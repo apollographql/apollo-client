@@ -466,17 +466,11 @@ function useResubscribeIfNecessary<
     observable[lastWatchOptions] &&
     !equal(observable[lastWatchOptions], watchQueryOptions)
   ) {
-    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
+    const opts = mergeOptions(
+      client.defaultOptions.watchQuery,
+      watchQueryOptions
+    );
 
-    const globalDefaults = client.defaultOptions.watchQuery;
-    if (globalDefaults) toMerge.push(globalDefaults);
-
-    toMerge.push(watchQueryOptions);
-
-    const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
-      TVariables,
-      TData
-    >;
     // Though it might be tempting to postpone this reobserve call to the
     // useEffect block, we need getCurrentResult to return an appropriate
     // loading:true result synchronously (later within the same call to

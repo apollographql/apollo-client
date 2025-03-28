@@ -346,7 +346,11 @@ describe("mutation results", () => {
           newName: "Hugh Willson",
         },
       })
-    ).rejects.toThrow(new CombinedGraphQLErrors([expectedFakeError]));
+    ).rejects.toThrow(
+      new CombinedGraphQLErrors([expectedFakeError], {
+        data: { newPerson: { __typename: "Person", name: "Hugh Willson" } },
+      })
+    );
 
     expect(client.cache.extract()).toMatchSnapshot();
 
@@ -384,7 +388,9 @@ describe("mutation results", () => {
           name: "Ellen Shapiro",
         },
       },
-      error: new CombinedGraphQLErrors([expectedFakeError]),
+      error: new CombinedGraphQLErrors([expectedFakeError], {
+        data: { newPerson: { __typename: "Person", name: "Ellen Shapiro" } },
+      }),
     });
 
     expect(client.cache.extract()).toMatchSnapshot();
@@ -529,7 +535,9 @@ describe("mutation results", () => {
       })
     ).resolves.toEqualStrictTyped({
       data: { newPerson: null },
-      error: new CombinedGraphQLErrors([{ message: "Oops" }]),
+      error: new CombinedGraphQLErrors([{ message: "Oops" }], {
+        data: { newPerson: null },
+      }),
       extensions: {
         requestLimit: 10,
       },
@@ -1143,7 +1151,11 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
+      ).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: "mock error" }], {
+          data: undefined,
+        })
+      );
 
       await expect(
         client.mutate({
@@ -1157,7 +1169,11 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
+      ).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: "mock error" }], {
+          data: undefined,
+        })
+      );
       await obsQuery.refetch();
     });
 
@@ -1739,7 +1755,11 @@ describe("mutation results", () => {
             });
           },
         })
-      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
+      ).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: "mock error" }], {
+          data: undefined,
+        })
+      );
 
       await expect(
         client.mutate({
@@ -1774,7 +1794,11 @@ describe("mutation results", () => {
             });
           },
         })
-      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
+      ).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: "mock error" }], {
+          data: undefined,
+        })
+      );
 
       await obsQuery.refetch();
     });

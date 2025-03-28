@@ -357,8 +357,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
       [observable, resultData]
     ),
-    () => resultOverride || getCurrentResult(resultData, observable),
-    () => resultOverride || getCurrentResult(resultData, observable)
+    () => resultOverride || resultData.current!,
+    () => resultOverride || resultData.current!
   );
 
   const obsQueryFields = React.useMemo(
@@ -455,13 +455,6 @@ function useResubscribeIfNecessary<
     resultData.current = void 0;
   }
   observable[lastWatchOptions] = watchQueryOptions;
-}
-
-function getCurrentResult<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>
-) {
-  return resultData.current;
 }
 
 useQuery.ssrDisabledResult = maybeDeepFreeze({

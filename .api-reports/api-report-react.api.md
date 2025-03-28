@@ -1414,21 +1414,9 @@ export namespace useQuery {
 // @public (undocumented)
 export namespace useQuery {
     var // (undocumented)
-    ssrDisabledResult: {
-        loading: boolean;
-        data: any;
-        error: undefined;
-        networkStatus: NetworkStatus_2;
-        partial: boolean;
-    };
+    ssrDisabledResult: ApolloQueryResult_2<any>;
     var // (undocumented)
-    skipStandbyResult: {
-        loading: boolean;
-        data: any;
-        error: undefined;
-        networkStatus: NetworkStatus_2;
-        partial: boolean;
-    };
+    skipStandbyResult: ApolloQueryResult_2<any>;
 }
 
 // @public

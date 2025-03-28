@@ -201,7 +201,7 @@
     "eslint-import-resolver-typescript": "3.7.0",
     "eslint-plugin-import": "2.31.0",
     "eslint-plugin-local-rules": "3.0.2",
-    "eslint-plugin-react-compiler": "19.0.0-beta-decd7b8-20250118",
+    "eslint-plugin-react-compiler": "19.0.0-beta-aeaed83-20250323",
     "eslint-plugin-react-hooks": "5.1.0",
     "eslint-plugin-testing-library": "7.1.1",
     "expect": "29.7.0",

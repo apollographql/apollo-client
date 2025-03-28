@@ -10,11 +10,18 @@ export class CombinedGraphQLErrors extends Error {
    */
   errors: ReadonlyArray<GraphQLFormattedError>;
 
+  /**
+   * Partial data returned in the GraphQL response.
+   */
+  data: Record<string, unknown> | null | undefined;
+
   constructor(
-    errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>
+    errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>,
+    options: { data: Record<string, unknown> | null }
   ) {
     super(formatMessage(errors));
     this.errors = errors;
+    this.data = options.data;
     this.name = "CombinedGraphQLErrors";
 
     Object.setPrototypeOf(this, CombinedGraphQLErrors.prototype);

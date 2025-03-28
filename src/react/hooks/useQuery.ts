@@ -396,6 +396,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
       query,
       observable,
       resultData: {
+        current: observable.getCurrentResult(),
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
         previousData: previous?.resultData.current?.data,

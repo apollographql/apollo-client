@@ -25,6 +25,7 @@ import {
   ApolloQueryResult,
   CombinedGraphQLErrors,
   DocumentNode,
+  ErrorLike,
   ErrorPolicy,
   gql,
   InMemoryCache,
@@ -72,7 +73,16 @@ import { useSuspenseQuery } from "../useSuspenseQuery.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
-type RenderSuspenseHookOptions<Props> = Omit<
+type RenderSuspenseHookOptions<Props> = {
+  initialProps?: Props;
+  client?: ApolloClient;
+  link?: ApolloLink;
+  cache?: ApolloCache;
+  mocks?: MockedResponse[];
+  strictMode?: boolean;
+};
+
+type LegacyRenderSuspenseHookOptions<Props> = Omit<
   RenderHookOptions<Props>,
   "wrapper"
 > & {
@@ -95,9 +105,76 @@ interface SimpleQueryData {
   greeting: string;
 }
 
+async function renderSuspenseHook<Result, Props>(
+  renderHook: (initialProps: Props) => Result,
+  options: RenderSuspenseHookOptions<Props> = {}
+) {
+  const { mocks = [], strictMode, initialProps } = options;
+
+  const client =
+    options.client ||
+    new ApolloClient({
+      cache: options.cache || new InMemoryCache(),
+      link: options.link || new MockLink(mocks),
+    });
+
+  function SuspenseFallback() {
+    useTrackRenders({ name: "SuspenseFallback" });
+
+    return null;
+  }
+
+  function Error({ error }: { error: ErrorLike }) {
+    useTrackRenders({ name: "Error" });
+    mergeSnapshot({ error });
+
+    return null;
+  }
+
+  function SuspenseHook({ props }: { props: Props | undefined }) {
+    useTrackRenders({ name: "useSuspenseQuery" });
+    mergeSnapshot({ result: renderHook(props!) });
+
+    return null;
+  }
+
+  function App({ props }: { props: Props | undefined }) {
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ErrorBoundary FallbackComponent={Error}>
+          <SuspenseHook props={props} />
+        </ErrorBoundary>
+      </Suspense>
+    );
+  }
+
+  const { render, takeRender, mergeSnapshot } = createRenderStream<{
+    result: Result;
+    error?: ErrorLike;
+  }>({ initialSnapshot: { result: undefined as any } });
+
+  const utils = await render(<App props={initialProps} />, {
+    wrapper: ({ children }) => {
+      const Wrapper = strictMode ? StrictMode : Fragment;
+
+      return (
+        <Wrapper>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        </Wrapper>
+      );
+    },
+  });
+
+  async function rerender(props: Props) {
+    return utils.rerender(<App props={props} />);
+  }
+
+  return { takeRender, rerender };
+}
+
 async function renderSuspenseHookLegacy<Result, Props>(
   render: (initialProps: Props) => Result,
-  options: RenderSuspenseHookOptions<Props> = {}
+  options: LegacyRenderSuspenseHookOptions<Props> = {}
 ) {
   function SuspenseFallback() {
     renders.suspenseCount++;

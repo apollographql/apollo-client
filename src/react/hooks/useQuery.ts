@@ -313,12 +313,10 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ...otherOptions } = options;
 
-  // This Object.assign is safe because otherOptions is a fresh ...rest object
-  // that did not exist until just now, so modifications are still allowed.
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
-    otherOptions,
-    { query }
-  );
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
+    ...otherOptions,
+    query,
+  };
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to

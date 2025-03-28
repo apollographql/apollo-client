@@ -95,7 +95,7 @@ interface SimpleQueryData {
   greeting: string;
 }
 
-async function renderSuspenseHook<Result, Props>(
+async function renderSuspenseHookLegacy<Result, Props>(
   render: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = {}
 ) {
@@ -532,7 +532,7 @@ describe("useSuspenseQuery", () => {
   it("returns the same results for the same variables", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { mocks, initialProps: { id: "1" } }
     );
@@ -568,7 +568,7 @@ describe("useSuspenseQuery", () => {
   it("ensures result is referentially stable", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { mocks, initialProps: { id: "1" } }
     );
@@ -597,9 +597,12 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result } = await renderSuspenseHook(() => useSuspenseQuery(query), {
-      client,
-    });
+    const { result } = await renderSuspenseHookLegacy(
+      () => useSuspenseQuery(query),
+      {
+        client,
+      }
+    );
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -636,7 +639,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, unmount } = await renderSuspenseHook(
+    const { result, unmount } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { client }
     );
@@ -666,7 +669,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { rerenderAsync, result, unmount } = await renderSuspenseHook(
+    const { rerenderAsync, result, unmount } = await renderSuspenseHookLegacy(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { client, initialProps: { id: "1" } }
     );
@@ -720,7 +723,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { rerenderAsync, result, unmount } = await renderSuspenseHook(
+    const { rerenderAsync, result, unmount } = await renderSuspenseHookLegacy(
       ({ client }) =>
         useSuspenseQuery(query, { client, variables: { id: "1" } }),
       { initialProps: { client: client1 } }
@@ -998,7 +1001,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { client: localClient }),
       { client: globalClient }
     );
@@ -1029,7 +1032,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { client: localClient }),
       { strictMode: true, client: globalClient }
     );
@@ -1062,9 +1065,12 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result } = await renderSuspenseHook(() => useSuspenseQuery(query), {
-      client,
-    });
+    const { result } = await renderSuspenseHookLegacy(
+      () => useSuspenseQuery(query),
+      {
+        client,
+      }
+    );
 
     // wait for query to finish suspending to avoid warnings
     await waitFor(() => {
@@ -1077,7 +1083,7 @@ describe("useSuspenseQuery", () => {
   it("suspends when changing variables", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { mocks, initialProps: { id: "1" } }
     );
@@ -1139,7 +1145,7 @@ describe("useSuspenseQuery", () => {
       ]),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ client }) => useSuspenseQuery(query, { client }),
       { initialProps: { client: client1 } }
     );
@@ -1312,7 +1318,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ queryKey }) =>
         // intentionally use a fetch policy that will execute a network request
         useSuspenseQuery(query, { queryKey, fetchPolicy: "network-only" }),
@@ -1369,7 +1375,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ queryKey }) =>
         // intentionally use a fetch policy that will execute a network request
         useSuspenseQuery(query, { queryKey, fetchPolicy: "network-only" }),
@@ -1426,7 +1432,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ queryKey }) =>
         // intentionally use a fetch policy that will execute a network request
         useSuspenseQuery(query, { queryKey, fetchPolicy: "network-only" }),
@@ -1483,7 +1489,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ queryKey }) =>
         // intentionally use a fetch policy that will execute a network request
         useSuspenseQuery(query, { queryKey, fetchPolicy: "network-only" }),
@@ -1532,7 +1538,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { client, initialProps: { id: "1" } }
     );
@@ -1597,7 +1603,7 @@ describe("useSuspenseQuery", () => {
   it("uses cached result and does not suspend when switching back to already used variables while using `cache-first` fetch policy", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-first",
@@ -1702,7 +1708,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-and-network",
@@ -1820,7 +1826,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
@@ -1927,7 +1933,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "no-cache",
@@ -1993,7 +1999,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { client, initialProps: { id: "1" } }
     );
@@ -2080,7 +2086,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "hello from cache" },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
       { cache, mocks }
     );
@@ -2124,7 +2130,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "hello from cache" },
     });
 
-    await renderSuspenseHook(
+    await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
       { cache, link, initialProps: { id: "1" } }
     );
@@ -2165,7 +2171,7 @@ describe("useSuspenseQuery", () => {
       data: { character: { id: "1" } },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(fullQuery, { fetchPolicy: "cache-first" }),
       { cache, mocks }
     );
@@ -2222,7 +2228,7 @@ describe("useSuspenseQuery", () => {
       data: { character: { id: "1" } },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-first",
@@ -2281,7 +2287,7 @@ describe("useSuspenseQuery", () => {
       variables: { id: "1" },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-first",
@@ -2347,7 +2353,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "hello from cache" },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "network-only" }),
       { cache, mocks }
     );
@@ -2404,7 +2410,7 @@ describe("useSuspenseQuery", () => {
       data: { character: { id: "1" } },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "network-only",
@@ -2444,7 +2450,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "hello from cache" },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "no-cache" }),
       { cache, mocks }
     );
@@ -2476,7 +2482,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "no-cache" }),
       { cache, mocks }
     );
@@ -2557,7 +2563,7 @@ describe("useSuspenseQuery", () => {
       data: { character: { id: "1" } },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "no-cache",
@@ -2592,7 +2598,7 @@ describe("useSuspenseQuery", () => {
 
     const { query, mocks } = useSimpleQueryCase();
 
-    await renderSuspenseHook(
+    await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           fetchPolicy: "no-cache",
@@ -2617,7 +2623,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "hello from cache" },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-and-network" }),
       { cache, mocks }
     );
@@ -2685,7 +2691,7 @@ describe("useSuspenseQuery", () => {
       data: { character: { id: "1" } },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-and-network",
@@ -2744,7 +2750,7 @@ describe("useSuspenseQuery", () => {
       variables: { id: "1" },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(fullQuery, {
           fetchPolicy: "cache-and-network",
@@ -2811,7 +2817,7 @@ describe("useSuspenseQuery", () => {
 
       const cache = new InMemoryCache();
 
-      const { result } = await renderSuspenseHook(
+      const { result } = await renderSuspenseHookLegacy(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
         { cache, mocks, initialProps: { id: "1" } }
       );
@@ -2831,7 +2837,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(query, { fetchPolicy: "no-cache", variables: { id } }),
       { cache, mocks, initialProps: { id: "1" } }
@@ -2860,7 +2866,7 @@ describe("useSuspenseQuery", () => {
         link: new MockLink(mocks),
       });
 
-      const { result, renders } = await renderSuspenseHook(
+      const { result, renders } = await renderSuspenseHookLegacy(
         () => useSuspenseQuery(query, { fetchPolicy }),
         { client }
       );
@@ -2908,7 +2914,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "no-cache" }),
       { client }
     );
@@ -2951,7 +2957,7 @@ describe("useSuspenseQuery", () => {
     async (fetchPolicy) => {
       const { query, mocks } = setupVariablesCase();
 
-      const { result, rerenderAsync, renders } = await renderSuspenseHook(
+      const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
         { mocks, initialProps: { id: "1" } }
       );
@@ -3029,7 +3035,7 @@ describe("useSuspenseQuery", () => {
         },
       ];
 
-      const { result, rerenderAsync, renders } = await renderSuspenseHook(
+      const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
         ({ query }) => useSuspenseQuery(query, { fetchPolicy }),
         { mocks, initialProps: { query: query1 as DocumentNode } }
       );
@@ -3104,7 +3110,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      const { result, rerenderAsync } = await renderSuspenseHook(
+      const { result, rerenderAsync } = await renderSuspenseHookLegacy(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
         { link, initialProps: { id: "1" } }
       );
@@ -3154,7 +3160,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      const { result, renders } = await renderSuspenseHook(
+      const { result, renders } = await renderSuspenseHookLegacy(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
         { strictMode: true, link, initialProps: { id: "1" } }
       );
@@ -3186,7 +3192,7 @@ describe("useSuspenseQuery", () => {
         link: new MockLink(mocks),
       });
 
-      const { result } = await renderSuspenseHook(
+      const { result } = await renderSuspenseHookLegacy(
         () => useSuspenseQuery(query, { fetchPolicy }),
         { strictMode: true, client }
       );
@@ -3226,7 +3232,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "Hello from cache" },
     });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
       { client }
     );
@@ -3272,7 +3278,7 @@ describe("useSuspenseQuery", () => {
 
     client.writeQuery({ query, data: { greeting: "hello from cache" } });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { client }
     );
@@ -3305,7 +3311,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { client }
     );
@@ -3340,7 +3346,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { strictMode: true, client }
     );
@@ -3391,7 +3397,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ source }) =>
         useSuspenseQuery(query, {
           fetchPolicy: "network-only",
@@ -3462,7 +3468,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           variables: { source: "local", globalOnlyVar: undefined },
@@ -3512,7 +3518,7 @@ describe("useSuspenseQuery", () => {
       }),
     });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           context: { valueA: "A", valueB: "B" },
@@ -3536,7 +3542,7 @@ describe("useSuspenseQuery", () => {
       networkError: new Error("Could not fetch"),
     });
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       {
         mocks,
@@ -3562,7 +3568,7 @@ describe("useSuspenseQuery", () => {
       graphQLErrors: [new GraphQLError("`id` should not be null")],
     });
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       {
         mocks,
@@ -3596,7 +3602,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       {
         client,
@@ -3649,7 +3655,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
       { client }
     );
@@ -3677,7 +3683,7 @@ describe("useSuspenseQuery", () => {
       networkError: new Error("Could not fetch"),
     });
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "none" }),
       { mocks }
     );
@@ -3701,7 +3707,7 @@ describe("useSuspenseQuery", () => {
       graphQLErrors: [new GraphQLError("`id` should not be null")],
     });
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "none" }),
       { mocks }
     );
@@ -3730,7 +3736,7 @@ describe("useSuspenseQuery", () => {
 
     const { query, mocks } = useErrorCase({ graphQLErrors });
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "none" }),
       { mocks }
     );
@@ -3753,7 +3759,7 @@ describe("useSuspenseQuery", () => {
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
@@ -3780,7 +3786,7 @@ describe("useSuspenseQuery", () => {
       graphQLErrors: [new GraphQLError("`id` should not be null")],
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
@@ -3808,7 +3814,7 @@ describe("useSuspenseQuery", () => {
       graphQLErrors: [new GraphQLError("`name` could not be found")],
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
@@ -3838,7 +3844,7 @@ describe("useSuspenseQuery", () => {
       ],
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
@@ -3866,7 +3872,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { client }
     );
@@ -3926,7 +3932,7 @@ describe("useSuspenseQuery", () => {
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
@@ -3961,7 +3967,7 @@ describe("useSuspenseQuery", () => {
 
     const { query, mocks } = useErrorCase({ graphQLErrors: [graphQLError] });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
@@ -4001,7 +4007,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { client }
     );
@@ -4062,7 +4068,7 @@ describe("useSuspenseQuery", () => {
 
     const { query, mocks } = useErrorCase({ graphQLErrors });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
@@ -4102,7 +4108,7 @@ describe("useSuspenseQuery", () => {
       graphQLErrors: [graphQLError],
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
@@ -4133,7 +4139,7 @@ describe("useSuspenseQuery", () => {
       graphQLErrors: [graphQLError],
     });
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
@@ -4178,7 +4184,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ id }) =>
         useSuspenseQuery(query, { errorPolicy: "all", variables: { id } }),
       { mocks, initialProps: { id: "1" } }
@@ -4249,7 +4255,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
       { mocks, initialProps: { id: "1" } }
     );
@@ -4417,7 +4423,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
       { mocks }
     );
@@ -4491,7 +4497,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
       { mocks, initialProps: { id: "1" } }
     );
@@ -4577,7 +4583,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
       { mocks }
     );
@@ -4637,7 +4643,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           errorPolicy: "ignore",
@@ -4701,7 +4707,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           errorPolicy: "all",
@@ -4778,7 +4784,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           errorPolicy: "all",
@@ -4829,7 +4835,7 @@ describe("useSuspenseQuery", () => {
   it("re-suspends when calling `fetchMore` with different variables", async () => {
     const { data, query, link } = usePaginatedCase();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { limit: 2 } }),
       { link }
     );
@@ -4942,7 +4948,7 @@ describe("useSuspenseQuery", () => {
       data: { greeting: "hello from cache" },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { cache, mocks }
     );
@@ -4984,7 +4990,7 @@ describe("useSuspenseQuery", () => {
   it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     const { data, query, link } = usePaginatedCase();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { limit: 2 } }),
       { link }
     );
@@ -5039,7 +5045,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { limit: 2 } }),
       { cache, link }
     );
@@ -5118,7 +5124,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           variables: { min: 0, max: 12 },
@@ -5195,7 +5201,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           variables: { min: 0, max: 12 },
@@ -5275,7 +5281,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { min: 0, max: 12 } }),
       { cache, mocks }
     );
@@ -5313,7 +5319,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { skip: true }),
       { cache, mocks }
     );
@@ -5331,7 +5337,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, skipToken),
       { cache, mocks }
     );
@@ -5349,7 +5355,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, { skip }),
       { cache, mocks, initialProps: { skip: true } }
     );
@@ -5388,7 +5394,7 @@ describe("useSuspenseQuery", () => {
   it("suspends when switching away from `skipToken` in options", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
       { mocks, initialProps: { skip: true } }
     );
@@ -5429,7 +5435,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, { skip }),
       { cache, mocks, initialProps: { skip: false } }
     );
@@ -5475,7 +5481,7 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
       { cache, mocks, initialProps: { skip: false } }
     );
@@ -5538,7 +5544,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip, id }) => useSuspenseQuery(query, { skip, variables: { id } }),
       { mocks, link, initialProps: { skip: true, id: "1" } }
     );
@@ -5584,7 +5590,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip, id }) =>
         useSuspenseQuery(query, skip ? skipToken : { variables: { id } }),
       { mocks, link, initialProps: { skip: true, id: "1" } }
@@ -5632,7 +5638,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip, id }) =>
         useSuspenseQuery(query, skip ? skipToken : { variables: { id } }),
       { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
@@ -5679,7 +5685,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip, id }) => useSuspenseQuery(query, { skip, variables: { id } }),
       { mocks, link, strictMode: true, initialProps: { skip: true, id: "1" } }
     );
@@ -5706,7 +5712,7 @@ describe("useSuspenseQuery", () => {
   it("`skip` result is referentially stable", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, { skip }),
       { mocks, initialProps: { skip: true } }
     );
@@ -5733,7 +5739,7 @@ describe("useSuspenseQuery", () => {
   it("`skip` result is referentially stable when using `skipToken` as options", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, skip ? skipToken : void 0),
       { mocks, initialProps: { skip: true } }
     );
@@ -6078,7 +6084,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ errorPolicy }) => useSuspenseQuery(query, { errorPolicy }),
       { mocks, initialProps: { errorPolicy: "none" as ErrorPolicy } }
     );
@@ -6151,7 +6157,7 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ context }) => useSuspenseQuery(query, { context }),
       { client, initialProps: { context: { phase: "initialValue" } } }
     );
@@ -6244,7 +6250,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, rerenderAsync } = await renderSuspenseHook(
+    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ refetchWritePolicy }) =>
         useSuspenseQuery(query, {
           variables: { min: 0, max: 12 },
@@ -6375,7 +6381,7 @@ describe("useSuspenseQuery", () => {
       data: { character: { __typename: "Character", id: "1" } },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ returnPartialData }) =>
         useSuspenseQuery(fullQuery, { returnPartialData }),
       { cache, mocks, initialProps: { returnPartialData: false } }
@@ -6480,16 +6486,17 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, /* renders, */ rerenderAsync } = await renderSuspenseHook(
-      ({ fetchPolicy }) => useSuspenseQuery(query, { fetchPolicy }),
-      {
-        cache,
-        mocks,
-        initialProps: {
-          fetchPolicy: "cache-first" as useSuspenseQuery.FetchPolicy,
-        },
-      }
-    );
+    const { result, /* renders, */ rerenderAsync } =
+      await renderSuspenseHookLegacy(
+        ({ fetchPolicy }) => useSuspenseQuery(query, { fetchPolicy }),
+        {
+          cache,
+          mocks,
+          initialProps: {
+            fetchPolicy: "cache-first" as useSuspenseQuery.FetchPolicy,
+          },
+        }
+      );
 
     expect(result.current).toMatchObject({
       data: {
@@ -6615,7 +6622,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
+    const { result, renders, rerenderAsync } = await renderSuspenseHookLegacy(
       ({ errorPolicy, variables }) =>
         useSuspenseQuery(query, { errorPolicy, variables }),
       {
@@ -6722,7 +6729,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
       { client, initialProps: { id: "1" } }
     );
@@ -6778,7 +6785,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { link }
     );
@@ -6874,7 +6881,7 @@ describe("useSuspenseQuery", () => {
 
       const link = new MockSubscriptionLink();
 
-      const { result, renders } = await renderSuspenseHook(
+      const { result, renders } = await renderSuspenseHookLegacy(
         () => useSuspenseQuery(query, { fetchPolicy }),
         { link }
       );
@@ -6981,7 +6988,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
       { cache }
     );
@@ -7046,7 +7053,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-first",
@@ -7183,7 +7190,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-and-network" }),
       { client }
     );
@@ -7305,7 +7312,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { link }
     );
@@ -7479,7 +7486,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { link }
     );
@@ -7613,7 +7620,7 @@ describe("useSuspenseQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { client }
     );
@@ -7832,7 +7839,7 @@ describe("useSuspenseQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
+    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
       ({ skip }) => useSuspenseQuery(query, { skip }),
       { client, initialProps: { skip: true } }
     );
@@ -7969,7 +7976,7 @@ describe("useSuspenseQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { variables: { offset: 0 } }),
       { client }
     );
@@ -8251,7 +8258,7 @@ describe("useSuspenseQuery", () => {
       const link = new MockSubscriptionLink();
       const client = new ApolloClient({ link, cache });
 
-      const { result, renders } = await renderSuspenseHook(
+      const { result, renders } = await renderSuspenseHookLegacy(
         () => useSuspenseQuery(query, { variables: { offset: 0 } }),
         { client }
       );
@@ -8519,7 +8526,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       {
         link,
@@ -8560,7 +8567,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       {
         link,
@@ -8605,7 +8612,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { renders } = await renderSuspenseHook(
+    const { renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       {
         link,
@@ -8653,7 +8660,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query),
       { link }
     );
@@ -8787,7 +8794,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { link }
     );
@@ -8963,7 +8970,7 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { link }
     );
@@ -9127,7 +9134,7 @@ describe("useSuspenseQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { client }
     );
@@ -9439,7 +9446,7 @@ describe("useSuspenseQuery", () => {
       mockLink
     );
 
-    const { result, renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHookLegacy(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { link }
     );
@@ -10044,7 +10051,7 @@ describe("useSuspenseQuery", () => {
     // preloaded cache
     await client.writeQuery({ query, data: { greeting: "Hello" } });
 
-    const { result } = await renderSuspenseHook(
+    const { result } = await renderSuspenseHookLegacy(
       () =>
         useSuspenseQuery(query, {
           fetchPolicy: "cache-and-network",

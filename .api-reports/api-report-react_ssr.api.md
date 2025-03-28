@@ -26,17 +26,23 @@ type GetMarkupFromTreeOptions = {
     renderFunction?: prerenderStatic.RenderToString | prerenderStatic.RenderToStringPromise;
 };
 
-// @public (undocumented)
-export function prerenderStatic({ tree, context, renderFunction, signal, ignoreResults, }: prerenderStatic.Options): Promise<prerenderStatic.Result>;
+// @public
+export function prerenderStatic({ tree, context, renderFunction, signal, ignoreResults, diagnostics, maxRerenders, }: prerenderStatic.Options): Promise<prerenderStatic.Result>;
 
 // @public (undocumented)
 export namespace prerenderStatic {
+    // (undocumented)
+    export interface Diagnostics {
+        renderCount: number;
+    }
     // (undocumented)
     export interface Options {
         context?: {
             client?: ApolloClient;
         };
+        diagnostics?: boolean;
         ignoreResults?: boolean;
+        maxRerenders?: number;
         renderFunction: RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream | ((reactNode: ReactTypes.ReactNode) => ReturnType<RenderToString> | ReturnType<RenderToStringPromise> | ReturnType<PrerenderToWebStream> | ReturnType<PrerenderToNodeStream>);
         signal?: AbortSignal;
         tree: ReactTypes.ReactNode;
@@ -56,6 +62,7 @@ export namespace prerenderStatic {
     // (undocumented)
     export interface Result {
         aborted: boolean;
+        diagnostics?: Diagnostics;
         result: string;
     }
 }

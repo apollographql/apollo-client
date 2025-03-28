@@ -352,7 +352,7 @@ test.each([
 ])(
   "%s: AbortSignal times out during render - stops rerendering, returns partial result",
   async (_, renderFunction) => {
-    const { Outlet, query1, query2, query3 } = testSetup();
+    const { query1, query2, query3 } = testSetup();
     type DataFor<T> = T extends TypedDocumentNode<infer D, any> ? D : never;
 
     const link = new MockSubscriptionLink();

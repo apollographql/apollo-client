@@ -337,6 +337,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   );
 
   if (!watchQueryOptions.fetchPolicy) {
+    // eslint-disable-next-line react-compiler/react-compiler
     watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;
   }
 

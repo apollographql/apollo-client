@@ -65,7 +65,6 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { TODO } from "../utilities/types/TODO.js";
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
@@ -336,6 +335,7 @@ export class QueryManager {
         false
       )
         .pipe(
+          validateDidEmitValue(),
           mergeMap((result) => {
             const hasErrors = graphQLResultHasError(result);
             if (hasErrors && errorPolicy === "none") {
@@ -702,11 +702,19 @@ export class QueryManager {
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<QueryResult<TData>> {
     return lastValueFrom(
-      this.fetchObservableWithInfo(queryId, options, networkStatus).observable,
-      { defaultValue: undefined }
-    ) as TODO;
+      this.fetchObservableWithInfo(
+        queryId,
+        options,
+        networkStatus
+      ).observable.pipe(map(toQueryResult)),
+      {
+        // This default is needed when a `standby` fetch policy is used to avoid
+        // an EmptyError from rejecting this promise.
+        defaultValue: { data: undefined },
+      }
+    );
   }
 
   public transform(document: DocumentNode) {
@@ -819,8 +827,6 @@ export class QueryManager {
     return observable;
   }
 
-  // TODO: catch `EmptyError` and rethrow as network error if `complete`
-  // notification is emitted without a value.
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
@@ -828,25 +834,15 @@ export class QueryManager {
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
-      .then((value) => {
-        // TODO: Update this when we handle emitting errors for empty results.
-        // `value` can be `undefined` when the link chain only emits a complete
-        // event with no value which should be an error.
-        // https://github.com/apollographql/apollo-client/issues/12482
-        if (!value) {
-          return { data: undefined };
-        }
-
-        return toQueryResult({
-          ...value,
-          data: this.maskOperation({
-            document: query,
-            data: value?.data,
-            fetchPolicy: options.fetchPolicy,
-            id: queryId,
-          }),
-        });
-      })
+      .then((value) => ({
+        ...value,
+        data: this.maskOperation({
+          document: query,
+          data: value?.data,
+          fetchPolicy: options.fetchPolicy,
+          id: queryId,
+        }),
+      }))
       .finally(() => this.stopQuery(queryId));
   }
 
@@ -1767,7 +1763,7 @@ export class QueryManager {
         context,
         fetchPolicy,
         errorPolicy,
-      });
+      }).pipe(validateDidEmitValue());
 
     switch (fetchPolicy) {
       default:
@@ -1884,6 +1880,22 @@ function maybeWrapError(error: unknown) {
   }
 
   return new UnconventionalError(error);
+}
+
+function validateDidEmitValue<T>() {
+  let didEmitValue = false;
+
+  return tap<T>({
+    next() {
+      didEmitValue = true;
+    },
+    complete() {
+      invariant(
+        didEmitValue,
+        "The link chain completed without emitting a value. This is likely unintentional and should be updated to emit a value before completing."
+      );
+    },
+  });
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

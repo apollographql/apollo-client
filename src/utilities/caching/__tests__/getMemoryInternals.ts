@@ -134,13 +134,15 @@ it("returns information about cache usage (some query triggered)", () => {
       .concat(ApolloLink.empty()),
   });
 
-  client.query({
-    query: gql`
-      query {
-        hello
-      }
-    `,
-  });
+  client
+    .query({
+      query: gql`
+        query {
+          hello
+        }
+      `,
+    })
+    .catch(() => {});
   expect(client.getMemoryInternals?.()).toStrictEqual({
     limits: defaultCacheSizesAsObject,
     sizes: {

@@ -1011,10 +1011,12 @@ describe("optimistic mutation results", () => {
         cache: new InMemoryCache(),
       });
 
-      client.mutate({
-        mutation,
-        optimisticResponse: (vars, { IGNORE }) => IGNORE,
-      });
+      client
+        .mutate({
+          mutation,
+          optimisticResponse: (vars, { IGNORE }) => IGNORE,
+        })
+        .catch(() => {});
     });
   });
 

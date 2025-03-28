@@ -7278,7 +7278,7 @@ describe("ApolloClient", () => {
         });
 
         // @ts-ignore a bit too generic for TS
-        client[method]({ [option]: document });
+        client[method]({ [option]: document }).catch(() => {});
 
         expect(context.foo).toBe("bar");
       }
@@ -7321,6 +7321,7 @@ describe("ApolloClient", () => {
           (operation) =>
             new Observable((observer) => {
               ({ cache: _, ...context } = operation.getContext());
+              observer.next({ data: null });
               observer.complete();
             })
         ),
@@ -7362,6 +7363,7 @@ describe("ApolloClient", () => {
           (operation) =>
             new Observable((observer) => {
               ({ cache: _, ...context } = operation.getContext());
+              observer.next({ data: null });
               observer.complete();
             })
         ),
@@ -7398,6 +7400,7 @@ describe("ApolloClient", () => {
           (operation) =>
             new Observable((observer) => {
               ({ cache: _, ...context } = operation.getContext());
+              observer.next({ data: null });
               observer.complete();
             })
         ),
@@ -7437,6 +7440,7 @@ describe("ApolloClient", () => {
             (operation) =>
               new Observable((observer) => {
                 ({ cache: _, ...context } = operation.getContext());
+                observer.next({ data: null });
                 observer.complete();
               })
           ),

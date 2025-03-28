@@ -273,7 +273,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     verifyDocumentType(query, DocumentType.Query);
 
     return {
-      client,
       observable: client.watchQuery(watchQueryOptions),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
@@ -285,7 +284,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   let [state, setState] = React.useState(createState);
 
-  if (client !== state.client || query !== state.observable.options.query) {
+  if (
+    client["queryManager"] !== state.observable["queryManager"] ||
+    query !== state.observable.options.query
+  ) {
     // If the client or query have changed, we need to create a new InternalState.
     // This will trigger a re-render with the new state, but it will also continue
     // to run the current render function to completion.

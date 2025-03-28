@@ -267,7 +267,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<any, any>,
-  makeWatchQueryOptions: () => WatchQueryOptions<TVariables, TData>
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>
 ) {
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
@@ -276,7 +276,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
       client,
       query,
       observable: client.watchQuery(
-        getObsQueryOptions(void 0, client, makeWatchQueryOptions())
+        getObsQueryOptions(void 0, client, watchQueryOptions)
       ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
@@ -311,21 +311,32 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
+  const { skip, ...otherOptions } = options;
 
-  const makeWatchQueryOptions = createMakeWatchQueryOptions(
-    client,
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
+    ...otherOptions,
     query,
-    options
-  );
+  };
+
+  if (skip) {
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    watchQueryOptions.initialFetchPolicy =
+      options.initialFetchPolicy || options.fetchPolicy;
+    watchQueryOptions.fetchPolicy = "standby";
+  }
 
   const { observable, resultData } = useInternalState(
     client,
     query,
-    makeWatchQueryOptions
+    watchQueryOptions
   );
 
-  const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
-    makeWatchQueryOptions(observable);
+  if (!watchQueryOptions.fetchPolicy) {
+    // eslint-disable-next-line react-compiler/react-compiler
+    watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;
+  }
 
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render
@@ -475,55 +486,6 @@ function useResubscribeIfNecessary<
     resultData.current = void 0;
   }
   observable[lastWatchOptions] = watchQueryOptions;
-}
-
-/*
- * A function to massage options before passing them to ObservableQuery.
- * This is two-step curried because we want to reuse the `make` function,
- * but the `observable` might differ between calls to `make`.
- */
-function createMakeWatchQueryOptions<
-  TData,
-  TVariables extends OperationVariables,
->(
-  client: ApolloClient,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  {
-    skip,
-    // The above options are useQuery-specific, so this ...otherOptions spread
-    // makes otherOptions almost a WatchQueryOptions object, except for the
-    // query property that we add below.
-    ...otherOptions
-  }: useQuery.Options<TData, TVariables> = {}
-) {
-  return (
-    observable?: ObservableQuery<TData, TVariables>
-  ): WatchQueryOptions<TVariables, TData> => {
-    // This Object.assign is safe because otherOptions is a fresh ...rest object
-    // that did not exist until just now, so modifications are still allowed.
-    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(otherOptions, { query });
-
-    if (!watchQueryOptions.variables) {
-      watchQueryOptions.variables = {} as TVariables;
-    }
-
-    if (skip) {
-      // When skipping, we set watchQueryOptions.fetchPolicy initially to
-      // "standby", but we also need/want to preserve the initial non-standby
-      // fetchPolicy that would have been used if not skipping.
-      watchQueryOptions.initialFetchPolicy =
-        watchQueryOptions.initialFetchPolicy ||
-        watchQueryOptions.fetchPolicy ||
-        client.defaultOptions?.watchQuery?.fetchPolicy ||
-        "cache-first";
-      watchQueryOptions.fetchPolicy = "standby";
-    } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy = observable?.options.initialFetchPolicy;
-    }
-
-    return watchQueryOptions;
-  };
 }
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(

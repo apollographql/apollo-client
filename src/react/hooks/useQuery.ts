@@ -389,7 +389,7 @@ function useObservableSubscriptionResult<
     [client, observable, resultOverride, previousData]
   );
 
-  return useSyncExternalStore(
+  const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
         const subscription = observable
@@ -444,6 +444,8 @@ function useObservableSubscriptionResult<
     () =>
       currentResultOverride || getCurrentResult(resultData, observable, client)
   );
+
+  return result;
 }
 
 // this hook is not compatible with any rules of React, and there's no good way to rewrite it.

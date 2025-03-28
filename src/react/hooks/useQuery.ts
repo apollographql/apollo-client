@@ -252,10 +252,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ssr, ...otherOptions } = options;
 
-  const watchQueryOptions = mergeOptions(
-    client.defaultOptions.watchQuery,
-    Object.assign(otherOptions, { query })
-  );
+  const watchQueryOptions = mergeOptions(client.defaultOptions.watchQuery, {
+    ...otherOptions,
+    query,
+  });
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to

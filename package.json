@@ -216,6 +216,7 @@
     "jest-environment-jsdom": "29.7.0",
     "jest-junit": "16.0.0",
     "jest-matcher-utils": "29.7.0",
+    "jsdom": "25.0.1",
     "jsesc": "^3.1.0",
     "knip": "^5.42.2",
     "lodash": "4.17.21",

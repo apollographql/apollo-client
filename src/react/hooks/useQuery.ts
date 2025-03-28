@@ -303,11 +303,19 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       useQuery.skipStandbyResult
     : ssrDisabledOverride;
 
+  const previousData = resultData.previousData;
+  const currentResultOverride = React.useMemo(
+    () =>
+      resultOverride &&
+      toQueryResult(resultOverride, previousData, observable, client),
+    [client, observable, resultOverride, previousData]
+  );
+
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
     observable,
     client,
-    resultOverride
+    currentResultOverride
   );
 
   const obsQueryFields = React.useMemo(
@@ -368,16 +376,8 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
-  resultOverride: ApolloQueryResult<any> | undefined
+  resultOverride: InternalQueryResult<TData, TVariables> | undefined
 ) {
-  const previousData = resultData.previousData;
-  const currentResultOverride = React.useMemo(
-    () =>
-      resultOverride &&
-      toQueryResult(resultOverride, previousData, observable, client),
-    [client, observable, resultOverride, previousData]
-  );
-
   const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
@@ -428,10 +428,8 @@ function useObservableSubscriptionResult<
 
       [observable, resultData, client]
     ),
-    () =>
-      currentResultOverride || getCurrentResult(resultData, observable, client),
-    () =>
-      currentResultOverride || getCurrentResult(resultData, observable, client)
+    () => resultOverride || getCurrentResult(resultData, observable, client),
+    () => resultOverride || getCurrentResult(resultData, observable, client)
   );
 
   return result;

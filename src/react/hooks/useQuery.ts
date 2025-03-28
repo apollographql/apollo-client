@@ -311,8 +311,30 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
+  const { skip, ...otherOptions } = options;
 
-  const watchQueryOptions = getWatchQueryOptions(client, query, options);
+  // This Object.assign is safe because otherOptions is a fresh ...rest object
+  // that did not exist until just now, so modifications are still allowed.
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
+    otherOptions,
+    { query }
+  );
+
+  if (!watchQueryOptions.variables) {
+    watchQueryOptions.variables = {} as TVariables;
+  }
+
+  if (skip) {
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    watchQueryOptions.initialFetchPolicy =
+      watchQueryOptions.initialFetchPolicy ||
+      watchQueryOptions.fetchPolicy ||
+      client.defaultOptions?.watchQuery?.fetchPolicy ||
+      "cache-first";
+    watchQueryOptions.fetchPolicy = "standby";
+  }
 
   const { observable, resultData } = useInternalState(
     client,
@@ -472,43 +494,6 @@ function useResubscribeIfNecessary<
     resultData.current = void 0;
   }
   observable[lastWatchOptions] = watchQueryOptions;
-}
-
-function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
-  client: ApolloClient,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  {
-    skip,
-    // The above options are useQuery-specific, so this ...otherOptions spread
-    // makes otherOptions almost a WatchQueryOptions object, except for the
-    // query property that we add below.
-    ...otherOptions
-  }: useQuery.Options<TData, TVariables> = {}
-) {
-  // This Object.assign is safe because otherOptions is a fresh ...rest object
-  // that did not exist until just now, so modifications are still allowed.
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
-    otherOptions,
-    { query }
-  );
-
-  if (!watchQueryOptions.variables) {
-    watchQueryOptions.variables = {} as TVariables;
-  }
-
-  if (skip) {
-    // When skipping, we set watchQueryOptions.fetchPolicy initially to
-    // "standby", but we also need/want to preserve the initial non-standby
-    // fetchPolicy that would have been used if not skipping.
-    watchQueryOptions.initialFetchPolicy =
-      watchQueryOptions.initialFetchPolicy ||
-      watchQueryOptions.fetchPolicy ||
-      client.defaultOptions?.watchQuery?.fetchPolicy ||
-      "cache-first";
-    watchQueryOptions.fetchPolicy = "standby";
-  }
-
-  return watchQueryOptions;
 }
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(

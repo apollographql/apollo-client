@@ -978,7 +978,16 @@ describe("client.watchQuery", () => {
           name: null,
         },
       },
-      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
+      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }], {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: null,
+            age: 34,
+          },
+        },
+      }),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -3832,7 +3841,9 @@ describe("client.query", () => {
     });
 
     await expect(client.query({ query, errorPolicy: "none" })).rejects.toEqual(
-      new CombinedGraphQLErrors([{ message: "User not logged in" }])
+      new CombinedGraphQLErrors([{ message: "User not logged in" }], {
+        data: undefined,
+      })
     );
   });
 
@@ -3871,7 +3882,9 @@ describe("client.query", () => {
 
     expect(result).toEqualStrictTyped({
       data: { currentUser: null },
-      error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
+      error: new CombinedGraphQLErrors([{ message: "User not logged in" }], {
+        data: { currentUser: null },
+      }),
     });
   });
 
@@ -3923,9 +3936,19 @@ describe("client.query", () => {
           name: "Test User",
         },
       },
-      error: new CombinedGraphQLErrors([
-        { message: "Could not determine age" },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: "Could not determine age" }],
+        {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: null,
+            },
+          },
+        }
+      ),
     });
   });
 
@@ -4384,7 +4407,9 @@ describe("client.subscribe", () => {
 
     await expect(stream).toEmitStrictTyped({
       data: undefined,
-      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
+      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }], {
+        data: { addedComment: null },
+      }),
     });
   });
 
@@ -4428,7 +4453,9 @@ describe("client.subscribe", () => {
 
     await expect(stream).toEmitStrictTyped({
       data: { addedComment: null },
-      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
+      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }], {
+        data: { addedComment: null },
+      }),
     });
   });
 
@@ -4477,7 +4504,16 @@ describe("client.subscribe", () => {
 
     await expect(stream).toEmitStrictTyped({
       data: { addedComment: { __typename: "Comment", id: 1 } },
-      error: new CombinedGraphQLErrors([{ message: "Could not get author" }]),
+      error: new CombinedGraphQLErrors([{ message: "Could not get author" }], {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: null,
+          },
+        },
+      }),
     });
   });
 
@@ -5471,7 +5507,9 @@ describe("client.mutate", () => {
     await expect(
       client.mutate({ mutation, errorPolicy: "none" })
     ).rejects.toEqual(
-      new CombinedGraphQLErrors([{ message: "User not logged in" }])
+      new CombinedGraphQLErrors([{ message: "User not logged in" }], {
+        data: undefined,
+      })
     );
   });
 
@@ -5529,7 +5567,9 @@ describe("client.mutate", () => {
       })
     ).resolves.toEqualStrictTyped({
       data: { updateUser: null },
-      error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
+      error: new CombinedGraphQLErrors([{ message: "User not logged in" }], {
+        data: { updateUser: null },
+      }),
     });
   });
 
@@ -5598,9 +5638,19 @@ describe("client.mutate", () => {
           name: "Test User",
         },
       },
-      error: new CombinedGraphQLErrors([
-        { message: "Could not determine age" },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: "Could not determine age" }],
+        {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: null,
+            },
+          },
+        }
+      ),
     });
   });
 

@@ -254,11 +254,42 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions.fetchPolicy = "standby";
   }
 
-  const { observable, resultData } = useInternalState(
-    client,
-    query,
-    watchQueryOptions
-  );
+  function createInternalState(previous?: InternalState<TData, TVariables>) {
+    verifyDocumentType(query, DocumentType.Query);
+
+    const observable = client.watchQuery(watchQueryOptions);
+
+    const internalState: InternalState<TData, TVariables> = {
+      client,
+      query,
+      observable,
+      resultData: {
+        current: observable.getCurrentResult(),
+        // Reuse previousData from previous InternalState (if any) to provide
+        // continuity of previousData even if/when the query or client changes.
+        previousData: previous?.resultData.current.data,
+      },
+    };
+
+    return internalState as InternalState<TData, TVariables>;
+  }
+
+  let [internalState, updateInternalState] =
+    React.useState(createInternalState);
+
+  if (client !== internalState.client || query !== internalState.query) {
+    // If the client or query have changed, we need to create a new InternalState.
+    // This will trigger a re-render with the new state, but it will also continue
+    // to run the current render function to completion.
+    // Since we sometimes trigger some side-effects in the render function, we
+    // re-assign `state` to the new state to ensure that those side-effects are
+    // triggered with the new state.
+    const newInternalState = createInternalState(internalState);
+    updateInternalState(newInternalState);
+    internalState = newInternalState;
+  }
+
+  const { observable, resultData } = internalState;
 
   if (!watchQueryOptions.fetchPolicy) {
     // eslint-disable-next-line react-compiler/react-compiler

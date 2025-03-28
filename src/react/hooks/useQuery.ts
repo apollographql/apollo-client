@@ -378,7 +378,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       stopPolling: observable.stopPolling.bind(observable),
       subscribeToMore: observable.subscribeToMore.bind(observable),
     }),
-
     [observable]
   );
 

@@ -248,16 +248,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const result = useQueryInternals(query, options);
-  const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(result.observable),
-    [result.observable]
-  );
-
-  return React.useMemo(
-    () => ({ ...result, ...obsQueryFields }),
-    [result, obsQueryFields]
-  );
+  return useQueryInternals(query, options);
 }
 
 function useInternalState<TData, TVariables extends OperationVariables>(
@@ -346,7 +337,15 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  return result;
+  const obsQueryFields = React.useMemo(
+    () => bindObservableMethods(result.observable),
+    [result.observable]
+  );
+
+  return React.useMemo(
+    () => ({ ...result, ...obsQueryFields }),
+    [result, obsQueryFields]
+  );
 }
 
 function useObservableSubscriptionResult<

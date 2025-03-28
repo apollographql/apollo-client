@@ -501,10 +501,8 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
   if (!resultData.current) {
-    const nextResult = observable.getCurrentResult();
-
     resultData.current = toQueryResult(
-      nextResult,
+      observable.getCurrentResult(),
       resultData.previousData,
       observable,
       client

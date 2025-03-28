@@ -81,7 +81,7 @@ describe("ObservableQuery", () => {
   const error = new GraphQLError("is offline.", undefined, null, null, [
     "people_one",
   ]);
-  const wrappedError = new CombinedGraphQLErrors([error]);
+  const wrappedError = new CombinedGraphQLErrors([error], { data: dataOne });
 
   describe("reobserve", () => {
     describe("to change pollInterval", () => {
@@ -449,7 +449,7 @@ describe("ObservableQuery", () => {
           },
           {
             request: { query, variables },
-            result: { errors: [error] },
+            result: { data: dataOne, errors: [error] },
           },
           {
             request: { query, variables },
@@ -468,12 +468,12 @@ describe("ObservableQuery", () => {
       });
 
       await expect(observable.refetch()).rejects.toThrow(
-        new CombinedGraphQLErrors([error])
+        new CombinedGraphQLErrors([error], { data: dataOne })
       );
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: dataOne }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -1028,14 +1028,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
       });
       expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2300,7 +2300,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2308,7 +2308,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2331,7 +2331,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2342,7 +2342,7 @@ describe("ObservableQuery", () => {
 
       expect(currentResult).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2371,14 +2371,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: dataOne }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: dataOne,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: dataOne }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -2435,7 +2435,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: dataOne }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,

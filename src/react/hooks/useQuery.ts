@@ -282,12 +282,34 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
+  const ssrDisabledOverride = useSyncExternalStore(
+    () => () => {},
+    () => void 0,
+    () => (options.ssr === false ? useQuery.ssrDisabledResult : void 0)
+  );
+
+  const resultOverride =
+    options.skip || watchQueryOptions.fetchPolicy === "standby" ?
+      // When skipping a query (ie. we're not querying for data but still want to
+      // render children), make sure the `data` is cleared out and `loading` is
+      // set to `false` (since we aren't loading anything).
+      //
+      // NOTE: We no longer think this is the correct behavior. Skipping should
+      // not automatically set `data` to `undefined`, but instead leave the
+      // previous data in place. In other words, skipping should not mandate that
+      // previously received data is all of a sudden removed. Unfortunately,
+      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+      // to address this.
+      useQuery.skipStandbyResult
+    : ssrDisabledOverride;
+
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
     observable,
     client,
     options,
-    watchQueryOptions
+    watchQueryOptions,
+    resultOverride
   );
 
   const obsQueryFields = React.useMemo(
@@ -349,29 +371,9 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
+  resultOverride: ApolloQueryResult<any> | undefined
 ) {
-  const ssrDisabledOverride = useSyncExternalStore(
-    () => () => {},
-    () => void 0,
-    () => (options.ssr === false ? useQuery.ssrDisabledResult : void 0)
-  );
-
-  const resultOverride =
-    options.skip || watchQueryOptions.fetchPolicy === "standby" ?
-      // When skipping a query (ie. we're not querying for data but still want to
-      // render children), make sure the `data` is cleared out and `loading` is
-      // set to `false` (since we aren't loading anything).
-      //
-      // NOTE: We no longer think this is the correct behavior. Skipping should
-      // not automatically set `data` to `undefined`, but instead leave the
-      // previous data in place. In other words, skipping should not mandate that
-      // previously received data is all of a sudden removed. Unfortunately,
-      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-      // to address this.
-      useQuery.skipStandbyResult
-    : ssrDisabledOverride;
-
   const previousData = resultData.previousData;
   const currentResultOverride = React.useMemo(
     () =>

@@ -17,7 +17,7 @@ export class CombinedGraphQLErrors extends Error {
 
   constructor(
     errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>,
-    options: { data: Record<string, unknown> | null }
+    options: { data: Record<string, unknown> | null | undefined }
   ) {
     super(formatMessage(errors));
     this.errors = errors;

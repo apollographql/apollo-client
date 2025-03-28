@@ -507,57 +507,23 @@ describe("useSuspenseQuery", () => {
     const { query, mocks } = setupVariablesCase();
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, render } =
-      createRenderStream<
-        useSuspenseQuery.Result<VariablesCaseData, VariablesCaseVariables>
-      >();
-
-    function Component({ id }: { id: string }) {
-      useTrackRenders();
-      replaceSnapshot(useSuspenseQuery(query, { variables: { id } }));
-
-      return null;
-    }
-
-    function SuspenseFallback() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function Error() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function App() {
-      return (
-        <Suspense fallback={<SuspenseFallback />}>
-          <ErrorBoundary FallbackComponent={Error}>
-            <Component id="1" />
-          </ErrorBoundary>
-        </Suspense>
-      );
-    }
-
-    await render(<App />, {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+    const { takeRender } = await renderSuspenseHook(
+      ({ id }) => useSuspenseQuery(query, { variables: { id } }),
+      { mocks, initialProps: { id: "1" } }
+    );
 
     {
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
     }
 
     {
       const { snapshot, renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([Component]);
-      expect(snapshot).toEqualStrictTyped({
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
         data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,

@@ -536,37 +536,45 @@ describe("useSuspenseQuery", () => {
   it("returns the same results for the same variables", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { mocks, initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[0].result.data,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    const previousResult = result.current;
+    await rerender({ id: "1" });
 
-    await rerenderAsync({ id: "1" });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    expect(result.current).toBe(previousResult);
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("ensures result is referentially stable", async () => {

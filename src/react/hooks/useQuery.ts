@@ -304,12 +304,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     : ssrDisabledOverride;
 
   const previousData = resultData.previousData;
-  const currentResultOverride = React.useMemo(
-    () =>
-      resultOverride &&
-      toQueryResult(resultOverride, previousData, observable, client),
-    [client, observable, resultOverride, previousData]
-  );
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
@@ -318,14 +312,19 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     resultOverride
   );
 
+  const queryResult = React.useMemo(
+    () => toQueryResult(result, previousData, observable, client),
+    [client, observable, result, previousData]
+  );
+
   const obsQueryFields = React.useMemo(
     () => bindObservableMethods(observable),
     [observable]
   );
 
   return React.useMemo(
-    () => ({ ...result, ...obsQueryFields }),
-    [result, obsQueryFields]
+    () => ({ ...queryResult, ...obsQueryFields }),
+    [queryResult, obsQueryFields]
   );
 }
 

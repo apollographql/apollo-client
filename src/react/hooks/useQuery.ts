@@ -272,7 +272,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
-    const internalState: InternalState<TData, TVariables> = {
+    return {
       client,
       query,
       observable: client.watchQuery(watchQueryOptions),
@@ -281,9 +281,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
         // continuity of previousData even if/when the query or client changes.
         previousData: previous?.resultData.current?.data,
       },
-    };
-
-    return internalState as InternalState<TData, TVariables>;
+    } as InternalState<TData, TVariables>;
   }
 
   let [internalState, updateInternalState] =

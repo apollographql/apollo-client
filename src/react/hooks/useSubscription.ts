@@ -10,10 +10,9 @@ import type {
   ErrorLike,
   ErrorPolicy,
   FetchPolicy,
-  FetchResult,
   OperationVariables,
+  SubscribeResult,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
@@ -87,6 +86,8 @@ export declare namespace useSubscription {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
     error?: ErrorLike;
 
+    restart: () => void;
+
     // This was added by the legacy useSubscription type, and is tested in unit
     // tests, but probably shouldn’t be added to the result.
     /**
@@ -96,16 +97,23 @@ export declare namespace useSubscription {
     variables?: TVariables;
   }
 
+  export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
+
   export interface OnDataOptions<TData = unknown> {
     client: ApolloClient;
-    data: Result<TData>;
+    data: OnDataResult<TData>;
   }
 
   export interface OnSubscriptionDataOptions<TData = unknown> {
     client: ApolloClient;
-    subscriptionData: Result<TData>;
+    subscriptionData: OnDataResult<TData>;
   }
 }
+
+type StateResult<TData, TVariables> = Omit<
+  useSubscription.Result<TData, TVariables>,
+  "restart"
+>;
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -194,7 +202,7 @@ export function useSubscription<
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
-) {
+): useSubscription.Result<TData, TVariables> {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
@@ -276,9 +284,7 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<
-    useSubscription.Result<TData, TVariables>
-  >(
+  const fallbackResult = React.useMemo<StateResult<TData, TVariables>>(
     () => ({
       loading: fallbackLoading,
       error: void 0,
@@ -301,7 +307,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<useSubscription.Result<TData, TVariables>>(
+  const ret = useSyncExternalStore<StateResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -312,22 +318,18 @@ export function useSubscription<
         const variables = observable.__.variables;
         const client = observable.__.client;
         const subscription = observable.subscribe({
-          next(fetchResult) {
+          next(value) {
             if (subscriptionStopped) {
               return;
             }
 
-            const result = {
+            const result: StateResult<TData, TVariables> = {
               loading: false,
-              // TODO: fetchResult.data can be null but SubscriptionResult.data
-              // expects TData | undefined only
-              data: fetchResult.data!,
-              error:
-                fetchResult.errors ?
-                  new CombinedGraphQLErrors(fetchResult.errors)
-                : undefined,
+              data: value.data,
+              error: value.error,
               variables,
             };
+
             observable.__.setResult(result);
             if (!ignoreResultsRef.current) update();
 
@@ -343,18 +345,6 @@ export function useSubscription<
                 client,
                 subscriptionData: result,
               });
-            }
-          },
-          error(error) {
-            if (!subscriptionStopped) {
-              observable.__.setResult({
-                loading: false,
-                data: void 0,
-                error,
-                variables,
-              });
-              if (!ignoreResultsRef.current) update();
-              optionsRef.current.onError?.(error);
             }
           },
           complete() {
@@ -426,15 +416,15 @@ function createSubscription<
       data: void 0,
       error: void 0,
       variables,
-    } as useSubscription.Result<TData, TVariables>,
-    setResult(result: useSubscription.Result<TData, TVariables>) {
+    } as StateResult<TData, TVariables>,
+    setResult(result: StateResult<TData, TVariables>) {
       __.result = result;
     },
   };
 
-  let observable: Observable<FetchResult<MaybeMasked<TData>>> | null = null;
+  let observable: Observable<SubscribeResult<MaybeMasked<TData>>> | null = null;
   return Object.assign(
-    new Observable<FetchResult<MaybeMasked<TData>>>((observer) => {
+    new Observable<SubscribeResult<MaybeMasked<TData>>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {

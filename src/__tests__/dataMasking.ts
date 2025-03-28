@@ -5529,13 +5529,15 @@ describe("client.mutate", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.mutate({
-      mutation,
-      errorPolicy: "all",
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "all",
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { updateUser: null },
+      error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
     });
-
-    expect(data).toEqual({ updateUser: null });
-    expect(errors).toEqual([{ message: "User not logged in" }]);
   });
 
   test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
@@ -5590,20 +5592,23 @@ describe("client.mutate", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.mutate({
-      mutation,
-      errorPolicy: "all",
-    });
-
-    expect(data).toEqual({
-      updateUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "all",
+      })
+    ).resolves.toEqualStrictTyped({
+      data: {
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
       },
+      error: new CombinedGraphQLErrors([
+        { message: "Could not determine age" },
+      ]),
     });
-
-    expect(errors).toEqual([{ message: "Could not determine age" }]);
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {

@@ -1731,10 +1731,7 @@ describe("ApolloClient", () => {
 
     const result = await client.mutate({ mutation });
 
-    expect(result).toEqualFetchResult({
-      data: { makeListPrivate: true },
-      errors: [],
-    });
+    expect(result).toEqualStrictTyped({ data: { makeListPrivate: true } });
   });
 
   it('runs a mutation with default errorPolicy equal to "none"', async () => {

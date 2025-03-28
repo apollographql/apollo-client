@@ -104,7 +104,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
-        // TODO: Include data and make it a required property
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -259,6 +260,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -417,6 +420,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -424,15 +429,9 @@ describe("useMutation Hook", () => {
 
       const [createTodo] = getCurrentSnapshot();
 
-      // TODO: This should either be an `error` property or it should be the
-      // raw error array. This value is a lie against the TypeScript type.
-      // This will be fixed by https://github.com/apollographql/apollo-client/issues/7167
-      // when we address the issue with onError.
-      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
-        data: undefined,
-        // @ts-expect-error
-        errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
-      });
+      await expect(createTodo({ variables })).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+      );
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
@@ -474,6 +473,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -544,6 +545,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -614,6 +617,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -623,7 +628,7 @@ describe("useMutation Hook", () => {
 
       await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: CREATE_TODO_RESULT,
-        errors: [{ message: CREATE_TODO_ERROR }],
+        error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
       });
 
       {
@@ -693,6 +698,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -702,7 +709,7 @@ describe("useMutation Hook", () => {
 
       await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: CREATE_TODO_RESULT,
-        errors: [{ message: CREATE_TODO_ERROR }],
+        error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
       });
 
       {
@@ -769,6 +776,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -847,6 +856,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -935,6 +946,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1018,6 +1031,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1101,6 +1116,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1142,6 +1159,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1199,6 +1218,8 @@ describe("useMutation Hook", () => {
       reset = result.reset;
       //initial value
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1227,6 +1248,8 @@ describe("useMutation Hook", () => {
 
       // reset to initial value
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1287,6 +1310,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1378,6 +1403,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1432,6 +1459,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1442,14 +1471,9 @@ describe("useMutation Hook", () => {
       const onCompleted = jest.fn();
       const onError = jest.fn();
 
-      // TODO: Ensure this rejects when fixing issue with onError
       await expect(
         createTodo({ variables, onCompleted, onError })
-      ).resolves.toEqualStrictTyped({
-        data: undefined,
-        // @ts-expect-error needs to be fixed
-        errors: new CombinedGraphQLErrors(errors),
-      });
+      ).rejects.toThrow(new CombinedGraphQLErrors(errors));
 
       {
         const [, result] = await takeSnapshot();
@@ -1518,6 +1542,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1525,14 +1551,9 @@ describe("useMutation Hook", () => {
 
       const [createTodo] = getCurrentSnapshot();
       const onError = jest.fn();
-      // TODO: Fix this when fixing issue with onError
-      await expect(
-        createTodo({ variables, onError })
-      ).resolves.toEqualStrictTyped({
-        data: undefined,
-        // @ts-expect-error
-        errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
-      });
+      await expect(createTodo({ variables, onError })).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+      );
 
       {
         const [, result] = await takeSnapshot();
@@ -1607,6 +1628,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1621,16 +1644,16 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
       }
 
-      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
-        data: undefined,
-        // @ts-expect-error
-        errors: new CombinedGraphQLErrors(errors),
-      });
+      await expect(createTodo({ variables })).rejects.toThrow(
+        new CombinedGraphQLErrors(errors)
+      );
 
       {
         const [, result] = await takeSnapshot();
@@ -1715,6 +1738,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1727,6 +1752,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1820,6 +1847,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1834,6 +1863,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1997,6 +2028,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2125,6 +2158,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2384,6 +2419,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2650,6 +2687,8 @@ describe("useMutation Hook", () => {
           variables: {},
         });
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2703,6 +2742,8 @@ describe("useMutation Hook", () => {
 
         if (IS_REACT_18) {
           expect(mutation).toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
             loading: false,
             called: false,
           });
@@ -2850,6 +2891,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2870,6 +2913,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3023,6 +3068,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3043,6 +3090,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3196,6 +3245,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3216,6 +3267,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3783,6 +3836,8 @@ describe("useMutation Hook", () => {
         const [, mutation] = await takeSnapshot();
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3858,7 +3913,6 @@ describe("useMutation Hook", () => {
         });
       }
 
-      // @ts-expect-error `incremental` should be stripped out
       await expect(promise).resolves.toEqualStrictTyped({
         data: {
           createTodo: {
@@ -3868,17 +3922,6 @@ describe("useMutation Hook", () => {
             __typename: "Todo",
           },
         },
-        hasNext: false,
-        incremental: [
-          {
-            data: {
-              description: "Get milk!",
-              priority: "High",
-              __typename: "Todo",
-            },
-            path: ["createTodo"],
-          },
-        ],
       });
 
       expect(consoleSpies.error).not.toHaveBeenCalled();
@@ -3909,6 +3952,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3959,11 +4004,9 @@ describe("useMutation Hook", () => {
         true
       );
 
-      await expect(promise).resolves.toEqualStrictTyped({
-        data: undefined,
-        // @ts-expect-error
-        errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
-      });
+      await expect(promise).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+      );
 
       {
         const [, result] = await takeSnapshot();
@@ -4010,6 +4053,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -4179,6 +4224,8 @@ describe("data masking", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -4286,6 +4333,8 @@ describe("data masking", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });

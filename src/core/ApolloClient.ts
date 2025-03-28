@@ -31,6 +31,7 @@ import type {
   ApolloQueryResult,
   DefaultContext,
   InternalRefetchQueriesResult,
+  MutateResult,
   OperationVariables,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
@@ -492,7 +493,7 @@ export class ApolloClient implements DataProxy {
     TCache extends ApolloCache = ApolloCache,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<MaybeMasked<TData>>> {
+  ): Promise<MutateResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }

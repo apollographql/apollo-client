@@ -83,6 +83,7 @@ import type {
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
+  MutateResult,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
@@ -266,7 +267,7 @@ export class QueryManager {
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<
-    FetchResult<MaybeMasked<TData>>
+    MutateResult<MaybeMasked<TData>>
   > {
     invariant(
       mutation,
@@ -333,7 +334,8 @@ export class QueryManager {
       )
         .pipe(
           mergeMap((result) => {
-            if (graphQLResultHasError(result) && errorPolicy === "none") {
+            const hasErrors = graphQLResultHasError(result);
+            if (hasErrors && errorPolicy === "none") {
               throw new CombinedGraphQLErrors(
                 getGraphQLErrorsFromResult(result)
               );
@@ -352,10 +354,7 @@ export class QueryManager {
               );
             }
 
-            if (
-              errorPolicy === "ignore" &&
-              graphQLResultHasError(storeResult)
-            ) {
+            if (errorPolicy === "ignore" && hasErrors) {
               delete storeResult.errors;
             }
 
@@ -389,24 +388,35 @@ export class QueryManager {
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
             if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
-              resolve({
-                ...storeResult,
+              const result: MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
                   data: storeResult.data,
                   fetchPolicy,
                   id: mutationId,
                 }) as any,
-              });
+              };
+
+              if (graphQLResultHasError(storeResult)) {
+                result.error = new CombinedGraphQLErrors(
+                  getGraphQLErrorsFromResult(storeResult)
+                );
+              }
+
+              if (storeResult.extensions) {
+                result.extensions = storeResult.extensions;
+              }
+
+              resolve(result);
             }
           },
 
           error: (err) => {
-            err = maybeWrapError(err);
+            const error = maybeWrapError(err);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
-              mutationStoreValue.error = err;
+              mutationStoreValue.error = error;
             }
 
             if (isOptimistic) {
@@ -415,7 +425,15 @@ export class QueryManager {
 
             this.broadcastQueries();
 
-            reject(err);
+            if (errorPolicy === "ignore") {
+              return resolve({ data: undefined });
+            }
+
+            if (errorPolicy === "all") {
+              return resolve({ data: undefined, error });
+            }
+
+            reject(error);
           },
         });
     });

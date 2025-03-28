@@ -9,7 +9,10 @@ import type { GraphQLFormattedError } from 'graphql';
 
 // @public
 export class CombinedGraphQLErrors extends Error {
-    constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
+    constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>, options: {
+        data: Record<string, unknown> | null | undefined;
+    });
+    data: Record<string, unknown> | null | undefined;
     errors: ReadonlyArray<GraphQLFormattedError>;
 }
 

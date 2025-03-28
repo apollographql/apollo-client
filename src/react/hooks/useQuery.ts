@@ -389,10 +389,12 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
+    const observable = client.watchQuery(watchQueryOptions);
+
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: client.watchQuery(watchQueryOptions),
+      observable,
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.

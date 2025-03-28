@@ -415,7 +415,18 @@ function useObservableSubscriptionResult<
               return;
             }
 
-            setResult(result, resultData, observable, client);
+            const nextResult = result;
+            const previousResult = resultData.current;
+            if (previousResult && previousResult.data) {
+              resultData.previousData = previousResult.data;
+            }
+
+            resultData.current = toQueryResult(
+              nextResult,
+              resultData.previousData,
+              observable,
+              client
+            );
             handleStoreChange();
           });
 

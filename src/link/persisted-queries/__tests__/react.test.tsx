@@ -14,7 +14,7 @@ import {
 } from "@apollo/client/link/persisted-queries";
 import { useQuery } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
-import { getMarkupFromTree } from "@apollo/client/react/ssr";
+import { getDataFromTree } from "@apollo/client/react/ssr";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
@@ -121,10 +121,7 @@ describe("react application", () => {
     );
 
     // preload all the data for client side request (with filter)
-    const result = await getMarkupFromTree({
-      tree: app,
-      renderFunction: ReactDOM.renderToStaticMarkup,
-    });
+    const result = await getDataFromTree(app);
     expect(result).toContain("data was returned");
     const [[, request]] = fetchMock.calls();
     expect(request!.body).toBe(
@@ -156,10 +153,7 @@ describe("react application", () => {
     );
 
     // change filter object to different variables and SSR
-    await getMarkupFromTree({
-      tree: app2,
-      renderFunction: ReactDOM.renderToStaticMarkup,
-    });
+    await getDataFromTree(app2);
     const view = ReactDOM.renderToString(app2);
 
     const [, [, request2]] = fetchMock.calls();

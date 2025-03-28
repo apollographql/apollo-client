@@ -323,8 +323,8 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     // "standby", but we also need/want to preserve the initial non-standby
     // fetchPolicy that would have been used if not skipping.
     watchQueryOptions.initialFetchPolicy =
-      watchQueryOptions.initialFetchPolicy ||
-      watchQueryOptions.fetchPolicy ||
+      options.initialFetchPolicy ||
+      options.fetchPolicy ||
       client.defaultOptions?.watchQuery?.fetchPolicy ||
       "cache-first";
     watchQueryOptions.fetchPolicy = "standby";

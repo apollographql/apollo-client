@@ -7,7 +7,10 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
-import { getMarkupFromTree, prerenderStatic } from "@apollo/client/react/ssr";
+import {
+  renderToStringWithData,
+  prerenderStatic,
+} from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 
@@ -72,10 +75,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    }).then((markup) => {
+    return renderToStringWithData(app).then((markup) => {
       expect(markup).toMatch(/Audi/);
     });
   });
@@ -95,10 +95,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    });
+    return renderToStringWithData(app);
   });
 
   it("should skip SSR tree rendering and return a loading state if `ssr` option is `false`", async () => {
@@ -122,10 +119,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    }).then((result) => {
+    return renderToStringWithData(app).then((result) => {
       expect(renderCount).toBe(1);
       expect(result).toEqual("");
     });
@@ -149,10 +143,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    }).then((result) => {
+    return renderToStringWithData(app).then((result) => {
       expect(renderCount).toBe(1);
       expect(result).toEqual("");
     });
@@ -195,10 +186,7 @@ describe("useQuery Hook SSR", () => {
       </ApolloProvider>
     );
 
-    const view = await getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    });
+    const view = await renderToStringWithData(app);
     expect(renderCount).toBe(1);
     expect(view).toEqual("");
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -227,10 +215,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    }).then((result) => {
+    return renderToStringWithData(app).then((result) => {
       expect(renderCount).toBe(1);
       expect(result).toBe("");
     });
@@ -273,10 +258,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    }).then((result) => {
+    return renderToStringWithData(app).then((result) => {
       expect(renderCount).toBe(4);
       expect(result).toMatch(/Audi/);
       expect(result).toMatch(/RS8/);
@@ -359,10 +341,7 @@ describe("useQuery Hook SSR", () => {
       </MockedProvider>
     );
 
-    return getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: app,
-    }).then((markup) => {
+    return renderToStringWithData(app).then((markup) => {
       expect(spy).toHaveBeenNthCalledWith(1, false);
       expect(markup).toMatch(/<div.*>3<\/div>/);
       expect(cache.extract()).toMatchSnapshot();
@@ -399,17 +378,14 @@ describe("useQuery Hook SSR", () => {
       return null;
     };
 
-    await getMarkupFromTree({
-      renderFunction: renderToString,
-      tree: (
-        <MockedProvider mocks={mocks}>
-          <>
-            <Component variables={{ foo: "a", bar: 1 }} />
-            <Component variables={{ bar: 1, foo: "a" }} />
-          </>
-        </MockedProvider>
-      ),
-    });
+    await renderToStringWithData(
+      <MockedProvider mocks={mocks}>
+        <>
+          <Component variables={{ foo: "a", bar: 1 }} />
+          <Component variables={{ bar: 1, foo: "a" }} />
+        </>
+      </MockedProvider>
+    );
   });
 
   const reactMajor = React.version.split(".")[0];

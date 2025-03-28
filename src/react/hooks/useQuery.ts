@@ -252,8 +252,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ssr, ...otherOptions } = options;
 
-  // This Object.assign is safe because otherOptions is a fresh ...rest object
-  // that did not exist until just now, so modifications are still allowed.
   const watchQueryOptions = mergeOptions(
     client.defaultOptions.watchQuery,
     Object.assign(otherOptions, { query })

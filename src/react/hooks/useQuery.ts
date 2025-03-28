@@ -238,7 +238,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
-  const { skip, ...otherOptions } = options;
+  const { skip, ssr, ...otherOptions } = options;
 
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
     client.defaultOptions.watchQuery,
@@ -302,7 +302,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const ssrDisabledOverride = useSyncExternalStore(
     () => () => {},
     () => void 0,
-    () => (options.ssr === false ? useQuery.ssrDisabledResult : void 0)
+    () => (ssr === false ? useQuery.ssrDisabledResult : void 0)
   );
 
   const resultOverride =

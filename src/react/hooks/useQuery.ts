@@ -508,7 +508,7 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
       client
     );
   }
-  return resultData.current!;
+  return resultData.current;
 }
 
 function toQueryResult<TData, TVariables extends OperationVariables>(

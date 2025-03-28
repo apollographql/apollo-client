@@ -284,9 +284,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     // Since we sometimes trigger some side-effects in the render function, we
     // re-assign `state` to the new state to ensure that those side-effects are
     // triggered with the new state.
-    const newInternalState = createInternalState(internalState);
-    updateInternalState(newInternalState);
-    internalState = newInternalState;
+    updateInternalState((internalState = createInternalState(internalState)));
   }
 
   const { observable, resultData } = internalState;

@@ -29,12 +29,14 @@ const defaults = {
   prettierPath: null,
 };
 
+const ignoreDTSFiles = ".d.ts$";
 const ignoreTSFiles = ".ts$";
 const ignoreTSXFiles = ".tsx$";
 
-const react19TestFileIgnoreList = [ignoreTSFiles];
+const react19TestFileIgnoreList = [ignoreDTSFiles, ignoreTSFiles];
 
 const react17TestFileIgnoreList = [
+  ignoreDTSFiles,
   ignoreTSFiles,
   // We only support Suspense with React 18, so don't test suspense hooks with
   // React 17
@@ -51,7 +53,7 @@ const react17TestFileIgnoreList = [
 const tsStandardConfig = {
   ...defaults,
   displayName: "Core Tests",
-  testPathIgnorePatterns: [ignoreTSXFiles],
+  testPathIgnorePatterns: [ignoreDTSFiles, ignoreTSXFiles],
 };
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
@@ -66,6 +68,7 @@ const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: [
+    ignoreDTSFiles,
     ignoreTSFiles,
     "src/react/ssr/__tests__/prerenderStatic.test.tsx",
   ],

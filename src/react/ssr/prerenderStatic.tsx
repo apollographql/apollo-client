@@ -97,7 +97,7 @@ export declare namespace prerenderStatic {
           | ReturnType<PrerenderToNodeStream>);
     /**
      * If this is set to `true`, the result will contain a `diagnostics` property that can help you e.g. detect `useQuery` waterfalls in your application.
-     * @default false
+     * @defaultValue false
      */
     diagnostics?: boolean;
 
@@ -106,7 +106,7 @@ export declare namespace prerenderStatic {
      * This is useful to prevent infinite loops in case of a bug in your application.
      * If you have a lot of waterfalls in your application, you might need to increase this number.
      *
-     * @default 50
+     * @defaultValue 50
      */
     maxRerenders?: number;
   }

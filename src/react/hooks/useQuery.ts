@@ -254,7 +254,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions.fetchPolicy = "standby";
   }
 
-  function createInternalState(
+  function createState(
     previous?: InternalState<TData, TVariables>
   ): InternalState<TData, TVariables> {
     verifyDocumentType(query, DocumentType.Query);
@@ -274,20 +274,19 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     };
   }
 
-  let [internalState, updateInternalState] =
-    React.useState(createInternalState);
+  let [state, setState] = React.useState(createState);
 
-  if (client !== internalState.client || query !== internalState.query) {
+  if (client !== state.client || query !== state.query) {
     // If the client or query have changed, we need to create a new InternalState.
     // This will trigger a re-render with the new state, but it will also continue
     // to run the current render function to completion.
     // Since we sometimes trigger some side-effects in the render function, we
     // re-assign `state` to the new state to ensure that those side-effects are
     // triggered with the new state.
-    updateInternalState((internalState = createInternalState(internalState)));
+    setState((state = createState(state)));
   }
 
-  const { observable, resultData } = internalState;
+  const { observable, resultData } = state;
 
   if (!watchQueryOptions.fetchPolicy) {
     // eslint-disable-next-line react-compiler/react-compiler

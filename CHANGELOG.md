@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.0.0-alpha.5
+
+### Minor Changes
+
+- [#12487](https://github.com/apollographql/apollo-client/pull/12487) [`b695e5e`](https://github.com/apollographql/apollo-client/commit/b695e5e10ab0eb47948e914b610f67c40267349e) Thanks [@phryneas](https://github.com/phryneas)! - Split out SSR-specific code from useQuery hook, remove RenderPromises
+
+### Patch Changes
+
+- [#12487](https://github.com/apollographql/apollo-client/pull/12487) [`b695e5e`](https://github.com/apollographql/apollo-client/commit/b695e5e10ab0eb47948e914b610f67c40267349e) Thanks [@phryneas](https://github.com/phryneas)! - `useQuery` with `ssr: false` - previously, `skip` had a higher priortity than `ssr: false` while `ssr: false` had a higher priority than `fetchPolicy: "standby"` (which is roughly equivalent to `skip`).
+
+  This priority has been adjusted so now both `skip` and `fetchPolicy: "standby"` have a higher priority than `ssr: false` and will return `loading: false`, while `ssr: false` will only come after those and will return `loading: true` if those are not set.
+
 ## 4.0.0-alpha.4
 
 ### Major Changes

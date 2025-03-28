@@ -319,17 +319,14 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   return React.useMemo(() => {
     const { data, partial, ...resultWithoutPartial } = result;
-    const queryResult: InternalQueryResult<TData, TVariables> = {
+
+    return {
       data, // Ensure always defined, even if result.data is missing.
       ...resultWithoutPartial,
       client: client,
       observable: observable,
       variables: observable.variables,
       previousData,
-    };
-
-    return {
-      ...queryResult,
       ...obsQueryFields,
     };
   }, [result, client, observable, previousData, obsQueryFields]);

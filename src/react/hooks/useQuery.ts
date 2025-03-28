@@ -406,6 +406,13 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   currentResultOverride: ApolloQueryResult<TData> | undefined
 ) {
+  // Using this.result as a cache ensures getCurrentResult continues returning
+  // the same (===) result object, unless state.setResult has been called, or
+  // we're doing server rendering and therefore override the result below.
+  if (!resultData.current) {
+    setResult(observable.getCurrentResult(), resultData, () => {});
+  }
+
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
@@ -446,8 +453,8 @@ function useObservableSubscriptionResult<
 
       [observable, resultData]
     ),
-    () => currentResultOverride || getCurrentResult(resultData, observable),
-    () => currentResultOverride || getCurrentResult(resultData, observable)
+    () => currentResultOverride || resultData.current!,
+    () => currentResultOverride || resultData.current!
   );
 }
 
@@ -490,19 +497,6 @@ function setResult<TData>(
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
-}
-
-function getCurrentResult<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData>,
-  observable: ObservableQuery<TData, TVariables>
-): ApolloQueryResult<TData> {
-  // Using this.result as a cache ensures getCurrentResult continues returning
-  // the same (===) result object, unless state.setResult has been called, or
-  // we're doing server rendering and therefore override the result below.
-  if (!resultData.current) {
-    setResult(observable.getCurrentResult(), resultData, () => {});
-  }
-  return resultData.current!;
 }
 
 function toQueryResult<TData, TVariables extends OperationVariables>(

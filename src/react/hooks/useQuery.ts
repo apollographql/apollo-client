@@ -38,7 +38,7 @@ import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
-import { maybeDeepFreeze } from "@apollo/client/utilities";
+import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
@@ -307,10 +307,10 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ...otherOptions } = options;
 
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
-    ...otherOptions,
-    query,
-  };
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
+    client.defaultOptions.watchQuery,
+    { ...otherOptions, query }
+  );
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to

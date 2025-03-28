@@ -414,66 +414,6 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   return internalState;
 }
 
-function useObservableSubscriptionResult<
-  TData,
-  TVariables extends OperationVariables,
->(
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  resultOverride: ApolloQueryResult<TData> | undefined
-) {
-  const result = useSyncExternalStore(
-    React.useCallback(
-      (handleStoreChange) => {
-        const subscription = observable
-          // We use the asapScheduler here to prevent issues with trying to
-          // update in the middle of a render. `reobserve` is kicked off in the
-          // middle of a render and because RxJS emits values synchronously,
-          // its possible for this `handleStoreChange` to be called in that same
-          // render. This allows the render to complete before trying to emit a
-          // new value.
-          .pipe(observeOn(asapScheduler))
-          .subscribe((result) => {
-            const previousResult = resultData.current;
-            // Make sure we're not attempting to re-render similar results
-            // TODO: Eventually move this check inside ObservableQuery. We should
-            // probably not emit a new result if the result is the same.
-            if (
-              previousResult &&
-              previousResult.loading === result.loading &&
-              previousResult.networkStatus === result.networkStatus &&
-              equal(previousResult.data, result.data) &&
-              equal(previousResult.error, result.error)
-            ) {
-              return;
-            }
-
-            if (previousResult && previousResult.data) {
-              resultData.previousData = previousResult.data;
-            }
-
-            resultData.current = result;
-            handleStoreChange();
-          });
-
-        // Do the "unsubscribe" with a short delay.
-        // This way, an existing subscription can be reused without an additional
-        // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
-        // happen in very fast succession.
-        return () => {
-          setTimeout(() => subscription.unsubscribe());
-        };
-      },
-
-      [observable, resultData]
-    ),
-    () => resultOverride || getCurrentResult(resultData, observable),
-    () => resultOverride || getCurrentResult(resultData, observable)
-  );
-
-  return result;
-}
-
 // this hook is not compatible with any rules of React, and there's no good way to rewrite it.
 // it should stay a separate hook that will not be optimized by the compiler
 function useResubscribeIfNecessary<

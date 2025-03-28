@@ -51,7 +51,8 @@ export declare namespace prerenderStatic {
      * An `AbortSignal` that indicates you want to stop the re-render loop, even if not all data is fetched yet.
      *
      * Note that if you use an api like `prerender` or `prerenderToNodeStream` that supports `AbortSignal` as an option,
-     * you will still have to pass that `signal` option to that function by wrapping the `renderFunction`.
+     * you will still have to pass that `signal` option to that function by wrapping the `renderFunction`, and if that api
+     * throws an exception if the signal is aborted, so will `prerenderStatic`.
      *
      * @example
      * ```ts
@@ -223,6 +224,11 @@ you have an infinite render loop in your application.`,
       maxRerenders
     );
 
+    invariant(
+      !signal?.aborted,
+      "The operation was aborted before it could be attempted."
+    );
+
     // Always re-render from the rootElement, even though it might seem
     // better to render the children of the component responsible for the
     // promise, because it is not possible to reconstruct the full context
@@ -266,9 +272,6 @@ you have an infinite render loop in your application.`,
     return process();
   }
 
-  if (signal?.aborted) {
-    throw new Error("The operation was aborted before it could be attempted.");
-  }
   return Promise.resolve()
     .then(process)
     .then((result) =>

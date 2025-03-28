@@ -25,7 +25,12 @@ import {
   useSuspenseQuery,
 } from "@apollo/client/react";
 import { prerenderStatic } from "@apollo/client/react/ssr";
-import { MockedResponse, MockLink } from "@apollo/client/testing";
+import {
+  MockedResponse,
+  MockLink,
+  MockSubscriptionLink,
+  wait,
+} from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
@@ -278,8 +283,86 @@ test.each([
   }
 );
 
-test.todo("AbortSignal times out during render");
-test.todo("cancelled AbortSignal is passed into `prerenderStatic`");
+test.each([
+  ["prerender", prerender],
+  ["prerenderToNodeStream", prerenderToNodeStream],
+])(
+  "%s: AbortSignal times out during render - React re-throws abort error",
+  async (_, renderFunction) => {
+    const { Outlet, query1, query2 } = testSetup();
+    type DataFor<T> = T extends TypedDocumentNode<infer D, any> ? D : never;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const controller = new AbortController();
+
+    const promise = prerenderStatic({
+      tree: <Outlet />,
+      context: { client },
+      renderFunction: (tree) =>
+        renderFunction(tree, { signal: controller.signal }),
+      signal: controller.signal,
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            hello: "world",
+          } satisfies DataFor<typeof query1>,
+        },
+      },
+      true
+    );
+
+    await wait(10);
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            whoami: { name: "Apollo" },
+          } satisfies DataFor<typeof query2>,
+        },
+      },
+      true
+    );
+
+    await wait(10);
+    controller.abort("AbortReason");
+
+    await expect(promise).rejects.toEqual("AbortReason");
+  }
+);
+
+test("cancelled AbortSignal is passed into `prerenderStatic`", async () => {
+  const { Outlet, mockLink } = testSetup();
+
+  const controller = new AbortController();
+  controller.abort();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: mockLink,
+  });
+
+  const promise = prerenderStatic({
+    tree: <Outlet />,
+    context: { client },
+    renderFunction: prerender,
+    signal: controller.signal,
+  });
+
+  await expect(promise).rejects.toEqual(
+    new Error("The operation was aborted before it could be attempted.")
+  );
+});
+
 test("usage with `useSuspenseQuery`: `diagnostics.renderCount` stays 1", async () => {
   const { Outlet, mockLink } = testSetup();
 

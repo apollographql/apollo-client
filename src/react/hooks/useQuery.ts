@@ -468,7 +468,7 @@ useQuery.ssrDisabledResult = maybeDeepFreeze({
   error: void 0,
   networkStatus: NetworkStatus.loading,
   partial: true,
-}) as ApolloQueryResult<any>;
+}) satisfies ApolloQueryResult<any> as ApolloQueryResult<any>;
 
 useQuery.skipStandbyResult = maybeDeepFreeze({
   loading: false,
@@ -476,4 +476,4 @@ useQuery.skipStandbyResult = maybeDeepFreeze({
   error: void 0,
   networkStatus: NetworkStatus.ready,
   partial: true,
-}) as ApolloQueryResult<any>;
+}) satisfies ApolloQueryResult<any> as ApolloQueryResult<any>;

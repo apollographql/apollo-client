@@ -77,10 +77,10 @@ export declare namespace prerenderStatic {
      * * `prerenderToNodeStream` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerenderToNodeStream)
      *   * recommended if you use Node.js
      * * `renderToString` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToString)
-     *   * this API has only limited suspense support and might cause additional workload on the server as a result
+     *   * this API has no suspense support and will not work with hooks like `useSuspenseQuery`
      * * `renderToStaticMarkup` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToStaticMarkup)
      *   * slightly faster than `renderToString`, but the result cannot be hydrated
-     *   * this API has only limited suspense support and might cause additional workload on the server as a result
+     *   * this API has no suspense support and will not work with hooks like `useSuspenseQuery`
      */
     renderFunction:
       | RenderToString

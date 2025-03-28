@@ -1,27 +1,36 @@
+/* eslint-disable testing-library/render-result-naming-convention */
 import "../../../testing/internal/messageChannelPolyfill.js";
+
+import "./polyfillReactDomTypes.d.ts";
 
 import { expectTypeOf } from "expect-type";
 import { JSDOM } from "jsdom";
 import jsesc from "jsesc";
 import * as React from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import { prerender } from "react-dom/static";
+import { prerenderToNodeStream } from "react-dom/static.node";
 
 import {
   ApolloClient,
   ApolloLink,
   gql,
   InMemoryCache,
+  Observable,
   TypedDocumentNode,
 } from "@apollo/client/core";
 import {
   ApolloProvider,
   getApolloContext,
+  useQuery,
   useSuspenseQuery,
 } from "@apollo/client/react";
 import { prerenderStatic } from "@apollo/client/react/ssr";
-import { MockLink } from "@apollo/client/testing";
+import { MockedResponse, MockLink } from "@apollo/client/testing";
 
 import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
+import { InvariantError } from "../../../utilities/invariant/index.js";
+import { set } from "lodash";
 
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like
@@ -79,7 +88,7 @@ function testSetup() {
     );
   }
 
-  const ssrLink = new MockLink([
+  const mocks = [
     {
       request: { query: query1 },
       result: { data: { hello: "world" } },
@@ -95,23 +104,23 @@ function testSetup() {
       result: { data: { currentTime: "2025-03-26T14:40:53.118Z" } },
       maxUsageCount: 1,
     },
-  ]);
+  ];
+  const mockLink = new MockLink(mocks);
   return {
     Outlet,
-    ssrLink,
+    mocks,
+    mockLink,
+    query1,
+    query2,
+    query3,
   };
 }
 
 test.each([
-  [
-    "prerender",
-    (require("react-dom/static.edge") as typeof import("react-dom/static"))
-      .prerender satisfies prerenderStatic.PrerenderToWebStream,
-  ],
+  ["prerender", prerender satisfies prerenderStatic.PrerenderToWebStream],
   [
     "prerenderToNodeStream",
-    (require("react-dom/static.node") as typeof import("react-dom/static"))
-      .prerenderToNodeStream satisfies prerenderStatic.PrerenderToNodeStream,
+    prerenderToNodeStream satisfies prerenderStatic.PrerenderToNodeStream,
   ],
 ] as const)(
   "real-life kitchen sink use case with %s and `useSuspenseQuery`",
@@ -127,7 +136,7 @@ test.each([
       );
     });
 
-    const { Outlet, ssrLink } = testSetup();
+    const { Outlet, mockLink: ssrLink } = testSetup();
     // from here on it's essentially what a userland app could look like
 
     function makeClient(link = throwingLink) {
@@ -241,15 +250,266 @@ test.each([
   }
 );
 
-test.todo("`prerenderStatic` with `renderToString` and `renderToStaticMarkup`");
+test.each([
+  ["renderToString", renderToString satisfies prerenderStatic.RenderToString],
+  [
+    "renderToStaticMarkup",
+    renderToStaticMarkup satisfies prerenderStatic.RenderToString,
+  ],
+])(
+  "`prerenderStatic` with `%s` and suspense hooks will error",
+  async (_, renderFunction) => {
+    const { Outlet, mockLink } = testSetup();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: mockLink,
+    });
+
+    const promise = prerenderStatic({
+      tree: <Outlet />,
+      context: { client },
+      renderFunction,
+    });
+
+    await expect(promise).rejects.toEqual(
+      new Error(
+        "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition."
+      )
+    );
+  }
+);
+
 test.todo("AbortSignal times out during render");
 test.todo("cancelled AbortSignal is passed into `prerenderStatic`");
-test.todo("usage with `useSuspenseQuery`: `diagnostics.renderCount` stays 1");
-test.todo("usage with `useQuery`: `diagnostics.renderCount` is 2");
-test.todo(
-  "usage with a waterfall of `useQuery`: `diagnostics.renderCount` is `n+1`"
-);
-test.todo("`maxRerenders` will throw an error if exceeded");
+test("usage with `useSuspenseQuery`: `diagnostics.renderCount` stays 1", async () => {
+  const { Outlet, mockLink } = testSetup();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: mockLink,
+  });
+
+  const { diagnostics, result } = await prerenderStatic({
+    tree: <Outlet />,
+    context: { client },
+    renderFunction: prerender,
+    diagnostics: true,
+  });
+
+  expect(diagnostics?.renderCount).toBe(1);
+  expect(result).toMatchInlineSnapshot(
+    `"<div><p>Hello <!-- -->world<!-- -->!</p><p>My name is <!-- -->Apollo<!-- -->!</p><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p></div>"`
+  );
+});
+
+test("usage with `useQuery`: `diagnostics.renderCount` is 2", async () => {
+  const { query1, mockLink } = testSetup();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: mockLink,
+  });
+
+  function Component() {
+    const { data, loading } = useQuery(query1);
+    if (loading) return <div>loading...</div>;
+    return <div>{data?.hello}</div>;
+  }
+
+  const { diagnostics, result } = await prerenderStatic({
+    tree: <Component />,
+    context: { client },
+    renderFunction: prerender,
+    diagnostics: true,
+  });
+
+  expect(diagnostics?.renderCount).toBe(2);
+  expect(result).toMatchInlineSnapshot(`"<div>world</div>"`);
+});
+
+test("usage with a waterfall of `useQuery`: `diagnostics.renderCount` is `n+1`", async () => {
+  const { query1, query2, query3, mockLink } = testSetup();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: mockLink,
+  });
+
+  function Component() {
+    const { data, loading } = useQuery(query1);
+    if (loading) return <div>loading...</div>;
+    return (
+      <div>
+        <p>Hello {data?.hello}!</p>
+        <Parent />
+      </div>
+    );
+  }
+
+  function Parent() {
+    const { data, loading } = useQuery(query2);
+    if (loading) return <div>loading...</div>;
+
+    return (
+      <>
+        <p>My name is {data?.whoami.name}!</p>
+        <Child />
+      </>
+    );
+  }
+  function Child() {
+    const { data, loading } = useQuery(query3);
+    if (loading) return <div>loading...</div>;
+
+    return (
+      <>
+        <p>Current time is {data?.currentTime}!</p>
+      </>
+    );
+  }
+
+  const { diagnostics, result } = await prerenderStatic({
+    tree: <Component />,
+    context: { client },
+    renderFunction: prerender,
+    diagnostics: true,
+  });
+
+  expect(diagnostics?.renderCount).toBe(4);
+  expect(result).toMatchInlineSnapshot(
+    `"<div><p>Hello <!-- -->world<!-- -->!</p><p>My name is <!-- -->Apollo<!-- -->!</p><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p></div>"`
+  );
+});
+
+test("multiple `useQuery` calls in the same component do not waterfall", async () => {
+  const { query1, query2, query3, mockLink } = testSetup();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: mockLink,
+  });
+
+  function Component() {
+    const result1 = useQuery(query1);
+    const result2 = useQuery(query2);
+    const result3 = useQuery(query3);
+    if (result1.loading || result2.loading || result3.loading)
+      return <div>loading...</div>;
+
+    return (
+      <div>
+        {result1.data?.hello}
+        {result2.data?.whoami?.name}
+        {result3.data?.currentTime}
+      </div>
+    );
+  }
+
+  const { result, diagnostics } = await prerenderStatic({
+    tree: <Component />,
+    context: { client },
+    renderFunction: prerender,
+    diagnostics: true,
+  });
+
+  expect(diagnostics?.renderCount).toBe(2);
+  expect(result).toMatchInlineSnapshot(
+    `"<div>world<!-- -->Apollo<!-- -->2025-03-26T14:40:53.118Z</div>"`
+  );
+});
+
+test("`maxRerenders` will throw an error if exceeded", async () => {
+  const query: TypedDocumentNode<{ hello: string }, { depth: number }> = gql`
+    query ($depth: Int!) {
+      hello(depth: $depth)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        variableMatcher: () => true,
+        newData: (arg) => ({ data: { hello: "world" + arg.depth } }),
+      } satisfies MockedResponse<{ hello: string }, { depth: number }>,
+    ]),
+  });
+
+  function Component({ depth }: { depth: number }) {
+    const { loading, data } = useQuery(query, { variables: { depth } });
+
+    if (loading) return <div>loading...</div>;
+
+    return (
+      <div>
+        {data?.hello}
+        <Component depth={depth + 1} />
+      </div>
+    );
+  }
+
+  const promise = prerenderStatic({
+    tree: <Component depth={1} />,
+    context: { client },
+    renderFunction: prerender,
+    diagnostics: true,
+    maxRerenders: 4,
+  });
+  await expect(promise).rejects.toEqual(
+    new InvariantError(`Exceeded maximum rerender count of 4.
+This either means you have very deep \`useQuery\` waterfalls in your application
+and need to increase the \`maxRerender\` option to \`prerenderStatic\`, or that
+you have an infinite render loop in your application.`)
+  );
+});
+
+test("`maxRerenders` defaults to 50", async () => {
+  const query: TypedDocumentNode<{ hello: string }, { depth: number }> = gql`
+    query ($depth: Int!) {
+      hello(depth: $depth)
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        variableMatcher: () => true,
+        newData: (arg) => ({ data: { hello: "world" + arg.depth } }),
+      } satisfies MockedResponse<{ hello: string }, { depth: number }>,
+    ]),
+  });
+
+  function Component({ depth }: { depth: number }) {
+    const { loading, data } = useQuery(query, { variables: { depth } });
+
+    if (loading) return <div>loading...</div>;
+
+    return (
+      <div>
+        {data?.hello}
+        <Component depth={depth + 1} />
+      </div>
+    );
+  }
+
+  const promise = prerenderStatic({
+    tree: <Component depth={1} />,
+    context: { client },
+    renderFunction: prerender,
+    diagnostics: true,
+  });
+  await expect(promise).rejects.toEqual(
+    new InvariantError(`Exceeded maximum rerender count of 50.
+This either means you have very deep \`useQuery\` waterfalls in your application
+and need to increase the \`maxRerender\` option to \`prerenderStatic\`, or that
+you have an infinite render loop in your application.`)
+  );
+});
+
 test.todo("`ignoreResults` will result in an empty string to be returned");
 
 it.skip("type tests", async () => {

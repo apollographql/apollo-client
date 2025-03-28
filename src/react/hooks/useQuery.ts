@@ -254,7 +254,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   // This Object.assign is safe because otherOptions is a fresh ...rest object
   // that did not exist until just now, so modifications are still allowed.
-  const watchQueryOptions = Object.assign(otherOptions, { query });
+  const watchQueryOptions = mergeOptions(
+    client.defaultOptions.watchQuery,
+    Object.assign(otherOptions, { query })
+  );
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
@@ -271,15 +274,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
-    const opts = mergeOptions(
-      client.defaultOptions.watchQuery,
-      watchQueryOptions
-    );
-
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: client.watchQuery(opts),
+      observable: client.watchQuery(watchQueryOptions),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.

@@ -38,11 +38,7 @@ import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
-import {
-  compact,
-  maybeDeepFreeze,
-  mergeOptions,
-} from "@apollo/client/utilities";
+import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
@@ -275,9 +271,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: client.watchQuery(
-        getObsQueryOptions(void 0, client, watchQueryOptions)
-      ),
+      observable: client.watchQuery(watchQueryOptions),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
@@ -313,10 +307,10 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ...otherOptions } = options;
 
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
-    ...otherOptions,
-    query,
-  };
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
+    client.defaultOptions.watchQuery,
+    { ...otherOptions, query }
+  );
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
@@ -341,7 +335,6 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render
     observable, // might get mutated during render
-    client,
     watchQueryOptions
   );
 
@@ -459,7 +452,6 @@ function useResubscribeIfNecessary<
   resultData: InternalResult<TData, TVariables>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  client: ApolloClient,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
   if (
@@ -474,9 +466,7 @@ function useResubscribeIfNecessary<
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    observable.reobserve(
-      getObsQueryOptions(observable, client, watchQueryOptions)
-    );
+    observable.reobserve(watchQueryOptions);
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult
@@ -486,31 +476,6 @@ function useResubscribeIfNecessary<
     resultData.current = void 0;
   }
   observable[lastWatchOptions] = watchQueryOptions;
-}
-
-function getObsQueryOptions<TData, TVariables extends OperationVariables>(
-  observable: ObservableQuery<TData, TVariables> | undefined,
-  client: ApolloClient,
-  watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>
-): WatchQueryOptions<TVariables, TData> {
-  const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
-
-  const globalDefaults = client.defaultOptions.watchQuery;
-  if (globalDefaults) toMerge.push(globalDefaults);
-
-  // We use compact rather than mergeOptions for this part of the merge,
-  // because we want watchQueryOptions.variables (if defined) to replace
-  // this.observable.options.variables whole. This replacement allows
-  // removing variables by removing them from the variables input to
-  // useQuery. If the variables were always merged together (rather than
-  // replaced), there would be no way to remove existing variables.
-  // However, the variables from options.defaultOptions and globalDefaults
-  // (if provided) should be merged, to ensure individual defaulted
-  // variables always have values, if not otherwise defined in
-  // observable.options or watchQueryOptions.
-  toMerge.push(compact(observable && observable.options, watchQueryOptions));
-
-  return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
 }
 
 function setResult<TData, TVariables extends OperationVariables>(

@@ -249,13 +249,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  return useQueryInternals(query, options);
-}
-
-function useQueryInternals<TData, TVariables extends OperationVariables>(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-) {
   const client = useApolloClient(options.client);
   const { skip, ssr, ...otherOptions } = options;
 

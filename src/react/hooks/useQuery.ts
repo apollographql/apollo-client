@@ -190,8 +190,6 @@ interface InternalResult<TData> {
 }
 
 interface State<TData, TVariables extends OperationVariables> {
-  client: ReturnType<typeof useApolloClient>;
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
   resultData: InternalResult<TData>;
 }

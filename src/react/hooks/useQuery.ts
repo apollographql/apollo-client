@@ -466,6 +466,27 @@ function useResubscribeIfNecessary<
     observable[lastWatchOptions] &&
     !equal(observable[lastWatchOptions], watchQueryOptions)
   ) {
+    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
+
+    const globalDefaults = client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    // We use compact rather than mergeOptions for this part of the merge,
+    // because we want watchQueryOptions.variables (if defined) to replace
+    // this.observable.options.variables whole. This replacement allows
+    // removing variables by removing them from the variables input to
+    // useQuery. If the variables were always merged together (rather than
+    // replaced), there would be no way to remove existing variables.
+    // However, the variables from options.defaultOptions and globalDefaults
+    // (if provided) should be merged, to ensure individual defaulted
+    // variables always have values, if not otherwise defined in
+    // observable.options or watchQueryOptions.
+    toMerge.push(compact(observable.options, watchQueryOptions));
+
+    const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
+      TVariables,
+      TData
+    >;
     // Though it might be tempting to postpone this reobserve call to the
     // useEffect block, we need getCurrentResult to return an appropriate
     // loading:true result synchronously (later within the same call to
@@ -474,9 +495,7 @@ function useResubscribeIfNecessary<
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    observable.reobserve(
-      getObsQueryOptions(observable, client, watchQueryOptions)
-    );
+    observable.reobserve(opts);
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult

@@ -261,7 +261,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
     const observable = client.watchQuery(watchQueryOptions);
 
-    const internalState = {
+    return {
       client,
       query,
       observable,
@@ -272,8 +272,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
         previousData: previous?.resultData.current.data,
       },
     };
-
-    return internalState;
   }
 
   let [internalState, updateInternalState] =

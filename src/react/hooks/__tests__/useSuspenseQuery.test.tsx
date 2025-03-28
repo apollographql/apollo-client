@@ -475,64 +475,25 @@ describe("useSuspenseQuery", () => {
   it("suspends a query and returns results", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    function Component() {
-      useTrackRenders();
-      replaceSnapshot(useSuspenseQuery(query));
-
-      return null;
-    }
-
-    function SuspenseFallback() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function Error() {
-      useTrackRenders();
-
-      return null;
-    }
-
-    function App() {
-      return (
-        <Suspense fallback={<SuspenseFallback />}>
-          <ErrorBoundary FallbackComponent={Error}>
-            <Component />
-          </ErrorBoundary>
-        </Suspense>
-      );
-    }
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new MockLink(mocks),
-    });
-
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, render } =
-      createRenderStream<
-        useSuspenseQuery.Result<SimpleQueryData, OperationVariables>
-      >();
-
-    await render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeRender } = await renderSuspenseHook(
+      () => useSuspenseQuery(query),
+      { mocks }
+    );
 
     {
       // ensure the hook suspends immediately
       const { renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
     }
 
     {
       const { snapshot, renderedComponents } = await takeRender();
 
-      expect(renderedComponents).toStrictEqual([Component]);
-      expect(snapshot).toEqualStrictTyped({
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
         data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,

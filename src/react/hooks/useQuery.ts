@@ -401,49 +401,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   }, [result, client, observable, previousData, obsQueryFields]);
 }
 
-function useInternalState<TData, TVariables extends OperationVariables>(
-  client: ApolloClient,
-  query: DocumentNode | TypedDocumentNode<any, any>,
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>
-) {
-  function createInternalState(previous?: InternalState<TData, TVariables>) {
-    verifyDocumentType(query, DocumentType.Query);
-
-    const observable = client.watchQuery(watchQueryOptions);
-
-    const internalState: InternalState<TData, TVariables> = {
-      client,
-      query,
-      observable,
-      resultData: {
-        current: observable.getCurrentResult(),
-        // Reuse previousData from previous InternalState (if any) to provide
-        // continuity of previousData even if/when the query or client changes.
-        previousData: previous?.resultData.current.data,
-      },
-    };
-
-    return internalState as InternalState<TData, TVariables>;
-  }
-
-  let [internalState, updateInternalState] =
-    React.useState(createInternalState);
-
-  if (client !== internalState.client || query !== internalState.query) {
-    // If the client or query have changed, we need to create a new InternalState.
-    // This will trigger a re-render with the new state, but it will also continue
-    // to run the current render function to completion.
-    // Since we sometimes trigger some side-effects in the render function, we
-    // re-assign `state` to the new state to ensure that those side-effects are
-    // triggered with the new state.
-    const newInternalState = createInternalState(internalState);
-    updateInternalState(newInternalState);
-    return newInternalState;
-  }
-
-  return internalState;
-}
-
 // this hook is not compatible with any rules of React, and there's no good way to rewrite it.
 // it should stay a separate hook that will not be optimized by the compiler
 function useResubscribeIfNecessary<

@@ -416,7 +416,6 @@ function useObservableSubscriptionResult<
             }
 
             const nextResult = result;
-            const previousResult = resultData.current;
             if (previousResult && previousResult.data) {
               resultData.previousData = previousResult.data;
             }

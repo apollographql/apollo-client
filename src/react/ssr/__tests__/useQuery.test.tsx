@@ -524,7 +524,7 @@ describe("useQuery Hook SSR", () => {
           </>
         );
       }
-      const view = await prerenderStatic({
+      const { result } = await prerenderStatic({
         tree: (
           <ApolloProvider client={client}>
             <App />
@@ -532,9 +532,9 @@ describe("useQuery Hook SSR", () => {
         ),
         renderFunction,
       });
-      expect(view).toMatch(/world/);
-      expect(view).toMatch(/Apollo/);
-      expect(view).toMatch(/2025-03-26T14:40:53.118Z/);
+      expect(result).toMatch(/world/);
+      expect(result).toMatch(/Apollo/);
+      expect(result).toMatch(/2025-03-26T14:40:53.118Z/);
     }
   );
 });

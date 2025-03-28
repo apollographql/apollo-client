@@ -277,7 +277,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
       client,
       query,
       observable: client.watchQuery(
-        getObsQueryOptions(void 0, client, watchQueryOptions)
+        getObsQueryOptions(client, watchQueryOptions)
       ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
@@ -473,7 +473,6 @@ function useObservableSubscriptionResult<
 }
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(
-  observable: ObservableQuery<TData, TVariables> | undefined,
   client: ApolloClient,
   watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>
 ): WatchQueryOptions<TVariables, TData> {
@@ -492,7 +491,7 @@ function getObsQueryOptions<TData, TVariables extends OperationVariables>(
   // (if provided) should be merged, to ensure individual defaulted
   // variables always have values, if not otherwise defined in
   // observable.options or watchQueryOptions.
-  toMerge.push(compact(observable && observable.options, watchQueryOptions));
+  toMerge.push(watchQueryOptions);
 
   return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
 }

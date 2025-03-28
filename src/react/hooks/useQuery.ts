@@ -325,8 +325,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   const ssrDisabledOverride = useSyncExternalStore(
     () => () => {},
-    () => false,
-    () => options.ssr === false
+    () => undefined,
+    () => (options.ssr === false ? useQuery.ssrDisabledResult : undefined)
   );
 
   const resultOverride =
@@ -342,8 +342,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       // changing this is breaking, so we'll have to wait until Apollo Client 4.0
       // to address this.
       useQuery.skipStandbyResult
-    : ssrDisabledOverride ? useQuery.ssrDisabledResult
-    : void 0;
+    : ssrDisabledOverride;
 
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or

@@ -261,11 +261,29 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   );
 }
 
-function useInternalState<TData, TVariables extends OperationVariables>(
-  client: ApolloClient,
-  query: DocumentNode | TypedDocumentNode<any, any>,
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>
+function useQueryInternals<TData, TVariables extends OperationVariables>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
+  const client = useApolloClient(options.client);
+  const { skip, ssr, ...otherOptions } = options;
+
+  // This Object.assign is safe because otherOptions is a fresh ...rest object
+  // that did not exist until just now, so modifications are still allowed.
+  const watchQueryOptions = Object.assign(otherOptions, { query });
+
+  if (skip) {
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    watchQueryOptions.initialFetchPolicy =
+      watchQueryOptions.initialFetchPolicy ||
+      watchQueryOptions.fetchPolicy ||
+      client.defaultOptions?.watchQuery?.fetchPolicy ||
+      "cache-first";
+    watchQueryOptions.fetchPolicy = "standby";
+  }
+
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
@@ -300,40 +318,10 @@ function useInternalState<TData, TVariables extends OperationVariables>(
     // triggered with the new state.
     const newInternalState = createInternalState(internalState);
     updateInternalState(newInternalState);
-    return newInternalState;
+    internalState = newInternalState;
   }
 
-  return internalState;
-}
-
-function useQueryInternals<TData, TVariables extends OperationVariables>(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-) {
-  const client = useApolloClient(options.client);
-  const { skip, ssr, ...otherOptions } = options;
-
-  // This Object.assign is safe because otherOptions is a fresh ...rest object
-  // that did not exist until just now, so modifications are still allowed.
-  const watchQueryOptions = Object.assign(otherOptions, { query });
-
-  if (skip) {
-    // When skipping, we set watchQueryOptions.fetchPolicy initially to
-    // "standby", but we also need/want to preserve the initial non-standby
-    // fetchPolicy that would have been used if not skipping.
-    watchQueryOptions.initialFetchPolicy =
-      watchQueryOptions.initialFetchPolicy ||
-      watchQueryOptions.fetchPolicy ||
-      client.defaultOptions?.watchQuery?.fetchPolicy ||
-      "cache-first";
-    watchQueryOptions.fetchPolicy = "standby";
-  }
-
-  const { observable, resultData } = useInternalState(
-    client,
-    query,
-    watchQueryOptions
-  );
+  const { observable, resultData } = internalState;
 
   if (!watchQueryOptions.fetchPolicy) {
     watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;

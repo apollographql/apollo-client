@@ -407,6 +407,11 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     () => resultOverride || resultData.current!
   );
 
+  const obsQueryFields = React.useMemo(
+    () => bindObservableMethods(observable),
+    [observable]
+  );
+
   const previousData = resultData.previousData;
   const internalResult = React.useMemo(() => {
     const { data, partial, ...resultWithoutPartial } = result;
@@ -420,11 +425,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       previousData,
     };
   }, [result, previousData, observable, client]);
-
-  const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(observable),
-    [observable]
-  );
 
   return React.useMemo(
     () => ({ ...internalResult, ...obsQueryFields }),

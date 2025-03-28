@@ -292,6 +292,8 @@ test.each([
     const { Outlet, query1, query2 } = testSetup();
     type DataFor<T> = T extends TypedDocumentNode<infer D, any> ? D : never;
 
+    const onError = jest.fn();
+
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
@@ -305,7 +307,10 @@ test.each([
       tree: <Outlet />,
       context: { client },
       renderFunction: (tree) =>
-        renderFunction(tree, { signal: controller.signal }),
+        renderFunction(tree, {
+          signal: controller.signal,
+          onError,
+        }),
       signal: controller.signal,
     });
 
@@ -337,6 +342,107 @@ test.each([
     controller.abort("AbortReason");
 
     await expect(promise).rejects.toEqual("AbortReason");
+    expect(onError).toHaveBeenLastCalledWith("AbortReason", expect.anything());
+  }
+);
+
+test.each([
+  ["renderToString", renderToString],
+  ["renderToStaticMarkup", renderToStaticMarkup],
+])(
+  "%s: AbortSignal times out during render - stops rerendering, returns partial result",
+  async (_, renderFunction) => {
+    const { Outlet, query1, query2, query3 } = testSetup();
+    type DataFor<T> = T extends TypedDocumentNode<infer D, any> ? D : never;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const controller = new AbortController();
+
+    function Component() {
+      const { data, loading } = useQuery(query1);
+      if (loading) return <div>loading...</div>;
+      return (
+        <div>
+          <p>Hello {data?.hello}!</p>
+          <Parent />
+        </div>
+      );
+    }
+
+    function Parent() {
+      const { data, loading } = useQuery(query2);
+      if (loading) return <div>loading...</div>;
+
+      return (
+        <>
+          <p>My name is {data?.whoami.name}!</p>
+          <Child />
+        </>
+      );
+    }
+    function Child() {
+      const { data, loading } = useQuery(query3);
+      if (loading) return <div>loading...</div>;
+
+      return (
+        <>
+          <p>Current time is {data?.currentTime}!</p>
+        </>
+      );
+    }
+
+    const promise = prerenderStatic({
+      tree: <Component />,
+      context: { client },
+      renderFunction,
+      signal: controller.signal,
+      diagnostics: true,
+    });
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            hello: "world",
+          } satisfies DataFor<typeof query1>,
+        },
+      },
+      true
+    );
+
+    await wait(10);
+
+    link.simulateResult(
+      {
+        result: {
+          data: {
+            whoami: { name: "Apollo" },
+          } satisfies DataFor<typeof query2>,
+        },
+      },
+      true
+    );
+
+    await wait(10);
+
+    controller.abort("AbortReason");
+    // the network request here never "resolves"
+    // (no call to `simulateResult` for the third query), yet the `abort` call
+    // should finish up the prerendering
+
+    const { result, aborted, diagnostics } = await promise;
+    expect(result).toMatchSnapshot();
+    expect(result).toMatch(/world/);
+    expect(result).toMatch(/Apollo/);
+    expect(result).toMatch(/loading.../);
+    expect(aborted).toBe(true);
+    expect(diagnostics?.renderCount).toBe(3);
   }
 );
 

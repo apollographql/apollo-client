@@ -256,7 +256,8 @@ you have an infinite render loop in your application.`,
     if (signal?.aborted) {
       return { result, aborted: true };
     }
-    await Promise.all(
+
+    const dataPromise = Promise.all(
       Array.from(recentlyCreatedObservableQueries).map(async (observable) => {
         await firstValueFrom(
           observable.pipe(filter((result) => result.loading === false))
@@ -265,6 +266,14 @@ you have an infinite render loop in your application.`,
         recentlyCreatedObservableQueries.delete(observable);
       })
     );
+
+    let resolveAbortPromise!: () => void;
+    const abortPromise = new Promise<void>((resolve) => {
+      resolveAbortPromise = resolve;
+    });
+    signal?.addEventListener("abort", resolveAbortPromise);
+    await Promise.race([abortPromise, dataPromise]);
+    signal?.removeEventListener("abort", resolveAbortPromise);
 
     if (signal?.aborted) {
       return { result, aborted: true };

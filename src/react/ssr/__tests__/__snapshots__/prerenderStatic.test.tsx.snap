@@ -29,3 +29,7 @@ Object {
   },
 }
 `;
+
+exports[`renderToStaticMarkup: AbortSignal times out during render - stops rerendering, returns partial result 1`] = `"<div><p>Hello world!</p><p>My name is Apollo!</p><div>loading...</div></div>"`;
+
+exports[`renderToString: AbortSignal times out during render - stops rerendering, returns partial result 1`] = `"<div><p>Hello <!-- -->world<!-- -->!</p><p>My name is <!-- -->Apollo<!-- -->!</p><div>loading...</div></div>"`;

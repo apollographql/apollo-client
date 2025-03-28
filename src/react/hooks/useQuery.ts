@@ -268,17 +268,10 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
-    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
-
-    const globalDefaults = client.defaultOptions.watchQuery;
-    if (globalDefaults) toMerge.push(globalDefaults);
-
-    toMerge.push(watchQueryOptions);
-
-    const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
-      TVariables,
-      TData
-    >;
+    const opts = mergeOptions(
+      client.defaultOptions.watchQuery,
+      watchQueryOptions
+    );
 
     const internalState: InternalState<TData, TVariables> = {
       client,

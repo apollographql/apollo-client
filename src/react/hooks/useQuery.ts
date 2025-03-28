@@ -413,7 +413,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   );
 
   const previousData = resultData.previousData;
-  const internalResult = React.useMemo(() => {
+  return React.useMemo(() => {
     const { data, partial, ...resultWithoutPartial } = result;
 
     return {
@@ -423,13 +423,9 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       observable,
       variables: observable.variables,
       previousData,
+      ...obsQueryFields,
     };
-  }, [result, previousData, observable, client]);
-
-  return React.useMemo(
-    () => ({ ...internalResult, ...obsQueryFields }),
-    [internalResult, obsQueryFields]
-  );
+  }, [result, previousData, observable, client, obsQueryFields]);
 }
 
 useQuery.ssrDisabledResult = maybeDeepFreeze({

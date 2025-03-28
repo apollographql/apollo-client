@@ -500,9 +500,7 @@ function createMakeWatchQueryOptions<
     ...otherOptions
   }: useQuery.Options<TData, TVariables> = {}
 ) {
-  return (
-    initialFetchPolicy?: WatchQueryFetchPolicy
-  ): WatchQueryOptions<TVariables, TData> => {
+  return (): WatchQueryOptions<TVariables, TData> => {
     // This Object.assign is safe because otherOptions is a fresh ...rest object
     // that did not exist until just now, so modifications are still allowed.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
@@ -522,8 +520,6 @@ function createMakeWatchQueryOptions<
         client.defaultOptions?.watchQuery?.fetchPolicy ||
         "cache-first";
       watchQueryOptions.fetchPolicy = "standby";
-    } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy = initialFetchPolicy;
     }
 
     return watchQueryOptions;

@@ -6,10 +6,10 @@
 
 import type { GraphQLResponse } from 'relay-runtime';
 import { Observable } from 'relay-runtime';
+import type { OperationVariables } from '@apollo/client/core';
 import type { RequestParameters } from 'relay-runtime';
 
 // Warning: (ae-forgotten-export) The symbol "CreateMultipartSubscriptionOptions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 export function createFetchMultipartSubscription(uri: string, { fetch: preferredFetch, headers }?: CreateMultipartSubscriptionOptions): (operation: RequestParameters, variables: OperationVariables) => Observable<GraphQLResponse>;
@@ -19,9 +19,6 @@ type CreateMultipartSubscriptionOptions = {
     fetch?: WindowOrWorkerGlobalScope["fetch"];
     headers?: Record<string, string>;
 };
-
-// @public (undocumented)
-type OperationVariables = Record<string, any>;
 
 // (No @packageDocumentation comment for this package)
 

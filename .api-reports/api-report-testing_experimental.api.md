@@ -4,9 +4,8 @@
 
 ```ts
 
-import type { FieldNode } from 'graphql';
-import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLSchema } from 'graphql';
+import type { Resolvers } from '@apollo/client/core';
 
 // @alpha @deprecated
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
@@ -27,30 +26,10 @@ export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
 // @alpha @deprecated
 export const createTestSchema: (schemaWithTypeDefs: GraphQLSchema, options: TestSchemaOptions) => ProxiedSchema;
 
-// @public
-interface FragmentMap {
-    // (undocumented)
-    [fragmentName: string]: FragmentDefinitionNode;
-}
-
 // Warning: (ae-forgotten-export) The symbol "TestSchemaFns" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 type ProxiedSchema = GraphQLSchema & TestSchemaFns;
-
-// @public (undocumented)
-type Resolver = (rootValue?: any, args?: any, context?: any, info?: {
-    field: FieldNode;
-    fragmentMap: FragmentMap;
-}) => any;
-
-// @public (undocumented)
-interface Resolvers {
-    // (undocumented)
-    [key: string]: {
-        [field: string]: Resolver;
-    };
-}
 
 // @public (undocumented)
 interface TestSchemaFns {
@@ -75,12 +54,6 @@ interface TestSchemaOptions {
         [key: string]: any;
     };
 }
-
-// Warnings were encountered during analysis:
-//
-// src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:233:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/testing/experimental/createTestSchema.ts:12:23 - (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

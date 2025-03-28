@@ -359,48 +359,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     resultData.current = observable.getCurrentResult();
   }
 
-  const result = useObservableSubscriptionResult<TData, TVariables>(
-    resultData,
-    observable,
-    resultOverride
-  );
-
-  const previousData = resultData.previousData;
-  const internalResult = React.useMemo<
-    InternalQueryResult<TData, TVariables>
-  >(() => {
-    const { data, partial, ...resultWithoutPartial } = result;
-
-    return {
-      data, // Ensure always defined, even if result.data is missing.
-      ...resultWithoutPartial,
-      client,
-      observable,
-      variables: observable.variables,
-      previousData,
-    };
-  }, [result, previousData, observable, client]);
-
-  const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(internalResult.observable),
-    [internalResult.observable]
-  );
-
-  return React.useMemo(
-    () => ({ ...internalResult, ...obsQueryFields }),
-    [internalResult, obsQueryFields]
-  );
-}
-
-function useObservableSubscriptionResult<
-  TData,
-  TVariables extends OperationVariables,
->(
-  resultData: InternalResult<TData>,
-  observable: ObservableQuery<TData, TVariables>,
-  currentResultOverride: ApolloQueryResult<TData> | undefined
-) {
-  return useSyncExternalStore(
+  const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
         const subscription = observable
@@ -446,8 +405,34 @@ function useObservableSubscriptionResult<
 
       [observable, resultData]
     ),
-    () => currentResultOverride || resultData.current!,
-    () => currentResultOverride || resultData.current!
+    () => resultOverride || resultData.current!,
+    () => resultOverride || resultData.current!
+  );
+
+  const previousData = resultData.previousData;
+  const internalResult = React.useMemo<
+    InternalQueryResult<TData, TVariables>
+  >(() => {
+    const { data, partial, ...resultWithoutPartial } = result;
+
+    return {
+      data, // Ensure always defined, even if result.data is missing.
+      ...resultWithoutPartial,
+      client,
+      observable,
+      variables: observable.variables,
+      previousData,
+    };
+  }, [result, previousData, observable, client]);
+
+  const obsQueryFields = React.useMemo(
+    () => bindObservableMethods(internalResult.observable),
+    [internalResult.observable]
+  );
+
+  return React.useMemo(
+    () => ({ ...internalResult, ...obsQueryFields }),
+    [internalResult, obsQueryFields]
   );
 }
 

@@ -385,6 +385,13 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     : ssrDisabledOverride ? useQuery.ssrDisabledResult
     : void 0;
 
+  // Using this.result as a cache ensures getCurrentResult continues returning
+  // the same (===) result object, unless state.setResult has been called, or
+  // we're doing server rendering and therefore override the result below.
+  if (!resultData.current) {
+    setResult(observable.getCurrentResult(), resultData, () => {});
+  }
+
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
     observable,
@@ -406,13 +413,6 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   currentResultOverride: ApolloQueryResult<TData> | undefined
 ) {
-  // Using this.result as a cache ensures getCurrentResult continues returning
-  // the same (===) result object, unless state.setResult has been called, or
-  // we're doing server rendering and therefore override the result below.
-  if (!resultData.current) {
-    setResult(observable.getCurrentResult(), resultData, () => {});
-  }
-
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {

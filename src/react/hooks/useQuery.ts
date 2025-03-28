@@ -353,8 +353,8 @@ function useObservableSubscriptionResult<
 ) {
   const ssrDisabledOverride = useSyncExternalStore(
     () => () => {},
-    () => false,
-    () => options.ssr === false
+    () => void 0,
+    () => (options.ssr === false ? useQuery.ssrDisabledResult : void 0)
   );
 
   const resultOverride =
@@ -370,8 +370,7 @@ function useObservableSubscriptionResult<
       // changing this is breaking, so we'll have to wait until Apollo Client 4.0
       // to address this.
       useQuery.skipStandbyResult
-    : ssrDisabledOverride ? useQuery.ssrDisabledResult
-    : void 0;
+    : ssrDisabledOverride;
 
   const previousData = resultData.previousData;
   const currentResultOverride = React.useMemo(

@@ -173,7 +173,7 @@ interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
 interface InternalResult<TData, TVariables extends OperationVariables> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  current?: undefined | ApolloQueryResult<TData>;
+  current: ApolloQueryResult<TData>;
   previousData?: undefined | MaybeMasked<TData>;
 }
 

@@ -474,11 +474,6 @@ function useResubscribeIfNecessary<
   observable[lastWatchOptions] = watchQueryOptions;
 }
 
-/*
- * A function to massage options before passing them to ObservableQuery.
- * This is two-step curried because we want to reuse the `make` function,
- * but the `observable` might differ between calls to `make`.
- */
 function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

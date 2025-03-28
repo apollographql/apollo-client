@@ -312,19 +312,17 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     resultOverride
   );
 
-  const queryResult = React.useMemo(
-    () => toQueryResult(result, previousData, observable, client),
-    [client, observable, result, previousData]
-  );
-
   const obsQueryFields = React.useMemo(
     () => bindObservableMethods(observable),
     [observable]
   );
 
   return React.useMemo(
-    () => ({ ...queryResult, ...obsQueryFields }),
-    [queryResult, obsQueryFields]
+    () => ({
+      ...toQueryResult(result, previousData, observable, client),
+      ...obsQueryFields,
+    }),
+    [result, client, observable, previousData, obsQueryFields]
   );
 }
 

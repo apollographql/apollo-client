@@ -48,6 +48,7 @@ export async function getMarkupFromTree({
     tree,
     context,
     renderFunction,
+    maxRerenders: Number.POSITIVE_INFINITY,
   });
   return result;
 }

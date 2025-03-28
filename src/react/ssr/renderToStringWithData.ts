@@ -13,6 +13,7 @@ export async function renderToStringWithData(
   const { result } = await prerenderStatic({
     tree: component,
     renderFunction: (await import("react-dom/server")).renderToString,
+    maxRerenders: Number.POSITIVE_INFINITY,
   });
   return result;
 }

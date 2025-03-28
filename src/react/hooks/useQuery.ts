@@ -415,13 +415,12 @@ function useObservableSubscriptionResult<
               return;
             }
 
-            const nextResult = result;
             if (previousResult && previousResult.data) {
               resultData.previousData = previousResult.data;
             }
 
             resultData.current = toQueryResult(
-              nextResult,
+              result,
               resultData.previousData,
               observable,
               client

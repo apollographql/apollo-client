@@ -267,7 +267,9 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions.fetchPolicy = "standby";
   }
 
-  function createState(previous?: State<TData, TVariables>) {
+  function createState(
+    previous?: State<TData, TVariables>
+  ): State<TData, TVariables> {
     verifyDocumentType(query, DocumentType.Query);
 
     return {
@@ -277,7 +279,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
         // continuity of previousData even if/when the query or client changes.
         previousData: previous?.resultData.current?.data,
       },
-    } as State<TData, TVariables>;
+    };
   }
 
   let [state, setState] = React.useState(createState);

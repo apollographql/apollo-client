@@ -184,7 +184,7 @@ interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
 interface InternalResult<TData, TVariables extends OperationVariables> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  current?: undefined | InternalQueryResult<TData, TVariables>;
+  current?: undefined | ApolloQueryResult<TData>;
   previousData?: undefined | MaybeMasked<TData>;
 }
 
@@ -408,12 +408,7 @@ function useObservableSubscriptionResult<
               resultData.previousData = previousResult.data;
             }
 
-            resultData.current = toQueryResult(
-              result,
-              resultData.previousData,
-              observable,
-              client
-            );
+            resultData.current = result;
             handleStoreChange();
           });
 
@@ -426,7 +421,7 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [observable, resultData, client]
+      [observable, resultData]
     ),
     () => resultOverride || getCurrentResult(resultData, observable, client),
     () => resultOverride || getCurrentResult(resultData, observable, client)
@@ -475,18 +470,14 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient
-): InternalQueryResult<TData, TVariables> {
+) {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
   if (!resultData.current) {
-    resultData.current = toQueryResult(
-      observable.getCurrentResult(),
-      resultData.previousData,
-      observable,
-      client
-    );
+    resultData.current = observable.getCurrentResult();
   }
+
   return resultData.current;
 }
 

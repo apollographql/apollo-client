@@ -455,7 +455,7 @@ function useResubscribeIfNecessary<
     // usually does.
     resultData.previousData =
       resultData.current?.data || resultData.previousData;
-    resultData.current = void 0;
+    resultData.current = observable.getCurrentResult();
   }
   observable[lastWatchOptions] = watchQueryOptions;
 }

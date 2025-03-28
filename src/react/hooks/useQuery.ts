@@ -482,25 +482,6 @@ function useResubscribeIfNecessary<
   observable[lastWatchOptions] = watchQueryOptions;
 }
 
-function setResult<TData, TVariables extends OperationVariables>(
-  nextResult: ApolloQueryResult<MaybeMasked<TData>>,
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient
-) {
-  const previousResult = resultData.current;
-  if (previousResult && previousResult.data) {
-    resultData.previousData = previousResult.data;
-  }
-
-  resultData.current = toQueryResult(
-    nextResult,
-    resultData.previousData,
-    observable,
-    client
-  );
-}
-
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,

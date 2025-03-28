@@ -408,9 +408,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   );
 
   const previousData = resultData.previousData;
-  const internalResult = React.useMemo<
-    InternalQueryResult<TData, TVariables>
-  >(() => {
+  const internalResult = React.useMemo(() => {
     const { data, partial, ...resultWithoutPartial } = result;
 
     return {

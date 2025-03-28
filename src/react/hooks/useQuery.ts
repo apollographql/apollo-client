@@ -186,10 +186,10 @@ interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
 }
 
-interface InternalResult<TData, TVariables extends OperationVariables> {
+interface InternalResult<TData> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
-  current?: undefined | InternalQueryResult<TData, TVariables>;
+  current?: undefined | ApolloQueryResult<TData>;
   previousData?: undefined | MaybeMasked<TData>;
 }
 
@@ -197,7 +197,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
-  resultData: InternalResult<TData, TVariables>;
+  resultData: InternalResult<TData>;
 }
 
 /**
@@ -385,32 +385,26 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     : ssrDisabledOverride ? useQuery.ssrDisabledResult
     : void 0;
 
-  const previousData = resultData.previousData;
-  const currentResultOverride = React.useMemo(
-    () =>
-      resultOverride &&
-      toQueryResult(resultOverride, previousData, observable, client),
-    [client, observable, resultOverride, previousData]
-  );
-
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
     observable,
-    client,
-    currentResultOverride
+    resultOverride
   );
 
-  return result;
+  const previousData = resultData.previousData;
+  return React.useMemo(
+    () => toQueryResult(result, previousData, observable, client),
+    [result, previousData, observable, client]
+  );
 }
 
 function useObservableSubscriptionResult<
   TData,
   TVariables extends OperationVariables,
 >(
-  resultData: InternalResult<TData, TVariables>,
+  resultData: InternalResult<TData>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient,
-  currentResultOverride: InternalQueryResult<TData, TVariables> | undefined
+  currentResultOverride: ApolloQueryResult<TData> | undefined
 ) {
   return useSyncExternalStore(
     React.useCallback(
@@ -438,13 +432,7 @@ function useObservableSubscriptionResult<
               return;
             }
 
-            setResult(
-              result,
-              resultData,
-              observable,
-              client,
-              handleStoreChange
-            );
+            setResult(result, resultData, handleStoreChange);
           });
 
         // Do the "unsubscribe" with a short delay.
@@ -456,12 +444,10 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [observable, resultData, client]
+      [observable, resultData]
     ),
-    () =>
-      currentResultOverride || getCurrentResult(resultData, observable, client),
-    () =>
-      currentResultOverride || getCurrentResult(resultData, observable, client)
+    () => currentResultOverride || getCurrentResult(resultData, observable),
+    () => currentResultOverride || getCurrentResult(resultData, observable)
   );
 }
 
@@ -490,11 +476,9 @@ function getObsQueryOptions<TData, TVariables extends OperationVariables>(
   return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
 }
 
-function setResult<TData, TVariables extends OperationVariables>(
+function setResult<TData>(
   nextResult: ApolloQueryResult<MaybeMasked<TData>>,
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient,
+  resultData: InternalResult<TData>,
   forceUpdate: () => void
 ) {
   const previousResult = resultData.current;
@@ -502,33 +486,21 @@ function setResult<TData, TVariables extends OperationVariables>(
     resultData.previousData = previousResult.data;
   }
 
-  resultData.current = toQueryResult(
-    nextResult,
-    resultData.previousData,
-    observable,
-    client
-  );
+  resultData.current = nextResult;
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
 }
 
 function getCurrentResult<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient
-): InternalQueryResult<TData, TVariables> {
+  resultData: InternalResult<TData>,
+  observable: ObservableQuery<TData, TVariables>
+): ApolloQueryResult<TData> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
   if (!resultData.current) {
-    setResult(
-      observable.getCurrentResult(),
-      resultData,
-      observable,
-      client,
-      () => {}
-    );
+    setResult(observable.getCurrentResult(), resultData, () => {});
   }
   return resultData.current!;
 }

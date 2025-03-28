@@ -41,6 +41,8 @@ beforeEach(() => {
   // This avoids that.
   resetApolloContext();
 });
+// @ts-ignore
+global.setImmediate ||= (fn) => setTimeout(fn, 0);
 
 function testSetup() {
   const query1: TypedDocumentNode<{ hello: string }> = gql`

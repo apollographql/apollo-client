@@ -307,8 +307,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     resultData,
     observable,
     client,
-    options,
-    watchQueryOptions,
     resultOverride
   );
 
@@ -370,8 +368,6 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   resultOverride: ApolloQueryResult<any> | undefined
 ) {
   const previousData = resultData.previousData;

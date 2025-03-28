@@ -347,12 +347,19 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const result = useObservableSubscriptionResult<TData, TVariables>(
+  const resultOverride = useResultOverride(
     resultData,
     observable,
     client,
     { skip, ssr },
     watchQueryOptions.fetchPolicy
+  );
+
+  const result = useObservableSubscriptionResult<TData, TVariables>(
+    resultData,
+    observable,
+    client,
+    resultOverride
   );
 
   return result;
@@ -408,20 +415,8 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
-  options: Pick<
-    useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-    "ssr" | "skip"
-  >,
-  fetchPolicy: WatchQueryFetchPolicy | undefined
+  currentResultOverride: InternalQueryResult<TData, TVariables> | undefined
 ) {
-  const currentResultOverride = useResultOverride(
-    resultData,
-    observable,
-    client,
-    options,
-    fetchPolicy
-  );
-
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {

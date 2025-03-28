@@ -403,7 +403,14 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   );
 
   const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(observable),
+    () => ({
+      refetch: observable.refetch.bind(observable),
+      fetchMore: observable.fetchMore.bind(observable),
+      updateQuery: observable.updateQuery.bind(observable),
+      startPolling: observable.startPolling.bind(observable),
+      stopPolling: observable.stopPolling.bind(observable),
+      subscribeToMore: observable.subscribeToMore.bind(observable),
+    }),
     [observable]
   );
 
@@ -438,16 +445,3 @@ useQuery.skipStandbyResult = maybeDeepFreeze({
   networkStatus: NetworkStatus.ready,
   partial: true,
 });
-
-function bindObservableMethods<TData, TVariables extends OperationVariables>(
-  observable: ObservableQuery<TData, TVariables>
-) {
-  return {
-    refetch: observable.refetch.bind(observable),
-    fetchMore: observable.fetchMore.bind(observable),
-    updateQuery: observable.updateQuery.bind(observable),
-    startPolling: observable.startPolling.bind(observable),
-    stopPolling: observable.stopPolling.bind(observable),
-    subscribeToMore: observable.subscribeToMore.bind(observable),
-  };
-}

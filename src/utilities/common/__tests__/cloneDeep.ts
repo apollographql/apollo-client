@@ -1,6 +1,10 @@
 import { cloneDeep } from "../cloneDeep.js";
+import { cloneDeep as rnCloneDeep } from "../cloneDeep.react-native.js";
 
-describe("cloneDeep", () => {
+describe.each([
+  ["cloneDeep", cloneDeep],
+  ["cloneDeep (React Native)", rnCloneDeep],
+])("%s", (_, cloneDeep) => {
   it("will clone primitive values", () => {
     expect(cloneDeep(undefined)).toEqual(undefined);
     expect(cloneDeep(null)).toEqual(null);

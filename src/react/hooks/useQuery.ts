@@ -315,7 +315,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     resultData,
     observable,
     client,
-    currentResultOverride
+    resultOverride
   );
 
   const obsQueryFields = React.useMemo(
@@ -376,7 +376,7 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
-  resultOverride: InternalQueryResult<TData, TVariables> | undefined
+  resultOverride: ApolloQueryResult<TData> | undefined
 ) {
   const result = useSyncExternalStore(
     React.useCallback(

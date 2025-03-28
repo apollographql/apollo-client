@@ -352,9 +352,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    observable.reobserve(
-      getObsQueryOptions(observable, client, watchQueryOptions)
-    );
+    observable.reobserve(watchQueryOptions);
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult

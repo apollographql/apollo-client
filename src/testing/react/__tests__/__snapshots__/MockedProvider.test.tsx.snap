@@ -53,7 +53,7 @@ exports[`General use should error if the variables in the mock and component do 
     __typename
   }
 }
-Expected variables: {"username":"other_user","age":<undefined>}
+Expected variables: {"username":"other_user"}
 
 Failed to match 1 mock for this query. The mocked response had the following variables:
   {"username":"mock_username"}

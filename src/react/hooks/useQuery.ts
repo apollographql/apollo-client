@@ -39,11 +39,7 @@ import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
-import {
-  compact,
-  maybeDeepFreeze,
-  mergeOptions,
-} from "@apollo/client/utilities";
+import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
@@ -273,12 +269,32 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
+    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
+
+    const globalDefaults = client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    // We use compact rather than mergeOptions for this part of the merge,
+    // because we want watchQueryOptions.variables (if defined) to replace
+    // this.observable.options.variables whole. This replacement allows
+    // removing variables by removing them from the variables input to
+    // useQuery. If the variables were always merged together (rather than
+    // replaced), there would be no way to remove existing variables.
+    // However, the variables from options.defaultOptions and globalDefaults
+    // (if provided) should be merged, to ensure individual defaulted
+    // variables always have values, if not otherwise defined in
+    // observable.options or watchQueryOptions.
+    toMerge.push(watchQueryOptions);
+
+    const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
+      TVariables,
+      TData
+    >;
+
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: client.watchQuery(
-        getObsQueryOptions(client, watchQueryOptions)
-      ),
+      observable: client.watchQuery(opts),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
@@ -470,30 +486,6 @@ function useObservableSubscriptionResult<
     () => currentResultOverride || resultData.current!,
     () => currentResultOverride || resultData.current!
   );
-}
-
-function getObsQueryOptions<TData, TVariables extends OperationVariables>(
-  client: ApolloClient,
-  watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>
-): WatchQueryOptions<TVariables, TData> {
-  const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
-
-  const globalDefaults = client.defaultOptions.watchQuery;
-  if (globalDefaults) toMerge.push(globalDefaults);
-
-  // We use compact rather than mergeOptions for this part of the merge,
-  // because we want watchQueryOptions.variables (if defined) to replace
-  // this.observable.options.variables whole. This replacement allows
-  // removing variables by removing them from the variables input to
-  // useQuery. If the variables were always merged together (rather than
-  // replaced), there would be no way to remove existing variables.
-  // However, the variables from options.defaultOptions and globalDefaults
-  // (if provided) should be merged, to ensure individual defaulted
-  // variables always have values, if not otherwise defined in
-  // observable.options or watchQueryOptions.
-  toMerge.push(watchQueryOptions);
-
-  return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
 }
 
 useQuery.ssrDisabledResult = maybeDeepFreeze({

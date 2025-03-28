@@ -424,8 +424,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   }, [result, previousData, observable, client]);
 
   const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(internalResult.observable),
-    [internalResult.observable]
+    () => bindObservableMethods(observable),
+    [observable]
   );
 
   return React.useMemo(

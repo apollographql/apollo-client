@@ -63,7 +63,10 @@ import {
   renderAsync,
   renderHookAsync,
   setupPaginatedCase,
+  setupVariablesCase,
   spyOnConsole,
+  VariablesCaseData,
+  VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
 import { useSuspenseQuery } from "../useSuspenseQuery.js";
 
@@ -254,43 +257,6 @@ function useErrorCase<TData extends ErrorCaseData>({
   });
 
   return { query, mocks: [mock] };
-}
-
-interface VariablesCaseData {
-  character: {
-    id: string;
-    name: string;
-  };
-}
-
-interface VariablesCaseVariables {
-  id: string;
-}
-
-function useVariablesQueryCase() {
-  const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
-
-  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
-    gql`
-      query CharacterQuery($id: ID!) {
-        character(id: $id) {
-          id
-          name
-        }
-      }
-    `;
-
-  const mocks = CHARACTERS.map((name, index) => ({
-    request: { query, variables: { id: String(index + 1) } },
-    result: {
-      data: {
-        character: { __typename: "Character", id: String(index + 1), name },
-      },
-    },
-    delay: 20,
-  }));
-
-  return { query, mocks };
 }
 
 type CharacterFragment = {
@@ -485,7 +451,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("suspends a query with variables and returns results", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { variables: { id: "1" } }),
@@ -511,7 +477,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("returns the same results for the same variables", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const { result, rerenderAsync, renders } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
@@ -547,7 +513,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("ensures result is referentially stable", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const { result, rerenderAsync } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
@@ -640,7 +606,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("tears down all queries when rendering with multiple variable sets", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
       link: new MockLink(mocks),
@@ -679,7 +645,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("tears down all queries when multiple clients are used", async () => {
-    const { query } = useVariablesQueryCase();
+    const { query } = setupVariablesCase();
 
     const client1 = new ApolloClient({
       link: new MockLink([
@@ -1056,7 +1022,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("suspends when changing variables", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const { result, rerenderAsync, renders } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
@@ -1506,7 +1472,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("responds to cache updates after changing variables", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -1540,7 +1506,9 @@ describe("useSuspenseQuery", () => {
       client.writeQuery({
         query,
         variables: { id: "2" },
-        data: { character: { id: "2", name: "Cached hero" } },
+        data: {
+          character: { __typename: "Character", id: "2", name: "Cached hero" },
+        },
       });
     });
 
@@ -1574,7 +1542,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses cached result and does not suspend when switching back to already used variables while using `cache-first` fetch policy", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const { result, rerenderAsync, renders } = await renderSuspenseHook(
       ({ id }) =>
@@ -1965,7 +1933,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("responds to cache updates after changing back to already fetched variables", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -2009,7 +1977,9 @@ describe("useSuspenseQuery", () => {
       client.writeQuery({
         query,
         variables: { id: "1" },
-        data: { character: { id: "1", name: "Cached hero" } },
+        data: {
+          character: { __typename: "Character", id: "1", name: "Cached hero" },
+        },
       });
     });
 
@@ -2240,7 +2210,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it('suspends and does not use partial data when changing variables and using a "cache-first" fetch policy with returnPartialData', async () => {
-    const { query: fullQuery, mocks } = useVariablesQueryCase();
+    const { query: fullQuery, mocks } = setupVariablesCase();
 
     const partialQuery = gql`
       query ($id: ID!) {
@@ -2703,7 +2673,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it('suspends and does not use partial data when changing variables and using a "cache-and-network" fetch policy with returnPartialData', async () => {
-    const { query: fullQuery, mocks } = useVariablesQueryCase();
+    const { query: fullQuery, mocks } = setupVariablesCase();
 
     const partialQuery = gql`
       query ($id: ID!) {
@@ -2784,7 +2754,7 @@ describe("useSuspenseQuery", () => {
   ])(
     'writes to the cache when using a "%s" fetch policy',
     async (fetchPolicy) => {
-      const { query, mocks } = useVariablesQueryCase();
+      const { query, mocks } = setupVariablesCase();
 
       const cache = new InMemoryCache();
 
@@ -2804,7 +2774,7 @@ describe("useSuspenseQuery", () => {
   );
 
   it('does not write to the cache when using a "no-cache" fetch policy', async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const cache = new InMemoryCache();
 
@@ -2926,7 +2896,7 @@ describe("useSuspenseQuery", () => {
   ])(
     're-suspends the component when changing variables and using a "%s" fetch policy',
     async (fetchPolicy) => {
-      const { query, mocks } = useVariablesQueryCase();
+      const { query, mocks } = setupVariablesCase();
 
       const { result, rerenderAsync, renders } = await renderSuspenseHook(
         ({ id }) => useSuspenseQuery(query, { fetchPolicy, variables: { id } }),
@@ -3060,7 +3030,7 @@ describe("useSuspenseQuery", () => {
   ])(
     'ensures data is fetched the correct amount of times when changing variables and using a "%s" fetch policy',
     async (fetchPolicy) => {
-      const { query, mocks } = useVariablesQueryCase();
+      const { query, mocks } = setupVariablesCase();
 
       let fetchCount = 0;
 
@@ -3110,7 +3080,7 @@ describe("useSuspenseQuery", () => {
   ])(
     'ensures data is fetched and suspended the correct amount of times in strict mode while using a "%s" fetch policy',
     async (fetchPolicy) => {
-      const { query, mocks } = useVariablesQueryCase();
+      const { query, mocks } = setupVariablesCase();
 
       let fetchCount = 0;
 
@@ -3270,7 +3240,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses default variables from the client when none provided in options", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -3305,7 +3275,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("uses default variables from the client when none provided in options in strict mode", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -5494,7 +5464,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("does not make network requests when `skip` is `true`", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     let fetchCount = 0;
 
@@ -5540,7 +5510,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("does not make network requests when using `skipToken` for options", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     let fetchCount = 0;
 
@@ -5588,7 +5558,7 @@ describe("useSuspenseQuery", () => {
 
   // https://github.com/apollographql/apollo-client/issues/11768
   it("does not make network requests when using `skipToken` with strict mode", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     let fetchCount = 0;
 
@@ -5635,7 +5605,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("does not make network requests when using `skip` with strict mode", async () => {
-    const { query, mocks } = useVariablesQueryCase();
+    const { query, mocks } = setupVariablesCase();
 
     let fetchCount = 0;
 
@@ -11609,14 +11579,14 @@ describe("useSuspenseQuery", () => {
     });
 
     it("disallows wider variables type than specified", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       // @ts-expect-error should not allow wider TVariables type
       useSuspenseQuery(query, { variables: { id: "1", foo: "bar" } });
     });
 
     it("returns TData in default case", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query);
 
@@ -11662,7 +11632,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         errorPolicy: "ignore",
@@ -11724,7 +11694,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it('returns TData | undefined with errorPolicy: "all"', () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         errorPolicy: "all",
@@ -11784,7 +11754,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it('returns TData with errorPolicy: "none"', () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         errorPolicy: "none",
@@ -11834,7 +11804,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns DeepPartial<TData> with returnPartialData: true", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         returnPartialData: true,
@@ -11898,7 +11868,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns TData with returnPartialData: false", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         returnPartialData: false,
@@ -11954,7 +11924,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns TData | undefined when skip is present", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         skip: true,
@@ -12046,7 +12016,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns TData | undefined when using `skipToken` as options", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
       const options = {
         skip: true,
       };
@@ -12111,7 +12081,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns TData | undefined when using `skipToken` with undefined options", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
       const options = {
         skip: true,
       };
@@ -12176,7 +12146,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns DeepPartial<TData> | undefined when using `skipToken` as options with `returnPartialData`", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
       const options = {
         skip: true,
       };
@@ -12247,7 +12217,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns TData when passing an option that does not affect TData", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         fetchPolicy: "no-cache",
@@ -12311,7 +12281,7 @@ describe("useSuspenseQuery", () => {
         skip: true,
       };
 
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
       const { query: maskedQuery } = useMaskedVariablesQueryCase();
 
       const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
@@ -12518,7 +12488,7 @@ describe("useSuspenseQuery", () => {
     });
 
     it("returns correct TData type when combined options that do not affect TData", () => {
-      const { query } = useVariablesQueryCase();
+      const { query } = setupVariablesCase();
 
       const { data: inferred } = useSuspenseQuery(query, {
         fetchPolicy: "no-cache",

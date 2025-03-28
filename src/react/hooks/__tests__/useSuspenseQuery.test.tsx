@@ -398,21 +398,34 @@ describe("useSuspenseQuery", () => {
   it("suspends a query and returns results", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
-    const Component = () => {
-      const result = useSuspenseQuery(query);
-      replaceSnapshot(result);
-      return <div>{result.data.greeting}</div>;
-    };
+    function Component() {
+      useTrackRenders();
+      replaceSnapshot(useSuspenseQuery(query));
 
-    const App = () => {
+      return null;
+    }
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return null;
+    }
+
+    function Error() {
+      useTrackRenders();
+
+      return null;
+    }
+
+    function App() {
       return (
-        <Suspense fallback={<div>loading</div>}>
-          <ErrorBoundary fallback={<div>Error</div>}>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary FallbackComponent={Error}>
             <Component />
           </ErrorBoundary>
         </Suspense>
       );
-    };
+    }
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -420,11 +433,11 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, render } = await createRenderStream<
-      useSuspenseQuery.Result<SimpleQueryData, OperationVariables>
-    >({
-      snapshotDOM: true,
-    });
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<
+        useSuspenseQuery.Result<SimpleQueryData, OperationVariables>
+      >();
+
     await render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -433,17 +446,17 @@ describe("useSuspenseQuery", () => {
 
     {
       // ensure the hook suspends immediately
-      const { withinDOM, snapshot } = await takeRender();
-      expect(withinDOM().getByText("loading")).toBeInTheDocument();
-      expect(snapshot).toBeUndefined();
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
     }
 
     {
-      const { withinDOM, snapshot } = await takeRender();
-      expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
-      expect(withinDOM().getByText("Hello")).toBeInTheDocument();
-      expect(snapshot).toMatchObject({
-        ...mocks[0].result,
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toEqualStrictTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });

@@ -292,8 +292,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       useQuery.skipStandbyResult
     : ssrDisabledOverride;
 
-  const previousData = resultData.previousData;
-
   const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
@@ -356,6 +354,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     [observable]
   );
 
+  const previousData = resultData.previousData;
   return React.useMemo(() => {
     const { data, partial, ...resultWithoutPartial } = result;
 

@@ -111,9 +111,10 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new CombinedGraphQLErrors([
-        { message: "This is an error message." },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: "This is an error message." }],
+        { data: undefined }
+      ),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -145,9 +146,10 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
-      error: new CombinedGraphQLErrors([
-        { message: "This is an error message." },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: "This is an error message." }],
+        { data: undefined }
+      ),
       networkStatus: 8,
       partial: true,
     });
@@ -178,9 +180,10 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new CombinedGraphQLErrors([
-        { message: "This is an error message." },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: "This is an error message." }],
+        { data: { allPeople: { people: { name: "Ada Lovelace" } } } }
+      ),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -246,7 +249,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new CombinedGraphQLErrors([null as any]),
+      error: new CombinedGraphQLErrors([null as any], { data: undefined }),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -1748,7 +1751,7 @@ describe("ApolloClient", () => {
     });
 
     await expect(client.mutate({ mutation })).rejects.toThrow(
-      new CombinedGraphQLErrors(errors)
+      new CombinedGraphQLErrors(errors, { data: undefined })
     );
   });
 
@@ -2198,7 +2201,9 @@ describe("ApolloClient", () => {
           },
         ]),
       }).query({ query })
-    ).rejects.toEqual(new CombinedGraphQLErrors(graphQLErrors));
+    ).rejects.toEqual(
+      new CombinedGraphQLErrors(graphQLErrors, { data: undefined })
+    );
   });
 
   it("should not empty the store when a non-polling query fails due to a network error", async () => {
@@ -2944,7 +2949,9 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    const expectedError = new CombinedGraphQLErrors(secondResult.errors);
+    const expectedError = new CombinedGraphQLErrors(secondResult.errors, {
+      data: undefined,
+    });
 
     await expect(handle.refetch()).rejects.toThrow(expectedError);
     await expect(stream).toEmitApolloQueryResult({

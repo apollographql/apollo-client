@@ -154,7 +154,9 @@ describe("useSubscription Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualStrictTyped({
       data: undefined,
-      error: new CombinedGraphQLErrors([{ message: "test" }]),
+      error: new CombinedGraphQLErrors([{ message: "test" }], {
+        data: errorResult.result.data,
+      }),
       loading: false,
     });
 
@@ -162,7 +164,9 @@ describe("useSubscription Hook", () => {
 
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledWith(
-      new CombinedGraphQLErrors([{ message: "test" }])
+      new CombinedGraphQLErrors([{ message: "test" }], {
+        data: errorResult.result.data,
+      })
     );
   });
 
@@ -233,14 +237,18 @@ describe("useSubscription Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualStrictTyped({
       data: undefined,
-      error: new CombinedGraphQLErrors([{ message: "test" }]),
+      error: new CombinedGraphQLErrors([{ message: "test" }], {
+        data: errorResult.result.data,
+      }),
       loading: false,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenLastCalledWith(
-      new CombinedGraphQLErrors([{ message: "test" }])
+      new CombinedGraphQLErrors([{ message: "test" }], {
+        data: errorResult.result.data,
+      })
     );
     expect(onComplete).toHaveBeenCalledTimes(0);
 
@@ -1242,7 +1250,8 @@ followed by new in-flight setup", async () => {
             expect(snapshot).toEqualStrictTyped({
               loading: false,
               error: new CombinedGraphQLErrors(
-                graphQlErrorResult.result!.errors as any
+                graphQlErrorResult.result!.errors as any,
+                { data: graphQlErrorResult.result!.data }
               ),
               data: undefined,
             });
@@ -1250,7 +1259,9 @@ followed by new in-flight setup", async () => {
 
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(
-            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
+            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!, {
+              data: graphQlErrorResult.result!.data,
+            })
           );
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
@@ -1276,7 +1287,8 @@ followed by new in-flight setup", async () => {
           expect(snapshot).toEqualStrictTyped({
             loading: false,
             error: new CombinedGraphQLErrors(
-              graphQlErrorResult.result!.errors!
+              graphQlErrorResult.result!.errors!,
+              { data: graphQlErrorResult.result!.data }
             ),
             data: { totalLikes: 42 },
           });
@@ -1284,7 +1296,9 @@ followed by new in-flight setup", async () => {
 
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError).toHaveBeenCalledWith(
-          new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
+          new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!, {
+            data: graphQlErrorResult.result!.data,
+          })
         );
         expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
@@ -1754,7 +1768,7 @@ describe("`restart` callback", () => {
       expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: undefined,
-        error: new CombinedGraphQLErrors([error]),
+        error: new CombinedGraphQLErrors([error], { data: undefined }),
       });
     }
 

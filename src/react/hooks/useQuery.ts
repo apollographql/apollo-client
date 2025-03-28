@@ -358,10 +358,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   return result;
 }
 
-function useObservableSubscriptionResult<
-  TData,
-  TVariables extends OperationVariables,
->(
+function useResultOverride<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
@@ -399,6 +396,30 @@ function useObservableSubscriptionResult<
       resultOverride &&
       toQueryResult(resultOverride, previousData, observable, client),
     [client, observable, resultOverride, previousData]
+  );
+
+  return currentResultOverride;
+}
+
+function useObservableSubscriptionResult<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  resultData: InternalResult<TData, TVariables>,
+  observable: ObservableQuery<TData, TVariables>,
+  client: ApolloClient,
+  options: Pick<
+    useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    "ssr" | "skip"
+  >,
+  fetchPolicy: WatchQueryFetchPolicy | undefined
+) {
+  const currentResultOverride = useResultOverride(
+    resultData,
+    observable,
+    client,
+    options,
+    fetchPolicy
   );
 
   return useSyncExternalStore(

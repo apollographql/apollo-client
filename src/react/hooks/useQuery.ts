@@ -238,11 +238,11 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
-  const { skip, ssr, ...otherOptions } = options;
+  const { skip, ssr, ...opts } = options;
 
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
     client.defaultOptions.watchQuery,
-    { ...otherOptions, query }
+    { ...opts, query }
   );
 
   if (skip) {

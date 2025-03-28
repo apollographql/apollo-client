@@ -189,7 +189,7 @@ interface InternalResult<TData> {
   previousData?: undefined | MaybeMasked<TData>;
 }
 
-interface InternalState<TData, TVariables extends OperationVariables> {
+interface State<TData, TVariables extends OperationVariables> {
   client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
@@ -269,7 +269,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions.fetchPolicy = "standby";
   }
 
-  function createInternalState(previous?: InternalState<TData, TVariables>) {
+  function createState(previous?: State<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
     return {
@@ -281,25 +281,24 @@ function useQuery_<TData, TVariables extends OperationVariables>(
         // continuity of previousData even if/when the query or client changes.
         previousData: previous?.resultData.current?.data,
       },
-    } as InternalState<TData, TVariables>;
+    } as State<TData, TVariables>;
   }
 
-  let [internalState, updateInternalState] =
-    React.useState(createInternalState);
+  let [state, setState] = React.useState(createState);
 
-  if (client !== internalState.client || query !== internalState.query) {
+  if (client !== state.client || query !== state.query) {
     // If the client or query have changed, we need to create a new InternalState.
     // This will trigger a re-render with the new state, but it will also continue
     // to run the current render function to completion.
     // Since we sometimes trigger some side-effects in the render function, we
     // re-assign `state` to the new state to ensure that those side-effects are
     // triggered with the new state.
-    const newInternalState = createInternalState(internalState);
-    updateInternalState(newInternalState);
-    internalState = newInternalState;
+    const newState = createState(state);
+    setState(newState);
+    state = newState;
   }
 
-  const { observable, resultData } = internalState;
+  const { observable, resultData } = state;
 
   if (!watchQueryOptions.fetchPolicy) {
     watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;

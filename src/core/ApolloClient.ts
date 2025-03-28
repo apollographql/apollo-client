@@ -28,11 +28,11 @@ import { LocalState } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
-  ApolloQueryResult,
   DefaultContext,
   InternalRefetchQueriesResult,
   MutateResult,
   OperationVariables,
+  QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
@@ -463,7 +463,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: QueryOptions<TVariables, TData>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -474,6 +474,29 @@ export class ApolloClient implements DataProxy {
         "client.query can only return a single result. Please use client.watchQuery " +
         "to receive multiple results from the cache and the network, or consider " +
         "using a different fetchPolicy, such as cache-first or network-only."
+    );
+
+    invariant(
+      options.query,
+      "query option is required. You must specify your GraphQL document " +
+        "in the query option."
+    );
+
+    invariant(
+      options.query.kind === "Document",
+      'You must wrap the query string in a "gql" tag.'
+    );
+
+    // TODO: Remove returnPartialData as valid option from QueryOptions type
+    invariant(
+      !options.returnPartialData,
+      "returnPartialData option only supported on watchQuery."
+    );
+
+    // TODO: Remove pollInterval as valid option from QueryOptions type
+    invariant(
+      !options.pollInterval,
+      "pollInterval option only supported on watchQuery."
     );
 
     return this.queryManager.query<TData, TVariables>(options);
@@ -657,7 +680,7 @@ export class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
+  public resetStore(): Promise<QueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() =>
         this.queryManager.clearStore({
@@ -724,7 +747,7 @@ export class ApolloClient implements DataProxy {
    */
   public reFetchObservableQueries(
     includeStandby?: boolean
-  ): Promise<ApolloQueryResult<any>[]> {
+  ): Promise<QueryResult<any>[]> {
     return this.queryManager.reFetchObservableQueries(includeStandby);
   }
 
@@ -741,7 +764,7 @@ export class ApolloClient implements DataProxy {
    */
   public refetchQueries<
     TCache extends ApolloCache = ApolloCache,
-    TResult = Promise<ApolloQueryResult<any>>,
+    TResult = Promise<QueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {

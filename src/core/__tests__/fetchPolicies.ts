@@ -929,7 +929,7 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -940,9 +940,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -971,7 +968,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -982,9 +979,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       // Changing variables resets the fetchPolicy to its initial value.
@@ -1078,7 +1072,7 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1089,9 +1083,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -1121,7 +1112,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1132,9 +1123,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -1250,7 +1238,7 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1261,9 +1249,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -1291,7 +1276,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1302,9 +1287,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       // The nextFetchPolicy function we provided always returnes cache-first,

@@ -3660,16 +3660,13 @@ describe("type policies", function () {
 
       let result = await client.query({ query: firstQuery });
 
-      expect(result).toEqualApolloQueryResult({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+      expect(result).toEqualStrictTyped({
         data: {
           todos: {
             __typename: "TodosConnection",
             totalCount: 1292,
           },
         },
-        partial: false,
       });
 
       expect(cache.extract()).toEqual({
@@ -3694,9 +3691,7 @@ describe("type policies", function () {
         variables: secondVariables,
       });
 
-      expect(result).toEqualApolloQueryResult({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+      expect(result).toEqualStrictTyped({
         data: {
           todos: {
             __typename: "TodosConnection",
@@ -3705,15 +3700,12 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
-        partial: false,
       });
 
       expect(cache.extract()).toMatchSnapshot();
 
       result = await client.query({ query: thirdQuery });
-      expect(result).toEqualApolloQueryResult({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+      expect(result).toEqualStrictTyped({
         data: {
           todos: {
             __typename: "TodosConnection",
@@ -3721,7 +3713,6 @@ describe("type policies", function () {
             extraMetaData: "extra",
           },
         },
-        partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
     });
@@ -4146,7 +4137,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4174,7 +4165,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(5);
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4201,7 +4192,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4235,7 +4226,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(7);
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4270,9 +4261,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqualApolloQueryResult({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
+        expect(result).toEqualStrictTyped({
           data: {
             search: {
               edges: turrellEdges.slice(0, 1),
@@ -4280,7 +4269,6 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
-          partial: false,
         });
 
         expect(snapshot).toMatchSnapshot();
@@ -4333,7 +4321,7 @@ describe("type policies", function () {
           },
         });
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4367,9 +4355,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqualApolloQueryResult({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
+        expect(result).toEqualStrictTyped({
           data: {
             search: {
               edges: turrellEdges,
@@ -4377,7 +4363,6 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
-          partial: false,
         });
 
         expect(snapshot).toMatchSnapshot();

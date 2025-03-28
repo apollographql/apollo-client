@@ -14,11 +14,11 @@ import { Observable } from "rxjs";
 import {
   ApolloClient,
   ApolloLink,
-  ApolloQueryResult,
   CombinedGraphQLErrors,
   ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
+  QueryResult,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -86,11 +86,8 @@ describe("useLazyQuery Hook", () => {
     const [execute] = getCurrentSnapshot();
     const result = await execute();
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { hello: "world" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -148,11 +145,8 @@ describe("useLazyQuery Hook", () => {
     const [execute] = getCurrentSnapshot();
     const result = await execute({ variables: { id: 1 } });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { hello: "world 1" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -207,11 +201,8 @@ describe("useLazyQuery Hook", () => {
     const [execute] = getCurrentSnapshot();
     const result = await execute();
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { hello: "world" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -294,11 +285,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -329,11 +317,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { name: "changed" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -403,11 +388,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -440,11 +422,8 @@ describe("useLazyQuery Hook", () => {
 
     const [, { refetch }] = getCurrentSnapshot();
 
-    await expect(refetch()).resolves.toEqualApolloQueryResult({
+    await expect(refetch()).resolves.toEqualStrictTyped({
       data: { name: "changed" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -518,11 +497,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -565,11 +541,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { name: "changed" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -644,11 +617,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world 1" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -664,11 +634,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world 2" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -731,11 +698,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world 1" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -764,11 +728,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world 2" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -843,11 +804,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world 1" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -878,11 +836,8 @@ describe("useLazyQuery Hook", () => {
 
     const [, { refetch }] = getCurrentSnapshot();
 
-    await expect(refetch()).resolves.toEqualApolloQueryResult({
+    await expect(refetch()).resolves.toEqualStrictTyped({
       data: { hello: "world 2" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -958,11 +913,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "world 1" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1073,14 +1025,9 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(
-      execute({ variables: { id: 1 } })
-    ).resolves.toEqualApolloQueryResult({
-      data: data1,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    await expect(execute({ variables: { id: 1 } })).resolves.toEqualStrictTyped(
+      { data: data1 }
+    );
 
     {
       const [, result] = await takeSnapshot();
@@ -1095,14 +1042,9 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(
-      execute({ variables: { id: 2 } })
-    ).resolves.toEqualApolloQueryResult({
-      data: data2,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    await expect(execute({ variables: { id: 2 } })).resolves.toEqualStrictTyped(
+      { data: data2 }
+    );
 
     {
       const [, result] = await takeSnapshot();
@@ -1186,14 +1128,9 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(
-      execute({ variables: { id: 1 } })
-    ).resolves.toEqualApolloQueryResult({
-      data: data1,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    await expect(execute({ variables: { id: 1 } })).resolves.toEqualStrictTyped(
+      { data: data1 }
+    );
 
     {
       const [, result] = await takeSnapshot();
@@ -1221,14 +1158,9 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(
-      execute({ variables: { id: 2 } })
-    ).resolves.toEqualApolloQueryResult({
-      data: data2,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    await expect(execute({ variables: { id: 2 } })).resolves.toEqualStrictTyped(
+      { data: data2 }
+    );
 
     {
       const [, result] = await takeSnapshot();
@@ -1299,11 +1231,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "from link" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1383,11 +1312,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "from link" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1416,11 +1342,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "from link 2" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1505,13 +1428,10 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "1" } })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1548,13 +1468,10 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "2" } })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1651,13 +1568,10 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "1" } })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1694,13 +1608,10 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "2" } })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1875,12 +1786,9 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors([{ message: "Not logged in" }]),
-      loading: false,
-      networkStatus: NetworkStatus.error,
-      partial: false,
     });
 
     {
@@ -1897,12 +1805,9 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }]),
-      loading: false,
-      networkStatus: NetworkStatus.error,
-      partial: false,
     });
 
     {
@@ -1975,11 +1880,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { currentUser: null },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -1995,11 +1897,8 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqual({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { currentUser: null },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     // We don't see an extra render here since the result is deeply equal to the
@@ -2019,7 +1918,7 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = result.current;
 
-    let promise: Promise<ApolloQueryResult<{ hello: string }>>;
+    let promise: Promise<QueryResult<{ hello: string }>>;
     act(() => {
       promise = execute();
     });
@@ -2028,11 +1927,8 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    await expect(promise!).resolves.toEqualApolloQueryResult({
+    await expect(promise!).resolves.toEqualStrictTyped({
       data: { hello: "Greetings" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 
@@ -2048,8 +1944,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = result.current;
 
-    let promise1: Promise<ApolloQueryResult<{ hello: string }>>;
-    let promise2: Promise<ApolloQueryResult<{ hello: string }>>;
+    let promise1: Promise<QueryResult<{ hello: string }>>;
+    let promise2: Promise<QueryResult<{ hello: string }>>;
     act(() => {
       promise1 = execute();
       promise2 = execute();
@@ -2059,15 +1955,12 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    const expectedResult = {
+    const expectedResult: QueryResult<{ hello: string }> = {
       data: { hello: "Greetings" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     };
 
-    await expect(promise1!).resolves.toEqualApolloQueryResult(expectedResult);
-    await expect(promise2!).resolves.toEqualApolloQueryResult(expectedResult);
+    await expect(promise1!).resolves.toEqualStrictTyped(expectedResult);
+    await expect(promise2!).resolves.toEqualStrictTyped(expectedResult);
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
@@ -2130,18 +2023,12 @@ describe("useLazyQuery Hook", () => {
     const promise1 = execute({ variables: { id: "1" } });
     const promise2 = execute({ variables: { id: "2" } });
 
-    await expect(promise1).resolves.toEqualApolloQueryResult({
+    await expect(promise1).resolves.toEqualStrictTyped({
       data: mocks[0].result.data,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
-    await expect(promise2).resolves.toEqualApolloQueryResult({
+    await expect(promise2).resolves.toEqualStrictTyped({
       data: mocks[1].result.data,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -2215,11 +2102,8 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualApolloQueryResult({
+    await expect(execute()).resolves.toEqualStrictTyped({
       data: { hello: "Greetings" },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     {
@@ -2759,12 +2643,9 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).resolves.toEqualApolloQueryResult({
+      await expect(execute()).resolves.toEqualStrictTyped({
         data: undefined,
         error: networkError,
-        loading: false,
-        networkStatus: NetworkStatus.error,
-        partial: true,
       });
 
       {
@@ -2828,12 +2709,7 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).resolves.toEqualApolloQueryResult({
-        data: undefined,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: true,
-      });
+      await expect(execute()).resolves.toEqualStrictTyped({ data: undefined });
 
       {
         const [, result] = await takeSnapshot();
@@ -2982,7 +2858,7 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -2990,9 +2866,6 @@ describe("useLazyQuery Hook", () => {
             name: "Test User",
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -3085,7 +2958,7 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -3094,9 +2967,6 @@ describe("useLazyQuery Hook", () => {
             age: 30,
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -3189,7 +3059,7 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -3198,9 +3068,6 @@ describe("useLazyQuery Hook", () => {
             age: 30,
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -3745,11 +3612,8 @@ test("uses the updated client when executing the function after changing clients
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { greeting: "Hello client 1" },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -3780,11 +3644,8 @@ test("uses the updated client when executing the function after changing clients
     });
   }
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { greeting: "Hello client 2" },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -3842,11 +3703,8 @@ test("responds to cache updates after executing query", async () => {
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { greeting: "Hello" },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -3921,16 +3779,13 @@ test("responds to cache updates after changing variables", async () => {
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(
-    execute({ variables: { id: "1" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Man" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -3947,16 +3802,13 @@ test("responds to cache updates after changing variables", async () => {
     });
   }
 
-  await expect(
-    execute({ variables: { id: "2" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "2", name: "Black Widow" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4069,16 +3921,13 @@ test("uses cached result when switching to variables already written to the cach
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(
-    execute({ variables: { id: "1" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Man" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4095,20 +3944,17 @@ test("uses cached result when switching to variables already written to the cach
     });
   }
 
-  await expect(
-    execute({ variables: { id: "2" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: {
-        __typename: "Character",
-        id: "2",
-        name: "Cached Character",
+  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
       },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4176,16 +4022,13 @@ test("renders loading states where necessary when switching to variables maybe w
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(
-    execute({ variables: { id: "1" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Man" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4215,20 +4058,17 @@ test("renders loading states where necessary when switching to variables maybe w
     });
   }
 
-  await expect(
-    execute({ variables: { id: "2" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: {
-        __typename: "Character",
-        id: "2",
-        name: "Cached Character",
+  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
       },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4251,20 +4091,17 @@ test("renders loading states where necessary when switching to variables maybe w
     });
   }
 
-  await expect(
-    execute({ variables: { id: "3" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: {
-        __typename: "Character",
-        id: "3",
-        name: "Iron Man",
+  await expect(execute({ variables: { id: "3" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: {
+          __typename: "Character",
+          id: "3",
+          name: "Iron Man",
+        },
       },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4384,16 +4221,13 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(
-    execute({ variables: { id: "1" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Man" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4502,11 +4336,8 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { context: { source: "initialHookValue" } },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -4537,11 +4368,8 @@ test("applies `context` on next fetch when it changes between renders", async ()
     });
   }
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { context: { source: "rerender" } },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -4590,11 +4418,8 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   await expect(
     execute({ context: { source: "execute" } })
-  ).resolves.toEqualApolloQueryResult({
+  ).resolves.toEqualStrictTyped({
     data: { context: { source: "execute" } },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -4693,12 +4518,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
   await expect(
     execute({ variables: { min: 0, max: 12 } })
-  ).resolves.toEqualApolloQueryResult({
-    data: mocks[0].result.data,
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  ).resolves.toEqualStrictTyped({ data: mocks[0].result.data });
 
   {
     const [, result] = await takeSnapshot();
@@ -4873,16 +4693,13 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(
-    execute({ variables: { id: "1" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Doctor Strange" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -4916,16 +4733,13 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
     });
   }
 
-  await expect(
-    execute({ variables: { id: "2" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "2", name: "Hulk" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "2", name: "Hulk" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -5012,16 +4826,13 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(
-    execute({ variables: { id: "1" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -5055,16 +4866,13 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
     });
   }
 
-  await expect(
-    execute({ variables: { id: "2" } })
-  ).resolves.toEqualApolloQueryResult({
-    data: {
-      character: { __typename: "Character", id: "2", name: "Black Widow" },
-    },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
-  });
+  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+    }
+  );
 
   {
     const [, result] = await takeSnapshot();
@@ -5146,11 +4954,8 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { greeting: "Hello 1" },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -5181,11 +4986,8 @@ test("renders loading states at appropriate times on next fetch after updating `
     });
   }
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { greeting: "Hello 2" },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {
@@ -5229,11 +5031,8 @@ test("renders loading states at appropriate times on next fetch after updating `
     });
   }
 
-  await expect(execute()).resolves.toEqualApolloQueryResult({
+  await expect(execute()).resolves.toEqualStrictTyped({
     data: { greeting: "Hello 3" },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   {

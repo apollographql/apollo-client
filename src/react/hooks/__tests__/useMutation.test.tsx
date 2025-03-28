@@ -17,11 +17,11 @@ import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloLink,
-  ApolloQueryResult,
   Cache,
   CombinedGraphQLErrors,
   NetworkStatus,
   ObservableQuery,
+  QueryResult,
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
@@ -2625,7 +2625,7 @@ describe("useMutation Hook", () => {
       interface OnQueryUpdatedResults {
         obsQuery: ObservableQuery;
         diff: Cache.DiffResult<TData>;
-        result: ApolloQueryResult<TData>;
+        result: QueryResult<TData>;
       }
       let resolveOnUpdate: (results: OnQueryUpdatedResults) => any;
       const onUpdatePromise = new Promise<OnQueryUpdatedResults>((resolve) => {
@@ -2638,12 +2638,7 @@ describe("useMutation Hook", () => {
           },
         });
         expect(onUpdateResult.result).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            todoCount: 1,
-          },
-          partial: false,
+          data: { todoCount: 1 },
         });
       });
 

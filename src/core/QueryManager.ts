@@ -58,7 +58,7 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent } from "@apollo/client/utilities/internal";
+import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -88,6 +88,7 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  QueryResult,
   SubscribeResult,
 } from "./types.js";
 import type {
@@ -823,43 +824,29 @@ export class QueryManager {
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    invariant(
-      options.query,
-      "query option is required. You must specify your GraphQL document " +
-        "in the query option."
-    );
-
-    invariant(
-      options.query.kind === "Document",
-      'You must wrap the query string in a "gql" tag.'
-    );
-
-    invariant(
-      !(options as any).returnPartialData,
-      "returnPartialData option only supported on watchQuery."
-    );
-
-    invariant(
-      !(options as any).pollInterval,
-      "pollInterval option only supported on watchQuery."
-    );
-
+  ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
-      .then(
-        (result) =>
-          result && {
-            ...result,
-            data: this.maskOperation({
-              document: query,
-              data: result.data,
-              fetchPolicy: options.fetchPolicy,
-              id: queryId,
-            }),
-          }
-      )
+      .then((value) => {
+        // TODO: Update this when we handle emitting errors for empty results.
+        // `value` can be `undefined` when the link chain only emits a complete
+        // event with no value which should be an error.
+        // https://github.com/apollographql/apollo-client/issues/12482
+        if (!value) {
+          return { data: undefined };
+        }
+
+        return toQueryResult({
+          ...value,
+          data: this.maskOperation({
+            document: query,
+            data: value?.data,
+            fetchPolicy: options.fetchPolicy,
+            id: queryId,
+          }),
+        });
+      })
       .finally(() => this.stopQuery(queryId));
   }
 
@@ -1014,8 +1001,8 @@ export class QueryManager {
 
   public reFetchObservableQueries(
     includeStandby: boolean = false
-  ): Promise<ApolloQueryResult<any>[]> {
-    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+  ): Promise<QueryResult<any>[]> {
+    const observableQueryPromises: Promise<QueryResult<any>>[] = [];
 
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery, queryId) => {
@@ -1548,7 +1535,7 @@ export class QueryManager {
               // options.include.
               includedQueriesById.delete(oq.queryId);
 
-              let result: TResult | boolean | Promise<ApolloQueryResult<any>> =
+              let result: TResult | boolean | Promise<QueryResult<any>> =
                 onQueryUpdated(oq, diff, lastDiff);
 
               if (result === true) {
@@ -1584,11 +1571,7 @@ export class QueryManager {
 
     if (includedQueriesById.size) {
       includedQueriesById.forEach(({ oq, lastDiff, diff }, queryId) => {
-        let result:
-          | TResult
-          | boolean
-          | Promise<ApolloQueryResult<any>>
-          | undefined;
+        let result: TResult | boolean | Promise<QueryResult<any>> | undefined;
 
         // If onQueryUpdated is provided, we want to use it for all included
         // queries, even the QueryOptions ones.

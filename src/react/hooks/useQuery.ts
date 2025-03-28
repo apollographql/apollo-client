@@ -363,34 +363,6 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   }
   observable[lastWatchOptions] = watchQueryOptions;
 
-  const resultOverride = useResultOverride(
-    resultData,
-    observable,
-    client,
-    { skip, ssr },
-    watchQueryOptions.fetchPolicy
-  );
-
-  const result = useObservableSubscriptionResult<TData, TVariables>(
-    resultData,
-    observable,
-    client,
-    resultOverride
-  );
-
-  return result;
-}
-
-function useResultOverride<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient,
-  options: Pick<
-    useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-    "ssr" | "skip"
-  >,
-  fetchPolicy: WatchQueryFetchPolicy | undefined
-) {
   const ssrDisabledOverride = useSyncExternalStore(
     () => () => {},
     () => false,
@@ -398,7 +370,7 @@ function useResultOverride<TData, TVariables extends OperationVariables>(
   );
 
   const resultOverride =
-    options.skip || fetchPolicy === "standby" ?
+    options.skip || watchQueryOptions.fetchPolicy === "standby" ?
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is
       // set to `false` (since we aren't loading anything).
@@ -421,7 +393,14 @@ function useResultOverride<TData, TVariables extends OperationVariables>(
     [client, observable, resultOverride, previousData]
   );
 
-  return currentResultOverride;
+  const result = useObservableSubscriptionResult<TData, TVariables>(
+    resultData,
+    observable,
+    client,
+    currentResultOverride
+  );
+
+  return result;
 }
 
 function useObservableSubscriptionResult<

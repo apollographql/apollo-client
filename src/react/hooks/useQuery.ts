@@ -339,8 +339,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
       [observable, resultData]
     ),
-    () => resultOverride || resultData.current!,
-    () => resultOverride || resultData.current!
+    () => resultOverride || resultData.current,
+    () => resultOverride || resultData.current
   );
 
   const obsQueryFields = React.useMemo(
@@ -381,7 +381,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
         current: observable.getCurrentResult(),
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
-        previousData: previous?.resultData.current?.data,
+        previousData: previous?.resultData.current.data,
       },
     };
 
@@ -436,7 +436,7 @@ function useResubscribeIfNecessary<
     // but save the current data as this.previousData, just like setResult
     // usually does.
     resultData.previousData =
-      resultData.current?.data || resultData.previousData;
+      resultData.current.data || resultData.previousData;
     resultData.current = observable.getCurrentResult();
   }
   observable[lastWatchOptions] = watchQueryOptions;

@@ -593,7 +593,7 @@ describe("client", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new CombinedGraphQLErrors(errors)
+      new CombinedGraphQLErrors(errors, { data: undefined })
     );
   });
 
@@ -638,7 +638,7 @@ describe("client", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new CombinedGraphQLErrors(errors)
+      new CombinedGraphQLErrors(errors, { data })
     );
   });
 
@@ -1950,7 +1950,9 @@ describe("client", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: initialData,
-        error: new CombinedGraphQLErrors([{ message: "network failure" }]),
+        error: new CombinedGraphQLErrors([{ message: "network failure" }], {
+          data: undefined,
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -2189,7 +2191,7 @@ describe("client", () => {
     });
 
     await expect(client.mutate({ mutation })).rejects.toEqual(
-      new CombinedGraphQLErrors(errors)
+      new CombinedGraphQLErrors(errors, { data })
     );
   });
 
@@ -2205,9 +2207,11 @@ describe("client", () => {
       }
     `;
     const data = {
-      person: {
-        firstName: "John",
-        lastName: "Smith",
+      newPerson: {
+        person: {
+          firstName: "John",
+          lastName: "Smith",
+        },
       },
     };
     const errors = [{ message: "Some kind of GraphQL error." }];
@@ -2216,9 +2220,7 @@ describe("client", () => {
         request: { query: mutation },
         result: {
           errors,
-          data: {
-            newPerson: data,
-          },
+          data,
         },
       }),
       cache: new InMemoryCache(),
@@ -2227,8 +2229,8 @@ describe("client", () => {
     await expect(
       client.mutate({ mutation, errorPolicy: "all" })
     ).resolves.toEqualStrictTyped({
-      data: { newPerson: data },
-      error: new CombinedGraphQLErrors(errors),
+      data,
+      error: new CombinedGraphQLErrors(errors, { data }),
     });
   });
 
@@ -2782,9 +2784,10 @@ describe("client", () => {
       client.query({ query, errorPolicy: "all" })
     ).resolves.toEqualStrictTyped({
       data: { posts: null },
-      error: new CombinedGraphQLErrors([
-        { message: 'Cannot query field "foo" on type "Post".' },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: 'Cannot query field "foo" on type "Post".' }],
+        { data: { posts: null } }
+      ),
     });
   });
 
@@ -3771,7 +3774,7 @@ describe("@connection", () => {
 
       expect(result).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors(errors),
+        error: new CombinedGraphQLErrors(errors, { data: undefined }),
       });
     });
 

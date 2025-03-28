@@ -16,7 +16,6 @@ import {
   ApolloLink,
   gql,
   InMemoryCache,
-  Observable,
   TypedDocumentNode,
 } from "@apollo/client/core";
 import {
@@ -27,10 +26,9 @@ import {
 } from "@apollo/client/react";
 import { prerenderStatic } from "@apollo/client/react/ssr";
 import { MockedResponse, MockLink } from "@apollo/client/testing";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
-import { InvariantError } from "../../../utilities/invariant/index.js";
-import { set } from "lodash";
 
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like
@@ -510,7 +508,34 @@ you have an infinite render loop in your application.`)
   );
 });
 
-test.todo("`ignoreResults` will result in an empty string to be returned");
+test.each([
+  ["renderToString", renderToString],
+  ["renderToStaticMarkup", renderToStaticMarkup],
+  ["prerender", prerender],
+  ["prerenderToNodeStream", prerenderToNodeStream],
+])(
+  "`ignoreResults` will result in an empty string to be returned (%s)",
+  async (_, renderFunction) => {
+    const { mockLink, query1 } = testSetup();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: mockLink,
+    });
+    function Component() {
+      const { data, loading } = useQuery(query1);
+      if (loading) return <div>loading...</div>;
+      return <div>{data?.hello}</div>;
+    }
+    const { result } = await prerenderStatic({
+      tree: <Component />,
+      context: { client },
+      renderFunction,
+      ignoreResults: true,
+    });
+
+    expect(result).toBe("");
+  }
+);
 
 it.skip("type tests", async () => {
   expectTypeOf(

@@ -297,7 +297,7 @@ you have an infinite render loop in your application.`,
         }
   ): Promise<string> {
     if (typeof value === "string") {
-      return value;
+      return ignoreResults ? "" : value;
     }
     if (!value.prelude) {
       throw new Error(

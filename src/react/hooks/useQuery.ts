@@ -294,13 +294,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   const previousData = resultData.previousData;
 
-  // Using this.result as a cache ensures getCurrentResult continues returning
-  // the same (===) result object, unless state.setResult has been called, or
-  // we're doing server rendering and therefore override the result below.
-  if (!resultData.current) {
-    resultData.current = observable.getCurrentResult();
-  }
-
   const result = useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {

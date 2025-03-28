@@ -22,3 +22,4 @@ export {
   mockDeferStream,
   mockMultipartSubscriptionStream,
 } from "./incremental.js";
+export { resetApolloContext } from "./resetApolloContext.js";

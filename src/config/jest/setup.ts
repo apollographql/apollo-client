@@ -55,3 +55,15 @@ expect.addEqualityTesters([
 
 // not available in JSDOM 🙄
 global.structuredClone = (val) => JSON.parse(JSON.stringify(val));
+global.ReadableStream ||= require("stream/web").ReadableStream;
+AbortSignal.timeout = (ms) => {
+  const controller = new AbortController();
+  setTimeout(
+    () =>
+      controller.abort(
+        new DOMException("The operation timed out.", "TimeoutError")
+      ),
+    ms
+  );
+  return controller.signal;
+};

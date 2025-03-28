@@ -426,8 +426,8 @@ function useObservableSubscriptionResult<
 
       [observable, resultData]
     ),
-    () => resultOverride || getCurrentResult(resultData, observable, client),
-    () => resultOverride || getCurrentResult(resultData, observable, client)
+    () => resultOverride || getCurrentResult(resultData, observable),
+    () => resultOverride || getCurrentResult(resultData, observable)
   );
 
   return result;
@@ -471,8 +471,7 @@ function useResubscribeIfNecessary<
 
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient
+  observable: ObservableQuery<TData, TVariables>
 ) {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or

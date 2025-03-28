@@ -272,12 +272,32 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
+    const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
+
+    const globalDefaults = client.defaultOptions.watchQuery;
+    if (globalDefaults) toMerge.push(globalDefaults);
+
+    // We use compact rather than mergeOptions for this part of the merge,
+    // because we want watchQueryOptions.variables (if defined) to replace
+    // this.observable.options.variables whole. This replacement allows
+    // removing variables by removing them from the variables input to
+    // useQuery. If the variables were always merged together (rather than
+    // replaced), there would be no way to remove existing variables.
+    // However, the variables from options.defaultOptions and globalDefaults
+    // (if provided) should be merged, to ensure individual defaulted
+    // variables always have values, if not otherwise defined in
+    // observable.options or watchQueryOptions.
+    toMerge.push(compact(watchQueryOptions));
+
+    const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
+      TVariables,
+      TData
+    >;
+
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: client.watchQuery(
-        getObsQueryOptions(void 0, client, watchQueryOptions)
-      ),
+      observable: client.watchQuery(opts),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.

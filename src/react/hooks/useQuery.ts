@@ -481,7 +481,7 @@ function useResubscribeIfNecessary<
     // (if provided) should be merged, to ensure individual defaulted
     // variables always have values, if not otherwise defined in
     // observable.options or watchQueryOptions.
-    toMerge.push(compact(watchQueryOptions));
+    toMerge.push(watchQueryOptions);
 
     const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
       TVariables,

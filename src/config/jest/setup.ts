@@ -58,14 +58,14 @@ global.structuredClone = (val) => JSON.parse(JSON.stringify(val));
 // @ts-ignore
 global.setImmediate ||= (fn) => setTimeout(fn, 0);
 global.ReadableStream ||= require("stream/web").ReadableStream;
-AbortSignal.timeout = (time) => {
+AbortSignal.timeout = (ms) => {
   const controller = new AbortController();
   setTimeout(
     () =>
       controller.abort(
-        new DOMException(`This signal is timeout in ${time}ms`, "TimeoutError")
+        new DOMException("The operation timed out.", "TimeoutError")
       ),
-    time
+    ms
   );
   return controller.signal;
 };

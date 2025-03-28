@@ -163,17 +163,6 @@ export declare namespace useQuery {
   }
 }
 
-type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
-  useQuery.Result<TData, TVariables>,
-  | "startPolling"
-  | "stopPolling"
-  | "subscribeToMore"
-  | "updateQuery"
-  | "refetch"
-  | "reobserve"
-  | "fetchMore"
->;
-
 const lastWatchOptions = Symbol();
 
 interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>

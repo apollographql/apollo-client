@@ -389,7 +389,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
   if (!resultData.current) {
-    setResult(observable.getCurrentResult(), resultData);
+    resultData.current = observable.getCurrentResult();
   }
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
@@ -495,18 +495,6 @@ function getObsQueryOptions<TData, TVariables extends OperationVariables>(
   toMerge.push(compact(observable && observable.options, watchQueryOptions));
 
   return toMerge.reduce(mergeOptions) as WatchQueryOptions<TVariables, TData>;
-}
-
-function setResult<TData>(
-  nextResult: ApolloQueryResult<MaybeMasked<TData>>,
-  resultData: InternalResult<TData>
-) {
-  const previousResult = resultData.current;
-  if (previousResult && previousResult.data) {
-    resultData.previousData = previousResult.data;
-  }
-
-  resultData.current = nextResult;
 }
 
 useQuery.ssrDisabledResult = maybeDeepFreeze({

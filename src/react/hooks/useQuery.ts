@@ -320,10 +320,6 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     { query }
   );
 
-  if (!watchQueryOptions.variables) {
-    watchQueryOptions.variables = {} as TVariables;
-  }
-
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
     // "standby", but we also need/want to preserve the initial non-standby

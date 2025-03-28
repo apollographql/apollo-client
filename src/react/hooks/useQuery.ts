@@ -325,8 +325,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     watchQueryOptions.initialFetchPolicy =
       options.initialFetchPolicy ||
       options.fetchPolicy ||
-      client.defaultOptions?.watchQuery?.fetchPolicy ||
-      "cache-first";
+      client.defaultOptions?.watchQuery?.fetchPolicy;
     watchQueryOptions.fetchPolicy = "standby";
   }
 

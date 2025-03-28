@@ -461,32 +461,72 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       });
     }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("suspends a query with variables and returns results", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { variables: { id: "1" } }),
-      { mocks }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<
+        useSuspenseQuery.Result<VariablesCaseData, VariablesCaseVariables>
+      >();
 
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        error: undefined,
-      });
+    function Component({ id }: { id: string }) {
+      useTrackRenders();
+      replaceSnapshot(useSuspenseQuery(query, { variables: { id } }));
+
+      return null;
+    }
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return null;
+    }
+
+    function Error() {
+      useTrackRenders();
+
+      return null;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary FallbackComponent={Error}>
+            <Component id="1" />
+          </ErrorBoundary>
+        </Suspense>
+      );
+    }
+
+    await render(<App />, {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
     });
 
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toEqualStrictTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
-      },
-    ]);
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 
   it("returns the same results for the same variables", async () => {

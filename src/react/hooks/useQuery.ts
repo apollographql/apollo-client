@@ -399,10 +399,18 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   );
 
   const previousData = resultData.previousData;
-  return React.useMemo(
-    () => toQueryResult(result, previousData, observable, client),
-    [result, previousData, observable, client]
-  );
+  return React.useMemo<InternalQueryResult<TData, TVariables>>(() => {
+    const { data, partial, ...resultWithoutPartial } = result;
+
+    return {
+      data, // Ensure always defined, even if result.data is missing.
+      ...resultWithoutPartial,
+      client,
+      observable,
+      variables: observable.variables,
+      previousData,
+    };
+  }, [result, previousData, observable, client]);
 }
 
 function useObservableSubscriptionResult<
@@ -497,24 +505,6 @@ function setResult<TData>(
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
-}
-
-function toQueryResult<TData, TVariables extends OperationVariables>(
-  result: ApolloQueryResult<MaybeMasked<TData>>,
-  previousData: MaybeMasked<TData> | undefined,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient
-): InternalQueryResult<TData, TVariables> {
-  const { data, partial, ...resultWithoutPartial } = result;
-  const queryResult: InternalQueryResult<TData, TVariables> = {
-    data, // Ensure always defined, even if result.data is missing.
-    ...resultWithoutPartial,
-    client: client,
-    observable: observable,
-    variables: observable.variables,
-    previousData,
-  };
-  return queryResult;
 }
 
 useQuery.ssrDisabledResult = maybeDeepFreeze({

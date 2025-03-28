@@ -268,15 +268,10 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
-    const opts = mergeOptions(
-      client.defaultOptions.watchQuery,
-      watchQueryOptions
-    );
-
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: client.watchQuery(opts),
+      observable: client.watchQuery(watchQueryOptions),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
@@ -465,11 +460,6 @@ function useResubscribeIfNecessary<
     observable[lastWatchOptions] &&
     !equal(observable[lastWatchOptions], watchQueryOptions)
   ) {
-    const opts = mergeOptions(
-      client.defaultOptions.watchQuery,
-      watchQueryOptions
-    );
-
     // Though it might be tempting to postpone this reobserve call to the
     // useEffect block, we need getCurrentResult to return an appropriate
     // loading:true result synchronously (later within the same call to
@@ -478,7 +468,7 @@ function useResubscribeIfNecessary<
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    observable.reobserve(opts);
+    observable.reobserve(watchQueryOptions);
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult

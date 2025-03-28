@@ -2913,7 +2913,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error" }]),
+          error: new CombinedGraphQLErrors([{ message: "error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -2968,9 +2970,10 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([
-            { message: 'Could not fetch "hello"' },
-          ]),
+          error: new CombinedGraphQLErrors(
+            [{ message: 'Could not fetch "hello"' }],
+            { data: { hello: null } }
+          ),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3137,9 +3140,10 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: null },
-          error: new CombinedGraphQLErrors([
-            { message: 'Could not fetch "hello"' },
-          ]),
+          error: new CombinedGraphQLErrors(
+            [{ message: 'Could not fetch "hello"' }],
+            { data: { hello: null } }
+          ),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3251,7 +3255,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error" }]),
+          error: new CombinedGraphQLErrors([{ message: "error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3266,7 +3272,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error" }]),
+          error: new CombinedGraphQLErrors([{ message: "error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3562,7 +3570,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error" }]),
+          error: new CombinedGraphQLErrors([{ message: "error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3678,7 +3688,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error 1" }]),
+          error: new CombinedGraphQLErrors([{ message: "error 1" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3687,7 +3699,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new CombinedGraphQLErrors([{ message: "error 2" }])
+        new CombinedGraphQLErrors([{ message: "error 2" }], { data: undefined })
       );
 
       {
@@ -3707,7 +3719,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error 2" }]),
+          error: new CombinedGraphQLErrors([{ message: "error 2" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3771,7 +3785,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error 1" }]),
+          error: new CombinedGraphQLErrors([{ message: "error 1" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3780,7 +3796,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new CombinedGraphQLErrors([{ message: "error 2" }])
+        new CombinedGraphQLErrors([{ message: "error 2" }], { data: undefined })
       );
 
       {
@@ -3788,7 +3804,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "error 2" }]),
+          error: new CombinedGraphQLErrors([{ message: "error 2" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3852,7 +3870,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "same error" }]),
+          error: new CombinedGraphQLErrors([{ message: "same error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3861,7 +3881,9 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new CombinedGraphQLErrors([{ message: "same error" }])
+        new CombinedGraphQLErrors([{ message: "same error" }], {
+          data: undefined,
+        })
       );
 
       {
@@ -3881,7 +3903,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "same error" }]),
+          error: new CombinedGraphQLErrors([{ message: "same error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3951,7 +3975,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: "same error" }]),
+          error: new CombinedGraphQLErrors([{ message: "same error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3985,7 +4011,9 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new CombinedGraphQLErrors([{ message: "same error" }])
+        new CombinedGraphQLErrors([{ message: "same error" }], {
+          data: undefined,
+        })
       );
 
       {
@@ -4004,7 +4032,9 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           // TODO: Is this correct behavior here?
           data: { hello: "world" },
-          error: new CombinedGraphQLErrors([{ message: "same error" }]),
+          error: new CombinedGraphQLErrors([{ message: "same error" }], {
+            data: undefined,
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: { hello: "world" },
@@ -4947,7 +4977,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -4972,7 +5004,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -4994,7 +5028,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5007,7 +5043,9 @@ describe("useQuery Hook", () => {
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -5051,7 +5089,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5064,7 +5104,9 @@ describe("useQuery Hook", () => {
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -5218,7 +5260,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5243,7 +5287,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5268,7 +5314,9 @@ describe("useQuery Hook", () => {
       // the other query has finished and re-rendered.
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5464,7 +5512,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5489,7 +5539,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5511,7 +5563,9 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }], {
+          data: { person: null },
+        }),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -9368,13 +9422,16 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        error: new CombinedGraphQLErrors([
-          {
-            message:
-              "homeWorld for character with ID 1000 could not be fetched.",
-            path: ["hero", "heroFriends", 0, "homeWorld"],
-          },
-        ]),
+        error: new CombinedGraphQLErrors(
+          [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
+            },
+          ],
+          { data: undefined }
+        ),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: {
@@ -9542,13 +9599,26 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        error: new CombinedGraphQLErrors([
+        error: new CombinedGraphQLErrors(
+          [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
+            },
+          ],
           {
-            message:
-              "homeWorld for character with ID 1000 could not be fetched.",
-            path: ["hero", "heroFriends", 0, "homeWorld"],
-          },
-        ]),
+            data: {
+              hero: {
+                heroFriends: [
+                  { homeWorld: null, id: "1000", name: "Luke Skywalker" },
+                  { homeWorld: "Alderaan", id: "1003", name: "Leia Organa" },
+                ],
+                name: "R2-D2",
+              },
+            },
+          }
+        ),
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: {
@@ -10002,7 +10072,9 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      error: new CombinedGraphQLErrors([graphQLError]),
+      error: new CombinedGraphQLErrors([graphQLError], {
+        data: { user: { __typename: "User", id: "1", name: null } },
+      }),
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
@@ -10024,7 +10096,9 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      error: new CombinedGraphQLErrors([graphQLError]),
+      error: new CombinedGraphQLErrors([graphQLError], {
+        data: { user: { __typename: "User", id: "1", name: null } },
+      }),
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
@@ -10999,7 +11073,11 @@ describe("useQuery Hook", () => {
               name: null,
             },
           },
-          error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
+          error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }], {
+            data: {
+              currentUser: { __typename: "User", id: 1, name: null, age: 34 },
+            },
+          }),
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,

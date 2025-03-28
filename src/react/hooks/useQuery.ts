@@ -487,24 +487,6 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   return resultData.current;
 }
 
-function toQueryResult<TData, TVariables extends OperationVariables>(
-  result: ApolloQueryResult<MaybeMasked<TData>>,
-  previousData: MaybeMasked<TData> | undefined,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient
-): InternalQueryResult<TData, TVariables> {
-  const { data, partial, ...resultWithoutPartial } = result;
-  const queryResult: InternalQueryResult<TData, TVariables> = {
-    data, // Ensure always defined, even if result.data is missing.
-    ...resultWithoutPartial,
-    client: client,
-    observable: observable,
-    variables: observable.variables,
-    previousData,
-  };
-  return queryResult;
-}
-
 useQuery.ssrDisabledResult = maybeDeepFreeze({
   loading: true,
   data: void 0 as any,

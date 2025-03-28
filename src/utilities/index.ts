@@ -1,18 +1,20 @@
-export { DEV, maybe } from "./globals/index.js";
+export { Observable } from "rxjs";
+
+export { maybe } from "./globals/index.js";
 
 export type {
   DirectiveInfo,
   InclusionDirectives,
 } from "./graphql/directives.js";
 export {
-  shouldInclude,
-  hasDirectives,
-  hasAnyDirectives,
-  hasAllDirectives,
-  hasClientExports,
   getDirectiveNames,
-  getInclusionDirectives,
   getFragmentMaskMode,
+  getInclusionDirectives,
+  hasAllDirectives,
+  hasAnyDirectives,
+  hasClientExports,
+  hasDirectives,
+  shouldInclude,
 } from "./graphql/directives.js";
 
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
@@ -21,66 +23,66 @@ export { DocumentTransform } from "./graphql/DocumentTransform.js";
 export type { FragmentMap, FragmentMapFunction } from "./graphql/fragments.js";
 export {
   createFragmentMap,
-  getFragmentQueryDocument,
   getFragmentFromSelection,
+  getFragmentQueryDocument,
   isFullyUnmaskedOperation,
 } from "./graphql/fragments.js";
 
 export {
   checkDocument,
+  getDefaultValues,
+  getFragmentDefinition,
+  getFragmentDefinitions,
+  getMainDefinition,
   getOperationDefinition,
   getOperationName,
-  getFragmentDefinitions,
   getQueryDefinition,
-  getFragmentDefinition,
-  getMainDefinition,
-  getDefaultValues,
 } from "./graphql/getFromAST.js";
 
 export { print } from "./graphql/print.js";
 
 export type {
-  StoreObject,
   AsStoreObject,
-  Reference,
-  StoreValue,
   Directives,
+  Reference,
+  StoreObject,
+  StoreValue,
   VariableValue,
 } from "./graphql/storeUtils.js";
 export {
-  makeReference,
-  isDocumentNode,
-  isReference,
-  isField,
-  isInlineFragment,
-  valueToObjectRepresentation,
-  storeKeyNameFromField,
   argumentsObjectFromField,
-  resultKeyNameFromField,
   getStoreKeyName,
   getTypenameFromResult,
+  isDocumentNode,
+  isField,
+  isInlineFragment,
+  isReference,
+  makeReference,
+  resultKeyNameFromField,
+  storeKeyNameFromField,
+  valueToObjectRepresentation,
 } from "./graphql/storeUtils.js";
 
 export type {
-  RemoveNodeConfig,
-  GetNodeConfig,
-  RemoveDirectiveConfig,
   GetDirectiveConfig,
-  RemoveArgumentsConfig,
   GetFragmentSpreadConfig,
-  RemoveFragmentSpreadConfig,
+  GetNodeConfig,
+  RemoveArgumentsConfig,
+  RemoveDirectiveConfig,
   RemoveFragmentDefinitionConfig,
+  RemoveFragmentSpreadConfig,
+  RemoveNodeConfig,
   RemoveVariableDefinitionConfig,
 } from "./graphql/transform.js";
 export {
-  addTypenameToDocument,
   addNonReactiveToNamedFragments,
+  addTypenameToDocument,
   buildQueryFromSelectionSet,
-  removeDirectivesFromDocument,
-  removeConnectionDirectiveFromDocument,
   removeArgumentsFromDocument,
-  removeFragmentSpreadFromDocument,
   removeClientSetsFromDocument,
+  removeConnectionDirectiveFromDocument,
+  removeDirectivesFromDocument,
+  removeFragmentSpreadFromDocument,
 } from "./graphql/transform.js";
 
 export {
@@ -95,17 +97,11 @@ export {
   relayStylePagination,
 } from "./policies/pagination.js";
 
-export type {
-  Observer,
-  ObservableSubscription,
-} from "./observables/Observable.js";
-export { Observable } from "./observables/Observable.js";
-
 export type { PromiseWithState } from "./promises/decoration.js";
 export {
-  isStatefulPromise,
   createFulfilledPromise,
   createRejectedPromise,
+  isStatefulPromise,
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
@@ -114,10 +110,6 @@ export { preventUnhandledRejection } from "./promises/preventUnhandledRejection.
 export * from "./common/mergeDeep.js";
 export * from "./common/cloneDeep.js";
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
-export * from "./observables/iteration.js";
-export * from "./observables/asyncMap.js";
-export * from "./observables/Concast.js";
-export * from "./observables/subclassing.js";
 export * from "./common/arrays.js";
 export * from "./common/objects.js";
 export * from "./common/errorHandling.js";

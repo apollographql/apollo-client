@@ -1,13 +1,13 @@
-export interface PendingPromise<TValue> extends Promise<TValue> {
+interface PendingPromise<TValue> extends Promise<TValue> {
   status: "pending";
 }
 
-export interface FulfilledPromise<TValue> extends Promise<TValue> {
+interface FulfilledPromise<TValue> extends Promise<TValue> {
   status: "fulfilled";
   value: TValue;
 }
 
-export interface RejectedPromise<TValue> extends Promise<TValue> {
+interface RejectedPromise<TValue> extends Promise<TValue> {
   status: "rejected";
   reason: unknown;
 }

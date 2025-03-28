@@ -1,40 +1,49 @@
-import { invariant, newInvariantError } from "../utilities/globals/index.js";
-
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type { Observable } from "rxjs";
+import { map } from "rxjs";
 
-import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
-import { ApolloLink, execute } from "../link/core/index.js";
-import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform } from "../utilities/index.js";
-import type { Observable } from "../utilities/index.js";
+import type { ApolloCache, DataProxy, Reference } from "@apollo/client/cache";
+import type {
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "@apollo/client/cache";
+import type { FetchResult, GraphQLRequest } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import type { UriFunction } from "@apollo/client/link/http";
+import { HttpLink } from "@apollo/client/link/http";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DocumentTransform } from "@apollo/client/utilities";
+import { mergeOptions } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import { version } from "../version.js";
-import type { UriFunction } from "../link/http/index.js";
-import { HttpLink } from "../link/http/index.js";
-
-import { QueryManager } from "./QueryManager.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-
-import type {
-  ApolloQueryResult,
-  DefaultContext,
-  OperationVariables,
-  Resolvers,
-  RefetchQueriesOptions,
-  RefetchQueriesResult,
-  InternalRefetchQueriesResult,
-  RefetchQueriesInclude,
-} from "./types.js";
-
-import type {
-  QueryOptions,
-  WatchQueryOptions,
-  MutationOptions,
-  SubscriptionOptions,
-  WatchQueryFetchPolicy,
-} from "./watchQueryOptions.js";
 
 import type { FragmentMatcher } from "./LocalState.js";
 import { LocalState } from "./LocalState.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import { QueryManager } from "./QueryManager.js";
+import type {
+  ApolloQueryResult,
+  DefaultContext,
+  InternalRefetchQueriesResult,
+  OperationVariables,
+  RefetchQueriesInclude,
+  RefetchQueriesOptions,
+  RefetchQueriesResult,
+  Resolvers,
+} from "./types.js";
+import type {
+  MutationOptions,
+  QueryOptions,
+  SubscriptionOptions,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "./watchQueryOptions.js";
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
@@ -42,7 +51,7 @@ export interface DefaultOptions {
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
-export interface DevtoolsOptions {
+interface DevtoolsOptions {
   /**
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
    *
@@ -60,7 +69,7 @@ export interface DevtoolsOptions {
 
 let hasSuggestedDevtools = false;
 
-export interface ApolloClientOptions<TCacheShape> {
+export interface ApolloClientOptions {
   /**
    * The URI of the GraphQL endpoint that Apollo Client will communicate with.
    *
@@ -85,7 +94,7 @@ export interface ApolloClientOptions<TCacheShape> {
    *
    * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
    */
-  cache: ApolloCache<TCacheShape>;
+  cache: ApolloCache;
   /**
    * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
    *
@@ -158,13 +167,6 @@ export interface ApolloClientOptions<TCacheShape> {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities/index.js";
-import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
-import type {
-  WatchFragmentOptions,
-  WatchFragmentResult,
-} from "../cache/core/cache.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -173,21 +175,39 @@ export { mergeOptions };
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through `Observable` instances.
  */
-export class ApolloClient<TCacheShape> implements DataProxy {
+export class ApolloClient implements DataProxy {
   public link: ApolloLink;
-  public cache: ApolloCache<TCacheShape>;
-  public disableNetworkFetches: boolean;
+  public cache: ApolloCache;
+  /**
+   * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`.
+   */
+  public disableNetworkFetches!: never;
+
+  public set prioritizeCacheValues(value: boolean) {
+    this.queryManager.prioritizeCacheValues = value;
+  }
+
+  /**
+   * Whether to prioritize cache values over network results when `query` or `watchQuery` is called.
+   * This will essentially turn a `"network-only"` or `"cache-and-network"` fetchPolicy into a `"cache-first"` fetchPolicy,
+   * but without influencing the `fetchPolicy` of the created `ObservableQuery` long-term.
+   *
+   * This can e.g. be used to prioritize the cache during the first render after SSR.
+   */
+  public get prioritizeCacheValues() {
+    return this.queryManager.prioritizeCacheValues;
+  }
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
-  public readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
+  public readonly typeDefs: ApolloClientOptions["typeDefs"];
   public readonly devtoolsConfig: DevtoolsOptions;
 
-  private queryManager: QueryManager<TCacheShape>;
+  private queryManager: QueryManager;
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private localState: LocalState<TCacheShape>;
+  private localState: LocalState;
 
   /**
    * Constructs an instance of `ApolloClient`.
@@ -215,7 +235,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * });
    * ```
    */
-  constructor(options: ApolloClientOptions<TCacheShape>) {
+  constructor(options: ApolloClientOptions) {
     if (!options.cache) {
       throw newInvariantError(
         "To initialize Apollo Client, you must specify a 'cache' property " +
@@ -258,9 +278,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     this.link = link;
     this.cache = cache;
-    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || Object.create(null);
+    this.defaultOptions = defaultOptions || {};
     this.typeDefs = typeDefs;
     this.devtoolsConfig = {
       ...devtools,
@@ -269,13 +288,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
     if (this.devtoolsConfig.enabled === undefined) {
       this.devtoolsConfig.enabled = __DEV__;
-    }
-
-    if (ssrForceFetchDelay) {
-      setTimeout(
-        () => (this.disableNetworkFetches = false),
-        ssrForceFetchDelay
-      );
     }
 
     this.watchQuery = this.watchQuery.bind(this);
@@ -313,18 +325,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         this.devtoolsConfig.enabled ?
           () => {
             if (this.devToolsHookCb) {
-              this.devToolsHookCb({
-                action: {},
-                state: {
-                  queries: this.queryManager.getQueryStore(),
-                  mutations: this.queryManager.mutationStore || {},
-                },
-                dataWithOptimisticResults: this.cache.extract(true),
-              });
+              this.devToolsHookCb();
             }
           }
         : void 0,
     });
+
+    this.prioritizeCacheValues = ssrMode || ssrForceFetchDelay > 0;
+    if (ssrForceFetchDelay) {
+      setTimeout(() => {
+        this.prioritizeCacheValues = false;
+      }, ssrForceFetchDelay);
+    }
 
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
   }
@@ -335,11 +347,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     type DevToolsConnector = {
-      push(client: ApolloClient<any>): void;
+      push(client: ApolloClient): void;
     };
     const windowWithDevTools = window as Window & {
       [devtoolsSymbol]?: DevToolsConnector;
-      __APOLLO_CLIENT__?: ApolloClient<any>;
+      __APOLLO_CLIENT__?: ApolloClient;
     };
     const devtoolsSymbol = Symbol.for("apollo.devtools");
     (windowWithDevTools[devtoolsSymbol] =
@@ -423,23 +435,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * a description of store reactivity.
    */
   public watchQuery<
-    T = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+  >(
+    options: WatchQueryOptions<TVariables, TData>
+  ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
 
-    // XXX Overwriting options is probably not the best way to do this long term...
-    if (
-      this.disableNetworkFetches &&
-      (options.fetchPolicy === "network-only" ||
-        options.fetchPolicy === "cache-and-network")
-    ) {
-      options = { ...options, fetchPolicy: "cache-first" };
-    }
-
-    return this.queryManager.watchQuery<T, TVariables>(options);
+    return this.queryManager.watchQuery<TData, TVariables>(options);
   }
 
   /**
@@ -452,11 +457,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * server at all or just resolve from the cache, etc.
    */
   public query<
-    T = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: QueryOptions<TVariables, T>
-  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
+    options: QueryOptions<TVariables, TData>
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -469,11 +474,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         "using a different fetchPolicy, such as cache-first or network-only."
     );
 
-    if (this.disableNetworkFetches && options.fetchPolicy === "network-only") {
-      options = { ...options, fetchPolicy: "cache-first" };
-    }
-
-    return this.queryManager.query<T, TVariables>(options);
+    return this.queryManager.query<TData, TVariables>(options);
   }
 
   /**
@@ -485,10 +486,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * It takes options as an object with the following keys and values:
    */
   public mutate<
-    TData = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TContext extends Record<string, any> = DefaultContext,
-    TCache extends ApolloCache<any> = ApolloCache<any>,
+    TCache extends ApolloCache = ApolloCache,
   >(
     options: MutationOptions<TData, TVariables, TContext>
   ): Promise<FetchResult<MaybeMasked<TData>>> {
@@ -505,16 +506,15 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * `Observable` which either emits received data or an error.
    */
   public subscribe<
-    T = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: SubscriptionOptions<TVariables, T>
-  ): Observable<FetchResult<MaybeMasked<T>>> {
+    options: SubscriptionOptions<TVariables, TData>
+  ): Observable<FetchResult<MaybeMasked<TData>>> {
     const id = this.queryManager.generateQueryId();
 
-    return this.queryManager
-      .startGraphQLSubscription<T>(options)
-      .map((result) => ({
+    return this.queryManager.startGraphQLSubscription<TData>(options).pipe(
+      map((result) => ({
         ...result,
         data: this.queryManager.maskOperation({
           document: options.query,
@@ -522,7 +522,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           fetchPolicy: options.fetchPolicy,
           id,
         }),
-      }));
+      }))
+    );
   }
 
   /**
@@ -534,11 +535,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * @param optimistic - Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
-  public readQuery<T = any, TVariables = OperationVariables>(
-    options: DataProxy.Query<TVariables, T>,
+  public readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: DataProxy.Query<TVariables, TData>,
     optimistic: boolean = false
-  ): Unmasked<T> | null {
-    return this.cache.readQuery<T, TVariables>(options, optimistic);
+  ): Unmasked<TData> | null {
+    return this.cache.readQuery<TData, TVariables>(options, optimistic);
   }
 
   /**
@@ -558,12 +559,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * to optimistic updates.
    */
 
-  public watchFragment<
-    TFragmentData = unknown,
-    TVariables = OperationVariables,
-  >(
-    options: WatchFragmentOptions<TFragmentData, TVariables>
-  ): Observable<WatchFragmentResult<TFragmentData>> {
+  public watchFragment<TData = unknown, TVariables = OperationVariables>(
+    options: WatchFragmentOptions<TData, TVariables>
+  ): Observable<WatchFragmentResult<TData>> {
     return this.cache.watchFragment({
       ...options,
       [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
@@ -584,7 +582,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
    */
-  public readFragment<T = any, TVariables = OperationVariables>(
+  public readFragment<T = unknown, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
   ): Unmasked<T> | null {
@@ -596,7 +594,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * the store. This method will start at the root query. To start at a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
-  public writeQuery<TData = any, TVariables = OperationVariables>(
+  public writeQuery<TData = unknown, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>
   ): Reference | undefined {
     const ref = this.cache.writeQuery<TData, TVariables>(options);
@@ -619,7 +617,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment<TData = any, TVariables = OperationVariables>(
+  public writeFragment<TData = unknown, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>
   ): Reference | undefined {
     const ref = this.cache.writeFragment<TData, TVariables>(options);
@@ -740,13 +738,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    */
   public refetchQueries<
-    TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
+    TCache extends ApolloCache = ApolloCache,
     TResult = Promise<ApolloQueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
-      options as RefetchQueriesOptions<ApolloCache<TCacheShape>, TResult>
+      options as RefetchQueriesOptions<ApolloCache, TResult>
     );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];
@@ -798,7 +796,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public extract(optimistic?: boolean): TCacheShape {
+  public extract(optimistic?: boolean) {
     return this.cache.extract(optimistic);
   }
 
@@ -809,7 +807,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * Called when hydrating a cache (server side rendering, or offline storage),
    * and also (potentially) during hot reloads.
    */
-  public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
+  public restore(serializedState: unknown) {
     return this.cache.restore(serializedState);
   }
 

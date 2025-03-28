@@ -1,4 +1,4 @@
-import type { VariableDefinitionNode, DocumentNode } from "graphql";
+import type { DocumentNode, VariableDefinitionNode } from "graphql";
 import { visit } from "graphql";
 
 export function filterOperationVariables(

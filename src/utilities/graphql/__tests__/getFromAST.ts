@@ -1,14 +1,14 @@
 import { print } from "graphql";
-import gql from "graphql-tag";
 import { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
+import { gql } from "graphql-tag";
 
 import {
   checkDocument,
-  getFragmentDefinitions,
-  getQueryDefinition,
   getDefaultValues,
+  getFragmentDefinitions,
   getOperationName,
-} from "../getFromAST";
+  getQueryDefinition,
+} from "../getFromAST.js";
 
 describe("AST utility functions", () => {
   it("should correctly check a document for correctness", () => {

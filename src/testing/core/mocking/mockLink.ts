@@ -1,27 +1,25 @@
-import { invariant } from "../../../utilities/globals/index.js";
-
 import { equal } from "@wry/equality";
+import { Observable } from "rxjs";
 
 import type {
-  Operation,
-  GraphQLRequest,
   FetchResult,
-} from "../../../link/core/index.js";
-import { ApolloLink } from "../../../link/core/index.js";
-
+  GraphQLRequest,
+  Operation,
+} from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
 import {
-  Observable,
   addTypenameToDocument,
-  removeClientSetsFromDocument,
-  cloneDeep,
-  print,
-  getOperationDefinition,
-  getDefaultValues,
-  removeDirectivesFromDocument,
   checkDocument,
+  cloneDeep,
+  getDefaultValues,
+  getOperationDefinition,
   makeUniqueId,
-} from "../../../utilities/index.js";
-import type { Unmasked } from "../../../masking/index.js";
+  print,
+  removeClientSetsFromDocument,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
@@ -31,7 +29,7 @@ export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
   T
 >;
 
-export type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
+type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
   V,
   boolean
 >;
@@ -56,27 +54,23 @@ export interface MockLinkOptions {
   showWarnings?: boolean;
 }
 
-function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
+function requestToKey(request: GraphQLRequest): string {
   const queryString =
-    request.query &&
-    print(addTypename ? addTypenameToDocument(request.query) : request.query);
+    request.query && print(addTypenameToDocument(request.query));
   const requestKey = { query: queryString };
   return JSON.stringify(requestKey);
 }
 
 export class MockLink extends ApolloLink {
   public operation!: Operation;
-  public addTypename: Boolean = true;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
-    addTypename: Boolean = true,
-    options: MockLinkOptions = Object.create(null)
+    options: MockLinkOptions = {}
   ) {
     super();
-    this.addTypename = addTypename;
     this.showWarnings = options.showWarnings ?? true;
 
     if (mockedResponses) {
@@ -89,10 +83,7 @@ export class MockLink extends ApolloLink {
   public addMockedResponse(mockedResponse: MockedResponse) {
     const normalizedMockedResponse =
       this.normalizeMockedResponse(mockedResponse);
-    const key = requestToKey(
-      normalizedMockedResponse.request,
-      this.addTypename
-    );
+    const key = requestToKey(normalizedMockedResponse.request);
     let mockedResponses = this.mockedResponsesByKey[key];
     if (!mockedResponses) {
       mockedResponses = [];
@@ -103,7 +94,7 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
-    const key = requestToKey(operation, this.addTypename);
+    const key = requestToKey(operation);
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
     const mockedResponses = this.mockedResponsesByKey[key];
@@ -266,26 +257,17 @@ export interface MockApolloLink extends ApolloLink {
 
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
-// NOTE: The last arg can optionally be an `addTypename` arg.
-export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink {
-  // To pull off the potential typename. If this isn't a boolean, we'll just
-  // set it true later.
-  let maybeTypename = mockedResponses[mockedResponses.length - 1];
-  let mocks = mockedResponses.slice(0, mockedResponses.length - 1);
-
-  if (typeof maybeTypename !== "boolean") {
-    mocks = mockedResponses;
-    maybeTypename = true;
-  }
-
-  return new MockLink(mocks, maybeTypename);
+export function mockSingleLink(
+  ...mockedResponses: Array<MockedResponse<any, any>>
+): MockApolloLink {
+  return new MockLink(mockedResponses);
 }
 
 // This is similiar to the stringifyForDisplay utility we ship, but includes
 // support for NaN in addition to undefined. More values may be handled in the
 // future. This is not added to the primary stringifyForDisplay helper since it
 // is used for the cache and other purposes. We need this for debuggging only.
-export function stringifyForDebugging(value: any, space = 0): string {
+function stringifyForDebugging(value: any, space = 0): string {
   const undefId = makeUniqueId("undefined");
   const nanId = makeUniqueId("NaN");
 

@@ -1,6 +1,7 @@
-import { checkDocument, print } from "../../utilities/index.js";
-import type { DocumentNode } from "../../core/index.js";
 import type { MatcherFunction } from "expect";
+
+import type { DocumentNode } from "@apollo/client/core";
+import { checkDocument, print } from "@apollo/client/utilities";
 
 export const toMatchDocument: MatcherFunction<[document: DocumentNode]> =
   function (actual, document) {

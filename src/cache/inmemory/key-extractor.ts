@@ -1,17 +1,16 @@
-import { invariant } from "../../utilities/globals/index.js";
-
 import {
   argumentsObjectFromField,
   DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { hasOwn, isArray } from "./helpers.js";
 import type {
-  KeySpecifier,
-  KeyFieldsFunction,
   KeyArgsFunction,
+  KeyFieldsFunction,
+  KeySpecifier,
 } from "./policies.js";
 
 // Mapping from JSON-encoded KeySpecifier strings to associated information.
@@ -22,17 +21,14 @@ const specifierInfoCache: Record<
     keyFieldsFn?: KeyFieldsFunction;
     keyArgsFn?: KeyArgsFunction;
   }
-> = Object.create(null);
+> = {};
 
 function lookupSpecifierInfo(spec: KeySpecifier) {
   // It's safe to encode KeySpecifier arrays with JSON.stringify, since they're
   // just arrays of strings or nested KeySpecifier arrays, and the order of the
   // array elements is important (and suitably preserved by JSON.stringify).
   const cacheKey = JSON.stringify(spec);
-  return (
-    specifierInfoCache[cacheKey] ||
-    (specifierInfoCache[cacheKey] = Object.create(null))
-  );
+  return specifierInfoCache[cacheKey] || (specifierInfoCache[cacheKey] = {});
 }
 
 export function keyFieldsFnFromSpecifier(
@@ -197,7 +193,7 @@ export function collectSpecifierPaths(
       collected = merger.merge(collected, toMerge);
     }
     return collected;
-  }, Object.create(null));
+  }, {});
 }
 
 export function getSpecifierPaths(spec: KeySpecifier): string[][] {

@@ -1,14 +1,30 @@
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import _import from "eslint-plugin-import";
-import localRules from "eslint-plugin-local-rules";
-import { fixupPluginRules, fixupConfigRules } from "@eslint/compat";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import reactCompiler from "eslint-plugin-react-compiler";
+if (!process.features.typescript) {
+  throw new Error(
+    `
+    This configuration requires TypeScript support.
+    Run node with --experimental-strip-types.
+
+    If using VSCode, add the following to your settings.json
+    and reload the window (restarting the ESLint Server might not be enough):
+      "eslint.runtime": "/opt/homebrew/bin/node",
+      "eslint.execArgv": [ "--experimental-strip-types" ]
+    `
+  );
+}
+
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
+
+import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
 import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
+import _import from "eslint-plugin-import";
+import reactCompiler from "eslint-plugin-react-compiler";
+import globals from "globals";
+
+import localRules from "./eslint-local-rules/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,7 +39,9 @@ export default [
     plugins: {
       "@typescript-eslint": typescriptEslint,
       import: fixupPluginRules(_import),
-      "local-rules": localRules,
+      "local-rules": {
+        rules: localRules,
+      },
     },
 
     languageOptions: {
@@ -41,7 +59,7 @@ export default [
       "import/parsers": {
         "@typescript-eslint/parser": [".ts", ".tsx"],
       },
-
+      "import/internal-regex": "^@apollo/client",
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
@@ -51,6 +69,38 @@ export default [
 
     rules: {
       "import/no-unresolved": "error",
+      "import/order": [
+        "warn",
+        {
+          "newlines-between": "always",
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+          ],
+          alphabetize: {
+            order: "asc",
+            orderImportKind: "asc",
+            caseInsensitive: true,
+          },
+          named: true,
+        },
+      ],
+      "local-rules/import-from-export": "error",
+      "local-rules/import-from-inside-other-export": [
+        "warn",
+        {
+          ignoreFrom: [
+            "src/version.js",
+            "src/invariantErrorCodes.js",
+            "src/utilities/caching/getMemoryInternals.js",
+            "src/utilities/types/TODO.js",
+          ].map((file) => path.resolve(__dirname, file)),
+        },
+      ],
     },
   },
   ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
@@ -75,6 +125,8 @@ export default [
       parserOptions: {
         project: [
           "./tsconfig.json",
+          "./config/tsconfig.json",
+          "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/data-masking/tsconfig.json",
         ],
       },
@@ -124,15 +176,6 @@ export default [
 
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
 
-      "import/extensions": [
-        "error",
-        "always",
-        {
-          ignorePackages: true,
-          checkTypeImports: true,
-        },
-      ],
-
       "local-rules/require-using-disposable": "error",
     },
   },
@@ -159,7 +202,10 @@ export default [
       sourceType: "script",
 
       parserOptions: {
-        project: "./tsconfig.tests.json",
+        project: [
+          "./tsconfig.tests.json",
+          "./eslint-local-rules/tsconfig.json",
+        ],
       },
     },
 
@@ -169,6 +215,7 @@ export default [
       "local-rules/require-using-disposable": "error",
       "local-rules/require-disable-act-environment": "error",
       "local-rules/forbid-act-in-disabled-act-environment": "error",
+      "local-rules/import-from-inside-other-export": "off",
       "@typescript-eslint/no-floating-promises": "warn",
     },
   },

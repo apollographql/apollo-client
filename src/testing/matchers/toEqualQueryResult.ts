@@ -1,16 +1,14 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
-import type { QueryResult } from "../../react/index.js";
+
+import type { useQuery } from "@apollo/client/react";
 
 const CHECKED_KEYS = [
   "loading",
   "error",
-  "errors",
   "data",
   "variables",
   "networkStatus",
-  "errors",
-  "called",
   "previousData",
 ] as const;
 
@@ -20,9 +18,9 @@ const hasOwnProperty = (obj: Record<string, any>, key: string) =>
   Object.prototype.hasOwnProperty.call(obj, key);
 
 export const toEqualQueryResult: MatcherFunction<
-  [queryResult: Pick<QueryResult<any, any>, CheckedKeys>]
+  [queryResult: Pick<useQuery.Result<any, any>, CheckedKeys>]
 > = function (actual, expected) {
-  const queryResult = actual as QueryResult<any, any>;
+  const queryResult = actual as useQuery.Result<any, any>;
   const hint = this.utils.matcherHint(
     this.isNot ? ".not.toEqualQueryResult" : "toEqualQueryResult",
     "queryResult",
@@ -38,7 +36,7 @@ export const toEqualQueryResult: MatcherFunction<
 
       return memo;
     },
-    {} as Partial<QueryResult<any, any>>
+    {} as Partial<useQuery.Result<any, any>>
   );
 
   const pass = this.equals(

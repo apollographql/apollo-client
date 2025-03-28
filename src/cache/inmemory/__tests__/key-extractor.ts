@@ -1,10 +1,11 @@
-import { KeySpecifier } from "../policies";
-import { canonicalStringify } from "../../../utilities";
+import { canonicalStringify } from "@apollo/client/utilities";
+
 import {
-  getSpecifierPaths,
   collectSpecifierPaths,
   extractKeyPath,
-} from "../key-extractor";
+  getSpecifierPaths,
+} from "../key-extractor.js";
+import { KeySpecifier } from "../policies.js";
 
 describe("keyFields and keyArgs extraction", () => {
   it("getSpecifierPaths should work for various specifiers", () => {

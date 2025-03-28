@@ -1,23 +1,23 @@
 import { equal } from "@wry/equality";
+import type { Subscription } from "rxjs";
+import { filter } from "rxjs";
+
 import type {
-  ApolloError,
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from "../../../core/index.js";
-import type {
-  ObservableSubscription,
-  PromiseWithState,
-} from "../../../utilities/index.js";
+} from "@apollo/client/core";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { PromiseWithState } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   createRejectedPromise,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
+import { wrapPromiseWithState } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { QueryKey } from "./types.js";
-import { wrapPromiseWithState } from "../../../utilities/index.js";
-import { invariant } from "../../../utilities/globals/invariantWrappers.js";
-import type { MaybeMasked } from "../../../masking/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<
   ApolloQueryResult<MaybeMasked<TData>>
@@ -193,7 +193,6 @@ export function updateWrappedQueryRef<TData>(
 }
 
 const OBSERVED_CHANGED_OPTIONS = [
-  "canonizeResults",
   "context",
   "errorPolicy",
   "fetchPolicy",
@@ -213,7 +212,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise!: QueryRefPromise<TData>;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
@@ -230,7 +229,6 @@ export class InternalQueryReference<TData = unknown> {
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
-    this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
 
@@ -348,10 +346,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   applyOptions(watchQueryOptions: ObservedOptions) {
-    const {
-      fetchPolicy: currentFetchPolicy,
-      canonizeResults: currentCanonizeResults,
-    } = this.watchQueryOptions;
+    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
 
     // "standby" is used when `skip` is set to `true`. Detect when we've
     // enabled the query (i.e. `skip` is `false`) to execute a network request.
@@ -362,11 +357,6 @@ export class InternalQueryReference<TData = unknown> {
       this.initiateFetch(this.observable.reobserve(watchQueryOptions));
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
-
-      if (currentCanonizeResults !== watchQueryOptions.canonizeResults) {
-        this.result = { ...this.result, ...this.observable.getCurrentResult() };
-        this.promise = createFulfilledPromise(this.result);
-      }
     }
 
     return this.promise;
@@ -405,8 +395,13 @@ export class InternalQueryReference<TData = unknown> {
         if (result.data === void 0) {
           result.data = this.result.data;
         }
-        this.result = result;
-        this.resolve?.(result);
+
+        if (this.shouldReject(result)) {
+          this.reject?.(result.error);
+        } else {
+          this.result = result;
+          this.resolve?.(result);
+        }
         break;
       }
       default: {
@@ -426,29 +421,15 @@ export class InternalQueryReference<TData = unknown> {
           result.data = this.result.data;
         }
 
-        this.result = result;
-        this.promise = createFulfilledPromise(result);
-        this.deliver(this.promise);
+        if (this.shouldReject(result)) {
+          this.promise = createRejectedPromise(result.error);
+          this.deliver(this.promise);
+        } else {
+          this.result = result;
+          this.promise = createFulfilledPromise(result);
+          this.deliver(this.promise);
+        }
         break;
-      }
-    }
-  }
-
-  private handleError(error: ApolloError) {
-    this.subscription.unsubscribe();
-    this.subscription = this.observable.resubscribeAfterError(
-      this.handleNext,
-      this.handleError
-    );
-
-    switch (this.promise.status) {
-      case "pending": {
-        this.reject?.(error);
-        break;
-      }
-      default: {
-        this.promise = createRejectedPromise(error);
-        this.deliver(this.promise);
       }
     }
   }
@@ -502,10 +483,8 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscribeToQuery() {
     this.subscription = this.observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
-      )
-      .subscribe(this.handleNext, this.handleError);
+      .pipe(filter((result) => !equal(result, this.result)))
+      .subscribe(this.handleNext);
   }
 
   private setResult() {
@@ -519,12 +498,15 @@ export class InternalQueryReference<TData = unknown> {
 
     this.result = result;
     this.promise =
-      (
-        result.data &&
-        (!result.partial || this.watchQueryOptions.returnPartialData)
-      ) ?
+      result.data ?
         createFulfilledPromise(result)
       : this.createPendingPromise();
+  }
+
+  private shouldReject(result: ApolloQueryResult<any>) {
+    const { errorPolicy = "none" } = this.watchQueryOptions;
+
+    return result.error && errorPolicy === "none";
   }
 
   private createPendingPromise() {

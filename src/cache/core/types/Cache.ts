@@ -1,46 +1,45 @@
-import { DataProxy } from "./DataProxy.js";
-import type { AllFieldsModifier, Modifiers } from "./common.js";
+import type { OperationVariables } from "@apollo/client/core";
+import type { Unmasked } from "@apollo/client/masking";
+
 import type { ApolloCache } from "../cache.js";
-import type { Unmasked } from "../../../masking/index.js";
+
+import type { AllFieldsModifier, Modifiers } from "./common.js";
+import { DataProxy } from "./DataProxy.js";
 
 export namespace Cache {
-  export type WatchCallback<TData = any> = (
+  export type WatchCallback<TData = unknown> = (
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  export interface ReadOptions<TVariables = any, TData = any>
+  export interface ReadOptions<TVariables = OperationVariables, TData = unknown>
     extends DataProxy.Query<TVariables, TData> {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
     returnPartialData?: boolean;
-    /**
-     * @deprecated
-     * Using `canonizeResults` can result in memory leaks so we generally do not
-     * recommend using this option anymore.
-     * A future version of Apollo Client will contain a similar feature without
-     * the risk of memory leaks.
-     */
-    canonizeResults?: boolean;
   }
 
-  export interface WriteOptions<TResult = any, TVariables = any>
-    extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
-      Omit<DataProxy.WriteOptions<TResult>, "data"> {
+  export interface WriteOptions<
+    TData = unknown,
+    TVariables = OperationVariables,
+  > extends Omit<DataProxy.Query<TVariables, TData>, "id">,
+      Omit<DataProxy.WriteOptions<TData>, "data"> {
     dataId?: string;
-    result: Unmasked<TResult>;
+    result: Unmasked<TData>;
   }
 
-  export interface DiffOptions<TData = any, TVariables = any>
+  export interface DiffOptions<TData = unknown, TVariables = OperationVariables>
     extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
   }
 
-  export interface WatchOptions<TData = any, TVariables = any>
-    extends DiffOptions<TData, TVariables> {
+  export interface WatchOptions<
+    TData = unknown,
+    TVariables = OperationVariables,
+  > extends DiffOptions<TData, TVariables> {
     watcher?: object;
     immediate?: boolean;
     callback: WatchCallback<TData>;
@@ -70,7 +69,7 @@ export namespace Cache {
   }
 
   export interface BatchOptions<
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
     TUpdateResult = void,
   > {
     // Same as the first parameter of performTransaction, except the cache

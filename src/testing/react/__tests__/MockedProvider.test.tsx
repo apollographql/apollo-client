@@ -1,16 +1,15 @@
-import React from "react";
-import { DocumentNode } from "graphql";
 import { act, render, screen, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
+import { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
+import React from "react";
+import { Observable } from "rxjs";
 
-import { MockedResponse, MockLink } from "../../core";
-import { MockedProvider } from "../MockedProvider";
-import { useQuery } from "../../../react/hooks";
-import { InMemoryCache } from "../../../cache";
-import { QueryResult } from "../../../react/types/types";
-import { ApolloLink, FetchResult } from "../../../link/core";
-import { Observable } from "zen-observable-ts";
-import { ApolloError } from "../../../errors";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { useQuery } from "@apollo/client/react";
+import { MockedResponse, MockLink } from "@apollo/client/testing/core";
+
+import { MockedProvider } from "../MockedProvider.js";
 
 const variables = {
   username: "mock_username",
@@ -59,7 +58,7 @@ interface Data {
 }
 
 interface Result {
-  current: QueryResult<any, any> | null;
+  current: useQuery.Result<any, any> | null;
 }
 
 interface Variables {
@@ -402,9 +401,7 @@ describe("General use", () => {
         variables,
       });
       if (!loading) {
-        expect(error).toEqual(
-          new ApolloError({ networkError: new Error("something went wrong") })
-        );
+        expect(error).toEqual(new Error("something went wrong"));
         finished = true;
       }
       return null;
@@ -575,7 +572,7 @@ describe("General use", () => {
 
     const link = ApolloLink.from([
       errorLink,
-      new MockLink([], true, { showWarnings: false }),
+      new MockLink([], { showWarnings: false }),
     ]);
 
     render(
@@ -637,7 +634,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -688,7 +685,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -746,7 +743,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -811,7 +808,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -982,7 +979,7 @@ describe("General use", () => {
       },
     ];
 
-    const link = new MockLink(mocksDifferentQuery, false, {
+    const link = new MockLink(mocksDifferentQuery, {
       showWarnings: false,
     });
 
@@ -1008,7 +1005,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mockLink = new MockLink([], true, { showWarnings: false });
+    const mockLink = new MockLink([], { showWarnings: false });
     mockLink.setOnError((error) => {
       expect(error).toMatchSnapshot();
       finished = true;
@@ -1039,7 +1036,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mockLink = new MockLink([], true, { showWarnings: false });
+    const mockLink = new MockLink([], { showWarnings: false });
     mockLink.setOnError(() => {
       throw new Error("oh no!");
     });
@@ -1212,7 +1209,7 @@ describe("@client testing", () => {
     });
 
     function Component() {
-      const { loading, data } = useQuery(gql`
+      const { loading, data } = useQuery<any>(gql`
         {
           networkStatus @client {
             isOnline
@@ -1256,7 +1253,7 @@ describe("@client testing", () => {
     });
 
     function Component() {
-      const { loading, data } = useQuery(gql`
+      const { loading, data } = useQuery<any>(gql`
         {
           networkStatus @client {
             isOnline

@@ -25,7 +25,7 @@ Direct writes to the cache do not require a GraphQL mutation or a resolver funct
 
 ```jsx
 import React from "react";
-import { useApolloClient } from "@apollo/client";
+import { useApolloClient } from "@apollo/client/react";
 
 import Link from "./Link";
 
@@ -50,7 +50,8 @@ What if we want to immediately subscribe to the data we just wrote to the cache?
 
 ```jsx
 import React from "react";
-import { gql, useQuery } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 
 import Link from "./Link";
 
@@ -130,7 +131,8 @@ Let's learn how to trigger our `toggleTodo` mutation from our component:
 
 ```jsx
 import React from "react"
-import { gql, useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 const TOGGLE_TODO = gql`
   mutation ToggleTodo($id: Int!) {
@@ -161,7 +163,8 @@ Querying for local data is very similar to querying your GraphQL server. The onl
 
 ```jsx
 import React from "react";
-import { gql, useQuery } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 
 import Todo from "./Todo";
 
@@ -509,14 +512,8 @@ As outlined in [Handling `@client` fields with resolvers][], `@client` fields ca
 ```jsx
 import React from "react";
 import ReactDOM from "react-dom";
-import {
-  ApolloClient,
-  InMemoryCache,
-  HttpLink,
-  ApolloProvider,
-  useQuery,
-  gql
-} from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink, gql } from "@apollo/client";
+import { ApolloProvider, useQuery } from "@apollo/client/react";
 
 import Pages from "./pages";
 import Login from "./pages/login";
@@ -566,7 +563,8 @@ Before Apollo Client executes a query, one of the first things it does is check 
 
 ```jsx
 import React, { Fragment } from "react";
-import { useQuery, gql } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 
 import { Loading, Header, LaunchDetail } from "../components";
 import { ActionButton } from "../containers";
@@ -947,7 +945,8 @@ and wait until our `Stats` component is called to define our local resolvers (us
 
 ```js
 import React from "react";
-import { ApolloConsumer, useApolloClient, useQuery, gql } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { ApolloConsumer, useApolloClient, useQuery } from "@apollo/client/react";
 
 const GET_MESSAGE_COUNT = gql`
   query GetMessageCount {

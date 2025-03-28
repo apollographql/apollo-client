@@ -1,4 +1,4 @@
-import { getStoreKeyName } from "../storeUtils";
+import { getStoreKeyName } from "../storeUtils.js";
 
 describe("getStoreKeyName", () => {
   it(

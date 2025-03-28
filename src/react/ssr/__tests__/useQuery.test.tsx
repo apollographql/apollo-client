@@ -1,21 +1,17 @@
 /** @jest-environment node */
+import { gql } from "graphql-tag";
 import React from "react";
-import { DocumentNode } from "graphql";
-import gql from "graphql-tag";
-import {
-  MockedProvider,
-  MockedResponse,
-  mockSingleLink,
-} from "../../../testing";
-import { ApolloClient } from "../../../core";
-import { InMemoryCache } from "../../../cache";
-import { ApolloProvider, getApolloContext } from "../../context";
-import { useApolloClient, useQuery } from "../../hooks";
-import { renderToStringWithData } from "..";
-import type { Trie } from "@wry/trie";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
+import { renderToStringWithData } from "@apollo/client/react/ssr";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 describe("useQuery Hook SSR", () => {
-  const CAR_QUERY: DocumentNode = gql`
+  const CAR_QUERY: TypedDocumentNode<typeof CAR_RESULT_DATA> = gql`
     query {
       cars {
         make
@@ -50,7 +46,7 @@ describe("useQuery Hook SSR", () => {
       const { loading, data } = useQuery(CAR_QUERY);
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
-        const { make, model, vin } = data.cars[0];
+        const { make, model, vin } = data!.cars[0];
         return (
           <div>
             {make}, {model}, {vin}
@@ -98,7 +94,7 @@ describe("useQuery Hook SSR", () => {
       expect(loading).toBeTruthy();
 
       if (!loading) {
-        const { make } = data.cars[0];
+        const { make } = data!.cars[0];
         return <div>{make}</div>;
       }
       return null;
@@ -222,7 +218,7 @@ describe("useQuery Hook SSR", () => {
 
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
-        const { make, model, vin } = data.cars[0];
+        const { make, model, vin } = data!.cars[0];
         return (
           <div>
             {make}, {model}, {vin}
@@ -265,7 +261,7 @@ describe("useQuery Hook SSR", () => {
       },
     });
 
-    const query = gql`
+    const query: TypedDocumentNode<typeof initialData> = gql`
       query GetSearchResults {
         getSearchResults @client {
           locale
@@ -320,14 +316,14 @@ describe("useQuery Hook SSR", () => {
           getSearchResults: {
             pagination: { pageLimit },
           },
-        } = data;
+        } = data!;
         return <div>{pageLimit}</div>;
       }
       return null;
     };
 
     const app = (
-      <MockedProvider addTypename cache={cache}>
+      <MockedProvider cache={cache}>
         <Component />
       </MockedProvider>
     );
@@ -351,18 +347,15 @@ describe("useQuery Hook SSR", () => {
       },
     ];
 
-    let trie: Trie<any> | undefined;
     const Component = ({
       variables,
     }: {
       variables: { foo: string; bar: number };
     }) => {
       const { loading, data } = useQuery(CAR_QUERY, { variables, ssr: true });
-      trie ||=
-        React.useContext(getApolloContext()).renderPromises!["queryInfoTrie"];
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
-        const { make, model, vin } = data.cars[0];
+        const { make, model, vin } = data!.cars[0];
         return (
           <div>
             {make}, {model}, {vin}
@@ -380,8 +373,89 @@ describe("useQuery Hook SSR", () => {
         </>
       </MockedProvider>
     );
-    expect(
-      Array.from(trie!["getChildTrie"](CAR_QUERY)["strong"].keys())
-    ).toEqual(['{"bar":1,"foo":"a"}']);
+  });
+
+  it("should render waterfalls by rerendering the tree multiple times", async () => {
+    const query1: TypedDocumentNode<{ hello: string }> = gql`
+      query {
+        hello
+      }
+    `;
+    const query2: TypedDocumentNode<{ whoami: { name: string } }> = gql`
+      query {
+        whoami {
+          name
+        }
+      }
+    `;
+    const query3: TypedDocumentNode<{ currentTime: string }> = gql`
+      query {
+        currentTime
+      }
+    `;
+
+    const link = mockSingleLink(
+      { request: { query: query1 }, result: { data: { hello: "world" } } },
+      {
+        request: { query: query2 },
+        result: { data: { whoami: { name: "Apollo" } } },
+      },
+      {
+        request: { query: query3 },
+        result: { data: { currentTime: "2025-03-26T14:40:53.118Z" } },
+      }
+    );
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    function App() {
+      const { loading, data } = useQuery(query1);
+
+      if (loading) {
+        return <p>Loading...</p>;
+      }
+      return (
+        <div>
+          <p>Hello {data?.hello}!</p>
+          <Parent />
+        </div>
+      );
+    }
+    function Parent() {
+      const { loading, data } = useQuery(query2);
+
+      if (loading) {
+        return <p>Loading...</p>;
+      }
+      return (
+        <>
+          <p>My name is {data?.whoami.name}!</p>
+          <Child />
+        </>
+      );
+    }
+    function Child() {
+      const { loading, data } = useQuery(query3);
+
+      if (loading) {
+        return <p>Loading...</p>;
+      }
+      return (
+        <>
+          <p>Current time is {data?.currentTime}!</p>
+        </>
+      );
+    }
+    const view = await renderToStringWithData(
+      <ApolloProvider client={client}>
+        <App />
+      </ApolloProvider>
+    );
+    expect(view).toMatchInlineSnapshot(
+      `"<div><p>Hello <!-- -->world<!-- -->!</p><p>My name is <!-- -->Apollo<!-- -->!</p><p>Current time is <!-- -->2025-03-26T14:40:53.118Z<!-- -->!</p></div>"`
+    );
   });
 });

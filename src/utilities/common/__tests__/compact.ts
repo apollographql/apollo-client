@@ -1,4 +1,4 @@
-import { compact } from "../compact";
+import { compact } from "../compact.js";
 
 const hasOwn = Object.prototype.hasOwnProperty;
 

@@ -1,20 +1,19 @@
+import { WeakCache } from "@wry/caches";
 import type {
-  DocumentNode,
   ASTNode,
+  DocumentNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
 } from "graphql";
 import { visit } from "graphql";
-
 import { wrap } from "optimism";
 
-import type { FragmentMap } from "../../utilities/index.js";
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   cacheSizes,
   defaultCacheSizes,
   getFragmentDefinitions,
-} from "../../utilities/index.js";
-import { WeakCache } from "@wry/caches";
+} from "@apollo/client/utilities";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;
@@ -36,7 +35,7 @@ export function createFragmentRegistry(
 }
 
 class FragmentRegistry implements FragmentRegistryAPI {
-  private registry: FragmentMap = Object.create(null);
+  private registry: FragmentMap = {};
 
   // Call `createFragmentRegistry` instead of invoking the
   // FragmentRegistry constructor directly. This reserves the constructor for
@@ -119,7 +118,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
     enqueueChildSpreads(document);
 
     const missing: string[] = [];
-    const map: FragmentMap = Object.create(null);
+    const map: FragmentMap = {};
 
     // This Set forEach loop can be extended during iteration by adding
     // additional strings to the unbound set.
@@ -157,7 +156,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
   }
 
   public findFragmentSpreads(root: ASTNode): FragmentSpreadMap {
-    const spreads: FragmentSpreadMap = Object.create(null);
+    const spreads: FragmentSpreadMap = {};
 
     visit(root, {
       FragmentSpread(node) {

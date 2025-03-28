@@ -1,17 +1,20 @@
-import gql from "graphql-tag";
-import { print } from "graphql";
-import { times } from "lodash";
-import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
-import { ApolloLink, execute } from "../../core";
-import { Observable } from "../../../utilities";
-import { createHttpLink } from "../../http/createHttpLink";
+import fetchMock from "fetch-mock";
+import { print } from "graphql";
+import { gql } from "graphql-tag";
+import { times } from "lodash";
+import { firstValueFrom, Observable } from "rxjs";
 
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
-import { wait } from "../../../testing";
-import { toPromise } from "../../utils";
-import { ObservableStream } from "../../../testing/internal";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import {
+  createPersistedQueryLink as createPersistedQuery,
+  VERSION,
+} from "@apollo/client/link/persisted-queries";
+import { wait } from "@apollo/client/testing";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
+import { createHttpLink } from "../../http/createHttpLink.js";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -699,11 +702,15 @@ describe("failure path", () => {
         createHttpLink({ fetch: fetcher } as any)
       );
 
-      const failingAttempt = toPromise(execute(link, { query, variables }));
+      const failingAttempt = firstValueFrom(
+        execute(link, { query, variables })
+      );
       await expect(failingAttempt).rejects.toThrow();
       expect(fetchMock.calls().length).toBe(0);
 
-      const successfullAttempt = toPromise(execute(link, { query, variables }));
+      const successfullAttempt = firstValueFrom(
+        execute(link, { query, variables })
+      );
       await expect(successfullAttempt).resolves.toEqual({ data });
       const [[, success]] = fetchMock.calls();
       expect(JSON.parse(success!.body!.toString()).query).toBeUndefined();

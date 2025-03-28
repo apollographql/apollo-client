@@ -5,7 +5,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
   "projectFolder": ".",
   "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
-  "bundledPackages": [],
+  "bundledPackages": ["@apollo/client"],
   "newlineKind": "lf",
   "enumMemberOrder": "preserve",
 

@@ -1,31 +1,36 @@
-import React from "react";
-import { act, renderHook, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
-
-import {
-  ApolloClient,
-  ApolloError,
-  ApolloLink,
-  concat,
-  TypedDocumentNode,
-} from "../../../core";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
-import { InMemoryCache as Cache } from "../../../cache";
-import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink, wait } from "../../../testing";
-import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
-import { SubscriptionHookOptions } from "../../types/types";
-import { ErrorBoundary } from "react-error-boundary";
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
-import { Masked, MaskedDocumentNode } from "../../../masking";
-import { expectTypeOf } from "expect-type";
+import { renderHook, waitFor } from "@testing-library/react";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
+
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import {
+  ApolloClient,
+  ApolloLink,
+  concat,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+} from "@apollo/client/errors";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
+import {
+  mockMultipartSubscriptionStream,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -46,50 +51,63 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result } = renderHook(() => useSubscription(subscription), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    setTimeout(() => link.simulateResult(results[1]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    setTimeout(() => link.simulateResult(results[2]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[2].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    setTimeout(() => link.simulateResult(results[3]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[3].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[2]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[2].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[3]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[3].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should call onError after error results", async () => {
@@ -106,18 +124,18 @@ describe("useSubscription Hook", () => {
     }));
 
     const errorResult = {
-      error: new ApolloError({ errorMessage: "test" }),
-      result: { data: { car: { make: null } } },
+      result: { data: { car: { make: null } }, errors: [{ message: "test" }] },
     };
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onError = jest.fn();
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription, { onError }),
       {
         wrapper: ({ children }) => (
@@ -126,24 +144,36 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(results[0].result.data);
-    setTimeout(() => link.simulateResult(errorResult));
-    await waitFor(
-      () => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(errorResult);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors([{ message: "test" }]),
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(
+      new CombinedGraphQLErrors([{ message: "test" }])
     );
   });
 
@@ -165,25 +195,40 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onComplete = jest.fn();
-    renderHook(() => useSubscription(subscription, { onComplete }), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onComplete }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
     link.simulateResult(results[0]);
 
-    setTimeout(() => link.simulateComplete());
-    await waitFor(
-      () => {
-        expect(onComplete).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateComplete();
+
+    await expect(takeSnapshot).not.toRerender();
+    expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
   it("should cleanup after the subscription component has been unmounted", async () => {
@@ -204,11 +249,12 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
-    const { result, unmount } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           onData,
@@ -220,29 +266,41 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(results[0].result.data);
-    setTimeout(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      // After the component has been unmounted, the internal
-      // ObservableQuery should be stopped, meaning it shouldn't
-      // receive any new data (so the onDataCount should
-      // stay at 1).
-      unmount();
-      link.simulateResult(results[0]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
+    });
+
+    // After the component has been unmounted, the internal
+    // ObservableQuery should be stopped, meaning it shouldn't
+    // receive any new data (so the onDataCount should
+    // stay at 1).
+    unmount();
+    link.simulateResult(results[0]);
+
+    await wait(100);
     expect(onData).toHaveBeenCalledTimes(1);
   });
 
@@ -260,43 +318,45 @@ describe("useSubscription Hook", () => {
     link.onSetup(onSetup);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
 
-    const { result, unmount, rerender } = renderHook(
-      ({ variables }) =>
-        useSubscription(subscription, {
-          variables,
-          skip: true,
-          onData,
-        }),
-      {
-        initialProps: {
-          variables: {
-            foo: "bar",
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, unmount, rerender } =
+      await renderHookToSnapshotStream(
+        ({ variables }) =>
+          useSubscription(subscription, { variables, skip: true, onData }),
+        {
+          initialProps: {
+            variables: {
+              foo: "bar",
+            },
           },
-        },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: { foo: "bar" },
+    });
 
-    rerender({ variables: { foo: "bar2" } });
-    await expect(
-      waitFor(
-        () => {
-          expect(result.current.data).not.toBe(undefined);
-        },
-        { interval: 1, timeout: 20 }
-      )
-    ).rejects.toThrow();
+    await rerender({ variables: { foo: "bar2" } });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: { foo: "bar2" },
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(onSetup).toHaveBeenCalledTimes(0);
     expect(onData).toHaveBeenCalledTimes(0);
@@ -324,9 +384,11 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
-    const { result, rerender } = renderHook(
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ skip }) => useSubscription(subscription, { skip }),
       {
         wrapper: ({ children }) => (
@@ -336,67 +398,72 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    rerender({ skip: false });
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    setTimeout(() => {
-      link.simulateResult(results[0]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.data).toEqual(results[0].result.data);
-    expect(result.current.error).toBe(undefined);
+    await rerender({ skip: false });
 
-    rerender({ skip: true });
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    // ensure state persists across rerenders
-    rerender({ skip: true });
-
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    await expect(
-      waitFor(
-        () => {
-          expect(result.current.data).not.toBe(undefined);
-        },
-        { interval: 1, timeout: 20 }
-      )
-    ).rejects.toThrow();
-
-    // ensure state persists across rerenders
-    rerender({ skip: false });
-
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-    setTimeout(() => {
-      link.simulateResult(results[1]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.data).toEqual(results[1].result.data);
-    expect(result.current.error).toBe(undefined);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await rerender({ skip: true });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    // ensure state persists across rerenders
+    await rerender({ skip: true });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    // ensure state persists across rerenders
+    await rerender({ skip: false });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should share context set in options", async () => {
@@ -420,10 +487,11 @@ describe("useSubscription Hook", () => {
     });
     const client = new ApolloClient({
       link: concat(contextLink, link),
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           context: { make: "Audi" },
@@ -435,34 +503,32 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => {
-      link.simulateResult(results[0]);
-    }, 100);
-
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
-
-    setTimeout(() => {
-      link.simulateResult(results[1]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(context!).toBe("Audi");
   });
@@ -488,10 +554,11 @@ describe("useSubscription Hook", () => {
     });
     const client = new ApolloClient({
       link: concat(extensionsLink, link),
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           extensions: { make: "Audi" },
@@ -503,34 +570,32 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => {
-      link.simulateResult(results[0]);
-    }, 100);
-
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
-
-    setTimeout(() => {
-      link.simulateResult(results[1]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(extensions!).toBe("Audi");
   });
@@ -551,10 +616,11 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => ({
         sub1: useSubscription(subscription),
         sub2: useSubscription(subscription),
@@ -566,44 +632,101 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.sub1.loading).toBe(true);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(true);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toBe(undefined);
+    {
+      const { sub1, sub2 } = await takeSnapshot();
 
-    setTimeout(() => {
-      link.simulateResult(results[0]);
-    });
+      expect(sub1).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
 
-    await waitFor(
-      () => {
-        expect(result.current.sub1.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.sub1.loading).toBe(false);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(false);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toEqual(results[0].result.data);
+      expect(sub2).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+    }
 
-    setTimeout(() => {
-      link.simulateResult(results[1]);
-    });
+    link.simulateResult(results[0]);
 
-    await waitFor(
-      () => {
-        expect(result.current.sub1.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.sub1.loading).toBe(false);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(false);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toEqual(results[1].result.data);
+    if (IS_REACT_17) {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+    }
+
+    {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    link.simulateResult(results[1]);
+
+    if (IS_REACT_17) {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should handle immediate completions gracefully", async () => {
@@ -620,38 +743,43 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result } = renderHook(() => useSubscription(subscription), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-
-    await act(async () => {
-      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-      link.simulateResult({ result: { data: null } }, /* complete */ true);
-    });
-
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(null);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    link.simulateResult({ result: { data: null } }, /* complete */ true);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: null,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(consoleSpy.error).toHaveBeenCalledTimes(1);
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 
@@ -668,10 +796,11 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => ({
         sub1: useSubscription(subscription),
         sub2: useSubscription(subscription),
@@ -684,52 +813,128 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.sub1.loading).toBe(true);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(true);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toBe(undefined);
-    expect(result.current.sub3.loading).toBe(true);
-    expect(result.current.sub3.error).toBe(undefined);
-    expect(result.current.sub3.data).toBe(undefined);
+    {
+      const { sub1, sub2, sub3 } = await takeSnapshot();
 
-    await act(async () => {
-      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-      link.simulateResult({ result: { data: null } }, /* complete */ true);
-    });
+      expect(sub1).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
 
-    await waitFor(
-      () => {
-        expect(result.current.sub1.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+      expect(sub2).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
 
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toBe(null);
-    expect(result.current.sub2.loading).toBe(false);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toBe(null);
-    expect(result.current.sub3.loading).toBe(false);
-    expect(result.current.sub3.error).toBe(undefined);
-    expect(result.current.sub3.data).toBe(null);
+      expect(sub3).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+    }
+
+    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    link.simulateResult({ result: { data: null } }, /* complete */ true);
+
+    if (IS_REACT_17) {
+      {
+        const { sub1, sub2, sub3 } = await takeSnapshot();
+
+        expect(sub1).toEqualStrictTyped({
+          data: null,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        });
+
+        expect(sub2).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
+        expect(sub3).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+      }
+
+      {
+        const { sub1, sub2, sub3 } = await takeSnapshot();
+
+        expect(sub1).toEqualStrictTyped({
+          data: null,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        });
+
+        expect(sub2).toEqualStrictTyped({
+          data: null,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        });
+
+        expect(sub3).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+      }
+    }
+
+    {
+      const { sub1, sub2, sub3 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: null,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: null,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub3).toEqualStrictTyped({
+        data: null,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(consoleSpy.error).toHaveBeenCalledTimes(3);
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 
@@ -746,7 +951,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     renderHook(
@@ -789,7 +994,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -808,13 +1013,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(onData).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    link.simulateResult(results[0]);
+    await tick();
+
+    expect(onData).toHaveBeenCalledTimes(1);
     expect(onSubscriptionData).toHaveBeenCalledTimes(0);
   });
 
@@ -837,7 +1039,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onSubscriptionData = jest.fn();
@@ -854,13 +1056,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(onSubscriptionData).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    link.simulateResult(results[0]);
+    await tick();
+
+    expect(onSubscriptionData).toHaveBeenCalledTimes(1);
   });
 
   test("only warns once using `onSubscriptionData`", () => {
@@ -876,7 +1075,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { rerender } = renderHook(
@@ -909,7 +1108,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     renderHook(
@@ -952,7 +1151,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onComplete = jest.fn();
@@ -971,15 +1170,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    link.simulateResult(results[0]);
+    link.simulateResult(results[0], true);
+    await tick();
 
-    setTimeout(() => link.simulateComplete());
-    await waitFor(
-      () => {
-        expect(onComplete).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
   });
 
@@ -1002,7 +1196,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onSubscriptionComplete = jest.fn();
@@ -1019,15 +1213,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    link.simulateResult(results[0]);
+    link.simulateResult(results[0], true);
+    await tick();
 
-    setTimeout(() => link.simulateComplete());
-    await waitFor(
-      () => {
-        expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
   });
 
   test("only warns once using `onSubscriptionComplete`", () => {
@@ -1043,7 +1232,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { rerender } = renderHook(
@@ -1065,6 +1254,9 @@ describe("useSubscription Hook", () => {
 
   describe("multipart subscriptions", () => {
     it("should handle a simple subscription properly", async () => {
+      const { httpLink, enqueueProtocolErrors } =
+        mockMultipartSubscriptionStream();
+
       const subscription = gql`
         subscription ANewDieWasCreated {
           aNewDieWasCreated {
@@ -1076,57 +1268,53 @@ describe("useSubscription Hook", () => {
           }
         }
       `;
-      const results = [
-        {
-          result: {
-            data: null,
-            extensions: {
-              [PROTOCOL_ERRORS_SYMBOL]: [
-                {
-                  message: "cannot read message from websocket",
-                  extensions: [
-                    {
-                      code: "WEBSOCKET_MESSAGE_ERROR",
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      ];
-      const link = new MockSubscriptionLink();
-      const client = new ApolloClient({
-        link,
-        cache: new Cache({ addTypename: false }),
-      });
-      let renderCount = 0;
 
-      const { result } = renderHook(
-        () => {
-          renderCount++;
-          return useSubscription(subscription);
-        },
+      const client = new ApolloClient({
+        link: httpLink,
+        cache: new Cache(),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useSubscription(subscription),
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         }
       );
-      expect(result.current.loading).toBe(true);
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toBe(undefined);
-      link.simulateResult(results[0]);
-      expect(renderCount).toBe(1);
-      await waitFor(
-        () => {
-          expect(result.current.error).toBeInstanceOf(ApolloError);
+
+      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+
+      enqueueProtocolErrors([
+        {
+          message: "cannot read message from websocket",
+          extensions: {
+            code: "WEBSOCKET_MESSAGE_ERROR",
+          },
         },
-        { interval: 1 }
-      );
-      expect(result.current.error!.protocolErrors[0].message).toBe(
-        "cannot read message from websocket"
-      );
+      ]);
+
+      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        data: undefined,
+        error: new CombinedProtocolErrors([
+          {
+            message: "cannot read message from websocket",
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
+          },
+        ]),
+        loading: false,
+        variables: undefined,
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 
@@ -1147,10 +1335,11 @@ followed by new in-flight setup", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const { result, unmount, rerender } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ coin }) => {
         const heads = useSubscription(subscription, {
           variables: {},
@@ -1174,38 +1363,112 @@ followed by new in-flight setup", async () => {
       }
     );
 
-    rerender({ coin: "tails" });
+    {
+      const { heads, tails } = await takeSnapshot();
 
-    await new Promise((resolve) => setTimeout(() => resolve("wait"), 20));
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
+
+    await rerender({ coin: "tails" });
+
+    {
+      const { heads, tails } = await takeSnapshot();
+
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: {},
+      });
+    }
+
+    await wait(20);
 
     link.simulateResult(results[0]);
 
-    await waitFor(
-      () => {
-        expect(result.current.tails.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.heads.data).toBeUndefined();
+    {
+      const { heads, tails } = await takeSnapshot();
 
-    rerender({ coin: "heads" });
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
+
+    await rerender({ coin: "heads" });
+
+    {
+      const { heads, tails } = await takeSnapshot();
+
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
 
     link.simulateResult(results[1]);
 
-    await waitFor(
-      () => {
-        expect(result.current.heads.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.tails.data).toBeUndefined();
+    {
+      const { heads, tails } = await takeSnapshot();
 
-    unmount();
+      expect(heads).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   describe("errorPolicy", () => {
     async function setup(
-      initialProps: SubscriptionHookOptions<{ totalLikes: number }, {}>
+      initialProps: useSubscription.Options<{ totalLikes: number }, {}>
     ) {
       const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
         subscription ($id: ID!) {
@@ -1226,7 +1489,7 @@ followed by new in-flight setup", async () => {
         </ApolloProvider>
       );
       const { takeSnapshot } = await renderHookToSnapshotStream(
-        (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
+        (options: useSubscription.Options<{ totalLikes: number }, {}>) =>
           useSubscription(subscription, options),
         {
           initialProps,
@@ -1236,7 +1499,7 @@ followed by new in-flight setup", async () => {
       const graphQlErrorResult: MockedSubscriptionResult = {
         result: {
           data: { totalLikes: 42 },
-          errors: [{ message: "test" } as any],
+          errors: [{ message: "test" }],
         },
       };
       const protocolErrorResult: MockedSubscriptionResult = {
@@ -1265,28 +1528,31 @@ followed by new in-flight setup", async () => {
             errorBoundaryOnError,
           } = await setup({ errorPolicy, onError, onData });
 
-          await takeSnapshot();
+          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            variables: undefined,
+          });
+
           link.simulateResult(graphQlErrorResult);
+
           {
             const snapshot = await takeSnapshot();
-            expect(snapshot).toStrictEqual({
+            expect(snapshot).toEqualStrictTyped({
               loading: false,
-              error: new ApolloError({
-                graphQLErrors: graphQlErrorResult.result!.errors as any,
-              }),
+              error: new CombinedGraphQLErrors(
+                graphQlErrorResult.result!.errors as any
+              ),
               data: undefined,
-              restart: expect.any(Function),
               variables: undefined,
             });
-            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
+
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(
-            new ApolloError({
-              graphQLErrors: graphQlErrorResult.result!.errors as any,
-            })
+            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
           );
-          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
@@ -1298,34 +1564,35 @@ followed by new in-flight setup", async () => {
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           await setup({ errorPolicy: "all", onError, onData });
 
-        await takeSnapshot();
+        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
         link.simulateResult(graphQlErrorResult);
+
         {
           const snapshot = await takeSnapshot();
-          expect(snapshot).toStrictEqual({
+          expect(snapshot).toEqualStrictTyped({
             loading: false,
-            error: new ApolloError({
-              errorMessage: "test",
-              graphQLErrors: graphQlErrorResult.result!.errors as any,
-            }),
+            error: new CombinedGraphQLErrors(
+              graphQlErrorResult.result!.errors!
+            ),
             data: { totalLikes: 42 },
-            restart: expect.any(Function),
             variables: undefined,
           });
-          expect(snapshot.error).toBeInstanceOf(ApolloError);
         }
 
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError).toHaveBeenCalledWith(
-          new ApolloError({
-            errorMessage: "test",
-            graphQLErrors: graphQlErrorResult.result!.errors as any,
-          })
+          new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
         );
-        expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
         expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
+
       it("`errorPolicy: 'ignore'`: returns `{ data }`, calls `onData`", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
@@ -1337,15 +1604,21 @@ followed by new in-flight setup", async () => {
             onData,
           });
 
-        await takeSnapshot();
+        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
         link.simulateResult(graphQlErrorResult);
+
         {
           const snapshot = await takeSnapshot();
-          expect(snapshot).toStrictEqual({
+          expect(snapshot).toEqualStrictTyped({
             loading: false,
             error: undefined,
             data: { totalLikes: 42 },
-            restart: expect.any(Function),
             variables: undefined,
           });
         }
@@ -1365,45 +1638,64 @@ followed by new in-flight setup", async () => {
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
     });
+
     describe("protocol error", () => {
       it.each([undefined, "none", "all", "ignore"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
         async (errorPolicy) => {
+          const { httpLink, enqueueProtocolErrors } =
+            mockMultipartSubscriptionStream();
+
+          const subscription: TypedDocumentNode<{ totalLikes: number }, {}> =
+            gql`
+              subscription ($id: ID!) {
+                totalLikes
+              }
+            `;
+          const client = new ApolloClient({
+            link: httpLink,
+            cache: new Cache(),
+          });
+
           const onData = jest.fn();
           const onError = jest.fn();
-          using _disabledAct = disableActEnvironment();
-          const {
-            takeSnapshot,
-            link,
-            protocolErrorResult,
-            errorBoundaryOnError,
-          } = await setup({ errorPolicy, onError, onData });
 
-          await takeSnapshot();
-          link.simulateResult(protocolErrorResult);
-          {
-            const snapshot = await takeSnapshot();
-            expect(snapshot).toStrictEqual({
-              loading: false,
-              error: new ApolloError({
-                protocolErrors: [protocolErrorResult.error!],
-              }),
-              data: undefined,
-              restart: expect.any(Function),
-              variables: undefined,
-            });
-            expect(snapshot.error).toBeInstanceOf(ApolloError);
-          }
+          using _disabledAct = disableActEnvironment();
+          const { takeSnapshot } = await renderHookToSnapshotStream(
+            () =>
+              useSubscription(subscription, { errorPolicy, onError, onData }),
+            {
+              wrapper: ({ children }) => (
+                <ApolloProvider client={client}>{children}</ApolloProvider>
+              ),
+            }
+          );
+
+          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            variables: undefined,
+          });
+
+          enqueueProtocolErrors([
+            { message: "Socket closed with event -1: I'm a test!" },
+          ]);
+
+          const expectedError = new CombinedProtocolErrors([
+            { message: "Socket closed with event -1: I'm a test!" },
+          ]);
+
+          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+            data: undefined,
+            error: expectedError,
+            loading: false,
+            variables: undefined,
+          });
 
           expect(onError).toHaveBeenCalledTimes(1);
-          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
-          expect(onError).toHaveBeenCalledWith(
-            new ApolloError({
-              protocolErrors: [protocolErrorResult.error!],
-            })
-          );
+          expect(onError).toHaveBeenCalledWith(expectedError);
           expect(onData).toHaveBeenCalledTimes(0);
-          expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
       );
     });
@@ -1412,7 +1704,7 @@ followed by new in-flight setup", async () => {
 
 describe("`restart` callback", () => {
   async function setup(
-    initialProps: SubscriptionHookOptions<
+    initialProps: useSubscription.Options<
       { totalLikes: number },
       { id: string }
     >
@@ -1437,7 +1729,7 @@ describe("`restart` callback", () => {
     const { takeSnapshot, getCurrentSnapshot, rerender } =
       await renderHookToSnapshotStream(
         (
-          options: SubscriptionHookOptions<
+          options: useSubscription.Options<
             { totalLikes: number },
             { id: string }
           >
@@ -1473,25 +1765,26 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
@@ -1500,29 +1793,30 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
   });
+
   it("will use the most recently passed in options", async () => {
     using _disabledAct = disableActEnvironment();
     const {
@@ -1535,20 +1829,22 @@ describe("`restart` callback", () => {
     } = await setup({
       variables: { id: "1" },
     });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     // deliberately keeping a reference to a very old `restart` function
     // to show that the most recent options are used even with that
     const restart = getCurrentSnapshot().restart;
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
+
     {
       const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
@@ -1559,33 +1855,35 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
     void rerender({ variables: { id: "2" } });
+
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1000 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1000 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
@@ -1602,26 +1900,27 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1005 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1005 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
   });
+
   it("can restart a subscription that has completed", async () => {
     using _disabledAct = disableActEnvironment();
     const {
@@ -1633,27 +1932,29 @@ describe("`restart` callback", () => {
     } = await setup({
       variables: { id: "1" },
     });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1 } } }, true);
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
@@ -1670,21 +1971,23 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
+
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
   });
+
   it("can restart a subscription that has errored", async () => {
     using _disabledAct = disableActEnvironment();
     const {
@@ -1696,30 +1999,32 @@ describe("`restart` callback", () => {
     } = await setup({
       variables: { id: "1" },
     });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     const error = new GraphQLError("error");
     link.simulateResult({
       result: { errors: [error] },
     });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
-        restart: expect.any(Function),
+        error: new CombinedGraphQLErrors([error]),
         variables: { id: "1" },
       });
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
@@ -1728,29 +2033,30 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
   });
+
   it("will not restart a subscription that has been `skip`ped", async () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot, onSubscribe, onUnsubscribe } =
@@ -1758,16 +2064,17 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
         skip: true,
       });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
 
@@ -1798,13 +2105,13 @@ describe("ignoreResults", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onData = jest.fn((() => {}) as useSubscription.Options["onData"]);
+    const onError = jest.fn((() => {}) as useSubscription.Options["onError"]);
     const onComplete = jest.fn(
-      (() => {}) as SubscriptionHookOptions["onComplete"]
+      (() => {}) as useSubscription.Options["onComplete"]
     );
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1823,44 +2130,43 @@ describe("ignoreResults", () => {
     );
 
     const snapshot = await takeSnapshot();
-    expect(snapshot).toStrictEqual({
+    expect(snapshot).toEqualStrictTyped({
       loading: false,
       error: undefined,
       data: undefined,
       variables: undefined,
-      restart: expect.any(Function),
     });
+
     link.simulateResult(results[0]);
 
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            data: results[0].result.data,
-            error: undefined,
-            loading: false,
-            variables: undefined,
-          },
-        })
-      );
+      expect(onData).toHaveBeenLastCalledWith({
+        client,
+        data: {
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        },
+      });
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
     link.simulateResult(results[1], true);
+
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(2);
-      expect(onData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            data: results[1].result.data,
-            error: undefined,
-            loading: false,
-            variables: undefined,
-          },
-        })
-      );
+      expect(onData).toHaveBeenLastCalledWith({
+        client,
+        data: {
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        },
+      });
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
@@ -1872,13 +2178,13 @@ describe("ignoreResults", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onData = jest.fn((() => {}) as useSubscription.Options["onData"]);
+    const onError = jest.fn((() => {}) as useSubscription.Options["onError"]);
     const onComplete = jest.fn(
-      (() => {}) as SubscriptionHookOptions["onComplete"]
+      (() => {}) as useSubscription.Options["onComplete"]
     );
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1897,39 +2203,37 @@ describe("ignoreResults", () => {
     );
 
     const snapshot = await takeSnapshot();
-    expect(snapshot).toStrictEqual({
+    expect(snapshot).toEqualStrictTyped({
       loading: false,
       error: undefined,
       data: undefined,
       variables: undefined,
-      restart: expect.any(Function),
     });
+
     link.simulateResult(results[0]);
 
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            data: results[0].result.data,
-            error: undefined,
-            loading: false,
-            variables: undefined,
-          },
-        })
-      );
+      expect(onData).toHaveBeenLastCalledWith({
+        client,
+        data: {
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        },
+      });
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
     const error = new Error("test");
     link.simulateResult({ error });
+
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(
-        new ApolloError({ protocolErrors: [error] })
-      );
+      expect(onError).toHaveBeenLastCalledWith(error);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
@@ -1942,10 +2246,10 @@ describe("ignoreResults", () => {
     link.onSetup(subscriptionCreated);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onData = jest.fn((() => {}) as useSubscription.Options["onData"]);
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
@@ -1960,6 +2264,7 @@ describe("ignoreResults", () => {
         ),
       }
     );
+
     if (!IS_REACT_17) {
       await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
@@ -1967,66 +2272,66 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         data: undefined,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
+
     link.simulateResult(results[0]);
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(1);
 
     await rerender({ ignoreResults: false });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         // `data` appears immediately after changing to `ignoreResults: false`
         data: results[0].result.data,
         variables: undefined,
-        restart: expect.any(Function),
       });
       // `onData` should not be called again for the same result
       expect(onData).toHaveBeenCalledTimes(1);
     }
 
     link.simulateResult(results[1]);
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         data: results[1].result.data,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(2);
     }
+
     // a second subscription should not have been started
     expect(subscriptionCreated).toHaveBeenCalledTimes(1);
   });
+
   it("can switch from `ignoreResults: false` to `ignoreResults: true` and will stop rerendering, without creating a new subscription", async () => {
     const subscriptionCreated = jest.fn();
     const link = new MockSubscriptionLink();
     link.onSetup(subscriptionCreated);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onData = jest.fn((() => {}) as useSubscription.Options["onData"]);
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-      ({ ignoreResults }: { ignoreResults: boolean }) =>
-        useSubscription(subscription, {
-          ignoreResults,
-          onData,
-        }),
+      ({ ignoreResults }) =>
+        useSubscription(subscription, { ignoreResults, onData }),
       {
         initialProps: { ignoreResults: false },
         wrapper: ({ children }) => (
@@ -2034,6 +2339,7 @@ describe("ignoreResults", () => {
         ),
       }
     );
+
     if (!IS_REACT_17) {
       await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
@@ -2041,45 +2347,47 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         error: undefined,
         data: undefined,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
+
     link.simulateResult(results[0]);
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         data: results[0].result.data,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
 
     await rerender({ ignoreResults: true });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         // switching back to the default `ignoreResults: true` return value
         data: undefined,
         variables: undefined,
-        restart: expect.any(Function),
       });
       // `onData` should not be called again
       expect(onData).toHaveBeenCalledTimes(1);
     }
 
     link.simulateResult(results[1]);
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(2);
 
@@ -2121,13 +2429,12 @@ describe("data masking", () => {
       }
     );
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(error).toBeUndefined();
-    }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
 
     link.simulateResult({
       result: {
@@ -2142,18 +2449,17 @@ describe("data masking", () => {
       },
     });
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toEqual({
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: {
         addedComment: {
           __typename: "Comment",
           id: 1,
         },
-      });
-      expect(error).toBeUndefined();
-    }
+      },
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
 
     await expect(takeSnapshot).not.toRerender();
   });
@@ -2190,13 +2496,12 @@ describe("data masking", () => {
       }
     );
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(error).toBeUndefined();
-    }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
 
     link.simulateResult({
       result: {
@@ -2211,20 +2516,19 @@ describe("data masking", () => {
       },
     });
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toEqual({
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: {
         addedComment: {
           __typename: "Comment",
           id: 1,
           comment: "Test comment",
           author: "Test User",
         },
-      });
-      expect(error).toBeUndefined();
-    }
+      },
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
 
     await expect(takeSnapshot).not.toRerender();
   });
@@ -2262,13 +2566,12 @@ describe("data masking", () => {
       }
     );
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(error).toBeUndefined();
-    }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
 
     link.simulateResult({
       result: {
@@ -2283,29 +2586,28 @@ describe("data masking", () => {
       },
     });
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toEqual({
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: {
         addedComment: {
           __typename: "Comment",
           id: 1,
         },
-      });
-      expect(error).toBeUndefined();
+      },
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
 
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenCalledWith({
-        client: expect.anything(),
-        data: {
-          data: { addedComment: { __typename: "Comment", id: 1 } },
-          loading: false,
-          error: undefined,
-          variables: undefined,
-        },
-      });
-    }
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledWith({
+      client,
+      data: {
+        data: { addedComment: { __typename: "Comment", id: 1 } },
+        loading: false,
+        error: undefined,
+        variables: undefined,
+      },
+    });
 
     await expect(takeSnapshot).not.toRerender();
   });
@@ -2343,13 +2645,12 @@ describe("data masking", () => {
       }
     );
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(error).toBeUndefined();
-    }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
 
     link.simulateResult({
       result: {
@@ -2364,38 +2665,37 @@ describe("data masking", () => {
       },
     });
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toEqual({
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: {
         addedComment: {
           __typename: "Comment",
           id: 1,
           comment: "Test comment",
           author: "Test User",
         },
-      });
-      expect(error).toBeUndefined();
+      },
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
 
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenCalledWith({
-        client: expect.anything(),
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledWith({
+      client: expect.anything(),
+      data: {
         data: {
-          data: {
-            addedComment: {
-              __typename: "Comment",
-              id: 1,
-              comment: "Test comment",
-              author: "Test User",
-            },
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
           },
-          loading: false,
-          error: undefined,
-          variables: undefined,
         },
-      });
-    }
+        loading: false,
+        error: undefined,
+        variables: undefined,
+      },
+    });
 
     await expect(takeSnapshot).not.toRerender();
   });

@@ -1695,7 +1695,7 @@ describe("useLazyQuery Hook", () => {
     }
 
     await expect(execute()).rejects.toEqual(
-      new CombinedGraphQLErrors([{ message: "error 1" }])
+      new CombinedGraphQLErrors([{ message: "error 1" }], { data: undefined })
     );
 
     {
@@ -1707,13 +1707,15 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new CombinedGraphQLErrors([{ message: "error 1" }]),
+        error: new CombinedGraphQLErrors([{ message: "error 1" }], {
+          data: undefined,
+        }),
         variables: {},
       });
     }
 
     await expect(execute()).rejects.toEqual(
-      new CombinedGraphQLErrors([{ message: "error 2" }])
+      new CombinedGraphQLErrors([{ message: "error 2" }], { data: undefined })
     );
 
     {
@@ -1725,7 +1727,9 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new CombinedGraphQLErrors([{ message: "error 2" }]),
+        error: new CombinedGraphQLErrors([{ message: "error 2" }], {
+          data: undefined,
+        }),
         variables: {},
       });
     }
@@ -1788,7 +1792,9 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualStrictTyped({
       data: { currentUser: null },
-      error: new CombinedGraphQLErrors([{ message: "Not logged in" }]),
+      error: new CombinedGraphQLErrors([{ message: "Not logged in" }], {
+        data: { currentUser: null },
+      }),
     });
 
     {
@@ -1800,14 +1806,18 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Not logged in" }]),
+        error: new CombinedGraphQLErrors([{ message: "Not logged in" }], {
+          data: { currentUser: null },
+        }),
         variables: {},
       });
     }
 
     await expect(execute()).resolves.toEqualStrictTyped({
       data: { currentUser: null },
-      error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }]),
+      error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }], {
+        data: { currentUser: null },
+      }),
     });
 
     {
@@ -1819,7 +1829,9 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }]),
+        error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }], {
+          data: { currentUser: null },
+        }),
         variables: {},
       });
     }
@@ -2411,7 +2423,7 @@ describe("useLazyQuery Hook", () => {
     expect(execute).toBe(originalExecute);
 
     await expect(execute({ variables: { id: "2" } })).rejects.toEqual(
-      new CombinedGraphQLErrors([{ message: "Oops" }])
+      new CombinedGraphQLErrors([{ message: "Oops" }], { data: undefined })
     );
 
     {
@@ -2419,7 +2431,9 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: { user: { id: "1", name: "John Doe" } },
-        error: new CombinedGraphQLErrors([{ message: "Oops" }]),
+        error: new CombinedGraphQLErrors([{ message: "Oops" }], {
+          data: undefined,
+        }),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2446,7 +2460,9 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: { user: { id: "1", name: "John Doe" } },
-        error: new CombinedGraphQLErrors([{ message: "Oops" }]),
+        error: new CombinedGraphQLErrors([{ message: "Oops" }], {
+          data: undefined,
+        }),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -4271,9 +4287,10 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: null,
       },
-      error: new CombinedGraphQLErrors([
-        { message: "Could not find character 1" },
-      ]),
+      error: new CombinedGraphQLErrors(
+        [{ message: "Could not find character 1" }],
+        { data: { character: null } }
+      ),
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,

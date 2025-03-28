@@ -99,7 +99,6 @@ async function buildReport(
   if (!Array.isArray(bundledPackages)) {
     bundledPackages = [bundledPackages];
   }
-  console.log({ bundledPackages });
   const configObject: IConfigFile = {
     ...(JSON.parse(JSON.stringify(baseConfig)) as IConfigFile),
     mainEntryPointFilePath,

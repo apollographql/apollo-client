@@ -335,7 +335,6 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render
     observable, // might get mutated during render
-    client,
     watchQueryOptions
   );
 
@@ -453,7 +452,6 @@ function useResubscribeIfNecessary<
   resultData: InternalResult<TData, TVariables>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  client: ApolloClient,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
   if (

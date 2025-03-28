@@ -38,11 +38,7 @@ import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
-import {
-  compact,
-  maybeDeepFreeze,
-  mergeOptions,
-} from "@apollo/client/utilities";
+import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
@@ -287,7 +283,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
     // (if provided) should be merged, to ensure individual defaulted
     // variables always have values, if not otherwise defined in
     // observable.options or watchQueryOptions.
-    toMerge.push(compact(watchQueryOptions));
+    toMerge.push(watchQueryOptions);
 
     const opts = toMerge.reduce(mergeOptions) as WatchQueryOptions<
       TVariables,

@@ -447,7 +447,12 @@ function useObservableSubscriptionResult<
               return;
             }
 
-            setResult(result, resultData);
+            if (previousResult && previousResult.data) {
+              resultData.previousData = previousResult.data;
+            }
+
+            resultData.current = result;
+
             handleStoreChange();
           });
 

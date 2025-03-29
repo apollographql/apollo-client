@@ -719,20 +719,49 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { rerenderAsync, result, unmount } = await renderSuspenseHookLegacy(
+    using _disabledAct = disableActEnvironment();
+    const { rerender, takeRender, unmount } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { client, initialProps: { id: "1" } }
     );
 
-    await waitFor(() =>
-      expect(result.current.data).toEqual(mocks[0].result.data)
-    );
+    {
+      const { renderedComponents } = await takeRender();
 
-    await rerenderAsync({ id: "2" });
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
 
-    await waitFor(() => {
-      expect(result.current.data).toEqual(mocks[1].result.data);
-    });
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[0].result.data,
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await rerender({ id: "2" });
+
+    if (IS_REACT_19) {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[1].result.data,
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
 
     unmount();
 

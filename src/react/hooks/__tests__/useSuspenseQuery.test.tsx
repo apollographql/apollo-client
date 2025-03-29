@@ -148,10 +148,11 @@ async function renderSuspenseHook<Result, Props>(
     );
   }
 
-  const { render, takeRender, mergeSnapshot } = createRenderStream<{
-    result: Result;
-    error?: ErrorLike;
-  }>({ initialSnapshot: { result: undefined as any } });
+  const { render, takeRender, mergeSnapshot, getCurrentRender } =
+    createRenderStream<{
+      result: Result;
+      error?: ErrorLike;
+    }>({ initialSnapshot: { result: undefined as any } });
 
   const utils = await render(<App props={initialProps} />, {
     wrapper: ({ children }) => {
@@ -169,7 +170,7 @@ async function renderSuspenseHook<Result, Props>(
     return utils.rerender(<App props={props} />);
   }
 
-  return { takeRender, rerender };
+  return { takeRender, rerender, getCurrentRender };
 }
 
 async function renderSuspenseHookLegacy<Result, Props>(

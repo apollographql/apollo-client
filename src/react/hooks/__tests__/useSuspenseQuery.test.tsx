@@ -581,25 +581,32 @@ describe("useSuspenseQuery", () => {
   it("ensures result is referentially stable", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync } = await renderSuspenseHookLegacy(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender, getCurrentRender } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { mocks, initialProps: { id: "1" } }
     );
 
-    expect(screen.getByText("loading")).toBeInTheDocument();
+    {
+      const { renderedComponents } = await takeRender();
 
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        error: undefined,
-      });
-    });
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
 
-    const previousResult = result.current;
+    {
+      const { renderedComponents } = await takeRender();
 
-    await rerenderAsync({ id: "1" });
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+    }
 
-    expect(result.current).toBe(previousResult);
+    const previousResult = getCurrentRender().snapshot.result;
+    await rerender({ id: "1" });
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot.result).toBe(previousResult);
+    }
   });
 
   it("ensures refetch, fetchMore, and subscribeToMore are referentially stable even after result data has changed", async () => {

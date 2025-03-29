@@ -677,14 +677,29 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result, unmount } = await renderSuspenseHookLegacy(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, unmount } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
       { client }
     );
 
-    await waitFor(() =>
-      expect(result.current.data).toEqual(mocks[0].result.data)
-    );
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[0].result.data,
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
 
     expect(client.getObservableQueries().size).toBe(1);
     expect(client).toHaveSuspenseCacheEntryUsing(query);

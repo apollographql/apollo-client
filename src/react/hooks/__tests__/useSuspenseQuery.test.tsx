@@ -619,38 +619,54 @@ describe("useSuspenseQuery", () => {
       cache: new InMemoryCache(),
     });
 
-    const { result } = await renderSuspenseHookLegacy(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, getCurrentRender } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      {
-        client,
-      }
+      { client }
     );
 
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[0].result.data,
         error: undefined,
+        networkStatus: NetworkStatus.ready,
       });
+    }
+
+    const previousResult = getCurrentRender().snapshot.result;
+
+    client.writeQuery({
+      query,
+      data: { greeting: "Updated cache greeting" },
     });
 
-    const previousResult = result.current;
+    {
+      const { snapshot, renderedComponents } = await takeRender();
 
-    act(() => {
-      client.writeQuery({
-        query,
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
         data: { greeting: "Updated cache greeting" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
       });
-    });
 
-    await waitFor(() => {
-      expect(result.current.data).toEqual({
-        greeting: "Updated cache greeting",
-      });
-    });
-
-    expect(result.current.fetchMore).toBe(previousResult.fetchMore);
-    expect(result.current.refetch).toBe(previousResult.refetch);
-    expect(result.current.subscribeToMore).toBe(previousResult.subscribeToMore);
+      expect(snapshot.result.fetchMore).toBe(previousResult.fetchMore);
+      expect(snapshot.result.refetch).toBe(previousResult.refetch);
+      expect(snapshot.result.subscribeToMore).toBe(
+        previousResult.subscribeToMore
+      );
+    }
   });
 
   it("tears down the query on unmount", async () => {

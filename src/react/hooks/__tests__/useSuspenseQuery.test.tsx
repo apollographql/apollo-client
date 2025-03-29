@@ -42,6 +42,7 @@ import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
+  wait,
 } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 import {
@@ -395,10 +396,6 @@ function useMaskedVariablesQueryCase() {
   }));
 
   return { query, unmaskedQuery, mocks };
-}
-
-function wait(delay: number) {
-  return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 describe("useSuspenseQuery", () => {

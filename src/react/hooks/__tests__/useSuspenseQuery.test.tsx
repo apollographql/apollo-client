@@ -105,7 +105,7 @@ interface SimpleQueryData {
   greeting: string;
 }
 
-async function renderSuspenseHook<Result, Props>(
+async function renderSuspenseHook<Result, Props = never>(
   renderHook: (initialProps: Props) => Result,
   options: RenderSuspenseHookOptions<Props> = {}
 ) {
@@ -166,8 +166,10 @@ async function renderSuspenseHook<Result, Props>(
     },
   });
 
-  async function rerender(props: Props) {
-    return utils.rerender(<App props={props} />);
+  async function rerender(
+    ...args: [Props] extends [never] ? [] : [props: Props]
+  ) {
+    return utils.rerender(<App props={args[0]} />);
   }
 
   return { takeRender, rerender, getCurrentRender };

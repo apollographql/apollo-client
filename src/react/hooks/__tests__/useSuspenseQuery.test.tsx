@@ -154,7 +154,7 @@ async function renderSuspenseHook<Result, Props = never>(
       error?: ErrorLike;
     }>({ initialSnapshot: { result: undefined as any } });
 
-  const utils = await render(<App props={initialProps} />, {
+  const { unmount, ...utils } = await render(<App props={initialProps} />, {
     wrapper: ({ children }) => {
       const Wrapper = strictMode ? StrictMode : Fragment;
 
@@ -172,7 +172,7 @@ async function renderSuspenseHook<Result, Props = never>(
     return utils.rerender(<App props={args[0]} />);
   }
 
-  return { takeRender, rerender, getCurrentRender };
+  return { takeRender, rerender, getCurrentRender, unmount };
 }
 
 async function renderSuspenseHookLegacy<Result, Props>(

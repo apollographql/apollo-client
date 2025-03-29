@@ -1162,43 +1162,51 @@ describe("useSuspenseQuery", () => {
   it("suspends when changing variables", async () => {
     const { query, mocks } = setupVariablesCase();
 
-    const { result, rerenderAsync, renders } = await renderSuspenseHookLegacy(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, rerender } = await renderSuspenseHook(
       ({ id }) => useSuspenseQuery(query, { variables: { id } }),
       { mocks, initialProps: { id: "1" } }
     );
 
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[0].result.data,
         error: undefined,
+        networkStatus: NetworkStatus.ready,
       });
-    });
+    }
 
-    await rerenderAsync({ id: "2" });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
+    if (IS_REACT_19) {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["SuspenseFallback"]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual(["useSuspenseQuery"]);
+      expect(snapshot.error).toBeUndefined();
+      expect(snapshot.result).toEqualStrictTyped({
+        data: mocks[1].result.data,
         error: undefined,
+        networkStatus: NetworkStatus.ready,
       });
-    });
+    }
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(takeRender).not.toRerender();
   });
 
   it("suspends and fetches data from new client when changing clients", async () => {

@@ -7,7 +7,7 @@ export const babelTransform: BuildStep = async (options) => {
   return applyRecast({
     glob: `**/*.${options.jsExt}`,
     cwd: options.targetDir,
-    async transformStep({ ast, sourceName }) {
+    async transformStep({ ast, sourceName, relativeSourcePath }) {
       const result = await transformFromAstAsync(ast as any, undefined, {
         filename: sourceName,
         sourceFileName: sourceName,
@@ -25,6 +25,22 @@ export const babelTransform: BuildStep = async (options) => {
             } satisfies import("@babel/preset-env").Options,
           ],
         ],
+        plugins:
+          (
+            // compiler will insert `"import"` statements, so it's not CJS compatible
+            options.type === "esm" &&
+            // apply the compiler only to the react hooks, not test helper components etc.
+            relativeSourcePath.match(/react\/hooks/)
+          ) ?
+            [
+              [
+                "babel-plugin-react-compiler",
+                {
+                  target: "17",
+                },
+              ],
+            ]
+          : [],
       });
       return { ast: result.ast!, map: result.map };
     },

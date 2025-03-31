@@ -173,7 +173,7 @@ export class ApolloClient implements DataProxy_2 {
     setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
-    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable<FetchResult_2<MaybeMasked_2<TData>>>;
+    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable<SubscribeResult<MaybeMasked_2<TData>>>;
     // (undocumented)
     readonly typeDefs: ApolloClientOptions["typeDefs"];
     // (undocumented)
@@ -1823,7 +1823,7 @@ class QueryManager {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable<FetchResult_2<TData>>;
+    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
     stopQuery(queryId: string): void;
@@ -2110,6 +2110,13 @@ class Stump extends Layer {
 }
 
 // @public (undocumented)
+export interface SubscribeResult<TData = unknown> {
+    data: TData | undefined;
+    error?: ErrorLike;
+    extensions?: Record<string, unknown>;
+}
+
+// @public (undocumented)
 export interface SubscribeToMoreFunction<TData, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     <TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
@@ -2328,8 +2335,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:128:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:456:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:458:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

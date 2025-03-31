@@ -7,7 +7,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { FetchResult, GraphQLRequest } from "@apollo/client/link/core";
+import type { GraphQLRequest } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import type { UriFunction } from "@apollo/client/link/http";
 import { HttpLink } from "@apollo/client/link/http";
@@ -37,6 +37,7 @@ import type {
   RefetchQueriesOptions,
   RefetchQueriesResult,
   Resolvers,
+  SubscribeResult,
 } from "./types.js";
 import type {
   MutationOptions,
@@ -511,7 +512,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: SubscriptionOptions<TVariables, TData>
-  ): Observable<FetchResult<MaybeMasked<TData>>> {
+  ): Observable<SubscribeResult<MaybeMasked<TData>>> {
     const id = this.queryManager.generateQueryId();
 
     return this.queryManager.startGraphQLSubscription<TData>(options).pipe(

@@ -649,7 +649,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       })
       .subscribe({
         next: (subscriptionData) => {
-          const { updateQuery } = options;
+          const { updateQuery, onError } = options;
+          const { error } = subscriptionData;
+
+          if (error) {
+            if (onError) {
+              onError(error);
+            } else {
+              invariant.error("Unhandled GraphQL subscription error", error);
+            }
+
+            return;
+          }
+
           if (updateQuery) {
             this.updateQuery((previous, updateOptions) =>
               updateQuery(previous, {
@@ -660,13 +672,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               })
             );
           }
-        },
-        error: (err: any) => {
-          if (options.onError) {
-            options.onError(err);
-            return;
-          }
-          invariant.error("Unhandled GraphQL subscription error", err);
         },
       });
 

@@ -211,7 +211,9 @@ describe("mutation results", () => {
     });
 
     await firstValueFrom(from(obsQuery));
-    await client.mutate({ mutation });
+    await expect(client.mutate({ mutation })).resolves.toEqualStrictTyped({
+      data: mutationResult.data,
+    });
     const newResult = await client.query<any>({ query });
     expect(newResult.data.todoList.todos[0].completed).toBe(true);
   });
@@ -285,7 +287,13 @@ describe("mutation results", () => {
       const result = await stream.takeNext();
       expect(result.data!.mini.cover).toBe("image");
     }
-    await client.mutate({ mutation, variables: { signature: "1234" } });
+
+    await expect(
+      client.mutate({ mutation, variables: { signature: "1234" } })
+    ).resolves.toEqualStrictTyped({
+      data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
+    });
+
     {
       const result = await stream.takeNext();
       expect(result.data!.mini.cover).toBe("image2");
@@ -350,7 +358,7 @@ describe("mutation results", () => {
       },
     });
 
-    expect(ignoreErrorsResult).toEqual({
+    expect(ignoreErrorsResult).toEqualStrictTyped({
       data: {
         newPerson: {
           __typename: "Person",
@@ -369,17 +377,208 @@ describe("mutation results", () => {
       },
     });
 
-    expect(allErrorsResult).toEqual({
+    expect(allErrorsResult).toEqualStrictTyped({
       data: {
         newPerson: {
           __typename: "Person",
           name: "Ellen Shapiro",
         },
       },
-      errors: [expectedFakeError],
+      error: new CombinedGraphQLErrors([expectedFakeError]),
     });
 
     expect(client.cache.extract()).toMatchSnapshot();
+  });
+
+  it("returns correct results for network errors with each errorPolicy option", async () => {
+    const networkError = new Error("Oops");
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            setTimeout(() => observer.error(networkError));
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+      })
+    ).rejects.toThrow(networkError);
+
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "ignore",
+        variables: {
+          newName: "Jenn Creighton",
+        },
+      })
+    ).resolves.toEqualStrictTyped({ data: undefined });
+
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "all",
+        variables: {
+          newName: "Ellen Shapiro",
+        },
+      })
+    ).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: networkError,
+    });
+  });
+
+  it("returns extensions provided by server", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: {
+                    __typename: "Person",
+                    name: operation.variables.newName,
+                  },
+                },
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: { __typename: "Person", name: "Hugh Willson" } },
+      extensions: {
+        requestLimit: 10,
+      },
+    });
+  });
+
+  it("returns extensions with GraphQL errors with errorPolicy: 'all'", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: null,
+                },
+                errors: [{ message: "Oops" }],
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+        errorPolicy: "all",
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: null },
+      error: new CombinedGraphQLErrors([{ message: "Oops" }]),
+      extensions: {
+        requestLimit: 10,
+      },
+    });
+  });
+
+  it("returns extensions with GraphQL errors with errorPolicy: 'ignore'", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: null,
+                },
+                errors: [{ message: "Oops" }],
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+        errorPolicy: "ignore",
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: null },
+      extensions: {
+        requestLimit: 10,
+      },
+    });
   });
 
   it("should warn when the result fields don't match the query fields", async () => {
@@ -455,23 +654,24 @@ describe("mutation results", () => {
       });
     });
 
-    await client
-      .mutate({
-        mutation: mutationTodo,
-        updateQueries: {
-          todos: (prev, { mutationResult }) => {
-            const newTodo = (mutationResult as any).data.createTodo;
-            const newResults = {
-              todos: [...(prev as any).todos, newTodo],
-            };
-            return newResults;
+    try {
+      await expect(
+        client.mutate({
+          mutation: mutationTodo,
+          updateQueries: {
+            todos: (prev, { mutationResult }) => {
+              const newTodo = (mutationResult as any).data.createTodo;
+              const newResults = {
+                todos: [...(prev as any).todos, newTodo],
+              };
+              return newResults;
+            },
           },
-        },
-      })
-      .finally(() => subscriptionHandle.unsubscribe())
-      .then((result) => {
-        expect(result).toEqual(mutationTodoResult);
-      });
+        })
+      ).resolves.toEqualStrictTyped({ data: mutationTodoResult.data });
+    } finally {
+      subscriptionHandle!.unsubscribe();
+    }
   });
 
   describe("InMemoryCache type/field policies", () => {
@@ -500,7 +700,7 @@ describe("mutation results", () => {
       }
     `;
 
-    it("mutation update function receives result from cache", () => {
+    it("mutation update function receives result from cache", async () => {
       let timeReadCount = 0;
       let timeMergeCount = 0;
 
@@ -527,58 +727,56 @@ describe("mutation results", () => {
         }),
       });
 
-      return client
-        .mutate<any>({
-          mutation,
-          update(
-            cache,
-            {
-              data: {
-                doSomething: { __typename, time },
-              },
-            }
-          ) {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).toBeInstanceOf(Date);
-            expect(time.getTime()).toBe(startTime);
-            expect(timeReadCount).toBe(1);
-            expect(timeMergeCount).toBe(1);
-            expect(cache.extract()).toEqual({
-              ROOT_MUTATION: {
-                __typename: "Mutation",
-                doSomething: {
-                  __typename: "MutationPayload",
-                  time: startTime,
-                },
-              },
-            });
-          },
-        })
-        .then(
-          ({
+      const result = await client.mutate<any>({
+        mutation,
+        update(
+          cache,
+          {
             data: {
               doSomething: { __typename, time },
             },
-          }) => {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).toBeInstanceOf(Date);
-            expect(time.getTime()).toBe(startTime);
-            expect(timeReadCount).toBe(1);
-            expect(timeMergeCount).toBe(1);
-
-            // The contents of the ROOT_MUTATION object exist only briefly, for the
-            // duration of the mutation update, and are removed after the mutation
-            // write is finished.
-            expect(client.cache.extract()).toEqual({
-              ROOT_MUTATION: {
-                __typename: "Mutation",
-              },
-            });
           }
-        );
+        ) {
+          expect(__typename).toBe("MutationPayload");
+          expect(time).toBeInstanceOf(Date);
+          expect(time.getTime()).toBe(startTime);
+          expect(timeReadCount).toBe(1);
+          expect(timeMergeCount).toBe(1);
+          expect(cache.extract()).toEqual({
+            ROOT_MUTATION: {
+              __typename: "Mutation",
+              doSomething: {
+                __typename: "MutationPayload",
+                time: startTime,
+              },
+            },
+          });
+        },
+      });
+
+      expect(result).toEqualStrictTyped({
+        data: {
+          doSomething: {
+            __typename: "MutationPayload",
+            time: new Date(startTime),
+          },
+        },
+      });
+
+      expect(timeReadCount).toBe(1);
+      expect(timeMergeCount).toBe(1);
+
+      // The contents of the ROOT_MUTATION object exist only briefly, for the
+      // duration of the mutation update, and are removed after the mutation
+      // write is finished.
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
     });
 
-    it("mutations can preserve ROOT_MUTATION cache data with keepRootFields: true", () => {
+    it("mutations can preserve ROOT_MUTATION cache data with keepRootFields: true", async () => {
       let timeReadCount = 0;
       let timeMergeCount = 0;
 
@@ -605,57 +803,55 @@ describe("mutation results", () => {
         }),
       });
 
-      return client
-        .mutate<any>({
-          mutation,
-          keepRootFields: true,
-          update(
-            cache,
-            {
-              data: {
-                doSomething: { __typename, time },
-              },
-            }
-          ) {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).toBeInstanceOf(Date);
-            expect(time.getTime()).toBe(startTime);
-            expect(timeReadCount).toBe(1);
-            expect(timeMergeCount).toBe(1);
-            expect(cache.extract()).toEqual({
-              ROOT_MUTATION: {
-                __typename: "Mutation",
-                doSomething: {
-                  __typename: "MutationPayload",
-                  time: startTime,
-                },
-              },
-            });
-          },
-        })
-        .then(
-          ({
+      const result = await client.mutate<any>({
+        mutation,
+        keepRootFields: true,
+        update(
+          cache,
+          {
             data: {
               doSomething: { __typename, time },
             },
-          }) => {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).toBeInstanceOf(Date);
-            expect(time.getTime()).toBe(startTime);
-            expect(timeReadCount).toBe(1);
-            expect(timeMergeCount).toBe(1);
-
-            expect(client.cache.extract()).toEqual({
-              ROOT_MUTATION: {
-                __typename: "Mutation",
-                doSomething: {
-                  __typename: "MutationPayload",
-                  time: startTime,
-                },
-              },
-            });
           }
-        );
+        ) {
+          expect(__typename).toBe("MutationPayload");
+          expect(time).toBeInstanceOf(Date);
+          expect(time.getTime()).toBe(startTime);
+          expect(timeReadCount).toBe(1);
+          expect(timeMergeCount).toBe(1);
+          expect(cache.extract()).toEqual({
+            ROOT_MUTATION: {
+              __typename: "Mutation",
+              doSomething: {
+                __typename: "MutationPayload",
+                time: startTime,
+              },
+            },
+          });
+        },
+      });
+
+      expect(result).toEqualStrictTyped({
+        data: {
+          doSomething: {
+            __typename: "MutationPayload",
+            time: new Date(startTime),
+          },
+        },
+      });
+
+      expect(timeReadCount).toBe(1);
+      expect(timeMergeCount).toBe(1);
+
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+          doSomething: {
+            __typename: "MutationPayload",
+            time: startTime,
+          },
+        },
+      });
     });
 
     it('mutation update function runs even when fetchPolicy is "no-cache"', async () => {
@@ -686,42 +882,41 @@ describe("mutation results", () => {
         }),
       });
 
-      return client
-        .mutate<any>({
-          mutation,
-          fetchPolicy: "no-cache",
-          update(
-            cache,
-            {
-              data: {
-                doSomething: { __typename, time },
-              },
-            }
-          ) {
-            expect(++mutationUpdateCount).toBe(1);
-            expect(__typename).toBe("MutationPayload");
-            expect(time).not.toBeInstanceOf(Date);
-            expect(time).toBe(startTime);
-            expect(timeReadCount).toBe(0);
-            expect(timeMergeCount).toBe(0);
-            expect(cache.extract()).toEqual({});
-          },
-        })
-        .then(
-          ({
+      const result = await client.mutate<any>({
+        mutation,
+        fetchPolicy: "no-cache",
+        update(
+          cache,
+          {
             data: {
               doSomething: { __typename, time },
             },
-          }) => {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).not.toBeInstanceOf(Date);
-            expect(time).toBe(+startTime);
-            expect(timeReadCount).toBe(0);
-            expect(timeMergeCount).toBe(0);
-            expect(mutationUpdateCount).toBe(1);
-            expect(client.cache.extract()).toEqual({});
           }
-        );
+        ) {
+          expect(++mutationUpdateCount).toBe(1);
+          expect(__typename).toBe("MutationPayload");
+          expect(time).not.toBeInstanceOf(Date);
+          expect(time).toBe(startTime);
+          expect(timeReadCount).toBe(0);
+          expect(timeMergeCount).toBe(0);
+          expect(cache.extract()).toEqual({});
+        },
+      });
+
+      expect(result).toEqualStrictTyped({
+        data: {
+          __typename: "Mutation",
+          doSomething: {
+            __typename: "MutationPayload",
+            time: startTime,
+          },
+        },
+      });
+
+      expect(timeReadCount).toBe(0);
+      expect(timeMergeCount).toBe(0);
+      expect(mutationUpdateCount).toBe(1);
+      expect(client.cache.extract()).toEqual({});
     });
   });
 
@@ -760,20 +955,24 @@ describe("mutation results", () => {
       await firstValueFrom(from(obsQuery));
       await firstValueFrom(from(client.watchQuery({ query })));
 
-      await client.mutate({
-        mutation,
-        updateQueries: {
-          todoList: (prev, options) => {
-            const mResult = options.mutationResult as any;
-            expect(mResult.data.createTodo.id).toBe("99");
-            expect(mResult.data.createTodo.text).toBe(
-              "This one was created with a mutation."
-            );
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
-            return state;
+      await expect(
+        client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              expect(mResult.data.createTodo.id).toBe("99");
+              expect(mResult.data.createTodo.text).toBe(
+                "This one was created with a mutation."
+              );
+              const state = cloneDeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
           },
-        },
+        })
+      ).resolves.toEqualStrictTyped({
+        data: mutationResult.data,
       });
 
       const newResult = await client.query<any>({ query });
@@ -824,22 +1023,25 @@ describe("mutation results", () => {
       const stream = new ObservableStream(handle);
       await stream.takeNext();
 
-      await client.mutate({
-        mutation: mutationWithVars,
-        variables,
-        updateQueries: {
-          todoList: (prev, options) => {
-            const mResult = options.mutationResult as any;
-            expect(mResult.data.createTodo.id).toBe("99");
-            expect(mResult.data.createTodo.text).toBe(
-              "This one was created with a mutation."
-            );
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
-            return state;
+      await expect(
+        client.mutate({
+          mutation: mutationWithVars,
+          variables,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              expect(mResult.data.createTodo.id).toBe("99");
+              expect(mResult.data.createTodo.text).toBe(
+                "This one was created with a mutation."
+              );
+              const state = cloneDeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
           },
-        },
-      });
+        })
+      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+
       const newResult = await client.query<any>({ query });
 
       // There should be one more todo item than before
@@ -862,22 +1064,24 @@ describe("mutation results", () => {
       // Cancel the query right away!
       subs.unsubscribe();
 
-      await client.mutate({
-        mutation,
-        updateQueries: {
-          todoList: (prev, options) => {
-            const mResult = options.mutationResult as any;
-            expect(mResult.data.createTodo.id).toBe("99");
-            expect(mResult.data.createTodo.text).toBe(
-              "This one was created with a mutation."
-            );
+      await expect(
+        client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              expect(mResult.data.createTodo.id).toBe("99");
+              expect(mResult.data.createTodo.text).toBe(
+                "This one was created with a mutation."
+              );
 
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
-            return state;
+              const state = cloneDeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
           },
-        },
-      });
+        })
+      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
     });
 
     it("does not fail if the query did not finish loading", async () => {
@@ -888,22 +1092,24 @@ describe("mutation results", () => {
       obsQuery.subscribe({
         next: () => null,
       });
-      await client.mutate({
-        mutation,
-        updateQueries: {
-          todoList: (prev, options) => {
-            const mResult = options.mutationResult as any;
-            expect(mResult.data.createTodo.id).toBe("99");
-            expect(mResult.data.createTodo.text).toBe(
-              "This one was created with a mutation."
-            );
+      await expect(
+        client.mutate({
+          mutation,
+          updateQueries: {
+            todoList: (prev, options) => {
+              const mResult = options.mutationResult as any;
+              expect(mResult.data.createTodo.id).toBe("99");
+              expect(mResult.data.createTodo.text).toBe(
+                "This one was created with a mutation."
+              );
 
-            const state = cloneDeep(prev) as any;
-            state.todoList.todos.unshift(mResult.data.createTodo);
-            return state;
+              const state = cloneDeep(prev) as any;
+              state.todoList.todos.unshift(mResult.data.createTodo);
+              return state;
+            },
           },
-        },
-      });
+        })
+      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
     });
 
     it("does not make next queries fail if a mutation fails", async () => {
@@ -921,7 +1127,7 @@ describe("mutation results", () => {
       const stream = new ObservableStream(obsQuery);
       await stream.takeNext();
 
-      await expect(() =>
+      await expect(
         client.mutate({
           mutation,
           updateQueries: {
@@ -939,7 +1145,7 @@ describe("mutation results", () => {
         })
       ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
 
-      await expect(() =>
+      await expect(
         client.mutate({
           mutation,
           updateQueries: {
@@ -969,7 +1175,7 @@ describe("mutation results", () => {
       const stream = new ObservableStream(handle);
       await stream.takeNext();
 
-      await expect(() =>
+      await expect(
         client.mutate({
           mutation,
           updateQueries: {
@@ -1068,14 +1274,16 @@ describe("mutation results", () => {
       expect(result.data).toEqual({ echo: "b" });
     }
 
-    await client.mutate({
-      mutation: resetMutation,
-      updateQueries: {
-        Echo: () => {
-          return { echo: "0" };
+    await expect(
+      client.mutate({
+        mutation: resetMutation,
+        updateQueries: {
+          Echo: () => {
+            return { echo: "0" };
+          },
         },
-      },
-    });
+      })
+    ).resolves.toEqualStrictTyped({ data: resetMutationResult.data });
 
     {
       const result = await stream.takeNext();
@@ -1153,7 +1361,7 @@ describe("mutation results", () => {
         __typename: "Mutation",
       },
     });
-    expect(results).toEqual([
+    expect(results).toEqualStrictTyped([
       { data: { result: "hello" } },
       { data: { result: "world" } },
       { data: { result: "goodbye" } },
@@ -1229,7 +1437,7 @@ describe("mutation results", () => {
         __typename: "Mutation",
       },
     });
-    expect(results).toEqual([
+    expect(results).toEqualStrictTyped([
       { data: { result: "hello" } },
       { data: { result: "world" } },
       { data: { result: "goodbye" } },
@@ -1305,7 +1513,7 @@ describe("mutation results", () => {
         __typename: "Mutation",
       },
     });
-    expect(results).toEqual([
+    expect(results).toEqualStrictTyped([
       { data: { result: "hello" } },
       { data: { result: "world" } },
       { data: { result: "moon" } },
@@ -1351,38 +1559,40 @@ describe("mutation results", () => {
       const handle = client.watchQuery({ query });
       const stream = new ObservableStream(handle);
       await stream.takeNext();
-      await client.mutate({
-        mutation,
-        update: (proxy, mResult: any) => {
-          expect(mResult.data.createTodo.id).toBe("99");
-          expect(mResult.data.createTodo.text).toBe(
-            "This one was created with a mutation."
-          );
+      await expect(
+        client.mutate({
+          mutation,
+          update: (proxy, mResult: any) => {
+            expect(mResult.data.createTodo.id).toBe("99");
+            expect(mResult.data.createTodo.text).toBe(
+              "This one was created with a mutation."
+            );
 
-          const id = "TodoList5";
-          const fragment = gql`
-            fragment todoList on TodoList {
-              todos {
-                id
-                text
-                completed
-                __typename
+            const id = "TodoList5";
+            const fragment = gql`
+              fragment todoList on TodoList {
+                todos {
+                  id
+                  text
+                  completed
+                  __typename
+                }
               }
-            }
-          `;
+            `;
 
-          const data: any = proxy.readFragment({ id, fragment });
+            const data: any = proxy.readFragment({ id, fragment });
 
-          proxy.writeFragment({
-            data: {
-              ...data,
-              todos: [mResult.data.createTodo, ...data.todos],
-            },
-            id,
-            fragment,
-          });
-        },
-      });
+            proxy.writeFragment({
+              data: {
+                ...data,
+                todos: [mResult.data.createTodo, ...data.todos],
+              },
+              id,
+              fragment,
+            });
+          },
+        })
+      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
 
       const newResult = await client.query<any>({ query });
 
@@ -1433,39 +1643,42 @@ describe("mutation results", () => {
       const stream = new ObservableStream(handle);
       await stream.takeNext();
 
-      await client.mutate({
-        mutation: mutationWithVars,
-        variables,
-        update: (proxy, mResult: any) => {
-          expect(mResult.data.createTodo.id).toBe("99");
-          expect(mResult.data.createTodo.text).toBe(
-            "This one was created with a mutation."
-          );
+      await expect(
+        client.mutate({
+          mutation: mutationWithVars,
+          variables,
+          update: (proxy, mResult: any) => {
+            expect(mResult.data.createTodo.id).toBe("99");
+            expect(mResult.data.createTodo.text).toBe(
+              "This one was created with a mutation."
+            );
 
-          const id = "TodoList5";
-          const fragment = gql`
-            fragment todoList on TodoList {
-              todos {
-                id
-                text
-                completed
-                __typename
+            const id = "TodoList5";
+            const fragment = gql`
+              fragment todoList on TodoList {
+                todos {
+                  id
+                  text
+                  completed
+                  __typename
+                }
               }
-            }
-          `;
+            `;
 
-          const data: any = proxy.readFragment({ id, fragment });
+            const data: any = proxy.readFragment({ id, fragment });
 
-          proxy.writeFragment({
-            data: {
-              ...data,
-              todos: [mResult.data.createTodo, ...data.todos],
-            },
-            id,
-            fragment,
-          });
-        },
-      });
+            proxy.writeFragment({
+              data: {
+                ...data,
+                todos: [mResult.data.createTodo, ...data.todos],
+              },
+              id,
+              fragment,
+            });
+          },
+        })
+      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+
       const newResult = await client.query<any>({ query });
 
       // There should be one more todo item than before
@@ -1527,6 +1740,7 @@ describe("mutation results", () => {
           },
         })
       ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
+
       await expect(
         client.mutate({
           mutation,
@@ -1561,6 +1775,7 @@ describe("mutation results", () => {
           },
         })
       ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
+
       await obsQuery.refetch();
     });
 
@@ -1615,10 +1830,8 @@ describe("mutation results", () => {
       const result = await client.mutate<{ foo: { bar: string } }>({
         mutation: mutation,
       });
-      // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'.", even without `!` operator
-      if (!result.data?.foo.bar) {
-        throw new Error("data was unexpectedly undefined");
-      }
+
+      expect(result).toEqualStrictTyped({ data: result1.data });
     });
 
     it("data might be undefined in case of failure with errorPolicy = ignore", async () => {
@@ -1645,9 +1858,8 @@ describe("mutation results", () => {
         errorPolicy: "ignore",
       });
 
-      expect(ignoreErrorsResult).toEqual({
+      expect(ignoreErrorsResult).toEqualStrictTyped({
         data: undefined,
-        errors: undefined,
       });
     });
   });

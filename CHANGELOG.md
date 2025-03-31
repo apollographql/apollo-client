@@ -1,5 +1,45 @@
 # @apollo/client
 
+## 4.0.0-alpha.5
+
+### Major Changes
+
+- [#12478](https://github.com/apollographql/apollo-client/pull/12478) [`5ea6a45`](https://github.com/apollographql/apollo-client/commit/5ea6a45b3ec2f0d526abe78ae03c42bb519f87c7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `variables` from the result returned from `useSubscription`.
+
+- [#12476](https://github.com/apollographql/apollo-client/pull/12476) [`6afff60`](https://github.com/apollographql/apollo-client/commit/6afff60beece953406af2cbe07f7ccbf973cadaa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Subscriptions now emit a `SubscribeResult` instead of a `FetchResult`. As a result, the `errors` field has been removed in favor of `error`.
+
+- [#12475](https://github.com/apollographql/apollo-client/pull/12475) [`3de63eb`](https://github.com/apollographql/apollo-client/commit/3de63ebcdf95a87adc31e6b4a39cae5391ed945a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Unify error behavior on mutations for GraphQL errors and network errors by ensuring network errors are subject to the `errorPolicy`. Network errors created when using an `errorPolicy` of `all` will now resolve the promise and be returned on the `error` property of the result, or stripped away when the `errorPolicy` is `none`.
+
+- [#12475](https://github.com/apollographql/apollo-client/pull/12475) [`3de63eb`](https://github.com/apollographql/apollo-client/commit/3de63ebcdf95a87adc31e6b4a39cae5391ed945a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `client.mutate` now returns a `MutateResult` instead of `FetchResult`. As a result, the `errors` property has been removed in favor of `error` which is set if either a network error occured or GraphQL errors are returned from the server.
+
+  `useMutation` now also returns a `MutateResult` instead of a `FetchResult`.
+
+- [#12475](https://github.com/apollographql/apollo-client/pull/12475) [`3de63eb`](https://github.com/apollographql/apollo-client/commit/3de63ebcdf95a87adc31e6b4a39cae5391ed945a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Mutations no longer report errors if the GraphQL result from the server contains an empty array of errors.
+
+- [#12476](https://github.com/apollographql/apollo-client/pull/12476) [`6afff60`](https://github.com/apollographql/apollo-client/commit/6afff60beece953406af2cbe07f7ccbf973cadaa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Unify error behavior on subscriptions for GraphQL errors and network errors by ensuring network errors are subject to the `errorPolicy`. Network errors that terminate the connection will now be emitted on the `error` property passed to the `next` callback followed by a call to the `complete` callback.
+
+- [#12478](https://github.com/apollographql/apollo-client/pull/12478) [`5ea6a45`](https://github.com/apollographql/apollo-client/commit/5ea6a45b3ec2f0d526abe78ae03c42bb519f87c7) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `onSubscriptionData` and `onSubscriptionComplete` callbacks from `useSubscription`. Use `onData` and `onComplete` instead.
+
+- [#12476](https://github.com/apollographql/apollo-client/pull/12476) [`6afff60`](https://github.com/apollographql/apollo-client/commit/6afff60beece953406af2cbe07f7ccbf973cadaa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - GraphQL errors or network errors emitted while using an `errorPolicy` of `ignore` in subscriptions will no longer emit a result if there is no `data` emitted along with the error.
+
+- [#12476](https://github.com/apollographql/apollo-client/pull/12476) [`6afff60`](https://github.com/apollographql/apollo-client/commit/6afff60beece953406af2cbe07f7ccbf973cadaa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Subscriptions no longer emit errors in the `error` callback and instead provide errors on the `error` property on the result passed to the `next` callback. As a result, errors will no longer automatically terminate the connection allowing additional results to be emitted when the connection stays open.
+
+  When an error terminates the downstream connection, a `next` event will be emitted with an `error` property followed by a `complete` event instead.
+
+### Minor Changes
+
+- [#12487](https://github.com/apollographql/apollo-client/pull/12487) [`b695e5e`](https://github.com/apollographql/apollo-client/commit/b695e5e10ab0eb47948e914b610f67c40267349e) Thanks [@phryneas](https://github.com/phryneas)! - Split out SSR-specific code from useQuery hook, remove RenderPromises
+
+### Patch Changes
+
+- [#12487](https://github.com/apollographql/apollo-client/pull/12487) [`b695e5e`](https://github.com/apollographql/apollo-client/commit/b695e5e10ab0eb47948e914b610f67c40267349e) Thanks [@phryneas](https://github.com/phryneas)! - `useQuery` with `ssr: false` - previously, `skip` had a higher priortity than `ssr: false` while `ssr: false` had a higher priority than `fetchPolicy: "standby"` (which is roughly equivalent to `skip`).
+
+  This priority has been adjusted so now both `skip` and `fetchPolicy: "standby"` have a higher priority than `ssr: false` and will return `loading: false`, while `ssr: false` will only come after those and will return `loading: true` if those are not set.
+
+- [#12475](https://github.com/apollographql/apollo-client/pull/12475) [`3de63eb`](https://github.com/apollographql/apollo-client/commit/3de63ebcdf95a87adc31e6b4a39cae5391ed945a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where passing `onError` to `useMutation` would resolve the promise returned by the `mutate` function instead of rejecting when using an `errorPolicy` of `none`.
+
+- [#12475](https://github.com/apollographql/apollo-client/pull/12475) [`3de63eb`](https://github.com/apollographql/apollo-client/commit/3de63ebcdf95a87adc31e6b4a39cae5391ed945a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where additional response properties were returned on the result returned from `client.mutate`, such as `@defer` payload fields. These properties are now stripped out to correspond to the TypeScript type.
+
 ## 4.0.0-alpha.4
 
 ### Major Changes

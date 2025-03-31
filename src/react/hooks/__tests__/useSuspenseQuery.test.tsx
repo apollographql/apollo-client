@@ -6129,7 +6129,11 @@ describe("useSuspenseQuery", () => {
     const link = new ApolloLink((operation) => {
       return of({
         data: {
-          context: operation.getContext(),
+          context: {
+            // Only apply serialized value to prevent comparing against object
+            // with additional client properties
+            phase: operation.getContext().phase,
+          },
         },
       });
     });

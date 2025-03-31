@@ -6389,8 +6389,10 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.data).toEqual({
-        character: { __typename: "Character", id: "1" },
+      expect(result.current).toEqualStrictTyped({
+        data: { character: { __typename: "Character", id: "1" } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
       });
     });
 
@@ -6406,7 +6408,13 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqualStrictTyped([
       {
-        data: { character: { __typename: "Character", id: "1" } },
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Doctor Strange",
+          },
+        },
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },

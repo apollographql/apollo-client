@@ -60,14 +60,8 @@ export declare namespace useSubscription {
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
     onData?: (options: OnDataOptions<TData>) => any;
 
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
-    onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
-
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
     onError?: (error: ErrorLike) => void;
-
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
-    onSubscriptionComplete?: () => void;
 
     /**
      * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
@@ -76,7 +70,7 @@ export declare namespace useSubscription {
     ignoreResults?: boolean;
   }
 
-  export interface Result<TData = unknown, TVariables = OperationVariables> {
+  export interface Result<TData = unknown> {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
     loading: boolean;
 
@@ -87,14 +81,6 @@ export declare namespace useSubscription {
     error?: ErrorLike;
 
     restart: () => void;
-
-    // This was added by the legacy useSubscription type, and is tested in unit
-    // tests, but probably shouldn’t be added to the result.
-    /**
-     * @internal
-     */
-    // TODO: Remove this
-    variables?: TVariables;
   }
 
   export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
@@ -109,11 +95,6 @@ export declare namespace useSubscription {
     subscriptionData: OnDataResult<TData>;
   }
 }
-
-type StateResult<TData, TVariables> = Omit<
-  useSubscription.Result<TData, TVariables>,
-  "restart"
->;
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -202,32 +183,9 @@ export function useSubscription<
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
-): useSubscription.Result<TData, TVariables> {
-  const hasIssuedDeprecationWarningRef = React.useRef(false);
+): useSubscription.Result<TData> {
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-
-  // eslint-disable-next-line react-compiler/react-compiler
-  if (!hasIssuedDeprecationWarningRef.current) {
-    // eslint-disable-next-line react-compiler/react-compiler
-    hasIssuedDeprecationWarningRef.current = true;
-
-    if (options.onSubscriptionData) {
-      invariant.warn(
-        options.onData ?
-          "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
-        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
-      );
-    }
-
-    if (options.onSubscriptionComplete) {
-      invariant.warn(
-        options.onComplete ?
-          "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
-        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
-      );
-    }
-  }
 
   const {
     skip,
@@ -284,14 +242,13 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<StateResult<TData, TVariables>>(
+  const fallbackResult = React.useMemo(
     () => ({
       loading: fallbackLoading,
       error: void 0,
       data: void 0,
-      variables,
     }),
-    [fallbackLoading, variables]
+    [fallbackLoading]
   );
 
   const ignoreResultsRef = React.useRef(ignoreResults);
@@ -307,7 +264,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<StateResult<TData, TVariables>>(
+  const ret = useSyncExternalStore(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -315,7 +272,6 @@ export function useSubscription<
         }
 
         let subscriptionStopped = false;
-        const variables = observable.__.variables;
         const client = observable.__.client;
         const subscription = observable.subscribe({
           next(value) {
@@ -323,11 +279,10 @@ export function useSubscription<
               return;
             }
 
-            const result: StateResult<TData, TVariables> = {
+            const result = {
               loading: false,
               data: value.data,
               error: value.error,
-              variables,
             };
 
             observable.__.setResult(result);
@@ -340,20 +295,11 @@ export function useSubscription<
                 client,
                 data: result,
               });
-            } else if (optionsRef.current.onSubscriptionData) {
-              optionsRef.current.onSubscriptionData({
-                client,
-                subscriptionData: result,
-              });
             }
           },
           complete() {
-            if (!subscriptionStopped) {
-              if (optionsRef.current.onComplete) {
-                optionsRef.current.onComplete();
-              } else if (optionsRef.current.onSubscriptionComplete) {
-                optionsRef.current.onSubscriptionComplete();
-              }
+            if (!subscriptionStopped && optionsRef.current.onComplete) {
+              optionsRef.current.onComplete();
             }
           },
         });
@@ -388,6 +334,8 @@ export function useSubscription<
   return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }
 
+type SubscriptionResult<TData> = Omit<useSubscription.Result<TData>, "restart">;
+
 function createSubscription<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -415,9 +363,8 @@ function createSubscription<
       loading: true,
       data: void 0,
       error: void 0,
-      variables,
-    } as StateResult<TData, TVariables>,
-    setResult(result: StateResult<TData, TVariables>) {
+    } as SubscriptionResult<TData>,
+    setResult(result: SubscriptionResult<TData>) {
       __.result = result;
     },
   };

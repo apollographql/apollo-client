@@ -89,7 +89,7 @@ export type MutationTuple<
 export type SubscriptionResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> = useSubscription.Result<TData, TVariables>;
+> = useSubscription.Result<TData>;
 
 /** @deprecated Use `useSubscription.Options` instead */
 export type SubscriptionHookOptions<

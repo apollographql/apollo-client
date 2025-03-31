@@ -9185,8 +9185,8 @@ describe("useSuspenseQuery", () => {
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
@@ -9227,8 +9227,8 @@ describe("useSuspenseQuery", () => {
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
@@ -9335,8 +9335,8 @@ describe("useSuspenseQuery", () => {
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
@@ -9354,8 +9354,8 @@ describe("useSuspenseQuery", () => {
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },

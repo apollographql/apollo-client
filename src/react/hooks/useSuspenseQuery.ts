@@ -242,6 +242,7 @@ export function useSuspenseQuery<
   TVariables,
   "empty" | "streaming" | "complete" | "partial"
 > {
+  "use no memo";
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler

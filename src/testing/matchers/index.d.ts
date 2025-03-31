@@ -25,7 +25,7 @@ type FilterUnserializableProperties<T> =
       : T[K] extends KnownClassInstances ? never
       : K]: T[K];
     }
-  : never;
+  : T;
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**

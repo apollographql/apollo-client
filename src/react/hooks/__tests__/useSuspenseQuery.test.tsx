@@ -493,6 +493,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -2938,6 +2939,7 @@ describe("useSuspenseQuery", () => {
       await waitFor(() => {
         expect(result.current).toEqualStrictTyped({
           ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -3228,6 +3230,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
         data: { greeting: "Updated hello" },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3634,7 +3637,7 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -3912,6 +3915,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
         data: undefined,
+        networkStatus: NetworkStatus.error,
         error: networkError,
       });
     });
@@ -4178,7 +4182,7 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[1].result,
+        data: mocks[1].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4195,7 +4199,7 @@ describe("useSuspenseQuery", () => {
         error: expectedError,
       },
       {
-        ...mocks[1].result,
+        data: mocks[1].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -4478,7 +4482,8 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[0].result,
+        data: mocks[0].result.data,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4564,7 +4569,7 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4583,7 +4588,7 @@ describe("useSuspenseQuery", () => {
     ]);
     expect(renders.frames).toEqualStrictTyped([
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -4628,7 +4633,7 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4642,12 +4647,12 @@ describe("useSuspenseQuery", () => {
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toEqualStrictTyped([
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -4696,7 +4701,7 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4708,7 +4713,7 @@ describe("useSuspenseQuery", () => {
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.error,
         error: expectedError,
       });
@@ -4718,12 +4723,12 @@ describe("useSuspenseQuery", () => {
     expect(renders.errors).toEqual([]);
     expect(renders.frames).toEqualStrictTyped([
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.error,
         error: expectedError,
       },
@@ -4774,6 +4779,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4972,6 +4978,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
         data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4988,6 +4995,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
         data: { letters: data.slice(0, 4) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -9473,10 +9481,15 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toEqualStrictTyped([
-      { data: { greeting: "Hello" }, networkStatus: NetworkStatus.ready },
+      {
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
       {
         data: { greeting: "Subscription hello" },
         networkStatus: NetworkStatus.ready,
+        error: undefined,
       },
     ]);
   });
@@ -10038,6 +10051,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toEqualStrictTyped({
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.loading,
+        error: undefined,
       });
     });
 
@@ -10047,6 +10061,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toEqualStrictTyped({
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
+        error: undefined,
       });
     });
   });

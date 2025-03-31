@@ -7,11 +7,12 @@ import type { OperationVariables } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import {
   cacheSizes,
-  defaultCacheSizes,
   isPlainObject,
   stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const KEEP = "__KEEP";
 

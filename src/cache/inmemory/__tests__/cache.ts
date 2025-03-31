@@ -10,8 +10,9 @@ import type {
 } from "@apollo/client/core";
 import { isReference, makeReference, makeVar } from "@apollo/client/core";
 import { spyOnConsole } from "@apollo/client/testing/internal";
-import { cloneDeep, defaultCacheSizes } from "@apollo/client/utilities";
+import { cloneDeep } from "@apollo/client/utilities";
 
+import { defaultCacheSizes } from "../../../utilities/caching/sizes.js";
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";

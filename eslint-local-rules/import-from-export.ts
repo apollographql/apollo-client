@@ -122,7 +122,7 @@ export const noDuplicateExports = ESLintUtils.RuleCreator.withoutDocs({
 });
 
 export const importFromInsideOtherExport = ESLintUtils.RuleCreator.withoutDocs({
-  create(context, options) {
+  create(context) {
     const currentFileEntrypoint = findNearestEntryPointFolder(
       context.physicalFilename
     );

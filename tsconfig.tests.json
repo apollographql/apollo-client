@@ -4,6 +4,7 @@
     "target": "es5",
     "moduleResolution": "Node",
     "module": "ES2015",
+    "allowJs": true,
     "types": [
       "jest",
       "node",

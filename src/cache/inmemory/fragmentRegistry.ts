@@ -9,12 +9,9 @@ import { visit } from "graphql";
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "@apollo/client/utilities";
-import {
-  cacheSizes,
-  defaultCacheSizes,
-  getFragmentDefinitions,
-} from "@apollo/client/utilities";
+import { cacheSizes, getFragmentDefinitions } from "@apollo/client/utilities";
 
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;
   lookup(fragmentName: string): FragmentDefinitionNode | null;

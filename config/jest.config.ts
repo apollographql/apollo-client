@@ -16,7 +16,7 @@ const defaults = {
     printBasicPrototype: true,
   },
   transform: {
-    "^.+\\.tsx?$": [
+    "(dist/.+\\.js|\\.tsx?)$": [
       "ts-jest",
       {
         // just transpile, no type checking. We type-check in CI by running `tsc` directly.

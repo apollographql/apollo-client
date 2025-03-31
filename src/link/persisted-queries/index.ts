@@ -11,13 +11,11 @@ import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
 import { compact, isNonEmptyArray } from "@apollo/client/utilities";
-import {
-  AutoCleanedWeakCache,
-  cacheSizes,
-  defaultCacheSizes,
-} from "@apollo/client/utilities";
+import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 

@@ -454,11 +454,9 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, render } = await createRenderStream<
+    const { takeRender, replaceSnapshot, render } = createRenderStream<
       useSuspenseQuery.Result<SimpleQueryData, OperationVariables>
-    >({
-      snapshotDOM: true,
-    });
+    >({ snapshotDOM: true });
     await render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>

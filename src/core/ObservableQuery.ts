@@ -20,6 +20,7 @@ import {
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { toQueryResult } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
@@ -30,6 +31,7 @@ import type {
   ApolloQueryResult,
   ErrorLike,
   OperationVariables,
+  QueryResult,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -407,9 +409,7 @@ export class ObservableQuery<
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public refetch(
-    variables?: Partial<TVariables>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -469,7 +469,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       ) => Unmasked<TData>;
     }
-  ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
+  ): Promise<QueryResult<TFetchData>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -608,7 +608,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           );
         }
 
-        return this.maskResult(fetchMoreResult);
+        return toQueryResult(this.maskResult(fetchMoreResult));
       })
       .finally(() => {
         // In case the cache writes above did not generate a broadcast
@@ -712,19 +712,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public async setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<QueryResult<TData>> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.subject.getValue();
+      return toQueryResult(this.subject.getValue());
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return this.subject.getValue();
+      return toQueryResult(this.subject.getValue());
     }
 
     return this.reobserve({
@@ -938,7 +938,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   // notification is emitted without a value.
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
 
@@ -1068,7 +1068,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Note: lastValueFrom will create a separate subscription to the
       // observable which means that terminating this ObservableQuery will not
       // cancel the request from the link chain.
-      lastValueFrom(observable).then(this.maskResult)
+      lastValueFrom(observable).then((result) =>
+        toQueryResult(this.maskResult(result))
+      )
     );
   }
 

@@ -16,6 +16,7 @@ import type { ObservableQuery } from '@apollo/client/core';
 import type { OnlyRequiredProperties } from '@apollo/client/utilities';
 import type { OperationVariables } from '@apollo/client/core';
 import type { PromiseWithState } from '@apollo/client/utilities';
+import type { QueryResult } from '@apollo/client/core';
 import type { Unmasked } from '@apollo/client/core';
 import type { useBackgroundQuery } from '@apollo/client/react/hooks';
 import type { useFragment } from '@apollo/client/react/hooks';
@@ -50,7 +51,7 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (f
         fetchMoreResult: Unmasked<TData>;
         variables: TVariables;
     }) => Unmasked<TData>;
-}) => Promise<ApolloQueryResult<MaybeMasked_2<TData>>>;
+}) => Promise<QueryResult<MaybeMasked_2<TData>>>;
 
 // @public (undocumented)
 type FetchMoreOptions<TData> = Parameters<ObservableQuery<TData>["fetchMore"]>[0];
@@ -140,7 +141,7 @@ export class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "FetchMoreOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchMore(options: FetchMoreOptions<TData>): Promise<ApolloQueryResult<TData>>;
+    fetchMore(options: FetchMoreOptions<TData>): Promise<QueryResult<TData>>;
     // (undocumented)
     readonly key: QueryKey;
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
@@ -152,7 +153,7 @@ export class InternalQueryReference<TData = unknown> {
     // (undocumented)
     promise: QueryRefPromise<TData>;
     // (undocumented)
-    refetch(variables: OperationVariables | undefined): Promise<ApolloQueryResult<TData>>;
+    refetch(variables: OperationVariables | undefined): Promise<QueryResult<TData>>;
     // (undocumented)
     reinitialize(): void;
     // (undocumented)

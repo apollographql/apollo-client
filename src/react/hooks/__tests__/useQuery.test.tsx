@@ -1734,7 +1734,7 @@ describe("useQuery Hook", () => {
           if (obsQuery.hasObservers()) {
             expect(inactiveSet.has(obsQuery)).toBe(false);
             activeSet.add(obsQuery);
-            expect(obsQuery.getCurrentResult()).toEqualApolloQueryResult({
+            expect(obsQuery.getCurrentResult()).toEqualStrictTyped({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
@@ -1755,12 +1755,7 @@ describe("useQuery Hook", () => {
 
       await expect(
         getCurrentSnapshot().observable.reobserve()
-      ).resolves.toEqualApolloQueryResult({
-        data: { linkCount: 2 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      ).resolves.toEqualStrictTyped({ data: { linkCount: 2 } });
 
       {
         const result = await takeSnapshot();
@@ -4104,11 +4099,8 @@ describe("useQuery Hook", () => {
         }),
       });
 
-      expect(fetchMoreResult).toEqualApolloQueryResult({
+      expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4173,11 +4165,8 @@ describe("useQuery Hook", () => {
         }),
       });
 
-      expect(fetchMoreResult).toEqualApolloQueryResult({
+      expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4259,11 +4248,8 @@ describe("useQuery Hook", () => {
         variables: { limit: 2 },
       });
 
-      expect(fetchMoreResult).toEqualApolloQueryResult({
+      expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4337,11 +4323,8 @@ describe("useQuery Hook", () => {
         variables: { limit: 2 },
       });
 
-      expect(fetchMoreResult).toEqualApolloQueryResult({
+      expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4542,16 +4525,13 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(fetchMorePromise).resolves.toEqualApolloQueryResult({
+      await expect(fetchMorePromise).resolves.toEqualStrictTyped({
         data: {
           letters: [
             { __typename: "Letter", letter: "C", position: 3 },
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -4618,16 +4598,13 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(fetchMorePromise).resolves.toEqualApolloQueryResult({
+      await expect(fetchMorePromise).resolves.toEqualStrictTyped({
         data: {
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },
           ],
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -5028,7 +5005,7 @@ describe("useQuery Hook", () => {
       // the partial result
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
-      ).toEqualApolloQueryResult({
+      ).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         loading: false,
@@ -5085,7 +5062,7 @@ describe("useQuery Hook", () => {
       // the partial result
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
-      ).toEqualApolloQueryResult({
+      ).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         loading: false,
@@ -6068,13 +6045,8 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(
-        getCurrentSnapshot().refetch()
-      ).resolves.toEqualApolloQueryResult({
+      await expect(getCurrentSnapshot().refetch()).resolves.toEqualStrictTyped({
         data: { hello: "world 2" },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -6201,11 +6173,8 @@ describe("useQuery Hook", () => {
 
         await expect(
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
-        ).resolves.toEqualApolloQueryResult({
+        ).resolves.toEqualStrictTyped({
           data: { primes: [13, 17, 19, 23, 29] },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: false,
         });
 
         {
@@ -6308,11 +6277,8 @@ describe("useQuery Hook", () => {
 
         await expect(
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
-        ).resolves.toEqualApolloQueryResult({
+        ).resolves.toEqualStrictTyped({
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: false,
         });
 
         {
@@ -6413,11 +6379,8 @@ describe("useQuery Hook", () => {
 
         await expect(
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
-        ).resolves.toEqualApolloQueryResult({
+        ).resolves.toEqualStrictTyped({
           data: { primes: [13, 17, 19, 23, 29] },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: false,
         });
 
         {
@@ -7207,11 +7170,8 @@ describe("useQuery Hook", () => {
 
       const refetchResult = await getCurrentSnapshot().refetch();
 
-      expect(refetchResult).toEqualApolloQueryResult({
+      expect(refetchResult).toEqualStrictTyped({
         data: { hello: "world" },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       expect(requestSpy).toHaveBeenCalledTimes(1);
@@ -7317,12 +7277,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      expect(result).toEqualApolloQueryResult({
-        data: { hello: 2 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data: { hello: 2 } });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
@@ -8166,11 +8121,8 @@ describe("useQuery Hook", () => {
 
       const result = await getCurrentSnapshot().observable.reobserve();
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: { a: "aaa", b: 2 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({

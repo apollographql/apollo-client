@@ -4,7 +4,9 @@
 
 ```ts
 
+import type { ApolloQueryResult } from '@apollo/client/core';
 import { Observable } from 'rxjs';
+import type { QueryResult } from '@apollo/client/core';
 
 // @internal
 export const getApolloCacheMemoryInternals: (() => {
@@ -95,6 +97,9 @@ export function onAnyEvent<T>(handleEvent: (event: ObservableEvent<T>) => void):
 //
 // @public (undocumented)
 export function registerGlobalCache(name: keyof typeof globalCaches, getSize: () => number): void;
+
+// @public (undocumented)
+export function toQueryResult<TData = unknown>(value: ApolloQueryResult<TData>): QueryResult<TData>;
 
 // (No @packageDocumentation comment for this package)
 

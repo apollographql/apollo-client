@@ -2679,14 +2679,11 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: { posts: null },
       error: new CombinedGraphQLErrors([
         { message: 'Cannot query field "foo" on type "Post".' },
       ]),
-      loading: false,
-      networkStatus: NetworkStatus.error,
-      partial: false,
     });
   });
 
@@ -2711,13 +2708,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualApolloQueryResult({
-      data: undefined,
-      error,
-      loading: false,
-      networkStatus: NetworkStatus.error,
-      partial: true,
-    });
+    ).resolves.toEqualStrictTyped({ data: undefined, error });
   });
 
   it("resolves partial data and strips errors when errorPolicy is 'ignore'", async () => {
@@ -2743,12 +2734,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualApolloQueryResult({
-      data: { posts: null },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    ).resolves.toEqualStrictTyped({ data: { posts: null } });
   });
 
   it("resolves with no data or errors for network error when errorPolicy is 'ignore'", async () => {
@@ -2772,12 +2758,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualApolloQueryResult({
-      data: undefined,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: true,
-    });
+    ).resolves.toEqualStrictTyped({ data: undefined });
   });
 
   it("should warn if server returns wrong data", async () => {
@@ -3623,8 +3604,7 @@ describe("@connection", () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0]).toMatchObject({
-        loading: false,
+      expect(results[0]).toEqualStrictTyped({
         data: { linkCount: 2 },
       });
 
@@ -3643,8 +3623,10 @@ describe("@connection", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      expect(finalResult.loading).toBe(false);
-      expect(finalResult.data).toEqual({ linkCount: 3 });
+      expect(finalResult).toEqualStrictTyped({
+        data: { linkCount: 3 },
+      });
+
       expect(fetchPolicyRecord).toEqual([
         "cache-first",
         "network-only",
@@ -3686,12 +3668,9 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors(errors),
-        loading: false,
-        networkStatus: NetworkStatus.error,
-        partial: true,
       });
     });
 

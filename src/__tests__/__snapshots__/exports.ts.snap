@@ -504,6 +504,7 @@ Array [
   "getInMemoryCacheMemoryInternals",
   "onAnyEvent",
   "registerGlobalCache",
+  "toQueryResult",
 ]
 `;
 

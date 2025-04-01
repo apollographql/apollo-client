@@ -1184,12 +1184,7 @@ describe("ApolloClient", () => {
 
     const result = await observable.refetch();
 
-    expect(result).toEqualApolloQueryResult({
-      data: data2,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data: data2 });
   });
 
   it("allows you to refetch queries with new variables", async () => {
@@ -2121,12 +2116,7 @@ describe("ApolloClient", () => {
       ]),
     }).query({ query });
 
-    expect(result).toEqualApolloQueryResult({
-      data: transformedQueryResult,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data: transformedQueryResult });
   });
 
   it("should transform mutations correctly", async () => {
@@ -2242,12 +2232,7 @@ describe("ApolloClient", () => {
     });
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
-      data,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data });
 
     await expect(
       client.query({ query, fetchPolicy: "network-only" })
@@ -2395,12 +2380,7 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
-      data,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({ data });
 
     await expect(stream).not.toEmitAnything();
   });
@@ -3028,13 +3008,13 @@ describe("ApolloClient", () => {
     const streamB = new ObservableStream(observableB);
 
     await expect(streamA).toEmitNext();
-    expect(observableA.getCurrentResult()).toEqualApolloQueryResult({
+    expect(observableA.getCurrentResult()).toEqualStrictTyped({
       data: dataA,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-    expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
+    expect(observableB.getCurrentResult()).toEqualStrictTyped({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -3042,13 +3022,13 @@ describe("ApolloClient", () => {
     });
 
     await expect(streamB).toEmitNext();
-    expect(observableA.getCurrentResult()).toEqualApolloQueryResult({
+    expect(observableA.getCurrentResult()).toEqualStrictTyped({
       data: dataA,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-    expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
+    expect(observableB.getCurrentResult()).toEqualStrictTyped({
       data: dataB,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3693,12 +3673,7 @@ describe("ApolloClient", () => {
         fetchPolicy: "network-only",
       });
 
-      expect(result).toEqualApolloQueryResult({
-        data: data2,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data: data2 });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
@@ -3799,13 +3774,13 @@ describe("ApolloClient", () => {
 
       await client.resetStore();
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: dataChanged,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable2.getCurrentResult()).toEqualStrictTyped({
         data: data2Changed,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -4353,13 +4328,13 @@ describe("ApolloClient", () => {
 
       await client.reFetchObservableQueries();
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: dataChanged,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable2.getCurrentResult()).toEqualStrictTyped({
         data: data2Changed,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -4879,13 +4854,13 @@ describe("ApolloClient", () => {
         include: ["GetAuthor", "GetAuthor2"],
       });
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: dataChanged,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable2.getCurrentResult()).toEqualStrictTyped({
         data: data2Changed,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -4914,12 +4889,7 @@ describe("ApolloClient", () => {
         ]),
       }).query({ query });
 
-      expect(result).toEqualApolloQueryResult({
-        data,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data });
     });
 
     it("should be passed to the observer as true if we are returning partial data", async () => {
@@ -5117,12 +5087,7 @@ describe("ApolloClient", () => {
       });
 
       const result1 = await client.query({ query: query1 });
-      expect(result1).toEqualApolloQueryResult({
-        data: data1,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result1).toEqualStrictTyped({ data: data1 });
 
       const observable = client.watchQuery({
         query: query2,
@@ -5223,7 +5188,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5629,7 +5594,7 @@ describe("ApolloClient", () => {
         },
         { timeout: 150 }
       );
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5722,7 +5687,7 @@ describe("ApolloClient", () => {
         },
         { timeout: 150 }
       );
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5816,7 +5781,7 @@ describe("ApolloClient", () => {
         },
         { timeout: 150 }
       );
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -6257,7 +6222,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -6450,7 +6415,7 @@ describe("ApolloClient", () => {
 
       await client.mutate({ mutation, refetchQueries: ["getAuthors"] });
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: queryData,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -6538,7 +6503,7 @@ describe("ApolloClient", () => {
         awaitRefetchQueries: false,
       });
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: queryData,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -6626,7 +6591,7 @@ describe("ApolloClient", () => {
         awaitRefetchQueries: true,
       });
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -6702,7 +6667,6 @@ describe("ApolloClient", () => {
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
-      let isRefetchErrorCaught = false;
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6711,16 +6675,13 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      void client
-        .mutate({
+      await expect(
+        client.mutate({
           mutation,
           refetchQueries: ["getAuthors"],
           awaitRefetchQueries: true,
         })
-        .catch((error) => {
-          expect(error).toBeDefined();
-          isRefetchErrorCaught = true;
-        });
+      ).rejects.toThrow(refetchError);
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6729,7 +6690,6 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.error,
         partial: false,
       });
-      expect(isRefetchErrorCaught).toBe(true);
     });
   });
 
@@ -6817,7 +6777,7 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,

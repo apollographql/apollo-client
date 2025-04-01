@@ -800,7 +800,7 @@ export class QueryManager {
     };
 
     if (typeof options.notifyOnNetworkStatusChange === "undefined") {
-      options.notifyOnNetworkStatusChange = false;
+      options.notifyOnNetworkStatusChange = true;
     }
 
     const queryInfo = new QueryInfo(this);
@@ -1339,7 +1339,7 @@ export class QueryManager {
       fetchPolicy = (defaults && defaults.fetchPolicy) || "cache-first",
       errorPolicy = (defaults && defaults.errorPolicy) || "none",
       returnPartialData = false,
-      notifyOnNetworkStatusChange = false,
+      notifyOnNetworkStatusChange = true,
       context = {},
     } = options;
 

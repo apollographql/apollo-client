@@ -1584,7 +1584,10 @@ describe("client.watchQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const observable = client.watchQuery({ query });
+    const observable = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
     const stream = new ObservableStream(observable);
 
     {
@@ -1620,9 +1623,7 @@ describe("client.watchQuery", () => {
 
     // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
     // see another result since the masked data did not change
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("masks result of setVariables", async () => {
@@ -1708,7 +1709,7 @@ describe("client.watchQuery", () => {
 
     const result = await observable.setVariables({ id: 2 });
 
-    expect(result?.data).toEqual({
+    expect(result.data).toEqual({
       user: {
         __typename: "User",
         id: 2,
@@ -1716,21 +1717,27 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         user: {
           __typename: "User",
           id: 2,
           name: "User 2",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("masks result of reobserve", async () => {
@@ -1816,7 +1823,7 @@ describe("client.watchQuery", () => {
 
     const result = await observable.reobserve({ variables: { id: 2 } });
 
-    expect(result?.data).toEqual({
+    expect(result.data).toEqual({
       user: {
         __typename: "User",
         id: 2,
@@ -1824,21 +1831,27 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         user: {
           __typename: "User",
           id: 2,
           name: "User 2",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("does not mask data passed to updateQuery", async () => {
@@ -2404,17 +2417,25 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
@@ -2473,18 +2494,27 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
+          // @ts-expect-error using a no-cache query
           age: 30,
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).not.toHaveBeenCalled();
   });
@@ -2540,18 +2570,26 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).not.toHaveBeenCalled();
   });
@@ -2616,18 +2654,26 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");

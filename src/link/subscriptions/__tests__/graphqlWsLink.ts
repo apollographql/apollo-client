@@ -169,9 +169,7 @@ describe("GraphQLWSlink", () => {
 
       const obs = execute(link, { query: subscription });
       await expect(observableToArray(obs)).rejects.toEqual(
-        new CombinedGraphQLErrors([{ message: "Foo bar." }], {
-          data: undefined,
-        })
+        new CombinedGraphQLErrors({ errors: [{ message: "Foo bar." }] })
       );
     });
   });

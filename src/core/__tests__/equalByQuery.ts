@@ -290,7 +290,10 @@ describe("equalByQuery", () => {
         { data: data123 },
         {
           data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
         }
       )
     ).toBe(false);
@@ -300,7 +303,10 @@ describe("equalByQuery", () => {
         query,
         {
           data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
         },
         { data: data123 }
       )
@@ -311,54 +317,16 @@ describe("equalByQuery", () => {
         query,
         {
           data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
         },
         {
           data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
-        }
-      )
-    ).toBe(true);
-
-    expect(
-      equalByQuery(
-        query,
-        {
-          data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
-        },
-        {
-          data: data123,
-          error: new CombinedGraphQLErrors([differentError], { data: data123 }),
-        }
-      )
-    ).toBe(false);
-
-    expect(
-      equalByQuery(
-        query,
-        {
-          data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
-        },
-        {
-          data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
-        }
-      )
-    ).toBe(true);
-
-    expect(
-      equalByQuery(
-        query,
-        {
-          data: data123,
-          error: new CombinedGraphQLErrors([oopsError], { data: data123 }),
-        },
-        {
-          data: { ...data123, b: 100 },
-          error: new CombinedGraphQLErrors([oopsError], {
-            data: { ...data123, b: 100 },
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
           }),
         }
       )
@@ -369,11 +337,37 @@ describe("equalByQuery", () => {
         query,
         {
           data: data123,
-          error: new CombinedGraphQLErrors([], { data: data123 }),
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
         },
         {
           data: data123,
-          error: new CombinedGraphQLErrors([], { data: data123 }),
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [differentError],
+          }),
+        }
+      )
+    ).toBe(false);
+
+    expect(
+      equalByQuery(
+        query,
+        {
+          data: data123,
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
+        },
+        {
+          data: data123,
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
         }
       )
     ).toBe(true);
@@ -383,12 +377,47 @@ describe("equalByQuery", () => {
         query,
         {
           data: data123,
-          error: new CombinedGraphQLErrors([], { data: data123 }),
+          error: new CombinedGraphQLErrors({
+            data: data123,
+            errors: [oopsError],
+          }),
         },
         {
           data: { ...data123, b: 100 },
-          error: new CombinedGraphQLErrors([], {
+          error: new CombinedGraphQLErrors({
             data: { ...data123, b: 100 },
+            errors: [oopsError],
+          }),
+        }
+      )
+    ).toBe(true);
+
+    expect(
+      equalByQuery(
+        query,
+        {
+          data: data123,
+          error: new CombinedGraphQLErrors({ data: data123, errors: [] }),
+        },
+        {
+          data: data123,
+          error: new CombinedGraphQLErrors({ data: data123, errors: [] }),
+        }
+      )
+    ).toBe(true);
+
+    expect(
+      equalByQuery(
+        query,
+        {
+          data: data123,
+          error: new CombinedGraphQLErrors({ data: data123, errors: [] }),
+        },
+        {
+          data: { ...data123, b: 100 },
+          error: new CombinedGraphQLErrors({
+            data: { ...data123, b: 100 },
+            errors: [],
           }),
         }
       )

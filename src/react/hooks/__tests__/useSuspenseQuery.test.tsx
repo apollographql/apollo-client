@@ -3560,8 +3560,8 @@ describe("useSuspenseQuery", () => {
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
-      new CombinedGraphQLErrors([{ message: "`id` should not be null" }], {
-        data: undefined,
+      new CombinedGraphQLErrors({
+        errors: [{ message: "`id` should not be null" }],
       })
     );
   });
@@ -3699,8 +3699,8 @@ describe("useSuspenseQuery", () => {
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
-      new CombinedGraphQLErrors([{ message: "`id` should not be null" }], {
-        data: undefined,
+      new CombinedGraphQLErrors({
+        errors: [{ message: "`id` should not be null" }],
       })
     );
   });
@@ -3729,9 +3729,7 @@ describe("useSuspenseQuery", () => {
     const [error] = renders.errors;
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
-    expect(error).toEqual(
-      new CombinedGraphQLErrors(graphQLErrors, { data: undefined })
-    );
+    expect(error).toEqual(new CombinedGraphQLErrors({ errors: graphQLErrors }));
   });
 
   it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
@@ -3958,7 +3956,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toEqualStrictTyped({
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors([graphQLError], { data: undefined }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       });
     });
 
@@ -3970,7 +3968,7 @@ describe("useSuspenseQuery", () => {
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors([graphQLError], { data: undefined }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       },
     ]);
 
@@ -3978,7 +3976,7 @@ describe("useSuspenseQuery", () => {
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
-      new CombinedGraphQLErrors([graphQLError], { data: undefined })
+      new CombinedGraphQLErrors({ errors: [graphQLError] })
     );
   });
 
@@ -4001,7 +3999,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toEqualStrictTyped({
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors([graphQLError], { data: undefined }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       });
     });
 
@@ -4035,7 +4033,7 @@ describe("useSuspenseQuery", () => {
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors([graphQLError], { data: undefined }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       },
       {
         data: { currentUser: { id: "1", name: "Cache User" } },
@@ -4058,9 +4056,7 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new CombinedGraphQLErrors(graphQLErrors, {
-      data: undefined,
-    });
+    const expectedError = new CombinedGraphQLErrors({ errors: graphQLErrors });
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
@@ -4101,8 +4097,9 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new CombinedGraphQLErrors([graphQLError], {
+    const expectedError = new CombinedGraphQLErrors({
       data: { currentUser: { id: "1", name: null } },
+      errors: [graphQLError],
     });
 
     await waitFor(() => {
@@ -4134,9 +4131,7 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new CombinedGraphQLErrors([graphQLError], {
-      data: undefined,
-    });
+    const expectedError = new CombinedGraphQLErrors({ errors: [graphQLError] });
 
     await waitFor(() => {
       expect(result.current.error).toEqual(expectedError);
@@ -4182,9 +4177,7 @@ describe("useSuspenseQuery", () => {
       { mocks, initialProps: { id: "1" } }
     );
 
-    const expectedError = new CombinedGraphQLErrors(graphQLErrors, {
-      data: undefined,
-    });
+    const expectedError = new CombinedGraphQLErrors({ errors: graphQLErrors });
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
@@ -4600,8 +4593,8 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.errors).toEqual([
-      new CombinedGraphQLErrors([{ message: "Something went wrong" }], {
-        data: undefined,
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Something went wrong" }],
       }),
     ]);
     expect(renders.frames).toEqualStrictTyped([
@@ -4713,10 +4706,9 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new CombinedGraphQLErrors(
-      [{ message: "Something went wrong" }],
-      { data: undefined }
-    );
+    const expectedError = new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    });
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
@@ -4791,10 +4783,10 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new CombinedGraphQLErrors(
-      [{ message: "Something went wrong" }],
-      { data: { user: { id: "1", name: null } } }
-    );
+    const expectedError = new CombinedGraphQLErrors({
+      data: { user: { id: "1", name: null } },
+      errors: [{ message: "Something went wrong" }],
+    });
 
     await waitFor(() => {
       expect(result.current).toEqualStrictTyped({
@@ -6109,9 +6101,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toEqualStrictTyped({
         ...successMock.result,
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors([{ message: "oops" }], {
-          data: undefined,
-        }),
+        error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
       });
     });
 
@@ -6136,9 +6126,7 @@ describe("useSuspenseQuery", () => {
       {
         ...successMock.result,
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors([{ message: "oops" }], {
-          data: undefined,
-        }),
+        error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
       },
     ]);
   });
@@ -6688,8 +6676,8 @@ describe("useSuspenseQuery", () => {
       void result.current.refetch();
     });
 
-    const expectedError = new CombinedGraphQLErrors([{ message: "oops" }], {
-      data: undefined,
+    const expectedError = new CombinedGraphQLErrors({
+      errors: [{ message: "oops" }],
     });
 
     await waitFor(() => {
@@ -8603,8 +8591,8 @@ describe("useSuspenseQuery", () => {
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
-      new CombinedGraphQLErrors([{ message: "Could not fetch greeting" }], {
-        data: undefined,
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Could not fetch greeting" }],
       })
     );
   });
@@ -8651,8 +8639,9 @@ describe("useSuspenseQuery", () => {
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
-      new CombinedGraphQLErrors([{ message: "Could not fetch greeting" }], {
+      new CombinedGraphQLErrors({
         data: { greeting: null },
+        errors: [{ message: "Could not fetch greeting" }],
       })
     );
   });
@@ -8784,16 +8773,15 @@ describe("useSuspenseQuery", () => {
 
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
-      new CombinedGraphQLErrors(
-        [
+      new CombinedGraphQLErrors({
+        errors: [
           {
             message:
               "homeWorld for character with ID 1000 could not be fetched.",
             path: ["hero", "heroFriends", 0, "homeWorld"],
           },
         ],
-        { data: undefined }
-      )
+      })
     );
   });
 
@@ -8911,34 +8899,32 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors(
-          [
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker",
+                  homeWorld: null,
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa",
+                  homeWorld: "Alderaan",
+                },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
             {
               message:
                 "homeWorld for character with ID 1000 could not be fetched.",
               path: ["hero", "heroFriends", 0, "homeWorld"],
             },
           ],
-          {
-            data: {
-              hero: {
-                heroFriends: [
-                  {
-                    id: "1000",
-                    name: "Luke Skywalker",
-                    homeWorld: null,
-                  },
-                  {
-                    id: "1003",
-                    name: "Leia Organa",
-                    homeWorld: "Alderaan",
-                  },
-                ],
-                name: "R2-D2",
-              },
-            },
-          }
-        ),
+        }),
       });
     });
 
@@ -8983,34 +8969,32 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors(
-          [
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker",
+                  homeWorld: null,
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa",
+                  homeWorld: "Alderaan",
+                },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
             {
               message:
                 "homeWorld for character with ID 1000 could not be fetched.",
               path: ["hero", "heroFriends", 0, "homeWorld"],
             },
           ],
-          {
-            data: {
-              hero: {
-                heroFriends: [
-                  {
-                    id: "1000",
-                    name: "Luke Skywalker",
-                    homeWorld: null,
-                  },
-                  {
-                    id: "1003",
-                    name: "Leia Organa",
-                    homeWorld: "Alderaan",
-                  },
-                ],
-                name: "R2-D2",
-              },
-            },
-          }
-        ),
+        }),
       },
     ]);
   });
@@ -9274,26 +9258,24 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors(
-          [
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                { id: "1000", name: "Luke Skywalker", homeWorld: null },
+                { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
             {
               message:
                 "homeWorld for character with ID 1000 could not be fetched.",
               path: ["hero", "heroFriends", 0, "homeWorld"],
             },
           ],
-          {
-            data: {
-              hero: {
-                heroFriends: [
-                  { id: "1000", name: "Luke Skywalker", homeWorld: null },
-                  { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-                ],
-                name: "R2-D2",
-              },
-            },
-          }
-        ),
+        }),
       });
     });
 
@@ -9434,26 +9416,24 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new CombinedGraphQLErrors(
-          [
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                { id: "1000", name: "Luke Skywalker", homeWorld: null },
+                { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
             {
               message:
                 "homeWorld for character with ID 1000 could not be fetched.",
               path: ["hero", "heroFriends", 0, "homeWorld"],
             },
           ],
-          {
-            data: {
-              hero: {
-                heroFriends: [
-                  { id: "1000", name: "Luke Skywalker", homeWorld: null },
-                  { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
-                ],
-                name: "R2-D2",
-              },
-            },
-          }
-        ),
+        }),
       },
       {
         data: {
@@ -10772,8 +10752,9 @@ describe("useSuspenseQuery", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot.error).toEqual(
-        new CombinedGraphQLErrors([{ message: "Could not fetch letters" }], {
+        new CombinedGraphQLErrors({
           data: null,
+          errors: [{ message: "Could not fetch letters" }],
         })
       );
     }
@@ -11715,7 +11696,7 @@ describe("useSuspenseQuery", () => {
       });
 
       expect(result?.error).toEqual(
-        new CombinedGraphQLErrors([{ message: "Couldn't get name" }], {
+        new CombinedGraphQLErrors({
           data: {
             currentUser: {
               __typename: "User",
@@ -11724,6 +11705,7 @@ describe("useSuspenseQuery", () => {
               age: 34,
             },
           },
+          errors: [{ message: "Couldn't get name" }],
         })
       );
     }

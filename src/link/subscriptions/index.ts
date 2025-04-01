@@ -77,8 +77,8 @@ export class GraphQLWsLink extends ApolloLink {
             }
 
             return observer.error(
-              new CombinedGraphQLErrors(Array.isArray(err) ? err : [err], {
-                data: undefined,
+              new CombinedGraphQLErrors({
+                errors: Array.isArray(err) ? err : [err],
               })
             );
           },

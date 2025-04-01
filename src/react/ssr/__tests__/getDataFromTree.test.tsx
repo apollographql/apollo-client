@@ -125,8 +125,9 @@ describe("SSR", () => {
           expect(data).toMatchObject({ allPeople: { people: null } });
           expect(error).toBeDefined();
           expect(error).toEqual(
-            new CombinedGraphQLErrors([{ message: "this is an error" }], {
+            new CombinedGraphQLErrors({
               data: { allPeople: { people: null } },
+              errors: [{ message: "this is an error" }],
             })
           );
         }

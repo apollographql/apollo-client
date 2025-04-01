@@ -743,10 +743,12 @@ describe("schema proxy", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.error).toEqual(
-        new CombinedGraphQLErrors(
-          [{ message: "Could not resolve type", path: ["viewer", "book"] }],
-          { data: null }
-        )
+        new CombinedGraphQLErrors({
+          data: null,
+          errors: [
+            { message: "Could not resolve type", path: ["viewer", "book"] },
+          ],
+        })
       );
     }
   });
@@ -819,10 +821,11 @@ describe("schema proxy", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.error).toEqual(
-        new CombinedGraphQLErrors(
-          [{ message: 'Expected { foo: "bar" } to be a GraphQL schema.' }],
-          { data: undefined }
-        )
+        new CombinedGraphQLErrors({
+          errors: [
+            { message: 'Expected { foo: "bar" } to be a GraphQL schema.' },
+          ],
+        })
       );
     }
   });

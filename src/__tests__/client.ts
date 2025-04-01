@@ -593,7 +593,7 @@ describe("client", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new CombinedGraphQLErrors(errors, { data: undefined })
+      new CombinedGraphQLErrors({ errors })
     );
   });
 
@@ -638,7 +638,7 @@ describe("client", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new CombinedGraphQLErrors(errors, { data })
+      new CombinedGraphQLErrors({ data, errors })
     );
   });
 
@@ -1950,8 +1950,8 @@ describe("client", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: initialData,
-        error: new CombinedGraphQLErrors([{ message: "network failure" }], {
-          data: undefined,
+        error: new CombinedGraphQLErrors({
+          errors: [{ message: "network failure" }],
         }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2191,7 +2191,7 @@ describe("client", () => {
     });
 
     await expect(client.mutate({ mutation })).rejects.toEqual(
-      new CombinedGraphQLErrors(errors, { data })
+      new CombinedGraphQLErrors({ data, errors })
     );
   });
 
@@ -2230,7 +2230,7 @@ describe("client", () => {
       client.mutate({ mutation, errorPolicy: "all" })
     ).resolves.toEqualStrictTyped({
       data,
-      error: new CombinedGraphQLErrors(errors, { data }),
+      error: new CombinedGraphQLErrors({ data, errors }),
     });
   });
 
@@ -2784,10 +2784,10 @@ describe("client", () => {
       client.query({ query, errorPolicy: "all" })
     ).resolves.toEqualStrictTyped({
       data: { posts: null },
-      error: new CombinedGraphQLErrors(
-        [{ message: 'Cannot query field "foo" on type "Post".' }],
-        { data: { posts: null } }
-      ),
+      error: new CombinedGraphQLErrors({
+        data: { posts: null },
+        errors: [{ message: 'Cannot query field "foo" on type "Post".' }],
+      }),
     });
   });
 
@@ -3774,7 +3774,7 @@ describe("@connection", () => {
 
       expect(result).toEqualStrictTyped({
         data: undefined,
-        error: new CombinedGraphQLErrors(errors, { data: undefined }),
+        error: new CombinedGraphQLErrors({ errors }),
       });
     });
 

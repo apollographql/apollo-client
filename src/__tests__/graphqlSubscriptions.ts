@@ -171,8 +171,9 @@ describe("GraphQL Subscriptions", () => {
 
     await expect(stream).toEmitStrictTyped({
       data: undefined,
-      error: new CombinedGraphQLErrors(
-        [
+      error: new CombinedGraphQLErrors({
+        data: null,
+        errors: [
           {
             message: "This is an error",
             locations: [
@@ -184,8 +185,7 @@ describe("GraphQL Subscriptions", () => {
             path: ["result"],
           },
         ],
-        { data: null }
-      ),
+      }),
     });
   });
 
@@ -219,8 +219,9 @@ describe("GraphQL Subscriptions", () => {
 
     await expect(stream).toEmitStrictTyped({
       data: undefined,
-      error: new CombinedGraphQLErrors(
-        [
+      error: new CombinedGraphQLErrors({
+        data: null,
+        errors: [
           {
             message: "This is an error",
             locations: [
@@ -232,8 +233,7 @@ describe("GraphQL Subscriptions", () => {
             path: ["result"],
           },
         ],
-        { data: null }
-      ),
+      }),
     });
 
     link.simulateResult(results[0]);
@@ -294,8 +294,9 @@ describe("GraphQL Subscriptions", () => {
 
     await expect(stream).toEmitStrictTyped({
       data: undefined,
-      error: new CombinedGraphQLErrors([{ message: "This is an error" }], {
+      error: new CombinedGraphQLErrors({
         data: null,
+        errors: [{ message: "This is an error" }],
       }),
     });
 

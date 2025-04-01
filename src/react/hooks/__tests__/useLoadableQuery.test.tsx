@@ -1804,9 +1804,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     expect(renderedComponents).not.toContain(ErrorFallback);
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
-      error: new CombinedGraphQLErrors([{ message: "oops" }], {
-        data: undefined,
-      }),
+      error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
       networkStatus: NetworkStatus.error,
     });
   }
@@ -2725,8 +2723,8 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
 
     expect(renderedComponents).toStrictEqual([ErrorFallback]);
     expect(snapshot.error).toEqual(
-      new CombinedGraphQLErrors([{ message: "Something went wrong" }], {
-        data: undefined,
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Something went wrong" }],
       })
     );
   }
@@ -2899,8 +2897,8 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
-      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }], {
-        data: undefined,
+      error: new CombinedGraphQLErrors({
+        errors: [{ message: "Something went wrong" }],
       }),
       networkStatus: NetworkStatus.error,
     });
@@ -2989,8 +2987,9 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: null } },
-      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }], {
+      error: new CombinedGraphQLErrors({
         data: { character: { id: "1", name: null } },
+        errors: [{ message: "Something went wrong" }],
       }),
       networkStatus: NetworkStatus.error,
     });

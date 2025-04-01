@@ -409,7 +409,7 @@ export class ObservableQuery<
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public refetch(variables?: Partial<TVariables>) {
+  public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -469,7 +469,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       ) => Unmasked<TData>;
     }
-  ) {
+  ): Promise<QueryResult<TFetchData>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -710,7 +710,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public async setVariables(variables: TVariables) {
+  public async setVariables(
+    variables: TVariables
+  ): Promise<QueryResult<TData>> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick

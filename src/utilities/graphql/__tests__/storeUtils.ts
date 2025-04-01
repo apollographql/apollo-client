@@ -1,6 +1,5 @@
 import { getStoreKeyName } from "@apollo/client/utilities";
 
-
 describe("getStoreKeyName", () => {
   it(
     "should return a deterministic version of the store key name no matter " +

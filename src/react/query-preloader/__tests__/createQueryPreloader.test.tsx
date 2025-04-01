@@ -52,7 +52,6 @@ import {
   setupMaskedVariablesCase,
 } from "../../../testing/internal/scenarios/index.js";
 
-
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({
     cache: new InMemoryCache(),

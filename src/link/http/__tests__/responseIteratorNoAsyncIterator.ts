@@ -8,7 +8,6 @@ import { HttpLink } from "@apollo/client/link/http";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 
-
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
     stub {

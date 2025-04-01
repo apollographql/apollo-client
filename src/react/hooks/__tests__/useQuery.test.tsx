@@ -1,4 +1,10 @@
-import { act , render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -24,7 +30,11 @@ import {
 import { ApolloLink } from "@apollo/client/link/core";
 import { Unmasked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
-import { useLazyQuery , useMutation , useQuery } from "@apollo/client/react/hooks";
+import {
+  useLazyQuery,
+  useMutation,
+  useQuery,
+} from "@apollo/client/react/hooks";
 import {
   MockedResponse,
   MockLink,
@@ -42,8 +52,6 @@ import {
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-
-
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

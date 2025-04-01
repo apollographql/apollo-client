@@ -44,7 +44,6 @@ import {
   VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
 
-
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;

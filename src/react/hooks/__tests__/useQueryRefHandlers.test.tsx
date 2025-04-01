@@ -16,7 +16,12 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { createQueryPreloader } from "@apollo/client/react";
-import { useBackgroundQuery , useLoadableQuery , useQueryRefHandlers , useReadQuery } from "@apollo/client/react/hooks";
+import {
+  useBackgroundQuery,
+  useLoadableQuery,
+  useQueryRefHandlers,
+  useReadQuery,
+} from "@apollo/client/react/hooks";
 import { QueryRef } from "@apollo/client/react/internal";
 import {
   MockedResponse,
@@ -36,11 +41,6 @@ import {
   setupSimpleCase,
   SimpleCaseData,
 } from "../../../testing/internal/index.js";
-
-
-
-
-
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

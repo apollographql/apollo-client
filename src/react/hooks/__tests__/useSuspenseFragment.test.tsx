@@ -28,7 +28,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
 
-
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {

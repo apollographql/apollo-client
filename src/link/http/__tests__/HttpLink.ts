@@ -12,8 +12,8 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
-import { ApolloLink , execute } from "@apollo/client/link/core";
-import { createHttpLink , HttpLink } from "@apollo/client/link/http";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { createHttpLink, HttpLink } from "@apollo/client/link/http";
 import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";

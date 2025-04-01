@@ -29,7 +29,7 @@ import {
 } from "@apollo/client/core";
 import { QueryRef } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
-import { useLoadableQuery , useReadQuery } from "@apollo/client/react/hooks";
+import { useLoadableQuery, useReadQuery } from "@apollo/client/react/hooks";
 import {
   MockedResponse,
   MockLink,
@@ -57,7 +57,6 @@ import {
   spyOnConsole,
 } from "../../../testing/internal/index.js";
 import { FetchMoreFunction, RefetchFunction } from "../../internal/types.js";
-
 
 const IS_REACT_19 = React.version.startsWith("19");
 

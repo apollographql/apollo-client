@@ -15,7 +15,7 @@ import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename
 import "@apollo/client/react";
 import { cacheSizes } from "@apollo/client/utilities";
 
-import {  defaultCacheSizes } from "../sizes.js";
+import { defaultCacheSizes } from "../sizes.js";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

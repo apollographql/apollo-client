@@ -1,9 +1,10 @@
 import { gql } from "graphql-tag";
 
-import { fallbackHttpConfig , selectHttpOptionsAndBody } from "@apollo/client/link/http";
+import {
+  fallbackHttpConfig,
+  selectHttpOptionsAndBody,
+} from "@apollo/client/link/http";
 import { createOperation } from "@apollo/client/link/utils";
-
-
 
 const query = gql`
   query SampleQuery {

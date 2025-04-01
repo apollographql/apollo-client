@@ -4,7 +4,6 @@ import React, { StrictMode, useEffect } from "react";
 import { makeVar } from "@apollo/client/core";
 import { useReactiveVar } from "@apollo/client/react/hooks";
 
-
 const IS_REACT_18 = React.version.startsWith("18");
 const IS_REACT_19 = React.version.startsWith("19");
 

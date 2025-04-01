@@ -3,8 +3,6 @@ import { gql } from "graphql-tag";
 import { selectURI } from "@apollo/client/link/http";
 import { createOperation } from "@apollo/client/link/utils";
 
-
-
 const query = gql`
   query SampleQuery {
     stub {

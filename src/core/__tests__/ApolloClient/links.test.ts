@@ -12,8 +12,6 @@ import {
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
-
-
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {
     expect.assertions(3);

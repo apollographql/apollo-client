@@ -8,8 +8,6 @@ import { ApolloProvider } from "@apollo/client/react/context";
 import { useApolloClient } from "@apollo/client/react/hooks";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-
-
 describe("useApolloClient Hook", () => {
   it("should return a client instance from the context if available", () => {
     const client = new ApolloClient({

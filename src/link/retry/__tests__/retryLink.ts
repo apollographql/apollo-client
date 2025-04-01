@@ -2,14 +2,13 @@ import { gql } from "graphql-tag";
 import { Observable, of, throwError } from "rxjs";
 
 import { CombinedProtocolErrors } from "@apollo/client/core";
-import { ApolloLink , execute } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
 import { RetryLink } from "@apollo/client/link/retry";
 
 import {
   mockMultipartSubscriptionStream,
   ObservableStream,
 } from "../../../testing/internal/index.js";
-
 
 const query = gql`
   {

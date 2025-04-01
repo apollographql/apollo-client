@@ -28,7 +28,6 @@ import {
 import { isSubscriptionOperation } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 const NO_CACHE_WARNING =

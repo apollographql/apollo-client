@@ -1,6 +1,4 @@
-import { EntityStore , InMemoryCache , Policies } from "@apollo/client/cache";
-
-
+import { EntityStore, InMemoryCache, Policies } from "@apollo/client/cache";
 
 import { NormalizedCacheObject, StoreObject } from "../types.js";
 

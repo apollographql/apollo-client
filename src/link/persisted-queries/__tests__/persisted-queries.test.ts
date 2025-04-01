@@ -16,7 +16,6 @@ import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 
-
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
 // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration

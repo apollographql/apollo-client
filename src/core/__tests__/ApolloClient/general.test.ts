@@ -4,7 +4,11 @@ import { gql } from "graphql-tag";
 import { Observable, Observer } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, ApolloQueryResult , NetworkStatus } from "@apollo/client/core";
+import {
+  ApolloClient,
+  ApolloQueryResult,
+  NetworkStatus,
+} from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import {
   ApolloLink,

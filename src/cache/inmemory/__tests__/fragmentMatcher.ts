@@ -5,7 +5,6 @@ import { InMemoryCache } from "@apollo/client/cache";
 
 import { hasOwn } from "../helpers.js";
 
-
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {
     const cacheWithoutPossibleTypes = new InMemoryCache();

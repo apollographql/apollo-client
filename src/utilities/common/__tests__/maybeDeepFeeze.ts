@@ -1,6 +1,5 @@
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 
-
 describe("maybeDeepFreeze", () => {
   it("should deep freeze", () => {
     const foo: any = { bar: undefined };

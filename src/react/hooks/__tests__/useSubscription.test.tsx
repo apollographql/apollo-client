@@ -29,7 +29,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 import { mockMultipartSubscriptionStream } from "../../../testing/internal/index.js";
 
-
 const IS_REACT_17 = React.version.startsWith("17");
 
 describe("useSubscription Hook", () => {

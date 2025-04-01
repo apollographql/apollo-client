@@ -1,7 +1,7 @@
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 
-import { EntityStore , InMemoryCache } from "@apollo/client/cache";
+import { EntityStore, InMemoryCache } from "@apollo/client/cache";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";

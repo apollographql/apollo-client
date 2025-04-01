@@ -6,7 +6,6 @@ import { InternalQueryReference } from "@apollo/client/react/internal";
 
 import { setupSimpleCase } from "../../../../testing/internal/index.js";
 import {
-  
   PreloadedQueryRef,
   QueryRef,
   QueryReference,

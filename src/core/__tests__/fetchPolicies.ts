@@ -3,7 +3,11 @@ import { gql } from "graphql-tag";
 import { map, Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, NetworkStatus , ObservableQuery } from "@apollo/client/core";
+import {
+  ApolloClient,
+  NetworkStatus,
+  ObservableQuery,
+} from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { mockSingleLink } from "@apollo/client/testing";
 

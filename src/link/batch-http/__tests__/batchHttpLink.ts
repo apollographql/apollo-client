@@ -4,12 +4,9 @@ import { gql } from "graphql-tag";
 import { map, Observable, Observer, Subscription } from "rxjs";
 
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import { ApolloLink , execute, FetchResult } from "@apollo/client/link/core";
+import { ApolloLink, execute, FetchResult } from "@apollo/client/link/core";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-
-
-
 
 const sampleQuery = gql`
   query SampleQuery {

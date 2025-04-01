@@ -1,6 +1,5 @@
 import { serializeFetchParameter } from "@apollo/client/link/http";
 
-
 describe("serializeFetchParameter", () => {
   it("throws a parse error on an unparsable body", () => {
     const b = {};

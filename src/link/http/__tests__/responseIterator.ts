@@ -10,8 +10,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 
-
-
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
     stub {

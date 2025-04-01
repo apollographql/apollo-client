@@ -5,7 +5,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 import { spyOnConsole } from "../../testing/internal/index.js";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 
-
 test("returns null when data is null", () => {
   const fragment = gql`
     fragment Foo on Query {

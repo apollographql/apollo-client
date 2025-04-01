@@ -8,7 +8,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, OperationVariables  } from "@apollo/client/core";
+import { ApolloClient, OperationVariables } from "@apollo/client/core";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink as createPersistedQuery,
@@ -18,9 +18,6 @@ import { useQuery } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { getDataFromTree } from "@apollo/client/react/ssr";
 import { addTypenameToDocument } from "@apollo/client/utilities";
-
-
-
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

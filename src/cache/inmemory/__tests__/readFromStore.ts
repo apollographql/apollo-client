@@ -1,7 +1,7 @@
 import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
-import { InMemoryCache, MissingFieldError  } from "@apollo/client/cache";
+import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
 import {
   isReference,
   makeReference,

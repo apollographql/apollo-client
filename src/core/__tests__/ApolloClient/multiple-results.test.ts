@@ -1,13 +1,11 @@
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient , NetworkStatus } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing/core";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-
 
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {

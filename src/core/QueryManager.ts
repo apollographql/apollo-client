@@ -339,9 +339,7 @@ export class QueryManager {
           mergeMap((result) => {
             const hasErrors = graphQLResultHasError(result);
             if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(
-                getGraphQLErrorsFromResult(result)
-              );
+              throw new CombinedGraphQLErrors(result);
             }
 
             if (mutationStoreValue) {
@@ -401,9 +399,7 @@ export class QueryManager {
               };
 
               if (graphQLResultHasError(storeResult)) {
-                result.error = new CombinedGraphQLErrors(
-                  getGraphQLErrorsFromResult(storeResult)
-                );
+                result.error = new CombinedGraphQLErrors(storeResult);
               }
 
               if (storeResult.extensions) {
@@ -1065,7 +1061,7 @@ export class QueryManager {
           };
 
           if (graphQLResultHasError(rawResult)) {
-            result.error = new CombinedGraphQLErrors(rawResult.errors!);
+            result.error = new CombinedGraphQLErrors(rawResult);
           } else if (graphQLResultHasProtocolErrors(rawResult)) {
             result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
             // Don't emit protocol errors added by HttpLink
@@ -1262,7 +1258,7 @@ export class QueryManager {
             queryInfo.resetLastWrite();
             queryInfo.reset();
             // Throwing here effectively calls observer.error.
-            throw new CombinedGraphQLErrors(graphQLErrors);
+            throw new CombinedGraphQLErrors(result);
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1291,7 +1287,7 @@ export class QueryManager {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
-          aqr.error = new CombinedGraphQLErrors(graphQLErrors);
+          aqr.error = new CombinedGraphQLErrors(result);
           aqr.networkStatus = NetworkStatus.error;
         }
 

@@ -1499,7 +1499,7 @@ test("throws when error is returned", async () => {
 
     expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
     expect(snapshot.error).toEqual(
-      new CombinedGraphQLErrors([{ message: "Oops" }])
+      new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
     );
   }
 });
@@ -1532,7 +1532,7 @@ test("returns error when error policy is 'all'", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
       data: undefined,
-      error: new CombinedGraphQLErrors([{ message: "Oops" }]),
+      error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
       networkStatus: NetworkStatus.error,
     });
     expect(snapshot.error).toEqual(null);

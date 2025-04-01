@@ -77,7 +77,9 @@ export class GraphQLWsLink extends ApolloLink {
             }
 
             return observer.error(
-              new CombinedGraphQLErrors(Array.isArray(err) ? err : [err])
+              new CombinedGraphQLErrors({
+                errors: Array.isArray(err) ? err : [err],
+              })
             );
           },
           // casting around a wrong type in graphql-ws, which incorrectly expects `Sink<ExecutionResult>`

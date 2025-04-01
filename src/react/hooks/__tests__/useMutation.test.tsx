@@ -430,12 +430,18 @@ describe("useMutation Hook", () => {
       const [createTodo] = getCurrentSnapshot();
 
       await expect(createTodo({ variables })).rejects.toThrow(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        new CombinedGraphQLErrors({
+          data: CREATE_TODO_RESULT,
+          errors: [{ message: CREATE_TODO_ERROR }],
+        })
       );
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        new CombinedGraphQLErrors({
+          data: CREATE_TODO_RESULT,
+          errors: [{ message: CREATE_TODO_ERROR }],
+        }),
         expect.anything()
       );
     });
@@ -483,7 +489,7 @@ describe("useMutation Hook", () => {
       const [createTodo] = getCurrentSnapshot();
 
       await expect(createTodo({ variables })).rejects.toThrow(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] })
       );
 
       {
@@ -502,7 +508,9 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          error: new CombinedGraphQLErrors({
+            errors: [{ message: CREATE_TODO_ERROR }],
+          }),
           loading: false,
           called: true,
         });
@@ -555,7 +563,7 @@ describe("useMutation Hook", () => {
       const [createTodo] = getCurrentSnapshot();
 
       await expect(createTodo({ variables })).rejects.toThrow(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] })
       );
 
       {
@@ -574,7 +582,10 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          error: new CombinedGraphQLErrors({
+            data: CREATE_TODO_RESULT,
+            errors: [{ message: CREATE_TODO_ERROR }],
+          }),
           loading: false,
           called: true,
         });
@@ -628,7 +639,10 @@ describe("useMutation Hook", () => {
 
       await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: CREATE_TODO_RESULT,
-        error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        error: new CombinedGraphQLErrors({
+          data: CREATE_TODO_RESULT,
+          errors: [{ message: CREATE_TODO_ERROR }],
+        }),
       });
 
       {
@@ -647,7 +661,10 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: CREATE_TODO_RESULT,
-          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          error: new CombinedGraphQLErrors({
+            data: CREATE_TODO_RESULT,
+            errors: [{ message: CREATE_TODO_ERROR }],
+          }),
           loading: false,
           called: true,
         });
@@ -709,7 +726,10 @@ describe("useMutation Hook", () => {
 
       await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: CREATE_TODO_RESULT,
-        error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        error: new CombinedGraphQLErrors({
+          data: CREATE_TODO_RESULT,
+          errors: [{ message: CREATE_TODO_ERROR }],
+        }),
       });
 
       {
@@ -728,7 +748,10 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: CREATE_TODO_RESULT,
-          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          error: new CombinedGraphQLErrors({
+            data: CREATE_TODO_RESULT,
+            errors: [{ message: CREATE_TODO_ERROR }],
+          }),
           loading: false,
           called: true,
         });
@@ -736,7 +759,10 @@ describe("useMutation Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        new CombinedGraphQLErrors({
+          data: CREATE_TODO_RESULT,
+          errors: [{ message: CREATE_TODO_ERROR }],
+        }),
         expect.anything()
       );
       expect(onCompleted).not.toHaveBeenCalled();
@@ -1473,7 +1499,7 @@ describe("useMutation Hook", () => {
 
       await expect(
         createTodo({ variables, onCompleted, onError })
-      ).rejects.toThrow(new CombinedGraphQLErrors(errors));
+      ).rejects.toThrow(new CombinedGraphQLErrors({ errors }));
 
       {
         const [, result] = await takeSnapshot();
@@ -1491,7 +1517,7 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: undefined,
-          error: new CombinedGraphQLErrors(errors),
+          error: new CombinedGraphQLErrors({ errors }),
           loading: false,
           called: true,
         });
@@ -1502,7 +1528,7 @@ describe("useMutation Hook", () => {
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(
-        new CombinedGraphQLErrors(errors),
+        new CombinedGraphQLErrors({ errors }),
         expect.objectContaining({ variables })
       );
     });
@@ -1552,7 +1578,7 @@ describe("useMutation Hook", () => {
       const [createTodo] = getCurrentSnapshot();
       const onError = jest.fn();
       await expect(createTodo({ variables, onError })).rejects.toThrow(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] })
       );
 
       {
@@ -1571,7 +1597,9 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          error: new CombinedGraphQLErrors({
+            errors: [{ message: CREATE_TODO_ERROR }],
+          }),
           loading: false,
           called: true,
         });
@@ -1579,7 +1607,7 @@ describe("useMutation Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] }),
         expect.objectContaining({ variables })
       );
       expect(hookOnError).not.toHaveBeenCalled();
@@ -1652,7 +1680,7 @@ describe("useMutation Hook", () => {
       }
 
       await expect(createTodo({ variables })).rejects.toThrow(
-        new CombinedGraphQLErrors(errors)
+        new CombinedGraphQLErrors({ errors })
       );
 
       {
@@ -1671,7 +1699,7 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: undefined,
-          error: new CombinedGraphQLErrors(errors),
+          error: new CombinedGraphQLErrors({ errors }),
           loading: false,
           called: true,
         });
@@ -1683,7 +1711,7 @@ describe("useMutation Hook", () => {
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onError1).toHaveBeenCalledTimes(1);
       expect(onError1).toHaveBeenCalledWith(
-        new CombinedGraphQLErrors(errors),
+        new CombinedGraphQLErrors({ errors }),
         expect.objectContaining({ variables })
       );
     });
@@ -4000,7 +4028,7 @@ describe("useMutation Hook", () => {
       );
 
       await expect(promise).rejects.toThrow(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] })
       );
 
       {
@@ -4008,7 +4036,9 @@ describe("useMutation Hook", () => {
 
         expect(result).toEqualStrictTyped({
           data: undefined,
-          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          error: new CombinedGraphQLErrors({
+            errors: [{ message: CREATE_TODO_ERROR }],
+          }),
           loading: false,
           called: true,
         });
@@ -4018,7 +4048,7 @@ describe("useMutation Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] }),
         expect.anything()
       );
       expect(consoleSpies.error).not.toHaveBeenCalled();

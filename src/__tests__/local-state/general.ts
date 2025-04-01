@@ -1179,7 +1179,10 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new CombinedGraphQLErrors([error]),
+      error: new CombinedGraphQLErrors({
+        data: { user: null },
+        errors: [error],
+      }),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,

@@ -2550,7 +2550,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
       error: null,
       result: {
         data: { greeting: "Hello" },
-        error: new CombinedGraphQLErrors([{ message: "oops" }]),
+        error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
         networkStatus: NetworkStatus.error,
       },
     });
@@ -3197,7 +3197,7 @@ it("properly handles changing options along with changing `variables`", async ()
             name: "Doctor Strangecache",
           },
         },
-        error: new CombinedGraphQLErrors([{ message: "oops" }]),
+        error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
         networkStatus: NetworkStatus.error,
       },
     });
@@ -4817,7 +4817,17 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
           name: null,
         },
       },
-      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
+      error: new CombinedGraphQLErrors({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: null,
+            age: 34,
+          },
+        },
+        errors: [{ message: "Couldn't get name" }],
+      }),
       networkStatus: NetworkStatus.error,
     });
   }
@@ -5206,7 +5216,9 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
       expect(snapshot.error).toEqual(
-        new CombinedGraphQLErrors([{ message: "Something went wrong" }])
+        new CombinedGraphQLErrors({
+          errors: [{ message: "Something went wrong" }],
+        })
       );
     }
 
@@ -5400,9 +5412,9 @@ describe("refetch", () => {
               name: "Spider-Man",
             },
           },
-          error: new CombinedGraphQLErrors([
-            { message: "Something went wrong" },
-          ]),
+          error: new CombinedGraphQLErrors({
+            errors: [{ message: "Something went wrong" }],
+          }),
           networkStatus: NetworkStatus.error,
         },
       });
@@ -5501,9 +5513,16 @@ describe("refetch", () => {
               name: null,
             },
           },
-          error: new CombinedGraphQLErrors([
-            { message: "Something went wrong" },
-          ]),
+          error: new CombinedGraphQLErrors({
+            data: {
+              character: {
+                __typename: "Character",
+                id: "1",
+                name: null,
+              },
+            },
+            errors: [{ message: "Something went wrong" }],
+          }),
           networkStatus: NetworkStatus.error,
         },
       });
@@ -5608,7 +5627,10 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
+        error: new CombinedGraphQLErrors({
+          data: null,
+          errors: [{ message: "Oops couldn't fetch" }],
+        }),
         result: null,
       });
     }
@@ -5629,7 +5651,10 @@ describe("refetch", () => {
         // TODO: We should reset the snapshot between renders to better capture
         // the actual result. This makes it seem like the error is rendered, but
         // in this is just leftover from the previous snapshot.
-        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
+        error: new CombinedGraphQLErrors({
+          data: null,
+          errors: [{ message: "Oops couldn't fetch" }],
+        }),
         result: {
           data: { todo: { id: "1", name: "Clean room", completed: true } },
           error: undefined,
@@ -5735,7 +5760,10 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
+        error: new CombinedGraphQLErrors({
+          data: null,
+          errors: [{ message: "Oops couldn't fetch" }],
+        }),
         result: null,
       });
     }
@@ -5753,9 +5781,10 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new CombinedGraphQLErrors([
-          { message: "Oops couldn't fetch again" },
-        ]),
+        error: new CombinedGraphQLErrors({
+          data: null,
+          errors: [{ message: "Oops couldn't fetch again" }],
+        }),
         result: null,
       });
     }

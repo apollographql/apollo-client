@@ -12,7 +12,9 @@ export const areCombinedGraphQLErrorsEqual: Tester = function (
 
   if (isACombinedGraphQLErrors && isBCombinedGraphQLErrors) {
     return (
-      a.message === b.message && this.equals(a.errors, b.errors, customTesters)
+      a.message === b.message &&
+      this.equals(a.errors, b.errors, customTesters) &&
+      this.equals(a.data, b.data, customTesters)
     );
   } else if (isACombinedGraphQLErrors === isBCombinedGraphQLErrors) {
     return undefined;

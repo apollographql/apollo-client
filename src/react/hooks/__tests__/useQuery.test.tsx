@@ -1863,10 +1863,34 @@ describe("useQuery Hook", () => {
         const result = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 2" },
           variables: {},
         });
       }
@@ -1988,10 +2012,34 @@ describe("useQuery Hook", () => {
         const result = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 2" },
           variables: {},
         });
       }
@@ -2439,7 +2487,18 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      await wait(25);
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+        expect(requestSpy).toHaveBeenCalledTimes(2);
+      }
 
       {
         const result = await takeSnapshot();
@@ -2535,6 +2594,18 @@ describe("useQuery Hook", () => {
         const result = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: { hello: "world 1" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2556,10 +2627,34 @@ describe("useQuery Hook", () => {
         const result = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: { hello: "world 2" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 3" },
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { hello: "world 3" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 3" },
           variables: {},
         });
       }
@@ -4137,6 +4232,18 @@ describe("useQuery Hook", () => {
         const result = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: { letters: ab },
+          loading: true,
+          networkStatus: NetworkStatus.fetchMore,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: { letters: ab.concat(cd) },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4281,6 +4388,18 @@ describe("useQuery Hook", () => {
       expect(fetchMoreResult).toStrictEqualTyped({
         data: { letters: cd },
       });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: { letters: ab },
+          loading: true,
+          networkStatus: NetworkStatus.fetchMore,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
+        });
+      }
 
       {
         const result = await takeSnapshot();
@@ -5888,13 +6007,17 @@ describe("useQuery Hook", () => {
     }
 
     await user.click(screen.getByText("Run mutation"));
+    // Mutation started
     await renderStream.takeRender();
 
     {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult!).toStrictEqualTyped({
-        data: {
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: {
           author: {
             __typename: "Author",
             id: 1,
@@ -5906,12 +6029,12 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
         variables: {},
       });
     }
+
+    // Mutation completed
+    await renderStream.takeRender();
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -8415,14 +8538,12 @@ describe("useQuery Hook", () => {
       });
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query),
-        {
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        }
-      );
+        });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8441,10 +8562,26 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        loading: true,
+        networkStatus: NetworkStatus.poll,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        loading: true,
+        networkStatus: NetworkStatus.poll,
+        previousData: { hello: "world 2" },
         variables: {},
       });
 

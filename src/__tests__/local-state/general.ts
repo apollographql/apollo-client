@@ -443,6 +443,13 @@ describe("Cache manipulation", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: { serverData, selectedItemId: -1 },
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         serverData,
         selectedItemId: 123,

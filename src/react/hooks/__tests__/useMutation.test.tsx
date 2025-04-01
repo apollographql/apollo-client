@@ -3506,9 +3506,7 @@ describe("useMutation Hook", () => {
 
       function App() {
         renderStream.mergeSnapshot({
-          useQueryResult: useQuery(NumbersQuery, {
-            notifyOnNetworkStatusChange: true,
-          }),
+          useQueryResult: useQuery(NumbersQuery),
           useMutationResult: useMutation(RemoveNumberMutation, {
             update(cache) {
               const oldData = cache.readQuery({ query: NumbersQuery });

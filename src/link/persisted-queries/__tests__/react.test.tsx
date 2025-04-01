@@ -7,7 +7,7 @@ import { gql } from "graphql-tag";
 import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient, OperationVariables } from "@apollo/client/core";
 import { createHttpLink } from "@apollo/client/link/http";
 import {

@@ -358,6 +358,8 @@ describe("no-cache", () => {
       await client.query({
         query,
         fetchPolicy: "no-cache",
+        // TODO: This value makes no sense since its a promise-based API. We
+        // should remove support for this option in client.query
         notifyOnNetworkStatusChange: true,
       });
       const actualResult = await client.query({ query });

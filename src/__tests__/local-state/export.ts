@@ -749,6 +749,13 @@ describe("@client @export tests", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
@@ -953,6 +960,13 @@ describe("@client @export tests", () => {
       data: {
         widgetCount: 500,
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({

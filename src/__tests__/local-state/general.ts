@@ -854,7 +854,6 @@ describe("Combining client and server state/operations", () => {
       variables: {
         id: 1,
       },
-      notifyOnNetworkStatusChange: true,
     };
 
     const PersonType = new GraphQLObjectType({

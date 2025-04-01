@@ -432,7 +432,6 @@ describe("no-cache", () => {
         `,
         fetchPolicy: "no-cache",
         variables: { id: "1" },
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -743,7 +742,6 @@ describe("cache-and-network", function () {
       `,
       fetchPolicy: "cache-and-network",
       variables: { id: "1" },
-      notifyOnNetworkStatusChange: true,
     });
 
     const stream = new ObservableStream(observable);

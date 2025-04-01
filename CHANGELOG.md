@@ -1,5 +1,37 @@
 # @apollo/client
 
+## 4.0.0-alpha.6
+
+### Major Changes
+
+- [#12485](https://github.com/apollographql/apollo-client/pull/12485) [`d338303`](https://github.com/apollographql/apollo-client/commit/d3383033d306b7d66e90f5f3170c24453cd76464) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Throw an error for queries and mutations if the link chain completes without emitting a value.
+
+- [#12484](https://github.com/apollographql/apollo-client/pull/12484) [`9a8b9ce`](https://github.com/apollographql/apollo-client/commit/9a8b9cebbcf290984a4f154f261a4090e636e50e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `loading`, `networkStatus`, and `partial` properties on all promise-based query APIs. These properties were mostly static and were unnecessary since promise resolution guaranteed that the query was not longer loading.
+
+  This affects the following APIs:
+
+  - `client.query`
+  - `client.refetchQueries`
+  - `client.reFetchObservableQueries`
+  - `client.resetStore`
+  - `observableQuery.fetchMore`
+  - `observableQuery.refetch`
+  - `observableQuery.reobserve`
+  - `observableQuery.setVariables`
+  - The `useLazyQuery` `execute` function
+
+### Minor Changes
+
+- [#12497](https://github.com/apollographql/apollo-client/pull/12497) [`ff2cbe1`](https://github.com/apollographql/apollo-client/commit/ff2cbe1db1815c30f5fda7f6c07091663e065582) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a `data` property to `CombinedGraphQLErrors` that captures any partial data returned by the GraphQL response when `errors` are also returned.
+
+- [#12488](https://github.com/apollographql/apollo-client/pull/12488) [`c98b633`](https://github.com/apollographql/apollo-client/commit/c98b6335de5b15e546aa5db79a8cf2dc9d914dcf) Thanks [@phryneas](https://github.com/phryneas)! - Add a new method for static SSR of React components, `prerenderStatic`.
+  The old methods, `getDataFromTree`, `getMarkupFromTree` and `renderToStringWithData`
+  have been deprecated in favor of `prerenderStatic`.
+
+  If used with React 19 and the `prerender` or `prerenderToNodeStream` apis from
+  `react-dom/static`, this method can now be used to SSR-prerender suspense-enabled
+  hook APIs.
+
 ## 4.0.0-alpha.5
 
 ### Major Changes

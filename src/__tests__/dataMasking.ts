@@ -2491,16 +2491,14 @@ describe("client.watchQuery", () => {
 
   test("does not warn on no-cache queries when all fragments use `@unmask`", async () => {
     using _ = spyOnConsole("warn");
-    type UserFieldsFragment = {
-      age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+        age: number;
+      };
     }
 
     const query: MaskedDocumentNode<Query, never> = gql`

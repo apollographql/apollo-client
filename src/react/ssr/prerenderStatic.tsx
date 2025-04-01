@@ -321,6 +321,17 @@ you have an infinite render loop in your application.`,
     const prelude = value.prelude;
     let result = "";
     if ("getReader" in prelude) {
+      /**
+       * The "web" `ReadableStream` consuming path.
+       * This could also be done with the `AsyncIterable` branch, but we add this
+       * code for two reasons:
+       * 1. potential performance benefits if we don't need to create an `AsyncIterator` on top
+       * 2. some browsers (looking at Safari) don't support `AsyncIterable` for `ReadableStream` yet
+       *    and we're not 100% sure how good this is covered on edge runtimes
+       *
+       * The extra code here doesn't really matter, since *usually* this would not
+       * be run in a browser, so we don't have to shave every single byte.
+       */
       const reader = prelude.getReader();
       while (true) {
         const { done, value } = await reader.read();

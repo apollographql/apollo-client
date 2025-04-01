@@ -78,7 +78,7 @@ function testSetup() {
 
     return (
       <>
-        <p>My name is {data?.whoami.name}!</p>
+        <p>My name is {data.whoami.name}!</p>
         <Child />
       </>
     );
@@ -88,7 +88,7 @@ function testSetup() {
 
     return (
       <>
-        <p>Current time is {data?.currentTime}!</p>
+        <p>Current time is {data.currentTime}!</p>
       </>
     );
   }

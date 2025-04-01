@@ -265,7 +265,6 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({
         query: queryWithVars,
         variables: variables1,
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -333,11 +332,7 @@ describe("ObservableQuery", () => {
         ]),
       });
 
-      const observable = client.watchQuery({
-        query,
-        variables,
-        notifyOnNetworkStatusChange: true,
-      });
+      const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
 
@@ -408,10 +403,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.reobserve({
-        variables: variables2,
-        notifyOnNetworkStatusChange: true,
-      });
+      await observable.reobserve({ variables: variables2 });
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
@@ -854,11 +846,7 @@ describe("ObservableQuery", () => {
         ]),
       });
 
-      const observable = client.watchQuery({
-        query,
-        variables,
-        notifyOnNetworkStatusChange: true,
-      });
+      const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
 
@@ -1135,7 +1123,6 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -1188,7 +1175,6 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -1565,7 +1551,6 @@ describe("ObservableQuery", () => {
         query: queryWithVars,
         variables: variables1,
         fetchPolicy: "cache-and-network",
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -1679,7 +1664,6 @@ describe("ObservableQuery", () => {
           }
           return currentFetchPolicy;
         },
-        notifyOnNetworkStatusChange: true,
       });
 
       expect(observable.options.fetchPolicy).toBe("cache-and-network");
@@ -1811,7 +1795,6 @@ describe("ObservableQuery", () => {
         query,
         fetchPolicy: "cache-and-network",
         returnPartialData: true,
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -2268,7 +2251,6 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({
         query: queryWithFragment,
         variables,
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);

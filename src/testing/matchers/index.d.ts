@@ -17,11 +17,15 @@ import { CheckedLazyQueryResult } from "./toEqualLazyQueryResult.js";
 // argument is a class or not, so we need to manually keep track of known class
 // intances that we filter out.
 type KnownClassInstances = ApolloClient | ObservableQuery<any, any>;
-type FilterUnserializableProperties<T extends Record<string, any>> = {
-  [K in keyof T as T[K] extends (...args: any[]) => any ? never
-  : T[K] extends KnownClassInstances ? never
-  : K]: T[K];
-};
+type FilterUnserializableProperties<T> =
+  T extends Array<infer TItem> ? Array<FilterUnserializableProperties<TItem>>
+  : T extends Record<string, any> ?
+    {
+      [K in keyof T as T[K] extends (...args: any[]) => any ? never
+      : T[K] extends KnownClassInstances ? never
+      : K]: T[K];
+    }
+  : T;
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -55,6 +59,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitApolloQueryResult: T extends ObservableStream<infer QueryResult> ?
     QueryResult extends ApolloQueryResult<infer TData> ?
       (value: ApolloQueryResult<TData>, options?: TakeOptions) => Promise<R>
@@ -69,6 +74,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (error?: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitFetchResult: T extends ObservableStream<FetchResult<infer TData>> ?
     (value: FetchResult<TData>, options?: TakeOptions) => Promise<R>
   : {
@@ -83,14 +89,17 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitValueStrict: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitMatchedValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
@@ -128,6 +137,13 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   ) ?
     (expected: FetchResult<TData, TContext, TExtensions>) => R
   : { error: "matchers needs to be called on a FetchResult" };
+
+  toEmitStrictTyped: T extends ObservableStream<infer TResult> ?
+    (
+      expected: FilterUnserializableProperties<TResult>,
+      options?: TakeOptions
+    ) => Promise<R>
+  : { error: "toEmitStrictTyped needs to be called on an ObservableStream" };
 
   toEqualStrictTyped: T extends Promise<infer TResult> ?
     (expected: FilterUnserializableProperties<TResult>) => R

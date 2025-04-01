@@ -6775,7 +6775,7 @@ describe("useQuery Hook", () => {
       }
 
       const mutate = getCurrentSnapshot().mutation[0];
-      void mutate();
+      void mutate().catch(() => {});
 
       {
         // The mutation ran and is loading the result. The query stays at not

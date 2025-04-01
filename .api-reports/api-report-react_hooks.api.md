@@ -36,6 +36,7 @@ import type { IsStrictlyAny } from '@apollo/client/utilities';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client/core';
 import type { MissingTree } from '@apollo/client/cache';
+import type { MutateResult as MutateResult_2 } from '@apollo/client/core';
 import type { MutationFetchPolicy as MutationFetchPolicy_2 } from '@apollo/client/core';
 import type { MutationQueryReducersMap as MutationQueryReducersMap_2 } from '@apollo/client/core';
 import type { MutationUpdaterFunction as MutationUpdaterFunction_2 } from '@apollo/client/core';
@@ -104,7 +105,8 @@ class ApolloClient_2 implements DataProxy {
     link: ApolloLink;
     // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MutationOptions" needs to be exported by the entry point index.d.ts
-    mutate<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
+    // Warning: (ae-forgotten-export) The symbol "MutateResult" needs to be exported by the entry point index.d.ts
+    mutate<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TContext>): Promise<MutateResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
@@ -128,7 +130,8 @@ class ApolloClient_2 implements DataProxy {
     setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscriptionOptions" needs to be exported by the entry point index.d.ts
-    subscribe<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: SubscriptionOptions<TVariables, TData>): Observable<FetchResult<MaybeMasked<TData>>>;
+    // Warning: (ae-forgotten-export) The symbol "SubscribeResult" needs to be exported by the entry point index.d.ts
+    subscribe<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: SubscriptionOptions<TVariables, TData>): Observable<SubscribeResult<MaybeMasked<TData>>>;
     // Warning: (ae-forgotten-export) The symbol "ApolloClientOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -356,6 +359,13 @@ interface MaskOperationOptions<TData> {
     fetchPolicy?: WatchQueryFetchPolicy_2;
     // (undocumented)
     id: string;
+}
+
+// @public (undocumented)
+interface MutateResult<TData = unknown> {
+    data: TData | undefined;
+    error?: ErrorLike;
+    extensions?: Record<string, unknown>;
 }
 
 // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
@@ -655,7 +665,7 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables_2, TContext extends Record<string, any>, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
+    mutate<TData, TVariables extends OperationVariables_2, TContext extends Record<string, any>, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TContext>): Promise<MutateResult<MaybeMasked<TData>>>;
     // (undocumented)
     mutationStore?: {
         [mutationId: string]: MutationStoreValue;
@@ -677,7 +687,7 @@ class QueryManager {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable<FetchResult<TData>>;
+    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
     stopQuery(queryId: string): void;
@@ -786,6 +796,13 @@ export type SkipToken = typeof skipToken;
 
 // @public (undocumented)
 export const skipToken: unique symbol;
+
+// @public (undocumented)
+interface SubscribeResult<TData = unknown> {
+    data: TData | undefined;
+    error?: ErrorLike;
+    extensions?: Record<string, unknown>;
+}
 
 // @public (undocumented)
 interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables extends OperationVariables_2 = OperationVariables_2, TSubscriptionData = TData, TVariables extends OperationVariables_2 = TSubscriptionVariables> {
@@ -1130,14 +1147,14 @@ export namespace useMutation {
     export interface Result<TData = unknown> {
         called: boolean;
         client: ApolloClient;
-        data?: MaybeMasked_2<TData> | null;
-        error?: ErrorLike_2;
+        data: MaybeMasked_2<TData> | null | undefined;
+        error: ErrorLike_2 | undefined;
         loading: boolean;
         reset: () => void;
     }
     // (undocumented)
     export type ResultTuple<TData, TVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = [
-    mutate: (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult_2<MaybeMasked_2<TData>>>,
+    mutate: (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<MutateResult_2<MaybeMasked_2<TData>>>,
     result: Result<TData>
     ];
 }
@@ -1226,13 +1243,7 @@ export namespace useReadQuery {
 }
 
 // @public
-export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
-    restart: () => void;
-    loading: boolean;
-    data?: TData | undefined;
-    error?: ErrorLike_2;
-    variables?: TVariables | undefined;
-};
+export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useSubscription.Result<TData>;
 
 // @public (undocumented)
 export namespace useSubscription {
@@ -1241,14 +1252,16 @@ export namespace useSubscription {
         // (undocumented)
         client: ApolloClient;
         // (undocumented)
-        data: Result<TData>;
+        data: OnDataResult<TData>;
     }
+    // (undocumented)
+    export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
     // (undocumented)
     export interface OnSubscriptionDataOptions<TData = unknown> {
         // (undocumented)
         client: ApolloClient;
         // (undocumented)
-        subscriptionData: Result<TData>;
+        subscriptionData: OnDataResult<TData>;
     }
     // (undocumented)
     export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -1261,21 +1274,17 @@ export namespace useSubscription {
         onComplete?: () => void;
         onData?: (options: OnDataOptions<TData>) => any;
         onError?: (error: ErrorLike_2) => void;
-        // @deprecated
-        onSubscriptionComplete?: () => void;
-        // @deprecated
-        onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
         shouldResubscribe?: boolean | ((options: Options<TData, TVariables>) => boolean);
         skip?: boolean;
         variables?: TVariables;
     }
     // (undocumented)
-    export interface Result<TData = unknown, TVariables = OperationVariables> {
+    export interface Result<TData = unknown> {
         data?: MaybeMasked<TData>;
         error?: ErrorLike_2;
         loading: boolean;
-        // @internal (undocumented)
-        variables?: TVariables;
+        // (undocumented)
+        restart: () => void;
     }
 }
 
@@ -1408,8 +1417,8 @@ interface WatchQueryOptions_2<TVariables extends OperationVariables_2 = Operatio
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:128:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:184:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:438:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:458:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:233:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:195:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts

@@ -2109,7 +2109,7 @@ describe("client", () => {
         lastName: "Smith",
       },
     };
-    const errors = [new Error("Some kind of GraphQL error.")];
+    const errors = [{ message: "Some kind of GraphQL error." }];
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
@@ -2123,13 +2123,11 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    const result = await client.mutate({ mutation, errorPolicy: "all" });
-
-    expect(result.errors).toBeDefined();
-    expect(result.errors!.length).toBe(1);
-    expect(result.errors![0].message).toBe(errors[0].message);
-    expect(result.data).toEqual({
-      newPerson: data,
+    await expect(
+      client.mutate({ mutation, errorPolicy: "all" })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: data },
+      error: new CombinedGraphQLErrors(errors),
     });
   });
 
@@ -2161,10 +2159,9 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    const result = await client.mutate({ mutation, errorPolicy: "ignore" });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual(data);
+    await expect(
+      client.mutate({ mutation, errorPolicy: "ignore" })
+    ).resolves.toEqualStrictTyped({ data });
   });
 
   it("should rollback optimistic after mutation got a GraphQL error", async () => {
@@ -6256,7 +6253,7 @@ describe("custom document transforms", () => {
 });
 
 describe("unconventional errors", () => {
-  test("wraps error mesage in Error type when erroring with a string", async () => {
+  test("wraps error message in Error type when erroring with a string", async () => {
     const query = gql`
       query {
         hello
@@ -6280,7 +6277,7 @@ describe("unconventional errors", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: undefined,
       error: expectedError,
       loading: false,
@@ -6307,7 +6304,10 @@ describe("unconventional errors", () => {
     });
     const subscriptionStream = new ObservableStream(subscription);
 
-    await expect(subscriptionStream).toEmitError(expectedError);
+    await expect(subscriptionStream).toEmitStrictTyped({
+      data: undefined,
+      error: expectedError,
+    });
   });
 
   test("wraps unconventional types in UnconventionalError", async () => {
@@ -6335,7 +6335,7 @@ describe("unconventional errors", () => {
 
       const stream = new ObservableStream(client.watchQuery({ query }));
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitStrictTyped({
         data: undefined,
         error: expectedError,
         loading: false,
@@ -6362,7 +6362,10 @@ describe("unconventional errors", () => {
       });
       const subscriptionStream = new ObservableStream(subscription);
 
-      await expect(subscriptionStream).toEmitError(expectedError);
+      await expect(subscriptionStream).toEmitStrictTyped({
+        data: undefined,
+        error: expectedError,
+      });
     }
   });
 });

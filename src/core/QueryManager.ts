@@ -5,6 +5,7 @@ import {
   catchError,
   concat,
   EMPTY,
+  filter,
   from,
   lastValueFrom,
   map,
@@ -83,9 +84,11 @@ import type {
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
+  MutateResult,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  SubscribeResult,
 } from "./types.js";
 import type {
   ErrorPolicy,
@@ -266,7 +269,7 @@ export class QueryManager {
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<
-    FetchResult<MaybeMasked<TData>>
+    MutateResult<MaybeMasked<TData>>
   > {
     invariant(
       mutation,
@@ -333,7 +336,8 @@ export class QueryManager {
       )
         .pipe(
           mergeMap((result) => {
-            if (graphQLResultHasError(result) && errorPolicy === "none") {
+            const hasErrors = graphQLResultHasError(result);
+            if (hasErrors && errorPolicy === "none") {
               throw new CombinedGraphQLErrors(
                 getGraphQLErrorsFromResult(result)
               );
@@ -352,10 +356,7 @@ export class QueryManager {
               );
             }
 
-            if (
-              errorPolicy === "ignore" &&
-              graphQLResultHasError(storeResult)
-            ) {
+            if (errorPolicy === "ignore" && hasErrors) {
               delete storeResult.errors;
             }
 
@@ -389,24 +390,35 @@ export class QueryManager {
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
             if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
-              resolve({
-                ...storeResult,
+              const result: MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
                   data: storeResult.data,
                   fetchPolicy,
                   id: mutationId,
                 }) as any,
-              });
+              };
+
+              if (graphQLResultHasError(storeResult)) {
+                result.error = new CombinedGraphQLErrors(
+                  getGraphQLErrorsFromResult(storeResult)
+                );
+              }
+
+              if (storeResult.extensions) {
+                result.extensions = storeResult.extensions;
+              }
+
+              resolve(result);
             }
           },
 
           error: (err) => {
-            err = maybeWrapError(err);
+            const error = maybeWrapError(err);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
-              mutationStoreValue.error = err;
+              mutationStoreValue.error = error;
             }
 
             if (isOptimistic) {
@@ -415,7 +427,15 @@ export class QueryManager {
 
             this.broadcastQueries();
 
-            reject(err);
+            if (errorPolicy === "ignore") {
+              return resolve({ data: undefined });
+            }
+
+            if (errorPolicy === "all") {
+              return resolve({ data: undefined, error });
+            }
+
+            reject(error);
           },
         });
     });
@@ -1022,7 +1042,7 @@ export class QueryManager {
 
   public startGraphQLSubscription<TData = unknown>(
     options: SubscriptionOptions
-  ): Observable<FetchResult<TData>> {
+  ): Observable<SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -1041,14 +1061,14 @@ export class QueryManager {
         variables,
         extensions
       ).pipe(
-        map((result) => {
+        map((rawResult): SubscribeResult<TData> => {
           if (fetchPolicy !== "no-cache") {
             // the subscription interface should handle not sending us results we no longer subscribe to.
             // XXX I don't think we ever send in an object with errors, but we might in the future...
-            if (shouldWriteResult(result, errorPolicy)) {
+            if (shouldWriteResult(rawResult, errorPolicy)) {
               this.cache.write({
                 query,
-                result: result.data,
+                result: rawResult.data,
                 dataId: "ROOT_SUBSCRIPTION",
                 variables: variables,
               });
@@ -1057,29 +1077,43 @@ export class QueryManager {
             this.broadcastQueries();
           }
 
-          const hasErrors = graphQLResultHasError(result);
-          const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
+          const result: SubscribeResult<TData> = {
+            data: rawResult.data ?? undefined,
+          };
 
-          if (hasErrors && errorPolicy === "none") {
-            throw new CombinedGraphQLErrors(result.errors!);
+          if (graphQLResultHasError(rawResult)) {
+            result.error = new CombinedGraphQLErrors(rawResult.errors!);
+          } else if (graphQLResultHasProtocolErrors(rawResult)) {
+            result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+            // Don't emit protocol errors added by HttpLink
+            delete rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
           }
 
-          if (hasProtocolErrors) {
-            // `errorPolicy` is a mechanism for handling GraphQL errors, according
-            // to our documentation, so we throw protocol errors regardless of the
-            // set error policy.
-            throw result.extensions[PROTOCOL_ERRORS_SYMBOL];
+          if (
+            rawResult.extensions &&
+            Object.keys(rawResult.extensions).length
+          ) {
+            result.extensions = rawResult.extensions;
+          }
+
+          if (result.error && errorPolicy === "none") {
+            result.data = undefined;
           }
 
           if (errorPolicy === "ignore") {
-            delete result.errors;
+            delete result.error;
           }
 
           return result;
         }),
         catchError((error) => {
-          throw maybeWrapError(error);
-        })
+          if (errorPolicy === "ignore") {
+            return of({ data: undefined } as SubscribeResult<TData>);
+          }
+
+          return of({ data: undefined, error: maybeWrapError(error) });
+        }),
+        filter((result) => !!(result.data || result.error))
       );
 
     if (this.getDocumentInfo(query).hasClientExports) {
@@ -1087,7 +1121,7 @@ export class QueryManager {
         .addExportedVariables(query, variables, context)
         .then(makeObservable);
 
-      return new Observable<FetchResult<TData>>((observer) => {
+      return new Observable<SubscribeResult<TData>>((observer) => {
         let sub: Subscription | null = null;
         observablePromise.then(
           (observable) => (sub = observable.subscribe(observer)),

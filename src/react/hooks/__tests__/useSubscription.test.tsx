@@ -1,10 +1,10 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { expectTypeOf } from "expect-type";
-import { GraphQLError } from "graphql";
+import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -26,10 +26,7 @@ import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import {
-  mockMultipartSubscriptionStream,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
+import { mockMultipartSubscriptionStream } from "../../../testing/internal/index.js";
 import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -68,7 +65,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -77,7 +73,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -86,7 +81,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[2]);
@@ -95,7 +89,6 @@ describe("useSubscription Hook", () => {
       data: results[2].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[3]);
@@ -104,7 +97,6 @@ describe("useSubscription Hook", () => {
       data: results[3].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -148,7 +140,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -157,7 +148,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(errorResult);
@@ -166,7 +156,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: new CombinedGraphQLErrors([{ message: "test" }]),
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -175,6 +164,108 @@ describe("useSubscription Hook", () => {
     expect(onError).toHaveBeenCalledWith(
       new CombinedGraphQLErrors([{ message: "test" }])
     );
+  });
+
+  it("can continue to receive new results after an error", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW", "Mercedes", "Hyundai"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const errorResult = {
+      result: { data: { car: { make: null } }, errors: [{ message: "test" }] },
+    };
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    const onError = jest.fn();
+    const onData = jest.fn();
+    const onComplete = jest.fn();
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onError, onData, onComplete }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
+    });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(0);
+
+    link.simulateResult(errorResult);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors([{ message: "test" }]),
+      loading: false,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenLastCalledWith(
+      new CombinedGraphQLErrors([{ message: "test" }])
+    );
+    expect(onComplete).toHaveBeenCalledTimes(0);
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(2);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledTimes(0);
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should call onComplete after subscription is complete", async () => {
@@ -213,7 +304,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -222,7 +312,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateComplete();
@@ -270,7 +359,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -279,7 +367,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -344,7 +431,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: { foo: "bar" },
     });
 
     await rerender({ variables: { foo: "bar2" } });
@@ -353,7 +439,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: { foo: "bar2" },
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -402,7 +487,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await rerender({ skip: false });
@@ -411,7 +495,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -420,7 +503,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await rerender({ skip: true });
@@ -429,7 +511,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     // ensure state persists across rerenders
@@ -439,7 +520,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -451,7 +531,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -460,7 +539,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -507,7 +585,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -516,7 +593,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -525,7 +601,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -574,7 +649,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -583,7 +657,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -592,7 +665,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -639,14 +711,12 @@ describe("useSubscription Hook", () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
     }
 
@@ -659,14 +729,12 @@ describe("useSubscription Hook", () => {
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
     }
 
@@ -677,14 +745,12 @@ describe("useSubscription Hook", () => {
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -697,14 +763,12 @@ describe("useSubscription Hook", () => {
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -715,14 +779,12 @@ describe("useSubscription Hook", () => {
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -730,8 +792,6 @@ describe("useSubscription Hook", () => {
   });
 
   it("should handle immediate completions gracefully", async () => {
-    using consoleSpy = spyOnConsole("error");
-
     const subscription = gql`
       subscription {
         car {
@@ -760,31 +820,24 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-    link.simulateResult({ result: { data: null } }, /* complete */ true);
+    link.simulateResult(
+      { result: { data: { car: { __typename: "Car", make: "Audi" } } } },
+      /* complete */ true
+    );
 
     await expect(takeSnapshot()).resolves.toEqualStrictTyped({
-      data: null,
+      data: { car: { __typename: "Car", make: "Audi" } },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
-
-    expect(consoleSpy.error).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
   });
 
   it("should handle immediate completions with multiple subscriptions gracefully", async () => {
-    using consoleSpy = spyOnConsole("error");
     const subscription = gql`
       subscription {
         car {
@@ -820,50 +873,47 @@ describe("useSubscription Hook", () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       expect(sub3).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
     }
 
     // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-    link.simulateResult({ result: { data: null } }, /* complete */ true);
+    link.simulateResult(
+      { result: { data: { car: { __typename: "Car", make: "Audi" } } } },
+      /* complete */ true
+    );
 
     if (IS_REACT_17) {
       {
         const { sub1, sub2, sub3 } = await takeSnapshot();
 
         expect(sub1).toEqualStrictTyped({
-          data: null,
+          data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
-          variables: undefined,
         });
 
         expect(sub2).toEqualStrictTyped({
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         expect(sub3).toEqualStrictTyped({
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
       }
 
@@ -871,24 +921,21 @@ describe("useSubscription Hook", () => {
         const { sub1, sub2, sub3 } = await takeSnapshot();
 
         expect(sub1).toEqualStrictTyped({
-          data: null,
+          data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
-          variables: undefined,
         });
 
         expect(sub2).toEqualStrictTyped({
-          data: null,
+          data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
-          variables: undefined,
         });
 
         expect(sub3).toEqualStrictTyped({
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
       }
     }
@@ -897,359 +944,25 @@ describe("useSubscription Hook", () => {
       const { sub1, sub2, sub3 } = await takeSnapshot();
 
       expect(sub1).toEqualStrictTyped({
-        data: null,
+        data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
-        data: null,
+        data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub3).toEqualStrictTyped({
-        data: null,
+        data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
     await expect(takeSnapshot).not.toRerender();
-
-    expect(consoleSpy.error).toHaveBeenCalledTimes(3);
-    expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
-    expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
-    expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
-  });
-
-  test("should warn when using 'onSubscriptionData' and 'onData' together", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onData: jest.fn(),
-          onSubscriptionData: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "supports only the 'onSubscriptionData' or 'onData' option"
-      )
-    );
-  });
-
-  test("prefers 'onData' when using 'onSubscriptionData' and 'onData' together", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Pagani" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onData = jest.fn();
-    const onSubscriptionData = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onData,
-          onSubscriptionData,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0]);
-    await tick();
-
-    expect(onData).toHaveBeenCalledTimes(1);
-    expect(onSubscriptionData).toHaveBeenCalledTimes(0);
-  });
-
-  test("uses 'onSubscriptionData' when 'onData' is absent", async () => {
-    using _consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Pagani" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onSubscriptionData = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionData,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0]);
-    await tick();
-
-    expect(onSubscriptionData).toHaveBeenCalledTimes(1);
-  });
-
-  test("only warns once using `onSubscriptionData`", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const { rerender } = renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionData: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    rerender();
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-  });
-
-  test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onComplete: jest.fn(),
-          onSubscriptionComplete: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "supports only the 'onSubscriptionComplete' or 'onComplete' option"
-      )
-    );
-  });
-
-  test("prefers 'onComplete' when using 'onComplete' and 'onSubscriptionComplete' together", async () => {
-    using _consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Audi" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onComplete = jest.fn();
-    const onSubscriptionComplete = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onComplete,
-          onSubscriptionComplete,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0], true);
-    await tick();
-
-    expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
-  });
-
-  test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {
-    using _consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Audi" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onSubscriptionComplete = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionComplete,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0], true);
-    await tick();
-
-    expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
-  });
-
-  test("only warns once using `onSubscriptionComplete`", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const { rerender } = renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionComplete: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    rerender();
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   });
 
   describe("multipart subscriptions", () => {
@@ -1288,7 +1001,6 @@ describe("useSubscription Hook", () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       enqueueProtocolErrors([
@@ -1311,7 +1023,6 @@ describe("useSubscription Hook", () => {
           },
         ]),
         loading: false,
-        variables: undefined,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -1370,14 +1081,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1390,14 +1099,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: {},
       });
     }
 
@@ -1412,14 +1119,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1432,14 +1137,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1452,14 +1155,12 @@ followed by new in-flight setup", async () => {
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1532,7 +1233,6 @@ followed by new in-flight setup", async () => {
             data: undefined,
             error: undefined,
             loading: true,
-            variables: undefined,
           });
 
           link.simulateResult(graphQlErrorResult);
@@ -1545,7 +1245,6 @@ followed by new in-flight setup", async () => {
                 graphQlErrorResult.result!.errors as any
               ),
               data: undefined,
-              variables: undefined,
             });
           }
 
@@ -1568,7 +1267,6 @@ followed by new in-flight setup", async () => {
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         link.simulateResult(graphQlErrorResult);
@@ -1581,7 +1279,6 @@ followed by new in-flight setup", async () => {
               graphQlErrorResult.result!.errors!
             ),
             data: { totalLikes: 42 },
-            variables: undefined,
           });
         }
 
@@ -1608,7 +1305,6 @@ followed by new in-flight setup", async () => {
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         link.simulateResult(graphQlErrorResult);
@@ -1619,7 +1315,6 @@ followed by new in-flight setup", async () => {
             loading: false,
             error: undefined,
             data: { totalLikes: 42 },
-            variables: undefined,
           });
         }
 
@@ -1640,7 +1335,7 @@ followed by new in-flight setup", async () => {
     });
 
     describe("protocol error", () => {
-      it.each([undefined, "none", "all", "ignore"] as const)(
+      it.each([undefined, "none", "all"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
         async (errorPolicy) => {
           const { httpLink, enqueueProtocolErrors } =
@@ -1659,11 +1354,17 @@ followed by new in-flight setup", async () => {
 
           const onData = jest.fn();
           const onError = jest.fn();
+          const onComplete = jest.fn();
 
           using _disabledAct = disableActEnvironment();
           const { takeSnapshot } = await renderHookToSnapshotStream(
             () =>
-              useSubscription(subscription, { errorPolicy, onError, onData }),
+              useSubscription(subscription, {
+                errorPolicy,
+                onError,
+                onData,
+                onComplete,
+              }),
             {
               wrapper: ({ children }) => (
                 <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -1675,7 +1376,6 @@ followed by new in-flight setup", async () => {
             data: undefined,
             error: undefined,
             loading: true,
-            variables: undefined,
           });
 
           enqueueProtocolErrors([
@@ -1690,14 +1390,65 @@ followed by new in-flight setup", async () => {
             data: undefined,
             error: expectedError,
             loading: false,
-            variables: undefined,
           });
 
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(expectedError);
           expect(onData).toHaveBeenCalledTimes(0);
+          expect(onComplete).toHaveBeenCalledTimes(1);
         }
       );
+
+      it("`errorPolicy: 'ignore'`: does not rerender, calls `onComplete`", async () => {
+        const { httpLink, enqueueProtocolErrors } =
+          mockMultipartSubscriptionStream();
+
+        const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
+          subscription ($id: ID!) {
+            totalLikes
+          }
+        `;
+        const client = new ApolloClient({
+          link: httpLink,
+          cache: new Cache(),
+        });
+
+        const onData = jest.fn();
+        const onError = jest.fn();
+        const onComplete = jest.fn();
+
+        using _disabledAct = disableActEnvironment();
+        const { takeSnapshot } = await renderHookToSnapshotStream(
+          () =>
+            useSubscription(subscription, {
+              errorPolicy: "ignore",
+              onError,
+              onData,
+              onComplete,
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+
+        enqueueProtocolErrors([
+          { message: "Socket closed with event -1: I'm a test!" },
+        ]);
+
+        await expect(takeSnapshot).not.toRerender();
+
+        expect(onError).toHaveBeenCalledTimes(0);
+        expect(onData).toHaveBeenCalledTimes(0);
+        expect(onComplete).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });
@@ -1769,7 +1520,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1781,7 +1531,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1797,7 +1546,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1812,7 +1560,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
   });
@@ -1836,7 +1583,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1847,12 +1593,10 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        restart: expect.any(Function),
-        variables: { id: "1" },
       });
     }
 
@@ -1872,7 +1616,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "2" },
       });
     }
 
@@ -1884,7 +1627,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1000 },
         error: undefined,
-        variables: { id: "2" },
       });
     }
 
@@ -1904,7 +1646,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "2" },
       });
     }
 
@@ -1916,7 +1657,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1005 },
         error: undefined,
-        variables: { id: "2" },
       });
     }
   });
@@ -1939,7 +1679,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1951,7 +1690,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1963,12 +1701,10 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
-        variables: { id: "1" },
       });
     }
 
@@ -1983,7 +1719,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
   });
@@ -2006,11 +1741,10 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
-    const error = new GraphQLError("error");
+    const error: GraphQLFormattedError = { message: "error" };
     link.simulateResult({
       result: { errors: [error] },
     });
@@ -2021,12 +1755,11 @@ describe("`restart` callback", () => {
         loading: false,
         data: undefined,
         error: new CombinedGraphQLErrors([error]),
-        variables: { id: "1" },
       });
     }
 
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
-    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
     getCurrentSnapshot().restart();
@@ -2037,11 +1770,11 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
+    await tick();
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
@@ -2052,7 +1785,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
   });
@@ -2071,7 +1803,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -2134,42 +1865,39 @@ describe("ignoreResults", () => {
       loading: false,
       error: undefined,
       data: undefined,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith({
-        client,
-        data: {
-          data: results[0].result.data,
-          error: undefined,
-          loading: false,
-          variables: undefined,
-        },
-      });
-      expect(onError).toHaveBeenCalledTimes(0);
-      expect(onComplete).toHaveBeenCalledTimes(0);
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
     });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(0);
 
     link.simulateResult(results[1], true);
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(2);
-      expect(onData).toHaveBeenLastCalledWith({
-        client,
-        data: {
-          data: results[1].result.data,
-          error: undefined,
-          loading: false,
-          variables: undefined,
-        },
-      });
-      expect(onError).toHaveBeenCalledTimes(0);
-      expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledTimes(2);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
     });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(1);
 
     await expect(takeSnapshot).not.toRerender();
   });
@@ -2207,35 +1935,32 @@ describe("ignoreResults", () => {
       loading: false,
       error: undefined,
       data: undefined,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith({
-        client,
-        data: {
-          data: results[0].result.data,
-          error: undefined,
-          loading: false,
-          variables: undefined,
-        },
-      });
-      expect(onError).toHaveBeenCalledTimes(0);
-      expect(onComplete).toHaveBeenCalledTimes(0);
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
     });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(0);
 
     const error = new Error("test");
     link.simulateResult({ error });
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(error);
-      expect(onComplete).toHaveBeenCalledTimes(0);
-    });
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenLastCalledWith(error);
+    expect(onComplete).toHaveBeenCalledTimes(1);
 
     await expect(takeSnapshot).not.toRerender();
   });
@@ -2276,7 +2001,6 @@ describe("ignoreResults", () => {
         loading: false,
         error: undefined,
         data: undefined,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
@@ -2295,7 +2019,6 @@ describe("ignoreResults", () => {
         error: undefined,
         // `data` appears immediately after changing to `ignoreResults: false`
         data: results[0].result.data,
-        variables: undefined,
       });
       // `onData` should not be called again for the same result
       expect(onData).toHaveBeenCalledTimes(1);
@@ -2309,7 +2032,6 @@ describe("ignoreResults", () => {
         loading: false,
         error: undefined,
         data: results[1].result.data,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(2);
     }
@@ -2351,7 +2073,6 @@ describe("ignoreResults", () => {
         loading: true,
         error: undefined,
         data: undefined,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
@@ -2364,7 +2085,6 @@ describe("ignoreResults", () => {
         loading: false,
         error: undefined,
         data: results[0].result.data,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
@@ -2380,7 +2100,6 @@ describe("ignoreResults", () => {
         error: undefined,
         // switching back to the default `ignoreResults: true` return value
         data: undefined,
-        variables: undefined,
       });
       // `onData` should not be called again
       expect(onData).toHaveBeenCalledTimes(1);
@@ -2433,7 +2152,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2458,7 +2176,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -2500,7 +2217,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2527,7 +2243,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -2570,7 +2285,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2595,7 +2309,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -2649,7 +2362,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2676,7 +2388,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -2702,20 +2413,6 @@ describe("data masking", () => {
 });
 
 describe.skip("Type Tests", () => {
-  test("NoInfer prevents adding arbitrary additional variables", () => {
-    const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
-    const { variables } = useSubscription(typedNode, {
-      variables: {
-        bar: 4,
-        // @ts-expect-error
-        nonExistingVariable: "string",
-      },
-    });
-    variables?.bar;
-    // @ts-expect-error
-    variables?.nonExistingVariable;
-  });
-
   test("uses masked types when using masked document", async () => {
     type UserFieldsFragment = {
       age: number;
@@ -2734,11 +2431,6 @@ describe.skip("Type Tests", () => {
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
         expectTypeOf(data.data).toEqualTypeOf<
-          Masked<Subscription> | undefined
-        >();
-      },
-      onSubscriptionData: ({ subscriptionData }) => {
-        expectTypeOf(subscriptionData.data).toEqualTypeOf<
           Masked<Subscription> | undefined
         >();
       },
@@ -2766,11 +2458,6 @@ describe.skip("Type Tests", () => {
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
         expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
-      },
-      onSubscriptionData: ({ subscriptionData }) => {
-        expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          Subscription | undefined
-        >();
       },
     });
 

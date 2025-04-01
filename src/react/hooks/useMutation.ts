@@ -12,6 +12,7 @@ import type {
   FetchResult,
   InternalRefetchQueriesInclude,
   MaybeMasked,
+  MutateResult,
   MutationFetchPolicy,
   MutationOptions,
   MutationQueryReducersMap,
@@ -20,7 +21,6 @@ import type {
   OperationVariables,
   Unmasked,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
@@ -100,10 +100,10 @@ export declare namespace useMutation {
 
   export interface Result<TData = unknown> {
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-    data?: MaybeMasked<TData> | null;
+    data: MaybeMasked<TData> | null | undefined;
 
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-    error?: ErrorLike;
+    error: ErrorLike | undefined;
 
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
     loading: boolean;
@@ -126,9 +126,7 @@ export declare namespace useMutation {
   > = [
     mutate: (
       options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-      // TODO This FetchResult<TData> seems strange here, as opposed to an
-      // ApolloQueryResult<TData>
-    ) => Promise<FetchResult<MaybeMasked<TData>>>,
+    ) => Promise<MutateResult<MaybeMasked<TData>>>,
     result: Result<TData>,
   ];
 
@@ -210,11 +208,7 @@ export function useMutation<
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<
     Omit<useMutation.Result<TData>, "reset">
-  >({
-    called: false,
-    loading: false,
-    client,
-  });
+  >(() => createInitialResult(client));
 
   const ref = React.useRef({
     result,
@@ -246,8 +240,8 @@ export function useMutation<
         setResult(
           (ref.current.result = {
             loading: true,
-            error: void 0,
-            data: void 0,
+            error: undefined,
+            data: undefined,
             called: true,
             client,
           })
@@ -261,11 +255,7 @@ export function useMutation<
         .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
         .then(
           (response) => {
-            const { data, errors } = response;
-            const error =
-              errors && errors.length > 0 ?
-                new CombinedGraphQLErrors(errors)
-              : void 0;
+            const { data, error } = response;
 
             const onError =
               executeOptions.onError || ref.current.options?.onError;
@@ -320,9 +310,6 @@ export function useMutation<
 
             if (onError) {
               onError(error, clientOptions);
-
-              // TODO(brian): why are we returning this here???
-              return { data: void 0, errors: error };
             }
 
             throw error;
@@ -334,11 +321,7 @@ export function useMutation<
 
   const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
-      const result = {
-        called: false,
-        loading: false,
-        client: ref.current.client,
-      };
+      const result = createInitialResult(ref.current.client);
       Object.assign(ref.current, { mutationId: 0, result });
       setResult(result);
     }
@@ -354,4 +337,14 @@ export function useMutation<
   }, []);
 
   return [execute, { reset, ...result }];
+}
+
+function createInitialResult(client: ApolloClient) {
+  return {
+    data: undefined,
+    error: undefined,
+    called: false,
+    loading: false,
+    client,
+  };
 }

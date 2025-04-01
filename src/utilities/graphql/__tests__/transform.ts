@@ -4,15 +4,15 @@ import { disableFragmentWarnings, gql } from "graphql-tag";
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
-import { getQueryDefinition } from "../getFromAST.js";
 import {
   addTypenameToDocument,
+  getQueryDefinition,
   removeArgumentsFromDocument,
   removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
   removeDirectivesFromDocument,
   removeFragmentSpreadFromDocument,
-} from "../transform.js";
+} from "@apollo/client/utilities";
 
 describe("removeArgumentsFromDocument", () => {
   it("should remove a single variable", () => {

@@ -1,14 +1,9 @@
-import { print } from "graphql";
-import { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
+import { FragmentDefinitionNode, OperationDefinitionNode, print } from "graphql";
 import { gql } from "graphql-tag";
 
-import {
-  checkDocument,
-  getDefaultValues,
-  getFragmentDefinitions,
-  getOperationName,
-  getQueryDefinition,
-} from "../getFromAST.js";
+import { checkDocument , getDefaultValues , getFragmentDefinitions , getOperationName , getQueryDefinition } from "@apollo/client/utilities";
+
+
 
 describe("AST utility functions", () => {
   it("should correctly check a document for correctness", () => {

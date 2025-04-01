@@ -1,9 +1,9 @@
 import { disableFragmentWarnings, gql } from "graphql-tag";
 
+
+import { defaultDataIdFromObject , InMemoryCache } from "@apollo/client/cache";
 import { MissingFieldError } from "@apollo/client/core";
 
-import { defaultDataIdFromObject } from "../helpers.js";
-import { InMemoryCache } from "../inMemoryCache.js";
 import { StoreReader } from "../readFromStore.js";
 import { NormalizedCache, Reference } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";

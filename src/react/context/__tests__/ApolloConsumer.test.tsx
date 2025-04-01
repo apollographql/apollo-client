@@ -4,10 +4,10 @@ import React from "react";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloConsumer , ApolloProvider, getApolloContext  } from "@apollo/client/react/context";
 
-import { ApolloConsumer } from "../ApolloConsumer.js";
-import { getApolloContext } from "../ApolloContext.js";
-import { ApolloProvider } from "../ApolloProvider.js";
+
+
 
 const client = new ApolloClient({
   cache: new Cache(),

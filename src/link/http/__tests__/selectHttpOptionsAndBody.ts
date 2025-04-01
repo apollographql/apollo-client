@@ -1,12 +1,10 @@
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation.js";
-import {
-  fallbackHttpConfig,
-  selectHttpOptionsAndBody,
-  selectHttpOptionsAndBodyInternal,
-} from "../selectHttpOptionsAndBody.js";
+import { fallbackHttpConfig , selectHttpOptionsAndBody , selectHttpOptionsAndBodyInternal } from "@apollo/client/link/http";
+import { createOperation } from "@apollo/client/link/utils";
+
+
 
 const query = gql`
   query SampleQuery {

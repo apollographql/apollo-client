@@ -2,9 +2,9 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
+import { ApolloLink , execute } from "@apollo/client/link/core";
+
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { ApolloLink } from "../ApolloLink.js";
-import { execute } from "../execute.js";
 import { FetchResult, GraphQLRequest, NextLink, Operation } from "../types.js";
 
 class SetContextLink extends ApolloLink {

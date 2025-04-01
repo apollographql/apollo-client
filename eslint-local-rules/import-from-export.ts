@@ -1,7 +1,9 @@
+import { dirname, join, relative, resolve, sep } from "node:path";
+
 import { ESLintUtils } from "@typescript-eslint/utils";
+import { $ } from "zx";
 
 import pkgJson from "../package.json" with { type: "json" };
-import { dirname, resolve, sep } from "node:path";
 
 const entryPoints = Object.fromEntries(
   Object.entries(pkgJson.exports).flatMap(function map(
@@ -126,3 +128,94 @@ export const importFromInsideOtherExport = ESLintUtils.RuleCreator.withoutDocs({
     },
   ],
 });
+
+const knownPublicExports: Record<string, string[]> = {};
+function getPublicExports(path: string) {
+  if (!(path in knownPublicExports)) {
+    const result = $.sync({
+      cwd: resolve(import.meta.dirname, "../dist"),
+    })`node --input-type=module --eval 'console.log(JSON.stringify(Object.keys(await import("${path}")).sort()))'`;
+    knownPublicExports[path] = JSON.parse(result.text()) as string[];
+  }
+  return knownPublicExports[path];
+}
+
+/**
+ * to be used in tests, so the test does a
+ * `import { InMemoryCache } from "@apollo/client/core";`
+ * instead of a
+ * `import { InMemoryCache } from "../inMemoryCache.js";`
+ */
+export const noInternalImportOfficialExport =
+  ESLintUtils.RuleCreator.withoutDocs({
+    create(context, options) {
+      return {
+        ImportDeclaration(node) {
+          if (!node.source.value.startsWith(".")) {
+            return;
+          }
+          const resolvedTarget = resolve(
+            dirname(context.physicalFilename),
+            node.source.value
+          );
+          if (resolvedTarget.includes("__tests__")) {
+            return;
+          }
+          const entry = findNearestEntryPointFolder(resolvedTarget);
+          if (!entry || entry.includes("testing")) {
+            return;
+          }
+          const importEntrypoint = join(
+            "@apollo/client",
+            relative(join(import.meta.dirname, "..", "src"), entry)
+          );
+          const knownExports = getPublicExports(importEntrypoint);
+
+          for (const specifier of node.specifiers) {
+            if (specifier.type == "ImportSpecifier") {
+              const name =
+                specifier.imported.type === "Identifier" ?
+                  specifier.imported.name
+                : specifier.imported.value;
+              const couldBeImportedFromPublicExport =
+                knownExports.includes(name);
+
+              if (couldBeImportedFromPublicExport) {
+                context.report({
+                  node: node.source,
+                  messageId: "noInternalImportOfficialExport",
+                  *fix(fixer) {
+                    yield fixer.insertTextBefore(
+                      node,
+                      `import { ${name} } from "${importEntrypoint}";\n`
+                    );
+                    // duplicates will be fixed by imports/no-duplicates
+
+                    if (node.specifiers.length === 1) {
+                      yield fixer.remove(node);
+                    } else {
+                      yield fixer.remove(specifier);
+                      const comma = context.sourceCode.getTokenAfter(specifier);
+                      if (comma.value === ",") {
+                        yield fixer.remove(comma);
+                      }
+                    }
+                  },
+                });
+              }
+            }
+          }
+        },
+      };
+    },
+    meta: {
+      messages: {
+        noInternalImportOfficialExport:
+          "This should be imported from the official entry point, not from the internal file.",
+      },
+      type: "problem",
+      schema: [],
+      fixable: "code",
+    },
+    defaultOptions: [],
+  });

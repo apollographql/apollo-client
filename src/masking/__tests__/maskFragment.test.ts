@@ -1,9 +1,10 @@
 import { gql, InMemoryCache } from "@apollo/client/core";
+import { maskFragment } from "@apollo/client/masking";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../testing/internal/index.js";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
-import { maskFragment } from "../maskFragment.js";
+
 
 test("returns null when data is null", () => {
   const fragment = gql`

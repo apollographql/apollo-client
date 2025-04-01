@@ -2,21 +2,19 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 
-import { MissingFieldError } from "@apollo/client/cache";
-import { stringifyForDisplay } from "@apollo/client/utilities";
+import { ApolloCache , EntityStore , InMemoryCache, MissingFieldError } from "@apollo/client/cache";
+import { isReference, makeReference, stringifyForDisplay   } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import {
-  isReference,
-  makeReference,
+  
+  
   Reference,
   StoreValue,
 } from "../../../utilities/graphql/storeUtils.js";
-import { ApolloCache } from "../../core/cache.js";
 import { Cache } from "../../core/types/Cache.js";
-import { EntityStore, supportsResultCaching } from "../entityStore.js";
-import { InMemoryCache } from "../inMemoryCache.js";
+import {  supportsResultCaching } from "../entityStore.js";
 import { StoreObject } from "../types.js";
 
 describe("EntityStore", () => {

@@ -2,11 +2,11 @@ import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
 import { setContext } from "@apollo/client/link/context";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink , execute } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { execute } from "../../core/execute.js";
+
 
 const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));
 const query = gql`

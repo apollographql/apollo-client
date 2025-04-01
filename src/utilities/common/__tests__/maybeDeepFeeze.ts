@@ -1,4 +1,5 @@
-import { maybeDeepFreeze } from "../maybeDeepFreeze.js";
+import { maybeDeepFreeze } from "@apollo/client/utilities";
+
 
 describe("maybeDeepFreeze", () => {
   it("should deep freeze", () => {

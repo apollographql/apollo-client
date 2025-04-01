@@ -1,6 +1,7 @@
 import { FragmentSpreadNode, Kind, visit } from "graphql";
 import { of } from "rxjs";
 
+import { createFragmentRegistry } from "@apollo/client/cache";
 import {
   ApolloCache,
   ApolloClient,
@@ -27,7 +28,7 @@ import {
 import { isSubscriptionOperation } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
+
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 const NO_CACHE_WARNING =

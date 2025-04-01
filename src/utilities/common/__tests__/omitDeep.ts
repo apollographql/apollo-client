@@ -1,4 +1,5 @@
-import { omitDeep } from "../omitDeep.js";
+import { omitDeep } from "@apollo/client/utilities";
+
 
 test("omits the key from a shallow object", () => {
   expect(omitDeep({ omit: "a", keep: "b", other: "c" }, "omit")).toEqual({

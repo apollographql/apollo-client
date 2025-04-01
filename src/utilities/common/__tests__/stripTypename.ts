@@ -1,4 +1,5 @@
-import { stripTypename } from "../stripTypename.js";
+import { stripTypename } from "@apollo/client/utilities";
+
 
 test("omits __typename from a shallow object", () => {
   expect(

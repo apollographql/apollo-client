@@ -1,11 +1,10 @@
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 
+import { EntityStore , InMemoryCache } from "@apollo/client/cache";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { EntityStore } from "../entityStore.js";
-import { InMemoryCache } from "../inMemoryCache.js";
 import { StoreReader } from "../readFromStore.js";
 import { StoreWriter } from "../writeToStore.js";
 

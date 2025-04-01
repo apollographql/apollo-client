@@ -216,7 +216,13 @@ export default [
       "local-rules/require-disable-act-environment": "error",
       "local-rules/forbid-act-in-disabled-act-environment": "error",
       "local-rules/import-from-inside-other-export": "off",
+      // only run this rule from the CLI, not the LSP
+      "local-rules/no-internal-import-official-export":
+        process.env.EXTENDED_RULES ? "error" : "off",
+      "import/no-duplicates": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
     },
   },
 ];
+
+console.log(process.env);

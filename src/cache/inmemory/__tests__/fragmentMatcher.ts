@@ -1,8 +1,10 @@
 import { FragmentDefinitionNode, visit } from "graphql";
 import { gql } from "graphql-tag";
 
+import { InMemoryCache } from "@apollo/client/cache";
+
 import { hasOwn } from "../helpers.js";
-import { InMemoryCache } from "../inMemoryCache.js";
+
 
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {

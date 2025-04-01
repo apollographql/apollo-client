@@ -25,6 +25,7 @@ import {
 } from "@apollo/client/core";
 import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react";
+import { useLazyQuery } from "@apollo/client/react/hooks";
 import {
   MockLink,
   mockSingleLink,
@@ -42,7 +43,7 @@ import {
   spyOnConsole,
   VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
-import { useLazyQuery } from "../useLazyQuery.js";
+
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{

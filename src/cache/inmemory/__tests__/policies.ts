@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 
-import { MissingFieldError } from "@apollo/client/cache";
+import { InMemoryCache , makeVar, MissingFieldError } from "@apollo/client/cache";
 import {
   ApolloClient,
   DocumentNode,
@@ -20,9 +20,8 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import { InMemoryCache } from "../inMemoryCache.js";
 import { FieldPolicy, StorageType } from "../policies.js";
-import { makeVar, ReactiveVar } from "../reactiveVars.js";
+import {  ReactiveVar } from "../reactiveVars.js";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

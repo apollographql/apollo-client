@@ -1795,8 +1795,6 @@ class QueryInfo {
     init(query: {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
-        observableQuery?: ObservableQuery<any, any>;
-        lastRequestId?: number;
     }): this;
     // (undocumented)
     lastRequestId: number;

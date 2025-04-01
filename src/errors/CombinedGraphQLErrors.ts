@@ -11,7 +11,7 @@ export class CombinedGraphQLErrors extends Error {
   /**
    * The raw list of GraphQL errors returned in a GraphQL response.
    */
-  readonly errors: GraphQLFormattedError[];
+  readonly errors: ReadonlyArray<GraphQLFormattedError>;
 
   /**
    * Partial data returned in the GraphQL response.

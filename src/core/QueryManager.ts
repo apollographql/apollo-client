@@ -814,11 +814,8 @@ export class QueryManager {
 
     // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query
-    queryInfo.init({
-      document: query,
-      observableQuery: observable,
-      variables: observable.variables,
-    });
+    queryInfo.init({ document: query, variables: observable.variables });
+    queryInfo.setObservableQuery(observable);
 
     return observable;
   }

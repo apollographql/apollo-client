@@ -1,5 +1,8 @@
 import type { GraphQLFormattedError } from "graphql";
 
+import type { FetchResult } from "@apollo/client/core";
+import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
+
 /**
  * Represents the combined list of GraphQL errors returned from the server in a
  * GraphQL response.
@@ -15,13 +18,12 @@ export class CombinedGraphQLErrors extends Error {
    */
   data: Record<string, unknown> | null | undefined;
 
-  constructor(
-    errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>,
-    options: { data: Record<string, unknown> | null | undefined }
-  ) {
+  constructor(result: FetchResult<unknown>) {
+    const errors = getGraphQLErrorsFromResult(result);
+
     super(formatMessage(errors));
     this.errors = errors;
-    this.data = options.data;
+    this.data = result.data as Record<string, unknown>;
     this.name = "CombinedGraphQLErrors";
 
     Object.setPrototypeOf(this, CombinedGraphQLErrors.prototype);

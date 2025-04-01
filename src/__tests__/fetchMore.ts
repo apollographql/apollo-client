@@ -325,6 +325,15 @@ describe("fetchMore on an observable query", () => {
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
+      await expect(stream).toEmitTypedValue({
+        data: {
+          entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
+
       {
         const result = await stream.takeNext();
         const combinedComments = result.data!.entry.comments;
@@ -374,6 +383,15 @@ describe("fetchMore on an observable query", () => {
         // This is the server result
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
+
+      await expect(stream).toEmitTypedValue({
+        data: {
+          entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
 
       {
         const result = await stream.takeNext();
@@ -432,6 +450,15 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
+      await expect(stream).toEmitTypedValue({
+        data: {
+          entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
+
       {
         const result = await stream.takeNext();
         const combinedComments = result.data!.entry.comments;
@@ -484,6 +511,15 @@ describe("fetchMore on an observable query", () => {
 
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10); // this is the server result
       }
+
+      await expect(stream).toEmitTypedValue({
+        data: {
+          entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
 
       {
         const result = await stream.takeNext();
@@ -643,6 +679,13 @@ describe("fetchMore on an observable query", () => {
       }
 
       await expect(stream).toEmitTypedValue({
+        data: { TODO: tasks.slice(0, 2) },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -670,6 +713,13 @@ describe("fetchMore on an observable query", () => {
           },
         });
       }
+
+      await expect(stream).toEmitTypedValue({
+        data: { TODO: tasks.slice(0, 4) },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
 
       await expect(stream).toEmitTypedValue({
         loading: false,
@@ -846,6 +896,13 @@ describe("fetchMore on an observable query", () => {
       }
 
       await expect(stream).toEmitTypedValue({
+        data: { TODO: tasks.slice(0, 2) },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -873,6 +930,13 @@ describe("fetchMore on an observable query", () => {
           },
         });
       }
+
+      await expect(stream).toEmitTypedValue({
+        data: { TODO: tasks.slice(0, 4) },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
 
       await expect(stream).toEmitTypedValue({
         loading: false,
@@ -1148,6 +1212,13 @@ describe("fetchMore on an observable query", () => {
 
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: { groceries: initialGroceries },
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      partial: false,
+    });
 
     // This result comes entirely from the cache, without updating the
     // original variables for the ObservableQuery, because the
@@ -1596,6 +1667,18 @@ describe("fetchMore on an observable query with connection", () => {
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
+      await expect(stream).toEmitTypedValue({
+        data: {
+          entry: {
+            __typename: "Entry",
+            comments: expect.arrayWithLength(10),
+          },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
+
       {
         const result = await stream.takeNext();
         const combinedComments = result.data!.entry.comments;
@@ -1647,6 +1730,18 @@ describe("fetchMore on an observable query with connection", () => {
         // this is the server result
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
+
+      await expect(stream).toEmitTypedValue({
+        data: {
+          entry: {
+            __typename: "Entry",
+            comments: expect.arrayWithLength(10),
+          },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        partial: false,
+      });
 
       {
         const result = await stream.takeNext();

@@ -91,7 +91,10 @@ describe("client.refetchQueries", () => {
 
   function setup(client = makeClient()) {
     function watch<T>(query: TypedDocumentNode<T>) {
-      const obsQuery = client.watchQuery({ query });
+      const obsQuery = client.watchQuery({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
       return new Promise<ObservableQuery<T>>((resolve, reject) => {
         subs.push(
           obsQuery.subscribe({

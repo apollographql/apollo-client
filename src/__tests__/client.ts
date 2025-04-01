@@ -2677,10 +2677,7 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    const observable = client.watchQuery({
-      query,
-      notifyOnNetworkStatusChange: true,
-    });
+    const observable = client.watchQuery({ query });
 
     let stream = new ObservableStream(observable);
 
@@ -3814,8 +3811,6 @@ describe("@connection", () => {
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
       const finalResult = await observable.reobserve({
-        // Allow delivery of loading:true result.
-        notifyOnNetworkStatusChange: true,
         // Force a network request in addition to loading:true cache result.
         fetchPolicy: "cache-and-network",
       });

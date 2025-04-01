@@ -2569,6 +2569,7 @@ describe("client.watchQuery", () => {
         __typename: "User";
         id: number;
         name: string;
+        age: number;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 

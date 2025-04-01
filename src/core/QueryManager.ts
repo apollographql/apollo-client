@@ -339,10 +339,7 @@ export class QueryManager {
           mergeMap((result) => {
             const hasErrors = graphQLResultHasError(result);
             if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(
-                getGraphQLErrorsFromResult(result),
-                { data: result.data as Record<string, unknown> }
-              );
+              throw new CombinedGraphQLErrors(result);
             }
 
             if (mutationStoreValue) {
@@ -402,10 +399,7 @@ export class QueryManager {
               };
 
               if (graphQLResultHasError(storeResult)) {
-                result.error = new CombinedGraphQLErrors(
-                  getGraphQLErrorsFromResult(storeResult),
-                  { data: storeResult.data as Record<string, unknown> }
-                );
+                result.error = new CombinedGraphQLErrors(result);
               }
 
               if (storeResult.extensions) {
@@ -1067,9 +1061,7 @@ export class QueryManager {
           };
 
           if (graphQLResultHasError(rawResult)) {
-            result.error = new CombinedGraphQLErrors(rawResult.errors!, {
-              data: rawResult.data as Record<string, unknown>,
-            });
+            result.error = new CombinedGraphQLErrors(rawResult);
           } else if (graphQLResultHasProtocolErrors(rawResult)) {
             result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
             // Don't emit protocol errors added by HttpLink
@@ -1266,9 +1258,7 @@ export class QueryManager {
             queryInfo.resetLastWrite();
             queryInfo.reset();
             // Throwing here effectively calls observer.error.
-            throw new CombinedGraphQLErrors(graphQLErrors, {
-              data: result.data as Record<string, unknown>,
-            });
+            throw new CombinedGraphQLErrors(result);
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1297,9 +1287,7 @@ export class QueryManager {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
-          aqr.error = new CombinedGraphQLErrors(graphQLErrors, {
-            data: result.data as Record<string, unknown>,
-          });
+          aqr.error = new CombinedGraphQLErrors(result);
           aqr.networkStatus = NetworkStatus.error;
         }
 

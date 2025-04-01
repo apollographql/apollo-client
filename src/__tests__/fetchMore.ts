@@ -1314,12 +1314,7 @@ describe("fetchMore on an observable query", () => {
         cache: new InMemoryCache(),
       });
 
-      const observable = client.watchQuery({
-        query,
-        variables,
-        notifyOnNetworkStatusChange: true,
-      });
-
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
       const { data, networkStatus } = await stream.takeNext();
@@ -1377,12 +1372,7 @@ describe("fetchMore on an observable query", () => {
         }),
       });
 
-      const observable = client.watchQuery({
-        query,
-        variables,
-        notifyOnNetworkStatusChange: true,
-      });
-
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
       const { data, networkStatus } = await stream.takeNext();
@@ -1458,11 +1448,7 @@ describe("fetchMore on an observable query", () => {
       cache: new InMemoryCache(),
     });
 
-    const observable = client.watchQuery({
-      query,
-      variables,
-      notifyOnNetworkStatusChange: true,
-    });
+    const observable = client.watchQuery({ query, variables });
 
     const stream = new ObservableStream(observable);
 
@@ -1777,11 +1763,7 @@ describe("fetchMore on an observable query with connection", () => {
         cache: new InMemoryCache(),
       });
 
-      const observable = client.watchQuery({
-        query,
-        variables,
-        notifyOnNetworkStatusChange: true,
-      });
+      const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
 
@@ -1848,11 +1830,7 @@ describe("fetchMore on an observable query with connection", () => {
         }),
       });
 
-      const observable = client.watchQuery({
-        query,
-        variables,
-        notifyOnNetworkStatusChange: true,
-      });
+      const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
 
@@ -1894,7 +1872,6 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   const observable = client.watchQuery({
     query,
     fetchPolicy: "no-cache",
-    notifyOnNetworkStatusChange: true,
     variables: { limit: 2 },
   });
 

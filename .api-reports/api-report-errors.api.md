@@ -5,15 +5,14 @@
 ```ts
 
 import type { FetchResult } from '@apollo/client/link/core';
+import type { FetchResult as FetchResult_2 } from '@apollo/client/core';
 import type { GraphQLFormattedError } from 'graphql';
 
 // @public
 export class CombinedGraphQLErrors extends Error {
-    constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>, options: {
-        data: Record<string, unknown> | null | undefined;
-    });
-    data: Record<string, unknown> | null | undefined;
-    errors: ReadonlyArray<GraphQLFormattedError>;
+    constructor(result: FetchResult_2<unknown>);
+    readonly data: Record<string, unknown> | null | undefined;
+    readonly errors: ReadonlyArray<GraphQLFormattedError>;
 }
 
 // @public

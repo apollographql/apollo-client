@@ -397,11 +397,9 @@ type CombineByTypeName<T extends {
 
 // @public
 export class CombinedGraphQLErrors extends Error {
-    constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>, options: {
-        data: Record<string, unknown> | null | undefined;
-    });
-    data: Record<string, unknown> | null | undefined;
-    errors: ReadonlyArray<GraphQLFormattedError>;
+    constructor(result: FetchResult<unknown>);
+    readonly data: Record<string, unknown> | null | undefined;
+    readonly errors: ReadonlyArray<GraphQLFormattedError>;
 }
 
 // @public
@@ -2487,7 +2485,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:130:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:131:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:461:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

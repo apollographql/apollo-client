@@ -11,12 +11,12 @@ export class CombinedGraphQLErrors extends Error {
   /**
    * The raw list of GraphQL errors returned in a GraphQL response.
    */
-  errors: ReadonlyArray<GraphQLFormattedError>;
+  readonly errors: GraphQLFormattedError[];
 
   /**
    * Partial data returned in the GraphQL response.
    */
-  data: Record<string, unknown> | null | undefined;
+  readonly data: Record<string, unknown> | null | undefined;
 
   constructor(result: FetchResult<unknown>) {
     const errors = getGraphQLErrorsFromResult(result);

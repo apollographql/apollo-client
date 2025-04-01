@@ -85,10 +85,16 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : (expected: FilterUnserializableProperties<T>) => R;
 }
 
+interface ApolloCustomAsymmetricMatchers {
+  arrayWithLength: (length: number) => any;
+}
+
 declare global {
   namespace jest {
     interface Matchers<R = void, T = {}>
       extends ApolloCustomMatchers<R, T>,
         RenderStreamMatchers<R, T> {}
+
+    interface Expect extends ApolloCustomAsymmetricMatchers {}
   }
 }

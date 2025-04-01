@@ -475,6 +475,13 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -483,6 +490,13 @@ describe("ObservableQuery", () => {
 
       await expect(observable.refetch()).resolves.toStrictEqualTyped({
         data: dataOne,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
 
       await expect(stream).toEmitTypedValue({
@@ -521,6 +535,13 @@ describe("ObservableQuery", () => {
       });
 
       await observable.reobserve({ fetchPolicy: "network-only" });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
@@ -905,6 +926,12 @@ describe("ObservableQuery", () => {
       ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
+      await expect(stream).toEmitTypedValue({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -990,6 +1017,12 @@ describe("ObservableQuery", () => {
       ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
+      await expect(stream).toEmitTypedValue({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1047,6 +1080,12 @@ describe("ObservableQuery", () => {
         observable.setVariables(differentVariables)
       ).resolves.toStrictEqualTyped({ data: dataTwo });
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
         loading: false,
@@ -1242,6 +1281,13 @@ describe("ObservableQuery", () => {
       ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1289,6 +1335,13 @@ describe("ObservableQuery", () => {
       });
 
       await observable.refetch(differentVariables);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
@@ -1341,6 +1394,13 @@ describe("ObservableQuery", () => {
       observers[1].complete();
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1390,6 +1450,13 @@ describe("ObservableQuery", () => {
         },
       });
       observers[2].complete();
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: {
@@ -1882,6 +1949,19 @@ describe("ObservableQuery", () => {
         await expect(stream).toEmitTypedValue({
           data: {
             getVars: [
+              { __typename: "Var", name: "a" },
+              { __typename: "Var", name: "b" },
+              { __typename: "Var", name: "c" },
+            ],
+          },
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: {
+            getVars: [
               { __typename: "Var", name: "d" },
               { __typename: "Var", name: "e" },
             ],
@@ -2071,6 +2151,13 @@ describe("ObservableQuery", () => {
         });
 
         await observableWithVariablesVar.refetch({ variables: ["d", "e"] });
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          partial: true,
+        });
 
         await expect(stream).toEmitTypedValue({
           data: {
@@ -3107,6 +3194,7 @@ describe("ObservableQuery", () => {
             query,
             fetchPolicy,
             nextFetchPolicy,
+            notifyOnNetworkStatusChange: false,
           });
 
           expect(observableQuery.getCurrentResult()).toStrictEqualTyped(

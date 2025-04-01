@@ -109,7 +109,6 @@ export class QueryInfo {
     Object.assign(this, {
       document: query.document,
       variables: query.variables,
-      networkError: null,
     });
 
     return this;

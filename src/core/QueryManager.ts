@@ -399,7 +399,7 @@ export class QueryManager {
               };
 
               if (graphQLResultHasError(storeResult)) {
-                result.error = new CombinedGraphQLErrors(result);
+                result.error = new CombinedGraphQLErrors(storeResult);
               }
 
               if (storeResult.extensions) {

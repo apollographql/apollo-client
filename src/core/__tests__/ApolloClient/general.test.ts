@@ -521,7 +521,6 @@ describe("ApolloClient", () => {
         watchQuery: {
           fetchPolicy: "cache-and-network",
           returnPartialData: false,
-          notifyOnNetworkStatusChange: true,
         },
         query: {
           fetchPolicy: "network-only",
@@ -772,7 +771,6 @@ describe("ApolloClient", () => {
       variables: {
         id: "1",
       },
-      notifyOnNetworkStatusChange: true,
     };
     const request2 = {
       query: gql`
@@ -785,7 +783,6 @@ describe("ApolloClient", () => {
       variables: {
         id: "2",
       },
-      notifyOnNetworkStatusChange: true,
     };
     const request3 = {
       query: gql`
@@ -798,7 +795,6 @@ describe("ApolloClient", () => {
       variables: {
         id: "3",
       },
-      notifyOnNetworkStatusChange: true,
     };
 
     const data1 = {
@@ -1509,7 +1505,6 @@ describe("ApolloClient", () => {
     const observable = client.watchQuery({
       query,
       pollInterval: 30,
-      notifyOnNetworkStatusChange: true,
     });
     const stream = new ObservableStream(observable);
 

@@ -4,16 +4,17 @@
 
 ```ts
 
+import type { ApolloClient } from '@apollo/client/core';
 import type * as ReactTypes from 'react';
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function getDataFromTree(tree: ReactTypes.ReactNode, context?: {
     [key: string]: any;
 }): Promise<string>;
 
 // Warning: (ae-forgotten-export) The symbol "GetMarkupFromTreeOptions" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function getMarkupFromTree({ tree, context, renderFunction, }: GetMarkupFromTreeOptions): Promise<string>;
 
 // @public (undocumented)
@@ -22,10 +23,51 @@ type GetMarkupFromTreeOptions = {
     context?: {
         [key: string]: any;
     };
-    renderFunction?: (tree: ReactTypes.ReactElement<any>) => string | PromiseLike<string>;
+    renderFunction?: prerenderStatic.RenderToString | prerenderStatic.RenderToStringPromise;
 };
 
+// @public
+export function prerenderStatic({ tree, context, renderFunction, signal, ignoreResults, diagnostics, maxRerenders, }: prerenderStatic.Options): Promise<prerenderStatic.Result>;
+
 // @public (undocumented)
+export namespace prerenderStatic {
+    // (undocumented)
+    export interface Diagnostics {
+        renderCount: number;
+    }
+    // (undocumented)
+    export interface Options {
+        context?: {
+            client?: ApolloClient;
+        };
+        diagnostics?: boolean;
+        ignoreResults?: boolean;
+        maxRerenders?: number;
+        renderFunction: RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream | ((reactNode: ReactTypes.ReactNode) => ReturnType<RenderToString> | ReturnType<RenderToStringPromise> | ReturnType<PrerenderToWebStream> | ReturnType<PrerenderToNodeStream>);
+        signal?: AbortSignal;
+        tree: ReactTypes.ReactNode;
+    }
+    // (undocumented)
+    export type PrerenderToNodeStream = (reactNode: ReactTypes.ReactNode) => Promise<{
+        prelude: AsyncIterable<string | Buffer>;
+    }>;
+    // (undocumented)
+    export type PrerenderToWebStream = (reactNode: ReactTypes.ReactNode) => Promise<{
+        prelude: ReadableStream<Uint8Array>;
+    }>;
+    // (undocumented)
+    export type RenderToString = (element: ReactTypes.ReactNode) => string;
+    // (undocumented)
+    export type RenderToStringPromise = (element: ReactTypes.ReactNode) => PromiseLike<string>;
+    // (undocumented)
+    export interface Result {
+        aborted: boolean;
+        diagnostics?: Diagnostics;
+        result: string;
+    }
+}
+
+// @public @deprecated (undocumented)
 export function renderToStringWithData(component: ReactTypes.ReactElement<any>): Promise<string>;
 
 // (No @packageDocumentation comment for this package)

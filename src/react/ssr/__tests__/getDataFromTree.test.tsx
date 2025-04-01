@@ -11,26 +11,32 @@ import {
 } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
+import { getDataFromTree } from "@apollo/client/react/ssr";
 import { mockSingleLink } from "@apollo/client/testing";
-
-import { getDataFromTree } from "../getDataFromTree.js";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {
     it("should support passing a root context", async () => {
-      type CustomContext = { text: string };
+      const client = new ApolloClient({
+        name: "oyez",
+        cache: new Cache(),
+      });
       const ApolloContext = getApolloContext();
 
       function App() {
         return (
           <ApolloContext.Consumer>
-            {(context) => <div>{(context as CustomContext).text}</div>}
+            {(context) => (
+              <div>
+                {context?.client?.["queryManager"]["clientAwareness"].name}
+              </div>
+            )}
           </ApolloContext.Consumer>
         );
       }
 
       const html = await getDataFromTree(<App />, {
-        text: "oyez",
+        client,
       });
 
       expect(html).toEqual("<div>oyez</div>");

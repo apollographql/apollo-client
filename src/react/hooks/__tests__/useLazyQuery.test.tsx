@@ -5108,7 +5108,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       data: undefined,
       called: false,
       loading: false,
-      // @ts-expect-error
       partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,

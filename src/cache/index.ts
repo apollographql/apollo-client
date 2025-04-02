@@ -15,12 +15,12 @@ export type {
 } from "./core/types/common.js";
 export { MissingFieldError } from "./core/types/common.js";
 
-export type { Reference } from "../utilities/index.js";
+export type { Reference } from "@apollo/client/utilities";
 export {
   canonicalStringify,
   isReference,
   makeReference,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 
 export { EntityStore } from "./inmemory/entityStore.js";
 export {

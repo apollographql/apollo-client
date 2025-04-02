@@ -4,131 +4,45 @@
 
 ```ts
 
-import { ApolloClient } from '@apollo/client/core';
-import { ApolloLink } from '@apollo/client/link/core';
-import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client/link/core';
-import type { GraphQLRequest } from '@apollo/client/link/core';
-import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link/core';
-import type { Unmasked } from '@apollo/client/masking';
+import { createMockClient } from '@apollo/client/testing/core';
+import { MockedResponse } from '@apollo/client/testing/core';
+import { MockLink } from '@apollo/client/testing/core';
+import { MockLinkOptions } from '@apollo/client/testing/core';
+import { mockObservableLink } from '@apollo/client/testing/core';
+import { mockSingleLink } from '@apollo/client/testing/core';
+import { MockSubscriptionLink } from '@apollo/client/testing/core';
+import { ResultFunction } from '@apollo/client/testing/core';
+import { tick } from '@apollo/client/testing/core';
+import { wait } from '@apollo/client/testing/core';
+import { withErrorSpy } from '@apollo/client/testing/core';
+import { withLogSpy } from '@apollo/client/testing/core';
+import { withWarningSpy } from '@apollo/client/testing/core';
 
-// @internal (undocumented)
-type CovariantUnaryFunction<out Arg, out Ret> = {
-    fn(arg: Arg): Ret;
-}["fn"];
+export { createMockClient }
 
-// @public (undocumented)
-export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient;
+export { MockedResponse }
 
-// @public (undocumented)
-interface MockApolloLink extends ApolloLink {
-    // (undocumented)
-    operation?: Operation;
-}
+export { MockLink }
 
-// @public (undocumented)
-export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
-    // (undocumented)
-    delay?: number;
-    // (undocumented)
-    error?: Error;
-    // (undocumented)
-    maxUsageCount?: number;
-    // (undocumented)
-    newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-    // (undocumented)
-    request: GraphQLRequest<TVariables>;
-    // (undocumented)
-    result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    variableMatcher?: VariableMatcher<TVariables>;
-}
+export { MockLinkOptions }
 
-// @public (undocumented)
-interface MockedSubscriptionResult {
-    // (undocumented)
-    delay?: number;
-    // (undocumented)
-    error?: Error;
-    // (undocumented)
-    result?: FetchResult;
-}
+export { mockObservableLink }
 
-// @public (undocumented)
-export class MockLink extends ApolloLink {
-    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, options?: MockLinkOptions);
-    // (undocumented)
-    addMockedResponse(mockedResponse: MockedResponse): void;
-    // (undocumented)
-    operation: Operation;
-    // (undocumented)
-    request(operation: Operation): Observable<FetchResult> | null;
-    // (undocumented)
-    showWarnings: boolean;
-}
+export { mockSingleLink }
 
-// @public (undocumented)
-export interface MockLinkOptions {
-    // (undocumented)
-    showWarnings?: boolean;
-}
+export { MockSubscriptionLink }
 
-// @public (undocumented)
-export function mockObservableLink(): MockSubscriptionLink;
+export { ResultFunction }
 
-// Warning: (ae-forgotten-export) The symbol "MockApolloLink" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function mockSingleLink(...mockedResponses: Array<MockedResponse<any, any>>): MockApolloLink;
+export { tick }
 
-// @public (undocumented)
-export class MockSubscriptionLink extends ApolloLink {
-    constructor();
-    // (undocumented)
-    onSetup(listener: any): void;
-    // (undocumented)
-    onUnsubscribe(listener: any): void;
-    // (undocumented)
-    operation?: Operation;
-    // (undocumented)
-    request(operation: Operation): Observable<FetchResult>;
-    // (undocumented)
-    setups: any[];
-    // (undocumented)
-    simulateComplete(): void;
-    // Warning: (ae-forgotten-export) The symbol "MockedSubscriptionResult" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    simulateResult(result: MockedSubscriptionResult, complete?: boolean): void;
-    // (undocumented)
-    unsubscribers: any[];
-}
+export { wait }
 
-// Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<V, T>;
+export { withErrorSpy }
 
-// @public (undocumented)
-export function tick(): Promise<void>;
+export { withLogSpy }
 
-// @public (undocumented)
-type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<V, boolean>;
-
-// @public (undocumented)
-export function wait(ms: number): Promise<void>;
-
-// @public @deprecated (undocumented)
-export function withErrorSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
-
-// @public @deprecated (undocumented)
-export function withLogSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
-
-// @public @deprecated (undocumented)
-export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
+export { withWarningSpy }
 
 // (No @packageDocumentation comment for this package)
 

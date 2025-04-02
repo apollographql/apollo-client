@@ -2,7 +2,7 @@ export type {
   MockedResponse,
   MockLinkOptions,
   ResultFunction,
-} from "./core/index.js";
+} from "@apollo/client/testing/core";
 export {
   createMockClient,
   MockLink,
@@ -14,4 +14,4 @@ export {
   withErrorSpy,
   withLogSpy,
   withWarningSpy,
-} from "./core/index.js";
+} from "@apollo/client/testing/core";

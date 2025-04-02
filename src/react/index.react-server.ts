@@ -20,7 +20,11 @@ function missingFeatureWarning(
 // eslint-disable-next-line no-restricted-syntax
 export type * from "./index.js";
 
-export { DocumentType, operationName, parser } from "./parser/index.js";
+export {
+  DocumentType,
+  operationName,
+  parser,
+} from "@apollo/client/react/parser";
 
 // prettier-ignore
 export const ApolloConsumer = missingFeatureWarning("component", "ApolloConsumer");

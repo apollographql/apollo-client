@@ -22,7 +22,34 @@ export type {
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
-export type * from "./types.js";
+export type {
+  ApolloQueryResult,
+  DefaultContext,
+  ErrorLike,
+  InternalRefetchQueriesInclude,
+  InternalRefetchQueriesMap,
+  InternalRefetchQueriesOptions,
+  InternalRefetchQueriesResult,
+  InternalRefetchQueryDescriptor,
+  MethodKeys,
+  MutateResult,
+  MutationQueryReducer,
+  MutationQueryReducersMap,
+  MutationUpdaterFn,
+  MutationUpdaterFunction,
+  OnQueryUpdated,
+  OperationVariables,
+  PureQueryOptions,
+  QueryListener,
+  RefetchQueriesInclude,
+  RefetchQueriesOptions,
+  RefetchQueriesPromiseResults,
+  RefetchQueriesResult,
+  RefetchQueryDescriptor,
+  Resolvers,
+  SubscribeResult,
+  TypedDocumentNode,
+} from "./types.js";
 export type { FragmentMatcher, Resolver } from "./LocalState.js";
 export {
   CombinedGraphQLErrors,
@@ -60,7 +87,20 @@ export {
   MissingFieldError,
 } from "../cache/index.js";
 
-export type * from "../cache/inmemory/types.js";
+export type {
+  ApolloReducerConfig,
+  DiffQueryAgainstStoreOptions,
+  IdGetter,
+  IdGetterObj,
+  MergeInfo,
+  MergeTree,
+  NormalizedCache,
+  NormalizedCacheObject,
+  OptimisticStoreItem,
+  ReadMergeModifyContext,
+  ReadQueryOptions,
+  StoreValue,
+} from "../cache/inmemory/types.js";
 
 /* Link */
 

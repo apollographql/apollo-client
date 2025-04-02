@@ -40,4 +40,36 @@ export type {
 } from "./internal/index.js";
 
 // These types will be removed with v5
-export type * from "./types/deprecated.js";
+export type {
+  BackgroundQueryHookFetchPolicy,
+  BackgroundQueryHookOptions,
+  LazyQueryExecFunction,
+  LazyQueryHookExecOptions,
+  LazyQueryHookOptions,
+  LazyQueryResult,
+  LazyQueryResultTuple,
+  LoadableQueryFetchPolicy,
+  LoadableQueryHookOptions,
+  LoadQueryFunction,
+  MutationFunctionOptions,
+  MutationHookOptions,
+  MutationResult,
+  MutationTuple,
+  OnDataOptions,
+  OnSubscriptionDataOptions,
+  QueryHookOptions,
+  QueryResult,
+  SubscriptionHookOptions,
+  SubscriptionResult,
+  SuspenseQueryHookFetchPolicy,
+  SuspenseQueryHookOptions,
+  UseBackgroundQueryResult,
+  UseFragmentOptions,
+  UseFragmentResult,
+  UseLoadableQueryResult,
+  UseQueryRefHandlersResult,
+  UseReadQueryResult,
+  UseSuspenseFragmentOptions,
+  UseSuspenseFragmentResult,
+  UseSuspenseQueryResult,
+} from "./types/deprecated.js";

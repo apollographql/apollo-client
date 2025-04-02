@@ -1972,12 +1972,22 @@ describe("ObservableQuery", () => {
           variables: { vars: ["d", "e"] },
         });
 
-        await expect(stream).toEmitMatchedValue({
+        await expect(stream).toEmitTypedValue({
+          data: {
+            getVars: [
+              { __typename: "Var", name: "a" },
+              { __typename: "Var", name: "b" },
+              { __typename: "Var", name: "c" },
+            ],
+          },
           error: expect.objectContaining({
             message: expect.stringMatching(
               /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
             ),
           }),
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          partial: false,
         });
 
         await expect(promise).rejects.toEqual(

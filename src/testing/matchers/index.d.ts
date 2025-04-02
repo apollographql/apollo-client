@@ -127,17 +127,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (expected: Pick<useQuery.Result<TData, TVariables>, CheckedKeys>) => R
   : { error: "matchers needs to be called on a QueryResult" };
 
-  /** @deprecated Use `toEqualStrictTyped` instead */
-  toEqualFetchResult: T extends (
-    FetchResult<infer TData, infer TContext, infer TExtensions>
-  ) ?
-    (expected: FetchResult<TData, TContext, TExtensions>) => R
-  : T extends (
-    Promise<FetchResult<infer TData, infer TContext, infer TExtensions>>
-  ) ?
-    (expected: FetchResult<TData, TContext, TExtensions>) => R
-  : { error: "matchers needs to be called on a FetchResult" };
-
   toEmitStrictTyped: T extends ObservableStream<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,

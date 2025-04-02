@@ -34,6 +34,7 @@ export {
 /* Cache */
 
 export type {
+  Cache,
   DataProxy,
   FieldFunctionOptions,
   FieldMergeFunction,
@@ -50,7 +51,7 @@ export type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/index.js";
-export type { Cache } from "../cache/index.js";
+
 export {
   ApolloCache,
   defaultDataIdFromObject,
@@ -63,8 +64,50 @@ export type * from "../cache/inmemory/types.js";
 
 /* Link */
 
-export * from "../link/core/index.js";
-export * from "../link/http/index.js";
+export {
+  ApolloLink,
+  concat,
+  empty,
+  execute,
+  from,
+  split,
+} from "../link/core/index.js";
+export type {
+  ApolloPayloadResult,
+  DocumentNode,
+  ExecutionPatchIncrementalResult,
+  ExecutionPatchInitialResult,
+  ExecutionPatchResult,
+  FetchResult,
+  GraphQLRequest,
+  IncrementalPayload,
+  NextLink,
+  Operation,
+  Path,
+  RequestHandler,
+  SingleExecutionResult,
+} from "../link/core/index.js";
+
+export {
+  checkFetcher,
+  createHttpLink,
+  createSignalIfSupported,
+  defaultPrinter,
+  fallbackHttpConfig,
+  HttpLink,
+  parseAndCheckHttpResponse,
+  rewriteURIForGET,
+  selectHttpOptionsAndBody,
+  // TODO remove: needed by @apollo/client/link/batch-http but not public
+  selectHttpOptionsAndBodyInternal,
+  selectURI,
+  serializeFetchParameter,
+} from "../link/http/index.js";
+export type {
+  ClientParseError,
+  HttpOptions,
+  UriFunction,
+} from "../link/http/index.js";
 
 /* Masking */
 export type {

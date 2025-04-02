@@ -2,6 +2,7 @@ import { rule as forbidActInDisabledActEnvironment } from "./forbid-act-in-disab
 import {
   importFromExport,
   importFromInsideOtherExport,
+  noDuplicateExports,
   noInternalImportOfficialExport,
 } from "./import-from-export.ts";
 import { rule as requireDisableActEnvironment } from "./require-disable-act-environment.ts";
@@ -14,4 +15,5 @@ export default {
   "import-from-export": importFromExport,
   "import-from-inside-other-export": importFromInsideOtherExport,
   "no-internal-import-official-export": noInternalImportOfficialExport,
+  "no-duplicate-exports": noDuplicateExports,
 };

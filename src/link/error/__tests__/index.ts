@@ -131,6 +131,8 @@ describe("error handling", () => {
       hasNext: true,
       incremental: [
         {
+          data: null,
+          path: [],
           errors: [
             {
               message: "could not read data",
@@ -352,6 +354,7 @@ describe("error handling", () => {
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitStrictTyped({
+      // @ts-expect-error TODO: Need to determine a better way to handle this
       errors: null,
       data: { foo: { id: 1 } },
     });

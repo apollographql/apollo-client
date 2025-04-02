@@ -5,6 +5,7 @@ import * as React from "rehackt";
 import type {
   ApolloClient,
   ApolloQueryResult,
+  ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
 } from "../../core/index.js";
@@ -17,7 +18,7 @@ import type {
   QueryHookOptions,
   QueryResult,
 } from "../types/types.js";
-import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
+import type { InternalResult } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,
   getDefaultFetchPolicy,
@@ -203,7 +204,7 @@ export function useLazyQuery<
 
 function executeQuery<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
-  observable: ObsQueryWithMeta<TData, TVariables>,
+  observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>,
   currentQuery: DocumentNode,
   options: QueryHookOptions<TData, TVariables> & {

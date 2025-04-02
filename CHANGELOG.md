@@ -1,5 +1,35 @@
 # @apollo/client
 
+## 3.13.5
+
+### Patch Changes
+
+- [#12461](https://github.com/apollographql/apollo-client/pull/12461) [`12c8d06`](https://github.com/apollographql/apollo-client/commit/12c8d06f1ef7cfbece8e3a63b7ad09d91334f663) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a `cache-first` query would return the result for previous variables when a cache update is issued after simultaneously changing variables and skipping the query.
+
+## 3.13.4
+
+### Patch Changes
+
+- [#12420](https://github.com/apollographql/apollo-client/pull/12420) [`fee9368`](https://github.com/apollographql/apollo-client/commit/fee9368750e242ea03dea8d1557683506d411d8d) Thanks [@jorenbroekema](https://github.com/jorenbroekema)! - Use import star from `rehackt` to prevent issues with importing named exports from external CJS modules.
+
+## 3.13.3
+
+### Patch Changes
+
+- [#12362](https://github.com/apollographql/apollo-client/pull/12362) [`f6d387c`](https://github.com/apollographql/apollo-client/commit/f6d387c166cc76f08135966fb6d74fd8fe808c21) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where calling `observableQuery.getCurrentResult()` when the `errorPolicy` was set to `all` would return the `networkStatus` as `NetworkStatus.ready` when there were errors returned in the result. This has been corrected to report `NetworkStatus.error`.
+
+  This bug also affected the `useQuery` and `useLazyQuery` hooks and may affect you if you check for `networkStatus` in your component.
+
+## 3.13.2
+
+### Patch Changes
+
+- [#12409](https://github.com/apollographql/apollo-client/pull/12409) [`6aa2f3e`](https://github.com/apollographql/apollo-client/commit/6aa2f3e81ee0ae59da7ae0b12000bb5a55ec5c6d) Thanks [@phryneas](https://github.com/phryneas)! - To mitigate problems when Apollo Client ends up more than once in the bundle, some unique symbols were converted into `Symbol.for` calls.
+
+- [#12392](https://github.com/apollographql/apollo-client/pull/12392) [`644bb26`](https://github.com/apollographql/apollo-client/commit/644bb2662168a9bac0519be6979f0db38b0febc4) Thanks [@Joja81](https://github.com/Joja81)! - Fixes an issue where the DeepOmit type would turn optional properties into required properties. This should only affect you if you were using the omitDeep or stripTypename utilities exported by Apollo Client.
+
+- [#12404](https://github.com/apollographql/apollo-client/pull/12404) [`4332b88`](https://github.com/apollographql/apollo-client/commit/4332b886f0409145af57f26d334f86e5a1b465c5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Show `NaN` rather than converting to `null` in debug messages from `MockLink` for unmatched `variables` values.
+
 ## 3.13.1
 
 ### Patch Changes

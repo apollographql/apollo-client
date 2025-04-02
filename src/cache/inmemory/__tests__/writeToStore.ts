@@ -23,8 +23,12 @@ import {
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { extractFragmentContext } from "../helpers.js";
 import type { KeyFieldsFunction } from "../policies.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreWriter } from "../writeToStore.js";
 
 import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";

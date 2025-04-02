@@ -14,9 +14,8 @@ import {
 } from "@apollo/client/react/ssr";
 import type { MockedResponse } from "@apollo/client/testing";
 import { mockSingleLink } from "@apollo/client/testing";
+import { resetApolloContext } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-
-import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
 
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like

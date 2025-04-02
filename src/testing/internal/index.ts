@@ -7,6 +7,7 @@ export {
 export { ObservableStream } from "./ObservableStream.js";
 
 export type {
+  MaskedVariablesCaseData,
   PaginatedCaseData,
   PaginatedCaseVariables,
   SimpleCaseData,
@@ -15,6 +16,7 @@ export type {
 } from "./scenarios/index.js";
 export {
   addDelayToMocks,
+  setupMaskedVariablesCase,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,

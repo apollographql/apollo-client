@@ -1,3 +1,5 @@
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import "../../../testing/internal/messageChannelPolyfill.js";
 import type { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";

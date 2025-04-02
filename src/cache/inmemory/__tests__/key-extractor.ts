@@ -4,6 +4,8 @@ import {
   collectSpecifierPaths,
   extractKeyPath,
   getSpecifierPaths,
+  // not exported
+  // eslint-disable-next-line local-rules/no-relative-imports
 } from "../key-extractor.js";
 import type { KeySpecifier } from "../policies.js";
 

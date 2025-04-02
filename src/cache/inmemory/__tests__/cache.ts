@@ -12,8 +12,12 @@ import { isReference, makeReference, makeVar } from "@apollo/client/core";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { cloneDeep, defaultCacheSizes } from "@apollo/client/utilities";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";
 import type { InMemoryCacheConfig } from "../types.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreWriter } from "../writeToStore.js";
 
 disableFragmentWarnings();

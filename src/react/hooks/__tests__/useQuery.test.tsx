@@ -56,7 +56,7 @@ import type { Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
+import type { QueryManager } from "../../../core/QueryManager.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -7389,14 +7389,19 @@ describe("useQuery Hook", () => {
         link,
       });
 
-      const mocks = mockFetchQuery(client["queryManager"]);
+      const fetchQueryByPolicy = jest.spyOn(
+        client["queryManager"] as any as {
+          fetchQueryByPolicy: QueryManager["fetchQueryByPolicy"];
+        },
+        "fetchQueryByPolicy"
+      );
 
       const expectQueryTriggered = (
         nth: number,
         fetchPolicy: WatchQueryFetchPolicy
       ) => {
-        expect(mocks.fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
-        expect(mocks.fetchQueryByPolicy).toHaveBeenNthCalledWith(
+        expect(fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
+        expect(fetchQueryByPolicy).toHaveBeenNthCalledWith(
           nth,
           expect.anything(),
           expect.objectContaining({ fetchPolicy }),

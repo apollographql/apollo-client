@@ -10,8 +10,7 @@ import { ApolloLink } from "@apollo/client/link/core";
 import { useQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing/core";
 import { MockLink } from "@apollo/client/testing/core";
-
-import { MockedProvider } from "../MockedProvider.js";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 const variables = {
   username: "mock_username",

@@ -20,13 +20,14 @@ import {
 import type { UseSuspenseQueryResult } from "@apollo/client/react";
 import { useMutation, useSuspenseQuery } from "@apollo/client/react";
 import {
+  createSchemaFetch,
+  createTestSchema,
+} from "@apollo/client/testing/experimental";
+import {
   createClientWrapper,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { createSchemaFetch } from "../createSchemaFetch.js";
-import { createTestSchema } from "../createTestSchema.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

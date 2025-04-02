@@ -3,6 +3,8 @@ import { maskFragment } from "@apollo/client/masking";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 
 test("returns null when data is null", () => {

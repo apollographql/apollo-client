@@ -7,6 +7,8 @@ import { isReference, makeReference } from "@apollo/client/core";
 import { defaultCacheSizes } from "@apollo/client/utilities";
 
 import type { Cache } from "../../core/types/Cache.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";
 import type { StoreObject } from "../types.js";
 

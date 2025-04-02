@@ -10,11 +10,12 @@ import {
 } from "@apollo/client/core";
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
-
 // importing react so the `parser` cache initializes
 import "@apollo/client/react";
 import { cacheSizes } from "@apollo/client/utilities";
 
+// this is compiled away so we need to import it from sources
+// eslint-disable-next-line local-rules/no-relative-imports
 import { defaultCacheSizes } from "../sizes.js";
 
 function sha256(data: string) {

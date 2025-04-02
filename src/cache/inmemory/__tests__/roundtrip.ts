@@ -5,7 +5,11 @@ import { EntityStore, InMemoryCache } from "@apollo/client/cache";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreWriter } from "../writeToStore.js";
 
 import { readQueryFromStore, withError, writeQueryToStore } from "./helpers.js";

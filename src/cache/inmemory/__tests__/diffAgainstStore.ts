@@ -3,8 +3,12 @@ import { disableFragmentWarnings, gql } from "graphql-tag";
 import { defaultDataIdFromObject, InMemoryCache } from "@apollo/client/cache";
 import { MissingFieldError } from "@apollo/client/core";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";
 import type { NormalizedCache, Reference } from "../types.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreWriter } from "../writeToStore.js";
 
 import {

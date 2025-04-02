@@ -9,11 +9,9 @@ import { InMemoryCache } from "@apollo/client/cache";
 import type { ApolloQueryResult } from "@apollo/client/core";
 import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type {
-  ApolloLink,
-  FetchResult,
-  type RequestHandler,
-} from "@apollo/client/link/core";
+import type { FetchResult, RequestHandler } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockLink } from "@apollo/client/testing";
 import { wait } from "@apollo/client/testing/core";
 import {
   mockDeferStream,
@@ -27,7 +25,6 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { MockApolloLink } from "../../../testing/core/mocking/mockLink.js";
-import { MockLink } from "../../../testing/core/mocking/mockLink.js";
 import type { QueryManager } from "../../QueryManager.js";
 import type {
   WatchQueryFetchPolicy,

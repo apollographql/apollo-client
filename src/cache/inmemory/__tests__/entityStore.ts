@@ -21,6 +21,8 @@ import type {
   StoreValue,
 } from "../../../utilities/graphql/storeUtils.js";
 import type { Cache } from "../../core/types/Cache.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { supportsResultCaching } from "../entityStore.js";
 import type { StoreObject } from "../types.js";
 

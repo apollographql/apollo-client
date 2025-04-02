@@ -42,6 +42,7 @@ import * as utilitiesGlobals from "@apollo/client/utilities/globals";
 import * as utilitiesInternal from "@apollo/client/utilities/internal";
 import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
 
+// eslint-disable-next-line local-rules/no-relative-imports
 import { entryPoints } from "../../config/entryPoints.js";
 
 type Namespace = object;

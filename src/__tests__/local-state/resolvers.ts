@@ -9,6 +9,8 @@ import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { LocalState } from "../../core/LocalState.js";
 
 const setupTestWithResolvers = ({

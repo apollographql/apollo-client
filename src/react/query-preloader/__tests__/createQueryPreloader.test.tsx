@@ -35,20 +35,19 @@ import { unwrapQueryRef } from "@apollo/client/react/internal";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import type {
+  MaskedVariablesCaseData,
   SimpleCaseData,
   VariablesCaseData,
 } from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
   renderHookAsync,
+  setupMaskedVariablesCase,
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
-
-import type { MaskedVariablesCaseData } from "../../../testing/internal/scenarios/index.js";
-import { setupMaskedVariablesCase } from "../../../testing/internal/scenarios/index.js";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

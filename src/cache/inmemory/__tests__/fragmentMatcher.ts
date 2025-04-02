@@ -4,8 +4,6 @@ import { gql } from "graphql-tag";
 
 import { InMemoryCache } from "@apollo/client/cache";
 
-import { hasOwn } from "../helpers.js";
-
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {
     const cacheWithoutPossibleTypes = new InMemoryCache();
@@ -283,7 +281,7 @@ describe("policies.fragmentMatches", () => {
           const supertype = frag.typeCondition.name.value;
           expect("ABCDEF".split("")).toContain(supertype);
 
-          if (hasOwn.call(expected, supertype)) {
+          if (expected.hasOwnProperty(supertype)) {
             Object.keys(expected[supertype]).forEach((subtype) => {
               check(subtype, expected[supertype][subtype]);
             });

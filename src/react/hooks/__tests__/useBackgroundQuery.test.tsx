@@ -49,6 +49,7 @@ import {
   addDelayToMocks,
   createClientWrapper,
   createMockWrapper,
+  setupMaskedVariablesCase,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
@@ -71,7 +72,6 @@ import type {
   MaskedVariablesCaseData,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
-import { setupMaskedVariablesCase } from "../../../testing/internal/scenarios/index.js";
 
 afterEach(() => {
   jest.useRealTimers();

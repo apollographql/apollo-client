@@ -1,14 +1,13 @@
 import { gql } from "graphql-tag";
 
 import { execute } from "@apollo/client/link/core";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import {
   enableFakeTimers,
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
-
-import type { MockedResponse } from "../mockLink.js";
-import { MockLink } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {

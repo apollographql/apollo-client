@@ -229,9 +229,8 @@ export interface SimpleCaseData {
 type Spies<Keys extends ConsoleMethod[]> = Record<Keys[number], jest.SpyInstance<void, any[], any>>;
 
 // Warning: (ae-forgotten-export) The symbol "Spies" needs to be exported by the entry point index.d.ts
-// Warning: (ae-internal-mixed-release-tag) Mixed release tags are not allowed for "spyOnConsole" because one of its declarations is marked as @internal
 //
-// @internal (undocumented)
+// @public (undocumented)
 export function spyOnConsole<Keys extends ConsoleMethod[]>(...spyOn: Keys): Spies<Keys> & Disposable;
 
 // @public (undocumented)

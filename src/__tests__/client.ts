@@ -1986,7 +1986,7 @@ describe("client", () => {
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 
@@ -2015,7 +2015,7 @@ describe("client", () => {
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
@@ -2037,7 +2037,7 @@ describe("client", () => {
 
       await expect(
         client.query({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
     });
   });
 
@@ -2229,7 +2229,7 @@ describe("client", () => {
 
     await expect(
       client.mutate({ mutation, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data,
       error: new CombinedGraphQLErrors({ data, errors }),
     });
@@ -2265,7 +2265,7 @@ describe("client", () => {
 
     await expect(
       client.mutate({ mutation, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({ data });
+    ).resolves.toStrictEqualTyped({ data });
   });
 
   it("should rollback optimistic after mutation got a GraphQL error", async () => {
@@ -2783,7 +2783,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { posts: null },
       error: new CombinedGraphQLErrors({
         data: { posts: null },
@@ -2813,7 +2813,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({ data: undefined, error });
+    ).resolves.toStrictEqualTyped({ data: undefined, error });
   });
 
   it("resolves partial data and strips errors when errorPolicy is 'ignore'", async () => {
@@ -2839,7 +2839,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({ data: { posts: null } });
+    ).resolves.toStrictEqualTyped({ data: { posts: null } });
   });
 
   it("resolves with no data or errors for network error when errorPolicy is 'ignore'", async () => {
@@ -2863,7 +2863,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({ data: undefined });
+    ).resolves.toStrictEqualTyped({ data: undefined });
   });
 
   it("should warn if server returns wrong data", async () => {
@@ -3709,7 +3709,7 @@ describe("@connection", () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0]).toEqualStrictTyped({
+      expect(results[0]).toStrictEqualTyped({
         data: { linkCount: 2 },
       });
 
@@ -3728,7 +3728,7 @@ describe("@connection", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      expect(finalResult).toEqualStrictTyped({
+      expect(finalResult).toStrictEqualTyped({
         data: { linkCount: 3 },
       });
 
@@ -3773,7 +3773,7 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({ errors }),
       });

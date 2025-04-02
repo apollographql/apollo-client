@@ -429,7 +429,7 @@ describe("ObservableQuery", () => {
 
       // go back to first set of variables
       const current = await observable.reobserve({ variables });
-      expect(current).toEqualStrictTyped({ data });
+      expect(current).toStrictEqualTyped({ data });
 
       await expect(stream).toEmitStrictTyped({
         data,
@@ -481,7 +481,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await expect(observable.refetch()).resolves.toEqualStrictTyped({
+      await expect(observable.refetch()).resolves.toStrictEqualTyped({
         data: dataOne,
       });
 
@@ -702,7 +702,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.reobserve({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();
@@ -762,7 +762,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.reobserve({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();
@@ -797,7 +797,7 @@ describe("ObservableQuery", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      expect(res).toEqualStrictTyped({ data: dataTwo });
+      expect(res).toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: dataOne,
@@ -850,7 +850,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: dataTwo });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: undefined,
@@ -893,7 +893,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -902,7 +902,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: dataTwo });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: dataTwo,
@@ -910,7 +910,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -978,7 +978,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -987,7 +987,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: dataTwo });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: dataTwo,
@@ -995,7 +995,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1035,7 +1035,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.error,
         partial: true,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
@@ -1045,7 +1045,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: dataTwo });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: dataTwo,
@@ -1053,7 +1053,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1073,7 +1073,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
     });
 
     it("sets networkStatus to `setVariables` when fetching", async () => {
@@ -1110,7 +1110,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: dataTwo });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: undefined,
@@ -1163,7 +1163,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.refetch(differentVariables)
-      ).resolves.toEqualStrictTyped({
+      ).resolves.toStrictEqualTyped({
         data: dataTwo,
       });
 
@@ -1210,7 +1210,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(variables)
-      ).resolves.toEqualStrictTyped({ data: dataOne });
+      ).resolves.toStrictEqualTyped({ data: dataOne });
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1239,7 +1239,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.setVariables(differentVariables)
-      ).resolves.toEqualStrictTyped({ data: dataTwo });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitStrictTyped({
         data: dataTwo,
@@ -1649,7 +1649,7 @@ describe("ObservableQuery", () => {
       {
         const result = await observable.reobserve({ variables: variables1 });
 
-        expect(result).toEqualStrictTyped({ data });
+        expect(result).toStrictEqualTyped({ data });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
 
@@ -1672,7 +1672,7 @@ describe("ObservableQuery", () => {
       {
         const result = await observable.reobserve({ variables: variables2 });
 
-        expect(result).toEqualStrictTyped({ data: data2 });
+        expect(result).toStrictEqualTyped({ data: data2 });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
 
@@ -1791,7 +1791,7 @@ describe("ObservableQuery", () => {
 
       const result = await observable.refetch();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           counter: 5,
           name: "Ben",
@@ -2183,7 +2183,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2198,7 +2198,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.refetch,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -2211,7 +2211,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2235,7 +2235,7 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2244,7 +2244,7 @@ describe("ObservableQuery", () => {
 
       await tick();
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2253,7 +2253,7 @@ describe("ObservableQuery", () => {
 
       await stream.takeNext();
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: false,
         networkStatus: 7,
@@ -2274,11 +2274,11 @@ describe("ObservableQuery", () => {
 
       const result = await client.query({ query, variables });
 
-      expect(result).toEqualStrictTyped({ data: dataOne });
+      expect(result).toStrictEqualTyped({ data: dataOne });
 
       const observable = client.watchQuery({ query, variables });
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2308,7 +2308,7 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
@@ -2342,7 +2342,7 @@ describe("ObservableQuery", () => {
       const currentResult = observable.getCurrentResult();
       const currentResult2 = observable.getCurrentResult();
 
-      expect(currentResult).toEqualStrictTyped({
+      expect(currentResult).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
@@ -2378,7 +2378,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.error,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
@@ -2478,7 +2478,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2527,7 +2527,7 @@ describe("ObservableQuery", () => {
 
       // TODO: Determine why this worked without the `false` argument before
       // since this updates the last value to be equal to the partial result.
-      expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+      expect(observable.getCurrentResult(false)).toStrictEqualTyped({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2542,7 +2542,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2555,7 +2555,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2583,7 +2583,7 @@ describe("ObservableQuery", () => {
 
       const result = await client.query({ query, variables });
 
-      expect(result).toEqualStrictTyped({ data: dataOne });
+      expect(result).toStrictEqualTyped({ data: dataOne });
 
       const observable = client.watchQuery({
         query,
@@ -2591,7 +2591,7 @@ describe("ObservableQuery", () => {
         fetchPolicy: "network-only",
       });
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2613,7 +2613,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2651,7 +2651,7 @@ describe("ObservableQuery", () => {
         fetchPolicy: "no-cache",
       });
 
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2666,7 +2666,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2679,7 +2679,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2739,7 +2739,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(obs.getCurrentResult()).toEqualStrictTyped({
+      expect(obs.getCurrentResult()).toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -2788,7 +2788,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(obs.getCurrentResult()).toEqualStrictTyped({
+      expect(obs.getCurrentResult()).toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -2806,7 +2806,7 @@ describe("ObservableQuery", () => {
 
       // This 2nd identical check is intentional to ensure calling this function
       // more than once returns the right value.
-      expect(obs.getCurrentResult()).toEqualStrictTyped({
+      expect(obs.getCurrentResult()).toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -3099,17 +3099,17 @@ describe("ObservableQuery", () => {
             nextFetchPolicy,
           });
 
-          expect(observableQuery.getCurrentResult()).toEqualStrictTyped(
+          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
             resultBeforeSubscribe
           );
 
           observableQuery.subscribe({});
-          expect(observableQuery.getCurrentResult()).toEqualStrictTyped(
+          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
             resultAfterSubscribe
           );
 
           cache.writeQuery({ query, data: cacheValues.update1 });
-          expect(observableQuery.getCurrentResult()).toEqualStrictTyped(
+          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
             resultAfterCacheUpdate1
           );
 
@@ -3123,19 +3123,19 @@ describe("ObservableQuery", () => {
             () =>
               void expect(
                 observableQuery.getCurrentResult()
-              ).toEqualStrictTyped(resultAfterLinkNext),
+              ).toStrictEqualTyped(resultAfterLinkNext),
             { interval: 1 }
           );
 
           cache.writeQuery({ query, data: cacheValues.update2 });
-          expect(observableQuery.getCurrentResult()).toEqualStrictTyped(
+          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
             resultAfterCacheUpdate2
           );
 
           void observableQuery.refetch();
 
           cache.writeQuery({ query, data: cacheValues.update3 });
-          expect(observableQuery.getCurrentResult()).toEqualStrictTyped(
+          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
             resultAfterCacheUpdate3
           );
 
@@ -3148,12 +3148,12 @@ describe("ObservableQuery", () => {
             () =>
               void expect(
                 observableQuery.getCurrentResult()
-              ).toEqualStrictTyped(resultAfterRefetchNext),
+              ).toStrictEqualTyped(resultAfterRefetchNext),
             { interval: 1 }
           );
 
           cache.writeQuery({ query, data: cacheValues.update4 });
-          expect(observableQuery.getCurrentResult()).toEqualStrictTyped(
+          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
             resultAfterCacheUpdate4
           );
         }
@@ -3211,7 +3211,7 @@ describe("ObservableQuery", () => {
           networkStatus: NetworkStatus.ready,
           partial: false,
         });
-        expect(observable.getCurrentResult()).toEqualStrictTyped({
+        expect(observable.getCurrentResult()).toStrictEqualTyped({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3232,7 +3232,7 @@ describe("ObservableQuery", () => {
           networkStatus: NetworkStatus.ready,
           partial: false,
         });
-        expect(observable.getCurrentResult()).toEqualStrictTyped({
+        expect(observable.getCurrentResult()).toStrictEqualTyped({
           data: {
             people_one: optimisticResponse,
           },
@@ -3249,7 +3249,7 @@ describe("ObservableQuery", () => {
           networkStatus: NetworkStatus.ready,
           partial: false,
         });
-        expect(observable.getCurrentResult()).toEqualStrictTyped({
+        expect(observable.getCurrentResult()).toStrictEqualTyped({
           data: {
             people_one: mutationData,
           },
@@ -3802,7 +3802,7 @@ test("handles changing variables in rapid succession before other request is com
   observable.subscribe(jest.fn());
 
   await waitFor(() => {
-    expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+    expect(observable.getCurrentResult(false)).toStrictEqualTyped({
       data: { userCount: 10 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3818,7 +3818,7 @@ test("handles changing variables in rapid succession before other request is com
   await wait(50);
 
   expect(observable.options.variables).toEqual({ department: null });
-  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,
@@ -3852,7 +3852,7 @@ test("works with `from`", async () => {
   const observable = from(observableQuery);
   const stream = new ObservableStream(observable);
   const result = await stream.takeNext();
-  expect(result).toEqualStrictTyped({
+  expect(result).toStrictEqualTyped({
     data,
     loading: false,
     networkStatus: NetworkStatus.ready,

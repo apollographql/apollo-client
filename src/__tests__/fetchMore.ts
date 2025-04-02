@@ -625,7 +625,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: { TODO: tasks.slice(2, 4) },
         });
       }
@@ -652,7 +652,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
@@ -716,7 +716,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(2, 4),
           },
@@ -754,7 +754,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
@@ -826,7 +826,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(2, 4),
           },
@@ -855,7 +855,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
@@ -918,7 +918,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(2, 4),
           },
@@ -956,7 +956,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
@@ -1128,7 +1128,7 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
-      expect(fetchMoreResult).toEqualStrictTyped({
+      expect(fetchMoreResult).toStrictEqualTyped({
         data: {
           groceries: additionalGroceries,
         },
@@ -1396,7 +1396,7 @@ describe("fetchMore on an observable query", () => {
       variables,
     });
 
-    expect(fetchMoreResult).toEqualStrictTyped({
+    expect(fetchMoreResult).toStrictEqualTyped({
       data: { emptyItems: [] },
     });
 
@@ -1825,7 +1825,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     }),
   });
 
-  expect(fetchMoreResult).toEqualStrictTyped({
+  expect(fetchMoreResult).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "C", position: 3 },
@@ -1861,7 +1861,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   });
 
   // Ensure we store the merged result as the last result
-  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1882,7 +1882,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
   });
 
-  expect(fetchMoreResult).toEqualStrictTyped({
+  expect(fetchMoreResult).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },
@@ -1917,7 +1917,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },

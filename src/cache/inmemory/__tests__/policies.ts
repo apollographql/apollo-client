@@ -3662,7 +3662,7 @@ describe("type policies", function () {
 
       let result = await client.query({ query: firstQuery });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           todos: {
             __typename: "TodosConnection",
@@ -3693,7 +3693,7 @@ describe("type policies", function () {
         variables: secondVariables,
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           todos: {
             __typename: "TodosConnection",
@@ -3707,7 +3707,7 @@ describe("type policies", function () {
       expect(cache.extract()).toMatchSnapshot();
 
       result = await client.query({ query: thirdQuery });
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           todos: {
             __typename: "TodosConnection",
@@ -4139,7 +4139,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4167,7 +4167,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(5);
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4194,7 +4194,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4228,7 +4228,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(7);
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4263,7 +4263,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             search: {
               edges: turrellEdges.slice(0, 1),
@@ -4323,7 +4323,7 @@ describe("type policies", function () {
           },
         });
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4357,7 +4357,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             search: {
               edges: turrellEdges,

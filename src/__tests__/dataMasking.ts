@@ -3880,7 +3880,7 @@ describe("client.query", () => {
 
     const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors({
         data: { currentUser: null },
@@ -3929,7 +3929,7 @@ describe("client.query", () => {
 
     const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         currentUser: {
           __typename: "User",
@@ -5565,7 +5565,7 @@ describe("client.mutate", () => {
         mutation,
         errorPolicy: "all",
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { updateUser: null },
       error: new CombinedGraphQLErrors({
         data: { updateUser: null },
@@ -5631,7 +5631,7 @@ describe("client.mutate", () => {
         mutation,
         errorPolicy: "all",
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: {
         updateUser: {
           __typename: "User",

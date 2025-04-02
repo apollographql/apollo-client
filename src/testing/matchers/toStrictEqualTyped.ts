@@ -3,13 +3,13 @@ import type { MatcherFunction } from "expect";
 
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 
-export const toEqualStrictTyped: MatcherFunction<[value: any]> = function (
+export const toStrictEqualTyped: MatcherFunction<[value: any]> = function (
   actual,
   expected
 ) {
   const value = actual as Record<string, any>;
   const hint = this.utils.matcherHint(
-    this.isNot ? ".not.toEqualStrictTyped" : "toEqualStrictTyped",
+    this.isNot ? ".not.toStrictEqualTyped" : "toStrictEqualTyped",
     "value",
     "expected",
     { isNot: this.isNot, promise: this.promise }

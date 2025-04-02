@@ -929,7 +929,7 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -968,7 +968,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1072,7 +1072,7 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1112,7 +1112,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1238,7 +1238,7 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           echo: {
             __typename: "Echo",
@@ -1276,7 +1276,7 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           echo: {
             __typename: "Echo",

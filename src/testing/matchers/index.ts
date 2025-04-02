@@ -8,9 +8,9 @@ import { toEmitError } from "./toEmitError.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitStrictTyped } from "./toEmitStrictTyped.js";
-import { toEqualStrictTyped } from "./toEqualStrictTyped.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
+import { toStrictEqualTyped } from "./toStrictEqualTyped.js";
 
 expect.extend({
   toComplete,
@@ -19,9 +19,9 @@ expect.extend({
   toEmitMatchedValue,
   toEmitNext,
   toEmitStrictTyped,
-  toEqualStrictTyped,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,
   toBeGarbageCollected,
+  toStrictEqualTyped,
 });

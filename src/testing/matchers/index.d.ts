@@ -85,7 +85,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     ) => Promise<R>
   : { error: "toEmitStrictTyped needs to be called on an ObservableStream" };
 
-  toEqualStrictTyped: T extends Promise<infer TResult> ?
+  toStrictEqualTyped: T extends Promise<infer TResult> ?
     (expected: FilterUnserializableProperties<TResult>) => R
   : (expected: FilterUnserializableProperties<T>) => R;
 }

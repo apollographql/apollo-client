@@ -25,7 +25,6 @@ function sha256(data: string) {
 }
 
 const defaultCacheSizesAsObject = {
-  parser: defaultCacheSizes["parser"],
   canonicalStringify: defaultCacheSizes["canonicalStringify"],
   print: defaultCacheSizes["print"],
   "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],

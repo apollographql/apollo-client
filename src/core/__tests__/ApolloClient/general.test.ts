@@ -6970,13 +6970,13 @@ describe("ApolloClient", () => {
         hasNext: true,
       });
 
-      await expect(query1).toEmitFetchResult(initialResult);
-      await expect(query2).toEmitFetchResult(initialResult);
+      await expect(query1).toEmitStrictTyped(initialResult);
+      await expect(query2).toEmitStrictTyped(initialResult);
 
       const query3 = new ObservableStream(
         client.watchQuery({ query, fetchPolicy: "network-only" })
       );
-      await expect(query3).toEmitFetchResult(initialResult);
+      await expect(query3).toEmitStrictTyped(initialResult);
       expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
 
       const firstChunk = {
@@ -6995,14 +6995,14 @@ describe("ApolloClient", () => {
 
       defer.enqueueSubsequentChunk(firstChunk);
 
-      await expect(query1).toEmitFetchResult(resultAfterFirstChunk);
-      await expect(query2).toEmitFetchResult(resultAfterFirstChunk);
-      await expect(query3).toEmitFetchResult(resultAfterFirstChunk);
+      await expect(query1).toEmitStrictTyped(resultAfterFirstChunk);
+      await expect(query2).toEmitStrictTyped(resultAfterFirstChunk);
+      await expect(query3).toEmitStrictTyped(resultAfterFirstChunk);
 
       const query4 = new ObservableStream(
         client.watchQuery({ query, fetchPolicy: "network-only" })
       );
-      expect(query4).toEmitFetchResult(resultAfterFirstChunk);
+      expect(query4).toEmitStrictTyped(resultAfterFirstChunk);
       expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
 
       const secondChunk = {
@@ -7021,10 +7021,10 @@ describe("ApolloClient", () => {
 
       defer.enqueueSubsequentChunk(secondChunk);
 
-      await expect(query1).toEmitFetchResult(resultAfterSecondChunk);
-      await expect(query2).toEmitFetchResult(resultAfterSecondChunk);
-      await expect(query3).toEmitFetchResult(resultAfterSecondChunk);
-      await expect(query4).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query1).toEmitStrictTyped(resultAfterSecondChunk);
+      await expect(query2).toEmitStrictTyped(resultAfterSecondChunk);
+      await expect(query3).toEmitStrictTyped(resultAfterSecondChunk);
+      await expect(query4).toEmitStrictTyped(resultAfterSecondChunk);
 
       // TODO: Re-enable once below condition can be met
       /* const query5 = */ new ObservableStream(

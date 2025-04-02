@@ -2,10 +2,10 @@ import React from "react";
 import { of } from "rxjs";
 
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client/core";
+import { InternalQueryReference } from "@apollo/client/react/internal";
 
 import { setupSimpleCase } from "../../../../testing/internal/index.js";
 import {
-  InternalQueryReference,
   PreloadedQueryRef,
   QueryRef,
   QueryReference,

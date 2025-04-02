@@ -12,13 +12,11 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { createHttpLink, HttpLink } from "@apollo/client/link/http";
 import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { ApolloLink } from "../../core/ApolloLink.js";
-import { execute } from "../../core/execute.js";
-import { createHttpLink } from "../createHttpLink.js";
-import { HttpLink } from "../HttpLink.js";
 import { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";

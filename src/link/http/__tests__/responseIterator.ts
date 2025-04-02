@@ -4,11 +4,11 @@ import { TextDecoder } from "util";
 import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
 
+import { execute } from "@apollo/client/link/core";
+import { HttpLink } from "@apollo/client/link/http";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { execute } from "../../core/execute.js";
-import { HttpLink } from "../HttpLink.js";
 
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {

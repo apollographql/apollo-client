@@ -1,13 +1,13 @@
 import assert from "assert";
 
 import {
+  act,
   render,
   renderHook,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
-import { act } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -17,8 +17,7 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import * as React from "react";
-import { Observer } from "rxjs";
-import { Observable } from "rxjs";
+import { Observable, Observer } from "rxjs";
 
 import {
   ApolloClient,
@@ -33,12 +32,11 @@ import {
 } from "@apollo/client/core";
 import { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
+import { useFragment, useQuery } from "@apollo/client/react/hooks";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { useFragment } from "../useFragment.js";
-import { useQuery } from "../useQuery.js";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

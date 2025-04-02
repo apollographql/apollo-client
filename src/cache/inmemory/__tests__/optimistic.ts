@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache.js";
+import { InMemoryCache } from "@apollo/client/cache";
 
 describe("optimistic cache layers", () => {
   it("return === results for repeated reads", () => {

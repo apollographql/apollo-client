@@ -1,6 +1,7 @@
 import { gql } from "graphql-tag";
 
-import { execute } from "../../../../link/core/execute.js";
+import { execute } from "@apollo/client/link/core";
+
 import {
   enableFakeTimers,
   ObservableStream,

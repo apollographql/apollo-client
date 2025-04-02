@@ -5,9 +5,8 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { ApolloProvider } from "@apollo/client/react/context";
+import { useApolloClient } from "@apollo/client/react/hooks";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { useApolloClient } from "../useApolloClient.js";
 
 describe("useApolloClient Hook", () => {
   it("should return a client instance from the context if available", () => {

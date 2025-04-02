@@ -1,7 +1,7 @@
 import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation.js";
-import { selectURI } from "../selectURI.js";
+import { selectURI } from "@apollo/client/link/http";
+import { createOperation } from "@apollo/client/link/utils";
 
 const query = gql`
   query SampleQuery {

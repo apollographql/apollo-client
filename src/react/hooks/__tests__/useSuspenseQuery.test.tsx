@@ -37,6 +37,7 @@ import {
 import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
 import { skipToken } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
+import { useSuspenseQuery } from "@apollo/client/react/hooks";
 import {
   MockedResponse,
   MockLink,
@@ -65,7 +66,6 @@ import {
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import { useSuspenseQuery } from "../useSuspenseQuery.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

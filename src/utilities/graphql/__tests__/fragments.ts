@@ -1,16 +1,16 @@
 import { print } from "graphql";
-import { gql } from "graphql-tag";
-import { disableFragmentWarnings } from "graphql-tag";
+import { disableFragmentWarnings, gql } from "graphql-tag";
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
 import {
   createFragmentMap,
-  FragmentMap,
+  getFragmentDefinitions,
   getFragmentQueryDocument,
-} from "../fragments.js";
-import { getFragmentDefinitions } from "../getFromAST.js";
+} from "@apollo/client/utilities";
+
+import { FragmentMap } from "../fragments.js";
 
 describe("getFragmentQueryDocument", () => {
   it("will throw an error if there is an operation", () => {

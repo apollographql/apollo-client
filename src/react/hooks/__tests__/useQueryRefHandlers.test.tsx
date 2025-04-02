@@ -5,8 +5,7 @@ import {
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
-import React from "react";
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 
 import {
   ApolloClient,
@@ -16,6 +15,13 @@ import {
   split,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { createQueryPreloader } from "@apollo/client/react";
+import {
+  useBackgroundQuery,
+  useLoadableQuery,
+  useQueryRefHandlers,
+  useReadQuery,
+} from "@apollo/client/react/hooks";
 import { QueryRef } from "@apollo/client/react/internal";
 import {
   MockedResponse,
@@ -35,11 +41,6 @@ import {
   setupSimpleCase,
   SimpleCaseData,
 } from "../../../testing/internal/index.js";
-import { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
-import { useBackgroundQuery } from "../useBackgroundQuery.js";
-import { useLoadableQuery } from "../useLoadableQuery.js";
-import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
-import { useReadQuery } from "../useReadQuery.js";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

@@ -27,7 +27,7 @@ const config = {
     .concat([
       "src/cache/inmemory/fixPolyfills.native.ts",
       "src/react/types/types.documentation.ts",
-      "eslint-local-rules/index.js",
+      "eslint-local-rules/index.mjs",
     ]),
   project: [
     "src/**/*.ts{,x}",

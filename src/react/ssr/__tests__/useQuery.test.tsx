@@ -8,8 +8,8 @@ import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
 import {
-  renderToStringWithData,
   prerenderStatic,
+  renderToStringWithData,
 } from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";

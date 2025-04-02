@@ -3,11 +3,11 @@ import {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLError,
+  GraphQLFormattedError,
   Kind,
   print,
   visit,
 } from "graphql";
-import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 import { Observable, of, Subscription } from "rxjs";

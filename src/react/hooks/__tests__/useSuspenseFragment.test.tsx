@@ -21,12 +21,12 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
+import { useSuspenseFragment } from "@apollo/client/react/hooks";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
-import { useSuspenseFragment } from "../useSuspenseFragment.js";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({

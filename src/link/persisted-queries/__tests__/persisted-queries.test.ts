@@ -7,6 +7,7 @@ import { times } from "lodash";
 import { firstValueFrom, Observable } from "rxjs";
 
 import { ApolloLink, execute } from "@apollo/client/link/core";
+import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
@@ -14,7 +15,6 @@ import {
 import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { createHttpLink } from "../../http/createHttpLink.js";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint

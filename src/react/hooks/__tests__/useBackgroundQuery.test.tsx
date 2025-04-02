@@ -29,6 +29,11 @@ import {
 } from "@apollo/client/core";
 import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
+import {
+  skipToken,
+  useBackgroundQuery,
+  useReadQuery,
+} from "@apollo/client/react/hooks";
 import { QueryRef, QueryReference } from "@apollo/client/react/internal";
 import {
   MockedResponse,
@@ -68,9 +73,6 @@ import {
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
-import { skipToken } from "../constants.js";
-import { useBackgroundQuery } from "../useBackgroundQuery.js";
-import { useReadQuery } from "../useReadQuery.js";
 
 afterEach(() => {
   jest.useRealTimers();

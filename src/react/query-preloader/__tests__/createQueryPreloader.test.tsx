@@ -22,6 +22,7 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { Masked } from "@apollo/client/masking";
+import { createQueryPreloader } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useReadQuery } from "@apollo/client/react/hooks";
 import {
@@ -50,7 +51,6 @@ import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
 } from "../../../testing/internal/scenarios/index.js";
-import { createQueryPreloader } from "../createQueryPreloader.js";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

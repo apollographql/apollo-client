@@ -1,4 +1,4 @@
-import { checkFetcher } from "../checkFetcher.js";
+import { checkFetcher } from "@apollo/client/link/http";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
 

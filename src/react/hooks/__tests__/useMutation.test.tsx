@@ -1,5 +1,10 @@
-import { act } from "@testing-library/react";
-import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -28,6 +33,7 @@ import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { FetchResult } from "@apollo/client/link/core";
 import { Masked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
+import { useMutation, useQuery } from "@apollo/client/react/hooks";
 import {
   MockedResponse,
   MockLink,
@@ -38,8 +44,6 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { useMutation } from "../useMutation.js";
-import { useQuery } from "../useQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

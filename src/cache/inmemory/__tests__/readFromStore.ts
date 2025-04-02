@@ -1,6 +1,7 @@
 import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
+import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
 import {
   isReference,
   makeReference,
@@ -10,8 +11,6 @@ import {
 import { defaultCacheSizes } from "@apollo/client/utilities";
 
 import { Cache } from "../../core/types/Cache.js";
-import { MissingFieldError } from "../../core/types/common.js";
-import { InMemoryCache } from "../inMemoryCache.js";
 import { StoreReader } from "../readFromStore.js";
 import { StoreObject } from "../types.js";
 

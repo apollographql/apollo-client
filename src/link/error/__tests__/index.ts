@@ -6,6 +6,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
 } from "@apollo/client/errors";
+import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 
 import {
@@ -13,8 +14,6 @@ import {
   mockMultipartSubscriptionStream,
   ObservableStream,
 } from "../../../testing/internal/index.js";
-import { ApolloLink } from "../../core/ApolloLink.js";
-import { execute } from "../../core/execute.js";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {

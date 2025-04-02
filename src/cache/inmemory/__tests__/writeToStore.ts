@@ -9,6 +9,7 @@ import {
 import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
+import { InMemoryCache } from "@apollo/client/cache";
 import { TypedDocumentNode } from "@apollo/client/core";
 import {
   addTypenameToDocument,
@@ -24,7 +25,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import { extractFragmentContext } from "../helpers.js";
-import { InMemoryCache } from "../inMemoryCache.js";
 import { KeyFieldsFunction } from "../policies.js";
 import { StoreWriter } from "../writeToStore.js";
 

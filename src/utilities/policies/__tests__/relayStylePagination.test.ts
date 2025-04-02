@@ -5,8 +5,9 @@ import {
   makeReference,
   StoreObject,
 } from "@apollo/client/cache";
+import { relayStylePagination } from "@apollo/client/utilities";
 
-import { relayStylePagination, TRelayPageInfo } from "../pagination.js";
+import { TRelayPageInfo } from "../pagination.js";
 
 describe("relayStylePagination", () => {
   const policy = relayStylePagination();

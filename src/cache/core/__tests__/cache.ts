@@ -1,11 +1,10 @@
 import { expectTypeOf } from "expect-type";
 import { gql } from "graphql-tag";
 
-import { Cache, DataProxy } from "@apollo/client/cache";
+import { ApolloCache, Cache, DataProxy } from "@apollo/client/cache";
 import { OperationVariables, Unmasked } from "@apollo/client/core";
 
 import { Reference } from "../../../utilities/graphql/storeUtils.js";
-import { ApolloCache } from "../cache.js";
 
 class TestCache extends ApolloCache {
   constructor() {

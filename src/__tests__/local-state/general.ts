@@ -3,6 +3,7 @@ import {
   getIntrospectionQuery,
   graphql,
   GraphQLError,
+  GraphQLFormattedError,
   GraphQLID,
   GraphQLInt,
   GraphQLObjectType,
@@ -10,15 +11,13 @@ import {
   GraphQLString,
   print,
 } from "graphql";
-import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { defer, Observable, of } from "rxjs";
 
 import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { ApolloLink } from "@apollo/client/link/core";
-import { Operation } from "@apollo/client/link/core";
+import { ApolloLink, Operation } from "@apollo/client/link/core";
 
 import {
   ObservableStream,

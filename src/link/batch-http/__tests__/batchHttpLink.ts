@@ -3,12 +3,10 @@ import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import { map, Observable, Observer, Subscription } from "rxjs";
 
-import { FetchResult } from "@apollo/client/link/core";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
+import { ApolloLink, execute, FetchResult } from "@apollo/client/link/core";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { ApolloLink } from "../../core/ApolloLink.js";
-import { execute } from "../../core/execute.js";
-import { BatchHttpLink } from "../batchHttpLink.js";
 
 const sampleQuery = gql`
   query SampleQuery {

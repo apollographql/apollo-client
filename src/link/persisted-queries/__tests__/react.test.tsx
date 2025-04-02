@@ -7,7 +7,9 @@ import { gql } from "graphql-tag";
 import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
-import { OperationVariables } from "@apollo/client/core";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { ApolloClient, OperationVariables } from "@apollo/client/core";
+import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
@@ -16,10 +18,6 @@ import { useQuery } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { getDataFromTree } from "@apollo/client/react/ssr";
 import { addTypenameToDocument } from "@apollo/client/utilities";
-
-import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
-import { ApolloClient } from "../../../core/ApolloClient.js";
-import { createHttpLink } from "../../http/createHttpLink.js";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

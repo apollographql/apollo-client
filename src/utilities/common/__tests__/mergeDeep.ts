@@ -1,4 +1,8 @@
-import { DeepMerger, mergeDeep, mergeDeepArray } from "../mergeDeep.js";
+import {
+  DeepMerger,
+  mergeDeep,
+  mergeDeepArray,
+} from "@apollo/client/utilities";
 
 describe("mergeDeep", function () {
   it("should return an object if first argument falsy", function () {

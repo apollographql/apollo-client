@@ -1,7 +1,6 @@
+import { EntityStore, InMemoryCache } from "@apollo/client/cache";
 import { Cache } from "@apollo/client/core";
 
-import { EntityStore } from "../entityStore.js";
-import { InMemoryCache } from "../inMemoryCache.js";
 import { StoreReader } from "../readFromStore.js";
 import {
   DiffQueryAgainstStoreOptions,

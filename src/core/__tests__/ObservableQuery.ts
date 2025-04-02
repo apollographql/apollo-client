@@ -3,8 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { from, Observable, ObservedValueOf, of, Subject } from "rxjs";
-import { Observer } from "rxjs";
+import { from, Observable, ObservedValueOf, Observer, of, Subject } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {

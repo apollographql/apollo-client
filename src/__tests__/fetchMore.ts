@@ -55,8 +55,11 @@ describe("updateQuery on a simple query", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 1 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     observable.updateQuery((prevResult: any) => {
@@ -65,8 +68,11 @@ describe("updateQuery on a simple query", () => {
       return res;
     });
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 2 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 2 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });
@@ -117,8 +123,11 @@ describe("updateQuery on a query with required and optional variables", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 1 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     observable.updateQuery((prevResult: any) => {
@@ -127,8 +136,11 @@ describe("updateQuery on a query with required and optional variables", () => {
       return res;
     });
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 2 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 2 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });

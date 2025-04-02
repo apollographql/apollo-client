@@ -912,8 +912,7 @@ describe("nextFetchPolicy", () => {
     observable,
     stream,
   }) => {
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitTypedValue({
       data: {
         echo: {
           __typename: "Echo",
@@ -922,6 +921,9 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1056,8 +1058,7 @@ describe("nextFetchPolicy", () => {
     observable,
     stream,
   }) => {
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitTypedValue({
       data: {
         echo: {
           __typename: "Echo",
@@ -1066,6 +1067,9 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1222,8 +1226,7 @@ describe("nextFetchPolicy", () => {
     observable,
     stream,
   }) => {
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitTypedValue({
       data: {
         echo: {
           __typename: "Echo",
@@ -1232,6 +1235,9 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 

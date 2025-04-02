@@ -1215,7 +1215,12 @@ describe("ApolloClient", () => {
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
 
-          await expect(stream).toEmitMatchedValue({ data });
+          await expect(stream).toEmitTypedValue({
+            data,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
           expect(observable.getCurrentResult().data).toEqual(data);
 
           const readData = client.readQuery<Data>({ query });
@@ -1245,7 +1250,12 @@ describe("ApolloClient", () => {
             },
           };
 
-          await expect(stream).toEmitMatchedValue({ data: expectation });
+          await expect(stream).toEmitTypedValue({
+            data: expectation,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
           expect(client.readQuery<Data>({ query })).toEqual(expectation);
         });
 
@@ -1254,7 +1264,12 @@ describe("ApolloClient", () => {
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
 
-          await expect(stream).toEmitMatchedValue({ data });
+          await expect(stream).toEmitTypedValue({
+            data,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
 
           expect(observable.getCurrentResult().data).toEqual(data);
 

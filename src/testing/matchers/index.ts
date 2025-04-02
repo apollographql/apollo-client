@@ -5,7 +5,6 @@ import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
 import { toComplete } from "./toComplete.js";
 import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
-import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitTypedValue } from "./toEmitTypedValue.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
@@ -16,7 +15,6 @@ expect.extend({
   toComplete,
   toEmitAnything,
   toEmitError,
-  toEmitMatchedValue,
   toEmitNext,
   toEmitTypedValue,
   toBeDisposed,

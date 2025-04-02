@@ -926,7 +926,12 @@ describe("client", () => {
     const handle = client.watchQuery({ query });
     const stream = new ObservableStream(handle);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitTypedValue({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("should be able to transform queries", async () => {
@@ -1864,8 +1869,18 @@ describe("client", () => {
 
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: initialData });
-      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: networkFetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1886,9 +1901,11 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: networkFetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1982,7 +1999,12 @@ describe("client", () => {
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
@@ -2011,7 +2033,12 @@ describe("client", () => {
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
@@ -2022,7 +2049,12 @@ describe("client", () => {
         void obs.reobserve({ query, fetchPolicy: "cache-first" });
       }, 10);
 
-      await expect(stream).toEmitMatchedValue({ data: data2 });
+      await expect(stream).toEmitTypedValue({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       await expect(stream).not.toEmitAnything();
     });
 
@@ -2506,7 +2538,12 @@ describe("client", () => {
     await client.resetStore();
     expect(count).toBe(2);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitTypedValue({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
     await expect(stream).toEmitNext();
 
     expect(onResetStoreOne).toHaveBeenCalled();
@@ -3561,8 +3598,18 @@ describe("@connection", () => {
 
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: initialData });
-      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: networkFetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       await expect(stream).not.toEmitAnything();
     });
 
@@ -3625,7 +3672,12 @@ describe("@connection", () => {
       const obs = client.watchQuery({ query });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "initial" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(1);
 
       // Refetching makes a copy of the current options, which
@@ -3633,7 +3685,12 @@ describe("@connection", () => {
       // nextFetchPolicy function ends up getting called twice.
       void obs.refetch();
 
-      await expect(stream).toEmitMatchedValue({ data: { count: 0 } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: 0 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(2);
 
       client.writeQuery({
@@ -3643,12 +3700,22 @@ describe("@connection", () => {
         },
       });
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "secondary" } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "secondary" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(3);
 
       client.cache.evict({ fieldName: "count" });
 
-      await expect(stream).toEmitMatchedValue({ data: { count: 1 } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: 1 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(4);
       expect(obs.options.fetchPolicy).toBe("cache-first");
 
@@ -3698,9 +3765,11 @@ describe("@connection", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(fetchPolicyRecord).toEqual(["cache-first"]);
 
@@ -3715,9 +3784,11 @@ describe("@connection", () => {
 
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
@@ -3738,14 +3809,18 @@ describe("@connection", () => {
         "cache-and-network",
       ]);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: true,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
       });
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 3 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(fetchPolicyRecord).toEqual([

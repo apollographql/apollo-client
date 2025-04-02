@@ -126,26 +126,28 @@ export const importFromInsideOtherExport = ESLintUtils.RuleCreator.withoutDocs({
     const currentFileEntrypoint = findNearestEntryPointFolder(
       context.physicalFilename
     );
+    function rule(node: AST.ImportDeclaration | AST.ExportNamedDeclaration) {
+      if (!node.source || !node.source.value.startsWith(".")) {
+        return;
+      }
+      const resolvedTarget = resolve(
+        dirname(context.physicalFilename),
+        node.source.value
+      );
+      if (context.options[0].ignoreFrom.includes(resolvedTarget)) {
+        return;
+      }
+      const importEntrypoint = findNearestEntryPointFolder(resolvedTarget);
+      if (currentFileEntrypoint !== importEntrypoint) {
+        context.report({
+          node: node.source,
+          messageId: "importFromInsideOtherExport",
+        });
+      }
+    }
     return {
-      ImportDeclaration(node) {
-        if (!node.source.value.startsWith(".")) {
-          return;
-        }
-        const resolvedTarget = resolve(
-          dirname(context.physicalFilename),
-          node.source.value
-        );
-        if (context.options[0].ignoreFrom.includes(resolvedTarget)) {
-          return;
-        }
-        const importEntrypoint = findNearestEntryPointFolder(resolvedTarget);
-        if (currentFileEntrypoint !== importEntrypoint) {
-          context.report({
-            node: node.source,
-            messageId: "importFromInsideOtherExport",
-          });
-        }
-      },
+      ImportDeclaration: rule,
+      ExportNamedDeclaration: rule,
     };
   },
   meta: {

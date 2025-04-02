@@ -4,7 +4,6 @@ import { toBeDisposed } from "./toBeDisposed.js";
 import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
 import { toComplete } from "./toComplete.js";
 import { toEmitAnything } from "./toEmitAnything.js";
-import { toEmitApolloQueryResult } from "./toEmitApolloQueryResult.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
@@ -15,7 +14,6 @@ import { toMatchDocument } from "./toMatchDocument.js";
 
 expect.extend({
   toComplete,
-  toEmitApolloQueryResult,
   toEmitAnything,
   toEmitError,
   toEmitMatchedValue,

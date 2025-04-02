@@ -416,7 +416,7 @@ describe("Cache manipulation", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         serverData,
         selectedItemId: -1,
@@ -432,7 +432,7 @@ describe("Cache manipulation", () => {
       refetchQueries: ["FetchInitialData"],
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         serverData,
         selectedItemId: 123,
@@ -1177,7 +1177,7 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: { user: null },

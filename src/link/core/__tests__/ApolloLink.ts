@@ -61,7 +61,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
       await expect(stream).toComplete();
     });
 
@@ -84,7 +84,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
       await expect(stream).toComplete();
     });
   });
@@ -99,7 +99,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 1 } });
       await expect(stream).toComplete();
     });
 
@@ -114,7 +114,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 1 } });
       await expect(stream).toComplete();
     });
 
@@ -134,7 +134,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 1 } });
       await expect(stream).toEmitError(error);
     });
 
@@ -152,7 +152,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
       await expect(stream).toComplete();
     });
 
@@ -175,7 +175,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
       await expect(stream).toComplete();
     });
 
@@ -194,7 +194,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
       await expect(stream).toComplete();
     });
 
@@ -216,7 +216,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
       await expect(stream).toComplete();
     });
 
@@ -241,7 +241,7 @@ describe("ApolloClient", () => {
           execute(link.concat(mock2), { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 5 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 5 } });
         await expect(stream).toComplete();
       }
 
@@ -250,7 +250,7 @@ describe("ApolloClient", () => {
           execute(link.concat(mock3), { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 6 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 6 } });
         await expect(stream).toComplete();
       }
     });
@@ -440,7 +440,7 @@ describe("ApolloClient", () => {
       const observable = ApolloLink.execute(chain, uniqueOperation);
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped(data);
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
 
@@ -506,7 +506,7 @@ describe("ApolloClient", () => {
       const observable = ApolloLink.execute(chain, uniqueOperation);
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped(data);
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
 
@@ -543,7 +543,7 @@ describe("ApolloClient", () => {
       const result = ApolloLink.execute(chain, uniqueOperation);
       const stream = new ObservableStream(result);
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         data: {
           ...data.data,
           modification: "unique",
@@ -579,7 +579,7 @@ describe("ApolloClient", () => {
         execute(link, { query: sampleQuery, context: { num: 0 } })
       );
 
-      await expect(stream).toEmitStrictTyped({ data: { num: 5 } });
+      await expect(stream).toEmitTypedValue({ data: { num: 5 } });
       await expect(stream).toComplete();
     });
   });
@@ -605,7 +605,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
 
@@ -616,7 +616,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 4 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 4 } });
         await expect(stream).toComplete();
       }
     });
@@ -645,7 +645,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
 
@@ -656,7 +656,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 4 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 4 } });
         await expect(stream).toComplete();
       }
     });
@@ -683,7 +683,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
 
@@ -694,7 +694,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 4 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 4 } });
         await expect(stream).toComplete();
       }
     });
@@ -727,7 +727,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
 
@@ -738,7 +738,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 3 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 3 } });
         await expect(stream).toComplete();
       }
     });
@@ -768,7 +768,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
 
@@ -787,7 +787,7 @@ describe("ApolloClient", () => {
           execute(concat, { query: sampleQuery })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
     });
@@ -805,7 +805,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
 
@@ -834,7 +834,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
 
@@ -845,7 +845,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
     });
@@ -864,7 +864,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
 
@@ -875,7 +875,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
     });
@@ -894,7 +894,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
 
@@ -905,7 +905,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
     });
@@ -927,7 +927,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
 
@@ -937,7 +937,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
     });
@@ -954,7 +954,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 2 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 2 } });
         await expect(stream).toComplete();
       }
 
@@ -965,7 +965,7 @@ describe("ApolloClient", () => {
           execute(link, { query: sampleQuery, context })
         );
 
-        await expect(stream).toEmitStrictTyped({ data: { count: 1 } });
+        await expect(stream).toEmitTypedValue({ data: { count: 1 } });
         await expect(stream).toComplete();
       }
     });

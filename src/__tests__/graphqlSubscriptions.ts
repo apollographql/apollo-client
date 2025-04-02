@@ -62,7 +62,7 @@ describe("GraphQL Subscriptions", () => {
     const stream = new ObservableStream(client.subscribe(defaultOptions));
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitStrictTyped(results[0].result);
+    await expect(stream).toEmitTypedValue(results[0].result);
 
     stream.unsubscribe();
   });
@@ -79,7 +79,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitStrictTyped(results[0].result);
+    await expect(stream).toEmitTypedValue(results[0].result);
 
     stream.unsubscribe();
   });
@@ -97,8 +97,8 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream1).toEmitStrictTyped(results[0].result);
-    await expect(stream2).toEmitStrictTyped(results[0].result);
+    await expect(stream1).toEmitTypedValue(results[0].result);
+    await expect(stream2).toEmitTypedValue(results[0].result);
   });
 
   it("should receive multiple results for a subscription", async () => {
@@ -114,10 +114,10 @@ describe("GraphQL Subscriptions", () => {
       link.simulateResult(results[i]);
     }
 
-    await expect(stream).toEmitStrictTyped(results[0].result);
-    await expect(stream).toEmitStrictTyped(results[1].result);
-    await expect(stream).toEmitStrictTyped(results[2].result);
-    await expect(stream).toEmitStrictTyped(results[3].result);
+    await expect(stream).toEmitTypedValue(results[0].result);
+    await expect(stream).toEmitTypedValue(results[1].result);
+    await expect(stream).toEmitTypedValue(results[2].result);
+    await expect(stream).toEmitTypedValue(results[3].result);
     await expect(stream).not.toEmitAnything();
   });
 
@@ -168,7 +168,7 @@ describe("GraphQL Subscriptions", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: null,
@@ -216,7 +216,7 @@ describe("GraphQL Subscriptions", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: null,
@@ -237,7 +237,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitStrictTyped({ data: results[0].result.data });
+    await expect(stream).toEmitTypedValue({ data: results[0].result.data });
   });
 
   it("emits a result with error if the result has network errors", async () => {
@@ -252,7 +252,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult({ error: new Error("Oops") });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new Error("Oops"),
     });
@@ -291,7 +291,7 @@ describe("GraphQL Subscriptions", () => {
       true
     );
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: null,
@@ -314,7 +314,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult({ error: new Error("Oops") });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new Error("Oops"),
     });
@@ -356,7 +356,7 @@ describe("GraphQL Subscriptions", () => {
       },
     ]);
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedProtocolErrors([
         {
@@ -493,7 +493,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitStrictTyped(results[0].result);
+    await expect(stream).toEmitTypedValue(results[0].result);
 
     expect(link.operation?.getContext().someVar).toEqual(
       options.context.someVar
@@ -524,7 +524,7 @@ describe("GraphQL Subscriptions", () => {
       },
     ]);
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedProtocolErrors([
         {

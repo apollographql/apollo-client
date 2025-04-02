@@ -39,7 +39,7 @@ describe("RetryLink", () => {
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitStrictTyped(data);
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
     expect(stub).toHaveBeenCalledTimes(1);
@@ -57,7 +57,7 @@ describe("RetryLink", () => {
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitStrictTyped(data);
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
     expect(stub).toHaveBeenCalledTimes(2);
@@ -249,7 +249,7 @@ describe("RetryLink", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         aNewDieWasCreated: { die: { color: "blue", roll: 2, sides: 6 } },
       },

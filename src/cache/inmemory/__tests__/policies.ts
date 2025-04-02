@@ -4120,7 +4120,7 @@ describe("type policies", function () {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {

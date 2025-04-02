@@ -69,7 +69,7 @@ describe("Basic resolver capabilities", () => {
 
     const stream = setupTestWithResolvers({ resolvers, query });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -112,7 +112,7 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true } } },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true },
         bar: { baz: true },
@@ -163,7 +163,7 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, __typename: "ClientData" },
         bar: { baz: true, __typename: "Bar" },
@@ -225,7 +225,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
@@ -262,7 +262,7 @@ describe("Basic resolver capabilities", () => {
       variables: { id: 1 },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -296,7 +296,7 @@ describe("Basic resolver capabilities", () => {
       queryOptions: { context: { id: 1 } },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -354,7 +354,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         author: {
           __typename: "Author",
@@ -556,7 +556,7 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { __typename: "Foo", bar: true },
         bar: { __typename: "Bar", baz: true },

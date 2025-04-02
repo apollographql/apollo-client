@@ -605,7 +605,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -630,7 +630,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -659,7 +659,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -696,7 +696,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -723,7 +723,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -732,7 +732,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -761,7 +761,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -770,7 +770,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -806,7 +806,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -833,7 +833,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -862,7 +862,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -898,7 +898,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -925,7 +925,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -934,7 +934,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -963,7 +963,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -972,7 +972,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -1109,7 +1109,7 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1140,7 +1140,7 @@ describe("fetchMore on an observable query", () => {
     // This result comes entirely from the cache, without updating the
     // original variables for the ObservableQuery, because the
     // offsetLimitPagination field policy has keyArgs:false.
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1383,7 +1383,7 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1400,7 +1400,7 @@ describe("fetchMore on an observable query", () => {
       data: { emptyItems: [] },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       data: {
@@ -1409,7 +1409,7 @@ describe("fetchMore on an observable query", () => {
       partial: false,
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1799,14 +1799,14 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   // this one didn't. This is a temporary fix to get the test to pass.
   //
   // This will be normalized with the work to change notifyOnNetworkStatusChange.
-  await expect(stream).toEmitStrictTyped({
+  await expect(stream).toEmitTypedValue({
     data: undefined,
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
   });
 
-  await expect(stream).toEmitStrictTyped({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1834,7 +1834,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
   });
 
-  await expect(stream).toEmitStrictTyped({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1846,7 +1846,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  await expect(stream).toEmitStrictTyped({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1891,7 +1891,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
   });
 
-  await expect(stream).toEmitStrictTyped({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1905,7 +1905,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  await expect(stream).toEmitStrictTyped({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },

@@ -971,7 +971,7 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentUser: {
           __typename: "User",
@@ -4404,7 +4404,7 @@ describe("client.subscribe", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: { addedComment: null },
@@ -4451,7 +4451,7 @@ describe("client.subscribe", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { addedComment: null },
       error: new CombinedGraphQLErrors({
         data: { addedComment: null },
@@ -4503,7 +4503,7 @@ describe("client.subscribe", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { addedComment: { __typename: "Comment", id: 1 } },
       error: new CombinedGraphQLErrors({
         data: {

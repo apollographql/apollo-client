@@ -3,19 +3,18 @@ import type {
   DefaultContext,
   OperationVariables,
 } from "@apollo/client/core";
-import type {
-  useBackgroundQuery,
-  useFragment,
-  useLazyQuery,
-  useLoadableQuery,
-  useMutation,
-  useQuery,
-  useQueryRefHandlers,
-  useReadQuery,
-  useSubscription,
-  useSuspenseFragment,
-  useSuspenseQuery,
-} from "@apollo/client/react/hooks";
+
+import type { useBackgroundQuery } from "../hooks/useBackgroundQuery.js";
+import type { useFragment } from "../hooks/useFragment.js";
+import type { useLazyQuery } from "../hooks/useLazyQuery.js";
+import type { useLoadableQuery } from "../hooks/useLoadableQuery.js";
+import type { useMutation } from "../hooks/useMutation.js";
+import type { useQuery } from "../hooks/useQuery.js";
+import type { useQueryRefHandlers } from "../hooks/useQueryRefHandlers.js";
+import type { useReadQuery } from "../hooks/useReadQuery.js";
+import type { useSubscription } from "../hooks/useSubscription.js";
+import type { useSuspenseFragment } from "../hooks/useSuspenseFragment.js";
+import type { useSuspenseQuery } from "../hooks/useSuspenseQuery.js";
 
 /** @deprecated Use `useQuery.Options` instead */
 export type QueryHookOptions<

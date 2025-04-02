@@ -91,6 +91,8 @@ export {
   isSubscriptionOperation,
 } from "./graphql/operations.js";
 
+export { verifyDocumentType } from "./graphql/verifyDocumentType.js";
+
 export {
   concatPagination,
   offsetLimitPagination,

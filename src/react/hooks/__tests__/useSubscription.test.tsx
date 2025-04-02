@@ -17,8 +17,8 @@ import {
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useSubscription } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useSubscription } from "@apollo/client/react";
 import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
 import { mockMultipartSubscriptionStream } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";

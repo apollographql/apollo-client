@@ -9,7 +9,7 @@ import type {
   ObservableQuery,
   OperationVariables,
 } from "@apollo/client/core";
-import { getApolloContext } from "@apollo/client/react/context";
+import { getApolloContext } from "@apollo/client/react";
 import { wrapperSymbol } from "@apollo/client/react/internal";
 import { canonicalStringify } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";

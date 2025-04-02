@@ -1,3 +1,4 @@
+import { OperationTypeNode } from "graphql";
 import * as React from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
@@ -24,8 +25,8 @@ import type {
   RefetchFunction,
 } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
+import { verifyDocumentType } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -343,7 +344,7 @@ function useSuspenseQuery_<
 function validateOptions(options: WatchQueryOptions) {
   const { query, fetchPolicy, returnPartialData } = options;
 
-  verifyDocumentType(query, DocumentType.Query);
+  verifyDocumentType(query, OperationTypeNode.QUERY);
   validateFetchPolicy(fetchPolicy);
   validatePartialDataReturn(fetchPolicy, returnPartialData);
 }

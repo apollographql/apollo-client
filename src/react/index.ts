@@ -1,34 +1,23 @@
-export type { ApolloContextValue } from "@apollo/client/react/context";
-export {
-  ApolloConsumer,
-  ApolloProvider,
-  getApolloContext,
-} from "@apollo/client/react/context";
+export type { ApolloContextValue } from "./context/ApolloContext.js";
+export { ApolloConsumer } from "./context/ApolloConsumer.js";
+export { getApolloContext } from "./context/ApolloContext.js";
+export { ApolloProvider } from "./context/ApolloProvider.js";
 
-export type { SkipToken } from "@apollo/client/react/hooks";
-export {
-  skipToken,
-  useApolloClient,
-  useBackgroundQuery,
-  useFragment,
-  useLazyQuery,
-  useLoadableQuery,
-  useMutation,
-  useQuery,
-  useQueryRefHandlers,
-  useReactiveVar,
-  useReadQuery,
-  useSubscription,
-  useSuspenseFragment,
-  useSuspenseQuery,
-} from "@apollo/client/react/hooks";
-
-export type { IDocumentDefinition } from "@apollo/client/react/parser";
-export {
-  DocumentType,
-  operationName,
-  parser,
-} from "@apollo/client/react/parser";
+export { useApolloClient } from "./hooks/useApolloClient.js";
+export { useLazyQuery } from "./hooks/useLazyQuery.js";
+export { useMutation } from "./hooks/useMutation.js";
+export { useQuery } from "./hooks/useQuery.js";
+export { useSubscription } from "./hooks/useSubscription.js";
+export { useReactiveVar } from "./hooks/useReactiveVar.js";
+export { useFragment } from "./hooks/useFragment.js";
+export { useSuspenseQuery } from "./hooks/useSuspenseQuery.js";
+export { useBackgroundQuery } from "./hooks/useBackgroundQuery.js";
+export { useSuspenseFragment } from "./hooks/useSuspenseFragment.js";
+export { useLoadableQuery } from "./hooks/useLoadableQuery.js";
+export { useQueryRefHandlers } from "./hooks/useQueryRefHandlers.js";
+export { useReadQuery } from "./hooks/useReadQuery.js";
+export { skipToken } from "./hooks/constants.js";
+export type { SkipToken } from "./hooks/constants.js";
 
 export type {
   PreloadQueryFetchPolicy,

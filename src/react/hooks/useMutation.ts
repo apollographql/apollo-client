@@ -1,12 +1,13 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
-import type { DocumentNode } from "graphql";
+import { OperationTypeNode } from "graphql";
 import * as React from "react";
 
 import type {
   ApolloCache,
   ApolloClient,
   DefaultContext,
+  DocumentNode,
   ErrorLike,
   ErrorPolicy,
   FetchResult,
@@ -21,9 +22,9 @@ import type {
   OperationVariables,
   Unmasked,
 } from "@apollo/client/core";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
+import { verifyDocumentType } from "@apollo/client/utilities";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";
 
@@ -205,7 +206,7 @@ export function useMutation<
   >
 ): useMutation.ResultTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
-  verifyDocumentType(mutation, DocumentType.Mutation);
+  verifyDocumentType(mutation, OperationTypeNode.MUTATION);
   const [result, setResult] = React.useState<
     Omit<useMutation.Result<TData>, "reset">
   >(() => createInitialResult(client));

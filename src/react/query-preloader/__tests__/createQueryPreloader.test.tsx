@@ -25,8 +25,8 @@ import {
 } from "@apollo/client/core";
 import type { Masked } from "@apollo/client/masking";
 import { createQueryPreloader } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useReadQuery } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useReadQuery } from "@apollo/client/react";
 import type {
   PreloadedQueryRef,
   QueryRef,

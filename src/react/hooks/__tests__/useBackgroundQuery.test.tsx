@@ -25,12 +25,12 @@ import {
   split,
 } from "@apollo/client/core";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import {
   skipToken,
   useBackgroundQuery,
   useReadQuery,
-} from "@apollo/client/react/hooks";
+} from "@apollo/client/react";
 import type { QueryRef, QueryReference } from "@apollo/client/react/internal";
 import type { MockedResponse } from "@apollo/client/testing";
 import {

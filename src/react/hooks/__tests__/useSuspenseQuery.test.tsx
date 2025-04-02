@@ -38,8 +38,8 @@ import type {
   Unmasked,
 } from "@apollo/client/masking";
 import { skipToken } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useSuspenseQuery } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useSuspenseQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {

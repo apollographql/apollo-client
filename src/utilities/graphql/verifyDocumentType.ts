@@ -4,6 +4,7 @@ import type {
   OperationDefinitionNode,
   VariableDefinitionNode,
 } from "graphql";
+import { OperationTypeNode } from "graphql";
 
 import {
   AutoCleanedWeakCache,
@@ -21,7 +22,7 @@ export enum DocumentType {
 }
 
 export interface IDocumentDefinition {
-  type: DocumentType;
+  type: OperationTypeNode;
   name: string;
   variables: ReadonlyArray<VariableDefinitionNode>;
 }
@@ -32,29 +33,13 @@ let cache:
       DocumentNode,
       {
         name: string;
-        type: DocumentType;
+        type: OperationTypeNode;
         variables: readonly VariableDefinitionNode[];
       }
     >;
 
-export function operationName(type: DocumentType) {
-  let name;
-  switch (type) {
-    case DocumentType.Query:
-      name = "Query";
-      break;
-    case DocumentType.Mutation:
-      name = "Mutation";
-      break;
-    case DocumentType.Subscription:
-      name = "Subscription";
-      break;
-  }
-  return name;
-}
-
 // This parser is mostly used to safety check incoming documents.
-export function parser(document: DocumentNode): IDocumentDefinition {
+function parser(document: DocumentNode): IDocumentDefinition {
   if (!cache) {
     cache = new AutoCleanedWeakCache(
       cacheSizes.parser || defaultCacheSizes.parser
@@ -120,8 +105,10 @@ export function parser(document: DocumentNode): IDocumentDefinition {
     mutations.length
   );
 
-  type = queries.length ? DocumentType.Query : DocumentType.Mutation;
-  if (!queries.length && !mutations.length) type = DocumentType.Subscription;
+  type =
+    queries.length ? OperationTypeNode.QUERY
+    : mutations.length ? OperationTypeNode.MUTATION
+    : OperationTypeNode.SUBSCRIPTION;
 
   const definitions =
     queries.length ? queries
@@ -159,15 +146,16 @@ if (__DEV__) {
   registerGlobalCache("parser", () => (cache ? cache.size : 0));
 }
 
-export function verifyDocumentType(document: DocumentNode, type: DocumentType) {
+export function verifyDocumentType(
+  document: DocumentNode,
+  type: OperationTypeNode
+) {
   const operation = parser(document);
-  const requiredOperationName = operationName(type);
-  const usedOperationName = operationName(operation.type);
   invariant(
     operation.type === type,
     `Running a %s requires a graphql ` + `%s, but a %s was used instead.`,
-    requiredOperationName,
-    requiredOperationName,
-    usedOperationName
+    type,
+    type,
+    operation.type
   );
 }

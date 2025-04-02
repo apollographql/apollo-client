@@ -4,7 +4,7 @@ import React, { useContext } from "react";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react";
 
 import type { ApolloContextValue } from "../ApolloContext.js";
 import type { ApolloProviderProps } from "../ApolloProvider.js";

@@ -33,12 +33,8 @@ import {
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
-import {
-  useLazyQuery,
-  useMutation,
-  useQuery,
-} from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
 import {
   MockLink,

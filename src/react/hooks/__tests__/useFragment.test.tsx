@@ -34,8 +34,8 @@ import {
   InMemoryCache,
 } from "@apollo/client/core";
 import type { FragmentType } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useFragment, useQuery } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useFragment, useQuery } from "@apollo/client/react";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";

@@ -53,10 +53,7 @@
       "react-server": "./src/react/index.react-server.ts",
       "default": "./src/react/index.ts"
     },
-    "./react/context": "./src/react/context/index.ts",
-    "./react/hooks": "./src/react/hooks/index.ts",
     "./react/internal": "./src/react/internal/index.ts",
-    "./react/parser": "./src/react/parser/index.ts",
     "./react/ssr": "./src/react/ssr/index.ts",
     "./testing": "./src/testing/index.ts",
     "./testing/core": "./src/testing/core/index.ts",

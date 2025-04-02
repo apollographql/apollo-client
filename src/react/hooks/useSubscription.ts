@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
+import { OperationTypeNode } from "graphql";
 import * as React from "react";
 import { Observable } from "rxjs";
 
@@ -14,8 +15,8 @@ import type {
   SubscribeResult,
 } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
+import { verifyDocumentType } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -185,7 +186,7 @@ export function useSubscription<
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
 ): useSubscription.Result<TData> {
   const client = useApolloClient(options.client);
-  verifyDocumentType(subscription, DocumentType.Subscription);
+  verifyDocumentType(subscription, OperationTypeNode.SUBSCRIPTION);
 
   const {
     skip,

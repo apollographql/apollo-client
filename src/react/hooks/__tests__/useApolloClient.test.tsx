@@ -4,8 +4,8 @@ import React from "react";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useApolloClient } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useApolloClient } from "@apollo/client/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("useApolloClient Hook", () => {

@@ -36,6 +36,7 @@ jobs:
       - checkout
       - run: npm version
       - run: npm ci
+      - run: npm run build
       - run: npm run lint
 
   Formatting:

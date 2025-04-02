@@ -5,8 +5,6 @@ import { $ } from "zx";
 
 import pkgJson from "../package.json" with { type: "json" };
 
-$.shell = "/bin/sh";
-
 const entryPoints = Object.fromEntries(
   Object.entries(pkgJson.exports).flatMap(function map(
     this: any,

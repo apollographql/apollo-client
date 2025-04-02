@@ -24,7 +24,11 @@ export {
 } from "@apollo/client/react/hooks";
 
 export type { IDocumentDefinition } from "@apollo/client/react/parser";
-export { DocumentType, operationName, parser } from "@apollo/client/react/parser";
+export {
+  DocumentType,
+  operationName,
+  parser,
+} from "@apollo/client/react/parser";
 
 export type {
   PreloadQueryFetchPolicy,

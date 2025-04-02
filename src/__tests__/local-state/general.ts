@@ -318,9 +318,19 @@ describe("Cache manipulation", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitMatchedValue({ data: { field: 0 } });
+    await expect(stream).toEmitTypedValue({
+      data: { field: 0 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
     await client.mutate({ mutation });
-    await expect(stream).toEmitMatchedValue({ data: { field: 1 } });
+    await expect(stream).toEmitTypedValue({
+      data: { field: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("should support writing to the cache with a local mutation using variables", () => {
@@ -617,20 +627,29 @@ describe("Sample apps", () => {
     client.addResolvers(resolvers);
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: { count: 0, lastCount: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await client.mutate({ mutation: increment, variables: { amount: 2 } });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: { count: 2, lastCount: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await client.mutate({ mutation: decrement, variables: { amount: 1 } });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: { count: 1, lastCount: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -856,7 +875,7 @@ describe("Combining client and server state/operations", () => {
             },
           },
           resolve: (_, { id }) => {
-            return peopleData;
+            return peopleData.find((p) => p.id === id);
           },
         },
       },
@@ -885,12 +904,27 @@ describe("Combining client and server state/operations", () => {
     const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ loading: false });
+    await expect(stream).toEmitTypedValue({
+      data: { people: { __typename: "Person", id: "1", name: "John Smith" } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     await observable.refetch({ id: 2 });
 
-    await expect(stream).toEmitMatchedValue({ loading: true });
-    await expect(stream).toEmitMatchedValue({ loading: false });
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { people: { __typename: "Person", id: "2", name: "Sara Smith" } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("should correctly propagate an error from a client resolver", async () => {
@@ -975,8 +1009,11 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: { count: 0, lastCount: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1028,7 +1065,7 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         user: {
           firstName: "John",
@@ -1036,6 +1073,9 @@ describe("Combining client and server state/operations", () => {
           __typename: "User",
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1116,11 +1156,14 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         count: 0,
         user: { __typename: "User", firstName: "John" },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await client.mutate<any>({
@@ -1135,11 +1178,14 @@ describe("Combining client and server state/operations", () => {
       },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         count: 1,
         user: { __typename: "User", firstName: "Harry" },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 

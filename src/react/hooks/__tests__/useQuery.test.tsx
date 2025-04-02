@@ -4961,7 +4961,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -4987,7 +4987,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5015,7 +5015,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -5055,7 +5055,7 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5078,7 +5078,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5118,7 +5118,7 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5250,7 +5250,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5276,7 +5276,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5304,7 +5304,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -5332,7 +5332,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: {
           person: {
             __typename: "Person",
@@ -5366,7 +5366,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: {
           person: {
             __typename: "Person",
@@ -5505,7 +5505,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5531,7 +5531,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5559,7 +5559,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -5584,7 +5584,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
         data: {
           person: {
             __typename: "Person",

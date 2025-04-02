@@ -24,7 +24,6 @@ import type {
 } from "@apollo/client/core";
 import type { NoInfer } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
-import { verifyDocumentType } from "@apollo/client/utilities";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";
 
@@ -206,7 +205,6 @@ export function useMutation<
   >
 ): useMutation.ResultTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
-  verifyDocumentType(mutation, OperationTypeNode.MUTATION);
   const [result, setResult] = React.useState<
     Omit<useMutation.Result<TData>, "reset">
   >(() => createInitialResult(client));

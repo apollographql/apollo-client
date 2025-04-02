@@ -26,7 +26,6 @@ import type {
 } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
-import { verifyDocumentType } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -342,9 +341,8 @@ function useSuspenseQuery_<
 }
 
 function validateOptions(options: WatchQueryOptions) {
-  const { query, fetchPolicy, returnPartialData } = options;
+  const { fetchPolicy, returnPartialData } = options;
 
-  verifyDocumentType(query, OperationTypeNode.QUERY);
   validateFetchPolicy(fetchPolicy);
   validatePartialDataReturn(fetchPolicy, returnPartialData);
 }

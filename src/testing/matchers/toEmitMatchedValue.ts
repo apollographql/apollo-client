@@ -5,7 +5,8 @@ import {
 } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
 
-import type { ObservableStream } from "../internal/index.js";
+import type { ObservableStream } from "@apollo/client/testing/internal";
+
 import type { TakeOptions } from "../internal/ObservableStream.js";
 
 export const toEmitMatchedValue: MatcherFunction<

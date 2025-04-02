@@ -4,17 +4,18 @@ import React from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client/core";
+import { ApolloClient } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
 import {
   prerenderStatic,
   renderToStringWithData,
 } from "@apollo/client/react/ssr";
-import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
+import type { MockedResponse } from "@apollo/client/testing";
+import { mockSingleLink } from "@apollo/client/testing";
+import { resetApolloContext } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-
-import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
 
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like

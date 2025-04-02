@@ -5,27 +5,26 @@ import {
   makeVar,
   MissingFieldError,
 } from "@apollo/client/cache";
-import {
-  ApolloClient,
+import type {
   DocumentNode,
-  NetworkStatus,
   OperationVariables,
   Reference,
   StoreObject,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { MockLink } from "@apollo/client/testing/core";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import {
   relayStylePagination,
   stringifyForDisplay,
 } from "@apollo/client/utilities";
 
-import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
-import { FieldPolicy, StorageType } from "../policies.js";
-import { ReactiveVar } from "../reactiveVars.js";
+import type { FieldPolicy, StorageType } from "../policies.js";
+import type { ReactiveVar } from "../reactiveVars.js";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

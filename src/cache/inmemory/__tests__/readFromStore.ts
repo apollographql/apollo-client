@@ -2,17 +2,15 @@ import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
 import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
-import {
-  isReference,
-  makeReference,
-  Reference,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { Reference, TypedDocumentNode } from "@apollo/client/core";
+import { isReference, makeReference } from "@apollo/client/core";
 import { defaultCacheSizes } from "@apollo/client/utilities";
 
-import { Cache } from "../../core/types/Cache.js";
+import type { Cache } from "../../core/types/Cache.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";
-import { StoreObject } from "../types.js";
+import type { StoreObject } from "../types.js";
 
 import {
   defaultNormalizedCacheFactory,

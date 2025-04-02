@@ -1,9 +1,8 @@
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import {
-  DocumentNode,
   getIntrospectionQuery,
   graphql,
   GraphQLError,
-  GraphQLFormattedError,
   GraphQLID,
   GraphQLInt,
   GraphQLObjectType,
@@ -12,17 +11,19 @@ import {
   print,
 } from "graphql";
 import { gql } from "graphql-tag";
-import { defer, Observable, of } from "rxjs";
+import type { Observable } from "rxjs";
+import { defer, of } from "rxjs";
 
-import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
+import type { ApolloCache } from "@apollo/client/cache";
+import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { ApolloLink, Operation } from "@apollo/client/link/core";
-
+import type { Operation } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 import {
   ObservableStream,
   spyOnConsole,
-} from "../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {

@@ -2,6 +2,8 @@
 import { render, waitFor } from "@testing-library/react";
 import * as React from "react";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { useRenderGuard } from "../useRenderGuard.js";
 
 const UNDEF = {};

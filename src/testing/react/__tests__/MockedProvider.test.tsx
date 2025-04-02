@@ -1,15 +1,16 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
-import { DocumentNode } from "graphql";
+import type { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 import { useQuery } from "@apollo/client/react";
-import { MockedResponse, MockLink } from "@apollo/client/testing/core";
-
-import { MockedProvider } from "../MockedProvider.js";
+import type { MockedResponse } from "@apollo/client/testing/core";
+import { MockLink } from "@apollo/client/testing/core";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 const variables = {
   username: "mock_username",

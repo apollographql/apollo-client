@@ -1,14 +1,13 @@
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import "../../../testing/internal/messageChannelPolyfill.js";
-import { DocumentNode } from "graphql";
+import type { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  CombinedGraphQLErrors,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client/core";
+import { ApolloClient, CombinedGraphQLErrors } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
 import { getDataFromTree } from "@apollo/client/react/ssr";

@@ -1,3 +1,5 @@
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { buildDelayFunction } from "../delayFunction.js";
 
 describe("buildDelayFunction", () => {

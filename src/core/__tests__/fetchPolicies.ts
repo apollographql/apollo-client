@@ -1,22 +1,19 @@
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { gql } from "graphql-tag";
 import { map, Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  NetworkStatus,
-  ObservableQuery,
-} from "@apollo/client/core";
+import type { ObservableQuery } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { mockSingleLink } from "@apollo/client/testing";
-
 import {
   ObservableStream,
   spyOnConsole,
-} from "../../testing/internal/index.js";
-import { ApolloQueryResult } from "../types.js";
-import {
+} from "@apollo/client/testing/internal";
+
+import type { ApolloQueryResult } from "../types.js";
+import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../watchQueryOptions.js";

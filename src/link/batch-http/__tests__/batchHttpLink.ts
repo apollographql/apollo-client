@@ -1,12 +1,14 @@
 import fetchMock from "fetch-mock";
-import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import type { ASTNode } from "graphql";
+import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
-import { map, Observable, Observer, Subscription } from "rxjs";
+import type { Observer, Subscription } from "rxjs";
+import { map, Observable } from "rxjs";
 
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import { ApolloLink, execute, FetchResult } from "@apollo/client/link/core";
-
-import { ObservableStream } from "../../../testing/internal/index.js";
+import type { FetchResult } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {

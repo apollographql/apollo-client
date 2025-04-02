@@ -19,31 +19,32 @@ import React, { useEffect } from "react";
 import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  ApolloLink,
+import type {
   Cache,
-  CombinedGraphQLErrors,
-  NetworkStatus,
   ObservableQuery,
   QueryResult,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+} from "@apollo/client/core";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import { FetchResult } from "@apollo/client/link/core";
-import { Masked } from "@apollo/client/masking";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useMutation, useQuery } from "@apollo/client/react/hooks";
+import type { MockedResponse } from "@apollo/client/testing";
 import {
-  MockedResponse,
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
 } from "@apollo/client/testing";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import { spyOnConsole } from "../../../testing/internal/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

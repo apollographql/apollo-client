@@ -1,23 +1,25 @@
 import { TextDecoder } from "util";
 
 import fetchMock from "fetch-mock";
-import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import type { ASTNode } from "graphql";
+import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
-import { map, Observable, Observer, Subscription } from "rxjs";
+import type { Observer, Subscription } from "rxjs";
+import { map, Observable } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
-import { FetchResult, ServerError } from "@apollo/client";
+import type { FetchResult, ServerError } from "@apollo/client";
+import type { ServerParseError } from "@apollo/client/errors";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
-  ServerParseError,
 } from "@apollo/client/errors";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { createHttpLink, HttpLink } from "@apollo/client/link/http";
 import { wait } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
-import { ObservableStream } from "../../../testing/internal/index.js";
-import { ClientParseError } from "../serializeFetchParameter.js";
+import type { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
 

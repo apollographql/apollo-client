@@ -1,4 +1,6 @@
 /* eslint-disable testing-library/render-result-naming-convention */
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import "../../../testing/internal/messageChannelPolyfill.js";
 
 import "./polyfillReactDomTypes.d.ts";
@@ -11,12 +13,12 @@ import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { prerender } from "react-dom/static";
 import { prerenderToNodeStream } from "react-dom/static.node";
 
+import type { TypedDocumentNode } from "@apollo/client/core";
 import {
   ApolloClient,
   ApolloLink,
   gql,
   InMemoryCache,
-  TypedDocumentNode,
 } from "@apollo/client/core";
 import {
   ApolloProvider,
@@ -25,15 +27,10 @@ import {
   useSuspenseQuery,
 } from "@apollo/client/react";
 import { prerenderStatic } from "@apollo/client/react/ssr";
-import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-  wait,
-} from "@apollo/client/testing";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { resetApolloContext } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
 
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like

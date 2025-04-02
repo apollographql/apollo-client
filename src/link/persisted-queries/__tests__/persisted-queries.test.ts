@@ -13,8 +13,7 @@ import {
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import { wait } from "@apollo/client/testing";
-
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint

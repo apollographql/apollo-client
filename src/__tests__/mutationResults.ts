@@ -1,15 +1,21 @@
-import { GraphQLError, GraphQLFormattedError } from "graphql";
+import type { GraphQLFormattedError } from "graphql";
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
-import { firstValueFrom, from, Observable, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { firstValueFrom, from, Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, FetchResult } from "@apollo/client/core";
+import type { FetchResult } from "@apollo/client/core";
+import { ApolloClient } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
-import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
-
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+import type { MockedResponse } from "@apollo/client/testing";
+import { mockSingleLink } from "@apollo/client/testing";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 describe("mutation results", () => {
   const query = gql`

@@ -1,7 +1,8 @@
-import { ExecutionResult, GraphQLError } from "graphql";
+import type { ExecutionResult } from "graphql";
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { Client } from "graphql-ws";
-import { Observable } from "rxjs";
+import type { Client } from "graphql-ws";
+import type { Observable } from "rxjs";
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { execute } from "@apollo/client/link/core";

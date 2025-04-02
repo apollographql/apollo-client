@@ -1,20 +1,21 @@
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { from, Observable, ObservedValueOf, Observer, of, Subject } from "rxjs";
+import type { ObservedValueOf, Observer } from "rxjs";
+import { from, Observable, of, Subject } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import {
-  ApolloClient,
+import type {
   ApolloQueryResult,
-  NetworkStatus,
   ObservableQuery,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 import {
   MockLink,
   MockSubscriptionLink,
@@ -22,17 +23,16 @@ import {
   wait,
 } from "@apollo/client/testing";
 import {
-  DeepPartial,
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
+import {
   DocumentTransform,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 
-import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../testing/internal/index.js";
-import type { ObservableAndInfo } from "../QueryManager.js";
-import { QueryManager } from "../QueryManager.js";
+import type { ObservableAndInfo, QueryManager } from "../QueryManager.js";
 
 export const mockFetchQuery = (queryManager: QueryManager) => {
   const mocks = {

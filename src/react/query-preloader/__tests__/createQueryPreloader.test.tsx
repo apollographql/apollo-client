@@ -11,6 +11,10 @@ import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
+import type {
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client/core";
 import {
   ApolloClient,
   ApolloLink,
@@ -18,39 +22,32 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-  OperationVariables,
-  TypedDocumentNode,
 } from "@apollo/client/core";
-import { Masked } from "@apollo/client/masking";
+import type { Masked } from "@apollo/client/masking";
 import { createQueryPreloader } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useReadQuery } from "@apollo/client/react/hooks";
-import {
+import type {
   PreloadedQueryRef,
   QueryRef,
-  unwrapQueryRef,
 } from "@apollo/client/react/internal";
-import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-  wait,
-} from "@apollo/client/testing";
-import { DeepPartial } from "@apollo/client/utilities";
-
+import { unwrapQueryRef } from "@apollo/client/react/internal";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
+import type {
+  MaskedVariablesCaseData,
+  SimpleCaseData,
+  VariablesCaseData,
+} from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
   renderHookAsync,
+  setupMaskedVariablesCase,
   setupSimpleCase,
   setupVariablesCase,
-  SimpleCaseData,
   spyOnConsole,
-  VariablesCaseData,
-} from "../../../testing/internal/index.js";
-import {
-  MaskedVariablesCaseData,
-  setupMaskedVariablesCase,
-} from "../../../testing/internal/scenarios/index.js";
+} from "@apollo/client/testing/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

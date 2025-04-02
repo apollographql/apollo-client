@@ -1,11 +1,15 @@
-import { DocumentNode } from "graphql";
+import type { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 
 import { EntityStore, InMemoryCache } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
-import { spyOnConsole } from "../../../testing/internal/index.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreReader } from "../readFromStore.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { StoreWriter } from "../writeToStore.js";
 
 import { readQueryFromStore, withError, writeQueryToStore } from "./helpers.js";

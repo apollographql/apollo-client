@@ -11,47 +11,52 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
-import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import React, { Fragment, ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, Observable, observeOn, of } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  CombinedGraphQLErrors,
+import type {
   FetchPolicy,
-  NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+} from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { Unmasked } from "@apollo/client/masking";
+import type { Unmasked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import {
   useLazyQuery,
   useMutation,
   useQuery,
 } from "@apollo/client/react/hooks";
+import type { MockedResponse } from "@apollo/client/testing";
 import {
-  MockedResponse,
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
   tick,
   wait,
 } from "@apollo/client/testing";
-import { MockedProvider } from "@apollo/client/testing/react";
-import { concatPagination, Reference } from "@apollo/client/utilities";
-import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
 import {
   setupPaginatedCase,
   spyOnConsole,
-} from "../../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+import type { Reference } from "@apollo/client/utilities";
+import { concatPagination } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import type { QueryManager } from "../../../core/QueryManager.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -7384,14 +7389,19 @@ describe("useQuery Hook", () => {
         link,
       });
 
-      const mocks = mockFetchQuery(client["queryManager"]);
+      const fetchQueryByPolicy = jest.spyOn(
+        client["queryManager"] as any as {
+          fetchQueryByPolicy: QueryManager["fetchQueryByPolicy"];
+        },
+        "fetchQueryByPolicy"
+      );
 
       const expectQueryTriggered = (
         nth: number,
         fetchPolicy: WatchQueryFetchPolicy
       ) => {
-        expect(mocks.fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
-        expect(mocks.fetchQueryByPolicy).toHaveBeenNthCalledWith(
+        expect(fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
+        expect(fetchQueryByPolicy).toHaveBeenNthCalledWith(
           nth,
           expect.anything(),
           expect.objectContaining({ fetchPolicy }),

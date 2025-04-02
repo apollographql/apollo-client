@@ -265,3 +265,60 @@ export const noInternalImportOfficialExport =
     },
     defaultOptions: [],
   });
+
+/**
+ * to be used in tests, so the test imports from the library instead of testing internals
+ * (where possible)
+ */
+export const noRelativeImports = ESLintUtils.RuleCreator.withoutDocs({
+  create(context, options) {
+    return {
+      ImportDeclaration(node) {
+        if (!node.source.value.startsWith("..")) {
+          // we're only interested in imports from parent folders outside of the test folder
+          return;
+        }
+        if (node.importKind === "type") {
+          // we're okay with internal types for now, although in most cases
+          // they should probably be exports if they are important enough
+          // that we need them for a test
+          return;
+        }
+        const resolvedTarget = resolve(
+          dirname(context.physicalFilename),
+          node.source.value
+        );
+        if (options[0].ignoreFrom.includes(resolvedTarget)) {
+          return;
+        }
+        context.report({
+          node: node.source,
+          messageId: "noRelativeImports",
+        });
+      },
+    };
+  },
+  meta: {
+    messages: {
+      noRelativeImports:
+        "Don't use relative imports in tests, import from official entry points instead.",
+    },
+    type: "problem",
+    schema: [
+      {
+        type: "object",
+        properties: {
+          ignoreFrom: {
+            type: "array",
+            items: { type: "string" },
+          },
+        },
+      },
+    ],
+  },
+  defaultOptions: [
+    {
+      ignoreFrom: [],
+    },
+  ],
+});

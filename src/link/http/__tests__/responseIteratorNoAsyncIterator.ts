@@ -5,8 +5,7 @@ import { ReadableStream } from "web-streams-polyfill";
 
 import { execute } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
-
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {

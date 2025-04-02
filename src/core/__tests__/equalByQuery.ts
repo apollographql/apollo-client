@@ -1,11 +1,10 @@
 import { GraphQLError } from "graphql";
 
-import {
-  CombinedGraphQLErrors,
-  gql,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client/core";
+import { CombinedGraphQLErrors, gql } from "@apollo/client/core";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { equalByQuery } from "../equalByQuery.js";
 
 describe("equalByQuery", () => {

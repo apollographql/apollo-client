@@ -1,4 +1,5 @@
-import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import type { ASTNode, print } from "graphql";
+import { stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 
 import {

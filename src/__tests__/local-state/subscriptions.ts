@@ -4,8 +4,7 @@ import { of } from "rxjs";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-
-import { ObservableStream } from "../../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("Basic functionality", () => {
   it("should not break subscriptions", async () => {

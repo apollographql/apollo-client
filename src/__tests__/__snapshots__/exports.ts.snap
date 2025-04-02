@@ -390,6 +390,29 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/testing/internal 1`] = `
+Array [
+  "ObservableStream",
+  "actAsync",
+  "addDelayToMocks",
+  "createClientWrapper",
+  "createMockWrapper",
+  "enableFakeTimers",
+  "mockDeferStream",
+  "mockMultipartSubscriptionStream",
+  "renderAsync",
+  "renderHookAsync",
+  "resetApolloContext",
+  "setupMaskedVariablesCase",
+  "setupPaginatedCase",
+  "setupSimpleCase",
+  "setupVariablesCase",
+  "spyOnConsole",
+  "withCleanup",
+  "withProdMode",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/testing/react 1`] = `
 Array [
   "MockedProvider",

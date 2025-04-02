@@ -5,11 +5,10 @@ import { of } from "rxjs";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-
 import {
   ObservableStream,
   spyOnConsole,
-} from "../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
 
 describe("@client @export tests", () => {
   it("should not break @client only queries when the @export directive is used", async () => {

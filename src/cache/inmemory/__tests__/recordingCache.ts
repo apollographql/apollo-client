@@ -1,6 +1,6 @@
 import { EntityStore, InMemoryCache, Policies } from "@apollo/client/cache";
 
-import { NormalizedCacheObject, StoreObject } from "../types.js";
+import type { NormalizedCacheObject, StoreObject } from "../types.js";
 
 describe("Optimistic EntityStore layering", () => {
   function makeLayer(root: EntityStore) {

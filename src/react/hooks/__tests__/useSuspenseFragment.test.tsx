@@ -9,24 +9,21 @@ import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import React, { Suspense } from "react";
 
-import {
-  ApolloClient,
+import type {
   FragmentType,
-  gql,
-  InMemoryCache,
   Masked,
   MaskedDocumentNode,
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useSuspenseFragment } from "@apollo/client/react/hooks";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({

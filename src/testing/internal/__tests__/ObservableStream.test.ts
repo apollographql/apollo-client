@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 
-import { ObservableStream } from "../ObservableStream.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 it("allows to step through an observable until completion", async () => {
   const stream = new ObservableStream(

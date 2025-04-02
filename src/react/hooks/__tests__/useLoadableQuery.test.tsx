@@ -1,9 +1,11 @@
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
-import {
+import type {
   AsyncRenderFn,
+  RenderStream,
+} from "@testing-library/react-render-stream";
+import {
   createRenderStream,
   disableActEnvironment,
-  RenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
@@ -14,49 +16,48 @@ import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
+import type {
+  ErrorPolicy,
+  OperationVariables,
+  RefetchWritePolicy,
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
 import {
   ApolloClient,
   ApolloLink,
   CombinedGraphQLErrors,
-  ErrorPolicy,
   gql,
   NetworkStatus,
-  OperationVariables,
-  RefetchWritePolicy,
   split,
-  SubscribeToMoreOptions,
-  TypedDocumentNode,
 } from "@apollo/client/core";
-import { QueryRef } from "@apollo/client/react";
+import type { QueryRef } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useLoadableQuery, useReadQuery } from "@apollo/client/react/hooks";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
+import type { SimpleCaseData } from "@apollo/client/testing/internal";
 import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-  wait,
-} from "@apollo/client/testing";
-import {
-  MockedProvider,
-  MockedProviderProps,
-} from "@apollo/client/testing/react";
+  renderAsync,
+  setupPaginatedCase,
+  setupSimpleCase,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import type { MockedProviderProps } from "@apollo/client/testing/react";
+import { MockedProvider } from "@apollo/client/testing/react";
+import type { DeepPartial } from "@apollo/client/utilities";
 import {
   concatPagination,
-  DeepPartial,
   getMainDefinition,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
-import {
-  renderAsync,
-  setupPaginatedCase,
-  setupSimpleCase,
-  SimpleCaseData,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
-import { FetchMoreFunction, RefetchFunction } from "../../internal/types.js";
+import type { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
+import type {
+  FetchMoreFunction,
+  RefetchFunction,
+} from "../../internal/types.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

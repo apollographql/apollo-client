@@ -72,6 +72,7 @@ export default [
       },
     },
 
+    // rules for the whole repo
     rules: {
       "import/no-unresolved": "error",
       "import/order": [
@@ -107,6 +108,14 @@ export default [
         },
       ],
       "local-rules/no-duplicate-exports": "error",
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          prefer: "type-imports",
+          disallowTypeAnnotations: false,
+          fixStyle: "separate-type-imports",
+        },
+      ],
     },
   },
   ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
@@ -138,17 +147,9 @@ export default [
       },
     },
 
+    // rules for source files, but no tests
     rules: {
       "react-compiler/react-compiler": "error",
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          disallowTypeAnnotations: false,
-          fixStyle: "separate-type-imports",
-        },
-      ],
-
       "@typescript-eslint/consistent-type-exports": ["error"],
       "@typescript-eslint/no-import-type-side-effects": "error",
 
@@ -215,6 +216,7 @@ export default [
       },
     },
 
+    // rules for tests only
     rules: {
       "testing-library/prefer-user-event": "error",
       "testing-library/no-wait-for-multiple-assertions": "off",
@@ -224,6 +226,7 @@ export default [
       "local-rules/import-from-inside-other-export": "off",
       "local-rules/no-internal-import-official-export":
         runExtendedRules ? "error" : "off",
+      "local-rules/no-relative-imports": "error",
       "import/no-duplicates": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
     },

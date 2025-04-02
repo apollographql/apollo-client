@@ -1,19 +1,17 @@
-import { DocumentNode, ExecutionResult } from "graphql";
+import type { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
 import { InMemoryCache, isReference } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  NetworkStatus,
-  QueryResult,
-  Resolvers,
-} from "@apollo/client/core";
+import type { QueryResult, Resolvers } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
 import { LocalState } from "../../core/LocalState.js";
-import { ObservableStream } from "../../testing/internal/index.js";
 
 const setupTestWithResolvers = ({
   resolvers,

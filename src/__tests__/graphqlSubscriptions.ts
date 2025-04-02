@@ -7,12 +7,11 @@ import {
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
 import { MockSubscriptionLink } from "@apollo/client/testing";
-
 import {
   mockMultipartSubscriptionStream,
   ObservableStream,
   spyOnConsole,
-} from "../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
 
 describe("GraphQL Subscriptions", () => {
   const results = [

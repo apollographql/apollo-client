@@ -1,4 +1,3 @@
-import { OperationTypeNode } from "graphql";
 import * as React from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";

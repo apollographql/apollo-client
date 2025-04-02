@@ -103,9 +103,6 @@ import type {
 
 const { hasOwnProperty } = Object.prototype;
 
-// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
-type OperationTypeNode = any;
-
 const IGNORE = {} as IgnoreModifier;
 
 interface MutationStoreValue {

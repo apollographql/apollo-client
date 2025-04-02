@@ -1,8 +1,4 @@
-import type {
-  DefinitionNode,
-  DocumentNode,
-  VariableDefinitionNode,
-} from "graphql";
+import type { DefinitionNode, DocumentNode } from "graphql";
 import { OperationTypeNode } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";

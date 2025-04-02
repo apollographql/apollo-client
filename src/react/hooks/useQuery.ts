@@ -12,7 +12,6 @@
  */
 /** */
 import { equal } from "@wry/equality";
-import { OperationTypeNode } from "graphql";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 

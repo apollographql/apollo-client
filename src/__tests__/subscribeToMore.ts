@@ -91,7 +91,7 @@ describe("subscribeToMore", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
@@ -100,7 +100,7 @@ describe("subscribeToMore", () => {
 
     wSLink.simulateResult(results[0]);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
@@ -110,7 +110,7 @@ describe("subscribeToMore", () => {
     await wait(10);
     wSLink.simulateResult(results[1]);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
@@ -151,14 +151,14 @@ describe("subscribeToMore", () => {
       wSLink.simulateResult(result);
     }
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
@@ -203,7 +203,7 @@ describe("subscribeToMore", () => {
       wSLink.simulateResult(result);
     }
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
@@ -290,14 +290,14 @@ describe("subscribeToMore", () => {
       // note: we don't complete mutation with performTransaction because a real example would detect duplicates
     }
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: [{ value: "1" }, { value: "2" }] },
       loading: false,
       networkStatus: 7,
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: {
         entry: [{ value: "1" }, { value: "2" }, { value: "Dahivat Pandya" }],
       },
@@ -306,7 +306,7 @@ describe("subscribeToMore", () => {
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: {
         entry: [
           { value: "1" },
@@ -369,7 +369,7 @@ describe("subscribeToMore", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
@@ -378,7 +378,7 @@ describe("subscribeToMore", () => {
 
     wSLink.simulateResult(results[0]);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
@@ -388,7 +388,7 @@ describe("subscribeToMore", () => {
     await wait(10);
     wSLink.simulateResult(results[1]);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,

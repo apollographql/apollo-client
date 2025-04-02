@@ -971,7 +971,7 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: {
         currentUser: {
           __typename: "User",

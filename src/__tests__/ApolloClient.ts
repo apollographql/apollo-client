@@ -2112,7 +2112,7 @@ describe("ApolloClient", () => {
           notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2148,7 +2148,7 @@ describe("ApolloClient", () => {
           notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2183,13 +2183,13 @@ describe("ApolloClient", () => {
         const stream = new ObservableStream(observable);
         // not really part of this test case but I decided to leave it here to highlight this
         // in the case of a network request, `no-cache` emits a `loading` state while `network-only` etc. do not?
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitStrictTyped({
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
           data: undefined,
         });
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,

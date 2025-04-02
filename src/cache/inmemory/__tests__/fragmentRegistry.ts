@@ -100,7 +100,7 @@ describe("FragmentRegistry", () => {
       client.watchQuery({ query, fetchPolicy: "cache-and-network" })
     );
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {
@@ -110,7 +110,7 @@ describe("FragmentRegistry", () => {
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {

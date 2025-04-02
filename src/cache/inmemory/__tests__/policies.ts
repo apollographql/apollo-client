@@ -4120,7 +4120,7 @@ describe("type policies", function () {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitStrictTyped({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {

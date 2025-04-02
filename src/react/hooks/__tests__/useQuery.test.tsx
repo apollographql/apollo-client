@@ -3550,7 +3550,6 @@ describe("useQuery Hook", () => {
       }> = ({ breed = "airedale" }) => {
         const { data, refetch, networkStatus } = useQuery(GET_DOG_DETAILS, {
           variables: { breed },
-          notifyOnNetworkStatusChange: true,
         });
         if (networkStatus === 1) return <p>Loading!</p>;
         return (
@@ -3938,10 +3937,7 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-          { wrapper }
-        );
+        await renderHookToSnapshotStream(() => useQuery(query), { wrapper });
 
       {
         const result = await takeSnapshot();
@@ -4042,10 +4038,7 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-          { wrapper }
-        );
+        await renderHookToSnapshotStream(() => useQuery(query), { wrapper });
 
       {
         const result = await takeSnapshot();
@@ -4560,7 +4553,6 @@ describe("useQuery Hook", () => {
         await renderHookToSnapshotStream(
           () =>
             useQuery(query, {
-              notifyOnNetworkStatusChange: true,
               fetchPolicy: "no-cache",
               variables: { limit: 2 },
             }),
@@ -6074,11 +6066,7 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
-          () =>
-            useQuery(query, {
-              variables: { id: 1 },
-              notifyOnNetworkStatusChange: true,
-            }),
+          () => useQuery(query, { variables: { id: 1 } }),
           { wrapper }
         );
       {
@@ -6159,19 +6147,13 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () =>
-            useQuery(query, {
-              notifyOnNetworkStatusChange: true,
-            }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks} cache={cache}>
-                {children}
-              </MockedProvider>
-            ),
-          }
-        );
+        await renderHookToSnapshotStream(() => useQuery(query), {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        });
 
       {
         const result = await takeSnapshot();
@@ -6318,7 +6300,6 @@ describe("useQuery Hook", () => {
             () =>
               useQuery(query, {
                 variables: { min: 0, max: 12 },
-                notifyOnNetworkStatusChange: true,
                 // This is the key line in this test.
                 refetchWritePolicy: "overwrite",
               }),
@@ -6422,7 +6403,6 @@ describe("useQuery Hook", () => {
             () =>
               useQuery(query, {
                 variables: { min: 0, max: 12 },
-                notifyOnNetworkStatusChange: true,
                 // This is the key line in this test.
                 refetchWritePolicy: "merge",
               }),
@@ -6527,7 +6507,6 @@ describe("useQuery Hook", () => {
             () =>
               useQuery(query, {
                 variables: { min: 0, max: 12 },
-                notifyOnNetworkStatusChange: true,
                 // Intentionally not passing refetchWritePolicy.
               }),
             { wrapper }
@@ -6667,7 +6646,6 @@ describe("useQuery Hook", () => {
         ({ id }) =>
           useQuery(CAR_QUERY_BY_ID, {
             variables: { id },
-            notifyOnNetworkStatusChange: true,
             fetchPolicy: "network-only",
           }),
         {
@@ -7542,7 +7520,6 @@ describe("useQuery Hook", () => {
             useQuery(query, {
               fetchPolicy: "network-only",
               variables,
-              notifyOnNetworkStatusChange: true,
               nextFetchPolicy,
             }),
           {
@@ -7938,7 +7915,6 @@ describe("useQuery Hook", () => {
           return useQuery(partialQuery, {
             variables: { id },
             returnPartialData: false,
-            notifyOnNetworkStatusChange: true,
           });
         },
         {
@@ -8024,10 +8000,7 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-          { wrapper }
-        );
+        await renderHookToSnapshotStream(() => useQuery(query), { wrapper });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8132,10 +8105,7 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-          { wrapper }
-        );
+        await renderHookToSnapshotStream(() => useQuery(query), { wrapper });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -8264,10 +8234,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot, rerender } =
         await renderHookToSnapshotStream(
           ({ query }) => {
-            return useQuery(query, {
-              fetchPolicy: "cache-and-network",
-              notifyOnNetworkStatusChange: true,
-            });
+            return useQuery(query, { fetchPolicy: "cache-and-network" });
           },
           {
             initialProps: { query: aQuery as DocumentNode },
@@ -10195,14 +10162,11 @@ describe("useQuery Hook", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      await renderHookToSnapshotStream(() => useQuery(query), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,

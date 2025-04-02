@@ -1702,7 +1702,7 @@ describe("ApolloClient", () => {
 
     const result = await client.mutate({ mutation });
 
-    expect(result).toEqualFetchResult({ data: { makeListPrivate: true } });
+    expect(result).toEqualStrictTyped({ data: { makeListPrivate: true } });
   });
 
   it("runs a mutation even when errors is empty array #2912", async () => {
@@ -1772,7 +1772,7 @@ describe("ApolloClient", () => {
       variables: { listId: "1" },
     });
 
-    expect(result).toEqualFetchResult({ data: { makeListPrivate: true } });
+    expect(result).toEqualStrictTyped({ data: { makeListPrivate: true } });
   });
 
   const getIdField = (obj: any) => obj.id;
@@ -1809,7 +1809,7 @@ describe("ApolloClient", () => {
 
     const result = await client.mutate({ mutation });
 
-    expect(result).toEqualFetchResult({ data });
+    expect(result).toEqualStrictTyped({ data });
 
     // Make sure we updated the store with the new data
     expect(cache.extract()["5"]).toEqual({
@@ -1848,7 +1848,7 @@ describe("ApolloClient", () => {
 
     const result = await client.mutate({ mutation });
 
-    expect(result).toEqualFetchResult({ data });
+    expect(result).toEqualStrictTyped({ data });
 
     // Make sure we updated the store with the new data
     expect(cache.extract()["5"]).toEqual({
@@ -1889,7 +1889,7 @@ describe("ApolloClient", () => {
 
     const result = await client.mutate({ mutation });
 
-    expect(result).toEqualFetchResult({ data });
+    expect(result).toEqualStrictTyped({ data });
 
     // Make sure we updated the store with the new data
     expect(cache.extract()["5"]).toEqual({
@@ -2154,7 +2154,7 @@ describe("ApolloClient", () => {
       ]),
     }).mutate({ mutation: mutation });
 
-    expect(result).toEqualFetchResult({ data: transformedMutationResult });
+    expect(result).toEqualStrictTyped({ data: transformedMutationResult });
   });
 
   it("should reject a query promise given a network error", async () => {

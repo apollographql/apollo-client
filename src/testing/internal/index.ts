@@ -1,4 +1,9 @@
-export * from "./disposables/index.js";
+export {
+  enableFakeTimers,
+  spyOnConsole,
+  withCleanup,
+  withProdMode,
+} from "./disposables/index.js";
 export { ObservableStream } from "./ObservableStream.js";
 
 export type {

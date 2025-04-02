@@ -58,7 +58,7 @@ export {
   ServerError,
   ServerParseError,
   UnconventionalError,
-} from "../errors/index.js";
+} from "@apollo/client/errors";
 /* Cache */
 
 export type {
@@ -78,7 +78,7 @@ export type {
   TypePolicy,
   WatchFragmentOptions,
   WatchFragmentResult,
-} from "../cache/index.js";
+} from "@apollo/client/cache";
 
 export {
   ApolloCache,
@@ -86,7 +86,7 @@ export {
   InMemoryCache,
   makeVar,
   MissingFieldError,
-} from "../cache/index.js";
+} from "@apollo/client/cache";
 
 export type {
   ApolloReducerConfig,
@@ -112,7 +112,7 @@ export {
   execute,
   from,
   split,
-} from "../link/core/index.js";
+} from "@apollo/client/link/core";
 export type {
   ApolloPayloadResult,
   DocumentNode,
@@ -127,7 +127,7 @@ export type {
   Path,
   RequestHandler,
   SingleExecutionResult,
-} from "../link/core/index.js";
+} from "@apollo/client/link/core";
 
 export {
   checkFetcher,
@@ -143,12 +143,12 @@ export {
   selectHttpOptionsAndBodyInternal,
   selectURI,
   serializeFetchParameter,
-} from "../link/http/index.js";
+} from "@apollo/client/link/http";
 export type {
   ClientParseError,
   HttpOptions,
   UriFunction,
-} from "../link/http/index.js";
+} from "@apollo/client/link/http";
 
 /* Masking */
 export type {
@@ -158,7 +158,7 @@ export type {
   MaskedDocumentNode,
   MaybeMasked,
   Unmasked,
-} from "../masking/index.js";
+} from "@apollo/client/masking";
 
 /* Utilities */
 
@@ -166,13 +166,13 @@ export type {
   DocumentTransformCacheKey,
   Reference,
   StoreObject,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 export {
   DocumentTransform,
   isReference,
   makeReference,
   Observable,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 
 /* Supporting */
 

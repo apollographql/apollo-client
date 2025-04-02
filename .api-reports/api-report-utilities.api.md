@@ -20,6 +20,7 @@ import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentSpreadNode } from 'graphql';
 import { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
+import { maybe } from '@apollo/client/utilities/globals';
 import type { MutationOptions } from '@apollo/client/core';
 import type { NameNode } from 'graphql';
 import { Observable } from 'rxjs';
@@ -426,8 +427,7 @@ export function makeReference(id: string): Reference;
 // @public (undocumented)
 export function makeUniqueId(prefix: string): string;
 
-// @public (undocumented)
-export function maybe<T>(thunk: () => T): T | undefined;
+export { maybe }
 
 // @public (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;

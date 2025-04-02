@@ -6,6 +6,7 @@
 
 import type { ApolloCache as ApolloCache_2 } from '@apollo/client/core';
 import type { AsStoreObject } from '@apollo/client/utilities';
+import { canonicalStringify } from '@apollo/client/utilities';
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
@@ -16,12 +17,13 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { InlineFragmentNode } from 'graphql';
-import { isReference as isReference_2 } from '@apollo/client/utilities';
+import { isReference } from '@apollo/client/utilities';
+import { makeReference } from '@apollo/client/utilities';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client/core';
-import type { Reference as Reference_2 } from '@apollo/client/utilities';
+import { Reference } from '@apollo/client/utilities';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
@@ -52,7 +54,7 @@ export abstract class ApolloCache implements DataProxy {
     // @internal
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
-    identify(object: StoreObject | Reference_2): string | undefined;
+    identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
     lookupFragment(fragmentName: string): FragmentDefinitionNode | null;
     // (undocumented)
@@ -84,11 +86,11 @@ export abstract class ApolloCache implements DataProxy {
     abstract watch<TData = unknown, TVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     watchFragment<TData = unknown, TVars = OperationVariables>(options: WatchFragmentOptions<TData, TVars>): Observable<WatchFragmentResult<TData>>;
     // (undocumented)
-    abstract write<TData = unknown, TVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference_2 | undefined;
+    abstract write<TData = unknown, TVariables = OperationVariables>(write: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
     // (undocumented)
-    writeFragment<TData = unknown, TVariables = OperationVariables>({ id, data, fragment, fragmentName, ...options }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference_2 | undefined;
+    writeFragment<TData = unknown, TVariables = OperationVariables>({ id, data, fragment, fragmentName, ...options }: Cache_2.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     // (undocumented)
-    writeQuery<TData = unknown, TVariables = OperationVariables>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference_2 | undefined;
+    writeQuery<TData = unknown, TVariables = OperationVariables>({ id, data, ...options }: Cache_2.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -209,10 +211,7 @@ export const cacheSlot: {
     withValue<TResult, TArgs extends any[], TThis = any>(value: ApolloCache_2, callback: (this: TThis, ...args: TArgs) => TResult, args?: TArgs | undefined, thisArg?: TThis | undefined): TResult;
 };
 
-// @public
-export const canonicalStringify: ((value: any) => string) & {
-    reset(): void;
-};
+export { canonicalStringify }
 
 // @public (undocumented)
 type CanReadFunction = (value: StoreValue) => boolean;
@@ -281,8 +280,8 @@ export namespace DataProxy {
 export interface DataProxy {
     readFragment<TData = unknown, TVariables = OperationVariables>(options: DataProxy.ReadFragmentOptions<TData, TVariables>, optimistic?: boolean): Unmasked<TData> | null;
     readQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.ReadQueryOptions<TData, TVariables>, optimistic?: boolean): Unmasked<TData> | null;
-    writeFragment<TData = unknown, TVariables = OperationVariables>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference_2 | undefined;
-    writeQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference_2 | undefined;
+    writeFragment<TData = unknown, TVariables = OperationVariables>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
+    writeQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
 
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
@@ -334,7 +333,7 @@ export abstract class EntityStore implements NormalizedCache {
     // Warning: (ae-forgotten-export) The symbol "SafeReadonly" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    getFieldValue: <T = StoreValue>(objectOrReference: StoreObject | Reference_2 | undefined, storeFieldName: string) => SafeReadonly<T>;
+    getFieldValue: <T = StoreValue>(objectOrReference: StoreObject | Reference | undefined, storeFieldName: string) => SafeReadonly<T>;
     // (undocumented)
     getRootIdSet(ids?: Set<string>): Set<string>;
     // Warning: (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
@@ -413,7 +412,7 @@ export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Recor
     // (undocumented)
     fieldName: string;
     // (undocumented)
-    isReference: typeof isReference_2;
+    isReference: typeof isReference;
     // Warning: (ae-forgotten-export) The symbol "MergeObjectsFunction" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -523,7 +522,7 @@ export class InMemoryCache extends ApolloCache {
     // @internal
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
-    identify(object: StoreObject | Reference_2): string | undefined;
+    identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
     lookupFragment(fragmentName: string): FragmentDefinitionNode | null;
     // (undocumented)
@@ -555,7 +554,7 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     watch<TData = unknown, TVariables = OperationVariables>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // (undocumented)
-    write<TData = unknown, TVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference_2 | undefined;
+    write<TData = unknown, TVariables = OperationVariables>(options: Cache_2.WriteOptions<TData, TVariables>): Reference | undefined;
 }
 
 // @public (undocumented)
@@ -581,8 +580,7 @@ interface InvalidateModifier {
 // @public (undocumented)
 const _invalidateModifier: unique symbol;
 
-// @public (undocumented)
-export function isReference(obj: any): obj is Reference;
+export { isReference }
 
 // @public (undocumented)
 type KeyArgsFunction = (args: Record<string, any> | null, context: {
@@ -631,8 +629,7 @@ class Layer extends EntityStore {
     toObject(): NormalizedCacheObject;
 }
 
-// @public (undocumented)
-export function makeReference(id: string): Reference;
+export { makeReference }
 
 // @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
@@ -648,7 +645,7 @@ export interface MergeInfo {
 }
 
 // @public (undocumented)
-type MergeObjectsFunction = <T extends StoreObject | Reference_2>(existing: T, incoming: T) => T;
+type MergeObjectsFunction = <T extends StoreObject | Reference>(existing: T, incoming: T) => T;
 
 // @public (undocumented)
 export interface MergeTree {
@@ -692,7 +689,7 @@ export type ModifierDetails = {
     storeFieldName: string;
     readField: ReadFieldFunction;
     canRead: CanReadFunction;
-    isReference: typeof isReference_2;
+    isReference: typeof isReference;
     toReference: ToReferenceFunction;
     storage: StorageType;
 };
@@ -819,13 +816,13 @@ interface ReadFieldFunction {
     // (undocumented)
     <V = StoreValue>(options: ReadFieldOptions): SafeReadonly<V> | undefined;
     // (undocumented)
-    <V = StoreValue>(fieldName: string, from?: StoreObject | Reference_2): SafeReadonly<V> | undefined;
+    <V = StoreValue>(fieldName: string, from?: StoreObject | Reference): SafeReadonly<V> | undefined;
 }
 
 // @public (undocumented)
 export interface ReadFieldOptions extends FieldSpecifier {
     // (undocumented)
-    from?: StoreObject | Reference_2;
+    from?: StoreObject | Reference;
 }
 
 // @public (undocumented)
@@ -848,11 +845,7 @@ export type ReadQueryOptions = {
     config?: ApolloReducerConfig;
 };
 
-// @public (undocumented)
-export interface Reference {
-    // (undocumented)
-    readonly __ref: string;
-}
+export { Reference }
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -865,7 +858,7 @@ export { StoreObject }
 // @public (undocumented)
 type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<string, any>> ? StoreVal extends Array<infer Item> ? [
 Item
-] extends [Record<string, any>] ? ReadonlyArray<AsStoreObject<Item> | Reference_2> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference_2 : StoreVal;
+] extends [Record<string, any>] ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
 export { StoreValue }
 
@@ -879,7 +872,7 @@ class Stump extends Layer {
 }
 
 // @public (undocumented)
-type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference_2, mergeIntoStore?: boolean) => Reference_2 | undefined;
+type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
 
 // @public (undocumented)
 export type Transaction = (c: ApolloCache) => void;
@@ -905,7 +898,7 @@ export type TypePolicy = {
 export interface WatchFragmentOptions<TData, TVars> {
     fragment: DocumentNode | TypedDocumentNode_2<TData, TVars>;
     fragmentName?: string;
-    from: StoreObject | Reference_2 | FragmentType<NoInfer_2<TData>> | string;
+    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     optimistic?: boolean;
     variables?: TVars;
 }

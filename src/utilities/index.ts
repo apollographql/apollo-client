@@ -1,6 +1,6 @@
 export { Observable } from "rxjs";
 
-export { maybe } from "./globals/index.js";
+export { maybe } from "@apollo/client/utilities/globals";
 
 export type {
   DirectiveInfo,

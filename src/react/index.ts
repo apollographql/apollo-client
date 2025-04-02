@@ -1,11 +1,11 @@
-export type { ApolloContextValue } from "./context/index.js";
+export type { ApolloContextValue } from "@apollo/client/react/context";
 export {
   ApolloConsumer,
   ApolloProvider,
   getApolloContext,
-} from "./context/index.js";
+} from "@apollo/client/react/context";
 
-export type { SkipToken } from "./hooks/index.js";
+export type { SkipToken } from "@apollo/client/react/hooks";
 export {
   skipToken,
   useApolloClient,
@@ -21,10 +21,10 @@ export {
   useSubscription,
   useSuspenseFragment,
   useSuspenseQuery,
-} from "./hooks/index.js";
+} from "@apollo/client/react/hooks";
 
-export type { IDocumentDefinition } from "./parser/index.js";
-export { DocumentType, operationName, parser } from "./parser/index.js";
+export type { IDocumentDefinition } from "@apollo/client/react/parser";
+export { DocumentType, operationName, parser } from "@apollo/client/react/parser";
 
 export type {
   PreloadQueryFetchPolicy,
@@ -37,7 +37,7 @@ export type {
   PreloadedQueryRef,
   QueryRef,
   QueryReference,
-} from "./internal/index.js";
+} from "@apollo/client/react/internal";
 
 // These types will be removed with v5
 export type {

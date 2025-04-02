@@ -65,8 +65,7 @@ export const importFromExport = ESLintUtils.RuleCreator.withoutDocs({
     }
     return {
       ImportDeclaration: rule,
-      // TODO: enable this in a separate PR for easier review
-      // ExportNamedDeclaration: rule,
+      ExportNamedDeclaration: rule,
     };
   },
   meta: {

@@ -120,13 +120,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (expected: CheckedLazyQueryResult<TData, TVariables>) => R
   : { error: "matchers needs to be called on a LazyQueryResult" };
 
-  /** @deprecated Use `toEqualStrictTyped` instead */
-  toEqualQueryResult: T extends useQuery.Result<infer TData, infer TVariables> ?
-    (expected: Pick<useQuery.Result<TData, TVariables>, CheckedKeys>) => R
-  : T extends Promise<useQuery.Result<infer TData, infer TVariables>> ?
-    (expected: Pick<useQuery.Result<TData, TVariables>, CheckedKeys>) => R
-  : { error: "matchers needs to be called on a QueryResult" };
-
   toEmitStrictTyped: T extends ObservableStream<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,

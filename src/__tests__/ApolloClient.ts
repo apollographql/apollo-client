@@ -2610,7 +2610,7 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValueStrict({
+      await expect(stream).toEmitStrictTyped({
         data: {
           __typename: "Item",
           id: 5,
@@ -2628,7 +2628,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      await expect(stream).toEmitValueStrict({
+      await expect(stream).toEmitStrictTyped({
         data: {
           __typename: "Item",
           id: 5,

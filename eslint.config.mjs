@@ -177,6 +177,7 @@ export default [
           message:
             "Please only use the namespace import syntax (`import * as React from 'react'`) for React imports!",
         },
+        "ExportAllDeclaration",
       ],
 
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],

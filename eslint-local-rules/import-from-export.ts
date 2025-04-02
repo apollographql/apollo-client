@@ -86,6 +86,9 @@ export const noDuplicateExports = ESLintUtils.RuleCreator.withoutDocs({
     const seenExports = new Map<string, AST.ExportNamedDeclaration>();
     return {
       ExportNamedDeclaration(node) {
+        if (!node.source) {
+          return;
+        }
         const name = node.source.value + ":" + node.exportKind;
         const alreadySeen = seenExports.get(name);
         if (alreadySeen) {

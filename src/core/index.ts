@@ -41,6 +41,7 @@ export type {
   OperationVariables,
   PureQueryOptions,
   QueryListener,
+  QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesPromiseResults,

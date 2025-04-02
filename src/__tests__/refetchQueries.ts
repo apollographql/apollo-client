@@ -479,7 +479,7 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqualApolloQueryResult({
+          expect(result).toEqualStrictTyped({
             data: { a: "A", b: "B" },
             loading: false,
             networkStatus: NetworkStatus.ready,

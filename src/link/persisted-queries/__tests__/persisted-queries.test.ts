@@ -91,7 +91,7 @@ describe("happy path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [uri, request] = fetchMock.lastCall()!;
 
@@ -119,7 +119,7 @@ describe("happy path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [uri, request] = fetchMock.lastCall()!;
     expect(uri).toEqual("/graphql");
@@ -148,7 +148,7 @@ describe("happy path", () => {
       const observable = execute(link, { query, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({ data });
+      await expect(stream).toEmitTypedValue({ data });
       await expect(stream).toComplete();
       expect(hashSpy).toHaveBeenCalledTimes(1);
     }
@@ -157,7 +157,7 @@ describe("happy path", () => {
       const observable = execute(link, { query, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({ data });
+      await expect(stream).toEmitTypedValue({ data });
       await expect(stream).toComplete();
       expect(hashSpy).toHaveBeenCalledTimes(1);
     }
@@ -202,7 +202,7 @@ describe("happy path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [uri, request] = fetchMock.lastCall()!;
     expect(uri).toEqual("/graphql");
@@ -283,7 +283,7 @@ describe("happy path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [uri, request] = fetchMock.lastCall()!;
 
@@ -375,7 +375,7 @@ describe("failure path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [[, failure]] = fetchMock.calls();
 
@@ -406,7 +406,7 @@ describe("failure path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [[, failure]] = fetchMock.calls();
 
@@ -464,7 +464,7 @@ describe("failure path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [[, failure]] = fetchMock.calls();
 
@@ -594,7 +594,7 @@ describe("failure path", () => {
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({ data });
+    await expect(stream).toEmitTypedValue({ data });
 
     const [[, failure]] = fetchMock.calls();
 
@@ -643,7 +643,7 @@ describe("failure path", () => {
         const observable = execute(link, { query, variables });
         const stream = new ObservableStream(observable);
 
-        await expect(stream).toEmitStrictTyped({ data });
+        await expect(stream).toEmitTypedValue({ data });
 
         const [[, success]] = fetchMock.calls();
 
@@ -658,7 +658,7 @@ describe("failure path", () => {
         const observable = execute(link, { query, variables });
         const stream = new ObservableStream(observable);
 
-        await expect(stream).toEmitStrictTyped({ data });
+        await expect(stream).toEmitTypedValue({ data });
 
         const [, [, success]] = fetchMock.calls();
 
@@ -747,7 +747,7 @@ describe("failure path", () => {
       const observable = execute(link, { query, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitStrictTyped({ data });
+      await expect(stream).toEmitTypedValue({ data });
 
       const [[, success]] = fetchMock.calls();
 

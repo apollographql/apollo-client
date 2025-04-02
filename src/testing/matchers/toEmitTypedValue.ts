@@ -7,12 +7,12 @@ import type { TakeOptions } from "../internal/ObservableStream.js";
 
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 
-export const toEmitStrictTyped: MatcherFunction<
+export const toEmitTypedValue: MatcherFunction<
   [value: any, options?: TakeOptions]
 > = async function (actual, expected, options) {
   const stream = actual as ObservableStream<any>;
   const hint = this.utils.matcherHint(
-    this.isNot ? ".not.toEmitStrictTyped" : "toEmitStrictTyped",
+    this.isNot ? ".not.toEmitTypedValue" : "toEmitTypedValue",
     "stream",
     "expected",
     { isNot: this.isNot }

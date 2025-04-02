@@ -971,7 +971,7 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentUser: {
           __typename: "User",
@@ -3880,7 +3880,7 @@ describe("client.query", () => {
 
     const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors({
         data: { currentUser: null },
@@ -3929,7 +3929,7 @@ describe("client.query", () => {
 
     const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         currentUser: {
           __typename: "User",
@@ -4404,7 +4404,7 @@ describe("client.subscribe", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: { addedComment: null },
@@ -4451,7 +4451,7 @@ describe("client.subscribe", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { addedComment: null },
       error: new CombinedGraphQLErrors({
         data: { addedComment: null },
@@ -4503,7 +4503,7 @@ describe("client.subscribe", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: { addedComment: { __typename: "Comment", id: 1 } },
       error: new CombinedGraphQLErrors({
         data: {
@@ -5565,7 +5565,7 @@ describe("client.mutate", () => {
         mutation,
         errorPolicy: "all",
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { updateUser: null },
       error: new CombinedGraphQLErrors({
         data: { updateUser: null },
@@ -5631,7 +5631,7 @@ describe("client.mutate", () => {
         mutation,
         errorPolicy: "all",
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: {
         updateUser: {
           __typename: "User",

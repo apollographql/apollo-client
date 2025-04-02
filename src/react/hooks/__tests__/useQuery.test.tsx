@@ -89,7 +89,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -101,7 +101,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -140,7 +140,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -154,7 +154,7 @@ describe("useQuery Hook", () => {
       {
         const result = (oldResult = await takeSnapshot());
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -168,7 +168,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -209,7 +209,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -221,7 +221,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -235,7 +235,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -276,7 +276,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -288,7 +288,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -302,7 +302,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -314,7 +314,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -358,7 +358,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -370,7 +370,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -384,7 +384,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -433,7 +433,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -499,7 +499,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -511,7 +511,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -525,7 +525,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -537,7 +537,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -581,7 +581,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -593,7 +593,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -607,7 +607,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -619,7 +619,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -633,7 +633,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -681,7 +681,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -693,7 +693,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { names: ["Alice", "Bob", "Eve"] },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -707,7 +707,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -719,7 +719,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { names: [] },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -733,7 +733,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -745,7 +745,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { names: [] },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -832,7 +832,7 @@ describe("useQuery Hook", () => {
       {
         const [useQueryResult] = await takeSnapshot();
 
-        expect(useQueryResult).toEqualStrictTyped({
+        expect(useQueryResult).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -844,7 +844,7 @@ describe("useQuery Hook", () => {
       {
         const [useQueryResult] = await takeSnapshot();
 
-        expect(useQueryResult).toEqualStrictTyped({
+        expect(useQueryResult).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -862,7 +862,7 @@ describe("useQuery Hook", () => {
         {
           const [useQueryResult] = await takeSnapshot();
 
-          expect(useQueryResult).toEqualStrictTyped({
+          expect(useQueryResult).toStrictEqualTyped({
             data: { hello: "world 1" },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -874,7 +874,7 @@ describe("useQuery Hook", () => {
         {
           const [useQueryResult] = await takeSnapshot();
 
-          expect(useQueryResult).toEqualStrictTyped({
+          expect(useQueryResult).toStrictEqualTyped({
             data: undefined,
             loading: true,
             networkStatus: NetworkStatus.setVariables,
@@ -887,7 +887,7 @@ describe("useQuery Hook", () => {
       {
         const [useQueryResult] = await takeSnapshot();
 
-        expect(useQueryResult).toEqualStrictTyped({
+        expect(useQueryResult).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -899,7 +899,7 @@ describe("useQuery Hook", () => {
       {
         const [useQueryResult] = await takeSnapshot();
 
-        expect(useQueryResult).toEqualStrictTyped({
+        expect(useQueryResult).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -911,7 +911,7 @@ describe("useQuery Hook", () => {
       if (IS_REACT_18) {
         const [useQueryResult] = await takeSnapshot();
 
-        expect(useQueryResult).toEqualStrictTyped({
+        expect(useQueryResult).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1047,7 +1047,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1059,7 +1059,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1130,7 +1130,7 @@ describe("useQuery Hook", () => {
       {
         const [result0, result1] = await takeSnapshot();
 
-        expect(result0).toEqualStrictTyped({
+        expect(result0).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1138,27 +1138,7 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        expect(result1).toEqualStrictTyped({
-          data: undefined,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const [result0, result1] = await takeSnapshot();
-
-        expect(result0).toEqualStrictTyped({
-          data: allPeopleData,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-
-        expect(result1).toEqualStrictTyped({
+        expect(result1).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1170,7 +1150,7 @@ describe("useQuery Hook", () => {
       {
         const [result0, result1] = await takeSnapshot();
 
-        expect(result0).toEqualStrictTyped({
+        expect(result0).toStrictEqualTyped({
           data: allPeopleData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1178,7 +1158,27 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        expect(result1).toEqualStrictTyped({
+        expect(result1).toStrictEqualTyped({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [result0, result1] = await takeSnapshot();
+
+        expect(result0).toStrictEqualTyped({
+          data: allPeopleData,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(result1).toStrictEqualTyped({
           data: allThingsData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1192,7 +1192,7 @@ describe("useQuery Hook", () => {
       {
         const [result0, result1] = await takeSnapshot();
 
-        expect(result0).toEqualStrictTyped({
+        expect(result0).toStrictEqualTyped({
           data: allPeopleData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1200,7 +1200,7 @@ describe("useQuery Hook", () => {
           variables: {},
         });
 
-        expect(result1).toEqualStrictTyped({
+        expect(result1).toStrictEqualTyped({
           data: allThingsData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1261,7 +1261,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1275,7 +1275,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1287,7 +1287,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: mocks[1].result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1335,7 +1335,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "from cache" },
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1347,7 +1347,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "from link" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1393,7 +1393,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1405,7 +1405,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "from link" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1450,7 +1450,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "from cache" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1493,7 +1493,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1505,7 +1505,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "from link" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1552,7 +1552,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -1568,7 +1568,7 @@ describe("useQuery Hook", () => {
       });
       await rerender({ id: 1, skip: false });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { user: { __typename: "User", id: 1, name: "User 1" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1578,7 +1578,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ id: 2, skip: true });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -1595,7 +1595,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ id: 2, skip: false });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { user: { __typename: "User", id: 2, name: "User 2" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1642,7 +1642,7 @@ describe("useQuery Hook", () => {
     {
       const result = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -1654,7 +1654,7 @@ describe("useQuery Hook", () => {
     {
       const result = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1714,7 +1714,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1726,7 +1726,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { linkCount: 1 },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1746,7 +1746,7 @@ describe("useQuery Hook", () => {
           if (obsQuery.hasObservers()) {
             expect(inactiveSet.has(obsQuery)).toBe(false);
             activeSet.add(obsQuery);
-            expect(obsQuery.getCurrentResult()).toEqualStrictTyped({
+            expect(obsQuery.getCurrentResult()).toStrictEqualTyped({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
@@ -1767,12 +1767,12 @@ describe("useQuery Hook", () => {
 
       await expect(
         getCurrentSnapshot().observable.reobserve()
-      ).resolves.toEqualStrictTyped({ data: { linkCount: 2 } });
+      ).resolves.toStrictEqualTyped({ data: { linkCount: 2 } });
 
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { linkCount: 1 },
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1784,7 +1784,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { linkCount: 2 },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1838,7 +1838,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1850,7 +1850,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1862,7 +1862,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1874,7 +1874,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 3" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1930,7 +1930,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -1942,7 +1942,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1956,7 +1956,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           // TODO: wut?
           data: undefined,
           // TODO: wut?
@@ -1975,7 +1975,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1987,7 +1987,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -1999,7 +1999,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 3" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2049,7 +2049,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2061,7 +2061,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2118,7 +2118,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2130,7 +2130,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2223,7 +2223,7 @@ describe("useQuery Hook", () => {
         const promise = takeSnapshot();
         await jest.advanceTimersByTimeAsync(0);
 
-        await expect(promise).resolves.toEqualStrictTyped({
+        await expect(promise).resolves.toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2238,7 +2238,7 @@ describe("useQuery Hook", () => {
         const promise = takeSnapshot();
         await jest.advanceTimersByTimeAsync(0);
 
-        await expect(promise).resolves.toEqualStrictTyped({
+        await expect(promise).resolves.toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2255,7 +2255,7 @@ describe("useQuery Hook", () => {
         const promise = takeSnapshot();
         await jest.advanceTimersByTimeAsync(0);
 
-        await expect(promise).resolves.toEqualStrictTyped({
+        await expect(promise).resolves.toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2321,7 +2321,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2333,7 +2333,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2417,7 +2417,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2429,7 +2429,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2444,7 +2444,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2510,7 +2510,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2522,7 +2522,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2534,7 +2534,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2555,7 +2555,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 3" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2567,7 +2567,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 4" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2616,7 +2616,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2628,7 +2628,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2693,7 +2693,7 @@ describe("useQuery Hook", () => {
           { wrapper }
         );
 
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2703,7 +2703,7 @@ describe("useQuery Hook", () => {
 
         await waitFor(
           () => {
-            expect(result.current).toEqualStrictTyped({
+            expect(result.current).toStrictEqualTyped({
               data: { hello: "world 1" },
               loading: false,
               networkStatus: NetworkStatus.ready,
@@ -2715,7 +2715,7 @@ describe("useQuery Hook", () => {
         );
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2726,7 +2726,7 @@ describe("useQuery Hook", () => {
         skipPollAttempt.mockImplementation(() => true);
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2735,7 +2735,7 @@ describe("useQuery Hook", () => {
         });
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2744,7 +2744,7 @@ describe("useQuery Hook", () => {
         });
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2755,7 +2755,7 @@ describe("useQuery Hook", () => {
         skipPollAttempt.mockImplementation(() => false);
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 3" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2803,7 +2803,7 @@ describe("useQuery Hook", () => {
           { wrapper }
         );
 
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2813,7 +2813,7 @@ describe("useQuery Hook", () => {
 
         await waitFor(
           () => {
-            expect(result.current).toEqualStrictTyped({
+            expect(result.current).toStrictEqualTyped({
               data: { hello: "world 1" },
               loading: false,
               networkStatus: NetworkStatus.ready,
@@ -2825,7 +2825,7 @@ describe("useQuery Hook", () => {
         );
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2836,7 +2836,7 @@ describe("useQuery Hook", () => {
         skipPollAttempt.mockImplementation(() => true);
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2845,7 +2845,7 @@ describe("useQuery Hook", () => {
         });
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2854,7 +2854,7 @@ describe("useQuery Hook", () => {
         });
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2865,7 +2865,7 @@ describe("useQuery Hook", () => {
         skipPollAttempt.mockImplementation(() => false);
 
         await jest.advanceTimersByTimeAsync(12);
-        expect(result.current).toEqualStrictTyped({
+        expect(result.current).toStrictEqualTyped({
           data: { hello: "world 3" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2911,7 +2911,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2923,7 +2923,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({ errors: [{ message: "error" }] }),
           loading: false,
@@ -2966,7 +2966,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2978,7 +2978,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             data: { hello: null },
@@ -3026,7 +3026,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3038,7 +3038,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: null },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3080,7 +3080,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3092,7 +3092,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3136,7 +3136,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3148,7 +3148,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: null },
           error: new CombinedGraphQLErrors({
             data: { hello: null },
@@ -3194,7 +3194,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3206,7 +3206,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: networkError,
           loading: false,
@@ -3251,7 +3251,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3263,7 +3263,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({ errors: [{ message: "error" }] }),
           loading: false,
@@ -3278,7 +3278,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({ errors: [{ message: "error" }] }),
           loading: false,
@@ -3562,7 +3562,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3574,7 +3574,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({ errors: [{ message: "error" }] }),
           loading: false,
@@ -3589,7 +3589,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -3601,7 +3601,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3615,7 +3615,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -3627,7 +3627,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3678,7 +3678,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3690,7 +3690,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "error 1" }],
@@ -3709,7 +3709,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -3721,7 +3721,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "error 2" }],
@@ -3775,7 +3775,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3787,7 +3787,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "error 1" }],
@@ -3806,7 +3806,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "error 2" }],
@@ -3860,7 +3860,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3872,7 +3872,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "same error" }],
@@ -3891,7 +3891,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -3903,7 +3903,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "same error" }],
@@ -3964,7 +3964,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3975,7 +3975,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
             errors: [{ message: "same error" }],
@@ -3992,7 +3992,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -4003,7 +4003,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4018,7 +4018,7 @@ describe("useQuery Hook", () => {
 
       {
         const result = await takeSnapshot();
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world" },
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -4029,7 +4029,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           // TODO: Is this correct behavior here?
           data: { hello: "world" },
           error: new CombinedGraphQLErrors({
@@ -4101,7 +4101,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -4113,7 +4113,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4129,14 +4129,14 @@ describe("useQuery Hook", () => {
         }),
       });
 
-      expect(fetchMoreResult).toEqualStrictTyped({
+      expect(fetchMoreResult).toStrictEqualTyped({
         data: { letters: cd },
       });
 
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab.concat(cd) },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4167,7 +4167,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -4179,7 +4179,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4195,14 +4195,14 @@ describe("useQuery Hook", () => {
         }),
       });
 
-      expect(fetchMoreResult).toEqualStrictTyped({
+      expect(fetchMoreResult).toStrictEqualTyped({
         data: { letters: cd },
       });
 
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab },
           loading: true,
           networkStatus: NetworkStatus.fetchMore,
@@ -4214,7 +4214,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab.concat(cd) },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4253,7 +4253,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -4265,7 +4265,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4278,14 +4278,14 @@ describe("useQuery Hook", () => {
         variables: { limit: 2 },
       });
 
-      expect(fetchMoreResult).toEqualStrictTyped({
+      expect(fetchMoreResult).toStrictEqualTyped({
         data: { letters: cd },
       });
 
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab.concat(cd) },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4328,7 +4328,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -4340,7 +4340,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4353,14 +4353,14 @@ describe("useQuery Hook", () => {
         variables: { limit: 2 },
       });
 
-      expect(fetchMoreResult).toEqualStrictTyped({
+      expect(fetchMoreResult).toStrictEqualTyped({
         data: { letters: cd },
       });
 
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab },
           loading: true,
           networkStatus: NetworkStatus.fetchMore,
@@ -4372,7 +4372,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { letters: ab.concat(cd) },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4464,7 +4464,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -4476,7 +4476,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             letters: [
               { __typename: "Letter", letter: "A", position: 1 },
@@ -4502,7 +4502,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             letters: [
               { __typename: "Letter", letter: "A", position: 1 },
@@ -4524,7 +4524,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             letters: [
               { __typename: "Letter", letter: "A", position: 1 },
@@ -4555,7 +4555,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(fetchMorePromise).resolves.toEqualStrictTyped({
+      await expect(fetchMorePromise).resolves.toStrictEqualTyped({
         data: {
           letters: [
             { __typename: "Letter", letter: "C", position: 3 },
@@ -4574,7 +4574,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             letters: [
               { __typename: "Letter", letter: "A", position: 1 },
@@ -4600,7 +4600,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             letters: [
               { __typename: "Letter", letter: "E", position: 5 },
@@ -4628,7 +4628,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(fetchMorePromise).resolves.toEqualStrictTyped({
+      await expect(fetchMorePromise).resolves.toStrictEqualTyped({
         data: {
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
@@ -4814,7 +4814,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -4826,7 +4826,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { countries },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4953,7 +4953,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -4961,7 +4961,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -4976,7 +4976,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -4988,7 +4988,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5005,7 +5005,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5017,7 +5017,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -5032,7 +5032,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5048,7 +5048,7 @@ describe("useQuery Hook", () => {
       // the partial result
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
-      ).toEqualStrictTyped({
+      ).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5059,7 +5059,7 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5076,7 +5076,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -5084,7 +5084,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5099,7 +5099,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5115,7 +5115,7 @@ describe("useQuery Hook", () => {
       // the partial result
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
-      ).toEqualStrictTyped({
+      ).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5126,7 +5126,7 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5252,7 +5252,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -5260,7 +5260,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5275,7 +5275,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5287,7 +5287,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5304,7 +5304,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5316,7 +5316,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -5334,7 +5334,7 @@ describe("useQuery Hook", () => {
       // We don't see the update from the cache for one more render cycle, hence
       // why this is still showing the error result even though the result from
       // the other query has finished and re-rendered.
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5346,7 +5346,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: {
           person: {
             __typename: "Person",
@@ -5368,7 +5368,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: {
           person: {
             __typename: "Person",
@@ -5382,7 +5382,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: {
           person: {
             __typename: "Person",
@@ -5515,7 +5515,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -5523,7 +5523,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5538,7 +5538,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5550,7 +5550,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -5567,7 +5567,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5579,7 +5579,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -5594,7 +5594,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
           data: { person: null },
@@ -5606,7 +5606,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: {
           person: {
             __typename: "Person",
@@ -5690,7 +5690,7 @@ describe("useQuery Hook", () => {
     {
       const result = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -5702,7 +5702,7 @@ describe("useQuery Hook", () => {
     {
       const result = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           author: {
             __typename: "Author",
@@ -5855,7 +5855,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -5867,7 +5867,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: {
           author: {
             __typename: "Author",
@@ -5893,7 +5893,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: {
           author: {
             __typename: "Author",
@@ -5916,7 +5916,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult!).toEqualStrictTyped({
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
         data: {
           author: {
             __typename: "Author",
@@ -5994,7 +5994,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -6005,7 +6005,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6019,7 +6019,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -6030,7 +6030,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6086,7 +6086,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -6097,7 +6097,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6113,7 +6113,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -6125,7 +6125,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           error: new Error("This is an error!"),
           loading: false,
@@ -6135,14 +6135,14 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(getCurrentSnapshot().refetch()).resolves.toEqualStrictTyped({
+      await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
         data: { hello: "world 2" },
       });
 
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 1" },
           loading: true,
           networkStatus: NetworkStatus.refetch,
@@ -6153,7 +6153,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: { hello: "world 2" },
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6238,7 +6238,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: undefined,
             loading: true,
             networkStatus: NetworkStatus.loading,
@@ -6250,7 +6250,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: { primes: [2, 3, 5, 7, 11] },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -6263,14 +6263,14 @@ describe("useQuery Hook", () => {
 
         await expect(
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
-        ).resolves.toEqualStrictTyped({
+        ).resolves.toStrictEqualTyped({
           data: { primes: [13, 17, 19, 23, 29] },
         });
 
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             // We get the stale data because we configured keyArgs: false.
             data: { primes: [2, 3, 5, 7, 11] },
             loading: true,
@@ -6285,7 +6285,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: { primes: [13, 17, 19, 23, 29] },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -6342,7 +6342,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: undefined,
             loading: true,
             networkStatus: NetworkStatus.loading,
@@ -6354,7 +6354,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: { primes: [2, 3, 5, 7, 11] },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -6367,14 +6367,14 @@ describe("useQuery Hook", () => {
 
         await expect(
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
-        ).resolves.toEqualStrictTyped({
+        ).resolves.toStrictEqualTyped({
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
         });
 
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             // We get the stale data because we configured keyArgs: false.
             data: { primes: [2, 3, 5, 7, 11] },
             loading: true,
@@ -6389,7 +6389,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -6446,7 +6446,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: undefined,
             loading: true,
             networkStatus: NetworkStatus.loading,
@@ -6457,7 +6457,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: { primes: [2, 3, 5, 7, 11] },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -6469,14 +6469,14 @@ describe("useQuery Hook", () => {
 
         await expect(
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
-        ).resolves.toEqualStrictTyped({
+        ).resolves.toStrictEqualTyped({
           data: { primes: [13, 17, 19, 23, 29] },
         });
 
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: {
               // We get the stale data because we configured keyArgs: false.
               primes: [2, 3, 5, 7, 11],
@@ -6493,7 +6493,7 @@ describe("useQuery Hook", () => {
         {
           const result = await takeSnapshot();
 
-          expect(result).toEqualStrictTyped({
+          expect(result).toStrictEqualTyped({
             data: { primes: [13, 17, 19, 23, 29] },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -6591,7 +6591,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -6603,7 +6603,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             car: {
               __typename: "Car",
@@ -6623,7 +6623,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             car: {
               __typename: "Car",
@@ -6650,7 +6650,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
@@ -6668,7 +6668,7 @@ describe("useQuery Hook", () => {
       {
         const result = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             car: {
               __typename: "Car",
@@ -6806,7 +6806,7 @@ describe("useQuery Hook", () => {
       {
         const { query } = await takeSnapshot();
 
-        expect(query).toEqualStrictTyped({
+        expect(query).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -6818,7 +6818,7 @@ describe("useQuery Hook", () => {
       {
         const { query } = await takeSnapshot();
 
-        expect(query).toEqualStrictTyped({
+        expect(query).toStrictEqualTyped({
           data: carsData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6843,7 +6843,7 @@ describe("useQuery Hook", () => {
           ({ query, mutation } = await takeSnapshot());
         }
         expect(mutation[1].loading).toBe(true);
-        expect(query).toEqualStrictTyped({
+        expect(query).toStrictEqualTyped({
           data: allCarsData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6858,7 +6858,7 @@ describe("useQuery Hook", () => {
         // The mutation ran and is loading the result. The query stays at
         // not loading as nothing has changed for the query.
         expect(mutation[1].loading).toBe(true);
-        expect(query).toEqualStrictTyped({
+        expect(query).toStrictEqualTyped({
           data: carsData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6872,7 +6872,7 @@ describe("useQuery Hook", () => {
         // The mutation has completely finished, leaving the query with access to
         // the original cache data.
         expect(mutation[1].loading).toBe(false);
-        expect(query).toEqualStrictTyped({
+        expect(query).toStrictEqualTyped({
           data: carsData,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -6961,7 +6961,7 @@ describe("useQuery Hook", () => {
         { wrapper }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -6969,7 +6969,7 @@ describe("useQuery Hook", () => {
         variables: { id: entityId },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           clientEntity: {
             id: entityId,
@@ -6992,7 +6992,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           clientEntity: {
             id: entityId,
@@ -7064,7 +7064,7 @@ describe("useQuery Hook", () => {
         { wrapper, initialProps: { skip: true } }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -7075,7 +7075,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ skip: false });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7083,7 +7083,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7115,7 +7115,7 @@ describe("useQuery Hook", () => {
         { wrapper, initialProps: { skip: false, variables: undefined as any } }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7123,7 +7123,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7133,7 +7133,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ skip: true, variables: { someVar: true } });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -7189,7 +7189,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -7200,7 +7200,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ fetchPolicy: "cache-first" });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7208,7 +7208,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7249,7 +7249,7 @@ describe("useQuery Hook", () => {
           }
         );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -7260,7 +7260,7 @@ describe("useQuery Hook", () => {
 
       const refetchResult = await getCurrentSnapshot().refetch();
 
-      expect(refetchResult).toEqualStrictTyped({
+      expect(refetchResult).toStrictEqualTyped({
         data: { hello: "world" },
       });
 
@@ -7311,7 +7311,7 @@ describe("useQuery Hook", () => {
           }
         );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -7335,7 +7335,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ skip: false });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7343,7 +7343,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: 1 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7367,10 +7367,10 @@ describe("useQuery Hook", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({ data: { hello: 2 } });
+      expect(result).toStrictEqualTyped({ data: { hello: 2 } });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: 1 },
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -7378,7 +7378,7 @@ describe("useQuery Hook", () => {
         variables: { newVar: true },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7470,7 +7470,7 @@ describe("useQuery Hook", () => {
       // first network request triggers with initial fetchPolicy
       expectQueryTriggered(1, "network-only");
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7478,7 +7478,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "from link" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7514,7 +7514,7 @@ describe("useQuery Hook", () => {
       // the return value of `nextFetchPolicy(..., {reason: "variables-changed"})`
       expectQueryTriggered(2, "cache-and-network");
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         // TODO: Shouldn't this be undefined?
         data: { hello: "from link" },
         loading: true,
@@ -7523,7 +7523,7 @@ describe("useQuery Hook", () => {
         variables: { id: 2 },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "from link2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7597,7 +7597,7 @@ describe("useQuery Hook", () => {
         { wrapper }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7605,7 +7605,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: carData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7691,7 +7691,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           cars: [
             {
@@ -7774,7 +7774,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7859,7 +7859,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           car: {
             __typename: "Car",
@@ -7876,7 +7876,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ id: 1 });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -7939,7 +7939,7 @@ describe("useQuery Hook", () => {
           { wrapper }
         );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -7947,7 +7947,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -7957,7 +7957,7 @@ describe("useQuery Hook", () => {
 
       await getCurrentSnapshot().refetch();
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data1,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -7965,7 +7965,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8047,7 +8047,7 @@ describe("useQuery Hook", () => {
           { wrapper }
         );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8055,7 +8055,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8065,7 +8065,7 @@ describe("useQuery Hook", () => {
 
       setTimeout(() => getCurrentSnapshot().refetch());
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data1,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -8073,7 +8073,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8083,7 +8083,7 @@ describe("useQuery Hook", () => {
 
       void getCurrentSnapshot().refetch({ vin: "ABCDEFG0123456789" });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -8091,7 +8091,7 @@ describe("useQuery Hook", () => {
         variables: { vin: "ABCDEFG0123456789" },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: data3,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8187,7 +8187,7 @@ describe("useQuery Hook", () => {
           }
         );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8195,7 +8195,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { a: "a" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8205,7 +8205,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ query: abQuery });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8213,7 +8213,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { a: "aa", b: 1 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8223,11 +8223,11 @@ describe("useQuery Hook", () => {
 
       const result = await getCurrentSnapshot().observable.reobserve();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { a: "aaa", b: 2 },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { a: "aa", b: 1 },
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8235,7 +8235,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { a: "aaa", b: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8245,7 +8245,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ query: bQuery });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { b: 2 },
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8253,7 +8253,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { b: 3 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8333,7 +8333,7 @@ describe("useQuery Hook", () => {
         { wrapper, initialProps: { gender: "all" } }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8341,7 +8341,7 @@ describe("useQuery Hook", () => {
         variables: { gender: "all" },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           people: peopleData.map(({ gender, ...person }) => person),
         },
@@ -8353,7 +8353,7 @@ describe("useQuery Hook", () => {
 
       await rerender({ gender: "female" });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -8363,7 +8363,7 @@ describe("useQuery Hook", () => {
         variables: { gender: "female" },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           people: peopleData
             .filter((person) => person.gender === "female")
@@ -8424,7 +8424,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8432,7 +8432,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world 1" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8440,7 +8440,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8448,7 +8448,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world 3" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8544,14 +8544,14 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.a).toEqualStrictTyped({
+      expect(result.current.a).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
       });
-      expect(result.current.b).toEqualStrictTyped({
+      expect(result.current.b).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8564,14 +8564,14 @@ describe("useQuery Hook", () => {
         expect(result.current.b.loading).toBe(false);
       });
 
-      expect(result.current.a).toEqualStrictTyped({
+      expect(result.current.a).toStrictEqualTyped({
         data: aData,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
       });
-      expect(result.current.b).toEqualStrictTyped({
+      expect(result.current.b).toStrictEqualTyped({
         data: bData,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8721,7 +8721,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current).toEqualStrictTyped({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8733,7 +8733,7 @@ describe("useQuery Hook", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      expect(result.current).toEqualStrictTyped({
+      expect(result.current).toStrictEqualTyped({
         data: { hello: "hello 1" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8751,7 +8751,7 @@ describe("useQuery Hook", () => {
         setShow(true);
       });
 
-      expect(result.current).toEqualStrictTyped({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8763,7 +8763,7 @@ describe("useQuery Hook", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      expect(result.current).toEqualStrictTyped({
+      expect(result.current).toStrictEqualTyped({
         data: { hello: "hello 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -8807,7 +8807,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8829,7 +8829,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -8862,7 +8862,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -8918,7 +8918,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -8940,7 +8940,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greetings: [
             { message: "Hello world", __typename: "Greeting" },
@@ -8973,7 +8973,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -9015,7 +9015,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -9082,7 +9082,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -9118,7 +9118,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           allProducts: [
             {
@@ -9171,7 +9171,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           allProducts: [
             {
@@ -9253,7 +9253,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -9275,7 +9275,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -9308,7 +9308,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             message: "Hello world",
@@ -9366,7 +9366,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -9397,7 +9397,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9447,7 +9447,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9528,7 +9528,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -9559,7 +9559,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           hero: {
             name: "R2-D2",
@@ -9617,7 +9617,7 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9719,7 +9719,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -9742,7 +9742,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -9777,7 +9777,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -9847,7 +9847,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -9869,7 +9869,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -9903,7 +9903,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -10038,7 +10038,7 @@ describe("useQuery Hook", () => {
     await wait(10);
     expect(requests).toBe(1);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -10048,7 +10048,7 @@ describe("useQuery Hook", () => {
 
     await client.clearStore();
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: new InvariantError(
         "Store reset while query was in flight (not completed in link chain)"
@@ -10100,7 +10100,7 @@ describe("useQuery Hook", () => {
         }
       );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -10108,7 +10108,7 @@ describe("useQuery Hook", () => {
       variables: {},
     });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: { user: { __typename: "User", id: "1", name: null } },
@@ -10125,7 +10125,7 @@ describe("useQuery Hook", () => {
     refetch().catch(() => {});
     refetch().catch(() => {});
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.refetch,
@@ -10133,7 +10133,7 @@ describe("useQuery Hook", () => {
       variables: {},
     });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: { user: { __typename: "User", id: "1", name: null } },
@@ -10220,7 +10220,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -10232,7 +10232,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10329,7 +10329,7 @@ describe("useQuery Hook", () => {
 
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -10424,7 +10424,7 @@ describe("useQuery Hook", () => {
 
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -10514,7 +10514,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10544,7 +10544,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10640,7 +10640,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10763,7 +10763,7 @@ describe("useQuery Hook", () => {
 
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10863,7 +10863,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10881,7 +10881,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -10991,7 +10991,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -11008,7 +11008,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -11105,7 +11105,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot).toEqualStrictTyped({
+        expect(snapshot).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",

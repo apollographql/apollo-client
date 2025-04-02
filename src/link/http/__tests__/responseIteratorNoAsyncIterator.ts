@@ -174,7 +174,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitStrictTyped(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
@@ -215,7 +215,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitStrictTyped(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
@@ -242,7 +242,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of results) {
-      await expect(observableStream).toEmitStrictTyped(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();
@@ -271,7 +271,7 @@ describe("multipart responses", () => {
     const observableStream = new ObservableStream(observable);
 
     for (const result of batchedResults) {
-      await expect(observableStream).toEmitStrictTyped(result);
+      await expect(observableStream).toEmitTypedValue(result);
     }
 
     await expect(observableStream).toComplete();

@@ -78,7 +78,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -93,14 +93,14 @@ describe("useLazyQuery Hook", () => {
     const [execute] = getCurrentSnapshot();
     const result = await execute();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { hello: "world" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -141,7 +141,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -156,14 +156,14 @@ describe("useLazyQuery Hook", () => {
     const [execute] = getCurrentSnapshot();
     const result = await execute({ variables: { id: 1 } });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { hello: "world 1" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
@@ -201,7 +201,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -216,14 +216,14 @@ describe("useLazyQuery Hook", () => {
     const [execute] = getCurrentSnapshot();
     const result = await execute();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { hello: "world" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -238,7 +238,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -292,7 +292,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -306,14 +306,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -330,7 +330,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -342,14 +342,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { name: "changed" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { name: "changed" },
         called: true,
         loading: false,
@@ -403,7 +403,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -417,14 +417,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -441,7 +441,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -455,14 +455,14 @@ describe("useLazyQuery Hook", () => {
 
     const [, { refetch }] = getCurrentSnapshot();
 
-    await expect(refetch()).resolves.toEqualStrictTyped({
+    await expect(refetch()).resolves.toStrictEqualTyped({
       data: { name: "changed" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { name: "changed" },
         called: true,
         loading: false,
@@ -520,7 +520,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -534,14 +534,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -555,7 +555,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -572,7 +572,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -584,14 +584,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { name: "changed" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -606,7 +606,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { name: "changed" },
         called: true,
         loading: false,
@@ -652,7 +652,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -666,14 +666,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 1" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
@@ -685,14 +685,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 2" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
@@ -739,7 +739,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -753,14 +753,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 1" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -775,7 +775,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
@@ -787,14 +787,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 2" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: true,
@@ -809,7 +809,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
@@ -855,7 +855,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -869,14 +869,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 1" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -891,7 +891,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
@@ -905,14 +905,14 @@ describe("useLazyQuery Hook", () => {
 
     const [, { refetch }] = getCurrentSnapshot();
 
-    await expect(refetch()).resolves.toEqualStrictTyped({
+    await expect(refetch()).resolves.toStrictEqualTyped({
       data: { hello: "world 2" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: true,
@@ -926,7 +926,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
@@ -974,7 +974,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -988,14 +988,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 1" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
@@ -1012,7 +1012,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
@@ -1027,7 +1027,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 3" },
         called: true,
         loading: false,
@@ -1094,7 +1094,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1108,14 +1108,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute({ variables: { id: 1 } })).resolves.toEqualStrictTyped(
+    await expect(execute({ variables: { id: 1 } })).resolves.toStrictEqualTyped(
       { data: data1 }
     );
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: data1,
         called: true,
         loading: false,
@@ -1127,14 +1127,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute({ variables: { id: 2 } })).resolves.toEqualStrictTyped(
+    await expect(execute({ variables: { id: 2 } })).resolves.toStrictEqualTyped(
       { data: data2 }
     );
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: data2,
         called: true,
         loading: false,
@@ -1203,7 +1203,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1217,14 +1217,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute({ variables: { id: 1 } })).resolves.toEqualStrictTyped(
+    await expect(execute({ variables: { id: 1 } })).resolves.toStrictEqualTyped(
       { data: data1 }
     );
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -1239,7 +1239,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: data1,
         called: true,
         loading: false,
@@ -1251,14 +1251,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute({ variables: { id: 2 } })).resolves.toEqualStrictTyped(
+    await expect(execute({ variables: { id: 2 } })).resolves.toStrictEqualTyped(
       { data: data2 }
     );
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: true,
@@ -1272,7 +1272,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: data2,
         called: true,
         loading: false,
@@ -1316,7 +1316,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1330,14 +1330,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "from link" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from cache" },
         called: true,
         loading: true,
@@ -1352,7 +1352,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
         called: true,
         loading: false,
@@ -1403,7 +1403,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1417,14 +1417,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "from link" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from cache" },
         called: true,
         loading: true,
@@ -1439,7 +1439,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
         called: true,
         loading: false,
@@ -1451,14 +1451,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "from link 2" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
         called: true,
         loading: true,
@@ -1473,7 +1473,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "from link 2" },
         called: true,
         loading: false,
@@ -1526,7 +1526,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1542,7 +1542,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "1" } })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -1551,7 +1551,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Cache 1" },
         },
@@ -1568,7 +1568,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
         },
@@ -1586,7 +1586,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "2" } })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
@@ -1595,7 +1595,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "2", name: "Cache 2" },
         },
@@ -1614,7 +1614,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "2", name: "Black Widow" },
         },
@@ -1675,7 +1675,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1691,7 +1691,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "1" } })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -1700,7 +1700,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Cache 1" },
         },
@@ -1717,7 +1717,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
         },
@@ -1735,7 +1735,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(
       execute({ variables: { id: "2" } })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
@@ -1744,7 +1744,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "2", name: "Cache 2" },
         },
@@ -1763,7 +1763,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           character: { __typename: "Character", id: "2", name: "Black Widow" },
         },
@@ -1815,7 +1815,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1834,7 +1834,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: false,
@@ -1854,7 +1854,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
         loading: false,
@@ -1913,7 +1913,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -1925,7 +1925,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors({
         data: { currentUser: null },
@@ -1936,7 +1936,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { currentUser: null },
         called: true,
         loading: false,
@@ -1952,7 +1952,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors({
         data: { currentUser: null },
@@ -1963,7 +1963,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { currentUser: null },
         called: true,
         loading: false,
@@ -2025,7 +2025,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2037,14 +2037,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { currentUser: null },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { currentUser: null },
         called: true,
         loading: false,
@@ -2056,7 +2056,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { currentUser: null },
     });
 
@@ -2086,7 +2086,7 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    await expect(promise!).resolves.toEqualStrictTyped({
+    await expect(promise!).resolves.toStrictEqualTyped({
       data: { hello: "Greetings" },
     });
   });
@@ -2118,8 +2118,8 @@ describe("useLazyQuery Hook", () => {
       data: { hello: "Greetings" },
     };
 
-    await expect(promise1!).resolves.toEqualStrictTyped(expectedResult);
-    await expect(promise2!).resolves.toEqualStrictTyped(expectedResult);
+    await expect(promise1!).resolves.toStrictEqualTyped(expectedResult);
+    await expect(promise2!).resolves.toStrictEqualTyped(expectedResult);
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
@@ -2169,7 +2169,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2184,18 +2184,18 @@ describe("useLazyQuery Hook", () => {
     const promise1 = execute({ variables: { id: "1" } });
     const promise2 = execute({ variables: { id: "2" } });
 
-    await expect(promise1).resolves.toEqualStrictTyped({
+    await expect(promise1).resolves.toStrictEqualTyped({
       data: mocks[0].result.data,
     });
 
-    await expect(promise2).resolves.toEqualStrictTyped({
+    await expect(promise2).resolves.toStrictEqualTyped({
       data: mocks[1].result.data,
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: mocks[1].result.data,
         called: true,
         loading: false,
@@ -2238,7 +2238,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2255,7 +2255,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2269,14 +2269,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    await expect(execute()).resolves.toEqualStrictTyped({
+    await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "Greetings" },
     });
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { hello: "Greetings" },
         called: true,
         loading: false,
@@ -2405,7 +2405,7 @@ describe("useLazyQuery Hook", () => {
       expect(fetchCount).toBe(1);
 
       await waitFor(() => {
-        expect(result.current[1]).toEqualStrictTyped({
+        expect(result.current[1]).toStrictEqualTyped({
           data: { user: { id: "2", name: "John Doe" } },
           called: true,
           loading: false,
@@ -2422,7 +2422,7 @@ describe("useLazyQuery Hook", () => {
       await act(() => result.current[0]());
 
       await waitFor(() => {
-        expect(result.current[1]).toEqualStrictTyped({
+        expect(result.current[1]).toStrictEqualTyped({
           data: { user: { id: null, name: "John Default" } },
           called: true,
           loading: false,
@@ -2509,7 +2509,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2530,7 +2530,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2550,7 +2550,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
         called: true,
         loading: false,
@@ -2574,7 +2574,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
         called: true,
         loading: false,
@@ -2596,7 +2596,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
         error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
         called: true,
@@ -2625,7 +2625,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
         error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
         called: true,
@@ -2643,7 +2643,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "3", name: "Johnny Three" } },
         called: true,
         loading: false,
@@ -2753,7 +2753,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           called: false,
           loading: false,
@@ -2772,7 +2772,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: networkError,
           called: true,
@@ -2820,7 +2820,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           called: false,
           loading: false,
@@ -2834,7 +2834,7 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).resolves.toEqualStrictTyped({
+      await expect(execute()).resolves.toStrictEqualTyped({
         data: undefined,
         error: networkError,
       });
@@ -2842,7 +2842,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           error: networkError,
           called: true,
@@ -2890,7 +2890,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           called: false,
           loading: false,
@@ -2904,12 +2904,12 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).resolves.toEqualStrictTyped({ data: undefined });
+      await expect(execute()).resolves.toStrictEqualTyped({ data: undefined });
 
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: undefined,
           called: true,
           loading: false,
@@ -2945,7 +2945,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         called: false,
         loading: false,
@@ -2973,7 +2973,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         error: new InvariantError(
           "Store reset while query was in flight (not completed in link chain)"
@@ -3059,7 +3059,7 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -3072,7 +3072,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3161,7 +3161,7 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -3175,7 +3175,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3264,7 +3264,7 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           currentUser: {
             __typename: "User",
@@ -3278,7 +3278,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3368,7 +3368,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3401,7 +3401,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3492,7 +3492,7 @@ describe("useLazyQuery Hook", () => {
       {
         const [, result] = await takeSnapshot();
 
-        expect(result).toEqualStrictTyped({
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3813,7 +3813,7 @@ test("uses the updated client when executing the function after changing clients
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -3827,14 +3827,14 @@ test("uses the updated client when executing the function after changing clients
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello client 1" },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 1" },
       called: true,
       loading: false,
@@ -3851,7 +3851,7 @@ test("uses the updated client when executing the function after changing clients
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 1" },
       called: true,
       loading: false,
@@ -3863,14 +3863,14 @@ test("uses the updated client when executing the function after changing clients
     });
   }
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello client 2" },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 2" },
       called: true,
       loading: false,
@@ -3912,7 +3912,7 @@ test("responds to cache updates after executing query", async () => {
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -3926,14 +3926,14 @@ test("responds to cache updates after executing query", async () => {
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello" },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       called: true,
       loading: false,
@@ -3955,7 +3955,7 @@ test("responds to cache updates after executing query", async () => {
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello (updated)" },
       called: true,
       loading: false,
@@ -3993,7 +3993,7 @@ test("responds to cache updates after changing variables", async () => {
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4007,7 +4007,7 @@ test("responds to cache updates after changing variables", async () => {
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4018,7 +4018,7 @@ test("responds to cache updates after changing variables", async () => {
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -4032,7 +4032,7 @@ test("responds to cache updates after changing variables", async () => {
     });
   }
 
-  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
@@ -4043,7 +4043,7 @@ test("responds to cache updates after changing variables", async () => {
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
@@ -4074,7 +4074,7 @@ test("responds to cache updates after changing variables", async () => {
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -4142,7 +4142,7 @@ test("uses cached result when switching to variables already written to the cach
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4156,7 +4156,7 @@ test("uses cached result when switching to variables already written to the cach
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4167,7 +4167,7 @@ test("uses cached result when switching to variables already written to the cach
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -4181,7 +4181,7 @@ test("uses cached result when switching to variables already written to the cach
     });
   }
 
-  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: {
@@ -4196,7 +4196,7 @@ test("uses cached result when switching to variables already written to the cach
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -4248,7 +4248,7 @@ test("renders loading states where necessary when switching to variables maybe w
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4262,7 +4262,7 @@ test("renders loading states where necessary when switching to variables maybe w
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4273,7 +4273,7 @@ test("renders loading states where necessary when switching to variables maybe w
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: true,
       loading: true,
@@ -4288,7 +4288,7 @@ test("renders loading states where necessary when switching to variables maybe w
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -4302,7 +4302,7 @@ test("renders loading states where necessary when switching to variables maybe w
     });
   }
 
-  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: {
@@ -4317,7 +4317,7 @@ test("renders loading states where necessary when switching to variables maybe w
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -4337,7 +4337,7 @@ test("renders loading states where necessary when switching to variables maybe w
     });
   }
 
-  await expect(execute({ variables: { id: "3" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "3" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: {
@@ -4352,7 +4352,7 @@ test("renders loading states where necessary when switching to variables maybe w
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: true,
       loading: true,
@@ -4373,7 +4373,7 @@ test("renders loading states where necessary when switching to variables maybe w
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -4458,7 +4458,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4472,7 +4472,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4483,7 +4483,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -4502,7 +4502,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -4522,7 +4522,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: null,
       },
@@ -4582,7 +4582,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4596,14 +4596,14 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { context: { source: "initialHookValue" } },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "initialHookValue" } },
       called: true,
       loading: false,
@@ -4620,7 +4620,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "initialHookValue" } },
       called: true,
       loading: false,
@@ -4632,14 +4632,14 @@ test("applies `context` on next fetch when it changes between renders", async ()
     });
   }
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { context: { source: "rerender" } },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "rerender" } },
       called: true,
       loading: false,
@@ -4656,7 +4656,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "rerender" } },
       called: true,
       loading: false,
@@ -4674,7 +4674,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "rerenderForRefetch" } },
       called: true,
       loading: false,
@@ -4688,14 +4688,14 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   await expect(
     execute({ context: { source: "execute" } })
-  ).resolves.toEqualStrictTyped({
+  ).resolves.toStrictEqualTyped({
     data: { context: { source: "execute" } },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "execute" } },
       called: true,
       loading: false,
@@ -4775,7 +4775,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4791,12 +4791,12 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
   await expect(
     execute({ variables: { min: 0, max: 12 } })
-  ).resolves.toEqualStrictTyped({ data: mocks[0].result.data });
+  ).resolves.toStrictEqualTyped({ data: mocks[0].result.data });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: mocks[0].result.data,
       called: true,
       loading: false,
@@ -4817,7 +4817,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       called: true,
       loading: false,
@@ -4842,7 +4842,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       called: true,
       loading: false,
@@ -4859,7 +4859,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: mocks[2].result.data,
       called: true,
       loading: false,
@@ -4962,7 +4962,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -4976,7 +4976,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
@@ -4987,7 +4987,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
@@ -5006,7 +5006,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
@@ -5020,7 +5020,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
     });
   }
 
-  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "2", name: "Hulk" },
@@ -5031,7 +5031,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "2" } },
       called: true,
       loading: true,
@@ -5048,7 +5048,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "2", name: "Hulk" } },
       called: true,
       loading: false,
@@ -5104,7 +5104,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -5118,7 +5118,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute({ variables: { id: "1" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Cache" },
@@ -5129,7 +5129,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Cache" },
       },
@@ -5148,7 +5148,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Cache" },
       },
@@ -5162,7 +5162,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
     });
   }
 
-  await expect(execute({ variables: { id: "2" } })).resolves.toEqualStrictTyped(
+  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
     {
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
@@ -5173,7 +5173,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Cached Widow" },
       },
@@ -5192,7 +5192,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
@@ -5242,7 +5242,7 @@ test("renders loading states at appropriate times on next fetch after updating `
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: undefined,
       called: false,
       loading: false,
@@ -5256,14 +5256,14 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   const [execute] = getCurrentSnapshot();
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello 1" },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       called: true,
       loading: false,
@@ -5280,7 +5280,7 @@ test("renders loading states at appropriate times on next fetch after updating `
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       called: true,
       loading: false,
@@ -5292,14 +5292,14 @@ test("renders loading states at appropriate times on next fetch after updating `
     });
   }
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello 2" },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       called: true,
       loading: true,
@@ -5314,7 +5314,7 @@ test("renders loading states at appropriate times on next fetch after updating `
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
       called: true,
       loading: false,
@@ -5331,7 +5331,7 @@ test("renders loading states at appropriate times on next fetch after updating `
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
       called: true,
       loading: false,
@@ -5343,14 +5343,14 @@ test("renders loading states at appropriate times on next fetch after updating `
     });
   }
 
-  await expect(execute()).resolves.toEqualStrictTyped({
+  await expect(execute()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello 3" },
   });
 
   {
     const [, result] = await takeSnapshot();
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 3" },
       called: true,
       loading: false,

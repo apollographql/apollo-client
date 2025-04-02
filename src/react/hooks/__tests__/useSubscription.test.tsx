@@ -57,7 +57,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -65,7 +65,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -73,7 +73,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[1]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[1].result.data,
       error: undefined,
       loading: false,
@@ -81,7 +81,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[2]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[2].result.data,
       error: undefined,
       loading: false,
@@ -89,7 +89,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[3]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[3].result.data,
       error: undefined,
       loading: false,
@@ -132,7 +132,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -140,7 +140,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -148,7 +148,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(errorResult);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: errorResult.result.data,
@@ -204,7 +204,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -212,7 +212,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -233,7 +233,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(errorResult);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: new CombinedGraphQLErrors({
         data: errorResult.result.data,
@@ -254,7 +254,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[1]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[1].result.data,
       error: undefined,
       loading: false,
@@ -308,7 +308,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -316,7 +316,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -363,7 +363,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -371,7 +371,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -435,7 +435,7 @@ describe("useSubscription Hook", () => {
         }
       );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: false,
@@ -443,7 +443,7 @@ describe("useSubscription Hook", () => {
 
     await rerender({ variables: { foo: "bar2" } });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: false,
@@ -491,7 +491,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: false,
@@ -499,7 +499,7 @@ describe("useSubscription Hook", () => {
 
     await rerender({ skip: false });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -507,7 +507,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -515,7 +515,7 @@ describe("useSubscription Hook", () => {
 
     await rerender({ skip: true });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: false,
@@ -524,7 +524,7 @@ describe("useSubscription Hook", () => {
     // ensure state persists across rerenders
     await rerender({ skip: true });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: false,
@@ -535,7 +535,7 @@ describe("useSubscription Hook", () => {
     // ensure state persists across rerenders
     await rerender({ skip: false });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -543,7 +543,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[1]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[1].result.data,
       error: undefined,
       loading: false,
@@ -589,7 +589,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -597,7 +597,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -605,7 +605,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[1]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[1].result.data,
       error: undefined,
       loading: false,
@@ -653,7 +653,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -661,7 +661,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[0].result.data,
       error: undefined,
       loading: false,
@@ -669,7 +669,7 @@ describe("useSubscription Hook", () => {
 
     link.simulateResult(results[1]);
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: results[1].result.data,
       error: undefined,
       loading: false,
@@ -715,13 +715,13 @@ describe("useSubscription Hook", () => {
     {
       const { sub1, sub2 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
@@ -733,13 +733,13 @@ describe("useSubscription Hook", () => {
     if (IS_REACT_17) {
       const { sub1, sub2 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
@@ -749,13 +749,13 @@ describe("useSubscription Hook", () => {
     {
       const { sub1, sub2 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
@@ -767,13 +767,13 @@ describe("useSubscription Hook", () => {
     if (IS_REACT_17) {
       const { sub1, sub2 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: results[1].result.data,
         error: undefined,
         loading: false,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
@@ -783,13 +783,13 @@ describe("useSubscription Hook", () => {
     {
       const { sub1, sub2 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: results[1].result.data,
         error: undefined,
         loading: false,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: results[1].result.data,
         error: undefined,
         loading: false,
@@ -824,7 +824,7 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -836,7 +836,7 @@ describe("useSubscription Hook", () => {
       /* complete */ true
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: { car: { __typename: "Car", make: "Audi" } },
       error: undefined,
       loading: false,
@@ -877,19 +877,19 @@ describe("useSubscription Hook", () => {
     {
       const { sub1, sub2, sub3 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
       });
 
-      expect(sub3).toEqualStrictTyped({
+      expect(sub3).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
@@ -906,19 +906,19 @@ describe("useSubscription Hook", () => {
       {
         const { sub1, sub2, sub3 } = await takeSnapshot();
 
-        expect(sub1).toEqualStrictTyped({
+        expect(sub1).toStrictEqualTyped({
           data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
         });
 
-        expect(sub2).toEqualStrictTyped({
+        expect(sub2).toStrictEqualTyped({
           data: undefined,
           error: undefined,
           loading: true,
         });
 
-        expect(sub3).toEqualStrictTyped({
+        expect(sub3).toStrictEqualTyped({
           data: undefined,
           error: undefined,
           loading: true,
@@ -928,19 +928,19 @@ describe("useSubscription Hook", () => {
       {
         const { sub1, sub2, sub3 } = await takeSnapshot();
 
-        expect(sub1).toEqualStrictTyped({
+        expect(sub1).toStrictEqualTyped({
           data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
         });
 
-        expect(sub2).toEqualStrictTyped({
+        expect(sub2).toStrictEqualTyped({
           data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
         });
 
-        expect(sub3).toEqualStrictTyped({
+        expect(sub3).toStrictEqualTyped({
           data: undefined,
           error: undefined,
           loading: true,
@@ -951,19 +951,19 @@ describe("useSubscription Hook", () => {
     {
       const { sub1, sub2, sub3 } = await takeSnapshot();
 
-      expect(sub1).toEqualStrictTyped({
+      expect(sub1).toStrictEqualTyped({
         data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
       });
 
-      expect(sub2).toEqualStrictTyped({
+      expect(sub2).toStrictEqualTyped({
         data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
       });
 
-      expect(sub3).toEqualStrictTyped({
+      expect(sub3).toStrictEqualTyped({
         data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
@@ -1005,7 +1005,7 @@ describe("useSubscription Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
@@ -1020,7 +1020,7 @@ describe("useSubscription Hook", () => {
         },
       ]);
 
-      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         error: new CombinedProtocolErrors([
           {
@@ -1085,13 +1085,13 @@ followed by new in-flight setup", async () => {
     {
       const { heads, tails } = await takeSnapshot();
 
-      expect(heads).toEqualStrictTyped({
+      expect(heads).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
       });
 
-      expect(tails).toEqualStrictTyped({
+      expect(tails).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -1103,13 +1103,13 @@ followed by new in-flight setup", async () => {
     {
       const { heads, tails } = await takeSnapshot();
 
-      expect(heads).toEqualStrictTyped({
+      expect(heads).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
       });
 
-      expect(tails).toEqualStrictTyped({
+      expect(tails).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
@@ -1123,13 +1123,13 @@ followed by new in-flight setup", async () => {
     {
       const { heads, tails } = await takeSnapshot();
 
-      expect(heads).toEqualStrictTyped({
+      expect(heads).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
       });
 
-      expect(tails).toEqualStrictTyped({
+      expect(tails).toStrictEqualTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
@@ -1141,13 +1141,13 @@ followed by new in-flight setup", async () => {
     {
       const { heads, tails } = await takeSnapshot();
 
-      expect(heads).toEqualStrictTyped({
+      expect(heads).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: true,
       });
 
-      expect(tails).toEqualStrictTyped({
+      expect(tails).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -1159,13 +1159,13 @@ followed by new in-flight setup", async () => {
     {
       const { heads, tails } = await takeSnapshot();
 
-      expect(heads).toEqualStrictTyped({
+      expect(heads).toStrictEqualTyped({
         data: results[1].result.data,
         error: undefined,
         loading: false,
       });
 
-      expect(tails).toEqualStrictTyped({
+      expect(tails).toStrictEqualTyped({
         data: undefined,
         error: undefined,
         loading: false,
@@ -1237,7 +1237,7 @@ followed by new in-flight setup", async () => {
             errorBoundaryOnError,
           } = await setup({ errorPolicy, onError, onData });
 
-          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          await expect(takeSnapshot()).resolves.toStrictEqualTyped({
             data: undefined,
             error: undefined,
             loading: true,
@@ -1247,7 +1247,7 @@ followed by new in-flight setup", async () => {
 
           {
             const snapshot = await takeSnapshot();
-            expect(snapshot).toEqualStrictTyped({
+            expect(snapshot).toStrictEqualTyped({
               loading: false,
               error: new CombinedGraphQLErrors(graphQlErrorResult.result!),
               data: undefined,
@@ -1269,7 +1269,7 @@ followed by new in-flight setup", async () => {
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           await setup({ errorPolicy: "all", onError, onData });
 
-        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        await expect(takeSnapshot()).resolves.toStrictEqualTyped({
           data: undefined,
           error: undefined,
           loading: true,
@@ -1279,7 +1279,7 @@ followed by new in-flight setup", async () => {
 
         {
           const snapshot = await takeSnapshot();
-          expect(snapshot).toEqualStrictTyped({
+          expect(snapshot).toStrictEqualTyped({
             loading: false,
             error: new CombinedGraphQLErrors(graphQlErrorResult.result!),
             data: { totalLikes: 42 },
@@ -1305,7 +1305,7 @@ followed by new in-flight setup", async () => {
             onData,
           });
 
-        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        await expect(takeSnapshot()).resolves.toStrictEqualTyped({
           data: undefined,
           error: undefined,
           loading: true,
@@ -1315,7 +1315,7 @@ followed by new in-flight setup", async () => {
 
         {
           const snapshot = await takeSnapshot();
-          expect(snapshot).toEqualStrictTyped({
+          expect(snapshot).toStrictEqualTyped({
             loading: false,
             error: undefined,
             data: { totalLikes: 42 },
@@ -1376,7 +1376,7 @@ followed by new in-flight setup", async () => {
             }
           );
 
-          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          await expect(takeSnapshot()).resolves.toStrictEqualTyped({
             data: undefined,
             error: undefined,
             loading: true,
@@ -1390,7 +1390,7 @@ followed by new in-flight setup", async () => {
             { message: "Socket closed with event -1: I'm a test!" },
           ]);
 
-          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          await expect(takeSnapshot()).resolves.toStrictEqualTyped({
             data: undefined,
             error: expectedError,
             loading: false,
@@ -1437,7 +1437,7 @@ followed by new in-flight setup", async () => {
           }
         );
 
-        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        await expect(takeSnapshot()).resolves.toStrictEqualTyped({
           data: undefined,
           error: undefined,
           loading: true,
@@ -1520,7 +1520,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1531,7 +1531,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
@@ -1546,7 +1546,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1560,7 +1560,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
@@ -1583,7 +1583,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1597,7 +1597,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
@@ -1616,7 +1616,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1627,7 +1627,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 1000 },
         error: undefined,
@@ -1646,7 +1646,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1657,7 +1657,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 1005 },
         error: undefined,
@@ -1679,7 +1679,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1690,7 +1690,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
@@ -1705,7 +1705,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1719,7 +1719,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
@@ -1741,7 +1741,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1755,7 +1755,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: undefined,
         error: new CombinedGraphQLErrors({ errors: [error] }),
@@ -1770,7 +1770,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         data: undefined,
         error: undefined,
@@ -1785,7 +1785,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
@@ -1803,7 +1803,7 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         data: undefined,
         error: undefined,
@@ -1865,7 +1865,7 @@ describe("ignoreResults", () => {
     );
 
     const snapshot = await takeSnapshot();
-    expect(snapshot).toEqualStrictTyped({
+    expect(snapshot).toStrictEqualTyped({
       loading: false,
       error: undefined,
       data: undefined,
@@ -1935,7 +1935,7 @@ describe("ignoreResults", () => {
     );
 
     const snapshot = await takeSnapshot();
-    expect(snapshot).toEqualStrictTyped({
+    expect(snapshot).toStrictEqualTyped({
       loading: false,
       error: undefined,
       data: undefined,
@@ -2001,7 +2001,7 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         error: undefined,
         data: undefined,
@@ -2018,7 +2018,7 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         error: undefined,
         // `data` appears immediately after changing to `ignoreResults: false`
@@ -2032,7 +2032,7 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         error: undefined,
         data: results[1].result.data,
@@ -2073,7 +2073,7 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: true,
         error: undefined,
         data: undefined,
@@ -2085,7 +2085,7 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         error: undefined,
         data: results[0].result.data,
@@ -2099,7 +2099,7 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toEqualStrictTyped({
+      expect(snapshot).toStrictEqualTyped({
         loading: false,
         error: undefined,
         // switching back to the default `ignoreResults: true` return value
@@ -2152,7 +2152,7 @@ describe("data masking", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -2171,7 +2171,7 @@ describe("data masking", () => {
       },
     });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: {
         addedComment: {
           __typename: "Comment",
@@ -2217,7 +2217,7 @@ describe("data masking", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -2236,7 +2236,7 @@ describe("data masking", () => {
       },
     });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: {
         addedComment: {
           __typename: "Comment",
@@ -2285,7 +2285,7 @@ describe("data masking", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -2304,7 +2304,7 @@ describe("data masking", () => {
       },
     });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: {
         addedComment: {
           __typename: "Comment",
@@ -2362,7 +2362,7 @@ describe("data masking", () => {
       }
     );
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: undefined,
       loading: true,
@@ -2381,7 +2381,7 @@ describe("data masking", () => {
       },
     });
 
-    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: {
         addedComment: {
           __typename: "Comment",

@@ -48,7 +48,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -57,7 +57,7 @@ describe("mutiple results", () => {
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -107,7 +107,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -118,7 +118,7 @@ describe("mutiple results", () => {
       result: { errors: [new GraphQLError("defer failed")] },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       loading: false,
       networkStatus: 7,
@@ -128,7 +128,7 @@ describe("mutiple results", () => {
     await wait(20);
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -178,7 +178,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -193,7 +193,7 @@ describe("mutiple results", () => {
       },
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -243,7 +243,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -255,7 +255,7 @@ describe("mutiple results", () => {
       error: new Error("defer failed"),
     });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -265,7 +265,7 @@ describe("mutiple results", () => {
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -322,7 +322,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -331,7 +331,7 @@ describe("mutiple results", () => {
 
     link.simulateResult({ error: new Error("defer failed") });
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
       error: new Error("defer failed"),
       loading: false,

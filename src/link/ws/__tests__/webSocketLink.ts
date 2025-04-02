@@ -57,7 +57,7 @@ describe("WebSocketLink", () => {
 
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitStrictTyped(result);
+    await expect(stream).toEmitTypedValue(result);
     expect(client.request).toHaveBeenCalledTimes(1);
   });
 
@@ -75,7 +75,7 @@ describe("WebSocketLink", () => {
 
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitStrictTyped(result);
+    await expect(stream).toEmitTypedValue(result);
     expect(client.request).toHaveBeenCalledTimes(1);
   });
 
@@ -93,7 +93,7 @@ describe("WebSocketLink", () => {
 
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitStrictTyped(result);
+    await expect(stream).toEmitTypedValue(result);
     expect(client.request).toHaveBeenCalledTimes(1);
   });
 
@@ -117,8 +117,8 @@ describe("WebSocketLink", () => {
     const observable = execute(link, { query: subscription });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitStrictTyped(results.shift()!);
-    await expect(stream).toEmitStrictTyped(results.shift()!);
+    await expect(stream).toEmitTypedValue(results.shift()!);
+    await expect(stream).toEmitTypedValue(results.shift()!);
 
     expect(client.request).toHaveBeenCalledTimes(1);
     expect(results).toHaveLength(0);

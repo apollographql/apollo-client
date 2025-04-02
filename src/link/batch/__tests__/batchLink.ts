@@ -227,7 +227,7 @@ describe("OperationBatcher", () => {
       expect(observables.length).toBe(1);
       expect(myBatcher["batchesByKey"].get("")).toBeUndefined();
 
-      await expect(stream).toEmitStrictTyped({ data });
+      await expect(stream).toEmitTypedValue({ data });
     });
 
     it("should be able to consume from a queue containing multiple queries", async () => {
@@ -266,8 +266,8 @@ describe("OperationBatcher", () => {
       expect(myBatcher["batchesByKey"].get("")).toBeUndefined();
       expect(observables.length).toBe(2);
 
-      await expect(stream1).toEmitStrictTyped({ data });
-      await expect(stream2).toEmitStrictTyped({ data });
+      await expect(stream1).toEmitTypedValue({ data });
+      await expect(stream2).toEmitTypedValue({ data });
     });
 
     it("should be able to consume from a queue containing multiple queries with different batch keys", async () => {
@@ -313,8 +313,8 @@ describe("OperationBatcher", () => {
 
       jest.runAllTimers();
 
-      await expect(stream1).toEmitStrictTyped({ data });
-      await expect(stream2).toEmitStrictTyped({ data });
+      await expect(stream1).toEmitTypedValue({ data });
+      await expect(stream2).toEmitTypedValue({ data });
     });
 
     it("should return a promise when we enqueue a request and resolve it with a result", async () => {
@@ -331,7 +331,7 @@ describe("OperationBatcher", () => {
 
       myBatcher.consumeQueue();
 
-      await expect(stream).toEmitStrictTyped({ data });
+      await expect(stream).toEmitTypedValue({ data });
     });
 
     it("should be able to debounce requests", () => {

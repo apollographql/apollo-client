@@ -102,13 +102,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
-  /** @deprecated Use `toEqualStrictTyped` instead */
-  toEqualApolloQueryResult: T extends ApolloQueryResult<infer TData> ?
-    (expected: ApolloQueryResult<TData>) => R
-  : T extends Promise<ApolloQueryResult<infer TData>> ?
-    (expected: ApolloQueryResult<TData>) => R
-  : { error: "matchers needs to be called on an ApolloQueryResult" };
-
   toEmitStrictTyped: T extends ObservableStream<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,

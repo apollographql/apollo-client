@@ -6,11 +6,13 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { getApolloContext } from "./ApolloContext.js";
 
-export interface ApolloConsumerProps {
-  children: (client: ApolloClient) => ReactTypes.ReactNode;
+declare namespace ApolloConsumer {
+  export interface Props {
+    children: (client: ApolloClient) => ReactTypes.ReactNode;
+  }
 }
 
-export const ApolloConsumer: ReactTypes.FC<ApolloConsumerProps> = (props) => {
+export const ApolloConsumer: ReactTypes.FC<ApolloConsumer.Props> = (props) => {
   const ApolloContext = getApolloContext();
   return (
     <ApolloContext.Consumer>

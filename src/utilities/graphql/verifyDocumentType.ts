@@ -8,18 +8,6 @@ import { OperationTypeNode } from "graphql";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-export enum DocumentType {
-  Query,
-  Mutation,
-  Subscription,
-}
-
-export interface IDocumentDefinition {
-  type: OperationTypeNode;
-  name: string;
-  variables: ReadonlyArray<VariableDefinitionNode>;
-}
-
 export function verifyDocumentType(
   document: DocumentNode,
   expectedType: OperationTypeNode

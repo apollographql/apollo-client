@@ -30,8 +30,8 @@ describe("Basic functionality", () => {
 
     const stream = new ObservableStream(client.subscribe({ query }));
 
-    await expect(stream).toEmitValue({ data: { field: 1 } });
-    await expect(stream).toEmitValue({ data: { field: 2 } });
+    await expect(stream).toEmitStrictTyped({ data: { field: 1 } });
+    await expect(stream).toEmitStrictTyped({ data: { field: 2 } });
     await expect(stream).toComplete();
   });
 
@@ -63,8 +63,8 @@ describe("Basic functionality", () => {
 
     const stream = new ObservableStream(client.subscribe({ query }));
 
-    await expect(stream).toEmitValue({ data: { field: 1, count: 1 } });
-    await expect(stream).toEmitValue({ data: { field: 2, count: 2 } });
+    await expect(stream).toEmitStrictTyped({ data: { field: 1, count: 1 } });
+    await expect(stream).toEmitStrictTyped({ data: { field: 2, count: 2 } });
     await expect(stream).toComplete();
   });
 });

@@ -618,7 +618,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue(data2);
+      await expect(stream).toEmitStrictTyped(data2);
     });
 
     it("adds headers to the request from the context", async () => {
@@ -903,7 +903,7 @@ describe("HttpLink", () => {
         execute(httpLink, { query: sampleQuery })
       );
 
-      await expect(stream).toEmitValue({ data: { hello: "from spy" } });
+      await expect(stream).toEmitStrictTyped({ data: { hello: "from spy" } });
       expect(fetchSpy).toHaveBeenCalledTimes(1);
 
       fetchSpy.mockRestore();
@@ -913,7 +913,7 @@ describe("HttpLink", () => {
         execute(httpLink, { query: sampleQuery })
       );
 
-      await expect(stream2).toEmitValue({ data: { hello: "world" } });
+      await expect(stream2).toEmitStrictTyped({ data: { hello: "world" } });
     });
 
     it("uses the print option function when defined", async () => {

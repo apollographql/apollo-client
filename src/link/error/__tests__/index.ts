@@ -122,15 +122,17 @@ describe("error handling", () => {
         },
       },
     ]);
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       data: {},
       hasNext: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       hasNext: true,
       incremental: [
         {
+          data: null,
+          path: [],
           errors: [
             {
               message: "could not read data",
@@ -186,11 +188,11 @@ describe("error handling", () => {
       { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
     ]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       extensions: {
         [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
           {
@@ -351,7 +353,8 @@ describe("error handling", () => {
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
+      // @ts-expect-error TODO: Need to determine a better way to handle this
       errors: null,
       data: { foo: { id: 1 } },
     });
@@ -532,11 +535,11 @@ describe("error handling with class", () => {
       { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
     ]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       extensions: {
         [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
           {
@@ -699,7 +702,7 @@ describe("support for request retrying", () => {
       execute(link, { query: QUERY, context: { bar: true } })
     );
 
-    await expect(stream).toEmitValue(GOOD_RESPONSE);
+    await expect(stream).toEmitStrictTyped(GOOD_RESPONSE);
     expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
   });
@@ -739,7 +742,7 @@ describe("support for request retrying", () => {
       execute(link, { query: QUERY, context: { bar: true } })
     );
 
-    await expect(stream).toEmitValue(GOOD_RESPONSE);
+    await expect(stream).toEmitStrictTyped(GOOD_RESPONSE);
     expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
   });
@@ -784,7 +787,7 @@ describe("support for request retrying", () => {
 
     enqueuePayloadResult({ data: { foo: { bar: true } } });
 
-    await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
+    await expect(stream).toEmitStrictTyped({ data: { foo: { bar: true } } });
 
     enqueueProtocolErrors([
       {
@@ -798,7 +801,7 @@ describe("support for request retrying", () => {
     enqueuePayloadResult({ data: { foo: { bar: true } } }, false);
 
     // Ensure the error result is not emitted but rather the retried result
-    await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
+    await expect(stream).toEmitStrictTyped({ data: { foo: { bar: true } } });
     expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
   });

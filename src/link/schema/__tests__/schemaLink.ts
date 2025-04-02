@@ -81,7 +81,7 @@ describe("SchemaLink", () => {
     });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       data: { sampleQuery: null },
       errors: [{ message: "Unauthorized", path: ["sampleQuery"] }],
     });
@@ -180,7 +180,7 @@ describe("SchemaLink", () => {
       `,
     });
     const stream = new ObservableStream(observable);
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitStrictTyped({
       errors: [{ message: 'Cannot query field "unknown" on type "Query".' }],
     });
   });

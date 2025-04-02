@@ -1,5 +1,6 @@
 import { dirname, join, relative, resolve, sep } from "node:path";
 
+import type { TSESTree as AST } from "@typescript-eslint/types";
 import { ESLintUtils } from "@typescript-eslint/utils";
 import { $ } from "zx";
 
@@ -41,28 +42,31 @@ function findNearestEntryPointFolder(filename: string) {
 
 export const importFromExport = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
+    function rule(node: AST.ImportDeclaration | AST.ExportNamedDeclaration) {
+      if (!node.source || !node.source.value.startsWith(".")) {
+        return;
+      }
+      const resolvedTarget = resolve(
+        dirname(context.physicalFilename),
+        node.source.value
+      );
+      if (resolvedTarget in entryPoints) {
+        context.report({
+          node: node.source,
+          messageId: "importFromExport",
+          fix(fixer) {
+            return fixer.replaceTextRange(
+              node.source.range,
+              `"${entryPoints[resolvedTarget]}"`
+            );
+          },
+        });
+      }
+    }
     return {
-      ImportDeclaration(node) {
-        if (!node.source.value.startsWith(".")) {
-          return;
-        }
-        const resolvedTarget = resolve(
-          dirname(context.physicalFilename),
-          node.source.value
-        );
-        if (resolvedTarget in entryPoints) {
-          context.report({
-            node: node.source,
-            messageId: "importFromExport",
-            fix(fixer) {
-              return fixer.replaceTextRange(
-                node.source.range,
-                `"${entryPoints[resolvedTarget]}"`
-              );
-            },
-          });
-        }
-      },
+      ImportDeclaration: rule,
+      // TODO: enable this in a separate PR for easier review
+      // ExportNamedDeclaration: rule,
     };
   },
   meta: {
@@ -72,6 +76,47 @@ export const importFromExport = ESLintUtils.RuleCreator.withoutDocs({
     },
     type: "problem",
     schema: [],
+    fixable: "code",
+  },
+  defaultOptions: [],
+});
+
+export const noDuplicateExports = ESLintUtils.RuleCreator.withoutDocs({
+  create(context) {
+    const seenExports = new Map<string, AST.ExportNamedDeclaration>();
+    return {
+      ExportNamedDeclaration(node) {
+        if (!node.source) {
+          return;
+        }
+        const name = node.source.value + ":" + node.exportKind;
+        const alreadySeen = seenExports.get(name);
+        if (alreadySeen) {
+          context.report({
+            node: node,
+            messageId: "noDuplicateExports",
+            *fix(fixer) {
+              for (const specifier of node.specifiers) {
+                yield fixer.insertTextBefore(
+                  alreadySeen.specifiers[0],
+                  context.sourceCode.getText(specifier) + ","
+                );
+              }
+              yield fixer.remove(node);
+            },
+          });
+        }
+        seenExports.set(name, node);
+      },
+    };
+  },
+  meta: {
+    messages: {
+      noDuplicateExports:
+        "Don't use multiple exports statements with the same source.",
+    },
+    schema: [],
+    type: "problem",
     fixable: "code",
   },
   defaultOptions: [],

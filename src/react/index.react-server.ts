@@ -17,6 +17,7 @@ function missingFeatureWarning(
   }[name];
 }
 
+// eslint-disable-next-line no-restricted-syntax
 export type * from "./index.js";
 
 export { DocumentType, operationName, parser } from "./parser/index.js";

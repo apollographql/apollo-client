@@ -10,4 +10,4 @@ export {
 } from "./mocking/mockSubscriptionLink.js";
 export { createMockClient } from "./mocking/mockClient.js";
 export { tick, wait } from "./wait.js";
-export * from "./withConsoleSpy.js";
+export { withErrorSpy, withLogSpy, withWarningSpy } from "./withConsoleSpy.js";

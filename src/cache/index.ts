@@ -47,4 +47,19 @@ export { Policies } from "./inmemory/policies.js";
 export type { FragmentRegistryAPI } from "./inmemory/fragmentRegistry.js";
 export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
-export type * from "./inmemory/types.js";
+export type {
+  ApolloReducerConfig,
+  DiffQueryAgainstStoreOptions,
+  IdGetter,
+  IdGetterObj,
+  InMemoryCacheConfig,
+  MergeInfo,
+  MergeTree,
+  NormalizedCache,
+  NormalizedCacheObject,
+  OptimisticStoreItem,
+  ReadMergeModifyContext,
+  ReadQueryOptions,
+  StoreObject,
+  StoreValue,
+} from "./inmemory/types.js";

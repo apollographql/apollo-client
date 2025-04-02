@@ -106,6 +106,7 @@ export default [
           ].map((file) => path.resolve(__dirname, file)),
         },
       ],
+      "local-rules/no-duplicate-exports": "error",
     },
   },
   ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
@@ -139,7 +140,6 @@ export default [
 
     rules: {
       "react-compiler/react-compiler": "error",
-
       "@typescript-eslint/consistent-type-imports": [
         "error",
         {
@@ -177,6 +177,7 @@ export default [
           message:
             "Please only use the namespace import syntax (`import * as React from 'react'`) for React imports!",
         },
+        "ExportAllDeclaration",
       ],
 
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],

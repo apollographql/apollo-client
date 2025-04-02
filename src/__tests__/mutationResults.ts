@@ -8,8 +8,10 @@ import { ApolloClient, FetchResult } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
-
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 describe("mutation results", () => {
   const query = gql`

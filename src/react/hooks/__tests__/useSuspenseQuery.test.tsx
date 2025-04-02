@@ -43,6 +43,15 @@ import {
   MockLink,
   MockSubscriptionLink,
 } from "@apollo/client/testing";
+import {
+  actAsync,
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+  renderAsync,
+  renderHookAsync,
+  setupPaginatedCase,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import {
   compact,
@@ -57,15 +66,6 @@ import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
-import {
-  actAsync,
-  PaginatedCaseData,
-  PaginatedCaseVariables,
-  renderAsync,
-  renderHookAsync,
-  setupPaginatedCase,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

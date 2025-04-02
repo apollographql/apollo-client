@@ -18,11 +18,10 @@ import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink, Operation } from "@apollo/client/link/core";
-
 import {
   ObservableStream,
   spyOnConsole,
-} from "../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {

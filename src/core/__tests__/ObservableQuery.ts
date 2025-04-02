@@ -22,15 +22,15 @@ import {
   wait,
 } from "@apollo/client/testing";
 import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import {
   DeepPartial,
   DocumentTransform,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 
-import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../testing/internal/index.js";
 import type { ObservableAndInfo } from "../QueryManager.js";
 import { QueryManager } from "../QueryManager.js";
 

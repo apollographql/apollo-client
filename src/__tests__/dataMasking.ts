@@ -25,10 +25,12 @@ import {
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { isSubscriptionOperation } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';

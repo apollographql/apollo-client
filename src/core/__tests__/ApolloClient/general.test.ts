@@ -16,6 +16,11 @@ import {
   type RequestHandler,
 } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing/core";
+import {
+  mockDeferStream,
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {
   InvariantError,
@@ -26,11 +31,6 @@ import {
   MockApolloLink,
   MockLink,
 } from "../../../testing/core/mocking/mockLink.js";
-import {
-  mockDeferStream,
-  ObservableStream,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
 import { QueryManager } from "../../QueryManager.js";
 import {
   WatchQueryFetchPolicy,

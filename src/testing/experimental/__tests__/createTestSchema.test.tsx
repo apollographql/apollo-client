@@ -21,9 +21,12 @@ import {
 } from "@apollo/client/core";
 import type { UseSuspenseQueryResult } from "@apollo/client/react";
 import { useMutation, useSuspenseQuery } from "@apollo/client/react";
+import {
+  createClientWrapper,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import { createClientWrapper, spyOnConsole } from "../../internal/index.js";
 import { createSchemaFetch } from "../createSchemaFetch.js";
 import { createTestSchema } from "../createTestSchema.js";
 

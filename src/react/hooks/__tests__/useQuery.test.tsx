@@ -43,15 +43,15 @@ import {
   tick,
   wait,
 } from "@apollo/client/testing";
+import {
+  setupPaginatedCase,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination, Reference } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
-import {
-  setupPaginatedCase,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

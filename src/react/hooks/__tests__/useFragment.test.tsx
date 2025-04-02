@@ -33,10 +33,9 @@ import {
 import { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useFragment, useQuery } from "@apollo/client/react/hooks";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
-
-import { spyOnConsole } from "../../../testing/internal/index.js";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

@@ -11,9 +11,9 @@ import {
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 import { LocalState } from "../../core/LocalState.js";
-import { ObservableStream } from "../../testing/internal/index.js";
 
 const setupTestWithResolvers = ({
   resolvers,

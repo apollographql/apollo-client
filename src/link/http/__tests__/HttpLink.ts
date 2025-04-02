@@ -15,8 +15,8 @@ import {
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { createHttpLink, HttpLink } from "@apollo/client/link/http";
 import { wait } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
-import { ObservableStream } from "../../../testing/internal/index.js";
 import { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";

@@ -3,8 +3,7 @@ import { gql } from "graphql-tag";
 
 import { execute } from "@apollo/client/link/core";
 import { SchemaLink } from "@apollo/client/link/schema";
-
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {

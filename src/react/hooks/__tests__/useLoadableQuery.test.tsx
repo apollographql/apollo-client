@@ -37,6 +37,13 @@ import {
   wait,
 } from "@apollo/client/testing";
 import {
+  renderAsync,
+  setupPaginatedCase,
+  setupSimpleCase,
+  SimpleCaseData,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import {
   MockedProvider,
   MockedProviderProps,
 } from "@apollo/client/testing/react";
@@ -49,13 +56,6 @@ import {
 import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
 import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
-import {
-  renderAsync,
-  setupPaginatedCase,
-  setupSimpleCase,
-  SimpleCaseData,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
 import { FetchMoreFunction, RefetchFunction } from "../../internal/types.js";
 
 const IS_REACT_19 = React.version.startsWith("19");

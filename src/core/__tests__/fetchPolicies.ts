@@ -10,11 +10,11 @@ import {
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { mockSingleLink } from "@apollo/client/testing";
-
 import {
   ObservableStream,
   spyOnConsole,
-} from "../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
+
 import { ApolloQueryResult } from "../types.js";
 import {
   WatchQueryFetchPolicy,

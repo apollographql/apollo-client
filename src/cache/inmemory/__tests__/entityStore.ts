@@ -8,6 +8,7 @@ import {
   InMemoryCache,
   MissingFieldError,
 } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import {
   isReference,
   makeReference,
@@ -15,7 +16,6 @@ import {
 } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import { spyOnConsole } from "../../../testing/internal/index.js";
 import {
   Reference,
   StoreValue,

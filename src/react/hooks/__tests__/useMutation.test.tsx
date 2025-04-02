@@ -40,10 +40,9 @@ import {
   mockSingleLink,
   MockSubscriptionLink,
 } from "@apollo/client/testing";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import { spyOnConsole } from "../../../testing/internal/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

@@ -28,19 +28,19 @@ import {
   MockLink,
   MockSubscriptionLink,
 } from "@apollo/client/testing";
-import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
-
-import {
-  SubscribeToMoreFunction,
-  SubscribeToMoreUpdateQueryFn,
-} from "../../../core/watchQueryOptions.js";
 import {
   createClientWrapper,
   PaginatedCaseData,
   setupPaginatedCase,
   setupSimpleCase,
   SimpleCaseData,
-} from "../../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
+import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
+
+import {
+  SubscribeToMoreFunction,
+  SubscribeToMoreUpdateQueryFn,
+} from "../../../core/watchQueryOptions.js";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

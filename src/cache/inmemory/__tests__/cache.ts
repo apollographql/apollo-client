@@ -10,9 +10,9 @@ import {
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import { cloneDeep, defaultCacheSizes } from "@apollo/client/utilities";
 
-import { spyOnConsole } from "../../../testing/internal/index.js";
 import { StoreReader } from "../readFromStore.js";
 import { InMemoryCacheConfig } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";

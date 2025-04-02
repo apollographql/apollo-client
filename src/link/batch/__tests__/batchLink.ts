@@ -5,8 +5,8 @@ import { EMPTY, map, Observable, of } from "rxjs";
 import { BatchLink, OperationBatcher } from "@apollo/client/link/batch";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
-import { ObservableStream } from "../../../testing/internal/index.js";
 import { FetchResult, GraphQLRequest, Operation } from "../../core/types.js";
 import { BatchableRequest, BatchHandler } from "../batchLink.js";
 

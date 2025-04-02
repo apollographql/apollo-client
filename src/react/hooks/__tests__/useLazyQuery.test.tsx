@@ -32,17 +32,16 @@ import {
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
-import { MockedProvider } from "@apollo/client/testing/react";
-import { DeepPartial } from "@apollo/client/utilities";
-import { InvariantError } from "@apollo/client/utilities/invariant";
-
 import {
   renderAsync,
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
   VariablesCaseVariables,
-} from "../../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { DeepPartial } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{

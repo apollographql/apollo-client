@@ -8,12 +8,11 @@ import {
 } from "@apollo/client/errors";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ErrorLink, onError } from "@apollo/client/link/error";
-
 import {
   mockDeferStream,
   mockMultipartSubscriptionStream,
   ObservableStream,
-} from "../../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {

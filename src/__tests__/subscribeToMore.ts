@@ -9,8 +9,10 @@ import {
   mockSingleLink,
   wait,
 } from "@apollo/client/testing";
-
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions

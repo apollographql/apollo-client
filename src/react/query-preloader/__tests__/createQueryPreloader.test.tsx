@@ -36,8 +36,6 @@ import {
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
-import { DeepPartial } from "@apollo/client/utilities";
-
 import {
   createClientWrapper,
   renderHookAsync,
@@ -46,7 +44,9 @@ import {
   SimpleCaseData,
   spyOnConsole,
   VariablesCaseData,
-} from "../../../testing/internal/index.js";
+} from "@apollo/client/testing/internal";
+import { DeepPartial } from "@apollo/client/utilities";
+
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,

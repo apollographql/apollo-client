@@ -3,8 +3,7 @@ import { execute, GraphQLError, validate } from "graphql";
 
 import { gql } from "@apollo/client/core";
 import { wait } from "@apollo/client/testing";
-
-import { withCleanup } from "../internal/index.js";
+import { withCleanup } from "@apollo/client/testing/internal";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and

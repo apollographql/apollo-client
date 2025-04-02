@@ -5,8 +5,7 @@ import { map, Observable, Observer, Subscription } from "rxjs";
 
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { ApolloLink, execute, FetchResult } from "@apollo/client/link/core";
-
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {

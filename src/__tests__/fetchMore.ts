@@ -16,14 +16,13 @@ import {
 } from "@apollo/client/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import {
+  ObservableStream,
+  setupPaginatedCase,
+} from "@apollo/client/testing/internal";
+import {
   concatPagination,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
-
-import {
-  ObservableStream,
-  setupPaginatedCase,
-} from "../testing/internal/index.js";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`

@@ -37,13 +37,15 @@ import {
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import {
   DocumentTransform,
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("client", () => {
   it("can be loaded via require", () => {

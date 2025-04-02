@@ -24,10 +24,10 @@ import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useSubscription } from "@apollo/client/react/hooks";
 import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
+import { mockMultipartSubscriptionStream } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import { mockMultipartSubscriptionStream } from "../../../testing/internal/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 

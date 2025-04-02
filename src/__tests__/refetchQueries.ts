@@ -9,8 +9,7 @@ import {
   ObservableQuery,
   TypedDocumentNode,
 } from "@apollo/client/core";
-
-import { ObservableStream } from "../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {

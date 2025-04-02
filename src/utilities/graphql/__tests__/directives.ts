@@ -3,6 +3,7 @@ import { BREAK, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import {
   getFragmentMaskMode,
   getQueryDefinition,
@@ -11,8 +12,6 @@ import {
   hasDirectives,
   shouldInclude,
 } from "@apollo/client/utilities";
-
-import { spyOnConsole } from "../../../testing/internal/index.js";
 
 describe("hasDirectives", () => {
   it("should allow searching the ast for a directive", () => {

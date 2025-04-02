@@ -21,9 +21,8 @@ import {
   MockLink,
   mockSingleLink,
 } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
-
-import { ObservableStream } from "../testing/internal/index.js";
 
 describe("optimistic mutation results", () => {
   const query = gql`

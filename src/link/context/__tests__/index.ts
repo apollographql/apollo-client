@@ -4,8 +4,7 @@ import { Observable, of } from "rxjs";
 import { setContext } from "@apollo/client/link/context";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
-
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));
 const query = gql`

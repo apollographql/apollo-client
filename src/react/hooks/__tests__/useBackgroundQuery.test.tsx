@@ -42,6 +42,19 @@ import {
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
+import {
+  addDelayToMocks,
+  createClientWrapper,
+  createMockWrapper,
+  PaginatedCaseData,
+  setupPaginatedCase,
+  setupSimpleCase,
+  setupVariablesCase,
+  SimpleCaseData,
+  spyOnConsole,
+  VariablesCaseData,
+  VariablesCaseVariables,
+} from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import {
   concatPagination,
@@ -55,19 +68,6 @@ import {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
 } from "../../../core/watchQueryOptions.js";
-import {
-  addDelayToMocks,
-  createClientWrapper,
-  createMockWrapper,
-  PaginatedCaseData,
-  setupPaginatedCase,
-  setupSimpleCase,
-  setupVariablesCase,
-  SimpleCaseData,
-  spyOnConsole,
-  VariablesCaseData,
-  VariablesCaseVariables,
-} from "../../../testing/internal/index.js";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,

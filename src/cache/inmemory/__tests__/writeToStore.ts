@@ -11,6 +11,7 @@ import { assign, omit } from "lodash";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { TypedDocumentNode } from "@apollo/client/core";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import {
   addTypenameToDocument,
   cloneDeep,
@@ -23,7 +24,6 @@ import {
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { spyOnConsole } from "../../../testing/internal/index.js";
 import { extractFragmentContext } from "../helpers.js";
 import { KeyFieldsFunction } from "../policies.js";
 import { StoreWriter } from "../writeToStore.js";

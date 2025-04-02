@@ -16,14 +16,14 @@ import {
 } from "@apollo/client/core";
 import { MockLink } from "@apollo/client/testing/core";
 import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import {
   relayStylePagination,
   stringifyForDisplay,
 } from "@apollo/client/utilities";
 
-import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
 import { FieldPolicy, StorageType } from "../policies.js";
 import { ReactiveVar } from "../reactiveVars.js";
 

@@ -23,10 +23,9 @@ import {
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useSuspenseFragment } from "@apollo/client/react/hooks";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({

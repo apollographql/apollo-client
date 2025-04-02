@@ -1,18 +1,11 @@
 import type {
   DefinitionNode,
   DocumentNode,
-  OperationDefinitionNode,
   VariableDefinitionNode,
 } from "graphql";
 import { OperationTypeNode } from "graphql";
 
-import {
-  AutoCleanedWeakCache,
-  cacheSizes,
-  defaultCacheSizes,
-} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { registerGlobalCache } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 export enum DocumentType {
@@ -27,29 +20,10 @@ export interface IDocumentDefinition {
   variables: ReadonlyArray<VariableDefinitionNode>;
 }
 
-let cache:
-  | undefined
-  | AutoCleanedWeakCache<
-      DocumentNode,
-      {
-        name: string;
-        type: OperationTypeNode;
-        variables: readonly VariableDefinitionNode[];
-      }
-    >;
-
-// This parser is mostly used to safety check incoming documents.
-function parser(document: DocumentNode): IDocumentDefinition {
-  if (!cache) {
-    cache = new AutoCleanedWeakCache(
-      cacheSizes.parser || defaultCacheSizes.parser
-    );
-  }
-  const cached = cache.get(document);
-  if (cached) return cached;
-
-  let variables, type, name;
-
+export function verifyDocumentType(
+  document: DocumentNode,
+  expectedType: OperationTypeNode
+) {
   invariant(
     !!document && !!document.kind,
     `Argument of %s passed to parser was not a valid GraphQL ` +
@@ -105,7 +79,7 @@ function parser(document: DocumentNode): IDocumentDefinition {
     mutations.length
   );
 
-  type =
+  const type =
     queries.length ? OperationTypeNode.QUERY
     : mutations.length ? OperationTypeNode.MUTATION
     : OperationTypeNode.SUBSCRIPTION;
@@ -124,38 +98,11 @@ function parser(document: DocumentNode): IDocumentDefinition {
     definitions.length
   );
 
-  const definition = definitions[0] as OperationDefinitionNode;
-  variables = definition.variableDefinitions || [];
-
-  if (definition.name && definition.name.kind === "Name") {
-    name = definition.name.value;
-  } else {
-    name = "data"; // fallback to using data if no name
-  }
-
-  const payload = { name, type, variables };
-  cache.set(document, payload);
-  return payload;
-}
-
-parser.resetCache = () => {
-  cache = undefined;
-};
-
-if (__DEV__) {
-  registerGlobalCache("parser", () => (cache ? cache.size : 0));
-}
-
-export function verifyDocumentType(
-  document: DocumentNode,
-  type: OperationTypeNode
-) {
-  const operation = parser(document);
   invariant(
-    operation.type === type,
+    type === expectedType,
     `Running a %s requires a graphql ` + `%s, but a %s was used instead.`,
-    type,
-    type,
-    operation.type
+    expectedType,
+    expectedType,
+    type
   );
 }

@@ -62,6 +62,7 @@
     "./testing/core": "./src/testing/core/index.ts",
     "./testing/experimental": "./src/testing/experimental/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
+    "./testing/internal": "./src/testing/internal/index.ts",
     "./utilities": "./src/utilities/index.ts",
     "./utilities/internal": {
       "production": "./src/utilities/internal/index.production.ts",

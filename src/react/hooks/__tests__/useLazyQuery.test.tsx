@@ -820,17 +820,11 @@ describe("useLazyQuery Hook", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(
-        () =>
-          useLazyQuery(helloQuery, {
-            notifyOnNetworkStatusChange: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
 
     {
       const [, result] = await takeSnapshot();

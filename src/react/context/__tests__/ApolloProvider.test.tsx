@@ -6,8 +6,8 @@ import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 
-import { ApolloContextValue } from "../ApolloContext.js";
-import { ApolloProviderProps } from "../ApolloProvider.js";
+import type { ApolloContextValue } from "../ApolloContext.js";
+import type { ApolloProviderProps } from "../ApolloProvider.js";
 
 describe("<ApolloProvider /> Component", () => {
   const client = new ApolloClient({

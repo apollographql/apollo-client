@@ -3,24 +3,16 @@ import { assign, cloneDeep } from "lodash";
 import { firstValueFrom, from, lastValueFrom, Observable } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
-import {
-  Cache,
-  InMemoryCache,
-  NormalizedCacheObject,
-} from "@apollo/client/cache";
-import {
+import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
+import { InMemoryCache } from "@apollo/client/cache";
+import type {
   ApolloCache,
-  ApolloClient,
-  ApolloLink,
-  makeReference,
   MutationQueryReducersMap,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import {
-  MockedResponse,
-  MockLink,
-  mockSingleLink,
-} from "@apollo/client/testing";
+import { ApolloClient, ApolloLink, makeReference } from "@apollo/client/core";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, mockSingleLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 

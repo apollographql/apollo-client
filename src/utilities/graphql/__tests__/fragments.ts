@@ -10,7 +10,7 @@ import {
   getFragmentQueryDocument,
 } from "@apollo/client/utilities";
 
-import { FragmentMap } from "../fragments.js";
+import type { FragmentMap } from "../fragments.js";
 
 describe("getFragmentQueryDocument", () => {
   it("will throw an error if there is an operation", () => {

@@ -1,20 +1,19 @@
 import { expectTypeOf } from "expect-type";
 import { disableFragmentWarnings, gql } from "graphql-tag";
 
-import { Cache, InMemoryCache, MissingFieldError } from "@apollo/client/cache";
-import {
+import type { Cache } from "@apollo/client/cache";
+import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
+import type {
   DocumentNode,
-  isReference,
-  makeReference,
-  makeVar,
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { isReference, makeReference, makeVar } from "@apollo/client/core";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { cloneDeep, defaultCacheSizes } from "@apollo/client/utilities";
 
 import { StoreReader } from "../readFromStore.js";
-import { InMemoryCacheConfig } from "../types.js";
+import type { InMemoryCacheConfig } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";
 
 disableFragmentWarnings();

@@ -1,35 +1,34 @@
 import { waitFor } from "@testing-library/react";
-import {
+import type {
   DocumentNode,
   FormattedExecutionResult,
-  GraphQLError,
   GraphQLFormattedError,
-  Kind,
-  print,
-  visit,
 } from "graphql";
+import { GraphQLError, Kind, print, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { Observable, of, Subscription } from "rxjs";
+import { Observable, of } from "rxjs";
+import type { Subscription } from "rxjs";
 
-import {
-  createFragmentRegistry,
-  InMemoryCache,
-  makeVar,
+import type {
   NormalizedCacheObject,
   PossibleTypesMap,
 } from "@apollo/client/cache";
 import {
-  ApolloClient,
+  createFragmentRegistry,
+  InMemoryCache,
+  makeVar,
+} from "@apollo/client/cache";
+import type {
   ApolloQueryResult,
   FetchPolicy,
-  NetworkStatus,
   ObservableQuery,
   Operation,
   QueryOptions,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
   UnconventionalError,

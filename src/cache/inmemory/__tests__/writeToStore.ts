@@ -1,4 +1,4 @@
-import {
+import type {
   ASTNode,
   DefinitionNode,
   DocumentNode,
@@ -10,22 +10,21 @@ import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { TypedDocumentNode } from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client/core";
 import { spyOnConsole } from "@apollo/client/testing/internal";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
   isReference,
   makeReference,
-  Reference,
   storeKeyNameFromField,
-  StoreObject,
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { extractFragmentContext } from "../helpers.js";
-import { KeyFieldsFunction } from "../policies.js";
+import type { KeyFieldsFunction } from "../policies.js";
 import { StoreWriter } from "../writeToStore.js";
 
 import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";

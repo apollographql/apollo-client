@@ -1,4 +1,5 @@
-import { DocumentNode, Kind, print } from "graphql";
+import type { DocumentNode } from "graphql";
+import { Kind, print } from "graphql";
 import { disableFragmentWarnings, gql } from "graphql-tag";
 
 // Turn off warnings for repeated fragment names

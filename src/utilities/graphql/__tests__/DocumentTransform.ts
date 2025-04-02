@@ -1,4 +1,5 @@
-import { DocumentNode, Kind, visit } from "graphql";
+import type { DocumentNode } from "graphql";
+import { Kind, visit } from "graphql";
 import { gql } from "graphql-tag";
 
 import {

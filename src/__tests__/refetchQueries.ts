@@ -1,5 +1,7 @@
-import { Observable, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
+import type { TypedDocumentNode } from "@apollo/client/core";
 import {
   ApolloClient,
   ApolloLink,
@@ -7,7 +9,6 @@ import {
   InMemoryCache,
   NetworkStatus,
   ObservableQuery,
-  TypedDocumentNode,
 } from "@apollo/client/core";
 import { ObservableStream } from "@apollo/client/testing/internal";
 

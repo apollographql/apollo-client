@@ -7,13 +7,13 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
 
+import type { TypedDocumentNode } from "@apollo/client/core";
 import {
   ApolloClient,
   gql,
   InMemoryCache,
   NetworkStatus,
   split,
-  TypedDocumentNode,
 } from "@apollo/client/core";
 import { createQueryPreloader } from "@apollo/client/react";
 import {
@@ -22,22 +22,21 @@ import {
   useQueryRefHandlers,
   useReadQuery,
 } from "@apollo/client/react/hooks";
-import { QueryRef } from "@apollo/client/react/internal";
-import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-} from "@apollo/client/testing";
+import type { QueryRef } from "@apollo/client/react/internal";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import type {
+  PaginatedCaseData,
+  SimpleCaseData,
+} from "@apollo/client/testing/internal";
 import {
   createClientWrapper,
-  PaginatedCaseData,
   setupPaginatedCase,
   setupSimpleCase,
-  SimpleCaseData,
 } from "@apollo/client/testing/internal";
 import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
 
-import {
+import type {
   SubscribeToMoreFunction,
   SubscribeToMoreUpdateQueryFn,
 } from "../../../core/watchQueryOptions.js";

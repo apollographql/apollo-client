@@ -1,9 +1,9 @@
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { DocumentNode } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 
+import type { ApolloCache } from "@apollo/client/cache";
 import {
-  ApolloCache,
   EntityStore,
   InMemoryCache,
   MissingFieldError,
@@ -16,13 +16,13 @@ import {
 } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import {
+import type {
   Reference,
   StoreValue,
 } from "../../../utilities/graphql/storeUtils.js";
-import { Cache } from "../../core/types/Cache.js";
+import type { Cache } from "../../core/types/Cache.js";
 import { supportsResultCaching } from "../entityStore.js";
-import { StoreObject } from "../types.js";
+import type { StoreObject } from "../types.js";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {

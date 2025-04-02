@@ -4,7 +4,7 @@ import { defaultDataIdFromObject, InMemoryCache } from "@apollo/client/cache";
 import { MissingFieldError } from "@apollo/client/core";
 
 import { StoreReader } from "../readFromStore.js";
-import { NormalizedCache, Reference } from "../types.js";
+import type { NormalizedCache, Reference } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";
 
 import {

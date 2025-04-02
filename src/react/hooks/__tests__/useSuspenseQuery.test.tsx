@@ -1,10 +1,5 @@
-import {
-  act,
-  renderHook,
-  RenderHookOptions,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import type { RenderHookOptions } from "@testing-library/react";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -15,54 +10,60 @@ import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import type { FallbackProps } from "react-error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
 import { Observable, of } from "rxjs";
 
-import {
+import type {
   ApolloCache,
-  ApolloClient,
-  ApolloLink,
-  CombinedGraphQLErrors,
   DocumentNode,
   ErrorPolicy,
-  gql,
-  InMemoryCache,
-  NetworkStatus,
   OperationVariables,
   QueryResult,
-  split,
   SubscribeToMoreOptions,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  split,
+} from "@apollo/client/core";
+import type {
+  Masked,
+  MaskedDocumentNode,
+  Unmasked,
+} from "@apollo/client/masking";
 import { skipToken } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useSuspenseQuery } from "@apollo/client/react/hooks";
-import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-} from "@apollo/client/testing";
-import {
-  actAsync,
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import type {
   PaginatedCaseData,
   PaginatedCaseVariables,
+} from "@apollo/client/testing/internal";
+import {
+  actAsync,
   renderAsync,
   renderHookAsync,
   setupPaginatedCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
+import type { DeepPartial } from "@apollo/client/utilities";
 import {
   compact,
   concatPagination,
-  DeepPartial,
   getMainDefinition,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import {
+import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";

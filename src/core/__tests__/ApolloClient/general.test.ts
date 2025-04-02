@@ -1,16 +1,15 @@
 // externals
-import { DocumentNode, GraphQLError } from "graphql";
+import type { DocumentNode } from "graphql";
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { Observable, Observer } from "rxjs";
+import type { Observer } from "rxjs";
+import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  ApolloQueryResult,
-  NetworkStatus,
-} from "@apollo/client/core";
+import type { ApolloQueryResult } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import {
+import type {
   ApolloLink,
   FetchResult,
   type RequestHandler,
@@ -27,12 +26,10 @@ import {
   setVerbosity,
 } from "@apollo/client/utilities/invariant";
 
-import {
-  MockApolloLink,
-  MockLink,
-} from "../../../testing/core/mocking/mockLink.js";
-import { QueryManager } from "../../QueryManager.js";
-import {
+import type { MockApolloLink } from "../../../testing/core/mocking/mockLink.js";
+import { MockLink } from "../../../testing/core/mocking/mockLink.js";
+import type { QueryManager } from "../../QueryManager.js";
+import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../watchQueryOptions.js";

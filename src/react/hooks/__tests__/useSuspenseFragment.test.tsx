@@ -9,17 +9,15 @@ import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import React, { Suspense } from "react";
 
-import {
-  ApolloClient,
+import type {
   FragmentType,
-  gql,
-  InMemoryCache,
   Masked,
   MaskedDocumentNode,
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useSuspenseFragment } from "@apollo/client/react/hooks";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";

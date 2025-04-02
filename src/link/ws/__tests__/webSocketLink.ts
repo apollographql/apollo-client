@@ -1,4 +1,4 @@
-import { ExecutionResult } from "graphql";
+import type { ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 import { SubscriptionClient } from "subscriptions-transport-ws";

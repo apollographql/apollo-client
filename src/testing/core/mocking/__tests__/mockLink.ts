@@ -7,7 +7,8 @@ import {
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
-import { MockedResponse, MockLink } from "../mockLink.js";
+import type { MockedResponse } from "../mockLink.js";
+import { MockLink } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {

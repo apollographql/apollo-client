@@ -1,4 +1,5 @@
-import { FragmentDefinitionNode, visit } from "graphql";
+import type { FragmentDefinitionNode } from "graphql";
+import { visit } from "graphql";
 import { gql } from "graphql-tag";
 
 import { InMemoryCache } from "@apollo/client/cache";

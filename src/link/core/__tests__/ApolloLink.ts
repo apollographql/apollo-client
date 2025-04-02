@@ -5,7 +5,12 @@ import { EMPTY, map, Observable, of } from "rxjs";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-import { FetchResult, GraphQLRequest, NextLink, Operation } from "../types.js";
+import type {
+  FetchResult,
+  GraphQLRequest,
+  NextLink,
+  Operation,
+} from "../types.js";
 
 class SetContextLink extends ApolloLink {
   constructor(

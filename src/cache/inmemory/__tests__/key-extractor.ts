@@ -5,7 +5,7 @@ import {
   extractKeyPath,
   getSpecifierPaths,
 } from "../key-extractor.js";
-import { KeySpecifier } from "../policies.js";
+import type { KeySpecifier } from "../policies.js";
 
 describe("keyFields and keyArgs extraction", () => {
   it("getSpecifierPaths should work for various specifiers", () => {

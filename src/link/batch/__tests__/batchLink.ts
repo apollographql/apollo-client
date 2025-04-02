@@ -7,8 +7,12 @@ import { ApolloLink, execute } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-import { FetchResult, GraphQLRequest, Operation } from "../../core/types.js";
-import { BatchableRequest, BatchHandler } from "../batchLink.js";
+import type {
+  FetchResult,
+  GraphQLRequest,
+  Operation,
+} from "../../core/types.js";
+import type { BatchableRequest, BatchHandler } from "../batchLink.js";
 
 interface MockedResponse {
   request: GraphQLRequest;

@@ -11,19 +11,25 @@ import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
-import {
-  ApolloClient,
-  ApolloLink,
-  CombinedGraphQLErrors,
+import type {
   ErrorPolicy,
-  InMemoryCache,
-  NetworkStatus,
   QueryResult,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  InMemoryCache,
+  NetworkStatus,
+} from "@apollo/client/core";
+import type {
+  Masked,
+  MaskedDocumentNode,
+  Unmasked,
+} from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react";
 import { useLazyQuery } from "@apollo/client/react/hooks";
 import {
@@ -32,15 +38,15 @@ import {
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
+import type { VariablesCaseVariables } from "@apollo/client/testing/internal";
 import {
   renderAsync,
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
-  VariablesCaseVariables,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("useLazyQuery Hook", () => {

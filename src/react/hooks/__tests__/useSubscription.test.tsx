@@ -4,30 +4,26 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { expectTypeOf } from "expect-type";
-import { GraphQLFormattedError } from "graphql";
+import type { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  ApolloLink,
-  concat,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client/core";
+import { ApolloClient, ApolloLink, concat } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
 } from "@apollo/client/errors";
-import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useSubscription } from "@apollo/client/react/hooks";
 import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
 import { mockMultipartSubscriptionStream } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
+import type { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 

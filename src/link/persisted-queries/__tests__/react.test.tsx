@@ -8,7 +8,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client/core";
+import { ApolloClient } from "@apollo/client/core";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink as createPersistedQuery,

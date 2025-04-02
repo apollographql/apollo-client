@@ -17,20 +17,23 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import * as React from "react";
-import { Observable, Observer } from "rxjs";
+import type { Observer } from "rxjs";
+import { Observable } from "rxjs";
 
-import {
-  ApolloClient,
-  ApolloLink,
+import type {
   DocumentNode,
   FetchResult,
-  gql,
-  InMemoryCache,
   Reference,
   StoreObject,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { FragmentType } from "@apollo/client/masking";
+import {
+  ApolloClient,
+  ApolloLink,
+  gql,
+  InMemoryCache,
+} from "@apollo/client/core";
+import type { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useFragment, useQuery } from "@apollo/client/react/hooks";
 import { spyOnConsole } from "@apollo/client/testing/internal";

@@ -1,30 +1,29 @@
-import { FragmentSpreadNode, Kind, visit } from "graphql";
+import type { FragmentSpreadNode } from "graphql";
+import { Kind, visit } from "graphql";
 import { of } from "rxjs";
 
 import { createFragmentRegistry } from "@apollo/client/cache";
-import {
-  ApolloCache,
-  ApolloClient,
-  ApolloLink,
+import type {
   Cache,
   DataProxy,
-  DocumentTransform,
   FetchPolicy,
-  gql,
-  InMemoryCache,
-  NetworkStatus,
   OperationVariables,
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
 import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-  wait,
-} from "@apollo/client/testing";
+  ApolloCache,
+  ApolloClient,
+  ApolloLink,
+  DocumentTransform,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+} from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import type { MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,

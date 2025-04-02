@@ -5,7 +5,7 @@ import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client/core";
 import { InternalQueryReference } from "@apollo/client/react/internal";
 import { setupSimpleCase } from "@apollo/client/testing/internal";
 
-import {
+import type {
   PreloadedQueryRef,
   QueryRef,
   QueryReference,

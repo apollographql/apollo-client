@@ -1,14 +1,11 @@
 import { print } from "graphql";
 import { gql } from "graphql-tag";
-import { map, of, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
+import { map, of } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import {
-  ApolloClient,
-  NextLink,
-  Operation,
-  Reference,
-} from "@apollo/client/core";
+import type { NextLink, Operation, Reference } from "@apollo/client/core";
+import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 

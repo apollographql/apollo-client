@@ -1,16 +1,14 @@
 import { screen } from "@testing-library/react";
+import type { RenderStream } from "@testing-library/react-render-stream";
 import {
   createRenderStream,
   disableActEnvironment,
-  RenderStream,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
 import { buildSchema } from "graphql";
 import * as React from "react";
-import {
-  ErrorBoundary as ReactErrorBoundary,
-  FallbackProps,
-} from "react-error-boundary";
+import type { FallbackProps } from "react-error-boundary";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
 import type { TypedDocumentNode } from "@apollo/client/core";
 import {

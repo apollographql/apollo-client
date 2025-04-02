@@ -11,7 +11,6 @@ import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
 import { CheckedKeys } from "./toEqualQueryResult.js";
-import { CheckedLazyQueryResult } from "./toEqualLazyQueryResult.js";
 
 // Unfortunately TypeScript does not have a way to determine if a generic
 // argument is a class or not, so we need to manually keep track of known class
@@ -110,15 +109,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : T extends Promise<ApolloQueryResult<infer TData>> ?
     (expected: ApolloQueryResult<TData>) => R
   : { error: "matchers needs to be called on an ApolloQueryResult" };
-
-  /** @deprecated Use `toEqualStrictTyped` instead */
-  toEqualLazyQueryResult: T extends (
-    useLazyQuery.Result<infer TData, infer TVariables>
-  ) ?
-    (expected: CheckedLazyQueryResult<TData, TVariables>) => R
-  : T extends Promise<useLazyQuery.Result<infer TData, infer TVariables>> ?
-    (expected: CheckedLazyQueryResult<TData, TVariables>) => R
-  : { error: "matchers needs to be called on a LazyQueryResult" };
 
   toEmitStrictTyped: T extends ObservableStream<infer TResult> ?
     (

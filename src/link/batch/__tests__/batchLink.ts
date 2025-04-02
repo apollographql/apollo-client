@@ -331,7 +331,7 @@ describe("OperationBatcher", () => {
 
       myBatcher.consumeQueue();
 
-      await expect(stream).toEmitValue({ data });
+      await expect(stream).toEmitStrictTyped({ data });
     });
 
     it("should be able to debounce requests", () => {

@@ -6,11 +6,10 @@ import type {
   ObservableQuery,
   OperationVariables,
 } from "../../core/index.js";
-import type { useQuery, useLazyQuery, QueryRef } from "../../react/index.js";
+import type { QueryRef } from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
-import { CheckedKeys } from "./toEqualQueryResult.js";
 
 // Unfortunately TypeScript does not have a way to determine if a generic
 // argument is a class or not, so we need to manually keep track of known class

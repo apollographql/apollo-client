@@ -35,6 +35,7 @@ import * as reactSSR from "@apollo/client/react/ssr";
 import * as testing from "@apollo/client/testing";
 import * as testingCore from "@apollo/client/testing/core";
 import * as testingExperimental from "@apollo/client/testing/experimental";
+import * as testingInternal from "@apollo/client/testing/internal";
 import * as testingReact from "@apollo/client/testing/react";
 import * as utilities from "@apollo/client/utilities";
 import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
@@ -97,6 +98,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/testing", testing);
   check("@apollo/client/testing/core", testingCore);
   check("@apollo/client/testing/experimental", testingExperimental);
+  check("@apollo/client/testing/internal", testingInternal);
   check("@apollo/client/testing/react", testingReact);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/internal", utilitiesInternal);

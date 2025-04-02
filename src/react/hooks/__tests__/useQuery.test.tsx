@@ -8472,12 +8472,14 @@ describe("useQuery Hook", () => {
       });
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(() => useQuery(query), {
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        });
+        }
+      );
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,

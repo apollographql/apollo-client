@@ -491,7 +491,7 @@ describe("SharedHttpTest", () => {
       })
     );
 
-    await expect(stream).toEmitValue(data2);
+    await expect(stream).toEmitStrictTyped(data2);
   });
 
   it("adds headers to the request from the context", async () => {

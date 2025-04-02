@@ -10,7 +10,6 @@ import { toEmitFetchResult } from "./toEmitFetchResult.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitStrictTyped } from "./toEmitStrictTyped.js";
-import { toEmitValue } from "./toEmitValue.js";
 import { toEqualStrictTyped } from "./toEqualStrictTyped.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
@@ -24,7 +23,6 @@ expect.extend({
   toEmitMatchedValue,
   toEmitNext,
   toEmitStrictTyped,
-  toEmitValue,
   toEqualStrictTyped,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,

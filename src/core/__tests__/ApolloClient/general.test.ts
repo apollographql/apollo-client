@@ -7379,6 +7379,7 @@ describe("ApolloClient", () => {
             foo
           }
         `,
+        fetchPolicy: "no-cache",
         context: {
           a: { x: "y" },
         },
@@ -7423,6 +7424,7 @@ describe("ApolloClient", () => {
             foo
           }
         `,
+        fetchPolicy: "no-cache",
       });
 
       expect(context.foo).toStrictEqual({ bar: "baz" });
@@ -7459,6 +7461,7 @@ describe("ApolloClient", () => {
               foo
             }
           `,
+          fetchPolicy: "no-cache",
           context: {
             a: { x: "y" },
           },

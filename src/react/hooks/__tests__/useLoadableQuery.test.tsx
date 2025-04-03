@@ -32,8 +32,7 @@ import {
   split,
 } from "@apollo/client/core";
 import type { QueryRef } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react";
-import { useLoadableQuery, useReadQuery } from "@apollo/client/react";
+import { ApolloProvider , useLoadableQuery, useReadQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import type { SimpleCaseData } from "@apollo/client/testing/internal";

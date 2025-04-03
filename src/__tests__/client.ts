@@ -7,8 +7,8 @@ import type {
 import { GraphQLError, Kind, print, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { Observable, of } from "rxjs";
 import type { Subscription } from "rxjs";
+import { Observable, of } from "rxjs";
 
 import type {
   NormalizedCacheObject,

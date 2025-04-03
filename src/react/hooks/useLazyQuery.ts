@@ -367,7 +367,7 @@ export function useLazyQuery<
 
         return promise;
       },
-      [observable, stableOptions, updateResult, calledDuringRender]
+      [observable, updateResult, calledDuringRender]
     );
 
   const executeRef = React.useRef(execute);

@@ -84,7 +84,12 @@ export class MockLink extends ApolloLink {
       this.normalizeMockedResponse(mockedResponse);
     const key = requestToKey(normalizedMockedResponse.request);
 
-    validateMockedResponse(normalizedMockedResponse, key);
+    invariant(
+      normalizedMockedResponse.result ||
+        normalizedMockedResponse.error ||
+        normalizedMockedResponse.delay === Infinity,
+      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
+    );
 
     let mockedResponses = this.mockedResponsesByKey[key];
     if (!mockedResponses) {
@@ -248,14 +253,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
 export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
-}
-
-function validateMockedResponse(response: MockedResponse, key: string) {
-  if (!response.result && !response.error && response.delay !== Infinity) {
-    throw new Error(
-      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
-    );
-  }
 }
 
 // Pass in multiple mocked responses, so that you can test flows that end up

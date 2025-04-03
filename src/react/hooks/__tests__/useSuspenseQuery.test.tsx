@@ -374,7 +374,7 @@ describe("useSuspenseQuery", () => {
       });
     }).toThrowError(
       new InvariantError(
-        "Running a Query requires a graphql Query, but a Mutation was used instead."
+        "Running a query requires a graphql query, but a mutation was used instead."
       )
     );
   });

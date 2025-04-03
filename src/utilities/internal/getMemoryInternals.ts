@@ -137,7 +137,6 @@ function _getApolloClientMemoryInternals(this: ApolloClient) {
     limits: getCurrentCacheSizes(),
     sizes: {
       print: globalCaches.print?.(),
-      parser: globalCaches.parser?.(),
       canonicalStringify: globalCaches.canonicalStringify?.(),
       links: linkInfo(this.link),
       queryManager: {

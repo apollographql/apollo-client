@@ -10,8 +10,6 @@ import {
 } from "@apollo/client/core";
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
-// importing react so the `parser` cache initializes
-import "@apollo/client/react";
 import { cacheSizes } from "@apollo/client/utilities";
 
 // this is compiled away so we need to import it from sources
@@ -69,7 +67,6 @@ it("returns information about cache usage (empty caches)", () => {
   expect(client.getMemoryInternals?.()).toEqual({
     limits: defaultCacheSizesAsObject,
     sizes: {
-      parser: 0,
       canonicalStringify: 0,
       print: 0,
       addTypenameDocumentTransform: [
@@ -148,7 +145,6 @@ it("returns information about cache usage (some query triggered)", () => {
   expect(client.getMemoryInternals?.()).toStrictEqual({
     limits: defaultCacheSizesAsObject,
     sizes: {
-      parser: 0,
       canonicalStringify: 0,
       print: 1,
       addTypenameDocumentTransform: [

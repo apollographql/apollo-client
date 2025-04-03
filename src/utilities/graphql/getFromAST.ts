@@ -2,6 +2,7 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
+  OperationTypeNode,
   ValueNode,
 } from "graphql";
 
@@ -17,7 +18,10 @@ type OperationDefinitionWithName = OperationDefinitionNode & {
 };
 
 // Checks the document for errors and throws an exception if there is an error.
-export function checkDocument(doc: DocumentNode) {
+export function checkDocument(
+  doc: DocumentNode,
+  expectedType?: OperationTypeNode
+) {
   invariant(
     doc && doc.kind === "Document",
     `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
@@ -41,6 +45,16 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
     `Ambiguous GraphQL document: contains %s operations`,
     operations.length
   );
+
+  if (expectedType) {
+    invariant(
+      operations.length == 1 && operations[0].operation === expectedType,
+      `Running a %s requires a graphql ` + `%s, but a %s was used instead.`,
+      expectedType,
+      expectedType,
+      operations[0].operation
+    );
+  }
 
   return doc;
 }

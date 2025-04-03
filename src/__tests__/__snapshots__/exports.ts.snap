@@ -461,7 +461,6 @@ Array [
   "stringifyForDisplay",
   "stripTypename",
   "valueToObjectRepresentation",
-  "verifyDocumentType",
   "wrapPromiseWithState",
 ]
 `;

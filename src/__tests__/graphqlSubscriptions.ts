@@ -521,8 +521,8 @@ describe("GraphQL Subscriptions", () => {
     });
     const stream = new ObservableStream(obs);
 
-    // Silence expected warning about missing field for cache write
-    using _consoleSpy = spyOnConsole("warn");
+    // Silence warning about missing field for cache write
+    using _consoleSpy = spyOnConsole("error");
 
     enqueueProtocolErrors([
       {

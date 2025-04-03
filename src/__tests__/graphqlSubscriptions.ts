@@ -36,17 +36,6 @@ describe("GraphQL Subscriptions", () => {
     }
   `;
 
-  const subscriptionWithDefaultArg: TypedDocumentNode<
-    { user: { __typename: "User"; name: string } },
-    { name?: string }
-  > = gql`
-    subscription UserInfo($name: String = "Changping Chen") {
-      user(name: $name) {
-        name
-      }
-    }
-  `;
-
   let options: any;
   beforeEach(() => {
     options = {
@@ -75,7 +64,15 @@ describe("GraphQL Subscriptions", () => {
     });
 
     const stream = new ObservableStream(
-      client.subscribe({ query: subscriptionWithDefaultArg })
+      client.subscribe({
+        query: gql`
+          subscription UserInfo($name: String = "Changping Chen") {
+            user(name: $name) {
+              name
+            }
+          }
+        `,
+      })
     );
     link.simulateResult(results[0]);
 

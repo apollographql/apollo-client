@@ -473,6 +473,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Invert this since this now matches the previous test
   test("renders loading states when changing queries with notifyOnNetworkStatusChange", async () => {
     const query1 = gql`
       query {
@@ -698,6 +699,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Invert this
   it('renders loading states each time the execution function is called when using a "network-only" fetch policy with notifyOnNetworkStatusChange', async () => {
     const mocks = [
       {
@@ -1139,6 +1141,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Invert this
   test("renders loading states when a query is re-run and variables changes with notifyOnNetworkStatusChange", async () => {
     const CAR_QUERY_BY_ID = gql`
       query ($id: Int) {
@@ -1588,6 +1591,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Invert this
   test("renders loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange", async () => {
     const { query, mocks } = setupVariablesCase();
 
@@ -4167,6 +4171,7 @@ test("uses cached result when switching to variables already written to the cach
   await expect(takeSnapshot).not.toRerender();
 });
 
+// TODO: Invert test
 test("renders loading states where necessary when switching to variables maybe written to the cache with notifyOnNetworkStatusChange", async () => {
   const { query, mocks } = setupVariablesCase();
 

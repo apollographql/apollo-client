@@ -1,6 +1,7 @@
 import { gql } from "graphql-tag";
 
 import { InMemoryCache } from "@apollo/client/cache";
+import type { TypedDocumentNode } from "@apollo/client/core";
 import { ApolloClient } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
@@ -19,10 +20,23 @@ describe("GraphQL Subscriptions", () => {
     "Vyacheslav Kim",
     "Changping Chen",
     "Amanda Liu",
-  ].map((name) => ({ result: { data: { user: { name } } }, delay: 10 }));
+  ].map((name) => ({
+    result: { data: { user: { __typename: "User" as const, name } } },
+    delay: 10,
+  }));
+
+  const subscriptionWithDefaultArg: TypedDocumentNode<
+    { user: { __typename: "User"; name: string } },
+    { name?: string }
+  > = gql`
+    subscription UserInfo($name: String = "Changping Chen") {
+      user(name: $name) {
+        name
+      }
+    }
+  `;
 
   let options: any;
-  let defaultOptions: any;
   beforeEach(() => {
     options = {
       query: gql`
@@ -39,16 +53,6 @@ describe("GraphQL Subscriptions", () => {
         someVar: "Some value",
       },
     };
-
-    defaultOptions = {
-      query: gql`
-        subscription UserInfo($name: String = "Changping Chen") {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-    };
   });
 
   it("should start a subscription on network interface and unsubscribe", async () => {
@@ -59,7 +63,9 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const stream = new ObservableStream(client.subscribe(defaultOptions));
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscriptionWithDefaultArg })
+    );
     link.simulateResult(results[0]);
 
     await expect(stream).toEmitTypedValue(results[0].result);
@@ -475,7 +481,9 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const stream = new ObservableStream(client.subscribe(defaultOptions));
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscriptionWithDefaultArg })
+    );
 
     setTimeout(() => link.simulateComplete(), 50);
 

@@ -40,17 +40,29 @@ export const babelTransform: BuildStep = async (options) => {
                   },
                 ],
               ]
+              // For now, the compiler doesn't seem to work in CJS files
+              // [
+              //   "babel-plugin-react-compiler",
+              //   {
+              //     target: "17",
+              //   },
+              // ],
+              // [
+              //   "@babel/plugin-transform-modules-commonjs",
+              //   { importInterop: "none" },
+              // ],
             : [
-                [
-                  "babel-plugin-react-compiler",
-                  {
-                    target: "17",
-                  },
-                ],
-                [
-                  "@babel/plugin-transform-modules-commonjs",
-                  { importInterop: "none" },
-                ],
+                // For now, the compiler doesn't seem to work in CJS files
+                // [
+                //   "babel-plugin-react-compiler",
+                //   {
+                //     target: "17",
+                //   },
+                // ],
+                // [
+                //   "@babel/plugin-transform-modules-commonjs",
+                //   { importInterop: "none" },
+                // ],
               ]
           : [],
       });

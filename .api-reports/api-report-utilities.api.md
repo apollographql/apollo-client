@@ -25,6 +25,7 @@ import type { MutationOptions } from '@apollo/client/core';
 import type { NameNode } from 'graphql';
 import { Observable } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
+import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client/core';
 import type { QueryOptions } from '@apollo/client/core';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
@@ -84,7 +85,6 @@ export interface CacheSizes {
     "queryManager.getDocumentInfo": number;
     "removeTypenameFromVariables.getVariableDefinitions": number;
     canonicalStringify: number;
-    parser: number;
     print: number;
 }
 
@@ -103,7 +103,7 @@ export const canUseDOM: boolean;
 export const canUseLayoutEffect: boolean;
 
 // @public (undocumented)
-export function checkDocument(doc: DocumentNode): DocumentNode;
+export function checkDocument(doc: DocumentNode, expectedType?: OperationTypeNode): DocumentNode;
 
 // @public
 export function cloneDeep<T>(value: T): T;
@@ -212,8 +212,6 @@ export const enum defaultCacheSizes {
     "removeTypenameFromVariables.getVariableDefinitions" = 2000,
     // (undocumented)
     canonicalStringify = 1000,
-    // (undocumented)
-    parser = 1000,
     // (undocumented)
     print = 2000
 }

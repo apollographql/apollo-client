@@ -182,7 +182,7 @@ describe("mockLink", () => {
       const stream = new ObservableStream(
         execute(link, { query, variables: { ...defaults } })
       );
-      await stream.takeError();
+      await expect(stream).toEmitError();
     }
     {
       // Execute called incorrectly without a default variable filled in.
@@ -192,15 +192,14 @@ describe("mockLink", () => {
       const stream = new ObservableStream(
         execute(link, { query, variables: { user: "Tim" } })
       );
-      await stream.takeError();
+      await expect(stream).toEmitError();
     }
     {
       // Expect default value to be filled in the mock request.
       const stream = new ObservableStream(
         execute(link, { query, variables: { ...defaults, user: "Tim" } })
       );
-      const result = await stream.takeNext();
-      expect(result).toEqual({ data: { todo: { id: 1 } } });
+      await expect(stream).toEmitTypedValue({ data: { todo: { id: 1 } } });
     }
     {
       // Test that defaults don't overwrite explicitly different values in a mock request.
@@ -210,8 +209,7 @@ describe("mockLink", () => {
           variables: { ...defaults, user: "Tim", done: false },
         })
       );
-      const result = await stream.takeNext();
-      expect(result).toEqual({ data: { todo: { id: 2 } } });
+      await expect(stream).toEmitTypedValue({ data: { todo: { id: 2 } } });
     }
   });
 });
@@ -255,7 +253,7 @@ test("removes @nonreactive directives from fields", async () => {
   {
     const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeNext()).resolves.toEqual({
+    await expect(stream).toEmitTypedValue({
       data: { a: 1, b: 2, c: 3 },
     });
   }
@@ -263,7 +261,7 @@ test("removes @nonreactive directives from fields", async () => {
   {
     const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeNext()).resolves.toEqual({
+    await expect(stream).toEmitTypedValue({
       data: { a: 4, b: 5, c: 6 },
     });
   }
@@ -308,7 +306,7 @@ test("removes @connection directives", async () => {
   {
     const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeNext()).resolves.toEqual({
+    await expect(stream).toEmitTypedValue({
       data: { a: 1, b: 2, c: 3 },
     });
   }
@@ -316,7 +314,7 @@ test("removes @connection directives", async () => {
   {
     const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeNext()).resolves.toEqual({
+    await expect(stream).toEmitTypedValue({
       data: { a: 4, b: 5, c: 6 },
     });
   }
@@ -359,13 +357,13 @@ test("removes fields with @client directives", async () => {
   {
     const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 1, b: 2 } });
+    await expect(stream).toEmitTypedValue({ data: { a: 1, b: 2 } });
   }
 
   {
     const stream = new ObservableStream(execute(link, { query: serverQuery }));
 
-    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 3, b: 4 } });
+    await expect(stream).toEmitTypedValue({ data: { a: 3, b: 4 } });
   }
 });
 

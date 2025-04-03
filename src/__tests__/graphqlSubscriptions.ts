@@ -74,7 +74,6 @@ describe("GraphQL Subscriptions", () => {
       client.subscribe({
         query: subscription,
         variables: { name: "Changping Chen" },
-        context: { someVar: "Some value" },
       })
     );
 
@@ -95,7 +94,6 @@ describe("GraphQL Subscriptions", () => {
     const obs = client.subscribe({
       query: subscription,
       variables: { name: "Changping Chen" },
-      context: { someVar: "Some value" },
     });
     const stream1 = new ObservableStream(obs);
     const stream2 = new ObservableStream(obs);
@@ -117,7 +115,6 @@ describe("GraphQL Subscriptions", () => {
       client.subscribe({
         query: subscription,
         variables: { name: "Changping Chen" },
-        context: { someVar: "Some value" },
       })
     );
 
@@ -147,7 +144,6 @@ describe("GraphQL Subscriptions", () => {
         query: subscription,
         fetchPolicy: "no-cache",
         variables: { name: "Changping Chen" },
-        context: { someVar: "Some value" },
       })
     );
 
@@ -167,7 +163,6 @@ describe("GraphQL Subscriptions", () => {
     const obs = client.subscribe({
       query: subscription,
       variables: { name: "Changping Chen" },
-      context: { someVar: "Some value" },
     });
     const stream = new ObservableStream(obs);
 
@@ -219,7 +214,6 @@ describe("GraphQL Subscriptions", () => {
     const obs = client.subscribe({
       query: subscription,
       variables: { name: "Changping Chen" },
-      context: { someVar: "Some value" },
     });
     const stream = new ObservableStream(obs);
 
@@ -275,7 +269,6 @@ describe("GraphQL Subscriptions", () => {
     const obs = client.subscribe({
       query: subscription,
       variables: { name: "Changping Chen" },
-      context: { someVar: "Some value" },
     });
     const stream = new ObservableStream(obs);
 
@@ -342,7 +335,6 @@ describe("GraphQL Subscriptions", () => {
       query: subscription,
       errorPolicy: "all",
       variables: { name: "Changping Chen" },
-      context: { someVar: "Some value" },
     });
     const stream = new ObservableStream(obs);
 
@@ -524,7 +516,6 @@ describe("GraphQL Subscriptions", () => {
     const obs = client.subscribe({
       query: subscription,
       variables: { name: "Changping Chen" },
-      context: { someVar: "Some value" },
     });
     const stream = new ObservableStream(obs);
 

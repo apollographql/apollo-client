@@ -33,11 +33,7 @@ import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import {
-  checkDocument,
-  print,
-  verifyDocumentType,
-} from "@apollo/client/utilities";
+import { checkDocument, print } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
   addNonReactiveToNamedFragments,

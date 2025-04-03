@@ -1,6 +1,7 @@
 import { gql } from "graphql-tag";
 
 import { InMemoryCache } from "@apollo/client/cache";
+import type { TypedDocumentNode } from "@apollo/client/core";
 import { ApolloClient } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
@@ -19,37 +20,21 @@ describe("GraphQL Subscriptions", () => {
     "Vyacheslav Kim",
     "Changping Chen",
     "Amanda Liu",
-  ].map((name) => ({ result: { data: { user: { name } } }, delay: 10 }));
+  ].map((name) => ({
+    result: { data: { user: { __typename: "User" as const, name } } },
+    delay: 10,
+  }));
 
-  let options: any;
-  let defaultOptions: any;
-  beforeEach(() => {
-    options = {
-      query: gql`
-        subscription UserInfo($name: String) {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-      variables: {
-        name: "Changping Chen",
-      },
-      context: {
-        someVar: "Some value",
-      },
-    };
-
-    defaultOptions = {
-      query: gql`
-        subscription UserInfo($name: String = "Changping Chen") {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-    };
-  });
+  const subscription: TypedDocumentNode<
+    { user: { __typename: "User"; name: string } },
+    { name?: string }
+  > = gql`
+    subscription UserInfo($name: String) {
+      user(name: $name) {
+        name
+      }
+    }
+  `;
 
   it("should start a subscription on network interface and unsubscribe", async () => {
     const link = new MockSubscriptionLink();
@@ -59,7 +44,17 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const stream = new ObservableStream(client.subscribe(defaultOptions));
+    const stream = new ObservableStream(
+      client.subscribe({
+        query: gql`
+          subscription UserInfo($name: String = "Changping Chen") {
+            user(name: $name) {
+              name
+            }
+          }
+        `,
+      })
+    );
     link.simulateResult(results[0]);
 
     await expect(stream).toEmitTypedValue(results[0].result);
@@ -75,7 +70,12 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const stream = new ObservableStream(client.subscribe(options));
+    const stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        variables: { name: "Changping Chen" },
+      })
+    );
 
     link.simulateResult(results[0]);
 
@@ -91,7 +91,10 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const obs = client.subscribe(options);
+    const obs = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
     const stream1 = new ObservableStream(obs);
     const stream2 = new ObservableStream(obs);
 
@@ -108,7 +111,12 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const stream = new ObservableStream(client.subscribe(options));
+    const stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        variables: { name: "Changping Chen" },
+      })
+    );
 
     for (let i = 0; i < 4; i++) {
       link.simulateResult(results[i]);
@@ -131,8 +139,13 @@ describe("GraphQL Subscriptions", () => {
 
     expect(cache.extract()).toEqual({});
 
-    options.fetchPolicy = "no-cache";
-    const stream = new ObservableStream(client.subscribe(options));
+    const stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        fetchPolicy: "no-cache",
+        variables: { name: "Changping Chen" },
+      })
+    );
 
     link.simulateResult(results[0]);
 
@@ -147,7 +160,10 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const obs = client.subscribe(options);
+    const obs = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
     const stream = new ObservableStream(obs);
 
     link.simulateResult({
@@ -195,7 +211,10 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const obs = client.subscribe(options);
+    const obs = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
     const stream = new ObservableStream(obs);
 
     link.simulateResult({
@@ -247,7 +266,10 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const obs = client.subscribe(options);
+    const obs = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
     const stream = new ObservableStream(obs);
 
     link.simulateResult({ error: new Error("Oops") });
@@ -309,7 +331,11 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const obs = client.subscribe({ ...options, errorPolicy: "all" });
+    const obs = client.subscribe({
+      query: subscription,
+      errorPolicy: "all",
+      variables: { name: "Changping Chen" },
+    });
     const stream = new ObservableStream(obs);
 
     link.simulateResult({ error: new Error("Oops") });
@@ -325,27 +351,22 @@ describe("GraphQL Subscriptions", () => {
     const { httpLink, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
 
-    const query = gql`
-      subscription UserInfo($name: String) {
-        user(name: $name) {
-          name
-        }
-      }
-    `;
     const client = new ApolloClient({
       link: httpLink,
       cache: new InMemoryCache(),
     });
 
     const obs = client.subscribe({
-      query,
+      query: subscription,
       variables: { name: "Iron Man" },
       errorPolicy: "all",
     });
     const stream = new ObservableStream(obs);
 
-    // Silence expected warning about missing field for cache write
-    using _consoleSpy = spyOnConsole("warn");
+    // Silence warning about missing field for cache write
+    // TODO: Investigate this to see if we can silence this since this should
+    // not be expected.
+    using _consoleSpy = spyOnConsole("error");
 
     enqueueProtocolErrors([
       {
@@ -372,13 +393,6 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it('does not emit anything for GraphQL errors with no data in next result when `errorPolicy` is "ignore"', async () => {
-    const query = gql`
-      subscription UserInfo($name: String) {
-        user(name: $name) {
-          name
-        }
-      }
-    `;
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
@@ -386,7 +400,7 @@ describe("GraphQL Subscriptions", () => {
     });
 
     const obs = client.subscribe({
-      query,
+      query: subscription,
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
@@ -406,13 +420,6 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it('does not emit anything for network errors with no data in next result when `errorPolicy` is "ignore"', async () => {
-    const query = gql`
-      subscription UserInfo($name: String) {
-        user(name: $name) {
-          name
-        }
-      }
-    `;
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
@@ -420,7 +427,7 @@ describe("GraphQL Subscriptions", () => {
     });
 
     const obs = client.subscribe({
-      query,
+      query: subscription,
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
@@ -434,27 +441,20 @@ describe("GraphQL Subscriptions", () => {
   it('does not emit anything and completes observable for protocolErrors when `errorPolicy` is "ignore"', async () => {
     const { httpLink, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
-    const query = gql`
-      subscription UserInfo($name: String) {
-        user(name: $name) {
-          name
-        }
-      }
-    `;
     const client = new ApolloClient({
       link: httpLink,
       cache: new InMemoryCache(),
     });
 
     const obs = client.subscribe({
-      query,
+      query: subscription,
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
     const stream = new ObservableStream(obs);
 
-    // Silence expected warning about missing field for cache write
-    using _consoleSpy = spyOnConsole("warn");
+    // Silence warning about missing field for cache write
+    using _consoleSpy = spyOnConsole("error");
 
     enqueueProtocolErrors([
       {
@@ -475,7 +475,9 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const stream = new ObservableStream(client.subscribe(defaultOptions));
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
 
     setTimeout(() => link.simulateComplete(), 50);
 
@@ -489,15 +491,19 @@ describe("GraphQL Subscriptions", () => {
       link,
     });
 
-    const stream = new ObservableStream(client.subscribe(options));
+    const stream = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        variables: { name: "Changping Chen" },
+        context: { someVar: "Some value" },
+      })
+    );
 
     link.simulateResult(results[0]);
 
     await expect(stream).toEmitTypedValue(results[0].result);
 
-    expect(link.operation?.getContext().someVar).toEqual(
-      options.context.someVar
-    );
+    expect(link.operation?.getContext().someVar).toEqual("Some value");
   });
 
   it("emits an error if the result has protocolErrors on it", async () => {
@@ -509,11 +515,14 @@ describe("GraphQL Subscriptions", () => {
       cache: new InMemoryCache(),
     });
 
-    const obs = client.subscribe(options);
+    const obs = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
     const stream = new ObservableStream(obs);
 
-    // Silence expected warning about missing field for cache write
-    using _consoleSpy = spyOnConsole("warn");
+    // Silence warning about missing field for cache write
+    using _consoleSpy = spyOnConsole("error");
 
     enqueueProtocolErrors([
       {
@@ -535,5 +544,7 @@ describe("GraphQL Subscriptions", () => {
         },
       ]),
     });
+
+    await expect(stream).toComplete();
   });
 });

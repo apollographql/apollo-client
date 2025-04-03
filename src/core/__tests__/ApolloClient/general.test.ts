@@ -7314,14 +7314,12 @@ describe("ApolloClient", () => {
     });
 
     it("`ApolloClient.defaultContext` can be modified and changes will show up in future queries", async () => {
-      let context: any;
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink(
           (operation) =>
             new Observable((observer) => {
-              ({ cache: _, ...context } = operation.getContext());
-              observer.next({ data: null });
+              observer.next({ data: { foo: operation.getContext().foo } });
               observer.complete();
             })
         ),
@@ -7332,27 +7330,29 @@ describe("ApolloClient", () => {
 
       // one query to "warm up" with an old value to make sure the value
       // isn't locked in at the first query or something
-      await client.query({
-        query: gql`
-          query {
-            foo
-          }
-        `,
-      });
-
-      expect(context.foo).toBe("bar");
+      await expect(
+        client.query({
+          query: gql`
+            query {
+              foo
+            }
+          `,
+          fetchPolicy: "no-cache",
+        })
+      ).resolves.toStrictEqualTyped({ data: { foo: "bar" } });
 
       client.defaultContext.foo = "changed";
 
-      await client.query({
-        query: gql`
-          query {
-            foo
-          }
-        `,
-      });
-
-      expect(context.foo).toBe("changed");
+      await expect(
+        client.query({
+          query: gql`
+            query {
+              foo
+            }
+          `,
+          fetchPolicy: "no-cache",
+        })
+      ).resolves.toStrictEqualTyped({ data: { foo: "changed" } });
     });
 
     it("`defaultContext` will be shallowly merged with explicit context", async () => {
@@ -7379,6 +7379,7 @@ describe("ApolloClient", () => {
             foo
           }
         `,
+        fetchPolicy: "no-cache",
         context: {
           a: { x: "y" },
         },
@@ -7423,6 +7424,7 @@ describe("ApolloClient", () => {
             foo
           }
         `,
+        fetchPolicy: "no-cache",
       });
 
       expect(context.foo).toStrictEqual({ bar: "baz" });
@@ -7459,6 +7461,7 @@ describe("ApolloClient", () => {
               foo
             }
           `,
+          fetchPolicy: "no-cache",
           context: {
             a: { x: "y" },
           },

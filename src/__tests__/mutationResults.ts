@@ -672,6 +672,8 @@ describe("mutation results", () => {
     });
 
     try {
+      // Silence mock link warning
+      using _ = spyOnConsole("warn");
       await expect(
         client.mutate({
           mutation: mutationTodo,

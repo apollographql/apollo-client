@@ -36,25 +36,6 @@ describe("GraphQL Subscriptions", () => {
     }
   `;
 
-  let options: any;
-  beforeEach(() => {
-    options = {
-      query: gql`
-        subscription UserInfo($name: String) {
-          user(name: $name) {
-            name
-          }
-        }
-      `,
-      variables: {
-        name: "Changping Chen",
-      },
-      context: {
-        someVar: "Some value",
-      },
-    };
-  });
-
   it("should start a subscription on network interface and unsubscribe", async () => {
     const link = new MockSubscriptionLink();
     // This test calls directly through Apollo Client

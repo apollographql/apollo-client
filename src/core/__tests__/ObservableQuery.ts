@@ -3426,7 +3426,9 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
       });
 
-      const observable = client.watchQuery({ query });
+      // Don't write results to the cache to prevent cache write warnings on
+      // missing data
+      const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
 
       expect(observable.query).toMatchDocument(gql`
         query {

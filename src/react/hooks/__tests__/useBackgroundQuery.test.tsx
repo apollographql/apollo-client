@@ -5027,7 +5027,7 @@ describe("refetch", () => {
             },
           },
         },
-        delay: 10,
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -5040,7 +5040,7 @@ describe("refetch", () => {
             },
           },
         },
-        delay: 10,
+        delay: 20,
       },
     ];
 

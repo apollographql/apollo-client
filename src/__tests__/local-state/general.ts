@@ -443,6 +443,13 @@ describe("Cache manipulation", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: { serverData, selectedItemId: -1 },
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         serverData,
         selectedItemId: 123,
@@ -847,7 +854,6 @@ describe("Combining client and server state/operations", () => {
       variables: {
         id: 1,
       },
-      notifyOnNetworkStatusChange: true,
     };
 
     const PersonType = new GraphQLObjectType({

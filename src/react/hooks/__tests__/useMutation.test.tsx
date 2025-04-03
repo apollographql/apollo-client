@@ -2988,9 +2988,31 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: GET_TODOS_RESULT_1,
+          variables: {},
+        });
+
+        expect(mutation).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toStrictEqualTyped({
+          data: GET_TODOS_RESULT_1,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: GET_TODOS_RESULT_1,
           variables: {},
         });
 
@@ -3165,9 +3187,31 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: GET_TODOS_RESULT_1,
+          variables: {},
+        });
+
+        expect(mutation).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toStrictEqualTyped({
+          data: GET_TODOS_RESULT_1,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: GET_TODOS_RESULT_1,
           variables: {},
         });
 
@@ -3462,9 +3506,7 @@ describe("useMutation Hook", () => {
 
       function App() {
         renderStream.mergeSnapshot({
-          useQueryResult: useQuery(NumbersQuery, {
-            notifyOnNetworkStatusChange: true,
-          }),
+          useQueryResult: useQuery(NumbersQuery),
           useMutationResult: useMutation(RemoveNumberMutation, {
             update(cache) {
               const oldData = cache.readQuery({ query: NumbersQuery });

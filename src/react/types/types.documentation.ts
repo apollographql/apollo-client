@@ -72,7 +72,7 @@ export interface QueryOptionsDocumentation {
   /**
    * If `true`, the in-progress query's associated component re-renders whenever the network status changes or a network error occurs.
    *
-   * The default value is `false`.
+   * The default value is `true`.
    *
    * @docGroup 2. Networking options
    */
@@ -395,7 +395,7 @@ export interface MutationOptionsDocumentation {
   /**
    * If `true`, the in-progress mutation's associated component re-renders whenever the network status changes or a network error occurs.
    *
-   * The default value is `false`.
+   * The default value is `true`.
    *
    * @docGroup 2. Networking options
    */

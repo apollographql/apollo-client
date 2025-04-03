@@ -7,7 +7,7 @@ import { firstValueFrom, from, Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { MockedResponse } from "@apollo/client/testing";
@@ -1291,11 +1291,19 @@ describe("mutation results", () => {
 
     await watchedQuery.refetch(variables2);
 
-    {
-      const result = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: true,
+    });
 
-      expect(result.data).toEqual({ echo: "b" });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { echo: "b" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     await expect(
       client.mutate({
@@ -1308,11 +1316,12 @@ describe("mutation results", () => {
       })
     ).resolves.toStrictEqualTyped({ data: resetMutationResult.data });
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data).toEqual({ echo: "0" });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { echo: "0" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("allows mutations with optional arguments", async () => {

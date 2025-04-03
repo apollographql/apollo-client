@@ -27,19 +27,31 @@ export const babelTransform: BuildStep = async (options) => {
         ],
         plugins:
           (
-            // compiler will insert `"import"` statements, so it's not CJS compatible
-            options.type === "esm" &&
             // apply the compiler only to the react hooks, not test helper components etc.
             relativeSourcePath.match(/react\/hooks/)
           ) ?
-            [
+            // compiler will insert `"import"` statements, so it's not CJS compatible
+            options.type === "esm" ?
               [
-                "babel-plugin-react-compiler",
-                {
-                  target: "17",
-                },
-              ],
-            ]
+                [
+                  "babel-plugin-react-compiler",
+                  {
+                    target: "17",
+                  },
+                ],
+              ]
+            : [
+                [
+                  "babel-plugin-react-compiler",
+                  {
+                    target: "17",
+                  },
+                ],
+                [
+                  "@babel/plugin-transform-modules-commonjs",
+                  { importInterop: "none" },
+                ],
+              ]
           : [],
       });
       return { ast: result.ast!, map: result.map };

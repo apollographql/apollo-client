@@ -2965,7 +2965,7 @@ describe("ApolloClient", () => {
 
       const stream2 = new ObservableStream(result.queries[0]);
 
-      await expect(stream2).toEmitStrictTyped({
+      await expect(stream2).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2974,7 +2974,7 @@ describe("ApolloClient", () => {
 
       link.simulateResult({ error: new Error("refetch failed") });
 
-      await expect(stream2).toEmitStrictTyped({
+      await expect(stream2).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,

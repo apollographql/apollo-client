@@ -108,30 +108,36 @@ describe("mockLink", () => {
     subscription.unsubscribe();
   });
 
-  it("should require result or error when delay is just large", (done) => {
-    using _fakeTimers = enableFakeTimers();
-
-    const mockLink = new MockLink([
-      {
-        request: {
-          query,
-        },
-        delay: MAXIMUM_DELAY,
-      },
-    ]);
-
-    execute(mockLink, { query }).subscribe(
-      () => fail("onNext was called"),
-      (error) => {
-        expect(error).toBeInstanceOf(Error);
-        expect(error.message).toMatch(
-          /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
-        );
-        done();
-      }
+  it("should require result or error when delay is just large", () => {
+    expect(
+      () => new MockLink([{ request: { query }, delay: MAXIMUM_DELAY }])
+    ).toThrow(
+      /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
     );
 
-    jest.advanceTimersByTime(MAXIMUM_DELAY);
+    expect(
+      () =>
+        new MockLink([
+          // This one is ok
+          {
+            request: { query },
+            error: new Error("test"),
+            delay: MAXIMUM_DELAY,
+          },
+          // This one is problematic
+          { request: { query }, delay: MAXIMUM_DELAY },
+        ])
+    ).toThrow(
+      /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
+    );
+
+    const link = new MockLink([]);
+
+    expect(() =>
+      link.addMockedResponse({ request: { query }, delay: MAXIMUM_DELAY })
+    ).toThrow(
+      /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
+    );
   });
 
   it("should fill in default variables if they are missing in mocked requests", async () => {

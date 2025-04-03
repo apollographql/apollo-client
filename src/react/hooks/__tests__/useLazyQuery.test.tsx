@@ -804,112 +804,106 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: When removing the explicit `notifyOnNetworkStatusChange` option to
-  // `useLazyQuery` (which should be the default), this test breaks as it does
-  // not emit the loading state correctly.
-  it.failing(
-    "should persist previous data when a query is refetched",
-    async () => {
-      const mocks = [
-        {
-          request: { query: helloQuery },
-          result: { data: { hello: "world 1" } },
-          delay: 20,
-        },
-        {
-          request: { query: helloQuery },
-          result: { data: { hello: "world 2" } },
-          delay: 20,
-        },
-      ];
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        });
-
+  it("should persist previous data when a query is refetched", async () => {
+    const mocks = [
       {
-        const [, result] = await takeSnapshot();
+        request: { query: helloQuery },
+        result: { data: { hello: "world 1" } },
+        delay: 20,
+      },
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "world 2" } },
+        delay: 20,
+      },
+    ];
 
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          called: false,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      const [execute] = getCurrentSnapshot();
-
-      await expect(execute()).resolves.toStrictEqualTyped({
-        data: { hello: "world 1" },
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
       });
 
-      {
-        const [, result] = await takeSnapshot();
+    {
+      const [, result] = await takeSnapshot();
 
-        expect(result).toStrictEqualTyped({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: { hello: "world 1" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      const [, { refetch }] = getCurrentSnapshot();
-
-      await expect(refetch()).resolves.toStrictEqualTyped({
-        data: { hello: "world 2" },
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
-
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: { hello: "world 1" },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.refetch,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-      {
-        const [, result] = await takeSnapshot();
-
-        expect(result).toStrictEqualTyped({
-          data: { hello: "world 2" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 1" },
-          variables: {},
-        });
-      }
-
-      await expect(takeSnapshot).not.toRerender();
     }
-  );
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(execute()).resolves.toStrictEqualTyped({
+      data: { hello: "world 1" },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [, { refetch }] = getCurrentSnapshot();
+
+    await expect(refetch()).resolves.toStrictEqualTyped({
+      data: { hello: "world 2" },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
 
   // TODO: Determine if this hook makes sense for polling or if that should be
   // reserved for useQuery. At the very least, we need to figure out if you can

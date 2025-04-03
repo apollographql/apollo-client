@@ -2218,7 +2218,6 @@ describe("useQuery Hook", () => {
     // https://github.com/apollographql/apollo-client/issues/9431
     // https://github.com/apollographql/apollo-client/issues/11750
     it("stops polling when component unmounts with cache-and-network fetch policy", async () => {
-      jest.useFakeTimers();
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {
           hello
@@ -2258,7 +2257,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
-            pollInterval: 100,
+            pollInterval: 50,
             fetchPolicy: "cache-and-network",
           }),
         {
@@ -2268,59 +2267,42 @@ describe("useQuery Hook", () => {
         }
       );
 
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-        await expect(promise).resolves.toStrictEqualTyped({
-          data: undefined,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(requestSpy).toHaveBeenCalledTimes(1);
 
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toStrictEqualTyped({
-          data: { hello: "world 1" },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-        expect(requestSpy).toHaveBeenCalledTimes(1);
-      }
-
-      // We wait a tick longer than 100 since values are emitted on the asapScheduler
-      jest.advanceTimersByTime(101);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toStrictEqualTyped({
-          data: { hello: "world 2" },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 1" },
-          variables: {},
-        });
-        expect(requestSpy).toHaveBeenCalledTimes(2);
-      }
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        loading: true,
+        networkStatus: NetworkStatus.poll,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+      expect(requestSpy).toHaveBeenCalledTimes(2);
 
       unmount();
 
-      jest.advanceTimersByTime(200);
-
       expect(requestSpy).toHaveBeenCalledTimes(2);
-
-      jest.useRealTimers();
     });
 
     it("should stop polling when component is unmounted in Strict Mode", async () => {

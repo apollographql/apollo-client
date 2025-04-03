@@ -358,7 +358,10 @@ export function useLazyQuery<
         const promise = observable.reobserve(options);
 
         // TODO: This should be fixed in core
-        if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
+        if (
+          !resultRef.current &&
+          observable.options.notifyOnNetworkStatusChange
+        ) {
           updateResult(observable.getCurrentResult(), forceUpdateState);
         }
 

@@ -754,21 +754,21 @@ describe("client", () => {
       partial: true,
     };
 
-    await expect(stream).toEmitStrictTyped(emittedValue);
+    await expect(stream).toEmitTypedValue(emittedValue);
 
     await expect(observable.refetch()).rejects.toThrow(expectedError);
-    await expect(stream).toEmitStrictTyped(emittedValue);
+    await expect(stream).toEmitTypedValue(emittedValue);
 
     await expect(observable.fetchMore({})).rejects.toThrow(expectedError);
-    await expect(stream).toEmitStrictTyped(emittedValue);
+    await expect(stream).toEmitTypedValue(emittedValue);
 
     await expect(observable.setVariables({ ignored: true })).rejects.toThrow(
       expectedError
     );
-    await expect(stream).toEmitStrictTyped(emittedValue);
+    await expect(stream).toEmitTypedValue(emittedValue);
 
     await expect(observable.reobserve()).rejects.toThrow(expectedError);
-    await expect(stream).toEmitStrictTyped(emittedValue);
+    await expect(stream).toEmitTypedValue(emittedValue);
   });
 
   it("allows subscriptions to terminate without emitting results", async () => {
@@ -926,7 +926,12 @@ describe("client", () => {
     const handle = client.watchQuery({ query });
     const stream = new ObservableStream(handle);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitTypedValue({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("should be able to transform queries", async () => {
@@ -1864,8 +1869,18 @@ describe("client", () => {
 
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: initialData });
-      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: networkFetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1886,9 +1901,11 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: networkFetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1912,7 +1929,7 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         data: undefined,
         error: new Error("Oops"),
         loading: false,
@@ -1942,14 +1959,14 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         data: initialData,
         networkStatus: 1,
         partial: false,
       });
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         data: initialData,
         error: new CombinedGraphQLErrors({
           errors: [{ message: "network failure" }],
@@ -1982,11 +1999,16 @@ describe("client", () => {
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 
@@ -2011,18 +2033,28 @@ describe("client", () => {
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
         void obs.reobserve({ query, fetchPolicy: "cache-first" });
       }, 10);
 
-      await expect(stream).toEmitMatchedValue({ data: data2 });
+      await expect(stream).toEmitTypedValue({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       await expect(stream).not.toEmitAnything();
     });
 
@@ -2037,7 +2069,7 @@ describe("client", () => {
 
       await expect(
         client.query({ query, fetchPolicy: "standby" })
-      ).resolves.toEqualStrictTyped({ data: undefined });
+      ).resolves.toStrictEqualTyped({ data: undefined });
     });
   });
 
@@ -2229,7 +2261,7 @@ describe("client", () => {
 
     await expect(
       client.mutate({ mutation, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data,
       error: new CombinedGraphQLErrors({ data, errors }),
     });
@@ -2265,7 +2297,7 @@ describe("client", () => {
 
     await expect(
       client.mutate({ mutation, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({ data });
+    ).resolves.toStrictEqualTyped({ data });
   });
 
   it("should rollback optimistic after mutation got a GraphQL error", async () => {
@@ -2506,7 +2538,12 @@ describe("client", () => {
     await client.resetStore();
     expect(count).toBe(2);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitTypedValue({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
     await expect(stream).toEmitNext();
 
     expect(onResetStoreOne).toHaveBeenCalled();
@@ -2607,7 +2644,7 @@ describe("client", () => {
 
     const stream = new ObservableStream(handle);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new Error("Uh oh!"),
       loading: false,
@@ -2646,7 +2683,7 @@ describe("client", () => {
 
     let stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
@@ -2656,14 +2693,14 @@ describe("client", () => {
     await wait(0);
     await expect(observable.refetch()).rejects.toThrow();
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data,
       error: new Error("This is an error!"),
       loading: false,
@@ -2685,7 +2722,7 @@ describe("client", () => {
     observable.resetLastResults();
     stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
@@ -2695,14 +2732,14 @@ describe("client", () => {
     await wait(0);
     await expect(observable.refetch()).resolves.toBeTruthy();
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: dataTwo,
@@ -2783,7 +2820,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { posts: null },
       error: new CombinedGraphQLErrors({
         data: { posts: null },
@@ -2813,7 +2850,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({ data: undefined, error });
+    ).resolves.toStrictEqualTyped({ data: undefined, error });
   });
 
   it("resolves partial data and strips errors when errorPolicy is 'ignore'", async () => {
@@ -2839,7 +2876,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({ data: { posts: null } });
+    ).resolves.toStrictEqualTyped({ data: { posts: null } });
   });
 
   it("resolves with no data or errors for network error when errorPolicy is 'ignore'", async () => {
@@ -2863,7 +2900,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({ data: undefined });
+    ).resolves.toStrictEqualTyped({ data: undefined });
   });
 
   it("should warn if server returns wrong data", async () => {
@@ -3238,21 +3275,21 @@ describe("@connection", () => {
       }
     `);
 
-    await expect(aStream).toEmitApolloQueryResult({
+    await expect(aStream).toEmitTypedValue({
       data: { a: 123 },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
 
-    await expect(bStream).toEmitApolloQueryResult({
+    await expect(bStream).toEmitTypedValue({
       data: { b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
 
-    await expect(abStream).toEmitApolloQueryResult({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 123, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3261,7 +3298,7 @@ describe("@connection", () => {
 
     aVar(aVar() + 111);
 
-    await expect(aStream).toEmitApolloQueryResult({
+    await expect(aStream).toEmitTypedValue({
       data: { a: 234 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3270,7 +3307,7 @@ describe("@connection", () => {
 
     await expect(bStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(abStream).toEmitApolloQueryResult({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 234, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3281,14 +3318,14 @@ describe("@connection", () => {
 
     await expect(aStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(bStream).toEmitApolloQueryResult({
+    await expect(bStream).toEmitTypedValue({
       data: { b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
 
-    await expect(abStream).toEmitApolloQueryResult({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 234, b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3298,21 +3335,21 @@ describe("@connection", () => {
     aVar(aVar() + 222);
     bVar("oyez");
 
-    await expect(aStream).toEmitApolloQueryResult({
+    await expect(aStream).toEmitTypedValue({
       data: { a: 456 },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
 
-    await expect(bStream).toEmitApolloQueryResult({
+    await expect(bStream).toEmitTypedValue({
       data: { b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
 
-    await expect(abStream).toEmitApolloQueryResult({
+    await expect(abStream).toEmitTypedValue({
       data: { a: 456, b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3347,7 +3384,7 @@ describe("@connection", () => {
     // result to be delivered even though networkStatus is still loading.
     const cStream = watch(cQuery, "cache-only");
 
-    await expect(cStream).toEmitApolloQueryResult({
+    await expect(cStream).toEmitTypedValue({
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3366,7 +3403,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitApolloQueryResult({
+    await expect(cStream).toEmitTypedValue({
       data: { c: "see" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3385,7 +3422,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitApolloQueryResult({
+    await expect(cStream).toEmitTypedValue({
       data: { c: "saw" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3397,7 +3434,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitApolloQueryResult({
+    await expect(cStream).toEmitTypedValue({
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3561,8 +3598,18 @@ describe("@connection", () => {
 
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: initialData });
-      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).toEmitTypedValue({
+        data: initialData,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
+        data: networkFetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       await expect(stream).not.toEmitAnything();
     });
 
@@ -3625,7 +3672,12 @@ describe("@connection", () => {
       const obs = client.watchQuery({ query });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "initial" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(1);
 
       // Refetching makes a copy of the current options, which
@@ -3633,7 +3685,12 @@ describe("@connection", () => {
       // nextFetchPolicy function ends up getting called twice.
       void obs.refetch();
 
-      await expect(stream).toEmitMatchedValue({ data: { count: 0 } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: 0 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(2);
 
       client.writeQuery({
@@ -3643,12 +3700,22 @@ describe("@connection", () => {
         },
       });
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "secondary" } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: "secondary" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(3);
 
       client.cache.evict({ fieldName: "count" });
 
-      await expect(stream).toEmitMatchedValue({ data: { count: 1 } });
+      await expect(stream).toEmitTypedValue({
+        data: { count: 1 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
       expect(nextFetchPolicyCallCount).toBe(4);
       expect(obs.options.fetchPolicy).toBe("cache-first");
 
@@ -3698,9 +3765,11 @@ describe("@connection", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(fetchPolicyRecord).toEqual(["cache-first"]);
 
@@ -3709,15 +3778,17 @@ describe("@connection", () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0]).toEqualStrictTyped({
+      expect(results[0]).toStrictEqualTyped({
         data: { linkCount: 2 },
       });
 
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
@@ -3728,7 +3799,7 @@ describe("@connection", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      expect(finalResult).toEqualStrictTyped({
+      expect(finalResult).toStrictEqualTyped({
         data: { linkCount: 3 },
       });
 
@@ -3738,14 +3809,18 @@ describe("@connection", () => {
         "cache-and-network",
       ]);
 
-      await expect(stream).toEmitMatchedValue({
-        loading: true,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: false,
       });
 
-      await expect(stream).toEmitMatchedValue({
-        loading: false,
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 3 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(fetchPolicyRecord).toEqual([
@@ -3773,7 +3848,7 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({ errors }),
       });
@@ -5197,7 +5272,7 @@ describe("custom document transforms", () => {
     const observable = client.watchQuery({ query, variables: { offset: 0 } });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
       },
@@ -5222,7 +5297,7 @@ describe("custom document transforms", () => {
       products: [{ __typename: "Product", id: 2 }],
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         products: [
           { __typename: "Product", id: 1 },
@@ -6361,7 +6436,7 @@ describe("unconventional errors", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitStrictTyped({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
       error: expectedError,
       loading: false,
@@ -6388,7 +6463,7 @@ describe("unconventional errors", () => {
     });
     const subscriptionStream = new ObservableStream(subscription);
 
-    await expect(subscriptionStream).toEmitStrictTyped({
+    await expect(subscriptionStream).toEmitTypedValue({
       data: undefined,
       error: expectedError,
     });
@@ -6419,7 +6494,7 @@ describe("unconventional errors", () => {
 
       const stream = new ObservableStream(client.watchQuery({ query }));
 
-      await expect(stream).toEmitStrictTyped({
+      await expect(stream).toEmitTypedValue({
         data: undefined,
         error: expectedError,
         loading: false,
@@ -6446,7 +6521,7 @@ describe("unconventional errors", () => {
       });
       const subscriptionStream = new ObservableStream(subscription);
 
-      await expect(subscriptionStream).toEmitStrictTyped({
+      await expect(subscriptionStream).toEmitTypedValue({
         data: undefined,
         error: expectedError,
       });

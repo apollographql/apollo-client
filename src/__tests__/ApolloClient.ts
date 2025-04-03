@@ -1215,7 +1215,12 @@ describe("ApolloClient", () => {
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
 
-          await expect(stream).toEmitMatchedValue({ data });
+          await expect(stream).toEmitTypedValue({
+            data,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
           expect(observable.getCurrentResult().data).toEqual(data);
 
           const readData = client.readQuery<Data>({ query });
@@ -1245,7 +1250,12 @@ describe("ApolloClient", () => {
             },
           };
 
-          await expect(stream).toEmitMatchedValue({ data: expectation });
+          await expect(stream).toEmitTypedValue({
+            data: expectation,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
           expect(client.readQuery<Data>({ query })).toEqual(expectation);
         });
 
@@ -1254,7 +1264,12 @@ describe("ApolloClient", () => {
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
 
-          await expect(stream).toEmitMatchedValue({ data });
+          await expect(stream).toEmitTypedValue({
+            data,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
 
           expect(observable.getCurrentResult().data).toEqual(data);
 
@@ -2112,7 +2127,7 @@ describe("ApolloClient", () => {
           notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitTypedValue({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2148,7 +2163,7 @@ describe("ApolloClient", () => {
           notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitTypedValue({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2183,13 +2198,13 @@ describe("ApolloClient", () => {
         const stream = new ObservableStream(observable);
         // not really part of this test case but I decided to leave it here to highlight this
         // in the case of a network request, `no-cache` emits a `loading` state while `network-only` etc. do not?
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitTypedValue({
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
           data: undefined,
         });
-        await expect(stream).toEmitApolloQueryResult({
+        await expect(stream).toEmitTypedValue({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2610,7 +2625,7 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValueStrict({
+      await expect(stream).toEmitTypedValue({
         data: {
           __typename: "Item",
           id: 5,
@@ -2628,7 +2643,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      await expect(stream).toEmitValueStrict({
+      await expect(stream).toEmitTypedValue({
         data: {
           __typename: "Item",
           id: 5,

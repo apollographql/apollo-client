@@ -69,7 +69,7 @@ describe("Basic resolver capabilities", () => {
 
     const stream = setupTestWithResolvers({ resolvers, query });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -112,7 +112,7 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true } } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true },
         bar: { baz: true },
@@ -163,7 +163,7 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, __typename: "ClientData" },
         bar: { baz: true, __typename: "Bar" },
@@ -225,7 +225,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
@@ -262,7 +262,7 @@ describe("Basic resolver capabilities", () => {
       variables: { id: 1 },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -296,7 +296,7 @@ describe("Basic resolver capabilities", () => {
       queryOptions: { context: { id: 1 } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -354,7 +354,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         author: {
           __typename: "Author",
@@ -395,7 +395,7 @@ describe("Basic resolver capabilities", () => {
 
     const result = await client.query({ query, fetchPolicy: "network-only" });
 
-    expect(result).toEqualStrictTyped({ data: { isInCart: false } });
+    expect(result).toStrictEqualTyped({ data: { isInCart: false } });
   });
 
   it("should handle nested asynchronous @client resolvers (issue #4841)", () => {
@@ -556,7 +556,7 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { __typename: "Foo", bar: true },
         bar: { __typename: "Bar", baz: true },
@@ -599,7 +599,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({ data: { field: 1 } });
+    expect(result).toStrictEqualTyped({ data: { field: 1 } });
   });
 
   it("should let you write to the cache with a mutation using an ID", async () => {
@@ -652,7 +652,7 @@ describe("Writing cache data from resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { obj: { __typename: "Object", field: 2 } },
     });
   });
@@ -714,7 +714,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         obj: {
           __typename: "Object",
@@ -757,7 +757,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         foo: { bar: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
@@ -788,7 +788,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query: aliasedQuery });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { fie: { bar: true, __typename: "Foo" } },
     });
     expect(fie).not.toHaveBeenCalled();
@@ -824,7 +824,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query: aliasedQuery });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         fie: { fum: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
@@ -867,7 +867,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { fie: { bar: "yo", __typename: "Foo" } },
     });
   });
@@ -927,13 +927,13 @@ describe("Resolving field aliases", () => {
 
     // `isInCart` resolver is fired, returning `true` (which is then
     // stored in the cache).
-    await expect(client.query({ query })).resolves.toEqualStrictTyped({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
     });
 
     // When the same query fires again, `isInCart` should be pulled from
     // the cache and have a value of `true`.
-    await expect(client.query({ query })).resolves.toEqualStrictTyped({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
     });
   });
@@ -970,7 +970,7 @@ describe("Force local resolvers", () => {
 
     // When the resolver isn't defined, there isn't anything to force, so
     // make sure the query resolves from the cache properly.
-    await expect(client.query({ query })).resolves.toEqualStrictTyped({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: {
         author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
       },
@@ -987,7 +987,7 @@ describe("Force local resolvers", () => {
     // A resolver is defined, so make sure it's forced, and the result
     // resolves properly as a combination of cache and local resolver
     // data.
-    await expect(client.query({ query })).resolves.toEqualStrictTyped({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: {
         author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
       },
@@ -1029,7 +1029,7 @@ describe("Force local resolvers", () => {
       },
     });
 
-    await expect(client.query({ query })).resolves.toEqualStrictTyped({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: {
         author: {
           __typename: "Author",
@@ -1164,7 +1164,7 @@ describe("Force local resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         userData: {
           __typename: "User",
@@ -1198,7 +1198,7 @@ describe("Async resolvers", () => {
 
     const result = await client.query({ query })!;
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: { isLoggedIn: true },
     });
   });
@@ -1248,7 +1248,7 @@ describe("Async resolvers", () => {
 
     const result = await client.query({ query })!;
 
-    expect(result).toEqualStrictTyped({
+    expect(result).toStrictEqualTyped({
       data: {
         member: {
           name: testMember.name,

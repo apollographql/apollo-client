@@ -29,7 +29,7 @@ it("can be used to set the context with a simple function", async () => {
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("can be used to set the context with a function returning a promise", async () => {
@@ -45,7 +45,7 @@ it("can be used to set the context with a function returning a promise", async (
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("can be used to set the context with a function returning a promise that is delayed", async () => {
@@ -61,7 +61,7 @@ it("can be used to set the context with a function returning a promise that is d
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("handles errors in the lookup correclty", async () => {
@@ -121,7 +121,7 @@ it("has access to the request information", async () => {
     execute(link, { query, variables: { id: 1 } })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("has access to the context at execution time", async () => {
@@ -140,7 +140,7 @@ it("has access to the context at execution time", async () => {
     execute(link, { query, context: { count: 1 } })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("unsubscribes correctly", async () => {
@@ -163,7 +163,7 @@ it("unsubscribes correctly", async () => {
     })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
   stream.unsubscribe();
 });
 

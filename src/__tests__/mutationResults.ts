@@ -217,7 +217,7 @@ describe("mutation results", () => {
     });
 
     await firstValueFrom(from(obsQuery));
-    await expect(client.mutate({ mutation })).resolves.toEqualStrictTyped({
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
       data: mutationResult.data,
     });
     const newResult = await client.query<any>({ query });
@@ -296,7 +296,7 @@ describe("mutation results", () => {
 
     await expect(
       client.mutate({ mutation, variables: { signature: "1234" } })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
     });
 
@@ -369,7 +369,7 @@ describe("mutation results", () => {
       },
     });
 
-    expect(ignoreErrorsResult).toEqualStrictTyped({
+    expect(ignoreErrorsResult).toStrictEqualTyped({
       data: {
         newPerson: {
           __typename: "Person",
@@ -388,7 +388,7 @@ describe("mutation results", () => {
       },
     });
 
-    expect(allErrorsResult).toEqualStrictTyped({
+    expect(allErrorsResult).toStrictEqualTyped({
       data: {
         newPerson: {
           __typename: "Person",
@@ -442,7 +442,7 @@ describe("mutation results", () => {
           newName: "Jenn Creighton",
         },
       })
-    ).resolves.toEqualStrictTyped({ data: undefined });
+    ).resolves.toStrictEqualTyped({ data: undefined });
 
     await expect(
       client.mutate({
@@ -452,7 +452,7 @@ describe("mutation results", () => {
           newName: "Ellen Shapiro",
         },
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: undefined,
       error: networkError,
     });
@@ -496,7 +496,7 @@ describe("mutation results", () => {
           newName: "Hugh Willson",
         },
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { newPerson: { __typename: "Person", name: "Hugh Willson" } },
       extensions: {
         requestLimit: 10,
@@ -541,7 +541,7 @@ describe("mutation results", () => {
         },
         errorPolicy: "all",
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { newPerson: null },
       error: new CombinedGraphQLErrors({
         data: { newPerson: null },
@@ -590,7 +590,7 @@ describe("mutation results", () => {
         },
         errorPolicy: "ignore",
       })
-    ).resolves.toEqualStrictTyped({
+    ).resolves.toStrictEqualTyped({
       data: { newPerson: null },
       extensions: {
         requestLimit: 10,
@@ -685,7 +685,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).resolves.toEqualStrictTyped({ data: mutationTodoResult.data });
+      ).resolves.toStrictEqualTyped({ data: mutationTodoResult.data });
     } finally {
       subscriptionHandle!.unsubscribe();
     }
@@ -771,7 +771,7 @@ describe("mutation results", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           doSomething: {
             __typename: "MutationPayload",
@@ -848,7 +848,7 @@ describe("mutation results", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           doSomething: {
             __typename: "MutationPayload",
@@ -920,7 +920,7 @@ describe("mutation results", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
+      expect(result).toStrictEqualTyped({
         data: {
           __typename: "Mutation",
           doSomething: {
@@ -988,7 +988,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).resolves.toEqualStrictTyped({
+      ).resolves.toStrictEqualTyped({
         data: mutationResult.data,
       });
 
@@ -1057,7 +1057,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+      ).resolves.toStrictEqualTyped({ data: mutationResult.data });
 
       const newResult = await client.query<any>({ query });
 
@@ -1098,7 +1098,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+      ).resolves.toStrictEqualTyped({ data: mutationResult.data });
     });
 
     it("does not fail if the query did not finish loading", async () => {
@@ -1126,7 +1126,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+      ).resolves.toStrictEqualTyped({ data: mutationResult.data });
     });
 
     it("does not make next queries fail if a mutation fails", async () => {
@@ -1304,7 +1304,7 @@ describe("mutation results", () => {
           },
         },
       })
-    ).resolves.toEqualStrictTyped({ data: resetMutationResult.data });
+    ).resolves.toStrictEqualTyped({ data: resetMutationResult.data });
 
     {
       const result = await stream.takeNext();
@@ -1382,7 +1382,7 @@ describe("mutation results", () => {
         __typename: "Mutation",
       },
     });
-    expect(results).toEqualStrictTyped([
+    expect(results).toStrictEqualTyped([
       { data: { result: "hello" } },
       { data: { result: "world" } },
       { data: { result: "goodbye" } },
@@ -1458,7 +1458,7 @@ describe("mutation results", () => {
         __typename: "Mutation",
       },
     });
-    expect(results).toEqualStrictTyped([
+    expect(results).toStrictEqualTyped([
       { data: { result: "hello" } },
       { data: { result: "world" } },
       { data: { result: "goodbye" } },
@@ -1534,7 +1534,7 @@ describe("mutation results", () => {
         __typename: "Mutation",
       },
     });
-    expect(results).toEqualStrictTyped([
+    expect(results).toStrictEqualTyped([
       { data: { result: "hello" } },
       { data: { result: "world" } },
       { data: { result: "moon" } },
@@ -1613,7 +1613,7 @@ describe("mutation results", () => {
             });
           },
         })
-      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+      ).resolves.toStrictEqualTyped({ data: mutationResult.data });
 
       const newResult = await client.query<any>({ query });
 
@@ -1698,7 +1698,7 @@ describe("mutation results", () => {
             });
           },
         })
-      ).resolves.toEqualStrictTyped({ data: mutationResult.data });
+      ).resolves.toStrictEqualTyped({ data: mutationResult.data });
 
       const newResult = await client.query<any>({ query });
 
@@ -1856,7 +1856,7 @@ describe("mutation results", () => {
         mutation: mutation,
       });
 
-      expect(result).toEqualStrictTyped({ data: result1.data });
+      expect(result).toStrictEqualTyped({ data: result1.data });
     });
 
     it("data might be undefined in case of failure with errorPolicy = ignore", async () => {
@@ -1883,7 +1883,7 @@ describe("mutation results", () => {
         errorPolicy: "ignore",
       });
 
-      expect(ignoreErrorsResult).toEqualStrictTyped({
+      expect(ignoreErrorsResult).toStrictEqualTyped({
         data: undefined,
       });
     });

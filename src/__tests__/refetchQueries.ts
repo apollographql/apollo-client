@@ -479,7 +479,7 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqualApolloQueryResult({
+          expect(result).toStrictEqualTyped({
             data: { a: "A", b: "B" },
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -565,7 +565,12 @@ describe("client.refetchQueries", () => {
     subs.push(stream as unknown as Subscription);
     expect(abObs.hasObservers()).toBe(true);
 
-    await expect(stream).toEmitMatchedValue({ data: { a: "A", b: "B" } });
+    await expect(stream).toEmitTypedValue({
+      data: { a: "A", b: "B" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     const resultsAfterSubscribe = await client.refetchQueries({
       include: [aQuery, "B"],

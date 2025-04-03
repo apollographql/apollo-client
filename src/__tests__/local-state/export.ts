@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import {
   ObservableStream,
@@ -732,11 +732,14 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     currentAuthorId = testAuthorId2;
@@ -745,11 +748,14 @@ describe("@client @export tests", () => {
       data: { currentAuthorId },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -792,11 +798,14 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(fetchCount).toBe(1);
 
@@ -853,11 +862,14 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // The initial result is fetched over the network.
     expect(fetchCount).toBe(1);
@@ -876,11 +888,14 @@ describe("@client @export tests", () => {
       data: { currentAuthorId: testAuthorId2 },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // The updated result should not have been fetched over the
     // network, as it can be found in the cache.
@@ -923,11 +938,14 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query: doubleWidgetsQuery });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         widgetCount: 100,
         doubleWidgets: 200,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     client.writeQuery({
@@ -937,11 +955,14 @@ describe("@client @export tests", () => {
       },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         widgetCount: 500,
         doubleWidgets: 1000,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });

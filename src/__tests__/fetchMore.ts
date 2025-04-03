@@ -55,8 +55,11 @@ describe("updateQuery on a simple query", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 1 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     observable.updateQuery((prevResult: any) => {
@@ -65,8 +68,11 @@ describe("updateQuery on a simple query", () => {
       return res;
     });
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 2 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 2 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });
@@ -117,8 +123,11 @@ describe("updateQuery on a query with required and optional variables", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 1 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     observable.updateQuery((prevResult: any) => {
@@ -127,8 +136,11 @@ describe("updateQuery on a query with required and optional variables", () => {
       return res;
     });
 
-    await expect(stream).toEmitMatchedValue({
-      data: { entry: { value: 2 } },
+    await expect(stream).toEmitTypedValue({
+      data: { __typename: "Query", entry: { __typename: "Entry", value: 2 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });
@@ -605,7 +617,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -625,12 +637,12 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: { TODO: tasks.slice(2, 4) },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -652,14 +664,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -696,7 +708,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -716,14 +728,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(2, 4),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -732,7 +744,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -754,14 +766,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -770,7 +782,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -806,7 +818,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -826,14 +838,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(2, 4),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -855,14 +867,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -898,7 +910,7 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -918,14 +930,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(2, 4),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -934,7 +946,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -956,14 +968,14 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualStrictTyped({
+        expect(fetchMoreResult).toStrictEqualTyped({
           data: {
             TODO: tasks.slice(5, 8),
           },
         });
       }
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
@@ -972,7 +984,7 @@ describe("fetchMore on an observable query", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -1109,7 +1121,7 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1128,7 +1140,7 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
-      expect(fetchMoreResult).toEqualStrictTyped({
+      expect(fetchMoreResult).toStrictEqualTyped({
         data: {
           groceries: additionalGroceries,
         },
@@ -1140,7 +1152,7 @@ describe("fetchMore on an observable query", () => {
     // This result comes entirely from the cache, without updating the
     // original variables for the ObservableQuery, because the
     // offsetLimitPagination field policy has keyArgs:false.
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1383,7 +1395,7 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1396,11 +1408,11 @@ describe("fetchMore on an observable query", () => {
       variables,
     });
 
-    expect(fetchMoreResult).toEqualStrictTyped({
+    expect(fetchMoreResult).toStrictEqualTyped({
       data: { emptyItems: [] },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       data: {
@@ -1409,7 +1421,7 @@ describe("fetchMore on an observable query", () => {
       partial: false,
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1799,14 +1811,14 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   // this one didn't. This is a temporary fix to get the test to pass.
   //
   // This will be normalized with the work to change notifyOnNetworkStatusChange.
-  await expect(stream).toEmitApolloQueryResult({
+  await expect(stream).toEmitTypedValue({
     data: undefined,
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
   });
 
-  await expect(stream).toEmitApolloQueryResult({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1825,7 +1837,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     }),
   });
 
-  expect(fetchMoreResult).toEqualStrictTyped({
+  expect(fetchMoreResult).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "C", position: 3 },
@@ -1834,7 +1846,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
   });
 
-  await expect(stream).toEmitApolloQueryResult({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1846,7 +1858,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  await expect(stream).toEmitApolloQueryResult({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1861,7 +1873,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   });
 
   // Ensure we store the merged result as the last result
-  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1882,7 +1894,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
   });
 
-  expect(fetchMoreResult).toEqualStrictTyped({
+  expect(fetchMoreResult).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },
@@ -1891,7 +1903,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
   });
 
-  await expect(stream).toEmitApolloQueryResult({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1905,7 +1917,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  await expect(stream).toEmitApolloQueryResult({
+  await expect(stream).toEmitTypedValue({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },
@@ -1917,7 +1929,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },

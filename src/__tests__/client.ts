@@ -4284,7 +4284,8 @@ describe("custom document transforms", () => {
       cache: new InMemoryCache(),
     });
 
-    await client.query({ query });
+    // Pass no-cache to silence cache write warnings
+    await client.query({ query, fetchPolicy: "no-cache" });
 
     expect(document!).toMatchDocument(gql`
       query TestQuery {

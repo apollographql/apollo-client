@@ -531,9 +531,7 @@ describe("GraphQL Subscriptions", () => {
 
     await expect(stream).toEmitTypedValue(results[0].result);
 
-    expect(link.operation?.getContext().someVar).toEqual(
-      options.context.someVar
-    );
+    expect(link.operation?.getContext().someVar).toEqual("Some value");
   });
 
   it("emits an error if the result has protocolErrors on it", async () => {

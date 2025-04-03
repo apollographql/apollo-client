@@ -24,7 +24,11 @@ import {
   NetworkStatus,
 } from "@apollo/client/core";
 import type { Masked } from "@apollo/client/masking";
-import { ApolloProvider, createQueryPreloader  , useReadQuery } from "@apollo/client/react";
+import {
+  ApolloProvider,
+  createQueryPreloader,
+  useReadQuery,
+} from "@apollo/client/react";
 import type {
   PreloadedQueryRef,
   QueryRef,

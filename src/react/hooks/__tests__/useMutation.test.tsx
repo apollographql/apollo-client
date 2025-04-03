@@ -34,7 +34,7 @@ import {
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { Masked } from "@apollo/client/masking";
-import { ApolloProvider , useMutation, useQuery } from "@apollo/client/react";
+import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
 import {
   MockLink,

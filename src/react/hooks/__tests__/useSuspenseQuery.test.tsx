@@ -37,7 +37,11 @@ import type {
   MaskedDocumentNode,
   Unmasked,
 } from "@apollo/client/masking";
-import { ApolloProvider, skipToken  , useSuspenseQuery } from "@apollo/client/react";
+import {
+  ApolloProvider,
+  skipToken,
+  useSuspenseQuery,
+} from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {

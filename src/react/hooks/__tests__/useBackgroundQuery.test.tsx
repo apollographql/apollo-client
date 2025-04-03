@@ -25,7 +25,8 @@ import {
   split,
 } from "@apollo/client/core";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
-import { ApolloProvider ,
+import {
+  ApolloProvider,
   skipToken,
   useBackgroundQuery,
   useReadQuery,

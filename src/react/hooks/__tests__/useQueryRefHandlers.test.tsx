@@ -15,7 +15,8 @@ import {
   NetworkStatus,
   split,
 } from "@apollo/client/core";
-import { createQueryPreloader ,
+import {
+  createQueryPreloader,
   useBackgroundQuery,
   useLoadableQuery,
   useQueryRefHandlers,

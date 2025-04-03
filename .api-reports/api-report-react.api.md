@@ -209,18 +209,19 @@ export interface ApolloContextValue {
     client?: ApolloClient;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ApolloProviderProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export const ApolloProvider: ReactTypes.FC<ApolloProviderProps>;
+export namespace ApolloProvider {
+    // (undocumented)
+    export interface Props {
+        // (undocumented)
+        children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
+        // (undocumented)
+        client: ApolloClient;
+    }
+}
 
 // @public (undocumented)
-interface ApolloProviderProps {
-    // (undocumented)
-    children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
-    // (undocumented)
-    client: ApolloClient;
-}
+export const ApolloProvider: ReactTypes.FC<ApolloProvider.Props>;
 
 // @public (undocumented)
 interface ApolloQueryResult<T> {

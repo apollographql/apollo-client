@@ -544,5 +544,7 @@ describe("GraphQL Subscriptions", () => {
         },
       ]),
     });
+
+    await expect(stream).toComplete();
   });
 });

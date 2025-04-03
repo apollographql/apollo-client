@@ -187,36 +187,6 @@ type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
 type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // @public (undocumented)
-export const enum defaultCacheSizes {
-    // (undocumented)
-    "cache.fragmentQueryDocuments" = 1000,
-    // (undocumented)
-    "documentTransform.cache" = 2000,
-    // (undocumented)
-    "fragmentRegistry.findFragmentSpreads" = 4000,
-    // (undocumented)
-    "fragmentRegistry.lookup" = 1000,
-    // (undocumented)
-    "fragmentRegistry.transform" = 2000,
-    // (undocumented)
-    "inMemoryCache.executeSelectionSet" = 50000,
-    // (undocumented)
-    "inMemoryCache.executeSubSelectedArray" = 10000,
-    // (undocumented)
-    "inMemoryCache.maybeBroadcastWatch" = 5000,
-    // (undocumented)
-    "PersistedQueryLink.persistedQueryHashes" = 2000,
-    // (undocumented)
-    "queryManager.getDocumentInfo" = 2000,
-    // (undocumented)
-    "removeTypenameFromVariables.getVariableDefinitions" = 2000,
-    // (undocumented)
-    canonicalStringify = 1000,
-    // (undocumented)
-    print = 2000
-}
-
-// @public (undocumented)
 export type DirectiveInfo = {
     [fieldName: string]: {
         [argName: string]: any;

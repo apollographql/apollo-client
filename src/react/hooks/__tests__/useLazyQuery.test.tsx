@@ -169,6 +169,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Invert this since the previoius test is now the same
   test("sets initial loading state when notifyOnNetworkStatusChange is true", async () => {
     const mocks = [
       {

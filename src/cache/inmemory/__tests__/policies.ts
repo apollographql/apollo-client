@@ -4112,6 +4112,7 @@ describe("type policies", function () {
         }
       >({
         query,
+        notifyOnNetworkStatusChange: false,
         variables: {
           query: "Basquiat",
           first: 3,

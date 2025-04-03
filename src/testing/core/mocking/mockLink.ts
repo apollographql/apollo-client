@@ -62,7 +62,6 @@ function requestToKey(request: GraphQLRequest): string {
 }
 
 export class MockLink extends ApolloLink {
-  public operation!: Operation;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
 
@@ -96,7 +95,6 @@ export class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
-    this.operation = operation;
     const key = requestToKey(operation);
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};

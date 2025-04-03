@@ -3294,9 +3294,7 @@ describe("ObservableQuery", () => {
             { request: queryOptions, result: { data: { value: 1 } } },
             { request: queryOptions, result: { data: { value: 2 } } },
             { request: queryOptions, result: { data: { value: 3 } } },
-          ]).setOnError((error) => {
-            throw error;
-          }),
+          ]),
           assumeImmutableResults,
           cache,
         });
@@ -3312,6 +3310,7 @@ describe("ObservableQuery", () => {
                 try {
                   data.value = "oyez";
                 } catch (error) {
+                  observable.stopPolling();
                   reject(error);
                 }
               } else {

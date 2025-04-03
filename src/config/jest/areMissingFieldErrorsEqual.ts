@@ -1,14 +1,12 @@
 import type { Tester } from "@jest/expect-utils";
 
-import { MissingFieldError } from "@apollo/client/cache";
-
 export const areMissingFieldErrorsEqual: Tester = function (
   a,
   b,
   customTesters
 ) {
-  const isAMissingFieldError = a instanceof MissingFieldError;
-  const isBMissingFieldError = b instanceof MissingFieldError;
+  const isAMissingFieldError = a && a.name === "MissingFieldError";
+  const isBMissingFieldError = b && b.name === "MissingFieldError";
 
   if (isAMissingFieldError && isBMissingFieldError) {
     return (

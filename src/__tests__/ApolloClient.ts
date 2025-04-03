@@ -16,17 +16,18 @@ import {
   ApolloClient,
   makeReference,
   NetworkStatus,
+  setLogVerbosity,
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
 import type { Masked } from "@apollo/client/masking";
-import { MockLink } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
+  withCleanup,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -2926,34 +2927,17 @@ describe("ApolloClient", () => {
   });
 
   describe("refetchQueries", () => {
-    let invariantDebugSpy: jest.SpyInstance;
+    it("should emit error from refetchQueries when not caught explicitly", async () => {
+      using consoleSpies = spyOnConsole("debug");
+      using _ = withCleanup(
+        { oldVerbosity: setLogVerbosity("debug") },
+        ({ oldVerbosity }) => setLogVerbosity(oldVerbosity)
+      );
 
-    beforeEach(() => {
-      invariantDebugSpy = jest.spyOn(invariant, "debug");
-    });
-
-    afterEach(() => {
-      invariantDebugSpy.mockRestore();
-    });
-
-    it("should emit error from refetchQueries when not caught explicitly", (done) => {
-      expect.assertions(3);
-      const linkFn = jest
-        .fn(
-          () =>
-            new Observable<any>((observer) => {
-              setTimeout(() => {
-                observer.error(new Error("refetch failed"));
-              });
-            })
-        )
-        .mockImplementationOnce(() => {
-          setTimeout(refetchQueries);
-          return of({ data: null });
-        });
+      const link = new MockSubscriptionLink();
 
       const client = new ApolloClient({
-        link: new ApolloLink(linkFn),
+        link,
         cache: new InMemoryCache(),
       });
 
@@ -2970,35 +2954,39 @@ describe("ApolloClient", () => {
         fetchPolicy: "network-only",
       });
 
-      observable.subscribe({});
+      const stream = new ObservableStream(observable);
+      link.simulateResult({ result: { data: { foo: { bar: 1 } } } }, true);
 
-      function refetchQueries() {
-        const result = client.refetchQueries({
-          include: "all",
-        });
+      await stream.takeNext();
 
-        result.queries[0].subscribe({
-          next(result) {
-            // Skip checking initial result
-            if (!result.error) {
-              return;
-            }
+      const result = client.refetchQueries({
+        include: "all",
+      });
 
-            const expectedError = new Error("refetch failed");
+      const stream2 = new ObservableStream(result.queries[0]);
 
-            expect(result.error).toEqual(expectedError);
+      await expect(stream2).toEmitStrictTyped({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+        data: { foo: { bar: 1 } },
+      });
 
-            setTimeout(() => {
-              expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
-              expect(invariantDebugSpy).toHaveBeenCalledWith(
-                "In client.refetchQueries, Promise.all promise rejected with error %o",
-                new Error("refetch failed")
-              );
-              done();
-            });
-          },
-        });
-      }
+      link.simulateResult({ error: new Error("refetch failed") });
+
+      await expect(stream2).toEmitStrictTyped({
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+        data: { foo: { bar: 1 } },
+        error: new Error("refetch failed"),
+      });
+
+      expect(consoleSpies.debug).toHaveBeenCalledTimes(1);
+      expect(consoleSpies.debug).toHaveBeenCalledWith(
+        "In client.refetchQueries, Promise.all promise rejected with error %o",
+        new Error("refetch failed")
+      );
     });
   });
 

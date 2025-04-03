@@ -1499,10 +1499,7 @@ describe("Cache", () => {
       `;
 
       const originalReader = cache["storeReader"];
-      expect(originalReader).toBeInstanceOf(StoreReader);
-
       const originalWriter = cache["storeWriter"];
-      expect(originalWriter).toBeInstanceOf(StoreWriter);
 
       const originalMBW = cache["maybeBroadcastWatch"];
       expect(typeof originalMBW).toBe("function");

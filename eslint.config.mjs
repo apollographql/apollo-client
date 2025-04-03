@@ -108,20 +108,6 @@ export default [
           ].map((file) => path.resolve(__dirname, file)),
         },
       ],
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "@apollo/client/utilities",
-              importNames: ["defaultCacheSizes"],
-              message:
-                "Please import defaultCacheSizes directly from the source file instead.",
-            },
-          ],
-        },
-      ],
-
       "local-rules/no-duplicate-exports": "error",
       "@typescript-eslint/consistent-type-imports": [
         "error",

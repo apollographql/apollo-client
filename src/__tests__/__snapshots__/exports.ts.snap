@@ -45,6 +45,7 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
+  "version",
 ]
 `;
 
@@ -111,6 +112,7 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
+  "version",
 ]
 `;
 
@@ -399,7 +401,6 @@ Array [
   "createFragmentMap",
   "createFulfilledPromise",
   "createRejectedPromise",
-  "defaultCacheSizes",
   "getDefaultValues",
   "getDirectiveNames",
   "getFragmentDefinition",

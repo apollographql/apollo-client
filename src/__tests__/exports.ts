@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-imports */
 /** @jest-environment node */
 // We run this in a node environment because:
 // A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524)

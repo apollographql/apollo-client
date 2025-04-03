@@ -18,8 +18,7 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useSuspenseFragment } from "@apollo/client/react/hooks";
+import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";

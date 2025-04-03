@@ -6,12 +6,14 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { getApolloContext } from "./ApolloContext.js";
 
-export interface ApolloProviderProps {
-  client: ApolloClient;
-  children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
+export declare namespace ApolloProvider {
+  interface Props {
+    client: ApolloClient;
+    children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
+  }
 }
 
-export const ApolloProvider: ReactTypes.FC<ApolloProviderProps> = ({
+export const ApolloProvider: ReactTypes.FC<ApolloProvider.Props> = ({
   client,
   children,
 }) => {

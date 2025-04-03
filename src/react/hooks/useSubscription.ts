@@ -14,7 +14,6 @@ import type {
   SubscribeResult,
 } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -185,7 +184,6 @@ export function useSubscription<
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
 ): useSubscription.Result<TData> {
   const client = useApolloClient(options.client);
-  verifyDocumentType(subscription, DocumentType.Subscription);
 
   const {
     skip,

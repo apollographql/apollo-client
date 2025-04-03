@@ -8,7 +8,7 @@ import {
   ApolloConsumer,
   ApolloProvider,
   getApolloContext,
-} from "@apollo/client/react/context";
+} from "@apollo/client/react";
 
 const client = new ApolloClient({
   cache: new Cache(),

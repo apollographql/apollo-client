@@ -37,9 +37,11 @@ import type {
   MaskedDocumentNode,
   Unmasked,
 } from "@apollo/client/masking";
-import { skipToken } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useSuspenseQuery } from "@apollo/client/react/hooks";
+import {
+  ApolloProvider,
+  skipToken,
+  useSuspenseQuery,
+} from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
@@ -372,7 +374,7 @@ describe("useSuspenseQuery", () => {
       });
     }).toThrowError(
       new InvariantError(
-        "Running a Query requires a graphql Query, but a Mutation was used instead."
+        "Running a query requires a graphql query, but a mutation was used instead."
       )
     );
   });

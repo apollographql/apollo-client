@@ -30,8 +30,7 @@ import type {
   MaskedDocumentNode,
   Unmasked,
 } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react";
-import { useLazyQuery } from "@apollo/client/react/hooks";
+import { ApolloProvider, useLazyQuery } from "@apollo/client/react";
 import {
   MockLink,
   mockSingleLink,

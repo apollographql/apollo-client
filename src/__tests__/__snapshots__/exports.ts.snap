@@ -248,11 +248,8 @@ exports[`exports of public entry points @apollo/client/react 1`] = `
 Array [
   "ApolloConsumer",
   "ApolloProvider",
-  "DocumentType",
   "createQueryPreloader",
   "getApolloContext",
-  "operationName",
-  "parser",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -274,38 +271,8 @@ exports[`exports of public entry points @apollo/client/react with conditions [re
 Array [
   "ApolloConsumer",
   "ApolloProvider",
-  "DocumentType",
   "createQueryPreloader",
   "getApolloContext",
-  "operationName",
-  "parser",
-  "useApolloClient",
-  "useBackgroundQuery",
-  "useFragment",
-  "useLazyQuery",
-  "useLoadableQuery",
-  "useMutation",
-  "useQuery",
-  "useQueryRefHandlers",
-  "useReactiveVar",
-  "useReadQuery",
-  "useSubscription",
-  "useSuspenseFragment",
-  "useSuspenseQuery",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/context 1`] = `
-Array [
-  "ApolloConsumer",
-  "ApolloProvider",
-  "getApolloContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
-Array [
-  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",
@@ -332,15 +299,6 @@ Array [
   "updateWrappedQueryRef",
   "wrapQueryRef",
   "wrapperSymbol",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/parser 1`] = `
-Array [
-  "DocumentType",
-  "operationName",
-  "parser",
-  "verifyDocumentType",
 ]
 `;
 

@@ -1,5 +1,6 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
+import { OperationTypeNode } from "graphql";
 import type { Subscription } from "rxjs";
 import {
   catchError,
@@ -32,7 +33,7 @@ import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { print } from "@apollo/client/utilities";
+import { checkDocument, print } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
   addNonReactiveToNamedFragments,
@@ -101,9 +102,6 @@ import type {
 } from "./watchQueryOptions.js";
 
 const { hasOwnProperty } = Object.prototype;
-
-// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
-type OperationTypeNode = any;
 
 const IGNORE = {} as IgnoreModifier;
 
@@ -275,6 +273,8 @@ export class QueryManager {
       mutation,
       "mutation option is required. You must specify your GraphQL document in the mutation option."
     );
+
+    checkDocument(mutation, OperationTypeNode.MUTATION);
 
     invariant(
       fetchPolicy === "network-only" || fetchPolicy === "no-cache",
@@ -788,6 +788,8 @@ export class QueryManager {
     T,
     TVariables extends OperationVariables = OperationVariables,
   >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+    checkDocument(options.query, OperationTypeNode.QUERY);
+
     const query = this.transform(options.query);
 
     // assign variable default values if supplied
@@ -824,6 +826,8 @@ export class QueryManager {
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
+    checkDocument(options.query, OperationTypeNode.QUERY);
+
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
@@ -1026,6 +1030,8 @@ export class QueryManager {
       context = {},
       extensions = {},
     } = options;
+
+    checkDocument(query, OperationTypeNode.SUBSCRIPTION);
 
     query = this.transform(query);
     variables = this.getVariables(query, variables);

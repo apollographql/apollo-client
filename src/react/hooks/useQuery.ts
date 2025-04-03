@@ -37,7 +37,6 @@ import type {
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
@@ -259,8 +258,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   function createState(
     previous?: InternalState<TData, TVariables>
   ): InternalState<TData, TVariables> {
-    verifyDocumentType(query, DocumentType.Query);
-
     const observable = client.watchQuery(watchQueryOptions);
 
     return {

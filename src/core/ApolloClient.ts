@@ -891,7 +891,6 @@ export class ApolloClient implements DataProxy {
    * ```json
    *{
    *  limits:     {
-   *    parser: 1000,
    *    canonicalStringify: 1000,
    *    print: 2000,
    *    'documentTransform.cache': 2000,
@@ -907,7 +906,6 @@ export class ApolloClient implements DataProxy {
    *    'inMemoryCache.executeSubSelectedArray': 5000
    *  },
    *  sizes: {
-   *    parser: 26,
    *    canonicalStringify: 4,
    *    print: 14,
    *    addTypenameDocumentTransform: [

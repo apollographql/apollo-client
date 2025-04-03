@@ -38,7 +38,6 @@ export const getApolloClientMemoryInternals: (() => {
             transform: number | undefined;
         } | undefined;
         print: number | undefined;
-        parser: number | undefined;
         canonicalStringify: number | undefined;
         links: unknown[];
         queryManager: {

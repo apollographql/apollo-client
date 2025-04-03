@@ -11,7 +11,7 @@ import type {
   useReadQuery,
   useSuspenseFragment,
   useSuspenseQuery,
-} from "@apollo/client/react/hooks";
+} from "@apollo/client/react";
 
 import type { QueryManager } from "../../../core/QueryManager.js";
 // direct import to avoid circular dependency

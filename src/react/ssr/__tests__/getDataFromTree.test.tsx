@@ -8,8 +8,11 @@ import React from "react";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import type { TypedDocumentNode } from "@apollo/client/core";
 import { ApolloClient, CombinedGraphQLErrors } from "@apollo/client/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
-import { useQuery } from "@apollo/client/react/hooks";
+import {
+  ApolloProvider,
+  getApolloContext,
+  useQuery,
+} from "@apollo/client/react";
 import { getDataFromTree } from "@apollo/client/react/ssr";
 import { mockSingleLink } from "@apollo/client/testing";
 

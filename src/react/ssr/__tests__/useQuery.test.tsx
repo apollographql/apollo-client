@@ -6,8 +6,11 @@ import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { TypedDocumentNode } from "@apollo/client/core";
 import { ApolloClient } from "@apollo/client/core";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
+import {
+  ApolloProvider,
+  useApolloClient,
+  useQuery,
+} from "@apollo/client/react";
 import {
   prerenderStatic,
   renderToStringWithData,

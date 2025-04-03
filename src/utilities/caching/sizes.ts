@@ -44,23 +44,6 @@ export interface CacheSizes {
    */
   print: number;
   /**
-   * Cache size for the [`parser`](https://github.com/apollographql/apollo-client/blob/main/src/react/parser/index.ts) function.
-   *
-   * It is called with user-provided `DocumentNode`s.
-   *
-   * @defaultValue
-   * Defaults to `1000`.
-   *
-   * @remarks
-   * This method is called by HOCs and hooks.
-   *
-   * @privateRemarks
-   * This function is used directly in HOCs, and nowadays mainly accessed by
-   * calling `verifyDocumentType` from various hooks.
-   * It is called with a user-provided DocumentNode.
-   */
-  parser: number;
-  /**
    * Cache size for the cache of [`DocumentTransform`](https://github.com/apollographql/apollo-client/blob/main/src/utilities/graphql/DocumentTransform.ts)
    * instances with the `cache` option set to `true`.
    *
@@ -286,7 +269,7 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  * You can directly modify this object, but any modification will
  * only have an effect on caches that are created after the modification.
  *
- * So for global caches, such as `parser`, `canonicalStringify` and `print`,
+ * So for global caches, such as `canonicalStringify` and `print`,
  * you might need to call `.reset` on them, which will essentially re-create them.
  *
  * Alternatively, you can set `globalThis[Symbol.for("apollo.cacheSize")]` before
@@ -295,14 +278,13 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
  * @example
  * ```ts
  * globalThis[Symbol.for("apollo.cacheSize")] = {
- *   parser: 100
+ *   print: 100
  * } satisfies Partial<CacheSizes> // the `satisfies` is optional if using TypeScript
  * ```
  */
 export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 
 export const enum defaultCacheSizes {
-  parser = 1000,
   canonicalStringify = 1000,
   print = 2000,
   "documentTransform.cache" = 2000,

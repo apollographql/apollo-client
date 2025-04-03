@@ -15,8 +15,7 @@ import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
-import { useQuery } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider, useQuery } from "@apollo/client/react";
 import { getDataFromTree } from "@apollo/client/react/ssr";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 

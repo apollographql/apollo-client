@@ -4,10 +4,9 @@ import React, { useContext } from "react";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react";
 
 import type { ApolloContextValue } from "../ApolloContext.js";
-import type { ApolloProviderProps } from "../ApolloProvider.js";
 
 describe("<ApolloProvider /> Component", () => {
   const client = new ApolloClient({
@@ -115,8 +114,8 @@ describe("<ApolloProvider /> Component", () => {
   describe.each<
     [
       string,
-      Omit<ApolloProviderProps, "children">,
-      Omit<ApolloProviderProps, "children">,
+      Omit<ApolloProvider.Props, "children">,
+      Omit<ApolloProvider.Props, "children">,
     ]
   >([["client", { client }, { client: anotherClient }]])(
     "context value stability, %s prop",

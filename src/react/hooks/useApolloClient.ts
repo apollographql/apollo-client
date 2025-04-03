@@ -1,8 +1,9 @@
 import * as React from "react";
 
 import type { ApolloClient } from "@apollo/client/core";
-import { getApolloContext } from "@apollo/client/react/context";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { getApolloContext } from "../context/ApolloContext.js";
 
 /**
  * @example

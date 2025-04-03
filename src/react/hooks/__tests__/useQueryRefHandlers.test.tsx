@@ -15,13 +15,13 @@ import {
   NetworkStatus,
   split,
 } from "@apollo/client/core";
-import { createQueryPreloader } from "@apollo/client/react";
 import {
+  createQueryPreloader,
   useBackgroundQuery,
   useLoadableQuery,
   useQueryRefHandlers,
   useReadQuery,
-} from "@apollo/client/react/hooks";
+} from "@apollo/client/react";
 import type { QueryRef } from "@apollo/client/react/internal";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";

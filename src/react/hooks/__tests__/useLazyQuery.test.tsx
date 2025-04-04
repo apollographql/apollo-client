@@ -1743,6 +1743,101 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  test("does not render loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange: false with no cached data", async () => {
+    const { query, mocks } = setupVariablesCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(query, {
+            fetchPolicy: "cache-and-network",
+            notifyOnNetworkStatusChange: false,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: false,
+        loading: false,
+        partial: true,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        // @ts-expect-error should be undefined
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(
+      execute({ variables: { id: "1" } })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+        called: true,
+        loading: false,
+        // @ts-expect-error
+        partial: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    await expect(
+      execute({ variables: { id: "2" } })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: {
+          character: { __typename: "Character", id: "2", name: "Black Widow" },
+        },
+        called: true,
+        loading: false,
+        // @ts-expect-error
+        partial: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("the promise returned from execute rejects when GraphQL errors are returned and errorPolicy is `none`", async () => {
     const mocks = [
       {

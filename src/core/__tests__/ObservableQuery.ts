@@ -872,9 +872,10 @@ describe("ObservableQuery", () => {
         () => {
           return new Observable((observer) => {
             timesFired += 1;
-            observer.next({ data });
-            observer.complete();
-            return;
+            setTimeout(() => {
+              observer.next({ data });
+              observer.complete();
+            }, 20);
           });
         },
       ]);
@@ -883,12 +884,11 @@ describe("ObservableQuery", () => {
         link,
       });
 
-      await client.query({ query: testQuery });
+      client.writeQuery({ query: testQuery, data });
 
       const observable = client.watchQuery({
         query: testQuery,
         fetchPolicy: "cache-only",
-        notifyOnNetworkStatusChange: false,
       });
 
       const stream = new ObservableStream(observable);
@@ -900,7 +900,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(timesFired).toBe(1);
+      expect(timesFired).toBe(0);
 
       await expect(
         observable.reobserve({ query, fetchPolicy: "standby" })
@@ -908,7 +908,7 @@ describe("ObservableQuery", () => {
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();
-      expect(timesFired).toBe(1);
+      expect(timesFired).toBe(0);
     });
 
     it("returns a promise which eventually returns data", async () => {

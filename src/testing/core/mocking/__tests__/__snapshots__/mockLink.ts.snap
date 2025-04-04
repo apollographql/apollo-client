@@ -88,6 +88,38 @@ Failed to match 3 mocks for this query. The mocked responses had the following v
 "
 `;
 
+exports[`shows default variables from query in error message for mocks with no configured variables 1`] = `
+"No more mocked responses for the query:
+query ($id: ID! = 1) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":3}
+
+Failed to match 2 mocks for this query. The mocked responses had the following variables:
+  {\\"id\\":1}
+  {\\"id\\":2}
+"
+`;
+
+exports[`shows empty object for variables when configured with empty vars 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":3}
+
+Failed to match 2 mocks for this query. The mocked responses had the following variables:
+  {}
+  {\\"id\\":2}
+"
+`;
+
 exports[`shows undefined and NaN in debug messages 1`] = `
 "No more mocked responses for the query:
 query ($id: ID!, $filter: Boolean) {

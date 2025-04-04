@@ -195,6 +195,15 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     const request = response.request;
 
+    const withDefaults = {
+      ...getDefaultValues(getOperationDefinition(request.query)),
+      ...request.variables,
+    };
+
+    if (Object.keys(withDefaults).length) {
+      request.variables = withDefaults;
+    }
+
     response.variableMatcher ||= (vars) => {
       return equal(vars || {}, {
         ...getDefaultValues(getOperationDefinition(request.query)),

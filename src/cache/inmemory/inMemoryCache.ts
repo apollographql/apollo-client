@@ -17,7 +17,6 @@ import {
   addTypenameToDocument,
   cacheSizes,
   canonicalStringify,
-  defaultCacheSizes,
   DocumentTransform,
   isReference,
   print,
@@ -28,6 +27,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { hasOwn, normalizeConfig } from "./helpers.js";

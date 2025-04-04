@@ -104,6 +104,7 @@ export default [
             "src/invariantErrorCodes.js",
             "src/utilities/caching/getMemoryInternals.js",
             "src/utilities/types/TODO.js",
+            "src/utilities/caching/sizes.js",
           ].map((file) => path.resolve(__dirname, file)),
         },
       ],
@@ -152,7 +153,6 @@ export default [
       "react-compiler/react-compiler": "error",
       "@typescript-eslint/consistent-type-exports": ["error"],
       "@typescript-eslint/no-import-type-side-effects": "error",
-
       "@typescript-eslint/no-restricted-types": [
         "error",
         {
@@ -226,7 +226,14 @@ export default [
       "local-rules/import-from-inside-other-export": "off",
       "local-rules/no-internal-import-official-export":
         runExtendedRules ? "error" : "off",
-      "local-rules/no-relative-imports": "error",
+      "local-rules/no-relative-imports": [
+        "error",
+        {
+          ignoreFrom: ["src/utilities/caching/sizes.js"].map((file) =>
+            path.resolve(__dirname, file)
+          ),
+        },
+      ],
       "import/no-duplicates": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
     },

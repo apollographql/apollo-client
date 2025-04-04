@@ -200,3 +200,4 @@ export {
   gql,
   resetCaches,
 } from "graphql-tag";
+export { version } from "../version.js";

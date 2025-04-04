@@ -698,6 +698,8 @@ abstract class EntityStore implements NormalizedCache {
     // (undocumented)
     retain(rootId: string): number;
     // (undocumented)
+    get supportsResultCaching(): boolean;
+    // (undocumented)
     toObject(): NormalizedCacheObject;
     // Warning: (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
     //
@@ -2399,6 +2401,9 @@ type VerbosityLevel = (typeof verbosityLevels)[number];
 
 // @public (undocumented)
 const verbosityLevels: readonly ["debug", "log", "warn", "error", "silent"];
+
+// @public (undocumented)
+export const version: string;
 
 // @public
 export interface WatchFragmentOptions<TData, TVars> {

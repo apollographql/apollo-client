@@ -35,6 +35,7 @@ export class MissingFieldError extends Error {
   ) {
     // 'Error' breaks prototype chain here
     super(message);
+    this.name = "MissingFieldError";
 
     if (Array.isArray(this.path)) {
       this.missing = this.message;

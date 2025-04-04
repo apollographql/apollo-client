@@ -11,7 +11,11 @@ global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
 import "../../testing/matchers/index.js";
 import { setLogVerbosity } from "@apollo/client";
-import { loadErrorMessageHandler } from "@apollo/client/dev";
+import {
+  loadDevMessages,
+  loadErrorMessageHandler,
+  loadErrorMessages,
+} from "@apollo/client/dev";
 
 import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.js";
 import { areCombinedProtocolErrorsEqual } from "./areCombinedProtocolErrorsEqual.js";
@@ -25,7 +29,15 @@ gql.disableFragmentWarnings();
 
 process.on("unhandledRejection", () => {});
 
-loadErrorMessageHandler();
+if (process.env.TEST_ENV === "ci") {
+  // in CI, we work with the compiled code, so we need to load the error messages
+  loadDevMessages();
+  loadErrorMessages();
+} else {
+  // locally, the error messages are in the source code, so we need to load the
+  // error message handler
+  loadErrorMessageHandler();
+}
 
 function fail(reason = "fail was called in a test.") {
   expect(reason).toBe(undefined);

@@ -1,3 +1,4 @@
+import { version } from "@apollo/client";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import {
   ApolloErrorMessageHandler,
@@ -5,17 +6,17 @@ import {
   InvariantError,
 } from "@apollo/client/utilities/invariant";
 
-function withDev(): typeof import("../../../dev/index.js") & AsyncDisposable {
+function withDev(): typeof import("@apollo/client/dev") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];
   window[ApolloErrorMessageHandler] = undefined;
-  let dev: typeof import("../../../dev/index.js");
+  let dev: typeof import("@apollo/client/dev");
   let restore = () => {};
   // we're running the test inside of `jest.isolateModulesAsync` to avoid
   // the test overriding the module-level state of the `dev` module
   const cleanupFinished = jest.isolateModulesAsync(
     () =>
       new Promise<void>((resolve) => {
-        dev = require("../../../dev/index.js");
+        dev = require("@apollo/client/dev");
         restore = resolve;
       })
   );
@@ -58,7 +59,7 @@ test("base invariant(false, 5, ...), no handlers", async () => {
       "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#" +
         encodeURIComponent(
           JSON.stringify({
-            version: "local",
+            version,
             message: 5,
             args: [
               "string",
@@ -119,7 +120,7 @@ test("invariant.log(5, ...), no handlers", async () => {
     "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#" +
       encodeURIComponent(
         JSON.stringify({
-          version: "local",
+          version,
           message: 5,
           args: ["string", "1", "1.1", JSON.stringify({ a: 1 }, undefined, 2)],
         })
@@ -163,7 +164,7 @@ test("base invariant(false, 6, ...), raises fallback", async () => {
       "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#" +
         encodeURIComponent(
           JSON.stringify({
-            version: "local",
+            version,
             message: 6,
             args: ["hello"],
           })
@@ -185,7 +186,7 @@ test("base invariant(false, 6, ...) with non-serializable param", async () => {
       "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#" +
         encodeURIComponent(
           JSON.stringify({
-            version: "local",
+            version,
             message: 6,
             args: ["<non-serializable>"],
           })

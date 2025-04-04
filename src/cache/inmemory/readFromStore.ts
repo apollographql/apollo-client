@@ -14,7 +14,6 @@ import {
   cacheSizes,
   canonicalStringify,
   DeepMerger,
-  defaultCacheSizes,
   getDefaultValues,
   getFragmentFromSelection,
   getMainDefinition,
@@ -34,6 +33,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import type { Cache } from "../core/types/Cache.js";
 import type { MissingTree } from "../core/types/common.js";
 import { MissingFieldError } from "../core/types/common.js";

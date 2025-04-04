@@ -382,7 +382,7 @@ describe("ApolloClient", () => {
           }
         }
       `,
-      delay: 1000,
+      delay: Infinity,
     });
 
     expect(stream.unsubscribe).not.toThrow();

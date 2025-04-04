@@ -154,17 +154,17 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       }
 
       return throwError(() => configError);
+    }
+
+    if (matched.maxUsageCount && matched.maxUsageCount > 1) {
+      matched.maxUsageCount--;
     } else {
-      if (matched.maxUsageCount && matched.maxUsageCount > 1) {
-        matched.maxUsageCount--;
-      } else {
-        mocks.splice(index, 1);
-      }
-      const { newData } = matched;
-      if (newData) {
-        matched.result = newData(operation.variables);
-        mocks.push(matched);
-      }
+      mocks.splice(index, 1);
+    }
+    const { newData } = matched;
+    if (newData) {
+      matched.result = newData(operation.variables);
+      mocks.push(matched);
     }
 
     return new Observable((observer) => {

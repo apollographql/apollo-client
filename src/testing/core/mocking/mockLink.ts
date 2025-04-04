@@ -243,20 +243,19 @@ function validateMockedResponse(mockedResponse: MockedResponse) {
     mockedResponse.result ||
       mockedResponse.error ||
       mockedResponse.delay === Infinity,
-    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: \n${stringifyMockedResponse(
-      mockedResponse
-    )}`
+    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n%s`,
+    stringifyMockedResponse(mockedResponse)
   );
 
   invariant(
     (mockedResponse.maxUsageCount ?? 1) > 0,
-    `Mock response maxUsageCount must be greater than 0, %s given`,
+    "Mocked response `maxUsageCount` must be greater than 0. Given %s",
     mockedResponse.maxUsageCount
   );
 
   invariant(
     !mockedResponse.variableMatcher || !mockedResponse.request.variables,
-    "Mocked response should contain either variableMatcher or request.variables"
+    "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
 }
 

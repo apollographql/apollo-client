@@ -145,6 +145,94 @@ test("returns matched mock", async () => {
   expect(stream).toComplete();
 });
 
+test("allows default static delay to be defined for all mocks", async () => {
+  const aQuery = gql`
+    query {
+      a
+    }
+  `;
+  const bQuery = gql`
+    query {
+      b
+    }
+  `;
+  const link = new MockLink(
+    [
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ],
+    { defaultOptions: { delay: 50 } }
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(stream).not.toEmitAnything({ timeout: 45 });
+    await expect(stream).toEmitNext({ timeout: 6 });
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: bQuery }));
+
+    await expect(stream).not.toEmitAnything({ timeout: 45 });
+    await expect(stream).toEmitNext({ timeout: 6 });
+    await expect(stream).toComplete();
+  }
+});
+
+test("allows default dynamic delay to be defined for all mocks", async () => {
+  const aQuery = gql`
+    query A {
+      a
+    }
+  `;
+  const bQuery = gql`
+    query B {
+      b
+    }
+  `;
+  const link = new MockLink(
+    [
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ],
+    {
+      defaultOptions: {
+        delay: (operation) => (operation.operationName === "A" ? 50 : 20),
+      },
+    }
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(stream).not.toEmitAnything({ timeout: 45 });
+    await expect(stream).toEmitNext({ timeout: 6 });
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: bQuery }));
+
+    await expect(stream).not.toEmitAnything({ timeout: 15 });
+    await expect(stream).toEmitNext({ timeout: 6 });
+    await expect(stream).toComplete();
+  }
+});
+
 test("matches like mocks sequentially", async () => {
   const query = gql`
     query {

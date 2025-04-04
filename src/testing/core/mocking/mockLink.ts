@@ -287,6 +287,7 @@ export function stringifyMockedResponse(mockedResponse: MockedResponse) {
   );
 }
 
+// TODO: ????
 export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }

@@ -40,7 +40,12 @@ export const updateVersion: BuildStep = async (options) => {
 
 export const verifyVersion: BuildStep = async (options) => {
   const { ApolloClient, InMemoryCache } = require(
-    path.join(options.rootDir, options.targetDir, `index.${options.jsExt}`)
+    path.join(
+      options.rootDir,
+      options.targetDir,
+      "core",
+      `index.${options.jsExt}`
+    )
   );
 
   // Though this may seem like overkill, verifying that ApolloClient is

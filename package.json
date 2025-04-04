@@ -14,9 +14,9 @@
   "author": "packages@apollographql.com",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/__cjs/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/__cjs/core/index.cjs",
+  "module": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
   "sideEffects": false,
   "react-native": {
     "react-dom/server": false

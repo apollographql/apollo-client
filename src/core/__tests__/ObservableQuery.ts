@@ -459,7 +459,6 @@ describe("ObservableQuery", () => {
     });
 
     it("rerenders with new variables then shows correct data for previous variables", async () => {
-      // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -491,6 +490,14 @@ describe("ObservableQuery", () => {
       });
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      // TODO: enable
+      // await expect(stream).toEmitTypedValue({
+      //   data: undefined,
+      //   loading: true,
+      //   networkStatus: NetworkStatus.loading,
+      //   partial: true
+      // })
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -549,6 +556,14 @@ describe("ObservableQuery", () => {
       });
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      // TODO: enable
+      // await expect(stream).toEmitTypedValue({
+      //   data: undefined,
+      //   loading: true,
+      //   networkStatus: NetworkStatus.loading,
+      //   partial: true
+      // })
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
@@ -614,6 +629,14 @@ describe("ObservableQuery", () => {
 
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      // TODO: enable
+      // await expect(stream).toEmitTypedValue({
+      //   data: undefined,
+      //   loading: true,
+      //   networkStatus: NetworkStatus.loading,
+      //   partial: true
+      // })
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,

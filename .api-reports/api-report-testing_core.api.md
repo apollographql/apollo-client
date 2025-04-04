@@ -39,7 +39,7 @@ export interface MockedRequest<TVariables = Record<string, any>> {
 // @public (undocumented)
 export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
     // (undocumented)
-    delay?: number;
+    delay?: number | MockLink.DelayFunction;
     // (undocumented)
     error?: Error;
     // (undocumented)
@@ -61,6 +61,19 @@ interface MockedSubscriptionResult {
 }
 
 // @public (undocumented)
+export namespace MockLink {
+    // (undocumented)
+    export interface DefaultOptions {
+        // (undocumented)
+        delay?: MockLink.Delay;
+    }
+    // (undocumented)
+    export type Delay = number | DelayFunction;
+    // (undocumented)
+    export type DelayFunction = (operation: Operation) => number;
+}
+
+// @public (undocumented)
 export class MockLink extends ApolloLink {
     constructor(mockedResponses: ReadonlyArray<MockedResponse<Record<string, any>, Record<string, any>>>, options?: MockLinkOptions);
     // (undocumented)
@@ -75,6 +88,8 @@ export class MockLink extends ApolloLink {
 
 // @public (undocumented)
 export interface MockLinkOptions {
+    // (undocumented)
+    defaultOptions?: MockLink.DefaultOptions;
     // (undocumented)
     showWarnings?: boolean;
 }
@@ -109,6 +124,12 @@ export class MockSubscriptionLink extends ApolloLink {
     // (undocumented)
     unsubscribers: any[];
 }
+
+// @public (undocumented)
+export function realisticDelay({ min, max, }?: {
+    min?: number;
+    max?: number;
+}): () => number;
 
 // Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
 //

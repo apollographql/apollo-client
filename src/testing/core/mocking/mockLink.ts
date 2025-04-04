@@ -208,13 +208,19 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
       checkDocument(response.request.query)
     );
-    invariant(queryWithoutClientOnlyDirectives, "query is required");
-    response.request.query = queryWithoutClientOnlyDirectives;
-    const query = removeClientSetsFromDocument(response.request.query);
-    if (query) {
-      response.request.query = query;
-    }
 
+    invariant(queryWithoutClientOnlyDirectives, "query is required");
+
+    const query = removeClientSetsFromDocument(
+      queryWithoutClientOnlyDirectives
+    );
+
+    invariant(
+      query,
+      "Cannot mock a client-only query. Mocked responses should contain at least one non-client field."
+    );
+
+    response.request.query = query;
     response.maxUsageCount = response.maxUsageCount ?? 1;
 
     this.normalizeVariableMatching(response);

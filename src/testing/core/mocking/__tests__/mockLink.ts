@@ -268,35 +268,30 @@ test("throws error when passing variableMatcher and variables", async () => {
   );
 });
 
-// TODO: Is this correct? We remove client-only fields in all other cases so I
-// think this should not be allowed.
-test("allows resolving client-only queries", async () => {
-  const query = gql`
-    query {
-      foo @client
-    }
-  `;
-
-  const link = new MockLink([
-    {
-      request: {
-        query: gql`
-          query {
-            foo @client
-          }
-        `,
-      },
-      result: {
-        data: {
-          foo: "never",
+test("throws error when given a client-only query", async () => {
+  expect(
+    () =>
+      new MockLink([
+        {
+          request: {
+            query: gql`
+              query {
+                foo @client
+              }
+            `,
+          },
+          result: {
+            data: {
+              foo: "never",
+            },
+          },
         },
-      },
-    },
-  ]);
-
-  const stream = new ObservableStream(execute(link, { query }));
-
-  await expect(stream).toEmitTypedValue({ data: { foo: "never" } });
+      ])
+  ).toThrow(
+    new InvariantError(
+      "Cannot mock a client-only query. Mocked responses should contain at least one non-client field."
+    )
+  );
 });
 
 test("throws error when passing maxUsageCount <= 0", async () => {

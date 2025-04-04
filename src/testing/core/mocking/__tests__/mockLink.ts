@@ -342,6 +342,95 @@ test("throws error when passing maxUsageCount <= 0", async () => {
   );
 });
 
+test("passes variables to the variableMatcher", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        name
+      }
+    }
+  `;
+
+  const variables = { id: 1 };
+  const variableMatcher = jest.fn().mockReturnValue(true);
+
+  const link = new MockLink([
+    {
+      request: { query },
+      variableMatcher,
+      result: { data: { user: { __typename: "User", name: "Test" } } },
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", name: "Test" } },
+  });
+
+  expect(variableMatcher).toHaveBeenCalledTimes(1);
+  expect(variableMatcher).toHaveBeenCalledWith(variables);
+});
+
+test("uses mock when variableMatcher returns true", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        name
+      }
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: { query },
+      variableMatcher: ({ id }) => id === 1,
+      result: { data: { user: { __typename: "User", name: "User 1" } } },
+    },
+    {
+      request: { query },
+      variableMatcher: ({ id }) => id === 2,
+      result: { data: { user: { __typename: "User", name: "User 2" } } },
+    },
+  ]);
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { id: 2 } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", name: "User 2" } },
+  });
+});
+
+test("fails when variableMatcher returns false", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        name
+      }
+    }
+  `;
+
+  const link = new MockLink(
+    [
+      {
+        request: { query },
+        variableMatcher: () => false,
+        result: { data: { user: { __typename: "User", name: "User 1" } } },
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { id: 1 } })
+  );
+
+  const error = await stream.takeError();
+  expect(error.message).toMatch(/^No more mocked responses/);
+});
+
 test("removes @nonreactive directives from fields", async () => {
   const serverQuery = gql`
     query A {

@@ -1,8 +1,8 @@
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
 import { Observable, throwError } from "rxjs";
 
 import type {
-  DocumentNode,
   FetchResult,
   GraphQLRequest,
   Operation,

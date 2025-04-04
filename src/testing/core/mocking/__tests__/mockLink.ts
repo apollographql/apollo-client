@@ -1364,4 +1364,68 @@ describe.skip("type tests", () => {
     // @ts-expect-error
     specificResponse = unspecificResponse;
   });
+
+  describe("MockedResponse.result as a callback", async () => {
+    const setup = () => {
+      const weaklyTypedMockResponse: MockedResponse = {
+        request: {
+          query: gql`
+            query A {
+              a
+            }
+          `,
+        },
+      };
+
+      const stronglyTypedMockResponse: MockedResponse<
+        { a: string },
+        { input: string }
+      > = {
+        request: {
+          query: gql`
+            query A {
+              a
+            }
+          `,
+        },
+      };
+
+      return {
+        weaklyTypedMockResponse,
+        stronglyTypedMockResponse,
+      };
+    };
+
+    test("returned 'data' can be any object with untyped response", () => {
+      const { weaklyTypedMockResponse } = setup();
+
+      weaklyTypedMockResponse.result = ({ fake: { faker } }) => ({
+        data: {
+          pretend: faker,
+        },
+      });
+    });
+
+    test("can't return output that doesn't match TData", () => {
+      const { stronglyTypedMockResponse } = setup();
+
+      // @ts-expect-error return type does not match `TData`
+      stronglyTypedMockResponse.result = () => ({
+        data: {
+          a: 123,
+        },
+      });
+    });
+
+    test("can't use input variables that don't exist in TVariables", () => {
+      const { stronglyTypedMockResponse } = setup();
+
+      // @ts-expect-error unknown variables
+      stronglyTypedMockResponse.result = ({ fake: { faker } }) => ({
+        data: {
+          a: faker,
+        },
+      });
+    });
+  });
 });

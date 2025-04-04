@@ -51,17 +51,17 @@ export function setupVariablesCase() {
     `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
-    (name, index) => ({
-      request: { query, variables: { id: String(index + 1) } },
-      result: {
-        data: {
-          character: { __typename: "Character", id: String(index + 1), name },
-        },
+  const mocks: MockedResponse<VariablesCaseData, VariablesCaseVariables>[] = [
+    ...CHARACTERS,
+  ].map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: {
+      data: {
+        character: { __typename: "Character", id: String(index + 1), name },
       },
-      delay: 20,
-    })
-  );
+    },
+    delay: 20,
+  }));
 
   return { mocks, query };
 }

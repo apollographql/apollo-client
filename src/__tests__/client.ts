@@ -47,20 +47,6 @@ import {
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("client", () => {
-  it("can be loaded via require", () => {
-    /* tslint:disable */
-    const ApolloClientRequire = require("../index.js").ApolloClient;
-    /* tslint:enable */
-
-    const client = new ApolloClientRequire({
-      link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
-    });
-
-    expect(client.queryManager).toBeDefined();
-    expect(client.cache).toBeDefined();
-  });
-
   it("can allow passing in a link", () => {
     const link = ApolloLink.empty();
     const client = new ApolloClient({

@@ -36,8 +36,6 @@ export interface MockedResponse<out TData = Record<string, any>, out TVariables 
     // (undocumented)
     maxUsageCount?: number;
     // (undocumented)
-    newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-    // (undocumented)
     request: GraphQLRequest<TVariables>;
     // (undocumented)
     result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;

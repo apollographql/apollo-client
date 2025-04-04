@@ -140,11 +140,16 @@ export class MockLink extends ApolloLink {
       mocks.splice(index, 1);
     }
 
-    invariant(
-      matched.result || matched.error || matched.delay === Infinity,
-      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n%s`,
-      stringifyMockedResponse(matched)
-    );
+    if (!matched.result && !matched.error && matched.delay !== Infinity) {
+      return throwError(
+        () =>
+          new Error(
+            `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
+              matched
+            )}`
+          )
+      );
+    }
 
     if (matched.delay === Infinity) {
       return new Observable();

@@ -67,15 +67,19 @@ type UnmatchedVariables = Array<
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
+  defaultDelay?: MockLink.Delay;
 }
 
 export declare namespace MockLink {
   export type DelayFunction = (operation: Operation) => number;
+  export type Delay = number | DelayFunction;
 }
 
 export class MockLink extends ApolloLink {
   public operation!: Operation;
   public showWarnings: boolean = true;
+
+  private defaultDelay: MockLink.Delay = 0;
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};
 
@@ -87,6 +91,7 @@ export class MockLink extends ApolloLink {
   ) {
     super();
     this.showWarnings = options.showWarnings ?? true;
+    this.defaultDelay = options.defaultDelay ?? 0;
 
     if (mockedResponses) {
       mockedResponses.forEach((mockedResponse) => {

@@ -28,7 +28,6 @@ import {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../watchQueryOptions";
-import { QueryManager } from "../../QueryManager";
 
 import { ApolloError } from "../../../errors";
 

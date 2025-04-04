@@ -140,6 +140,10 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       mocks.splice(index, 1);
     }
 
+    if (matched.delay === Infinity) {
+      return new Observable();
+    }
+
     const { newData } = matched;
 
     if (newData) {
@@ -147,17 +151,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       mocks.push(matched);
     }
 
-    // There have been platform- and engine-dependent differences with
-    // setInterval(fn, Infinity), so we pass 0 instead (but detect
-    // Infinity where we call observer.error or observer.next to pend
-    // indefinitely in those cases.)
-    const delay = matched?.delay === Infinity ? 0 : matched?.delay ?? 0;
+    const delay = matched.delay === Infinity ? 0 : matched?.delay ?? 0;
 
     return new Observable((observer) => {
-      if (matched.delay === Infinity) {
-        return;
-      }
-
       const timer = setTimeout(() => {
         if (matched.error) {
           observer.error(matched.error);

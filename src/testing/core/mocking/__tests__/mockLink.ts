@@ -10,10 +10,6 @@ import {
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-// This is an internal function and will not be exported publicly
-// eslint-disable-next-line local-rules/no-relative-imports
-import { stringifyMockedResponse } from "../mockLink.js";
-
 describe("MockedResponse.newData", () => {
   const setup = () => {
     const weaklyTypedMockResponse: MockedResponse = {
@@ -155,30 +151,21 @@ test("should not require a result or error when delay equals Infinity", async ()
 
 test("should require result or error when delay is just large", () => {
   const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
-  const expectedError = new InvariantError(
-    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
-      invalidResponse
-    )}`
-  );
+  const expectedError =
+    /^Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:/;
 
-  expect(() => new MockLink([invalidResponse])).toThrow(expectedError);
+  {
+    const link = new MockLink([invalidResponse]);
 
-  expect(
-    () =>
-      new MockLink([
-        // This one is ok
-        {
-          request: { query },
-          error: new Error("test"),
-          delay: MAXIMUM_DELAY,
-        },
-        invalidResponse,
-      ])
-  ).toThrow(expectedError);
+    expect(() => execute(link, { query })).toThrow(expectedError);
+  }
 
-  const link = new MockLink([]);
+  {
+    const link = new MockLink([]);
+    link.addMockedResponse(invalidResponse);
 
-  expect(() => link.addMockedResponse(invalidResponse)).toThrow(expectedError);
+    expect(() => execute(link, { query })).toThrow(expectedError);
+  }
 });
 
 test("returns matched mock", async () => {

@@ -336,6 +336,31 @@ test("returns matched mock with variables", async () => {
   expect(stream).toComplete();
 });
 
+test("matches variables with undefined values", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        name
+      }
+    }
+  `;
+  const link = new MockLink([
+    {
+      request: { query, variables: { id: 1, foo: undefined } },
+      result: { data: { user: { __typename: "User", name: "User 1" } } },
+    },
+  ]);
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { id: 1 } })
+  );
+
+  expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", name: "User 1" } },
+  });
+  expect(stream).toComplete();
+});
+
 test("should fill in default variables if they are missing in mocked requests", async () => {
   const query = gql`
     query GetTodo($done: Boolean = true, $user: String!) {

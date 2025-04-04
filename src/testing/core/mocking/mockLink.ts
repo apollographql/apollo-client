@@ -200,10 +200,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         ...getDefaultValues(getOperationDefinition(request.query)),
         ...request.variables,
       };
+
       response.variableMatcher = (vars) => {
-        const requestVariables = vars || {};
-        const mockedResponseVariables = request.variables || {};
-        return equal(requestVariables, mockedResponseVariables);
+        return equal(vars || {}, request.variables || {});
       };
     }
 

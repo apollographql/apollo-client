@@ -193,7 +193,7 @@ ${
     `
 Failed to match ${unmatchedVars.length} mock${
       unmatchedVars.length === 1 ? "" : "s"
-    } for this query. The mocked responses had the following variables:
+    } for this query. The matched mocks had the following variables:
 ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 `
   : ""

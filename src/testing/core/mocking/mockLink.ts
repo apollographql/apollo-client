@@ -125,11 +125,8 @@ export class MockLink extends ApolloLink {
     // indefinitely in those cases.)
     const delay = matched?.delay === Infinity ? 0 : matched?.delay ?? 0;
 
-    let configError: Error;
-
     if (!matched) {
-      configError = new Error(
-        `No more mocked responses for the query:
+      const message = `No more mocked responses for the query:
 ${print(operation.query)}
 
 Request variables: ${stringifyForDebugging(operation.variables)}
@@ -142,18 +139,17 @@ Failed to match ${unmatchedVars.length} mock${
 ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 `
   : ""
-}`
-      );
+}`;
 
       if (this.showWarnings) {
         console.warn(
-          configError.message +
+          message +
             "\nThis typically indicates a configuration error in your mocks " +
             "setup, usually due to a typo or mismatched variable."
         );
       }
 
-      return throwError(() => configError);
+      return throwError(() => new Error(message));
     }
 
     if (matched.maxUsageCount > 1) {

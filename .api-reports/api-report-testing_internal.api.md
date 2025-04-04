@@ -15,6 +15,7 @@ import type { MaskedDocumentNode } from '@apollo/client/masking';
 import type { MockedProviderProps } from '@apollo/client/testing/react';
 import { MockedRequest } from '@apollo/client/testing/core';
 import type { MockedResponse } from '@apollo/client/testing/core';
+import { MockLink } from '@apollo/client/testing/core';
 import type { Observable } from 'rxjs';
 import type { Queries } from '@testing-library/dom';
 import type { queries } from '@testing-library/dom';
@@ -34,11 +35,11 @@ export function actAsync<T>(scope: () => T | Promise<T>): Promise<T>;
 
 // @public (undocumented)
 export function addDelayToMocks<T extends MockedResponse<unknown>[]>(mocks: T, delay?: number, override?: boolean): {
-    delay: number;
     request: MockedRequest<Record<string, any>>;
     maxUsageCount?: number;
     result?: FetchResult<unknown> | ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
     error?: Error;
+    delay: number | MockLink.DelayFunction;
 }[];
 
 // @public (undocumented)

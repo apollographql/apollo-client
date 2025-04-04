@@ -11,6 +11,7 @@ import { MockLinkOptions } from '@apollo/client/testing/core';
 import { mockObservableLink } from '@apollo/client/testing/core';
 import { mockSingleLink } from '@apollo/client/testing/core';
 import { MockSubscriptionLink } from '@apollo/client/testing/core';
+import { realisticDelay } from '@apollo/client/testing/core';
 import { ResultFunction } from '@apollo/client/testing/core';
 import { tick } from '@apollo/client/testing/core';
 import { wait } from '@apollo/client/testing/core';
@@ -31,6 +32,8 @@ export { mockObservableLink }
 export { mockSingleLink }
 
 export { MockSubscriptionLink }
+
+export { realisticDelay }
 
 export { ResultFunction }
 

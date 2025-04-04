@@ -204,7 +204,7 @@ Request variables: ${stringifyForDebugging(operation.variables)}
 ${
   unmatchedVars.length > 0 ?
     `
-Failed to match ${unmatchedVars.length} mock${
+Failed to match variables against ${unmatchedVars.length} mock${
       unmatchedVars.length === 1 ? "" : "s"
     } for this query. The matched mocks had the following variables:
 ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}

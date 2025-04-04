@@ -102,23 +102,22 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     const unmatchedVars: Array<Record<string, any> | "<undefined>"> = [];
-    const mockedResponses = this.getMockedResponses(operation);
+    const mocks = this.getMockedResponses(operation);
 
-    const responseIndex = mockedResponses.findIndex((res) => {
-      if (variablesEqual(operation.variables, res.request.variables)) {
+    const responseIndex = mocks.findIndex((mock) => {
+      if (variablesEqual(operation.variables, mock.request.variables)) {
         return true;
       }
 
-      if (res.variableMatcher && res.variableMatcher(operation.variables)) {
+      if (mock.variableMatcher && mock.variableMatcher(operation.variables)) {
         return true;
       }
 
-      unmatchedVars.push(res.request.variables || "<undefined>");
+      unmatchedVars.push(mock.request.variables || "<undefined>");
       return false;
     });
 
-    const response =
-      responseIndex >= 0 ? mockedResponses[responseIndex] : void 0;
+    const response = responseIndex >= 0 ? mocks[responseIndex] : void 0;
 
     // There have been platform- and engine-dependent differences with
     // setInterval(fn, Infinity), so we pass 0 instead (but detect
@@ -157,12 +156,12 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       if (response.maxUsageCount && response.maxUsageCount > 1) {
         response.maxUsageCount--;
       } else {
-        mockedResponses.splice(responseIndex, 1);
+        mocks.splice(responseIndex, 1);
       }
       const { newData } = response;
       if (newData) {
         response.result = newData(operation.variables);
-        mockedResponses.push(response);
+        mocks.push(response);
       }
     }
 

@@ -54,6 +54,7 @@ export interface MockedResponse<
 interface NormalizedMockedResponse {
   original: MockedResponse;
   request: MockedRequest;
+  variablesWithDefaults: Record<string, any>;
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
@@ -113,16 +114,15 @@ export class MockLink extends ApolloLink {
         return matched;
       }
 
-      const withDefaults = {
-        ...getDefaultValues(getOperationDefinition(operation.query)),
-        ...variables,
-      };
+      const withDefaults = mock.variablesWithDefaults;
 
       if (equal(withDefaults, operation.variables)) {
         return true;
       }
 
       unmatchedVars.push(
+        // Include default variables from the query in unmatched variables
+        // output
         Object.keys(withDefaults).length > 0 ?
           withDefaults
         : variables || "<undefined>"
@@ -234,15 +234,18 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 function normalizeMockedResponse(
   mockedResponse: MockedResponse
 ): NormalizedMockedResponse {
+  const { request } = mockedResponse;
   const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
-  const request = response.request;
-
-  request.query = getServerQuery(request.query);
-  response.maxUsageCount = response.maxUsageCount ?? 1;
 
   response.original = mockedResponse;
+  response.request.query = getServerQuery(request.query);
+  response.maxUsageCount ??= 1;
+  response.variablesWithDefaults = {
+    ...getDefaultValues(getOperationDefinition(request.query)),
+    ...request.variables,
+  };
 
-  return response as NormalizedMockedResponse;
+  return response;
 }
 
 function getServerQuery(query: DocumentNode) {

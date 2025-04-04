@@ -77,6 +77,15 @@ export declare namespace MockLink {
   export type Delay = number | DelayFunction;
 }
 
+export function realisticDelay({
+  min = 20,
+  max = 50,
+}: { min?: number; max?: number } = {}) {
+  invariant(max > min, "realisticDelay: `min` must be less than `max`");
+
+  return () => Math.floor(Math.random() * (max - min) + min);
+}
+
 export class MockLink extends ApolloLink {
   public operation!: Operation;
   public showWarnings: boolean = true;

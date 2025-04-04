@@ -120,7 +120,14 @@ export class MockLink extends ApolloLink {
         );
       }
 
-      return throwError(() => new Error(message));
+      return throwError(() => {
+        const error = new Error(message);
+
+        // TODO: Remove this once `onError` and `setOnError` is removed.
+        if (this.onError(error) !== false) {
+          return error;
+        }
+      });
     }
 
     const { newData } = matched;

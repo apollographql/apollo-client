@@ -104,7 +104,7 @@ export class MockLink extends ApolloLink {
     const unmatchedVars: Array<Record<string, any> | "<undefined>"> = [];
     const mocks = this.getMockedResponses(operation);
 
-    const responseIndex = mocks.findIndex((mock) => {
+    const index = mocks.findIndex((mock) => {
       if (variablesEqual(operation.variables, mock.request.variables)) {
         return true;
       }
@@ -117,17 +117,17 @@ export class MockLink extends ApolloLink {
       return false;
     });
 
-    const response = responseIndex >= 0 ? mocks[responseIndex] : void 0;
+    const matched = index >= 0 ? mocks[index] : void 0;
 
     // There have been platform- and engine-dependent differences with
     // setInterval(fn, Infinity), so we pass 0 instead (but detect
     // Infinity where we call observer.error or observer.next to pend
     // indefinitely in those cases.)
-    const delay = response?.delay === Infinity ? 0 : response?.delay ?? 0;
+    const delay = matched?.delay === Infinity ? 0 : matched?.delay ?? 0;
 
     let configError: Error;
 
-    if (!response) {
+    if (!matched) {
       configError = new Error(
         `No more mocked responses for the query:
 ${print(operation.query)}
@@ -153,15 +153,15 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         );
       }
     } else {
-      if (response.maxUsageCount && response.maxUsageCount > 1) {
-        response.maxUsageCount--;
+      if (matched.maxUsageCount && matched.maxUsageCount > 1) {
+        matched.maxUsageCount--;
       } else {
-        mocks.splice(responseIndex, 1);
+        mocks.splice(index, 1);
       }
-      const { newData } = response;
+      const { newData } = matched;
       if (newData) {
-        response.result = newData(operation.variables);
-        mocks.push(response);
+        matched.result = newData(operation.variables);
+        mocks.push(matched);
       }
     }
 
@@ -180,15 +180,15 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
           } catch (error) {
             observer.error(error);
           }
-        } else if (response && response.delay !== Infinity) {
-          if (response.error) {
-            observer.error(response.error);
+        } else if (matched && matched.delay !== Infinity) {
+          if (matched.error) {
+            observer.error(matched.error);
           } else {
-            if (response.result) {
+            if (matched.result) {
               observer.next(
-                typeof response.result === "function" ?
-                  response.result(operation.variables)
-                : response.result
+                typeof matched.result === "function" ?
+                  matched.result(operation.variables)
+                : matched.result
               );
             }
             observer.complete();

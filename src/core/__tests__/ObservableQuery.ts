@@ -1224,10 +1224,12 @@ describe("ObservableQuery", () => {
         {
           request: { query, variables },
           result: { data: dataOne },
+          delay: 20,
         },
         {
           request: { query, variables: differentVariables },
           result: { data: dataTwo },
+          delay: 20,
         },
       ];
 
@@ -1235,13 +1237,15 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
-      const firstRequest = mockedResponses[0].request;
-      const observable = client.watchQuery({
-        query: firstRequest.query,
-        variables: firstRequest.variables,
-      });
-
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
@@ -1252,9 +1256,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.refetch(differentVariables)
-      ).resolves.toStrictEqualTyped({
-        data: dataTwo,
-      });
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
 
       await expect(stream).toEmitTypedValue({
         data: undefined,

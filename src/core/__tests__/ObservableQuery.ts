@@ -1341,6 +1341,15 @@ describe("ObservableQuery", () => {
         observable.setVariables(differentVariables)
       ).resolves.toStrictEqualTyped({ data: dataTwo });
 
+      // Initial fetch
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      // setVariables
       await expect(stream).toEmitTypedValue({
         data: undefined,
         loading: true,

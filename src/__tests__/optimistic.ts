@@ -1325,6 +1325,7 @@ describe("optimistic mutation results", () => {
         {
           request: { query },
           result,
+          delay: 0,
         },
         {
           request: { query: mutation },
@@ -1751,10 +1752,11 @@ describe("optimistic mutation results", () => {
 
     it("will handle dependent updates", async () => {
       expect.assertions(1);
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query },
           result,
+          delay: 0,
         },
         {
           request: { query: mutation },
@@ -1765,8 +1767,8 @@ describe("optimistic mutation results", () => {
           request: { query: mutation },
           result: mutationResult2,
           delay: 20,
-        }
-      );
+        },
+      ]);
 
       const customOptimisticResponse1 = {
         __typename: "Mutation",

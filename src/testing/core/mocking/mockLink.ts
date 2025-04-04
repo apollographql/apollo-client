@@ -108,20 +108,7 @@ export class MockLink extends ApolloLink {
     const matched = index >= 0 ? mocks[index] : void 0;
 
     if (!matched) {
-      const message = `No more mocked responses for the query:
-${print(operation.query)}
-
-Request variables: ${stringifyForDebugging(operation.variables)}
-${
-  unmatchedVars.length > 0 ?
-    `
-Failed to match ${unmatchedVars.length} mock${
-      unmatchedVars.length === 1 ? "" : "s"
-    } for this query. The mocked responses had the following variables:
-${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
-`
-  : ""
-}`;
+      const message = getErrorMessage(operation, unmatchedVars);
 
       if (this.showWarnings) {
         console.warn(
@@ -188,6 +175,26 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     return mockedResponses;
   }
+}
+
+function getErrorMessage(
+  operation: Operation,
+  unmatchedVars: Array<Record<string, any> | "<undefined>">
+) {
+  return `No more mocked responses for the query:
+${print(operation.query)}
+
+Request variables: ${stringifyForDebugging(operation.variables)}
+${
+  unmatchedVars.length > 0 ?
+    `
+Failed to match ${unmatchedVars.length} mock${
+      unmatchedVars.length === 1 ? "" : "s"
+    } for this query. The mocked responses had the following variables:
+${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
+`
+  : ""
+}`;
 }
 
 function normalizeMockedResponse(

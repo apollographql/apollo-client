@@ -4,7 +4,7 @@
 
 ```ts
 
-import { ApolloClient } from '@apollo/client/core';
+import { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link/core';
 import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client/link/core';

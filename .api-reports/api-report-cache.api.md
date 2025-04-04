@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { ApolloCache as ApolloCache_2 } from '@apollo/client/core';
+import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
 import type { DeepPartial } from '@apollo/client/utilities';
@@ -22,14 +22,14 @@ import { makeReference } from '@apollo/client/utilities';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
 import { Observable } from 'rxjs';
-import type { OperationVariables } from '@apollo/client/core';
+import type { OperationVariables } from '@apollo/client';
 import { Reference } from '@apollo/client/utilities';
 import type { SelectionSetNode } from 'graphql';
 import type { StoreObject } from '@apollo/client/utilities';
 import type { StoreValue } from '@apollo/client/utilities';
 import { Trie } from '@wry/trie';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client/core';
+import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 
 // Warning: (ae-forgotten-export) The symbol "StoreObjectValueMaybeReference" needs to be exported by the entry point index.d.ts
@@ -948,9 +948,9 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

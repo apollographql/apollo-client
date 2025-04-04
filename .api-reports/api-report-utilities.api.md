@@ -9,7 +9,7 @@ import type { ArgumentNode } from 'graphql';
 import type { ASTNode } from 'graphql';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { DocumentNode as DocumentNode_2 } from '@apollo/client/core';
+import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { ExecutionPatchIncrementalResult } from '@apollo/client/link/core';
 import type { ExecutionPatchInitialResult } from '@apollo/client/link/core';
 import type { ExecutionPatchResult } from '@apollo/client/link/core';
@@ -21,13 +21,13 @@ import type { FragmentSpreadNode } from 'graphql';
 import { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import { maybe } from '@apollo/client/utilities/globals';
-import type { MutationOptions } from '@apollo/client/core';
+import type { MutationOptions } from '@apollo/client';
 import type { NameNode } from 'graphql';
 import { Observable } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { OperationTypeNode } from 'graphql';
-import type { OperationVariables } from '@apollo/client/core';
-import type { QueryOptions } from '@apollo/client/core';
+import type { OperationVariables } from '@apollo/client';
+import type { QueryOptions } from '@apollo/client';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
@@ -35,7 +35,7 @@ import { StrongCache } from '@wry/caches';
 import type { ValueNode } from 'graphql';
 import type { VariableDefinitionNode } from 'graphql';
 import type { VariableNode } from 'graphql';
-import type { WatchQueryOptions } from '@apollo/client/core';
+import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
 // @public (undocumented)
@@ -615,9 +615,9 @@ export function wrapPromiseWithState<TValue>(promise: Promise<TValue>): PromiseW
 
 // Warnings were encountered during analysis:
 //
-// src/utilities/graphql/storeUtils.ts:283:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
-// src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
-// src/utilities/policies/pagination.ts:78:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/storeUtils.ts - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/policies/pagination.ts - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
+// src/utilities/policies/pagination.ts - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

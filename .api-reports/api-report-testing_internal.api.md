@@ -4,12 +4,12 @@
 
 ```ts
 
-import type { ApolloClient } from '@apollo/client/core';
-import { ApolloLink } from '@apollo/client/core';
-import type { ApolloPayloadResult } from '@apollo/client/core';
-import { FetchResult } from '@apollo/client/core';
+import type { ApolloClient } from '@apollo/client';
+import { ApolloLink } from '@apollo/client';
+import type { ApolloPayloadResult } from '@apollo/client';
+import { FetchResult } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql-17-alpha2';
-import { GraphQLRequest } from '@apollo/client/core';
+import { GraphQLRequest } from '@apollo/client';
 import { HttpLink } from '@apollo/client/link/http';
 import type { InitialIncrementalExecutionResult } from 'graphql-17-alpha2';
 import type { MaskedDocumentNode } from '@apollo/client/masking';
@@ -27,7 +27,7 @@ import type { RenderResult } from '@testing-library/react';
 import { ResultFunction } from '@apollo/client/testing/core';
 import type { Subscribable } from 'rxjs';
 import type { SubsequentIncrementalExecutionResult } from 'graphql-17-alpha2';
-import type { TypedDocumentNode } from '@apollo/client/core';
+import type { TypedDocumentNode } from '@apollo/client';
 
 // @public (undocumented)
 export function actAsync<T>(scope: () => T | Promise<T>): Promise<T>;
@@ -271,7 +271,7 @@ export function withProdMode(): {
 
 // Warnings were encountered during analysis:
 //
-// src/testing/internal/scenarios/index.ts:80:7 - (ae-forgotten-export) The symbol "MaskedVariablesCaseFragment" needs to be exported by the entry point index.d.ts
+// src/testing/internal/scenarios/index.ts - (ae-forgotten-export) The symbol "MaskedVariablesCaseFragment" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

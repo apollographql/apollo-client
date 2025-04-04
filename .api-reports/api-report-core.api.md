@@ -5,7 +5,7 @@
 ```ts
 
 import { ApolloCache } from '@apollo/client/cache';
-import type { ApolloCache as ApolloCache_3 } from '@apollo/client/core';
+import type { ApolloCache as ApolloCache_3 } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link/core';
 import { ApolloPayloadResult } from '@apollo/client/link/core';
 import type { AsStoreObject } from '@apollo/client/utilities';
@@ -75,7 +75,7 @@ import { Observable } from '@apollo/client/utilities';
 import { Observable as Observable_2 } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link/core';
-import type { OperationVariables as OperationVariables_2 } from '@apollo/client/core';
+import type { OperationVariables as OperationVariables_2 } from '@apollo/client';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { Path } from '@apollo/client/link/core';
 import { PossibleTypesMap } from '@apollo/client/cache';
@@ -102,7 +102,7 @@ import type { Subscription } from 'rxjs';
 import { Transaction } from '@apollo/client/cache';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client/core';
+import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
@@ -2017,18 +2017,18 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:139:9 - (ae-forgotten-export) The symbol "MissingFieldError_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:62:3 - (ae-forgotten-export) The symbol "TypePolicy_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:135:5 - (ae-forgotten-export) The symbol "FieldPolicy_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "FieldReadFunction_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldMergeFunction_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:130:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:131:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts - (ae-forgotten-export) The symbol "MissingFieldError_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "TypePolicy_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "FieldPolicy_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "FieldReadFunction_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "FieldMergeFunction_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

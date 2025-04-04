@@ -1,5 +1,6 @@
-import { readFileSync } from "fs";
 import fs from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import * as path from "path";
 
@@ -10,9 +11,11 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 
-import { buildDocEntryPoints, entryPoints } from "./entryPoints.ts";
+import pkg from "../dist/package.json" with { type: "json" };
+
+import type { ExportsCondition } from "./entryPoints.ts";
+import { buildDocEntryPoints } from "./entryPoints.ts";
 import { withPseudoNodeModules } from "./helpers.ts";
-import { join } from "node:path";
 
 const parsed = parseArgs({
   options: {
@@ -44,8 +47,18 @@ const configObjectFullPath = path.resolve(
 const baseConfig = ExtractorConfig.loadFile(configObjectFullPath);
 const packageJsonFullPath = path.resolve(
   import.meta.dirname,
-  "../package.json"
+  "../dist/package.json"
 );
+
+const entryPoints = Object.entries(pkg.exports as ExportsCondition)
+  .filter(([key]) => !(key.includes("*") || key.includes(".json")))
+  .map(([key, value]) => {
+    return {
+      path: key.slice("./".length),
+      key,
+      value,
+    };
+  });
 
 process.exitCode = 0;
 
@@ -72,17 +85,36 @@ try {
 
   if (parsed.values.generate?.includes("apiReport")) {
     for (const entryPoint of entryPoints) {
-      const path = entryPoint.dirs.join("/");
-      const mainEntryPointFilePath =
-        `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
+      let entry = entryPoint.value;
+      while (typeof entry === "object") {
+        entry = entry.types || Object.values(entry).at(-1);
+      }
+      const mainEntryPointFilePath = `<projectFolder>/dist/${entry}`.replace(
+        "//",
+        "/"
+      );
       console.log(
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );
+      const reportFileName = `api-report${
+        entryPoint.path ? "-" + entryPoint.path.replace(/\//g, "_") : ""
+      }.api.md`;
       await buildReport(
         join("@apollo/client", entryPoint.key),
         mainEntryPointFilePath,
         "apiReport",
-        `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
+        reportFileName
+      );
+
+      await cleanupApiReport(
+        join(
+          baseConfig.apiReport.reportFolder!.replace(
+            "<projectFolder>",
+            join(import.meta.dirname, "..")
+          ),
+          reportFileName
+        ),
+        join(import.meta.dirname, "..", "src")
       );
     }
   }
@@ -145,4 +177,24 @@ async function buildReport(
     );
     process.exitCode = 1;
   }
+}
+
+/**
+ * Cleans up the "Warnings were encountered during analysis:" section of the api report in two steps:
+ *
+ * original:
+ * // /Users/tronic/tmp/apollo-client/src/cache/core/types/DataProxy.ts:137:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+ * step 1: remove path
+ * // src/cache/core/types/DataProxy.ts:137:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+ * step 2: remove line number
+ * // src/cache/core/types/DataProxy.ts - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+ */
+async function cleanupApiReport(reportFileName: string, sourcePath: string) {
+  const contents = await readFile(reportFileName, { encoding: "utf-8" });
+  const newContents = contents
+    .split("\n")
+    .map((line) => line.replace(sourcePath, "src"))
+    .map((line) => line.replace(/:\d+:\d+ - \(/, " - ("))
+    .join("\n");
+  await writeFile(reportFileName, newContents, { encoding: "utf-8" });
 }

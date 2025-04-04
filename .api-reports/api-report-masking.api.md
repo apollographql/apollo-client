@@ -4,13 +4,13 @@
 
 ```ts
 
-import type { ApolloCache } from '@apollo/client/core';
-import type { DocumentNode } from '@apollo/client/core';
+import type { ApolloCache } from '@apollo/client';
+import type { DocumentNode } from '@apollo/client';
 import type { Prettify } from '@apollo/client/utilities';
 import type { Primitive } from '@apollo/client/utilities';
 import type { RemoveIndexSignature } from '@apollo/client/utilities';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client/core';
+import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 
 // Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts

@@ -73,7 +73,7 @@ describe("MockedResponse.newData", () => {
     });
   });
 
-  test("replaces .result with value returned from newData and does not consume the mock the first time", async () => {
+  test("does not consume mock if newData is defined", async () => {
     const query = gql`
       query {
         count

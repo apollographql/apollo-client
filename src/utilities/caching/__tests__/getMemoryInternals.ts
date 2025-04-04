@@ -13,7 +13,7 @@ import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename
 import { cacheSizes } from "@apollo/client/utilities";
 
 // this is compiled away so we need to import it from sources
- 
+
 import { defaultCacheSizes } from "../sizes.js";
 
 function sha256(data: string) {

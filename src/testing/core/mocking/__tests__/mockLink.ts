@@ -251,7 +251,7 @@ test("returns error when no mock matches request", async () => {
     const stream = new ObservableStream(execute(link, { query }));
 
     const error = await stream.takeError();
-    expect(error.message).toMatch(/^No more mocked responses/);
+    expect(error.message).toMatchSnapshot();
   }
 
   {
@@ -273,7 +273,7 @@ test("returns error when no mock matches request", async () => {
     const stream = new ObservableStream(execute(link, { query }));
 
     const error = await stream.takeError();
-    expect(error.message).toMatch(/^No more mocked responses/);
+    expect(error.message).toMatchSnapshot();
   }
 });
 
@@ -303,7 +303,7 @@ test("consumes matched mock", async () => {
     const stream = new ObservableStream(execute(link, { query }));
 
     const error = await stream.takeError();
-    expect(error.message).toMatch(/^No more mocked responses/);
+    expect(error.message).toMatchSnapshot();
   }
 });
 
@@ -645,7 +645,7 @@ test("fails when variableMatcher returns false", async () => {
   );
 
   const error = await stream.takeError();
-  expect(error.message).toMatch(/^No more mocked responses/);
+  expect(error.message).toMatchSnapshot();
 });
 
 test("removes @nonreactive directives from fields", async () => {
@@ -934,7 +934,7 @@ test("uses a mock a configured number of times when `maxUsageCount` is configure
     const stream = new ObservableStream(execute(link, { query, variables }));
 
     const error = await stream.takeError();
-    expect(error.message).toMatch(/^No more mocked responses/);
+    expect(error.message).toMatchSnapshot();
   }
 });
 
@@ -993,7 +993,7 @@ test("uses a mock once when `maxUsageCount` is not configured", async () => {
     const stream = new ObservableStream(execute(link, { query, variables }));
 
     const error = await stream.takeError();
-    expect(error.message).toMatch(/^No more mocked responses/);
+    expect(error.message).toMatchSnapshot();
   }
 });
 

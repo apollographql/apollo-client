@@ -163,7 +163,12 @@ export class MockLink extends ApolloLink {
       mocks.splice(index, 1);
     }
 
-    if (!matched.result && !matched.error && matched.delay !== Infinity) {
+    const delay =
+      typeof matched.delay === "function" ?
+        matched.delay(operation)
+      : matched.delay;
+
+    if (!matched.result && !matched.error && delay !== Infinity) {
       return throwError(
         () =>
           new Error(
@@ -192,7 +197,7 @@ export class MockLink extends ApolloLink {
           );
         }
         observer.complete();
-      }, matched.delay ?? 0);
+      }, delay);
 
       return () => {
         clearTimeout(timer);

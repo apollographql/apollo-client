@@ -83,138 +83,134 @@ We've chosen this value as the MAXIMUM_DELAY since values that don't fit into a 
 */
 const MAXIMUM_DELAY = 0x7f_ff_ff_ff;
 
-describe("mockLink", () => {
+const query = gql`
+  query A {
+    a
+  }
+`;
+
+test("should not require a result or error when delay equals Infinity", async () => {
+  using _fakeTimers = enableFakeTimers();
+
+  const mockLink = new MockLink([
+    {
+      request: {
+        query,
+      },
+      delay: Infinity,
+    },
+  ]);
+
+  const observable = execute(mockLink, { query });
+
+  const subscription = observable.subscribe(
+    () => fail("onNext was called"),
+    () => fail("onError was called"),
+    () => fail("onComplete was called")
+  );
+  jest.advanceTimersByTime(MAXIMUM_DELAY);
+  subscription.unsubscribe();
+});
+
+test("should require result or error when delay is just large", () => {
+  const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
+  const expectedError = new InvariantError(
+    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
+      invalidResponse
+    )}`
+  );
+
+  expect(() => new MockLink([invalidResponse])).toThrow(expectedError);
+
+  expect(
+    () =>
+      new MockLink([
+        // This one is ok
+        {
+          request: { query },
+          error: new Error("test"),
+          delay: MAXIMUM_DELAY,
+        },
+        invalidResponse,
+      ])
+  ).toThrow(expectedError);
+
+  const link = new MockLink([]);
+
+  expect(() => link.addMockedResponse(invalidResponse)).toThrow(expectedError);
+});
+
+test("should fill in default variables if they are missing in mocked requests", async () => {
   const query = gql`
-    query A {
-      a
+    query GetTodo($done: Boolean = true, $user: String!) {
+      todo(user: $user, done: $done) {
+        id
+      }
     }
   `;
-
-  test("should not require a result or error when delay equals Infinity", async () => {
-    using _fakeTimers = enableFakeTimers();
-
-    const mockLink = new MockLink([
-      {
-        request: {
-          query,
-        },
-        delay: Infinity,
+  const mocks = [
+    {
+      // default should get filled in here
+      request: { query, variables: { user: "Tim" } },
+      result: {
+        data: { todo: { id: 1 } },
       },
-    ]);
+    },
+    {
+      // we provide our own `done`, so it should not get filled in
+      request: { query, variables: { user: "Tim", done: false } },
+      result: {
+        data: { todo: { id: 2 } },
+      },
+    },
+    {
+      // one more that has a different user variable and should never match
+      request: { query, variables: { user: "Tom" } },
+      result: {
+        data: { todo: { id: 2 } },
+      },
+    },
+  ];
 
-    const observable = execute(mockLink, { query });
-
-    const subscription = observable.subscribe(
-      () => fail("onNext was called"),
-      () => fail("onError was called"),
-      () => fail("onComplete was called")
+  // Apollo Client will always fill in default values for missing variables
+  // in the operation before calling the Link, so we have to do the same here
+  // when we call `execute`
+  const defaults = { done: true };
+  const link = new MockLink(mocks, { showWarnings: false });
+  {
+    // Non-optional variable is missing, should not match.
+    const stream = new ObservableStream(
+      execute(link, { query, variables: { ...defaults } })
     );
-    jest.advanceTimersByTime(MAXIMUM_DELAY);
-    subscription.unsubscribe();
-  });
-
-  test("should require result or error when delay is just large", () => {
-    const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
-    const expectedError = new InvariantError(
-      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
-        invalidResponse
-      )}`
+    await expect(stream).toEmitError();
+  }
+  {
+    // Execute called incorrectly without a default variable filled in.
+    // This will never happen in Apollo Client since AC always fills these
+    // before calling `execute`, so it's okay if it results in a "no match"
+    // scenario here.
+    const stream = new ObservableStream(
+      execute(link, { query, variables: { user: "Tim" } })
     );
-
-    expect(() => new MockLink([invalidResponse])).toThrow(expectedError);
-
-    expect(
-      () =>
-        new MockLink([
-          // This one is ok
-          {
-            request: { query },
-            error: new Error("test"),
-            delay: MAXIMUM_DELAY,
-          },
-          invalidResponse,
-        ])
-    ).toThrow(expectedError);
-
-    const link = new MockLink([]);
-
-    expect(() => link.addMockedResponse(invalidResponse)).toThrow(
-      expectedError
+    await expect(stream).toEmitError();
+  }
+  {
+    // Expect default value to be filled in the mock request.
+    const stream = new ObservableStream(
+      execute(link, { query, variables: { ...defaults, user: "Tim" } })
     );
-  });
-
-  test("should fill in default variables if they are missing in mocked requests", async () => {
-    const query = gql`
-      query GetTodo($done: Boolean = true, $user: String!) {
-        todo(user: $user, done: $done) {
-          id
-        }
-      }
-    `;
-    const mocks = [
-      {
-        // default should get filled in here
-        request: { query, variables: { user: "Tim" } },
-        result: {
-          data: { todo: { id: 1 } },
-        },
-      },
-      {
-        // we provide our own `done`, so it should not get filled in
-        request: { query, variables: { user: "Tim", done: false } },
-        result: {
-          data: { todo: { id: 2 } },
-        },
-      },
-      {
-        // one more that has a different user variable and should never match
-        request: { query, variables: { user: "Tom" } },
-        result: {
-          data: { todo: { id: 2 } },
-        },
-      },
-    ];
-
-    // Apollo Client will always fill in default values for missing variables
-    // in the operation before calling the Link, so we have to do the same here
-    // when we call `execute`
-    const defaults = { done: true };
-    const link = new MockLink(mocks, { showWarnings: false });
-    {
-      // Non-optional variable is missing, should not match.
-      const stream = new ObservableStream(
-        execute(link, { query, variables: { ...defaults } })
-      );
-      await expect(stream).toEmitError();
-    }
-    {
-      // Execute called incorrectly without a default variable filled in.
-      // This will never happen in Apollo Client since AC always fills these
-      // before calling `execute`, so it's okay if it results in a "no match"
-      // scenario here.
-      const stream = new ObservableStream(
-        execute(link, { query, variables: { user: "Tim" } })
-      );
-      await expect(stream).toEmitError();
-    }
-    {
-      // Expect default value to be filled in the mock request.
-      const stream = new ObservableStream(
-        execute(link, { query, variables: { ...defaults, user: "Tim" } })
-      );
-      await expect(stream).toEmitTypedValue({ data: { todo: { id: 1 } } });
-    }
-    {
-      // Test that defaults don't overwrite explicitly different values in a mock request.
-      const stream = new ObservableStream(
-        execute(link, {
-          query,
-          variables: { ...defaults, user: "Tim", done: false },
-        })
-      );
-      await expect(stream).toEmitTypedValue({ data: { todo: { id: 2 } } });
-    }
-  });
+    await expect(stream).toEmitTypedValue({ data: { todo: { id: 1 } } });
+  }
+  {
+    // Test that defaults don't overwrite explicitly different values in a mock request.
+    const stream = new ObservableStream(
+      execute(link, {
+        query,
+        variables: { ...defaults, user: "Tim", done: false },
+      })
+    );
+    await expect(stream).toEmitTypedValue({ data: { todo: { id: 2 } } });
+  }
 });
 
 test("throws error when query is a plain string", async () => {

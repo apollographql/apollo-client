@@ -96,7 +96,7 @@ export class MockLink extends ApolloLink {
   public addMockedResponse(mockedResponse: MockedResponse) {
     validateMockedResponse(mockedResponse);
 
-    const normalized = this.normalizeMockedResponse(mockedResponse);
+    const normalized = normalizeMockedResponse(mockedResponse);
     this.getMockedResponses(normalized.request).push(normalized);
   }
 
@@ -185,35 +185,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     });
   }
 
-  private normalizeMockedResponse(
-    mockedResponse: MockedResponse
-  ): NormalizedMockedResponse {
-    const response = cloneDeep(mockedResponse);
-
-    response.request.query = getServerQuery(response.request.query);
-    response.maxUsageCount = response.maxUsageCount ?? 1;
-
-    const request = response.request;
-
-    const withDefaults = {
-      ...getDefaultValues(getOperationDefinition(request.query)),
-      ...request.variables,
-    };
-
-    if (Object.keys(withDefaults).length) {
-      request.variables = withDefaults;
-    }
-
-    response.variableMatcher ||= (vars) => {
-      return equal(vars || {}, {
-        ...getDefaultValues(getOperationDefinition(request.query)),
-        ...request.variables,
-      });
-    };
-
-    return response as NormalizedMockedResponse;
-  }
-
   private getMockedResponses(request: GraphQLRequest) {
     const key = requestToKey(request);
 
@@ -226,6 +197,34 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     return mockedResponses;
   }
+}
+
+function normalizeMockedResponse(
+  mockedResponse: MockedResponse
+): NormalizedMockedResponse {
+  const response = cloneDeep(mockedResponse);
+  const request = response.request;
+
+  request.query = getServerQuery(request.query);
+  response.maxUsageCount = response.maxUsageCount ?? 1;
+
+  const withDefaults = {
+    ...getDefaultValues(getOperationDefinition(request.query)),
+    ...request.variables,
+  };
+
+  if (Object.keys(withDefaults).length) {
+    request.variables = withDefaults;
+  }
+
+  response.variableMatcher ||= (vars) => {
+    return equal(vars || {}, {
+      ...getDefaultValues(getOperationDefinition(request.query)),
+      ...request.variables,
+    });
+  };
+
+  return response as NormalizedMockedResponse;
 }
 
 function getServerQuery(query: DocumentNode) {

@@ -91,7 +91,7 @@ export class MockLink extends ApolloLink {
   public operation!: Operation;
   public showWarnings: boolean = true;
 
-  private defaultDelay: MockLink.Delay = 0;
+  private defaultDelay: MockLink.Delay;
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};
 

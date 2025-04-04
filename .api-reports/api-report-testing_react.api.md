@@ -9,6 +9,7 @@ import { ApolloClient } from '@apollo/client/core';
 import type { ApolloLink } from '@apollo/client/link/core';
 import type { DefaultOptions } from '@apollo/client/core';
 import type { MockedResponse } from '@apollo/client/testing/core';
+import { MockLink } from '@apollo/client/testing/core';
 import * as React_2 from 'react';
 import type { Resolvers } from '@apollo/client/core';
 
@@ -36,6 +37,8 @@ export interface MockedProviderProps {
     defaultOptions?: DefaultOptions;
     // (undocumented)
     link?: ApolloLink;
+    // (undocumented)
+    mockLinkDefaultOptions?: MockLink.DefaultOptions;
     // (undocumented)
     mocks?: ReadonlyArray<MockedResponse<any, any>>;
     // (undocumented)

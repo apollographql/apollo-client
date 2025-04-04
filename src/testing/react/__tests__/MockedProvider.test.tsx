@@ -681,6 +681,7 @@ describe("General use", () => {
         },
         maxUsageCount: Number.POSITIVE_INFINITY,
         result: { data: { user } },
+        delay: 0,
       },
     ];
 

@@ -111,6 +111,25 @@ describe("MockedResponse.newData", () => {
       await expect(stream).toComplete();
     }
   });
+
+  test("warns if maxUsageCount and newData is used together", async () => {
+    using _ = spyOnConsole("warn");
+
+    const query = gql`
+      query {
+        count
+      }
+    `;
+
+    new MockLink([
+      { request: { query }, maxUsageCount: 2, newData: () => ({ data: null }) },
+    ]);
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "`maxUsageCount` has no effect when `newData` is used"
+    );
+  });
 });
 
 /*

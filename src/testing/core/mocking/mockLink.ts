@@ -239,7 +239,7 @@ export class MockLink extends ApolloLink {
       ...getDefaultValues(getOperationDefinition(request.query)),
       ...request.variables,
     };
-    response.delay ??= 0;
+    response.delay ??= this.defaultDelay;
 
     return response;
   }

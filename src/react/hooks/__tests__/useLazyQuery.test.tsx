@@ -199,8 +199,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Invert this since the previoius test is now the same
-  test("sets initial loading state when notifyOnNetworkStatusChange is true", async () => {
+  test("does not emit loading state when notifyOnNetworkStatusChange is false", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -212,7 +211,7 @@ describe("useLazyQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
-        () => useLazyQuery(helloQuery, { notifyOnNetworkStatusChange: true }),
+        () => useLazyQuery(helloQuery, { notifyOnNetworkStatusChange: false }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -239,19 +238,6 @@ describe("useLazyQuery Hook", () => {
     expect(result).toStrictEqualTyped({
       data: { hello: "world" },
     });
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
 
     {
       const [, result] = await takeSnapshot();
@@ -533,8 +519,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Invert this since this now matches the previous test
-  test("renders loading states when changing queries with notifyOnNetworkStatusChange", async () => {
+  test("does not render loading states when changing queries with notifyOnNetworkStatusChange: false", async () => {
     const query1 = gql`
       query {
         hello
@@ -563,7 +548,7 @@ describe("useLazyQuery Hook", () => {
     const { takeSnapshot, getCurrentSnapshot, rerender } =
       await renderHookToSnapshotStream(
         ({ query }) =>
-          useLazyQuery(query, { notifyOnNetworkStatusChange: true }),
+          useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
         {
           initialProps: { query: query1 },
           wrapper: ({ children }) => (
@@ -597,18 +582,6 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
@@ -636,19 +609,6 @@ describe("useLazyQuery Hook", () => {
     await expect(execute()).resolves.toStrictEqualTyped({
       data: { name: "changed" },
     });
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: { hello: "world" },
-        variables: {},
-      });
-    }
 
     {
       const [, result] = await takeSnapshot();
@@ -774,8 +734,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Invert this
-  it('renders loading states each time the execution function is called when using a "network-only" fetch policy with notifyOnNetworkStatusChange', async () => {
+  it('does not render loading states when the execution function is called when using a "network-only" fetch policy with notifyOnNetworkStatusChange: false', async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -794,7 +753,7 @@ describe("useLazyQuery Hook", () => {
       await renderHookToSnapshotStream(
         () =>
           useLazyQuery(helloQuery, {
-            notifyOnNetworkStatusChange: true,
+            notifyOnNetworkStatusChange: false,
             fetchPolicy: "network-only",
           }),
         {
@@ -827,19 +786,6 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
@@ -852,19 +798,6 @@ describe("useLazyQuery Hook", () => {
     await expect(execute()).resolves.toStrictEqualTyped({
       data: { hello: "world 2" },
     });
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
-        data: { hello: "world 1" },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
 
     {
       const [, result] = await takeSnapshot();
@@ -1246,8 +1179,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Invert this
-  test("renders loading states when a query is re-run and variables changes with notifyOnNetworkStatusChange", async () => {
+  test("does not render loading states when a query is re-run and variables changes with notifyOnNetworkStatusChange: false", async () => {
     const CAR_QUERY_BY_ID = gql`
       query ($id: Int) {
         car(id: $id) {
@@ -1290,7 +1222,7 @@ describe("useLazyQuery Hook", () => {
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
         () =>
-          useLazyQuery(CAR_QUERY_BY_ID, { notifyOnNetworkStatusChange: true }),
+          useLazyQuery(CAR_QUERY_BY_ID, { notifyOnNetworkStatusChange: false }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -1321,19 +1253,6 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: { id: 1 },
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: data1,
         called: true,
         loading: false,
@@ -1347,18 +1266,6 @@ describe("useLazyQuery Hook", () => {
       { data: data2 }
     );
 
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.setVariables,
-        previousData: data1,
-        variables: { id: 2 },
-      });
-    }
     {
       const [, result] = await takeSnapshot();
 
@@ -1696,8 +1603,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Invert this
-  test("renders loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange", async () => {
+  test("renders loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange: false when there is cached data", async () => {
     const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
@@ -1727,7 +1633,7 @@ describe("useLazyQuery Hook", () => {
         () =>
           useLazyQuery(query, {
             fetchPolicy: "cache-and-network",
-            notifyOnNetworkStatusChange: true,
+            notifyOnNetworkStatusChange: false,
           }),
         {
           wrapper: ({ children }) => (
@@ -4523,8 +4429,7 @@ test("uses cached result when switching to variables already written to the cach
   await expect(takeSnapshot).not.toRerender();
 });
 
-// TODO: Invert test
-test("renders loading states where necessary when switching to variables maybe written to the cache with notifyOnNetworkStatusChange", async () => {
+test("does not render loading states when switching to variables maybe written to the cache with notifyOnNetworkStatusChange: false", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -4542,7 +4447,7 @@ test("renders loading states where necessary when switching to variables maybe w
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
-    () => useLazyQuery(query, { notifyOnNetworkStatusChange: true }),
+    () => useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
     {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -4573,19 +4478,6 @@ test("renders loading states where necessary when switching to variables maybe w
       },
     }
   );
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toStrictEqualTyped({
-      data: undefined,
-      called: true,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      previousData: undefined,
-      variables: { id: "1" },
-    });
-  }
 
   {
     const [, result] = await takeSnapshot();
@@ -4646,25 +4538,6 @@ test("renders loading states where necessary when switching to variables maybe w
       },
     }
   );
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toStrictEqualTyped({
-      data: undefined,
-      called: true,
-      loading: true,
-      networkStatus: NetworkStatus.setVariables,
-      previousData: {
-        character: {
-          __typename: "Character",
-          id: "2",
-          name: "Cached Character",
-        },
-      },
-      variables: { id: "3" },
-    });
-  }
 
   {
     const [, result] = await takeSnapshot();

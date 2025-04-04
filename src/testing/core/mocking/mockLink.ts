@@ -102,7 +102,7 @@ export class MockLink extends ApolloLink {
   ) {
     super();
     this.showWarnings = options.showWarnings ?? true;
-    this.defaultDelay = options.defaultOptions?.delay ?? 0;
+    this.defaultDelay = options.defaultOptions?.delay ?? realisticDelay();
 
     if (mockedResponses) {
       mockedResponses.forEach((mockedResponse) => {

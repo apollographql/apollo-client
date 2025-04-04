@@ -30,7 +30,7 @@
   },
   "homepage": "https://www.apollographql.com/docs/react/",
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./src/core/index.ts",
     "./cache": "./src/cache/index.ts",
     "./core": "./src/core/index.ts",
     "./dev": "./src/dev/index.ts",

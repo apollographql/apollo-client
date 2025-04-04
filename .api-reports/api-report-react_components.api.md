@@ -1530,6 +1530,8 @@ class QueryManager<TStore> {
     getLocalState(): LocalState<TStore>;
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Map<string, ObservableQuery<any, OperationVariables>>;
+    // (undocumented)
+    getOrCreateQuery(queryId: string): QueryInfo;
     // Warning: (ae-forgotten-export) The symbol "QueryStoreValue" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1596,8 +1598,6 @@ class QueryManager<TStore> {
     removeQuery(queryId: string): void;
     // (undocumented)
     resetErrors(queryId: string): void;
-    // (undocumented)
-    setObservableQuery(observableQuery: ObservableQuery<any, any>): void;
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)

@@ -49,6 +49,7 @@ export declare namespace useReadQuery {
 export function useReadQuery<TData>(
   queryRef: QueryRef<TData>
 ): useReadQuery.Result<TData> {
+  "use no memo";
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
     unwrapped ?

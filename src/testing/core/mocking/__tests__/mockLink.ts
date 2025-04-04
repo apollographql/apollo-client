@@ -1212,6 +1212,56 @@ test("mocks is consumed after running `result` callback function", async () => {
   }
 });
 
+test("can use `result` as callback with `maxUsageCount`", async () => {
+  const query = gql`
+    query GetUser($username: String!) {
+      user(username: $username) {
+        id
+      }
+    }
+  `;
+
+  const variables = { username: "username" };
+
+  const link = new MockLink(
+    [
+      {
+        request: { query, variables },
+        result: (vars) => ({
+          data: { user: { __typename: "User", name: vars.username } },
+        }),
+        maxUsageCount: 2,
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", name: variables.username } },
+    });
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", name: variables.username } },
+    });
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    const error = await stream.takeError();
+    expect(error.message).toMatchSnapshot();
+  }
+});
+
 describe.skip("type tests", () => {
   const ANY = {} as any;
   test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {

@@ -73,6 +73,9 @@ describe("MockedResponse.newData", () => {
     });
   });
 
+  // TODO: Determine if we want to keep newData. `result` also accepts a callback
+  // function. The only difference between the two is that newData keeps the
+  // mock without consuming it.
   test("does not consume mock if newData is defined", async () => {
     const query = gql`
       query {

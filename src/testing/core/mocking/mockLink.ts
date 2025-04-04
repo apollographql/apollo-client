@@ -193,24 +193,21 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     response.request.query = getServerQuery(response.request.query);
     response.maxUsageCount = response.maxUsageCount ?? 1;
 
-    this.normalizeVariableMatching(response);
-    return response as NormalizedMockedResponse;
-  }
+    const request = response.request;
 
-  private normalizeVariableMatching(mockedResponse: MockedResponse) {
-    const request = mockedResponse.request;
-
-    if (!mockedResponse.variableMatcher) {
+    if (!response.variableMatcher) {
       request.variables = {
         ...getDefaultValues(getOperationDefinition(request.query)),
         ...request.variables,
       };
-      mockedResponse.variableMatcher = (vars) => {
+      response.variableMatcher = (vars) => {
         const requestVariables = vars || {};
         const mockedResponseVariables = request.variables || {};
         return equal(requestVariables, mockedResponseVariables);
       };
     }
+
+    return response as NormalizedMockedResponse;
   }
 
   private getMockedResponses(request: GraphQLRequest) {

@@ -5,6 +5,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 
 import { mockSingleLink } from "./mockLink.js";
 
+// TODO: Deprecate this function
 export function createMockClient<TData>(
   data: TData,
   query: DocumentNode,
@@ -14,8 +15,6 @@ export function createMockClient<TData>(
     link: mockSingleLink({
       request: { query, variables },
       result: { data },
-    }).setOnError((error) => {
-      throw error;
     }),
     cache: new InMemoryCache(),
   });

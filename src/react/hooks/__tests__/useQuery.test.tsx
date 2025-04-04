@@ -2106,8 +2106,6 @@ describe("useQuery Hook", () => {
 
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
       const wrapper = ({ children }: any) => (
         <MockedProvider link={link} cache={cache}>
           {children}
@@ -2162,10 +2160,6 @@ describe("useQuery Hook", () => {
         )
       ).rejects.toThrow();
 
-      await waitFor(() => {
-        expect(onErrorFn).toHaveBeenCalledTimes(0);
-      });
-
       requestSpy.mockRestore();
     });
 
@@ -2201,8 +2195,6 @@ describe("useQuery Hook", () => {
 
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
 
       const client = new ApolloClient({
         queryDeduplication: false,
@@ -2275,7 +2267,6 @@ describe("useQuery Hook", () => {
       jest.advanceTimersByTime(200);
 
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       jest.useRealTimers();
     });
@@ -2307,8 +2298,6 @@ describe("useQuery Hook", () => {
       const cache = new InMemoryCache();
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
       const wrapper = ({ children }: any) => (
         <React.StrictMode>
           <MockedProvider link={link} cache={cache}>
@@ -2362,7 +2351,6 @@ describe("useQuery Hook", () => {
         )
       ).rejects.toThrow();
       expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       requestSpy.mockRestore();
     });
@@ -2398,8 +2386,6 @@ describe("useQuery Hook", () => {
 
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
 
       const client = new ApolloClient({ link, cache });
 
@@ -2464,7 +2450,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender({ timeout: 50 });
       // TODO rarely seeing 3 here investigate further
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
 
     it("should start and stop polling in Strict Mode", async () => {
@@ -2495,8 +2480,6 @@ describe("useQuery Hook", () => {
       const cache = new InMemoryCache();
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
       const wrapper = ({ children }: any) => (
         <React.StrictMode>
           <MockedProvider link={link} cache={cache}>
@@ -2555,7 +2538,6 @@ describe("useQuery Hook", () => {
       getCurrentSnapshot().startPolling(20);
 
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       {
         const result = await takeSnapshot();
@@ -2582,7 +2564,6 @@ describe("useQuery Hook", () => {
       }
 
       expect(requestSpy).toHaveBeenCalledTimes(4);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();
     });
 

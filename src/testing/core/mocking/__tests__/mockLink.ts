@@ -10,6 +10,10 @@ import {
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
+// This isn't a public API and won't be exposed
+// eslint-disable-next-line local-rules/no-relative-imports
+import { stringifyMockedResponse } from "../mockLink.js";
+
 describe("MockedResponse.newData", () => {
   const setup = () => {
     const weaklyTypedMockResponse: MockedResponse = {
@@ -168,15 +172,17 @@ test("should not require a result or error when delay equals Infinity", async ()
 
 test("should require result or error when delay is just large", async () => {
   const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
-  const expectedError =
-    /^Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:/;
+  const expectedError = new Error(
+    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
+      invalidResponse
+    )}`
+  );
 
   {
     const link = new MockLink([invalidResponse]);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
-    expect(error.message).toMatch(expectedError);
+    await expect(stream).toEmitError(expectedError);
   }
 
   {
@@ -185,8 +191,7 @@ test("should require result or error when delay is just large", async () => {
 
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
-    expect(error.message).toMatch(expectedError);
+    await expect(stream).toEmitError(expectedError);
   }
 });
 

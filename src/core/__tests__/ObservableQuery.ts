@@ -918,15 +918,24 @@ describe("ObservableQuery", () => {
           {
             request: { query, variables },
             result: { data: dataOne },
+            delay: 20,
           },
           {
             request: { query, variables },
             result: { data: dataTwo },
+            delay: 20,
           },
         ]),
       });
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,

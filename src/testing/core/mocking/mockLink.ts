@@ -1,6 +1,7 @@
 import { equal } from "@wry/equality";
 import { Observable } from "rxjs";
 
+import type { OperationVariables } from "@apollo/client/core";
 import type {
   DocumentNode,
   FetchResult,
@@ -89,19 +90,19 @@ export class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
-    const unmatchedVars: Array<Record<string, any>> = [];
-    const requestVariables = operation.variables || {};
+    const unmatchedVars: Array<Record<string, any> | "<undefined>"> = [];
     const mockedResponses = this.getMockedResponses(operation);
 
     const responseIndex = mockedResponses.findIndex((res) => {
-      const mockedResponseVars = res.request.variables || {};
-      if (equal(requestVariables, mockedResponseVars)) {
+      if (variablesEqual(operation.variables, res.request.variables)) {
         return true;
       }
+
       if (res.variableMatcher && res.variableMatcher(operation.variables)) {
         return true;
       }
-      unmatchedVars.push(mockedResponseVars);
+
+      unmatchedVars.push(res.request.variables || "<undefined>");
       return false;
     });
 
@@ -267,6 +268,13 @@ function validateMockedResponse(mockedResponse: MockedResponse) {
   );
 }
 
+function variablesEqual(
+  vars1: OperationVariables | undefined,
+  vars2: OperationVariables | undefined
+) {
+  return equal(vars1 || {}, vars2 || {});
+}
+
 /** @internal */
 export function stringifyMockedResponse(mockedResponse: MockedResponse) {
   return JSON.stringify(
@@ -303,6 +311,10 @@ export function mockSingleLink(
 // future. This is not added to the primary stringifyForDisplay helper since it
 // is used for the cache and other purposes. We need this for debuggging only.
 function stringifyForDebugging(value: any, space = 0): string {
+  if (typeof value === "string") {
+    return value;
+  }
+
   const undefId = makeUniqueId("undefined");
   const nanId = makeUniqueId("NaN");
 

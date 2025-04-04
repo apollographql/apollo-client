@@ -261,6 +261,10 @@ function validateMockedResponse(mock: MockedResponse) {
     !mock.variableMatcher || !mock.request.variables,
     "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
+
+  if (mock.maxUsageCount && mock.newData) {
+    invariant.warn("`maxUsageCount` has no effect when `newData` is used");
+  }
 }
 
 /** @internal */

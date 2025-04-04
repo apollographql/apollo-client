@@ -10,6 +10,8 @@ import {
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
+// This is an internal function and will not be exported publicly
+// eslint-disable-next-line local-rules/no-relative-imports
 import { stringifyMockedResponse } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {

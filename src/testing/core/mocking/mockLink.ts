@@ -248,17 +248,17 @@ function getServerQuery(query: DocumentNode) {
   return serverQuery;
 }
 
-function validateMockedResponse(mockedResponse: MockedResponse) {
-  checkDocument(mockedResponse.request.query);
+function validateMockedResponse(mock: MockedResponse) {
+  checkDocument(mock.request.query);
 
   invariant(
-    (mockedResponse.maxUsageCount ?? 1) > 0,
+    (mock.maxUsageCount ?? 1) > 0,
     "Mocked response `maxUsageCount` must be greater than 0. Given %s",
-    mockedResponse.maxUsageCount
+    mock.maxUsageCount
   );
 
   invariant(
-    !mockedResponse.variableMatcher || !mockedResponse.request.variables,
+    !mock.variableMatcher || !mock.request.variables,
     "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
 }

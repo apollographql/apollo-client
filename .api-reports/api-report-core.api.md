@@ -1944,6 +1944,8 @@ class QueryManager<TStore> {
     getLocalState(): LocalState<TStore>;
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Map<string, ObservableQuery<any, OperationVariables>>;
+    // (undocumented)
+    getOrCreateQuery(queryId: string): QueryInfo;
     // Warning: (ae-forgotten-export) The symbol "QueryStoreValue" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2007,8 +2009,6 @@ class QueryManager<TStore> {
     removeQuery(queryId: string): void;
     // (undocumented)
     resetErrors(queryId: string): void;
-    // (undocumented)
-    setObservableQuery(observableQuery: ObservableQuery<any, any>): void;
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
@@ -2533,8 +2533,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:128:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts

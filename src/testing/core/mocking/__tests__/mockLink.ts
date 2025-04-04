@@ -584,6 +584,70 @@ test("removes fields with @client directives", async () => {
   }
 });
 
+test("shows warning in console when a mock cannot be matched", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      foo
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query OtherQuery {
+            otherQuery {
+              id
+            }
+          }
+        `,
+      },
+      result: { data: { otherQuery: { id: 1 } } },
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query }));
+  await expect(stream).toEmitError();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    expect.stringContaining("No more mocked responses")
+  );
+});
+
+test("silences console warning for unmatched mocks when `showWarnings` is `false`", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      foo
+    }
+  `;
+
+  const link = new MockLink(
+    [
+      {
+        request: {
+          query: gql`
+            query OtherQuery {
+              otherQuery {
+                id
+              }
+            }
+          `,
+        },
+        result: { data: { otherQuery: { id: 1 } } },
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  const stream = new ObservableStream(execute(link, { query }));
+  await expect(stream).toEmitError();
+
+  expect(console.warn).not.toHaveBeenCalled();
+});
+
 test("shows undefined and NaN in debug messages", async () => {
   using _ = spyOnConsole("warn");
 

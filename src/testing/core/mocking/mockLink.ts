@@ -53,6 +53,16 @@ export interface MockedResponse<
   newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
 }
 
+interface NormalizedMockedResponse {
+  request: GraphQLRequest;
+  maxUsageCount: number;
+  result?: FetchResult | ResultFunction<FetchResult, any>;
+  error?: Error;
+  delay?: number;
+  variableMatcher: VariableMatcher;
+  newData?: ResultFunction<FetchResult, any>;
+}
+
 export interface MockLinkOptions {
   showWarnings?: boolean;
 }
@@ -66,7 +76,8 @@ function requestToKey(request: GraphQLRequest): string {
 
 export class MockLink extends ApolloLink {
   public showWarnings: boolean = true;
-  private mockedResponsesByKey: { [key: string]: MockedResponse[] } = {};
+  private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
+    {};
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
@@ -194,7 +205,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
   private normalizeMockedResponse(
     mockedResponse: MockedResponse
-  ): MockedResponse {
+  ): NormalizedMockedResponse {
     const response = cloneDeep(mockedResponse);
     const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
       [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
@@ -216,7 +227,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     response.maxUsageCount = response.maxUsageCount ?? 1;
 
     this.normalizeVariableMatching(response);
-    return response;
+    return response as NormalizedMockedResponse;
   }
 
   private normalizeVariableMatching(mockedResponse: MockedResponse) {

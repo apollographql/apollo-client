@@ -658,7 +658,7 @@ test("passes variables to the `variables` callback function", async () => {
   expect(variableMatcher).toHaveBeenCalledWith(variables);
 });
 
-test("uses mock when variableMatcher returns true", async () => {
+test("uses mock when `variables` as callback returns true", async () => {
   const query = gql`
     query ($id: ID!) {
       user(id: $id) {

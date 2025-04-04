@@ -84,37 +84,26 @@ export class MockLink extends ApolloLink {
   public addMockedResponse(mockedResponse: MockedResponse) {
     validateMockedResponse(mockedResponse);
 
-    const normalizedMockedResponse =
-      this.normalizeMockedResponse(mockedResponse);
-    const key = requestToKey(normalizedMockedResponse.request);
-
-    let mockedResponses = this.mockedResponsesByKey[key];
-    if (!mockedResponses) {
-      mockedResponses = [];
-      this.mockedResponsesByKey[key] = mockedResponses;
-    }
-    mockedResponses.push(normalizedMockedResponse);
+    const normalized = this.normalizeMockedResponse(mockedResponse);
+    this.getMockedResponses(normalized.request).push(normalized);
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
-    const key = requestToKey(operation);
     const unmatchedVars: Array<Record<string, any>> = [];
     const requestVariables = operation.variables || {};
-    const mockedResponses = this.mockedResponsesByKey[key];
-    const responseIndex =
-      mockedResponses ?
-        mockedResponses.findIndex((res, index) => {
-          const mockedResponseVars = res.request.variables || {};
-          if (equal(requestVariables, mockedResponseVars)) {
-            return true;
-          }
-          if (res.variableMatcher && res.variableMatcher(operation.variables)) {
-            return true;
-          }
-          unmatchedVars.push(mockedResponseVars);
-          return false;
-        })
-      : -1;
+    const mockedResponses = this.getMockedResponses(operation);
+
+    const responseIndex = mockedResponses.findIndex((res) => {
+      const mockedResponseVars = res.request.variables || {};
+      if (equal(requestVariables, mockedResponseVars)) {
+        return true;
+      }
+      if (res.variableMatcher && res.variableMatcher(operation.variables)) {
+        return true;
+      }
+      unmatchedVars.push(mockedResponseVars);
+      return false;
+    });
 
     const response =
       responseIndex >= 0 ? mockedResponses[responseIndex] : void 0;
@@ -241,6 +230,19 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
         return equal(requestVariables, mockedResponseVariables);
       };
     }
+  }
+
+  private getMockedResponses(request: GraphQLRequest) {
+    const key = requestToKey(request);
+
+    let mockedResponses = this.mockedResponsesByKey[key];
+
+    if (!mockedResponses) {
+      mockedResponses = [];
+      this.mockedResponsesByKey[key] = mockedResponses;
+    }
+
+    return mockedResponses;
   }
 }
 

@@ -238,6 +238,36 @@ test("throws error when query is a plain string", async () => {
   ).toThrow(/^Expecting a parsed GraphQL document/);
 });
 
+// TODO: Should we consider combining these options and allowing `variables` to
+// accept a callback function? Doing so would make this error obsolete.
+test("throws error when passing variableMatcher and variables", async () => {
+  expect(
+    () =>
+      new MockLink([
+        {
+          request: {
+            query: gql`
+              query ($id: ID!) {
+                user(id: $id) {
+                  name
+                }
+              }
+            `,
+            variables: { id: 1 },
+          },
+          variableMatcher: () => true,
+          result: {
+            data: null,
+          },
+        },
+      ])
+  ).toThrow(
+    new InvariantError(
+      "Mocked response should contain either variableMatcher or request.variables"
+    )
+  );
+});
+
 // TODO: Is this correct? We remove client-only fields in all other cases so I
 // think this should not be allowed.
 test("allows resolving client-only queries", async () => {
@@ -267,6 +297,31 @@ test("allows resolving client-only queries", async () => {
   const stream = new ObservableStream(execute(link, { query }));
 
   await expect(stream).toEmitTypedValue({ data: { foo: "never" } });
+});
+
+test("throws error when passing maxUsageCount < 0", async () => {
+  expect(
+    () =>
+      new MockLink([
+        {
+          request: {
+            query: gql`
+              query {
+                foo
+              }
+            `,
+          },
+          maxUsageCount: -1,
+          result: {
+            data: null,
+          },
+        },
+      ])
+  ).toThrow(
+    new InvariantError(
+      "Mock response maxUsageCount must be greater than 0, -1 given"
+    )
+  );
 });
 
 test("removes @nonreactive directives from fields", async () => {

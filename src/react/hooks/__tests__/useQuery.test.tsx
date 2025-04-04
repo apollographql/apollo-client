@@ -823,7 +823,11 @@ describe("useQuery Hook", () => {
           },
           {
             wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks} cache={cache}>
+              <MockedProvider
+                mocks={mocks}
+                cache={cache}
+                mockLinkDefaultOptions={{ delay: 0 }}
+              >
                 {children}
               </MockedProvider>
             ),

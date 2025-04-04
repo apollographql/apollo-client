@@ -176,14 +176,12 @@ describe("ObservableQuery", () => {
             {
               request: { query, variables },
               result: { data: dataOne },
+              delay: 20,
             },
             {
               request: { query, variables },
               result: { data: dataTwo },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
+              delay: 20,
             },
           ]),
         });
@@ -196,6 +194,14 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
+        // TODO: enable
+        // await expect(stream).toEmitTypedValue({
+        //   data: undefined,
+        //   loading: true,
+        //   networkStatus: NetworkStatus.loading,
+        //   partial: true,
+        // });
+
         await expect(stream).toEmitTypedValue({
           data: dataOne,
           loading: false,
@@ -203,7 +209,21 @@ describe("ObservableQuery", () => {
           partial: false,
         });
 
-        await observable.reobserve({ query, pollInterval: 0 });
+        await expect(stream).toEmitTypedValue({
+          data: dataOne,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: dataTwo,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await observable.reobserve({ pollInterval: 0 });
 
         await expect(stream).not.toEmitAnything();
       });

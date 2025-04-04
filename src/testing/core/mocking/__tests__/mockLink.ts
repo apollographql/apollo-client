@@ -267,14 +267,29 @@ test("prefers configured delay over default delay", async () => {
         result: { data: { a: "a" } },
         delay: 20,
       },
+      {
+        request: { query },
+        result: { data: { a: "a" } },
+      },
     ],
     { defaultOptions: { delay: 50 } }
   );
 
-  const stream = new ObservableStream(execute(link, { query }));
+  {
+    const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitNext({ timeout: 25 });
-  await expect(stream).toComplete();
+    await expect(stream).toEmitNext({ timeout: 25 });
+    await expect(stream).toComplete();
+  }
+
+  // This uses the default delay
+  {
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).not.toEmitAnything({ timeout: 45 });
+    await expect(stream).toEmitNext({ timeout: 6 });
+    await expect(stream).toComplete();
+  }
 });
 
 test("uses realistic delay by default", async () => {

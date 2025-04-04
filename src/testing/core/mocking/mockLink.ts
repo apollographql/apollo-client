@@ -169,20 +169,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     return new Observable((observer) => {
       const timer = setTimeout(() => {
-        if (configError) {
-          try {
-            // The onError function can return false to indicate that
-            // configError need not be passed to observer.error. For
-            // example, the default implementation of onError calls
-            // observer.error(configError) and then returns false to
-            // prevent this extra (harmless) observer.error call.
-            if (this.onError(configError, observer) !== false) {
-              throw configError;
-            }
-          } catch (error) {
-            observer.error(error);
-          }
-        } else if (matched && matched.delay !== Infinity) {
+        if (matched && matched.delay !== Infinity) {
           if (matched.error) {
             observer.error(matched.error);
           } else {

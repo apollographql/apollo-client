@@ -210,27 +210,27 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
   private normalizeMockedResponse(
     mockedResponse: MockedResponse
   ): MockedResponse {
-    const newMockedResponse = cloneDeep(mockedResponse);
+    const response = cloneDeep(mockedResponse);
     const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
       [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
-      checkDocument(newMockedResponse.request.query)
+      checkDocument(response.request.query)
     );
     invariant(queryWithoutClientOnlyDirectives, "query is required");
-    newMockedResponse.request.query = queryWithoutClientOnlyDirectives!;
-    const query = removeClientSetsFromDocument(newMockedResponse.request.query);
+    response.request.query = queryWithoutClientOnlyDirectives!;
+    const query = removeClientSetsFromDocument(response.request.query);
     if (query) {
-      newMockedResponse.request.query = query;
+      response.request.query = query;
     }
 
-    newMockedResponse.maxUsageCount = newMockedResponse.maxUsageCount ?? 1;
+    response.maxUsageCount = response.maxUsageCount ?? 1;
     invariant(
-      newMockedResponse.maxUsageCount > 0,
+      response.maxUsageCount > 0,
       `Mock response maxUsageCount must be greater than 0, %s given`,
       mockedResponse.maxUsageCount
     );
 
-    this.normalizeVariableMatching(newMockedResponse);
-    return newMockedResponse;
+    this.normalizeVariableMatching(response);
+    return response;
   }
 
   private normalizeVariableMatching(mockedResponse: MockedResponse) {

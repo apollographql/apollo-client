@@ -998,61 +998,6 @@ describe("General use", () => {
     consoleSpy.mockRestore();
   });
 
-  it("should support custom error handling using setOnError", async () => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      useQuery<Data, Variables>(query, { variables });
-      return null;
-    }
-
-    const mockLink = new MockLink([], { showWarnings: false });
-    mockLink.setOnError((error) => {
-      expect(error).toMatchSnapshot();
-      finished = true;
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    });
-  });
-
-  it("should pipe exceptions thrown in custom onError functions through the link chain", async () => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, {
-        variables,
-      });
-      if (!loading) {
-        expect(error).toMatchSnapshot();
-        finished = true;
-      }
-      return null;
-    }
-
-    const mockLink = new MockLink([], { showWarnings: false });
-    mockLink.setOnError(() => {
-      throw new Error("oh no!");
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    });
-  });
-
   it("should support loading state testing with delay", async () => {
     jest.useFakeTimers();
 

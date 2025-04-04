@@ -67,7 +67,7 @@ export interface MockLinkOptions {
 }
 
 export class MockLink extends ApolloLink {
-  public operation?: Operation;
+  public operation!: Operation;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};

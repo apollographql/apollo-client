@@ -49,7 +49,6 @@ export interface MockedResponse<
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
-  newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
 }
 
 interface NormalizedMockedResponse {
@@ -60,7 +59,6 @@ interface NormalizedMockedResponse {
   error?: Error;
   delay?: number;
   variableMatcher: VariableMatcher;
-  newData?: ResultFunction<FetchResult, any>;
 }
 
 export interface MockLinkOptions {
@@ -131,11 +129,7 @@ export class MockLink extends ApolloLink {
       });
     }
 
-    const { newData } = matched;
-
-    if (newData) {
-      matched.result = newData(operation.variables);
-    } else if (matched.maxUsageCount > 1) {
+    if (matched.maxUsageCount > 1) {
       matched.maxUsageCount--;
     } else {
       mocks.splice(index, 1);
@@ -276,10 +270,6 @@ function validateMockedResponse(mock: MockedResponse) {
     !mock.variableMatcher || !mock.request.variables,
     "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
-
-  if (mock.maxUsageCount && mock.newData) {
-    invariant.warn("`maxUsageCount` has no effect when `newData` is used");
-  }
 }
 
 /** @internal */

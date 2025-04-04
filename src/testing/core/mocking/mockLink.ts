@@ -1,5 +1,5 @@
 import { equal } from "@wry/equality";
-import { Observable } from "rxjs";
+import { Observable, throwError } from "rxjs";
 
 import type { OperationVariables } from "@apollo/client/core";
 import type {
@@ -152,6 +152,8 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
             "setup, usually due to a typo or mismatched variable."
         );
       }
+
+      return throwError(() => configError);
     } else {
       if (matched.maxUsageCount && matched.maxUsageCount > 1) {
         matched.maxUsageCount--;

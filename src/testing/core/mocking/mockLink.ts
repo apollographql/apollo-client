@@ -156,12 +156,14 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       return throwError(() => configError);
     }
 
-    if (matched.maxUsageCount && matched.maxUsageCount > 1) {
+    if (matched.maxUsageCount > 1) {
       matched.maxUsageCount--;
     } else {
       mocks.splice(index, 1);
     }
+
     const { newData } = matched;
+
     if (newData) {
       matched.result = newData(operation.variables);
       mocks.push(matched);

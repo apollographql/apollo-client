@@ -233,6 +233,29 @@ test("allows default dynamic delay to be defined for all mocks", async () => {
   }
 });
 
+test("prefers configured delay over default delay", async () => {
+  const query = gql`
+    query {
+      a
+    }
+  `;
+  const link = new MockLink(
+    [
+      {
+        request: { query },
+        result: { data: { a: "a" } },
+        delay: 20,
+      },
+    ],
+    { defaultOptions: { delay: 50 } }
+  );
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitNext({ timeout: 25 });
+  await expect(stream).toComplete();
+});
+
 test("uses realistic delay by default", async () => {
   const query = gql`
     query A {

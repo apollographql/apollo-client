@@ -1,4 +1,5 @@
 export type {
+  MockedRequest,
   MockedResponse,
   MockLinkOptions,
   ResultFunction,

@@ -658,8 +658,11 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
-      .promise as TODO;
+    return this.fetchConcastWithInfo(
+      this.getOrCreateQuery(queryId),
+      options,
+      networkStatus
+    ).concast.promise as TODO;
   }
 
   public getQueryStore() {
@@ -957,7 +960,7 @@ export class QueryManager<TStore> {
         // pre-allocate a new query ID here, using a special prefix to enable
         // cleaning up these temporary queries later, after fetching.
         const queryId = makeUniqueId("legacyOneTimeQuery");
-        const queryInfo = this.getQuery(queryId).init({
+        const queryInfo = this.getOrCreateQuery(queryId).init({
           document: options.query,
           variables: options.variables,
         });
@@ -1012,17 +1015,15 @@ export class QueryManager<TStore> {
         ) {
           observableQueryPromises.push(observableQuery.refetch());
         }
-        this.getQuery(queryId).setDiff(null);
+        (this.queries.get(queryId) || observableQuery["queryInfo"]).setDiff(
+          null
+        );
       }
     );
 
     this.broadcastQueries();
 
     return Promise.all(observableQueryPromises);
-  }
-
-  public setObservableQuery(observableQuery: ObservableQuery<any, any>) {
-    this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
   public startGraphQLSubscription<T = any>(
@@ -1120,7 +1121,7 @@ export class QueryManager<TStore> {
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
     if (this.queries.has(queryId)) {
-      this.getQuery(queryId).stop();
+      this.queries.get(queryId)?.stop();
       this.queries.delete(queryId);
     }
   }
@@ -1305,7 +1306,7 @@ export class QueryManager<TStore> {
   }
 
   private fetchConcastWithInfo<TData, TVars extends OperationVariables>(
-    queryId: string,
+    queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
@@ -1314,7 +1315,6 @@ export class QueryManager<TStore> {
     query = options.query
   ): ConcastAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
-    const queryInfo = this.getQuery(queryId);
 
     const defaults = this.defaultOptions.watchQuery;
     let {
@@ -1367,8 +1367,8 @@ export class QueryManager<TStore> {
 
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
-    const cleanupCancelFn = () => this.fetchCancelFns.delete(queryId);
-    this.fetchCancelFns.set(queryId, (reason) => {
+    const cleanupCancelFn = () => this.fetchCancelFns.delete(queryInfo.queryId);
+    this.fetchCancelFns.set(queryInfo.queryId, (reason) => {
       cleanupCancelFn();
       // This delay ensures the concast variable has been initialized.
       setTimeout(() => concast.cancel(reason));
@@ -1437,7 +1437,7 @@ export class QueryManager<TStore> {
       this.getObservableQueries(include).forEach((oq, queryId) => {
         includedQueriesById.set(queryId, {
           oq,
-          lastDiff: this.getQuery(queryId).getDiff(),
+          lastDiff: (this.queries.get(queryId) || oq["queryInfo"]).getDiff(),
         });
       });
     }
@@ -1790,7 +1790,7 @@ export class QueryManager<TStore> {
     }
   }
 
-  private getQuery(queryId: string): QueryInfo {
+  public getOrCreateQuery(queryId: string): QueryInfo {
     if (queryId && !this.queries.has(queryId)) {
       this.queries.set(queryId, new QueryInfo(this, queryId));
     }

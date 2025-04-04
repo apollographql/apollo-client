@@ -48,6 +48,7 @@ import {
   wait,
 } from "@apollo/client/testing";
 import {
+  enableFakeTimers,
   setupPaginatedCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
@@ -2642,16 +2643,8 @@ describe("useQuery Hook", () => {
     });
 
     describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
-      beforeEach(() => {
-        jest.useFakeTimers();
-      });
-
-      afterEach(() => {
-        jest.runOnlyPendingTimers();
-        jest.useRealTimers();
-      });
-
       it("when defined as a global default option", async () => {
+        using _ = enableFakeTimers();
         const skipPollAttempt = jest.fn().mockImplementation(() => false);
 
         const query = gql`
@@ -2765,6 +2758,7 @@ describe("useQuery Hook", () => {
       });
 
       it("when defined for a single query", async () => {
+        using _ = enableFakeTimers();
         const skipPollAttempt = jest.fn().mockImplementation(() => false);
 
         const query = gql`

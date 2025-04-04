@@ -1097,10 +1097,12 @@ describe("ObservableQuery", () => {
           {
             request: { query, variables },
             result: { errors: [error] },
+            delay: 20,
           },
           {
             request: { query, variables: differentVariables },
             result: { data: dataTwo },
+            delay: 20,
           },
         ]),
       });
@@ -1112,6 +1114,13 @@ describe("ObservableQuery", () => {
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: undefined,

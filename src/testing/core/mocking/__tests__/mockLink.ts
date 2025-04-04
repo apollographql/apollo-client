@@ -1295,14 +1295,17 @@ test("mocks is consumed after running `result` callback function", async () => {
 
   const variables = { username: "username" };
 
-  const link = new MockLink([
-    {
-      request: { query, variables },
-      result: (vars) => ({
-        data: { user: { __typename: "User", name: vars.username } },
-      }),
-    },
-  ]);
+  const link = new MockLink(
+    [
+      {
+        request: { query, variables },
+        result: (vars) => ({
+          data: { user: { __typename: "User", name: vars.username } },
+        }),
+      },
+    ],
+    { showWarnings: false }
+  );
 
   {
     const stream = new ObservableStream(execute(link, { query, variables }));

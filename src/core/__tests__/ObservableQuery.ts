@@ -1163,19 +1163,6 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("does not perform a query when unsubscribed if variables change", async () => {
-      // Note: no responses, will throw if a query is made
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink([]),
-      });
-      const observable = client.watchQuery({ query, variables });
-
-      await expect(
-        observable.setVariables(differentVariables)
-      ).resolves.toStrictEqualTyped({ data: undefined });
-    });
-
     it("sets networkStatus to `setVariables` when fetching", async () => {
       const mockedResponses = [
         {

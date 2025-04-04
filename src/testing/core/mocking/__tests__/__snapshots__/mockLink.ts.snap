@@ -35,6 +35,18 @@ Failed to match 1 mock for this query. The mocked responses had the following va
 "
 `;
 
+exports[`mocks is consumed after running \`result\` callback function 1`] = `
+"No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+  }
+}
+
+Request variables: {\\"username\\":\\"username\\"}
+"
+`;
+
 exports[`returns error when no mock matches request 1`] = `
 "No more mocked responses for the query:
 {

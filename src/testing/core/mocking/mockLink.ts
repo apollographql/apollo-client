@@ -143,8 +143,6 @@ export class MockLink extends ApolloLink {
       return new Observable();
     }
 
-    const delay = matched.delay ?? 0;
-
     return new Observable((observer) => {
       const timer = setTimeout(() => {
         if (matched.error) {
@@ -159,7 +157,7 @@ export class MockLink extends ApolloLink {
           );
         }
         observer.complete();
-      }, delay);
+      }, matched.delay ?? 0);
 
       return () => {
         clearTimeout(timer);

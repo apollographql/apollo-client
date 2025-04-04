@@ -1243,7 +1243,7 @@ describe.skip("type tests", () => {
     specificResponse = unspecificResponse;
   });
 
-  describe("MockedResponse.result as a callback", async () => {
+  describe("MockedResponse.result as a callback", () => {
     const setup = () => {
       const weaklyTypedMockResponse: MockedResponse = {
         request: {

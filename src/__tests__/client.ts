@@ -11,6 +11,16 @@ import type { Subscription } from "rxjs";
 import { Observable, of } from "rxjs";
 
 import type {
+  ApolloQueryResult,
+  FetchPolicy,
+  ObservableQuery,
+  Operation,
+  QueryOptions,
+  TypedDocumentNode,
+  WatchQueryFetchPolicy,
+} from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import type {
   NormalizedCacheObject,
   PossibleTypesMap,
 } from "@apollo/client/cache";
@@ -19,16 +29,6 @@ import {
   InMemoryCache,
   makeVar,
 } from "@apollo/client/cache";
-import type {
-  ApolloQueryResult,
-  FetchPolicy,
-  ObservableQuery,
-  Operation,
-  QueryOptions,
-  TypedDocumentNode,
-  WatchQueryFetchPolicy,
-} from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
   UnconventionalError,
@@ -47,20 +47,6 @@ import {
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("client", () => {
-  it("can be loaded via require", () => {
-    /* tslint:disable */
-    const ApolloClientRequire = require("../index.js").ApolloClient;
-    /* tslint:enable */
-
-    const client = new ApolloClientRequire({
-      link: ApolloLink.empty(),
-      cache: new InMemoryCache(),
-    });
-
-    expect(client.queryManager).toBeDefined();
-    expect(client.cache).toBeDefined();
-  });
-
   it("can allow passing in a link", () => {
     const link = ApolloLink.empty();
     const client = new ApolloClient({

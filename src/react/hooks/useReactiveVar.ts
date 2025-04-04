@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { ReactiveVar } from "@apollo/client/core";
+import type { ReactiveVar } from "@apollo/client";
 
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 

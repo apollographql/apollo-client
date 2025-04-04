@@ -1,4 +1,4 @@
-import type { OperationVariables } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 
 import type { ApolloCache } from "../cache.js";

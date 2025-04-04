@@ -18,19 +18,19 @@ import { gql } from "graphql-tag";
 import React, { useEffect } from "react";
 import { Observable } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   Cache,
   ObservableQuery,
   QueryResult,
   TypedDocumentNode,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
   CombinedGraphQLErrors,
   NetworkStatus,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { Masked } from "@apollo/client/masking";

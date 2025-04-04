@@ -4,9 +4,9 @@
 
 ```ts
 
-import type { ApolloQueryResult } from '@apollo/client/core';
+import type { ApolloQueryResult } from '@apollo/client';
 import { Observable } from 'rxjs';
-import type { QueryResult } from '@apollo/client/core';
+import type { QueryResult } from '@apollo/client';
 
 // @internal
 export const getApolloCacheMemoryInternals: (() => {

@@ -1,6 +1,6 @@
 import type { DocumentNode } from "graphql";
 
-import type { ObservableQuery } from "@apollo/client/core";
+import type { ObservableQuery } from "@apollo/client";
 import { useApolloClient, useQuery } from "@apollo/client/react";
 
 import type { PrerenderStaticInternalContext } from "./prerenderStatic.js";

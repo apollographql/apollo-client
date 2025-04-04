@@ -12,7 +12,7 @@ import type {
   FetchPolicy,
   OperationVariables,
   SubscribeResult,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";

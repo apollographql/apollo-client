@@ -1,6 +1,6 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
-import type { OperationVariables } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client";
 import type {
   Reference,
   StoreObject,

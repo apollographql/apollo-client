@@ -25,7 +25,11 @@ test.suite("Node with ESM require", () => {
 
     assert.equal(
       require.resolve("@apollo/client"),
-      path.posix.join(basedir, "/index.js")
+      path.posix.join(basedir, "/core/index.js")
+    );
+    assert.equal(
+      require.resolve("@apollo/client/core"),
+      path.posix.join(basedir, "/core/index.js")
     );
     assert.equal(
       require.resolve("@apollo/client/react"),

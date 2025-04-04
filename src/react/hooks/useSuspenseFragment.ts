@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   DocumentNode,
@@ -8,7 +7,8 @@ import type {
   Reference,
   StoreObject,
   TypedDocumentNode,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { canonicalStringify } from "@apollo/client/cache";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import type { VariablesOption } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";

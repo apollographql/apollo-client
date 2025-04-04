@@ -9,9 +9,9 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient, ApolloLink, concat } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { ApolloClient, ApolloLink, concat } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,

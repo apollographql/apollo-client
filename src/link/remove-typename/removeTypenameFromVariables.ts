@@ -3,7 +3,7 @@ import type { DocumentNode, TypeNode } from "graphql";
 import { Kind, visit } from "graphql";
 import { wrap } from "optimism";
 
-import type { OperationVariables } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link/core";
 import {
   cacheSizes,

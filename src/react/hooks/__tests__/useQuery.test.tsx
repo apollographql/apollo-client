@@ -18,19 +18,19 @@ import type { ReactNode } from "react";
 import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, Observable, observeOn, of } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   FetchPolicy,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
   NetworkStatus,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
 import {

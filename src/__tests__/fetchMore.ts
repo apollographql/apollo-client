@@ -2,14 +2,14 @@ import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 import { Observable } from "rxjs";
 
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient, ApolloLink, NetworkStatus } from "@apollo/client";
 import type {
   ApolloCache,
   FieldMergeFunction,
   InMemoryCacheConfig,
 } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { ApolloClient, ApolloLink, NetworkStatus } from "@apollo/client/core";
 import type { MockedResponse } from "@apollo/client/testing";
 import { mockSingleLink } from "@apollo/client/testing";
 import {

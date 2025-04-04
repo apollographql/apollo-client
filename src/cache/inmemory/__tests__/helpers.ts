@@ -1,5 +1,5 @@
+import type { Cache } from "@apollo/client";
 import { EntityStore, InMemoryCache } from "@apollo/client/cache";
-import type { Cache } from "@apollo/client/core";
 
 import type { StoreReader } from "../readFromStore.js";
 import type {

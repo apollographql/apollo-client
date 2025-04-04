@@ -7,14 +7,14 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import React, { Suspense } from "react";
 
-import type { TypedDocumentNode } from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   gql,
   InMemoryCache,
   NetworkStatus,
   split,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   createQueryPreloader,
   useBackgroundQuery,

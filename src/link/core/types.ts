@@ -2,7 +2,7 @@ import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { DefaultContext } from "@apollo/client/core";
+import type { DefaultContext } from "@apollo/client";
 
 export type { DocumentNode };
 

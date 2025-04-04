@@ -15,14 +15,13 @@ import React, { Suspense, useState } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   ErrorPolicy,
   OperationVariables,
   RefetchWritePolicy,
   SubscribeToMoreOptions,
   TypedDocumentNode,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -30,7 +29,8 @@ import {
   gql,
   NetworkStatus,
   split,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import type { QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,

@@ -5,7 +5,7 @@ import type {
   OperationVariables,
   QueryResult,
   Unmasked,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
 export type VariablesOption<TVariables extends OperationVariables> =

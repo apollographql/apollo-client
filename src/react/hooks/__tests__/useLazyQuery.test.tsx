@@ -17,14 +17,14 @@ import type {
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
   CombinedGraphQLErrors,
   InMemoryCache,
   NetworkStatus,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type {
   Masked,
   MaskedDocumentNode,

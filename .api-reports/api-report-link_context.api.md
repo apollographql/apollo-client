@@ -5,7 +5,7 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link/core';
-import type { DefaultContext } from '@apollo/client/core';
+import type { DefaultContext } from '@apollo/client';
 import type { GraphQLRequest } from '@apollo/client/link/core';
 
 // @public (undocumented)

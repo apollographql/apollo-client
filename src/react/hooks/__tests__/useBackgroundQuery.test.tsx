@@ -14,8 +14,7 @@ import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { Observable, of } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
-import type { ErrorPolicy, TypedDocumentNode } from "@apollo/client/core";
+import type { ErrorPolicy, TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -23,7 +22,8 @@ import {
   gql,
   NetworkStatus,
   split,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import {
   ApolloProvider,

@@ -50,6 +50,10 @@ test.suite("Node with ESM imports", () => {
       path.posix.join(basedir, "/legacyEntryPoints/index.js")
     );
     assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/core/index.js")),
+      path.posix.join(basedir, "/legacyEntryPoints/core/index.js")
+    );
+    assert.equal(
       fileURLToPath(import.meta.resolve("@apollo/client/react/index.js")),
       path.posix.join(basedir, "/legacyEntryPoints/react/index.js")
     );
@@ -62,7 +66,11 @@ test.suite("Node with ESM imports", () => {
   test("module resolution", () => {
     assert.equal(
       fileURLToPath(import.meta.resolve("@apollo/client")),
-      path.posix.join(basedir, "/index.js")
+      path.posix.join(basedir, "/core/index.js")
+    );
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/core")),
+      path.posix.join(basedir, "/core/index.js")
     );
     assert.equal(
       fileURLToPath(import.meta.resolve("@apollo/client/react")),

@@ -8,7 +8,7 @@ import type {
   OperationVariables,
   QueryResult,
   WatchQueryOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { PromiseWithState } from "@apollo/client/utilities";
 import {

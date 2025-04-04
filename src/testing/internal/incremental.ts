@@ -11,7 +11,7 @@ import type {
   SubsequentIncrementalExecutionResult,
 } from "graphql-17-alpha2";
 
-import type { ApolloPayloadResult } from "@apollo/client/core";
+import type { ApolloPayloadResult } from "@apollo/client";
 import { HttpLink } from "@apollo/client/link/http";
 
 const hasNextSymbol = Symbol("hasNext");

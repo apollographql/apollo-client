@@ -1,7 +1,7 @@
 import { disableFragmentWarnings, gql } from "graphql-tag";
 
+import { MissingFieldError } from "@apollo/client";
 import { defaultDataIdFromObject, InMemoryCache } from "@apollo/client/cache";
-import { MissingFieldError } from "@apollo/client/core";
 
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports

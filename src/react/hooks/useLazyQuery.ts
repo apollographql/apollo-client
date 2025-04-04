@@ -20,8 +20,8 @@ import type {
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "@apollo/client/core";
-import { NetworkStatus } from "@apollo/client/core";
+} from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
 import type { VariablesOption } from "@apollo/client/react/internal";
 import type { NoInfer, OnlyRequiredProperties } from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";

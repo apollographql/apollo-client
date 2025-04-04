@@ -7,10 +7,7 @@ import type {
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
-import type {
-  OperationVariables,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import type {
   FragmentType,
   MaybeMasked,
@@ -32,8 +29,8 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getApolloCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";

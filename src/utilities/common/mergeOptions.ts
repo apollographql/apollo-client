@@ -3,7 +3,7 @@ import type {
   OperationVariables,
   QueryOptions,
   WatchQueryOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 
 import { compact } from "./compact.js";
 

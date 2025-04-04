@@ -1,8 +1,8 @@
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 
+import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing/core";
 import { ObservableStream } from "@apollo/client/testing/internal";
 

@@ -11,7 +11,7 @@ const pkg = JSON.parse(
   })
 ) as typeof import("../package.json");
 
-type ExportsCondition = string | { [key: string]: ExportsCondition };
+export type ExportsCondition = string | { [key: string]: ExportsCondition };
 
 type EntryPoint = {
   dirs: string[];

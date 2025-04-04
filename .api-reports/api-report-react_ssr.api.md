@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { ApolloClient } from '@apollo/client/core';
+import type { ApolloClient } from '@apollo/client';
 import type * as ReactTypes from 'react';
 
 // @public @deprecated (undocumented)

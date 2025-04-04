@@ -1,7 +1,7 @@
 import type * as ReactTypes from "react";
 import * as React from "react";
 
-import type { ApolloClient } from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client";
 import type {
   HookWrappers,
   wrapperSymbol,

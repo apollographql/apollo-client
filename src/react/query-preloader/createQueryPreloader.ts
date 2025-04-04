@@ -8,7 +8,7 @@ import type {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type {
   PreloadedQueryRef,
   VariablesOption,

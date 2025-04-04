@@ -13,13 +13,8 @@ import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { prerender } from "react-dom/static";
 import { prerenderToNodeStream } from "react-dom/static.node";
 
-import type { TypedDocumentNode } from "@apollo/client/core";
-import {
-  ApolloClient,
-  ApolloLink,
-  gql,
-  InMemoryCache,
-} from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import {
   ApolloProvider,
   getApolloContext,

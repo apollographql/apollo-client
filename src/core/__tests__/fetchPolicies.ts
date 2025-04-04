@@ -2,9 +2,9 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { gql } from "graphql-tag";
 import { map, Observable } from "rxjs";
 
+import type { ObservableQuery } from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { ObservableQuery } from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { mockSingleLink } from "@apollo/client/testing";
 import {

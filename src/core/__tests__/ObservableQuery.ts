@@ -6,13 +6,13 @@ import { gql } from "graphql-tag";
 import type { ObservedValueOf, Observer } from "rxjs";
 import { from, Observable, of, Subject } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   ApolloQueryResult,
   ObservableQuery,
   WatchQueryFetchPolicy,
-} from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+} from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";

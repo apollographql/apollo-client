@@ -1,10 +1,10 @@
 import * as React from "react";
 
+import type { DefaultOptions } from "@apollo/client";
+import type { Resolvers } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import type { DefaultOptions } from "@apollo/client/core";
-import type { Resolvers } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
 import type { ApolloLink } from "@apollo/client/link/core";
 import { ApolloProvider } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing/core";

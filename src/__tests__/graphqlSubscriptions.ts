@@ -1,8 +1,8 @@
 import { gql } from "graphql-tag";
 
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,

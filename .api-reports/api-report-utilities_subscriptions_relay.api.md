@@ -6,7 +6,7 @@
 
 import type { GraphQLResponse } from 'relay-runtime';
 import { Observable } from 'relay-runtime';
-import type { OperationVariables } from '@apollo/client/core';
+import type { OperationVariables } from '@apollo/client';
 import type { RequestParameters } from 'relay-runtime';
 
 // Warning: (ae-forgotten-export) The symbol "CreateMultipartSubscriptionOptions" needs to be exported by the entry point index.d.ts

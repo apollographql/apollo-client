@@ -3,9 +3,9 @@ import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, of } from "rxjs";
 
+import type { NextLink, Operation, Reference } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { NextLink, Operation, Reference } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 

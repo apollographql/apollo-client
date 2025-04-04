@@ -5,7 +5,7 @@
 ```ts
 
 import { ApolloCache } from '@apollo/client/cache';
-import type { ApolloCache as ApolloCache_3 } from '@apollo/client/core';
+import type { ApolloCache as ApolloCache_3 } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link/core';
 import { ApolloPayloadResult } from '@apollo/client/link/core';
 import type { AsStoreObject } from '@apollo/client/utilities';
@@ -75,7 +75,7 @@ import { Observable } from '@apollo/client/utilities';
 import { Observable as Observable_2 } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link/core';
-import type { OperationVariables as OperationVariables_2 } from '@apollo/client/core';
+import type { OperationVariables as OperationVariables_2 } from '@apollo/client';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { Path } from '@apollo/client/link/core';
 import { PossibleTypesMap } from '@apollo/client/cache';
@@ -102,7 +102,7 @@ import type { Subscription } from 'rxjs';
 import { Transaction } from '@apollo/client/cache';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client/core';
+import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';

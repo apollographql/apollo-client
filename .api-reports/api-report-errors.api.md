@@ -5,7 +5,7 @@
 ```ts
 
 import type { FetchResult } from '@apollo/client/link/core';
-import type { FetchResult as FetchResult_2 } from '@apollo/client/core';
+import type { FetchResult as FetchResult_2 } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql';
 
 // @public

@@ -1,4 +1,4 @@
-import { ApolloClient, ObservableQuery } from "@apollo/client/core";
+import { ApolloClient, ObservableQuery } from "@apollo/client";
 import { isPlainObject } from "@apollo/client/utilities";
 
 function isKnownClassInstance(value: unknown) {

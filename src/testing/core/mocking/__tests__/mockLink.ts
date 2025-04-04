@@ -166,22 +166,27 @@ test("should not require a result or error when delay equals Infinity", async ()
   subscription.unsubscribe();
 });
 
-test("should require result or error when delay is just large", () => {
+test("should require result or error when delay is just large", async () => {
   const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
   const expectedError =
     /^Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:/;
 
   {
     const link = new MockLink([invalidResponse]);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    expect(() => execute(link, { query })).toThrow(expectedError);
+    const error = await stream.takeError();
+    expect(error.message).toMatch(expectedError);
   }
 
   {
     const link = new MockLink([]);
     link.addMockedResponse(invalidResponse);
 
-    expect(() => execute(link, { query })).toThrow(expectedError);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    const error = await stream.takeError();
+    expect(error.message).toMatch(expectedError);
   }
 });
 

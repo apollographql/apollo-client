@@ -1,71 +1,112 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`consumes matched mock 1`] = `
-"No more mocked responses for the query: {
+"No more mocked responses for the query:
+{
   a
 }
-Expected variables: {}
+
+Request variables: {}
+"
+`;
+
+exports[`does not show variables in error message if none configured 1`] = `
+"No more mocked responses for the query:
+{
+  b
+}
+
+Request variables: {}
 "
 `;
 
 exports[`fails when variableMatcher returns false 1`] = `
-"No more mocked responses for the query: query ($id: ID!) {
+"No more mocked responses for the query:
+query ($id: ID!) {
   user(id: $id) {
     name
   }
 }
-Expected variables: {\\"id\\":1}
 
-Failed to match 1 mock for this query. The mocked response had the following variables:
+Request variables: {\\"id\\":1}
+
+Failed to match 1 mock for this query. The mocked responses had the following variables:
   <undefined>
 "
 `;
 
 exports[`returns error when no mock matches request 1`] = `
-"No more mocked responses for the query: {
+"No more mocked responses for the query:
+{
   a
 }
-Expected variables: {}
+
+Request variables: {}
 "
 `;
 
 exports[`returns error when no mock matches request 2`] = `
-"No more mocked responses for the query: {
+"No more mocked responses for the query:
+{
   a
 }
-Expected variables: {}
+
+Request variables: {}
+"
+`;
+
+exports[`shows all configured variables for queries that did not match request 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":4}
+
+Failed to match 3 mocks for this query. The mocked responses had the following variables:
+  {\\"id\\":1}
+  {\\"id\\":2}
+  {\\"id\\":3}
 "
 `;
 
 exports[`shows undefined and NaN in debug messages 1`] = `
-"No more mocked responses for the query: query ($id: ID!, $filter: Boolean) {
+"No more mocked responses for the query:
+query ($id: ID!, $filter: Boolean) {
   usersByTestId(id: $id, filter: $filter) {
     id
   }
 }
-Expected variables: {\\"id\\":NaN,\\"filter\\":<undefined>}
 
-Failed to match 1 mock for this query. The mocked response had the following variables:
+Request variables: {\\"id\\":NaN,\\"filter\\":<undefined>}
+
+Failed to match 1 mock for this query. The mocked responses had the following variables:
   {\\"id\\":1,\\"filter\\":true}
 "
 `;
 
 exports[`uses a mock a configured number of times when \`maxUsageCount\` is configured 1`] = `
-"No more mocked responses for the query: query GetUser($username: String!) {
+"No more mocked responses for the query:
+query GetUser($username: String!) {
   user(username: $username) {
     id
   }
 }
-Expected variables: {\\"username\\":\\"username\\"}
+
+Request variables: {\\"username\\":\\"username\\"}
 "
 `;
 
 exports[`uses a mock once when \`maxUsageCount\` is not configured 1`] = `
-"No more mocked responses for the query: query GetUser($username: String!) {
+"No more mocked responses for the query:
+query GetUser($username: String!) {
   user(username: $username) {
     id
   }
 }
-Expected variables: {\\"username\\":\\"username\\"}
+
+Request variables: {\\"username\\":\\"username\\"}
 "
 `;

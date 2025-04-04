@@ -67,13 +67,6 @@ export interface MockLinkOptions {
   showWarnings?: boolean;
 }
 
-function requestToKey(request: GraphQLRequest): string {
-  const queryString =
-    request.query && print(addTypenameToDocument(request.query));
-  const requestKey = { query: queryString };
-  return JSON.stringify(requestKey);
-}
-
 export class MockLink extends ApolloLink {
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
@@ -197,6 +190,13 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     return mockedResponses;
   }
+}
+
+function requestToKey(request: GraphQLRequest): string {
+  const queryString =
+    request.query && print(addTypenameToDocument(request.query));
+  const requestKey = { query: queryString };
+  return JSON.stringify(requestKey);
 }
 
 function normalizeMockedResponse(

@@ -195,16 +195,12 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     const request = response.request;
 
-    if (!response.variableMatcher) {
-      request.variables = {
+    response.variableMatcher ||= (vars) => {
+      return equal(vars || {}, {
         ...getDefaultValues(getOperationDefinition(request.query)),
         ...request.variables,
-      };
-
-      response.variableMatcher = (vars) => {
-        return equal(vars || {}, request.variables || {});
-      };
-    }
+      });
+    };
 
     return response as NormalizedMockedResponse;
   }

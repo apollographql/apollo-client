@@ -67,7 +67,14 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = setupTestWithResolvers({ resolvers, query });
+    const client = new ApolloClient({
+      resolvers,
+      cache: new InMemoryCache(),
+      // Local resolvers handle this query
+      link: ApolloLink.empty(),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { bar: true } },
@@ -256,11 +263,16 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = setupTestWithResolvers({
+    const client = new ApolloClient({
       resolvers,
-      query,
-      variables: { id: 1 },
+      cache: new InMemoryCache(),
+      // Local resolvers handle this query
+      link: ApolloLink.empty(),
     });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, variables: { id: 1 } })
+    );
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },

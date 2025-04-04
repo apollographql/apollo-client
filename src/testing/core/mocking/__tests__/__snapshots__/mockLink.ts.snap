@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`can use \`result\` as callback with \`maxUsageCount\` 1`] = `
+"No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+  }
+}
+
+Request variables: {\\"username\\":\\"username\\"}
+"
+`;
+
 exports[`consumes matched mock 1`] = `
 "No more mocked responses for the query:
 {

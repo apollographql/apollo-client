@@ -656,6 +656,8 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    // TODO: This test does not match the description since it never becomes
+    // "not cache-only" after it is set to cache-only.
     it("does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only", async () => {
       const testQuery = gql`
         query {

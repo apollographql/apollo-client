@@ -103,7 +103,7 @@ export class MockLink extends ApolloLink {
   public addMockedResponse(mockedResponse: MockedResponse) {
     validateMockedResponse(mockedResponse);
 
-    const normalized = normalizeMockedResponse(mockedResponse);
+    const normalized = this.normalizeMockedResponse(mockedResponse);
     this.getMockedResponses(normalized.request).push(normalized);
   }
 
@@ -225,6 +225,24 @@ export class MockLink extends ApolloLink {
 
     return mockedResponses;
   }
+
+  private normalizeMockedResponse(
+    mockedResponse: MockedResponse
+  ): NormalizedMockedResponse {
+    const { request } = mockedResponse;
+    const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
+
+    response.original = mockedResponse;
+    response.request.query = getServerQuery(request.query);
+    response.maxUsageCount ??= 1;
+    response.variablesWithDefaults = {
+      ...getDefaultValues(getOperationDefinition(request.query)),
+      ...request.variables,
+    };
+    response.delay ??= 0;
+
+    return response;
+  }
 }
 
 function getErrorMessage(
@@ -245,24 +263,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 `
   : ""
 }`;
-}
-
-function normalizeMockedResponse(
-  mockedResponse: MockedResponse
-): NormalizedMockedResponse {
-  const { request } = mockedResponse;
-  const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
-
-  response.original = mockedResponse;
-  response.request.query = getServerQuery(request.query);
-  response.maxUsageCount ??= 1;
-  response.variablesWithDefaults = {
-    ...getDefaultValues(getOperationDefinition(request.query)),
-    ...request.variables,
-  };
-  response.delay ??= 0;
-
-  return response;
 }
 
 function getServerQuery(query: DocumentNode) {

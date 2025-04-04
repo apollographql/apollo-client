@@ -1921,7 +1921,11 @@ describe("useQuery Hook", () => {
         {
           initialProps: {},
           wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
+            <MockedProvider
+              mocks={mocks}
+              cache={cache}
+              mockLinkDefaultOptions={{ delay: 0 }}
+            >
               {children}
             </MockedProvider>
           ),
@@ -2652,19 +2656,22 @@ describe("useQuery Hook", () => {
             hello
           }
         `;
-        const link = mockSingleLink(
-          {
-            request: { query },
-            result: { data: { hello: "world 1" } },
-          },
-          {
-            request: { query },
-            result: { data: { hello: "world 2" } },
-          },
-          {
-            request: { query },
-            result: { data: { hello: "world 3" } },
-          }
+        const link = new MockLink(
+          [
+            {
+              request: { query },
+              result: { data: { hello: "world 1" } },
+            },
+            {
+              request: { query },
+              result: { data: { hello: "world 2" } },
+            },
+            {
+              request: { query },
+              result: { data: { hello: "world 3" } },
+            },
+          ],
+          { defaultOptions: { delay: 0 } }
         );
 
         const client = new ApolloClient({
@@ -2783,7 +2790,12 @@ describe("useQuery Hook", () => {
 
         const cache = new InMemoryCache();
         const wrapper = ({ children }: any) => (
-          <MockedProvider mocks={mocks} cache={cache}>
+          <MockedProvider
+            mocks={mocks}
+            cache={cache}
+            // This test uses fake timers and does not expect a delay
+            mockLinkDefaultOptions={{ delay: 0 }}
+          >
             {children}
           </MockedProvider>
         );

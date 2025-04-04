@@ -88,43 +88,77 @@ describe("ObservableQuery", () => {
   describe("reobserve", () => {
     describe("to change pollInterval", () => {
       it("starts polling if goes from 0 -> something", async () => {
+        const query = gql`
+          query {
+            count
+          }
+        `;
+        let count = 0;
         const client = new ApolloClient({
           cache: new InMemoryCache(),
           link: new MockLink([
             {
-              request: { query, variables },
-              result: { data: dataOne },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
+              request: { query },
+              result: () => ({ data: { count: ++count } }),
+              maxUsageCount: Number.POSITIVE_INFINITY,
+              delay: 20,
             },
           ]),
         });
 
-        const observable = client.watchQuery({
-          query,
-          variables,
-          notifyOnNetworkStatusChange: false,
-        });
+        const observable = client.watchQuery({ query });
 
         const stream = new ObservableStream(observable);
 
+        // TODO: This is what we want
+        // await expect(stream).toEmitTypedValue({
+        //   data: undefined,
+        //   loading: true,
+        //   networkStatus: NetworkStatus.ready,
+        //   partial: true,
+        // });
+
         await expect(stream).toEmitTypedValue({
-          data: dataOne,
+          data: { count: 1 },
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
         });
 
-        await observable.reobserve({ query, pollInterval: 10 });
+        await expect(stream).not.toEmitAnything();
+
+        // The value is returned from the cache
+        await expect(
+          observable.reobserve({ pollInterval: 10 })
+        ).resolves.toStrictEqualTyped({ data: { count: 1 } });
+
+        // We don't expect to see a loading state from reobserve since it just
+        // read the value from the cache and did not fetch from the network. The
+        // poll state is the first loading state we will see
 
         await expect(stream).toEmitTypedValue({
-          data: dataTwo,
+          data: { count: 1 },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { count: 2 },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { count: 2 },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { count: 3 },
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,

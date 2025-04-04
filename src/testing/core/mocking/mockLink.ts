@@ -67,6 +67,7 @@ export interface MockLinkOptions {
 }
 
 export class MockLink extends ApolloLink {
+  public operation?: Operation;
   public showWarnings: boolean = true;
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};
@@ -93,6 +94,7 @@ export class MockLink extends ApolloLink {
   }
 
   public request(operation: Operation): Observable<FetchResult> | null {
+    this.operation = operation;
     const unmatchedVars: Array<Record<string, any> | "<undefined>"> = [];
     const mocks = this.getMockedResponses(operation);
 
@@ -287,7 +289,6 @@ export function stringifyMockedResponse(mockedResponse: MockedResponse) {
   );
 }
 
-// TODO: ????
 export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }

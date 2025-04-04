@@ -31,12 +31,9 @@ export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
   T
 >;
 
-type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
-  V,
-  boolean
->;
+type VariableMatcher<V> = CovariantUnaryFunction<V, boolean>;
 
-interface MockedRequest<out TVariables> {
+interface MockedRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
   variables?: TVariables | VariableMatcher<TVariables>;
 }
@@ -53,7 +50,6 @@ export interface MockedResponse<
     | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
   error?: Error;
   delay?: number;
-  variableMatcher?: VariableMatcher<TVariables>;
 }
 
 interface NormalizedMockedResponse {
@@ -63,7 +59,6 @@ interface NormalizedMockedResponse {
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
   delay?: number;
-  variableMatcher: VariableMatcher;
 }
 
 export interface MockLinkOptions {
@@ -99,15 +94,38 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
-    const unmatchedVars: Array<Record<string, any> | "<undefined>"> = [];
+    const unmatchedVars: Array<
+      Record<string, any> | "<undefined>" | "<function>"
+    > = [];
     const mocks = this.getMockedResponses(operation);
 
     const index = mocks.findIndex((mock) => {
-      if (mock.variableMatcher(operation.variables)) {
+      const { variables } = mock.request;
+
+      if (typeof variables === "function") {
+        const matched = variables(operation.variables);
+
+        if (!matched) {
+          unmatchedVars.push("<function>");
+        }
+
+        return matched;
+      }
+
+      const withDefaults = {
+        ...getDefaultValues(getOperationDefinition(operation.query)),
+        ...variables,
+      };
+
+      if (equal(withDefaults, operation.variables)) {
         return true;
       }
 
-      unmatchedVars.push(mock.request.variables || "<undefined>");
+      unmatchedVars.push(
+        Object.keys(withDefaults).length > 0 ?
+          withDefaults
+        : variables || "<undefined>"
+      );
       return false;
     });
 
@@ -194,7 +212,7 @@ export class MockLink extends ApolloLink {
 
 function getErrorMessage(
   operation: Operation,
-  unmatchedVars: Array<Record<string, any> | "<undefined>">
+  unmatchedVars: Array<Record<string, any> | "<undefined>" | "<function>">
 ) {
   return `No more mocked responses for the query:
 ${print(operation.query)}
@@ -215,29 +233,13 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 function normalizeMockedResponse(
   mockedResponse: MockedResponse
 ): NormalizedMockedResponse {
-  const response = cloneDeep(mockedResponse);
+  const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
   const request = response.request;
 
   request.query = getServerQuery(request.query);
   response.maxUsageCount = response.maxUsageCount ?? 1;
 
-  (response as NormalizedMockedResponse).original = mockedResponse;
-
-  const withDefaults = {
-    ...getDefaultValues(getOperationDefinition(request.query)),
-    ...request.variables,
-  };
-
-  if (Object.keys(withDefaults).length) {
-    request.variables = withDefaults;
-  }
-
-  response.variableMatcher ||= (vars) => {
-    return equal(vars || {}, {
-      ...getDefaultValues(getOperationDefinition(request.query)),
-      ...request.variables,
-    });
-  };
+  response.original = mockedResponse;
 
   return response as NormalizedMockedResponse;
 }
@@ -269,11 +271,6 @@ function validateMockedResponse(mock: MockedResponse) {
     (mock.maxUsageCount ?? 1) > 0,
     "Mocked response `maxUsageCount` must be greater than 0. Given %s",
     mock.maxUsageCount
-  );
-
-  invariant(
-    !mock.variableMatcher || !mock.request.variables,
-    "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
 }
 

@@ -32,7 +32,7 @@ Request variables: {}
 "
 `;
 
-exports[`fails when variableMatcher returns false 1`] = `
+exports[`fails when variables returns false 1`] = `
 "No more mocked responses for the query:
 query ($id: ID!) {
   user(id: $id) {
@@ -43,7 +43,7 @@ query ($id: ID!) {
 Request variables: {\\"id\\":1}
 
 Failed to match variables against 1 mock for this query. The available mocks had the following variables:
-  <undefined>
+  <function>
 "
 `;
 

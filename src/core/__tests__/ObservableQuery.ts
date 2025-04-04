@@ -389,7 +389,6 @@ describe("ObservableQuery", () => {
     });
 
     it("rerenders when refetch is called", async () => {
-      // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
@@ -409,18 +408,14 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
         link: new MockLink([
           {
-            request: {
-              query,
-              variables,
-            },
+            request: { query, variables },
             result: { data },
+            delay: 20,
           },
           {
-            request: {
-              query,
-              variables,
-            },
+            request: { query, variables },
             result: { data: data2 },
+            delay: 20,
           },
         ]),
       });
@@ -428,6 +423,14 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
+
+      // TODO: enable
+      // await expect(stream).toEmitTypedValue({
+      //   data: undefined,
+      //   loading: true,
+      //   networkStatus: NetworkStatus.loading,
+      //   partial: true
+      // })
 
       await expect(stream).toEmitTypedValue({
         data,

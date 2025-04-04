@@ -2869,18 +2869,21 @@ describe("ApolloClient", () => {
           },
         },
       }),
-      link: new MockLink([
-        {
-          request: { query: queryWithoutId },
-          result: { data: dataWithoutId },
-          maxUsageCount: Number.POSITIVE_INFINITY,
-        },
-        {
-          request: { query: queryWithId },
-          result: { data: dataWithId },
-          maxUsageCount: Number.POSITIVE_INFINITY,
-        },
-      ]),
+      link: new MockLink(
+        [
+          {
+            request: { query: queryWithoutId },
+            result: { data: dataWithoutId },
+            maxUsageCount: Number.POSITIVE_INFINITY,
+          },
+          {
+            request: { query: queryWithId },
+            result: { data: dataWithId },
+            maxUsageCount: Number.POSITIVE_INFINITY,
+          },
+        ],
+        { defaultOptions: { delay: 0 } }
+      ),
     });
 
     const observableWithId = client.watchQuery({ query: queryWithId });
@@ -2996,7 +2999,7 @@ describe("ApolloClient", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache({}),
       link: new MockLink([
-        { request: { query: queryA }, result: { data: dataA } },
+        { request: { query: queryA }, result: { data: dataA }, delay: 10 },
         { request: { query: queryB }, result: { data: dataB }, delay: 20 },
       ]),
       ssrMode: true,
@@ -6085,7 +6088,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitNext();
 
-      void client.mutate({
+      await client.mutate({
         mutation,
         refetchQueries: [
           {

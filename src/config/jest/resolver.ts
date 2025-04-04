@@ -19,7 +19,7 @@ export function sync(path: string, options: ResolverOptions): string {
       );
     }
     if (!result.includes("dist")) {
-      throw new Error("Did not resolve to build artefact!");
+      throw new Error("Did not resolve to build artifact!");
     }
     return fileURLToPath(result);
   }

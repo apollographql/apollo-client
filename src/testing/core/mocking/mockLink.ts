@@ -29,7 +29,7 @@ export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
 
 type VariableMatcher<V> = CovariantUnaryFunction<V, boolean>;
 
-interface MockedRequest<TVariables = Record<string, any>> {
+export interface MockedRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
   variables?: TVariables | VariableMatcher<TVariables>;
 }

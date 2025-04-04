@@ -164,9 +164,7 @@ describe("mutation results", () => {
           delay,
         },
         ...mockedResponses
-      ).setOnError((error) => {
-        throw error;
-      }),
+      ),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {

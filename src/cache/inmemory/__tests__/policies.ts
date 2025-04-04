@@ -3654,9 +3654,7 @@ describe("type policies", function () {
             },
           },
         },
-      ]).setOnError((error) => {
-        throw new Error(error);
-      });
+      ]);
 
       const client = new ApolloClient({ link, cache });
 
@@ -4095,9 +4093,7 @@ describe("type policies", function () {
             },
           },
         },
-      ]).setOnError((error) => {
-        throw new Error(error);
-      });
+      ]);
 
       const client = new ApolloClient({ link, cache });
 

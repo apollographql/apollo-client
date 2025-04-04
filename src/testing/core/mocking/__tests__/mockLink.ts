@@ -76,6 +76,47 @@ describe("MockedResponse.newData", () => {
       },
     });
   });
+
+  // TODO: Determine the fate of newData, especially since `result` can take a
+  // function
+  test.failing(
+    "does not consume mock when using newData function",
+    async () => {
+      const query = gql`
+        query {
+          count
+        }
+      `;
+      let count = 0;
+      const link = new MockLink([
+        {
+          request: { query },
+          newData: () => ({ data: { count: ++count } }),
+        },
+      ]);
+
+      {
+        const stream = new ObservableStream(execute(link, { query }));
+
+        expect(stream).toEmitTypedValue({ data: { count: 1 } });
+        expect(stream).toComplete();
+      }
+
+      {
+        const stream = new ObservableStream(execute(link, { query }));
+
+        expect(stream).toEmitTypedValue({ data: { count: 2 } });
+        expect(stream).toComplete();
+      }
+
+      {
+        const stream = new ObservableStream(execute(link, { query }));
+
+        expect(stream).toEmitTypedValue({ data: { count: 3 } });
+        expect(stream).toComplete();
+      }
+    }
+  );
 });
 
 /*

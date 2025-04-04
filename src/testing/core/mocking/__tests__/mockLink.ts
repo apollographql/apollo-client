@@ -94,6 +94,31 @@ test("waits to return result based on static delay", async () => {
   await expect(stream).toComplete();
 });
 
+test("waits to return result based on delay returned from callback function", async () => {
+  const query = gql`
+    query {
+      a
+    }
+  `;
+  const delay = jest.fn().mockReturnValue(100);
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { a: "a" } },
+      delay,
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).not.toEmitAnything({ timeout: 95 });
+  await expect(stream).toEmitNext({ timeout: 6 });
+  await expect(stream).toComplete();
+
+  expect(delay).toHaveBeenCalledTimes(1);
+  expect(delay).toHaveBeenCalledWith(expect.objectContaining({ query }));
+});
+
 test("returns matched mock", async () => {
   const query = gql`
     query {

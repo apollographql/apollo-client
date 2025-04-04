@@ -434,6 +434,70 @@ test("should fill in default variables if they are missing in mocked requests", 
   }
 });
 
+test("does not show variables in error message if none configured", async () => {
+  const query = gql`
+    query {
+      a
+    }
+  `;
+  const link = new MockLink(
+    [
+      {
+        request: { query },
+        result: { data: { user: { __typename: "User", name: "User 1" } } },
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  const stream = new ObservableStream(
+    execute(link, {
+      query: gql`
+        query {
+          b
+        }
+      `,
+    })
+  );
+
+  const error = await stream.takeError();
+  expect(error.message).toMatchSnapshot();
+});
+
+test("shows all configured variables for queries that did not match request", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        name
+      }
+    }
+  `;
+  const link = new MockLink(
+    [
+      {
+        request: { query, variables: { id: 1 } },
+        result: { data: { user: { __typename: "User", name: "User 1" } } },
+      },
+      {
+        request: { query, variables: { id: 2 } },
+        result: { data: { user: { __typename: "User", name: "User 2" } } },
+      },
+      {
+        request: { query, variables: { id: 3 } },
+        result: { data: { user: { __typename: "User", name: "User 3" } } },
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { id: 4 } })
+  );
+
+  const error = await stream.takeError();
+  expect(error.message).toMatchSnapshot();
+});
+
 test("throws error when query is a plain string", async () => {
   expect(
     () =>

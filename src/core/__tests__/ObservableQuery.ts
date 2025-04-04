@@ -704,7 +704,9 @@ describe("ObservableQuery", () => {
 
       expect(timesFired).toBe(1);
 
-      await observable.reobserve({ fetchPolicy: "cache-only" });
+      await expect(
+        observable.reobserve({ fetchPolicy: "cache-only" })
+      ).resolves.toStrictEqualTyped({ data });
       await client.resetStore();
 
       await expect(stream).toEmitTypedValue({

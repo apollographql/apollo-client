@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 
 import { execute } from "@apollo/client/link/core";
 import type { MockedResponse } from "@apollo/client/testing";
-import { MockLink } from "@apollo/client/testing";
+import { MockLink, realisticDelay } from "@apollo/client/testing";
 import {
   enableFakeTimers,
   ObservableStream,
@@ -117,6 +117,27 @@ test("waits to return result based on delay returned from callback function", as
 
   expect(delay).toHaveBeenCalledTimes(1);
   expect(delay).toHaveBeenCalledWith(expect.objectContaining({ query }));
+});
+
+test("can set min/max for realisticDelay", async () => {
+  const query = gql`
+    query {
+      a
+    }
+  `;
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { a: "a" } },
+      delay: realisticDelay({ min: 50, max: 100 }),
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).not.toEmitAnything({ timeout: 45 });
+  await expect(stream).toEmitNext({ timeout: 56 });
+  await expect(stream).toComplete();
 });
 
 test("returns matched mock", async () => {

@@ -9,6 +9,7 @@ export {
   mockObservableLink,
   mockSingleLink,
   MockSubscriptionLink,
+  realisticDelay,
   tick,
   wait,
   withErrorSpy,

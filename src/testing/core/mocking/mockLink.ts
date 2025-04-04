@@ -72,7 +72,9 @@ export class MockLink extends ApolloLink {
     {};
 
   constructor(
-    mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
+    mockedResponses: ReadonlyArray<
+      MockedResponse<Record<string, any>, Record<string, any>>
+    >,
     options: MockLinkOptions = {}
   ) {
     super();

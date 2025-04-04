@@ -116,7 +116,7 @@ describe("mockLink", () => {
   it("should require result or error when delay is just large", () => {
     const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
     const expectedError = new InvariantError(
-      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: \n${stringifyMockedResponse(
+      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
         invalidResponse
       )}`
     );
@@ -263,7 +263,7 @@ test("throws error when passing variableMatcher and variables", async () => {
       ])
   ).toThrow(
     new InvariantError(
-      "Mocked response should contain either variableMatcher or request.variables"
+      "Mocked response should use either `request.variables` or `variableMatcher` but not both"
     )
   );
 });
@@ -319,7 +319,7 @@ test("throws error when passing maxUsageCount <= 0", async () => {
       ])
   ).toThrow(
     new InvariantError(
-      "Mock response maxUsageCount must be greater than 0, -1 given"
+      "Mocked response `maxUsageCount` must be greater than 0. Given -1"
     )
   );
 
@@ -342,7 +342,7 @@ test("throws error when passing maxUsageCount <= 0", async () => {
       ])
   ).toThrow(
     new InvariantError(
-      "Mock response maxUsageCount must be greater than 0, 0 given"
+      "Mocked response `maxUsageCount` must be greater than 0. Given 0"
     )
   );
 });

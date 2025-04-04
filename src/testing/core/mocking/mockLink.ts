@@ -222,9 +222,9 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       newMockedResponse.request.query = query;
     }
 
-    mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
+    newMockedResponse.maxUsageCount = newMockedResponse.maxUsageCount ?? 1;
     invariant(
-      mockedResponse.maxUsageCount > 0,
+      newMockedResponse.maxUsageCount > 0,
       `Mock response maxUsageCount must be greater than 0, %s given`,
       mockedResponse.maxUsageCount
     );

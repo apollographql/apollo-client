@@ -2869,16 +2869,13 @@ describe("ApolloClient", () => {
 
     const mocks = mockFetchQuery(queryManager);
     const queryId = "1";
-    const getQuery: QueryManager<any>["getQuery"] = (
-      queryManager as any
-    ).getQuery.bind(queryManager);
 
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitNext();
 
     {
-      const query = getQuery(queryId);
+      const query = queryManager["getOrCreateQuery"](queryId);
       const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
 
       expect(query.lastRequestId).toEqual(1);

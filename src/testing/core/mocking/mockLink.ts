@@ -58,7 +58,7 @@ interface NormalizedMockedResponse {
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
-  delay?: number | MockLink.DelayFunction;
+  delay: number | MockLink.DelayFunction;
 }
 
 type UnmatchedVariables = Array<
@@ -250,6 +250,7 @@ function normalizeMockedResponse(
     ...getDefaultValues(getOperationDefinition(request.query)),
     ...request.variables,
   };
+  response.delay ??= 0;
 
   return response;
 }

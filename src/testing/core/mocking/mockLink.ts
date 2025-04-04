@@ -1,7 +1,6 @@
 import { equal } from "@wry/equality";
 import { Observable, throwError } from "rxjs";
 
-import type { OperationVariables } from "@apollo/client/core";
 import type {
   DocumentNode,
   FetchResult,
@@ -230,7 +229,7 @@ function normalizeMockedResponse(
 function getServerQuery(query: DocumentNode) {
   const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
     [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
-    checkDocument(query)
+    query
   );
 
   invariant(queryWithoutClientOnlyDirectives, "query is required");
@@ -248,6 +247,8 @@ function getServerQuery(query: DocumentNode) {
 }
 
 function validateMockedResponse(mockedResponse: MockedResponse) {
+  checkDocument(mockedResponse.request.query);
+
   invariant(
     mockedResponse.result ||
       mockedResponse.error ||

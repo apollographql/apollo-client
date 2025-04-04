@@ -588,6 +588,19 @@ test("shows empty object for variables when configured with empty vars", async (
   expect(error.message).toMatchSnapshot();
 });
 
+test("throws error when a query is not provided", async () => {
+  expect(
+    () =>
+      new MockLink([
+        {
+          // @ts-expect-error
+          request: {},
+          result: { data: null },
+        },
+      ])
+  ).toThrow(/^Expecting a parsed GraphQL document/);
+});
+
 test("throws error when query is a plain string", async () => {
   expect(
     () =>

@@ -63,14 +63,15 @@ interface NormalizedMockedResponse {
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
-  defaultOptions?: {
-    delay?: MockLink.Delay;
-  };
+  defaultOptions?: MockLink.DefaultOptions;
 }
 
 export declare namespace MockLink {
   export type DelayFunction = (operation: Operation) => number;
   export type Delay = number | DelayFunction;
+  export interface DefaultOptions {
+    delay?: MockLink.Delay;
+  }
 }
 
 export function realisticDelay({

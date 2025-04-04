@@ -216,7 +216,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       checkDocument(response.request.query)
     );
     invariant(queryWithoutClientOnlyDirectives, "query is required");
-    response.request.query = queryWithoutClientOnlyDirectives!;
+    response.request.query = queryWithoutClientOnlyDirectives;
     const query = removeClientSetsFromDocument(response.request.query);
     if (query) {
       response.request.query = query;

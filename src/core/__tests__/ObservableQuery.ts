@@ -756,7 +756,6 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({
         query: testQuery,
         fetchPolicy: "cache-only",
-        notifyOnNetworkStatusChange: false,
       });
 
       const stream = new ObservableStream(observable);
@@ -772,11 +771,19 @@ describe("ObservableQuery", () => {
       await observable.reobserve({ fetchPolicy: "cache-first" });
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
+
       expect(timesFired).toBe(1);
       await expect(stream).not.toEmitAnything();
     });

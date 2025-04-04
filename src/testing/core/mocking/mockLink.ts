@@ -36,12 +36,17 @@ type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
   boolean
 >;
 
+interface MockedRequest<out TVariables> {
+  query: DocumentNode;
+  variables?: TVariables | VariableMatcher<TVariables>;
+}
+
 export interface MockedResponse<
   // @ts-ignore
   out TData = Record<string, any>,
   out TVariables = Record<string, any>,
 > {
-  request: GraphQLRequest<TVariables>;
+  request: MockedRequest<TVariables>;
   maxUsageCount?: number;
   result?:
     | FetchResult<Unmasked<TData>>

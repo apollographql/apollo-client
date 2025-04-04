@@ -174,21 +174,7 @@ export class ObservableQuery<
             this.tearDownQuery();
           }
         },
-      }),
-      // TODO: Conditionally filter when notifyOnNetworkStatusChange is true or
-      // not. We want to emit the loading result if notifyOnNetworkStatusChange
-      // is true.
-      filter(
-        (result) =>
-          // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
-          (this.options.fetchPolicy === "no-cache" &&
-            this.options.notifyOnNetworkStatusChange) ||
-          // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
-          (this.options.fetchPolicy === "network-only" &&
-            !this.queryManager.prioritizeCacheValues &&
-            this.queryInfo.getDiff().complete) ||
-          result !== this.initialResult
-      )
+      })
     );
 
     this["@@observable"] = () => this;

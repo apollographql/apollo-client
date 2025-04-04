@@ -1,4 +1,4 @@
-import { gql, InMemoryCache } from "@apollo/client/core";
+import { gql, InMemoryCache } from "@apollo/client";
 import { maskOperation } from "@apollo/client/masking";
 import { spyOnConsole, withProdMode } from "@apollo/client/testing/internal";
 import { __DEV__ } from "@apollo/client/utilities/environment";

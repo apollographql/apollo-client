@@ -1,4 +1,4 @@
-import type { ApolloQueryResult, QueryResult } from "@apollo/client/core";
+import type { ApolloQueryResult, QueryResult } from "@apollo/client";
 
 export function toQueryResult<TData = unknown>(
   value: ApolloQueryResult<TData>

@@ -1,7 +1,7 @@
 import type { DocumentNode } from "graphql";
 
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient } from "@apollo/client/core";
 
 import { mockSingleLink } from "./mockLink.js";
 

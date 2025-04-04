@@ -1,7 +1,7 @@
 import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { DefaultContext } from "@apollo/client/core";
+import type { DefaultContext } from "@apollo/client";
 import type { GraphQLRequest } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 

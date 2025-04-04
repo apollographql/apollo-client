@@ -5,8 +5,8 @@ import type {
   ApolloLink,
   DocumentTransform,
   InMemoryCache,
-} from "@apollo/client/core";
-import type { ApolloClient } from "@apollo/client/core";
+} from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
 import type { CacheSizes } from "../caching/sizes.js";

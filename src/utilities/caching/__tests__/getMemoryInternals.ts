@@ -1,19 +1,19 @@
 import crypto from "crypto";
 
-import { createFragmentRegistry } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloLink,
   DocumentTransform,
   gql,
   InMemoryCache,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { createFragmentRegistry } from "@apollo/client/cache";
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
 import { cacheSizes } from "@apollo/client/utilities";
 
 // this is compiled away so we need to import it from sources
-// eslint-disable-next-line local-rules/no-relative-imports
+ 
 import { defaultCacheSizes } from "../sizes.js";
 
 function sha256(data: string) {

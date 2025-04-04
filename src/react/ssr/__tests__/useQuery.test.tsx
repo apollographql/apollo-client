@@ -3,9 +3,9 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
 import {
   ApolloProvider,
   useApolloClient,

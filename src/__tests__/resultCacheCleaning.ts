@@ -1,8 +1,8 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
+import type { Resolvers } from "@apollo/client";
+import { ApolloClient, gql } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { Resolvers } from "@apollo/client/core";
-import { ApolloClient, gql } from "@apollo/client/core";
 import { SchemaLink } from "@apollo/client/link/schema";
 
 describe("resultCache cleaning", () => {

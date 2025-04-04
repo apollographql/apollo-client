@@ -2,7 +2,7 @@ import type {
   ApolloCache,
   DefaultContext,
   OperationVariables,
-} from "@apollo/client/core";
+} from "@apollo/client";
 
 import type { useBackgroundQuery } from "../hooks/useBackgroundQuery.js";
 import type { useFragment } from "../hooks/useFragment.js";

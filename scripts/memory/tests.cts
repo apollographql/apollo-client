@@ -1,12 +1,7 @@
 const assert = require("node:assert");
 const { describe, it } = require("node:test");
 
-const {
-  ApolloClient,
-  InMemoryCache,
-  gql,
-  makeVar,
-} = require("@apollo/client/core");
+const { ApolloClient, InMemoryCache, gql, makeVar } = require("@apollo/client");
 
 function itAsync(message, testFn) {
   const start = Date.now();

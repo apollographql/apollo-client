@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import React from "react";
 
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { ApolloProvider, useApolloClient } from "@apollo/client/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";

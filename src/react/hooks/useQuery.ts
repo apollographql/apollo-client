@@ -27,15 +27,15 @@ import type {
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type {
   ApolloQueryResult,
   DocumentNode,
   ObservableQuery,
   TypedDocumentNode,
   WatchQueryOptions,
-} from "@apollo/client/core";
-import { NetworkStatus } from "@apollo/client/core";
+} from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";

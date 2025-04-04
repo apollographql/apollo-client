@@ -5,7 +5,7 @@ import type {
   ErrorLike,
   NetworkStatus,
   ObservableQuery,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { QueryRef } from "@apollo/client/react/internal";
 import {

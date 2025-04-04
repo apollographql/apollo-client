@@ -1,9 +1,9 @@
 import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
+import type { Reference, TypedDocumentNode } from "@apollo/client";
+import { isReference, makeReference } from "@apollo/client";
 import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
-import type { Reference, TypedDocumentNode } from "@apollo/client/core";
-import { isReference, makeReference } from "@apollo/client/core";
 
 import { defaultCacheSizes } from "../../../utilities/caching/sizes.js";
 import type { Cache } from "../../core/types/Cache.js";

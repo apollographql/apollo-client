@@ -8,8 +8,8 @@ import { resolve } from "node:path";
 import { $ } from "zx";
 
 import * as client from "@apollo/client";
+import * as core from "@apollo/client";
 import * as cache from "@apollo/client/cache";
-import * as core from "@apollo/client/core";
 import * as dev from "@apollo/client/dev";
 import * as errors from "@apollo/client/errors";
 import * as linkBatch from "@apollo/client/link/batch";
@@ -69,7 +69,7 @@ describe("exports of public entry points", () => {
 
   check("@apollo/client", client);
   check("@apollo/client/cache", cache);
-  check("@apollo/client/core", core);
+  check("@apollo/client", core);
   check("@apollo/client/dev", dev);
   check("@apollo/client/errors", errors);
   check("@apollo/client/link/batch", linkBatch);

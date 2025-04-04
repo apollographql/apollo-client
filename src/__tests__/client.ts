@@ -11,6 +11,16 @@ import type { Subscription } from "rxjs";
 import { Observable, of } from "rxjs";
 
 import type {
+  ApolloQueryResult,
+  FetchPolicy,
+  ObservableQuery,
+  Operation,
+  QueryOptions,
+  TypedDocumentNode,
+  WatchQueryFetchPolicy,
+} from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import type {
   NormalizedCacheObject,
   PossibleTypesMap,
 } from "@apollo/client/cache";
@@ -19,16 +29,6 @@ import {
   InMemoryCache,
   makeVar,
 } from "@apollo/client/cache";
-import type {
-  ApolloQueryResult,
-  FetchPolicy,
-  ObservableQuery,
-  Operation,
-  QueryOptions,
-  TypedDocumentNode,
-  WatchQueryFetchPolicy,
-} from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import {
   CombinedGraphQLErrors,
   UnconventionalError,

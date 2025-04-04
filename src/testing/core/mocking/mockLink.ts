@@ -185,8 +185,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     let mockedResponses = this.mockedResponsesByKey[key];
 
     if (!mockedResponses) {
-      mockedResponses = [];
-      this.mockedResponsesByKey[key] = mockedResponses;
+      mockedResponses = this.mockedResponsesByKey[key] = [];
     }
 
     return mockedResponses;

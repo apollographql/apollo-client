@@ -81,7 +81,7 @@ export declare namespace MockLink {
 export function realisticDelay({
   min = 20,
   max = 50,
-}: { min?: number; max?: number } = {}) {
+}: { min?: number; max?: number } = {}): MockLink.DelayFunction {
   invariant(max > min, "realisticDelay: `min` must be less than `max`");
 
   return () => Math.floor(Math.random() * (max - min) + min);

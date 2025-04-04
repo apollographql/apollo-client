@@ -3294,9 +3294,7 @@ describe("ObservableQuery", () => {
             { request: queryOptions, result: { data: { value: 1 } } },
             { request: queryOptions, result: { data: { value: 2 } } },
             { request: queryOptions, result: { data: { value: 3 } } },
-          ]).setOnError((error) => {
-            throw error;
-          }),
+          ]),
           assumeImmutableResults,
           cache,
         });
@@ -3312,6 +3310,7 @@ describe("ObservableQuery", () => {
                 try {
                   data.value = "oyez";
                 } catch (error) {
+                  observable.stopPolling();
                   reject(error);
                 }
               } else {
@@ -3426,7 +3425,9 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
       });
 
-      const observable = client.watchQuery({ query });
+      // Don't write results to the cache to prevent cache write warnings on
+      // missing data
+      const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
 
       expect(observable.query).toMatchDocument(gql`
         query {

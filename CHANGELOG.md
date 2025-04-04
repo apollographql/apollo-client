@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 4.0.0-alpha.7
+
+### Major Changes
+
+- [#12513](https://github.com/apollographql/apollo-client/pull/12513) [`9c3207c`](https://github.com/apollographql/apollo-client/commit/9c3207c44ddad1f8b845c09495d6c070ace8de7b) Thanks [@phryneas](https://github.com/phryneas)! - Removed the `@apollo/client/react/context` and `@apollo/client/react/hooks` entry points. Please use `@apollo/client/react` instead.
+
+- [#12513](https://github.com/apollographql/apollo-client/pull/12513) [`9c3207c`](https://github.com/apollographql/apollo-client/commit/9c3207c44ddad1f8b845c09495d6c070ace8de7b) Thanks [@phryneas](https://github.com/phryneas)! - Removed the `@apollo/client/react/parser` entry point. There is no replacement.
+
+### Patch Changes
+
+- [#12513](https://github.com/apollographql/apollo-client/pull/12513) [`9c3207c`](https://github.com/apollographql/apollo-client/commit/9c3207c44ddad1f8b845c09495d6c070ace8de7b) Thanks [@phryneas](https://github.com/phryneas)! - Removed the `parser` cache. The functionality has been replaced in a way that doesn't need caching.
+
 ## 4.0.0-alpha.6
 
 ### Major Changes

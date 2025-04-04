@@ -1,17 +1,17 @@
-import gql from "graphql-tag";
+import type { DocumentNode, FragmentSpreadNode } from "graphql";
+import { BREAK, visit } from "graphql";
+import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 
-import { getQueryDefinition } from "../getFromAST";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 import {
-  shouldInclude,
-  hasDirectives,
-  hasAnyDirectives,
-  hasAllDirectives,
   getFragmentMaskMode,
-} from "../directives";
-import { spyOnConsole } from "../../../testing/internal";
-import { BREAK, visit } from "graphql";
-import type { DocumentNode, FragmentSpreadNode } from "graphql";
+  getQueryDefinition,
+  hasAllDirectives,
+  hasAnyDirectives,
+  hasDirectives,
+  shouldInclude,
+} from "@apollo/client/utilities";
 
 describe("hasDirectives", () => {
   it("should allow searching the ast for a directive", () => {

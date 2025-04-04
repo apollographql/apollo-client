@@ -74,7 +74,7 @@ Below we use the `gql` function to define our query, which automatically generat
 
 ```tsx
 import React from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 import { gql } from '../src/__generated__/gql';
 
@@ -193,7 +193,7 @@ We can type `useMutation` hooks the same way we type `useQuery` hooks. Using the
 
 ```tsx
 import React, { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 import { gql } from '../src/__generated__/gql';
 
@@ -261,7 +261,7 @@ We can type our `useSubscription` hooks the same way we typed our `useQuery` and
 
 ```tsx
 import React from 'react';
-import { useSubscription } from '@apollo/client';
+import { useSubscription } from '@apollo/client/react';
 
 import { gql } from '../src/gql';
 
@@ -438,12 +438,8 @@ This is especially helpful when accessing deeply nested objects passed to our co
 
 ```tsx
 import React from "react";
-import {
-  ApolloClient,
-  createHttpLink,
-  InMemoryCache,
-  ApolloProvider
-} from "@apollo/client";
+import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 
 import Character from "./Character";
 
@@ -583,7 +579,8 @@ This technique enables us to modify the [`useQuery` example](#usequery) above to
 
 ```tsx
 import React from 'react';
-import { useQuery, gql, TypedDocumentNode } from '@apollo/client';
+import { gql, TypedDocumentNode } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 interface RocketInventoryData {
   rocketInventory: RocketInventory[];

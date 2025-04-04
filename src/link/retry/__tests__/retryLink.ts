@@ -1,15 +1,13 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { Observable, of, throwError } from "rxjs";
 
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
-import { Observable } from "../../../utilities/observables/Observable";
-import { fromError } from "../../utils/fromError";
-import { RetryLink } from "../retryLink";
+import { CombinedProtocolErrors } from "@apollo/client/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { RetryLink } from "@apollo/client/link/retry";
 import {
   mockMultipartSubscriptionStream,
   ObservableStream,
-} from "../../../testing/internal";
-import { ApolloError } from "../../../core";
+} from "@apollo/client/testing/internal";
 
 const query = gql`
   {
@@ -25,7 +23,7 @@ describe("RetryLink", () => {
   it("fails for unreachable endpoints", async () => {
     const max = 10;
     const retry = new RetryLink({ delay: { initial: 1 }, attempts: { max } });
-    const stub = jest.fn(() => fromError(standardError)) as any;
+    const stub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -37,11 +35,11 @@ describe("RetryLink", () => {
   it("returns data from the underlying link on a successful operation", async () => {
     const retry = new RetryLink();
     const data = { data: { hello: "world" } };
-    const stub = jest.fn(() => Observable.of(data));
+    const stub = jest.fn(() => of(data));
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitValue(data);
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
     expect(stub).toHaveBeenCalledTimes(1);
@@ -54,12 +52,12 @@ describe("RetryLink", () => {
     });
     const data = { data: { hello: "world" } };
     const stub = jest.fn();
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(Observable.of(data));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(of(data));
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitValue(data);
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
     expect(stub).toHaveBeenCalledTimes(2);
@@ -73,7 +71,7 @@ describe("RetryLink", () => {
     const data = { data: { hello: "world" } };
     const unsubscribeStub = jest.fn();
 
-    const firstTry = fromError(standardError);
+    const firstTry = throwError(() => standardError);
     // Hold the test hostage until we're hit
     let secondTry;
     const untilSecondTry = new Promise<void>((resolve) => {
@@ -103,9 +101,9 @@ describe("RetryLink", () => {
 
   it("multiple subscribers will trigger multiple requests", async () => {
     const subscriber = {
-      next: jest.fn(console.log),
-      error: jest.fn(console.error),
-      complete: jest.fn(console.info),
+      next: jest.fn(),
+      error: jest.fn(),
+      complete: jest.fn(),
     };
     const retry = new RetryLink({
       delay: { initial: 1 },
@@ -113,12 +111,12 @@ describe("RetryLink", () => {
     });
     const data = { data: { hello: "world" } };
     const stub = jest.fn();
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(Observable.of(data));
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(Observable.of(data));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(of(data));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(of(data));
     const link = ApolloLink.from([retry, stub]);
 
     const observable = execute(link, { query });
@@ -136,7 +134,7 @@ describe("RetryLink", () => {
       delay: { initial: 1 },
       attempts: { max: 5 },
     });
-    const stub = jest.fn(() => fromError(standardError)) as any;
+    const stub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, stub]);
     const stream1 = new ObservableStream(execute(link, { query }));
     const stream2 = new ObservableStream(execute(link, { query }));
@@ -152,7 +150,7 @@ describe("RetryLink", () => {
   it("supports custom delay functions", async () => {
     const delayStub = jest.fn(() => 1);
     const retry = new RetryLink({ delay: delayStub, attempts: { max: 3 } });
-    const linkStub = jest.fn(() => fromError(standardError)) as any;
+    const linkStub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, linkStub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -175,7 +173,7 @@ describe("RetryLink", () => {
       delay: { initial: 1 },
       attempts: attemptStub,
     });
-    const linkStub = jest.fn(() => fromError(standardError)) as any;
+    const linkStub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, linkStub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -251,7 +249,7 @@ describe("RetryLink", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         aNewDieWasCreated: { die: { color: "blue", roll: 2, sides: 6 } },
       },
@@ -264,14 +262,12 @@ describe("RetryLink", () => {
         operationName: "MySubscription",
         query: subscription,
       }),
-      new ApolloError({
-        protocolErrors: [
-          {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ],
-      })
+      new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ])
     );
   });
 });

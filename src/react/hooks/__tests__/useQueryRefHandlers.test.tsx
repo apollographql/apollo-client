@@ -1,43 +1,45 @@
-import React from "react";
 import { screen } from "@testing-library/react";
-import {
-  ApolloClient,
-  InMemoryCache,
-  NetworkStatus,
-  TypedDocumentNode,
-  gql,
-  split,
-} from "../../../core";
-import {
-  SubscribeToMoreFunction,
-  SubscribeToMoreUpdateQueryFn,
-} from "../../../core/watchQueryOptions";
-import {
-  MockLink,
-  MockSubscriptionLink,
-  MockedResponse,
-} from "../../../testing";
-import {
-  createClientWrapper,
-  PaginatedCaseData,
-  SimpleCaseData,
-  setupPaginatedCase,
-  setupSimpleCase,
-} from "../../../testing/internal";
-import { useQueryRefHandlers } from "../useQueryRefHandlers";
-import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
-import { Suspense } from "react";
-import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
-import userEvent from "@testing-library/user-event";
-import { QueryRef } from "../../internal";
-import { useBackgroundQuery } from "../useBackgroundQuery";
-import { useLoadableQuery } from "../useLoadableQuery";
-import { concatPagination, getMainDefinition } from "../../../utilities";
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import React, { Suspense } from "react";
+
+import type { TypedDocumentNode } from "@apollo/client/core";
+import {
+  ApolloClient,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  split,
+} from "@apollo/client/core";
+import {
+  createQueryPreloader,
+  useBackgroundQuery,
+  useLoadableQuery,
+  useQueryRefHandlers,
+  useReadQuery,
+} from "@apollo/client/react";
+import type { QueryRef } from "@apollo/client/react/internal";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import type {
+  PaginatedCaseData,
+  SimpleCaseData,
+} from "@apollo/client/testing/internal";
+import {
+  createClientWrapper,
+  setupPaginatedCase,
+  setupSimpleCase,
+} from "@apollo/client/testing/internal";
+import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
+
+import type {
+  SubscribeToMoreFunction,
+  SubscribeToMoreUpdateQueryFn,
+} from "../../../core/watchQueryOptions.js";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
@@ -50,7 +52,7 @@ test("does not interfere with updates from useReadQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -151,7 +153,7 @@ test("refetches and resuspends when calling refetch", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -273,7 +275,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
+      result: null as useReadQuery.Result<QueryData> | null,
     },
   });
 
@@ -400,7 +402,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
+      result: null as useReadQuery.Result<QueryData> | null,
     },
   });
 
@@ -524,7 +526,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
+      result: null as useReadQuery.Result<QueryData> | null,
     },
   });
 
@@ -644,7 +646,7 @@ test("`refetch` works with startTransition", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<Data> | null,
+      result: null as useReadQuery.Result<Data> | null,
     },
   });
 
@@ -781,7 +783,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
       usePreloadedQueryHandlersIsPending: false,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -945,7 +947,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -1033,7 +1035,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -1127,7 +1129,7 @@ test("resuspends when calling `fetchMore`", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1220,7 +1222,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1333,7 +1335,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1437,7 +1439,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1541,7 +1543,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1655,7 +1657,7 @@ test("`fetchMore` works with startTransition", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1786,7 +1788,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
       useQueryRefHandlersIsPending: false,
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -2007,7 +2009,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
         SimpleCaseData,
         Record<string, never>
       > | null,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 

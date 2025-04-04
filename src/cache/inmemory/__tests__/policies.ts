@@ -1,20 +1,30 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
-import { ReactiveVar, makeVar } from "../reactiveVars";
 import {
+  InMemoryCache,
+  makeVar,
+  MissingFieldError,
+} from "@apollo/client/cache";
+import type {
+  DocumentNode,
+  OperationVariables,
   Reference,
   StoreObject,
-  ApolloClient,
-  NetworkStatus,
   TypedDocumentNode,
-  DocumentNode,
-} from "../../../core";
-import { MissingFieldError } from "../..";
-import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
-import { FieldPolicy, StorageType } from "../policies";
-import { MockLink } from "../../../testing/core";
-import { ObservableStream, spyOnConsole } from "../../../testing/internal";
+} from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { MockLink } from "@apollo/client/testing/core";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import {
+  relayStylePagination,
+  stringifyForDisplay,
+} from "@apollo/client/utilities";
+
+import type { FieldPolicy, StorageType } from "../policies.js";
+import type { ReactiveVar } from "../reactiveVars.js";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -1187,7 +1197,10 @@ describe("type policies", function () {
         },
       };
 
-      function check<TData extends typeof data, TVars>(
+      function check<
+        TData extends typeof data,
+        TVars extends OperationVariables,
+      >(
         query: DocumentNode | TypedDocumentNode<TData, TVars>,
         variables?: TVars
       ) {
@@ -2116,29 +2129,27 @@ describe("type policies", function () {
           ],
         },
         complete: false,
-        missing: [
-          new MissingFieldError(
-            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
-            {
-              jobs: {
-                0: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
-                },
-                1: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #2"} object',
-                },
-                2: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
-                },
+        missing: new MissingFieldError(
+          `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+          {
+            jobs: {
+              0: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
+              },
+              1: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #2"} object',
+              },
+              2: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
               },
             },
-            expect.anything(), // query
-            expect.anything() // variables
-          ),
-        ],
+          },
+          expect.anything(), // query
+          expect.anything() // variables
+        ),
       });
 
       function setResult(jobNum: number) {
@@ -2196,25 +2207,23 @@ describe("type policies", function () {
           ],
         },
         complete: false,
-        missing: [
-          new MissingFieldError(
-            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
-            {
-              jobs: {
-                0: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
-                },
-                2: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
-                },
+        missing: new MissingFieldError(
+          `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+          {
+            jobs: {
+              0: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
+              },
+              2: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
               },
             },
-            expect.anything(), // query
-            expect.anything() // variables
-          ),
-        ],
+          },
+          expect.anything(), // query
+          expect.anything() // variables
+        ),
       });
 
       cache.writeQuery({
@@ -2282,25 +2291,23 @@ describe("type policies", function () {
           ],
         },
         complete: false,
-        missing: [
-          new MissingFieldError(
-            `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
-            {
-              jobs: {
-                0: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
-                },
-                2: {
-                  result:
-                    'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
-                },
+        missing: new MissingFieldError(
+          `Can't find field 'result' on Job:{"name":"Job #${1}"} object`,
+          {
+            jobs: {
+              0: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #1"} object',
+              },
+              2: {
+                result:
+                  'Can\'t find field \'result\' on Job:{"name":"Job #3"} object',
               },
             },
-            expect.anything(), // query
-            expect.anything() // variables
-          ),
-        ],
+          },
+          expect.anything(), // query
+          expect.anything() // variables
+        ),
       });
 
       setResult(1);
@@ -3244,19 +3251,45 @@ describe("type policies", function () {
         })
       ).toBe(null);
 
-      expect(() =>
-        cache.diff({
-          optimistic: true,
-          returnPartialData: false,
-          query: gql`
+      const diff = cache.diff({
+        optimistic: true,
+        returnPartialData: false,
+        query: gql`
+          query {
+            me {
+              secret
+            }
+          }
+        `,
+      });
+
+      const missingFieldErrorMessage = `Can't find field 'secret' on object ${JSON.stringify(
+        {
+          __typename: "Person",
+          name: "Ben Newman",
+        },
+        null,
+        2
+      )}`;
+
+      expect(diff.complete).toBe(false);
+      expect(diff.result).toBeNull();
+      expect(diff.missing).toEqual(
+        new MissingFieldError(
+          missingFieldErrorMessage,
+          {
+            me: { secret: missingFieldErrorMessage },
+          },
+          gql`
             query {
               me {
                 secret
               }
             }
           `,
-        })
-      ).toThrowError("Can't find field 'secret' ");
+          {}
+        )
+      );
 
       expect(secretReadAttempted).toBe(true);
     });
@@ -3507,7 +3540,6 @@ describe("type policies", function () {
 
     it("can handle Relay-style pagination without args", async () => {
       const cache = new InMemoryCache({
-        addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -3586,6 +3618,7 @@ describe("type policies", function () {
           result: {
             data: {
               todos: {
+                __typename: "TodosConnection",
                 totalCount: 1292,
               },
             },
@@ -3599,6 +3632,7 @@ describe("type policies", function () {
           result: {
             data: {
               todos: {
+                __typename: "TodosConnection",
                 edges: secondEdges,
                 pageInfo: secondPageInfo,
                 totalCount: 1292,
@@ -3613,6 +3647,7 @@ describe("type policies", function () {
           result: {
             data: {
               todos: {
+                __typename: "TodosConnection",
                 totalCount: 1293,
                 extraMetaData: "extra",
               },
@@ -3627,11 +3662,10 @@ describe("type policies", function () {
 
       let result = await client.query({ query: firstQuery });
 
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+      expect(result).toStrictEqualTyped({
         data: {
           todos: {
+            __typename: "TodosConnection",
             totalCount: 1292,
           },
         },
@@ -3641,6 +3675,7 @@ describe("type policies", function () {
         ROOT_QUERY: {
           __typename: "Query",
           todos: {
+            __typename: "TodosConnection",
             edges: [],
             pageInfo: {
               endCursor: "",
@@ -3658,11 +3693,10 @@ describe("type policies", function () {
         variables: secondVariables,
       });
 
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+      expect(result).toStrictEqualTyped({
         data: {
           todos: {
+            __typename: "TodosConnection",
             edges: secondEdges,
             pageInfo: secondPageInfo,
             totalCount: 1292,
@@ -3673,11 +3707,10 @@ describe("type policies", function () {
       expect(cache.extract()).toMatchSnapshot();
 
       result = await client.query({ query: thirdQuery });
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+      expect(result).toStrictEqualTyped({
         data: {
           todos: {
+            __typename: "TodosConnection",
             totalCount: 1293,
             extraMetaData: "extra",
           },
@@ -3688,7 +3721,6 @@ describe("type policies", function () {
 
     it("can handle Relay-style pagination", async () => {
       const cache = new InMemoryCache({
-        addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -4088,7 +4120,7 @@ describe("type policies", function () {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitTypedValue({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -4098,6 +4130,7 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
 
@@ -4106,7 +4139,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqual({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4122,6 +4155,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
         expect(cache.extract()).toMatchSnapshot();
       }
@@ -4133,7 +4167,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(5);
 
-        expect(result).toEqual({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4149,6 +4183,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(cache.extract()).toMatchSnapshot();
@@ -4159,7 +4194,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqual({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4175,6 +4210,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(result.data.search.edges).toEqual([
@@ -4192,7 +4228,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(7);
 
-        expect(result).toEqual({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4208,6 +4244,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(cache.extract()).toMatchSnapshot();
@@ -4226,9 +4263,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
+        expect(result).toStrictEqualTyped({
           data: {
             search: {
               edges: turrellEdges.slice(0, 1),
@@ -4288,7 +4323,7 @@ describe("type policies", function () {
           },
         });
 
-        expect(result).toEqual({
+        expect(result).toStrictEqualTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4304,6 +4339,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(cache.extract()).toMatchSnapshot();
@@ -4321,9 +4357,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
+        expect(result).toStrictEqualTyped({
           data: {
             search: {
               edges: turrellEdges,
@@ -4596,9 +4630,18 @@ describe("type policies", function () {
 
       expect(read()).toBe(null);
 
-      expect(diff).toThrow(
-        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
-      );
+      expect(diff()).toEqual({
+        complete: false,
+        result: null,
+        missing: new MissingFieldError(
+          'Dangling reference to missing Book:{"isbn":"156858217X"} object',
+          {
+            book: 'Dangling reference to missing Book:{"isbn":"156858217X"} object',
+          },
+          query,
+          { isbn: "156858217X" }
+        ),
+      });
 
       const stealThisData = {
         __typename: "Book",
@@ -4732,14 +4775,32 @@ describe("type policies", function () {
       });
 
       expect(read("0393354326")).toBe(null);
-      expect(() => diff("0393354326")).toThrow(
-        /Dangling reference to missing Book:{"isbn":"0393354326"} object/
-      );
+      expect(diff("0393354326")).toEqual({
+        complete: false,
+        result: null,
+        missing: new MissingFieldError(
+          'Dangling reference to missing Book:{"isbn":"0393354326"} object',
+          {
+            book: 'Dangling reference to missing Book:{"isbn":"0393354326"} object',
+          },
+          query,
+          { isbn: "0393354326" }
+        ),
+      });
 
       expect(read("156858217X")).toBe(null);
-      expect(() => diff("156858217X")).toThrow(
-        /Dangling reference to missing Book:{"isbn":"156858217X"} object/
-      );
+      expect(diff("156858217X")).toEqual({
+        complete: false,
+        result: null,
+        missing: new MissingFieldError(
+          'Dangling reference to missing Book:{"isbn":"156858217X"} object',
+          {
+            book: 'Dangling reference to missing Book:{"isbn":"156858217X"} object',
+          },
+          query,
+          { isbn: "156858217X" }
+        ),
+      });
     });
 
     it("can force merging of unidentified non-normalized data", function () {
@@ -5768,7 +5829,6 @@ describe("type policies", function () {
     function readFirstBookResult() {
       return cache.readQuery<{ author: any }>({
         query: firstBookQuery,
-        canonizeResults: true,
       })!;
     }
 
@@ -5861,7 +5921,6 @@ describe("type policies", function () {
 
     const thirdFirstBookResult = readFirstBookResult();
     expect(thirdFirstBookResult).toEqual(secondFirstBookResult);
-    expect(thirdFirstBookResult).toBe(secondFirstBookResult);
   });
 
   it("readField can read fields with arguments", function () {

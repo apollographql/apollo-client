@@ -4,10 +4,11 @@
 
 ```ts
 
+import type { DefaultContext } from '@apollo/client/core';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
+import type { Observable } from 'rxjs';
+import type { Subscriber } from 'rxjs';
 
 // @public (undocumented)
 export class ApolloLink {
@@ -27,7 +28,7 @@ export class ApolloLink {
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
+    protected onError(error: any, observer?: Subscriber<FetchResult>): false | void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
     // @internal
@@ -44,18 +45,12 @@ export class ApolloLink {
 export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
-    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
 export const concat: typeof ApolloLink.concat;
-
-// @public (undocumented)
-interface DefaultContext extends Record<string, any> {
-}
 
 export { DocumentNode }
 

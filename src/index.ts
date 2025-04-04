@@ -1,2 +1,3 @@
-export * from "./core/index.js";
-export * from "./react/index.js";
+// eslint-disable-next-line no-restricted-syntax
+export * from "@apollo/client/core";
+export { Observable } from "rxjs";

@@ -5,11 +5,9 @@ export type {
 } from "./mocking/mockLink.js";
 export { MockLink, mockSingleLink } from "./mocking/mockLink.js";
 export {
-  MockSubscriptionLink,
   mockObservableLink,
+  MockSubscriptionLink,
 } from "./mocking/mockSubscriptionLink.js";
 export { createMockClient } from "./mocking/mockClient.js";
-export { default as subscribeAndCount } from "./subscribeAndCount.js";
-export { itAsync } from "./itAsync.js";
-export { wait, tick } from "./wait.js";
-export * from "./withConsoleSpy.js";
+export { tick, wait } from "./wait.js";
+export { withErrorSpy, withLogSpy, withWarningSpy } from "./withConsoleSpy.js";

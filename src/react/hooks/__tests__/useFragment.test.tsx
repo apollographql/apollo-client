@@ -1,46 +1,43 @@
-import * as React from "react";
-import {
-  render,
-  waitFor,
-  screen,
-  renderHook,
-  within,
-} from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { act } from "@testing-library/react";
+import assert from "assert";
 
 import {
-  UseFragmentOptions,
-  UseFragmentResult,
-  useFragment,
-} from "../useFragment";
-import { MockedProvider } from "../../../testing";
-import { ApolloProvider } from "../../context";
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import {
-  InMemoryCache,
-  gql,
-  TypedDocumentNode,
-  Reference,
-  ApolloClient,
-  Observable,
-  ApolloLink,
-  StoreObject,
-  DocumentNode,
-  FetchResult,
-} from "../../../core";
-import { useQuery } from "../useQuery";
-import { concatPagination } from "../../../utilities";
-import assert from "assert";
-import { expectTypeOf } from "expect-type";
-import { SubscriptionObserver } from "zen-observable-ts";
-import { spyOnConsole } from "../../../testing/internal";
-import { FragmentType } from "../../../masking";
-import {
-  disableActEnvironment,
   createRenderStream,
+  disableActEnvironment,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { expectTypeOf } from "expect-type";
+import * as React from "react";
+import type { Observer } from "rxjs";
+import { Observable } from "rxjs";
+
+import type {
+  DocumentNode,
+  FetchResult,
+  Reference,
+  StoreObject,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import {
+  ApolloClient,
+  ApolloLink,
+  gql,
+  InMemoryCache,
+} from "@apollo/client/core";
+import type { FragmentType } from "@apollo/client/masking";
+import { ApolloProvider, useFragment, useQuery } from "@apollo/client/react";
+import { spyOnConsole } from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { concatPagination } from "@apollo/client/utilities";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1717,7 +1714,7 @@ describe("useFragment", () => {
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ from }) => useFragment({ fragment, from }),
       {
-        initialProps: { from: null as UseFragmentOptions<any, never>["from"] },
+        initialProps: { from: null as useFragment.Options<any, never>["from"] },
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -2066,8 +2063,8 @@ describe("data masking", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        parent: null as UseFragmentResult<ParentFragment> | null,
-        child: null as UseFragmentResult<ChildFragment> | null,
+        parent: null as useFragment.Result<ParentFragment> | null,
+        child: null as useFragment.Result<ChildFragment> | null,
       },
     });
 
@@ -2182,7 +2179,7 @@ describe("has the same timing as `useQuery`", () => {
       }
       ${itemFragment}
     `;
-    let observer: SubscriptionObserver<FetchResult>;
+    let observer: Observer<FetchResult>;
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
@@ -2430,14 +2427,13 @@ describe.skip("Type Tests", () => {
   });
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
-    expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
+    expectTypeOf<useFragment.Options<TData, TVars>>().branded.toEqualTypeOf<{
       from: string | StoreObject | Reference | FragmentType<TData> | null;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;
       optimistic?: boolean;
       variables?: TVars;
-      canonizeResults?: boolean;
-      client?: ApolloClient<any>;
+      client?: ApolloClient;
     }>();
   });
 });

@@ -4,23 +4,22 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloConsumer",
-  "ApolloError",
   "ApolloLink",
-  "ApolloProvider",
-  "Cache",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
-  "DocumentType",
   "HttpLink",
   "InMemoryCache",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "checkFetcher",
   "concat",
   "createHttpLink",
-  "createQueryPreloader",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
   "defaultPrinter",
@@ -31,20 +30,13 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
-  "getApolloContext",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
   "makeReference",
   "makeVar",
   "mergeOptions",
-  "operationName",
   "parseAndCheckHttpResponse",
-  "parser",
-  "resetApolloContext",
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
@@ -52,30 +44,14 @@ Array [
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
-  "skipToken",
   "split",
-  "throwServerError",
-  "toPromise",
-  "useApolloClient",
-  "useBackgroundQuery",
-  "useFragment",
-  "useLazyQuery",
-  "useLoadableQuery",
-  "useMutation",
-  "useQuery",
-  "useQueryRefHandlers",
-  "useReactiveVar",
-  "useReadQuery",
-  "useSubscription",
-  "useSuspenseFragment",
-  "useSuspenseQuery",
+  "version",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
-  "Cache",
   "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
@@ -95,9 +71,9 @@ exports[`exports of public entry points @apollo/client/core 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloError",
   "ApolloLink",
-  "Cache",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -105,6 +81,9 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -118,10 +97,7 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
   "makeReference",
@@ -136,8 +112,7 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
-  "throwServerError",
-  "toPromise",
+  "version",
 ]
 `;
 
@@ -152,10 +127,13 @@ Array [
 
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
-  "ApolloError",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "PROTOCOL_ERRORS_SYMBOL",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "graphQLResultHasProtocolErrors",
-  "isApolloError",
 ]
 `;
 
@@ -249,10 +227,6 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "fromError",
-  "fromPromise",
-  "throwServerError",
-  "toPromise",
   "transformOperation",
   "validateOperation",
 ]
@@ -276,12 +250,8 @@ exports[`exports of public entry points @apollo/client/react 1`] = `
 Array [
   "ApolloConsumer",
   "ApolloProvider",
-  "DocumentType",
   "createQueryPreloader",
   "getApolloContext",
-  "operationName",
-  "parser",
-  "resetApolloContext",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -299,36 +269,12 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/components 1`] = `
-Array [
-  "Mutation",
-  "Query",
-  "Subscription",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/context 1`] = `
+exports[`exports of public entry points @apollo/client/react with conditions [react-server] 1`] = `
 Array [
   "ApolloConsumer",
   "ApolloProvider",
+  "createQueryPreloader",
   "getApolloContext",
-  "resetApolloContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
-Array [
-  "graphql",
-  "withApollo",
-  "withMutation",
-  "withQuery",
-  "withSubscription",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
-Array [
-  "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
   "useFragment",
@@ -354,23 +300,15 @@ Array [
   "unwrapQueryRef",
   "updateWrappedQueryRef",
   "wrapQueryRef",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/parser 1`] = `
-Array [
-  "DocumentType",
-  "operationName",
-  "parser",
-  "verifyDocumentType",
+  "wrapperSymbol",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
 Array [
-  "RenderPromises",
   "getDataFromTree",
   "getMarkupFromTree",
+  "prerenderStatic",
   "renderToStringWithData",
 ]
 `;
@@ -379,12 +317,9 @@ exports[`exports of public entry points @apollo/client/testing 1`] = `
 Array [
   "MockLink",
   "MockSubscriptionLink",
-  "MockedProvider",
   "createMockClient",
-  "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "subscribeAndCount",
   "tick",
   "wait",
   "withErrorSpy",
@@ -398,10 +333,8 @@ Array [
   "MockLink",
   "MockSubscriptionLink",
   "createMockClient",
-  "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "subscribeAndCount",
   "tick",
   "wait",
   "withErrorSpy",
@@ -417,27 +350,49 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/testing/internal 1`] = `
+Array [
+  "ObservableStream",
+  "actAsync",
+  "addDelayToMocks",
+  "createClientWrapper",
+  "createMockWrapper",
+  "enableFakeTimers",
+  "mockDeferStream",
+  "mockMultipartSubscriptionStream",
+  "renderAsync",
+  "renderHookAsync",
+  "resetApolloContext",
+  "setupMaskedVariablesCase",
+  "setupPaginatedCase",
+  "setupSimpleCase",
+  "setupVariablesCase",
+  "spyOnConsole",
+  "withCleanup",
+  "withProdMode",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/react 1`] = `
+Array [
+  "MockedProvider",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
   "AutoCleanedStrongCache",
   "AutoCleanedWeakCache",
-  "Concast",
-  "DEV",
   "DeepMerger",
   "DocumentTransform",
   "Observable",
   "addNonReactiveToNamedFragments",
   "addTypenameToDocument",
   "argumentsObjectFromField",
-  "asyncMap",
   "buildQueryFromSelectionSet",
   "cacheSizes",
-  "canUseAsyncIteratorSymbol",
   "canUseDOM",
   "canUseLayoutEffect",
-  "canUseSymbol",
-  "canUseWeakMap",
-  "canUseWeakSet",
   "canonicalStringify",
   "checkDocument",
   "cloneDeep",
@@ -446,7 +401,6 @@ Array [
   "createFragmentMap",
   "createFulfilledPromise",
   "createRejectedPromise",
-  "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
   "getFragmentDefinition",
@@ -484,7 +438,6 @@ Array [
   "isReference",
   "isStatefulPromise",
   "isSubscriptionOperation",
-  "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",
   "maybe",
@@ -513,20 +466,36 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+exports[`exports of public entry points @apollo/client/utilities/environment 1`] = `
 Array [
-  "DEV",
-  "InvariantError",
   "__DEV__",
-  "global",
-  "invariant",
-  "maybe",
-  "newInvariantError",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
+exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
-  "createFetchMultipartSubscription",
+  "global",
+  "maybe",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/internal 1`] = `
+Array [
+  "getApolloCacheMemoryInternals",
+  "getApolloClientMemoryInternals",
+  "getInMemoryCacheMemoryInternals",
+  "onAnyEvent",
+  "registerGlobalCache",
+  "toQueryResult",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/invariant 1`] = `
+Array [
+  "ApolloErrorMessageHandler",
+  "InvariantError",
+  "invariant",
+  "newInvariantError",
+  "setVerbosity",
 ]
 `;

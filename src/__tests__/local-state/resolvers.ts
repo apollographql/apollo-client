@@ -1,20 +1,17 @@
-import gql from "graphql-tag";
-import { DocumentNode, ExecutionResult } from "graphql";
+import type { DocumentNode, ExecutionResult } from "graphql";
+import { gql } from "graphql-tag";
+import { of } from "rxjs";
 
-import { LocalState } from "../../core/LocalState";
+import { InMemoryCache, isReference } from "@apollo/client/cache";
+import type { QueryResult, Resolvers } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockLink } from "@apollo/client/testing";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
-import {
-  ApolloClient,
-  ApolloQueryResult,
-  NetworkStatus,
-  Resolvers,
-} from "../../core";
-
-import { InMemoryCache, isReference } from "../../cache";
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { ObservableStream } from "../../testing/internal";
-import { MockLink } from "../../testing";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { LocalState } from "../../core/LocalState.js";
 
 const setupTestWithResolvers = ({
   resolvers,
@@ -36,7 +33,7 @@ const setupTestWithResolvers = ({
   delay?: number;
 }) => {
   const client = new ApolloClient({
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
     link: new MockLink([
       {
         request: { query: serverQuery || query, variables },
@@ -72,10 +69,11 @@ describe("Basic resolver capabilities", () => {
 
     const stream = setupTestWithResolvers({ resolvers, query });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: { foo: { bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -114,13 +112,14 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true } } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true },
         bar: { baz: true },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -164,13 +163,14 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, __typename: "ClientData" },
-        bar: { baz: true },
+        bar: { baz: true, __typename: "Bar" },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -225,13 +225,14 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -261,10 +262,11 @@ describe("Basic resolver capabilities", () => {
       variables: { id: 1 },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: 1 } },
+    await expect(stream).toEmitTypedValue({
+      data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -294,10 +296,11 @@ describe("Basic resolver capabilities", () => {
       queryOptions: { context: { id: 1 } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: 1 } },
+    await expect(stream).toEmitTypedValue({
+      data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -351,11 +354,13 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: {
         author: {
+          __typename: "Author",
           name: "John Smith",
           stats: {
+            __typename: "Stats",
             totalPosts: 100,
             postsToday: 10,
           },
@@ -363,6 +368,7 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -389,11 +395,7 @@ describe("Basic resolver capabilities", () => {
 
     const result = await client.query({ query, fetchPolicy: "network-only" });
 
-    expect(result).toEqualApolloQueryResult({
-      data: { isInCart: false },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-    });
+    expect(result).toStrictEqualTyped({ data: { isInCart: false } });
   });
 
   it("should handle nested asynchronous @client resolvers (issue #4841)", () => {
@@ -472,7 +474,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    function check(result: ApolloQueryResult<any>) {
+    function check(result: QueryResult<any>) {
       return new Promise<void>((resolve) => {
         expect(result.data.developer.id).toBe(developerId);
         expect(result.data.developer.handle).toBe("@benjamn");
@@ -551,13 +553,17 @@ describe("Basic resolver capabilities", () => {
       resolvers,
       query,
       serverQuery,
-      serverResult: { data: { bar: { baz: true } } },
+      serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: true }, bar: { baz: true } },
+    await expect(stream).toEmitTypedValue({
+      data: {
+        foo: { __typename: "Foo", bar: true },
+        bar: { __typename: "Bar", baz: true },
+      },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(barResolver).not.toHaveBeenCalled();
   });
@@ -593,11 +599,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
-      data: { field: 1 },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-    });
+    expect(result).toStrictEqualTyped({ data: { field: 1 } });
   });
 
   it("should let you write to the cache with a mutation using an ID", async () => {
@@ -650,10 +652,8 @@ describe("Writing cache data from resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: { obj: { __typename: "Object", field: 2 } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -714,7 +714,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: {
         obj: {
           __typename: "Object",
@@ -722,8 +722,6 @@ describe("Writing cache data from resolvers", () => {
           id: "uniqueId",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 });
@@ -744,7 +742,7 @@ describe("Resolving field aliases", () => {
     const link = new ApolloLink(() =>
       // Each link is responsible for implementing their own aliasing so it
       // returns baz not bar
-      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+      of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const client = new ApolloClient({
@@ -759,13 +757,11 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: {
         foo: { bar: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -792,10 +788,8 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query: aliasedQuery });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: { fie: { bar: true, __typename: "Foo" } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -813,7 +807,7 @@ describe("Resolving field aliases", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+      of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const fie = jest.fn();
@@ -830,13 +824,11 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query: aliasedQuery });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: {
         fie: { fum: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -875,10 +867,8 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: { fie: { bar: "yo", __typename: "Foo" } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -897,7 +887,7 @@ describe("Resolving field aliases", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           launch: {
             id: 1,
@@ -937,18 +927,14 @@ describe("Resolving field aliases", () => {
 
     // `isInCart` resolver is fired, returning `true` (which is then
     // stored in the cache).
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
 
     // When the same query fires again, `isInCart` should be pulled from
     // the cache and have a value of `true`.
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 });
@@ -984,12 +970,10 @@ describe("Force local resolvers", () => {
 
     // When the resolver isn't defined, there isn't anything to force, so
     // make sure the query resolves from the cache properly.
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: {
         author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
 
     client.addResolvers({
@@ -1003,12 +987,10 @@ describe("Force local resolvers", () => {
     // A resolver is defined, so make sure it's forced, and the result
     // resolves properly as a combination of cache and local resolver
     // data.
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: {
         author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -1023,7 +1005,7 @@ describe("Force local resolvers", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           author: {
             name: "John Smith",
@@ -1047,7 +1029,7 @@ describe("Force local resolvers", () => {
       },
     });
 
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
       data: {
         author: {
           __typename: "Author",
@@ -1055,8 +1037,6 @@ describe("Force local resolvers", () => {
           name: "John Smith",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
     expect(count).toEqual(1);
   });
@@ -1184,7 +1164,7 @@ describe("Force local resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: {
         userData: {
           __typename: "User",
@@ -1193,8 +1173,6 @@ describe("Force local resolvers", () => {
           fullName: "Ben Newman",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 });
@@ -1220,10 +1198,8 @@ describe("Async resolvers", () => {
 
     const result = await client.query({ query })!;
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: { isLoggedIn: true },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -1245,7 +1221,7 @@ describe("Async resolvers", () => {
     };
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           member: {
             name: testMember.name,
@@ -1272,7 +1248,7 @@ describe("Async resolvers", () => {
 
     const result = await client.query({ query })!;
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toStrictEqualTyped({
       data: {
         member: {
           name: testMember.name,
@@ -1281,8 +1257,6 @@ describe("Async resolvers", () => {
           __typename: "Member",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
     });
   });
 });

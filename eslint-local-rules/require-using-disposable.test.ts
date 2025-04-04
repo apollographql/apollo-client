@@ -1,5 +1,5 @@
-import { rule } from "./require-using-disposable";
-import { ruleTester } from "./testSetup";
+import { rule } from "./require-using-disposable.ts";
+import { ruleTester } from "./testSetup.ts";
 
 ruleTester.run("require-using-disposable", rule, {
   valid: [

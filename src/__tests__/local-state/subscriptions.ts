@@ -1,10 +1,10 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { of } from "rxjs";
 
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { ApolloClient } from "../../core";
-import { InMemoryCache } from "../../cache";
-import { ObservableStream } from "../../testing/internal";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("Basic functionality", () => {
   it("should not break subscriptions", async () => {
@@ -15,7 +15,7 @@ describe("Basic functionality", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 1 } }, { data: { field: 2 } })
+      of({ data: { field: 1 } }, { data: { field: 2 } })
     );
 
     const client = new ApolloClient({
@@ -30,8 +30,8 @@ describe("Basic functionality", () => {
 
     const stream = new ObservableStream(client.subscribe({ query }));
 
-    await expect(stream).toEmitValue({ data: { field: 1 } });
-    await expect(stream).toEmitValue({ data: { field: 2 } });
+    await expect(stream).toEmitTypedValue({ data: { field: 1 } });
+    await expect(stream).toEmitTypedValue({ data: { field: 2 } });
     await expect(stream).toComplete();
   });
 
@@ -44,7 +44,7 @@ describe("Basic functionality", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 1 } }, { data: { field: 2 } })
+      of({ data: { field: 1 } }, { data: { field: 2 } })
     );
 
     let subCounter = 0;
@@ -63,8 +63,8 @@ describe("Basic functionality", () => {
 
     const stream = new ObservableStream(client.subscribe({ query }));
 
-    await expect(stream).toEmitValue({ data: { field: 1, count: 1 } });
-    await expect(stream).toEmitValue({ data: { field: 2, count: 2 } });
+    await expect(stream).toEmitTypedValue({ data: { field: 1, count: 1 } });
+    await expect(stream).toEmitTypedValue({ data: { field: 2, count: 2 } });
     await expect(stream).toComplete();
   });
 });

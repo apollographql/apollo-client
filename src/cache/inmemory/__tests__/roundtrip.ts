@@ -1,12 +1,18 @@
-import { DocumentNode } from "graphql";
-import gql from "graphql-tag";
+import type { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
 
-import { EntityStore } from "../entityStore";
-import { StoreReader } from "../readFromStore";
-import { StoreWriter } from "../writeToStore";
-import { InMemoryCache } from "../inMemoryCache";
-import { writeQueryToStore, readQueryFromStore, withError } from "./helpers";
-import { spyOnConsole } from "../../../testing/internal";
+import { EntityStore, InMemoryCache } from "@apollo/client/cache";
+import { spyOnConsole } from "@apollo/client/testing/internal";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { StoreReader } from "../readFromStore.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { StoreWriter } from "../writeToStore.js";
+
+import { readQueryFromStore, withError, writeQueryToStore } from "./helpers.js";
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === "object" && stack.indexOf(value) < 0) {
@@ -20,7 +26,12 @@ function assertDeeplyFrozen(value: any, stack: any[] = []) {
   }
 }
 
-function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
+function storeRoundtrip(
+  query: DocumentNode,
+  result: any,
+  variables = {},
+  expectedResult = result
+) {
   const cache = new InMemoryCache({
     possibleTypes: {
       Character: ["Jedi", "Droid"],
@@ -44,7 +55,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   };
 
   const reconstructedResult = readQueryFromStore(reader, readOptions);
-  expect(reconstructedResult).toEqual(result);
+  expect(reconstructedResult).toEqual(expectedResult);
 
   // Make sure the result is identical if we haven't written anything new
   // to the store. https://github.com/apollographql/apollo-client/pull/3394
@@ -81,7 +92,7 @@ function storeRoundtrip(query: DocumentNode, result: any, variables = {}) {
   });
 
   const deletedRootResult = readQueryFromStore(reader, readOptions);
-  expect(deletedRootResult).toEqual(result);
+  expect(deletedRootResult).toEqual(expectedResult);
 
   if (deletedRootResult === reconstructedResult) {
     // We don't expect the new result to be identical to the previous result,
@@ -258,7 +269,9 @@ describe("roundtrip", () => {
             fortuneCookie @skip(if: true)
           }
         `,
-        {}
+        {},
+        {},
+        null
       );
     });
 
@@ -317,33 +330,33 @@ describe("roundtrip", () => {
     // However, the user may have written this result with client.writeQuery.
     it("should throw an error on two of the same inline fragment types", () => {
       using _consoleSpies = spyOnConsole.takeSnapshots("error");
-      expect(() => {
-        storeRoundtrip(
-          gql`
-            query {
-              all_people {
-                __typename
-                name
-                ... on Jedi {
-                  side
-                }
-                ... on Jedi {
-                  rank
-                }
+      storeRoundtrip(
+        gql`
+          query {
+            all_people {
+              __typename
+              name
+              ... on Jedi {
+                side
+              }
+              ... on Jedi {
+                rank
               }
             }
-          `,
-          {
-            all_people: [
-              {
-                __typename: "Jedi",
-                name: "Luke Skywalker",
-                side: "bright",
-              },
-            ],
           }
-        );
-      }).toThrowError(/Can't find field 'rank' /);
+        `,
+        {
+          all_people: [
+            {
+              __typename: "Jedi",
+              name: "Luke Skywalker",
+              side: "bright",
+            },
+          ],
+        },
+        {},
+        null
+      );
     });
 
     it("should resolve fields it can on interface with non matching inline fragments", () => {
@@ -458,37 +471,37 @@ describe("roundtrip", () => {
 
     it("should throw on error on two of the same spread fragment types", () => {
       using _consoleSpies = spyOnConsole.takeSnapshots("error");
-      expect(() => {
-        storeRoundtrip(
-          gql`
-            fragment jediSide on Jedi {
-              side
-            }
-
-            fragment jediRank on Jedi {
-              rank
-            }
-
-            query {
-              all_people {
-                __typename
-                name
-                ...jediSide
-                ...jediRank
-              }
-            }
-          `,
-          {
-            all_people: [
-              {
-                __typename: "Jedi",
-                name: "Luke Skywalker",
-                side: "bright",
-              },
-            ],
+      storeRoundtrip(
+        gql`
+          fragment jediSide on Jedi {
+            side
           }
-        );
-      }).toThrowError(/Can't find field 'rank' /);
+
+          fragment jediRank on Jedi {
+            rank
+          }
+
+          query {
+            all_people {
+              __typename
+              name
+              ...jediSide
+              ...jediRank
+            }
+          }
+        `,
+        {
+          all_people: [
+            {
+              __typename: "Jedi",
+              name: "Luke Skywalker",
+              side: "bright",
+            },
+          ],
+        },
+        {},
+        null
+      );
     });
 
     it("should resolve on @include and @skip with inline fragments", () => {

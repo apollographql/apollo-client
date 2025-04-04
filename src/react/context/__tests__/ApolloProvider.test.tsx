@@ -1,11 +1,12 @@
-import React, { useContext } from "react";
 import { render, screen } from "@testing-library/react";
+import React, { useContext } from "react";
 
-import { ApolloLink } from "../../../link/core";
-import { ApolloClient } from "../../../core";
-import { InMemoryCache as Cache } from "../../../cache";
-import { ApolloProvider, ApolloProviderProps } from "../ApolloProvider";
-import { ApolloContextValue, getApolloContext } from "../ApolloContext";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react";
+
+import type { ApolloContextValue } from "../ApolloContext.js";
 
 describe("<ApolloProvider /> Component", () => {
   const client = new ApolloClient({
@@ -30,7 +31,7 @@ describe("<ApolloProvider /> Component", () => {
 
   it("should support the 2.0", () => {
     render(
-      <ApolloProvider client={{} as ApolloClient<any>}>
+      <ApolloProvider client={{} as ApolloClient}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
@@ -113,8 +114,8 @@ describe("<ApolloProvider /> Component", () => {
   describe.each<
     [
       string,
-      Omit<ApolloProviderProps<any>, "children">,
-      Omit<ApolloProviderProps<any>, "children">,
+      Omit<ApolloProvider.Props, "children">,
+      Omit<ApolloProvider.Props, "children">,
     ]
   >([["client", { client }, { client: anotherClient }]])(
     "context value stability, %s prop",

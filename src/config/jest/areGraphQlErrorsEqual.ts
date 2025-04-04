@@ -1,5 +1,5 @@
-import { GraphQLError } from "graphql";
 import type { Tester } from "@jest/expect-utils";
+import { GraphQLError } from "graphql";
 
 export const areGraphQLErrorsEqual: Tester = function (a, b, customTesters) {
   if (a instanceof GraphQLError || b instanceof GraphQLError) {

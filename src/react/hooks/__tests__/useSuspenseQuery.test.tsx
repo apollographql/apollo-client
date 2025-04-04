@@ -1,81 +1,84 @@
-import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
-import {
-  act,
-  screen,
-  waitFor,
-  RenderHookOptions,
-  renderHook,
-} from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
-import { equal } from "@wry/equality";
-import { expectTypeOf } from "expect-type";
-
-import {
-  gql,
-  ApolloCache,
-  ApolloClient,
-  ApolloError,
-  ApolloLink,
-  DocumentNode,
-  InMemoryCache,
-  Observable,
-  OperationVariables,
-  SubscribeToMoreOptions,
-  TypedDocumentNode,
-  split,
-  NetworkStatus,
-  ApolloQueryResult,
-  ErrorPolicy,
-} from "../../../core";
-import {
-  DeepPartial,
-  compact,
-  concatPagination,
-  getMainDefinition,
-  offsetLimitPagination,
-} from "../../../utilities";
-import {
-  MockedProvider,
-  MockedResponse,
-  MockSubscriptionLink,
-  MockLink,
-} from "../../../testing";
-import { ApolloProvider } from "../../context";
-import { SuspenseQueryHookFetchPolicy, skipToken } from "../../../react";
-import { UseSuspenseQueryResult, useSuspenseQuery } from "../useSuspenseQuery";
-import {
-  RefetchWritePolicy,
-  WatchQueryFetchPolicy,
-} from "../../../core/watchQueryOptions";
-import {
-  PaginatedCaseData,
-  PaginatedCaseVariables,
-  setupPaginatedCase,
-  spyOnConsole,
-  actAsync,
-  renderAsync,
-  renderHookAsync,
-} from "../../../testing/internal";
-import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
-
+import type { RenderHookOptions } from "@testing-library/react";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { equal } from "@wry/equality";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
+import type { FallbackProps } from "react-error-boundary";
+import { ErrorBoundary } from "react-error-boundary";
+import { Observable, of } from "rxjs";
+
+import type {
+  ApolloCache,
+  DocumentNode,
+  ErrorPolicy,
+  OperationVariables,
+  QueryResult,
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  split,
+} from "@apollo/client/core";
+import type {
+  Masked,
+  MaskedDocumentNode,
+  Unmasked,
+} from "@apollo/client/masking";
+import {
+  ApolloProvider,
+  skipToken,
+  useSuspenseQuery,
+} from "@apollo/client/react";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import type {
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+} from "@apollo/client/testing/internal";
+import {
+  actAsync,
+  renderAsync,
+  renderHookAsync,
+  setupPaginatedCase,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+import type { DeepPartial } from "@apollo/client/utilities";
+import {
+  compact,
+  concatPagination,
+  getMainDefinition,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import type {
+  RefetchWritePolicy,
+  WatchQueryFetchPolicy,
+} from "../../../core/watchQueryOptions.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
-type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
+type RenderSuspenseHookOptions<Props> = Omit<
   RenderHookOptions<Props>,
   "wrapper"
 > & {
-  client?: ApolloClient<TSerializedCache>;
+  client?: ApolloClient;
   link?: ApolloLink;
-  cache?: ApolloCache<TSerializedCache>;
+  cache?: ApolloCache;
   mocks?: MockedResponse[];
   strictMode?: boolean;
 };
@@ -94,7 +97,7 @@ interface SimpleQueryData {
 
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
-  options: RenderSuspenseHookOptions<Props> = Object.create(null)
+  options: RenderSuspenseHookOptions<Props> = {}
 ) {
   function SuspenseFallback() {
     renders.suspenseCount++;
@@ -229,17 +232,15 @@ interface ErrorCaseData {
   };
 }
 
-function useErrorCase<TData extends ErrorCaseData>(
-  {
-    data,
-    networkError,
-    graphQLErrors,
-  }: {
-    data?: Unmasked<TData>;
-    networkError?: Error;
-    graphQLErrors?: GraphQLError[];
-  } = Object.create(null)
-) {
+function useErrorCase<TData extends ErrorCaseData>({
+  data,
+  networkError,
+  graphQLErrors,
+}: {
+  data?: Unmasked<TData>;
+  networkError?: Error;
+  graphQLErrors?: GraphQLError[];
+} = {}) {
   const query: TypedDocumentNode<TData, never> = gql`
     query MyQuery {
       currentUser {
@@ -373,7 +374,7 @@ describe("useSuspenseQuery", () => {
       });
     }).toThrowError(
       new InvariantError(
-        "Running a Query requires a graphql Query, but a Mutation was used instead."
+        "Running a query requires a graphql query, but a mutation was used instead."
       )
     );
   });
@@ -456,11 +457,9 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, render } = await createRenderStream<
-      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
-    >({
-      snapshotDOM: true,
-    });
+    const { takeRender, replaceSnapshot, render } = createRenderStream<
+      useSuspenseQuery.Result<SimpleQueryData, OperationVariables>
+    >({ snapshotDOM: true });
     await render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -478,7 +477,7 @@ describe("useSuspenseQuery", () => {
       const { withinDOM, snapshot } = await takeRender();
       expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
       expect(withinDOM().getByText("Hello")).toBeInTheDocument();
-      expect(snapshot).toMatchObject({
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -495,15 +494,16 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -521,8 +521,9 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -534,7 +535,7 @@ describe("useSuspenseQuery", () => {
     expect(result.current).toBe(previousResult);
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -559,8 +560,9 @@ describe("useSuspenseQuery", () => {
     expect(screen.getByText("loading")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -585,17 +587,20 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
     const previousResult = result.current;
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated cache greeting" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated cache greeting" },
+      });
     });
 
     await waitFor(() => {
@@ -609,114 +614,11 @@ describe("useSuspenseQuery", () => {
     expect(result.current.subscribeToMore).toBe(previousResult.subscribeToMore);
   });
 
-  it('enables canonical results when canonizeResults is "true"', async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: "Result", value: 0 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 2 },
-      { __typename: "Result", value: 3 },
-      { __typename: "Result", value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    const { result } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { canonizeResults: true }),
-      { cache }
-    );
-
-    const { data } = result.current;
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data).toEqual({ results });
-    expect(data.results.length).toBe(6);
-    expect(resultSet.size).toBe(5);
-    expect(values).toEqual([0, 1, 2, 3, 5]);
-  });
-
-  it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    const cache = new InMemoryCache({
-      canonizeResults: true,
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: "Result", value: 0 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 2 },
-      { __typename: "Result", value: 3 },
-      { __typename: "Result", value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    const { result } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { canonizeResults: false }),
-      { cache }
-    );
-
-    const { data } = result.current;
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data).toEqual({ results });
-    expect(data.results.length).toBe(6);
-    expect(resultSet.size).toBe(6);
-    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-  });
-
   it("tears down the query on unmount", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of(mocks[0].result)),
+      link: new ApolloLink(() => of(mocks[0].result)),
       cache: new InMemoryCache(),
     });
 
@@ -1073,16 +975,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1095,7 +993,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current.data).toEqual({ greeting: "local hello" })
     );
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "local hello" },
         networkStatus: NetworkStatus.ready,
@@ -1108,16 +1006,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1132,7 +1026,7 @@ describe("useSuspenseQuery", () => {
 
     // React double invokes the render function in strict mode so we expect
     // to render 2 frames after the initial suspense.
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "local hello" },
         networkStatus: NetworkStatus.ready,
@@ -1150,9 +1044,7 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1177,7 +1069,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1187,7 +1079,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1196,7 +1088,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -1239,7 +1131,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello client 1" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1249,7 +1141,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ client: client2 });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello client 2" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1258,7 +1150,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello client 1" },
         networkStatus: NetworkStatus.ready,
@@ -1414,7 +1306,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1424,7 +1316,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ queryKey: ["second"] });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello second fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1433,7 +1325,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
@@ -1471,7 +1363,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1481,7 +1373,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ queryKey: ["greeting", 2] });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello second fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1490,7 +1382,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
@@ -1528,7 +1420,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1538,7 +1430,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ queryKey: "second" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello second fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1547,7 +1439,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
@@ -1585,7 +1477,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1595,7 +1487,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ queryKey: 2 });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello second fetch" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1604,7 +1496,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello first fetch" },
         networkStatus: NetworkStatus.ready,
@@ -1632,7 +1524,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1642,21 +1534,23 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "2" },
-      data: { character: { id: "2", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "2" },
+        data: { character: { id: "2", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { character: { id: "2", name: "Cached hero" } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1665,7 +1559,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.suspenseCount).toBe(2);
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -1697,7 +1591,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1707,7 +1601,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1716,7 +1610,7 @@ describe("useSuspenseQuery", () => {
 
     await rerenderAsync({ id: "1" });
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -1724,7 +1618,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -1802,7 +1696,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1812,7 +1706,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1821,14 +1715,14 @@ describe("useSuspenseQuery", () => {
 
     await rerenderAsync({ id: "1" });
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       ...mocks[0].result,
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1837,7 +1731,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -1920,7 +1814,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1930,7 +1824,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1940,7 +1834,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "1" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -1949,7 +1843,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -2027,7 +1921,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2037,7 +1931,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2047,7 +1941,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "1" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2056,7 +1950,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -2089,7 +1983,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2099,7 +1993,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2109,21 +2003,23 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "1" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "1" },
-      data: { character: { id: "1", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "1" },
+        data: { character: { id: "1", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { character: { id: "1", name: "Cached hero" } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2132,7 +2028,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.suspenseCount).toBe(2);
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -2171,7 +2067,7 @@ describe("useSuspenseQuery", () => {
       { cache, mocks }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { greeting: "hello from cache" },
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -2179,7 +2075,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(1 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "hello from cache" },
         networkStatus: NetworkStatus.ready,
@@ -2257,7 +2153,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2266,7 +2162,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -2318,14 +2214,14 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { character: { id: "1" } },
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2334,7 +2230,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { character: { id: "1" } },
         networkStatus: NetworkStatus.loading,
@@ -2378,14 +2274,14 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { character: { id: "1" } },
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2395,7 +2291,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2404,7 +2300,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { character: { id: "1" } },
         networkStatus: NetworkStatus.loading,
@@ -2439,7 +2335,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2448,7 +2344,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
@@ -2502,7 +2398,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2511,7 +2407,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -2536,7 +2432,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2547,7 +2443,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
@@ -2568,7 +2464,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2577,7 +2473,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
@@ -2587,14 +2483,14 @@ describe("useSuspenseQuery", () => {
 
     await rerenderAsync();
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
@@ -2655,7 +2551,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2664,7 +2560,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -2708,14 +2604,14 @@ describe("useSuspenseQuery", () => {
       { cache, mocks }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { greeting: "hello from cache" },
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2724,7 +2620,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "hello from cache" },
         networkStatus: NetworkStatus.loading,
@@ -2781,14 +2677,14 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { character: { id: "1" } },
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2797,7 +2693,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { character: { id: "1" } },
         networkStatus: NetworkStatus.loading,
@@ -2841,14 +2737,14 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { character: { id: "1" } },
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2858,7 +2754,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -2867,7 +2763,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { character: { id: "1" } },
         networkStatus: NetworkStatus.loading,
@@ -2886,7 +2782,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -2932,7 +2828,7 @@ describe("useSuspenseQuery", () => {
     expect(cachedData).toBeNull();
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -2955,13 +2851,15 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: { greeting: "Updated hello" },
           networkStatus: NetworkStatus.ready,
           error: undefined,
@@ -2969,7 +2867,7 @@ describe("useSuspenseQuery", () => {
       });
       expect(renders.suspenseCount).toBe(1);
       expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-      expect(renders.frames).toMatchObject([
+      expect(renders.frames).toStrictEqualTyped([
         {
           ...mocks[0].result,
           networkStatus: NetworkStatus.ready,
@@ -3009,14 +2907,14 @@ describe("useSuspenseQuery", () => {
     // Wait for a while to ensure no updates happen asynchronously
     await wait(100);
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
     expect(renders.suspenseCount).toBe(1);
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -3025,7 +2923,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3042,8 +2940,9 @@ describe("useSuspenseQuery", () => {
 
       expect(renders.suspenseCount).toBe(1);
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           ...mocks[0].result,
+          networkStatus: NetworkStatus.ready,
           error: undefined,
         });
       });
@@ -3051,7 +2950,7 @@ describe("useSuspenseQuery", () => {
       await rerenderAsync({ id: "2" });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           ...mocks[1].result,
           networkStatus: NetworkStatus.ready,
           error: undefined,
@@ -3065,7 +2964,7 @@ describe("useSuspenseQuery", () => {
       // 5. Unsuspend and return results from refetch
       expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toMatchObject([
+      expect(renders.frames).toStrictEqualTyped([
         {
           ...mocks[0].result,
           networkStatus: NetworkStatus.ready,
@@ -3080,7 +2979,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3120,7 +3019,7 @@ describe("useSuspenseQuery", () => {
 
       expect(renders.suspenseCount).toBe(1);
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           ...mocks[0].result,
           networkStatus: NetworkStatus.ready,
           error: undefined,
@@ -3130,7 +3029,7 @@ describe("useSuspenseQuery", () => {
       await rerenderAsync({ query: query2 });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           ...mocks[1].result,
           networkStatus: NetworkStatus.ready,
           error: undefined,
@@ -3144,7 +3043,7 @@ describe("useSuspenseQuery", () => {
       // 5. Unsuspend and return results from refetch
       expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toMatchObject([
+      expect(renders.frames).toStrictEqualTyped([
         {
           ...mocks[0].result,
           networkStatus: NetworkStatus.ready,
@@ -3159,7 +3058,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3209,7 +3108,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3256,7 +3155,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -3279,13 +3178,15 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: { greeting: "Updated hello" },
           networkStatus: NetworkStatus.ready,
           error: undefined,
@@ -3322,14 +3223,17 @@ describe("useSuspenseQuery", () => {
     // updated value.
     await wait(0);
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated hello" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated hello" },
+      });
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Updated hello" },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -3363,7 +3267,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -3391,14 +3295,14 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
@@ -3426,7 +3330,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -3435,7 +3339,7 @@ describe("useSuspenseQuery", () => {
 
     // React double invokes the render function in strict mode so we expect 2
     // frames to be rendered here.
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
@@ -3481,7 +3385,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
         },
@@ -3493,7 +3397,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ source: "rerender" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           vars: { source: "rerender", globalOnlyVar: true, localOnlyVar: true },
         },
@@ -3502,7 +3406,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           vars: { source: "local", globalOnlyVar: true, localOnlyVar: true },
@@ -3551,7 +3455,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { vars: { source: "local" } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -3564,7 +3468,7 @@ describe("useSuspenseQuery", () => {
     // they have strictly the same keys and values.
     expect(result.current.data.vars).not.toHaveProperty("globalOnlyVar");
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { vars: { source: "local" } },
         networkStatus: NetworkStatus.ready,
@@ -3601,7 +3505,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { context: { valueA: "A", valueB: "B" } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -3629,11 +3533,10 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error("Could not fetch"));
-    expect(error.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(new Error("Could not fetch"));
   });
 
   it("throws graphql errors by default", async () => {
@@ -3656,13 +3559,14 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("`id` should not be null"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "`id` should not be null" }],
+      })
+    );
   });
 
   it("tears down subscription when throwing an error", async () => {
@@ -3737,8 +3641,8 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -3770,11 +3674,10 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error("Could not fetch"));
-    expect(error.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(new Error("Could not fetch"));
   });
 
   it('throws graphql errors when errorPolicy is set to "none"', async () => {
@@ -3795,13 +3698,14 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("`id` should not be null"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "`id` should not be null" }],
+      })
+    );
   });
 
   it('handles multiple graphql errors when errorPolicy is set to "none"', async () => {
@@ -3825,37 +3729,38 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toBeNull();
-    expect(error!.graphQLErrors).toEqual(graphQLErrors);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(new CombinedGraphQLErrors({ errors: graphQLErrors }));
   });
 
-  it('throws network errors when errorPolicy is set to "ignore"', async () => {
+  it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
     using _consoleSpy = spyOnConsole("error");
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
+      expect(result.current).toStrictEqualTyped({
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
     });
 
-    expect(renders.errors.length).toBe(1);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors as ApolloError[];
-
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toEqual(networkError);
-    expect(error!.graphQLErrors).toEqual([]);
+    expect(renders.frames).toStrictEqualTyped([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+    ]);
   });
 
   it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
@@ -3869,7 +3774,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -3880,7 +3785,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
     ]);
   });
@@ -3897,14 +3802,14 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { currentUser: { id: "1", name: null } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { currentUser: { id: "1", name: null } },
         networkStatus: NetworkStatus.ready,
@@ -3927,14 +3832,14 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
     ]);
   });
@@ -3955,25 +3860,27 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           currentUser: {
             id: "1",
@@ -3986,7 +3893,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: undefined,
         networkStatus: NetworkStatus.ready,
@@ -4000,31 +3907,42 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it('throws network errors when errorPolicy is set to "all"', async () => {
+  it('does not throw and returns network errors when errorPolicy is set to "all"', async () => {
     using _consoleSpy = spyOnConsole("error");
 
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
+      expect(result.current).toStrictEqualTyped({
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: networkError,
+      });
     });
 
-    expect(renders.errors.length).toBe(1);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
+    expect(renders.frames).toStrictEqualTyped([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: networkError,
+      },
+    ]);
 
-    const [error] = renders.errors as ApolloError[];
+    const { error } = result.current;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toEqual(networkError);
-    expect(error!.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(networkError);
   });
 
   it('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {
@@ -4038,9 +3956,10 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        networkStatus: NetworkStatus.error,
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       });
     });
 
@@ -4048,19 +3967,20 @@ describe("useSuspenseQuery", () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       },
     ]);
 
     const { error } = result.current;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toBeNull();
-    expect(error!.graphQLErrors).toEqual([graphQLError]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({ errors: [graphQLError] })
+    );
   });
 
   it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "all"', async () => {
@@ -4079,25 +3999,27 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           currentUser: {
             id: "1",
@@ -4110,11 +4032,11 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors({ errors: [graphQLError] }),
       },
       {
         data: { currentUser: { id: "1", name: "Cache User" } },
@@ -4137,11 +4059,12 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors });
+    const expectedError = new CombinedGraphQLErrors({ errors: graphQLErrors });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
+        networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
@@ -4150,7 +4073,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.errors).toEqual([]);
     expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
@@ -4160,9 +4083,8 @@ describe("useSuspenseQuery", () => {
 
     const { error } = result.current;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toBeNull();
-    expect(error!.graphQLErrors).toEqual(graphQLErrors);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(expectedError);
   });
 
   it('returns partial data and keeps errors when errorPolicy is set to "all"', async () => {
@@ -4178,17 +4100,20 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
+    const expectedError = new CombinedGraphQLErrors({
+      data: { currentUser: { id: "1", name: null } },
+      errors: [graphQLError],
+    });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { currentUser: { id: "1", name: null } },
         networkStatus: NetworkStatus.error,
         error: expectedError,
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { currentUser: { id: "1", name: null } },
         networkStatus: NetworkStatus.error,
@@ -4209,7 +4134,7 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
+    const expectedError = new CombinedGraphQLErrors({ errors: [graphQLError] });
 
     await waitFor(() => {
       expect(result.current.error).toEqual(expectedError);
@@ -4255,10 +4180,10 @@ describe("useSuspenseQuery", () => {
       { mocks, initialProps: { id: "1" } }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors });
+    const expectedError = new CombinedGraphQLErrors({ errors: graphQLErrors });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: undefined,
         networkStatus: NetworkStatus.error,
         error: expectedError,
@@ -4268,8 +4193,8 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "2" });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[1].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[1].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4279,14 +4204,14 @@ describe("useSuspenseQuery", () => {
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
         error: expectedError,
       },
       {
-        ...mocks[1].result,
+        data: mocks[1].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -4326,7 +4251,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4341,7 +4266,7 @@ describe("useSuspenseQuery", () => {
       void result.current.refetch();
     });
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4350,7 +4275,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -4494,7 +4419,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4506,7 +4431,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4514,7 +4439,7 @@ describe("useSuspenseQuery", () => {
     });
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -4568,8 +4493,9 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[0].result.data,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4579,7 +4505,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4591,7 +4517,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4600,7 +4526,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -4654,8 +4580,8 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4670,13 +4596,13 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.errors).toEqual([
-      new ApolloError({
-        graphQLErrors: [new GraphQLError("Something went wrong")],
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Something went wrong" }],
       }),
     ]);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -4720,8 +4646,8 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4733,14 +4659,14 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -4783,13 +4709,13 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
+    const expectedError = new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
@@ -4800,8 +4726,8 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
-        ...mocks[0].result,
+      expect(result.current).toStrictEqualTyped({
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.error,
         error: expectedError,
       });
@@ -4809,14 +4735,14 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
       {
-        ...mocks[0].result,
+        data: mocks[0].result.data,
         networkStatus: NetworkStatus.error,
         error: expectedError,
       },
@@ -4860,13 +4786,15 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
+    const expectedError = new CombinedGraphQLErrors({
+      data: { user: { id: "1", name: null } },
+      errors: [{ message: "Something went wrong" }],
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -4876,7 +4804,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: mocks[1].result.data,
         networkStatus: NetworkStatus.error,
         error: expectedError,
@@ -4885,7 +4813,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -4908,7 +4836,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4920,7 +4848,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { letters: data.slice(2, 4) },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -4929,7 +4857,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
@@ -5020,7 +4948,7 @@ describe("useSuspenseQuery", () => {
       { cache, mocks }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: { greeting: "hello from cache" },
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5031,7 +4959,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5040,7 +4968,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: "hello from cache" },
         networkStatus: NetworkStatus.ready,
@@ -5063,8 +4991,9 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { letters: data.slice(0, 2) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
@@ -5079,13 +5008,14 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { letters: data.slice(0, 4) },
+        networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
@@ -5118,7 +5048,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5130,14 +5060,14 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { letters: data.slice(0, 4) },
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
@@ -5201,7 +5131,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5215,7 +5145,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5278,7 +5208,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5292,7 +5222,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5354,7 +5284,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5368,7 +5298,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5392,7 +5322,7 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: undefined,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5410,7 +5340,7 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: undefined,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5428,7 +5358,7 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: undefined,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5439,7 +5369,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5448,7 +5378,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
       {
         ...mocks[0].result,
@@ -5467,7 +5397,7 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.suspenseCount).toBe(0);
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: undefined,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5478,7 +5408,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5487,7 +5417,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
       {
         ...mocks[0].result,
@@ -5510,7 +5440,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5521,7 +5451,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.suspenseCount).toBe(1);
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5529,7 +5459,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -5556,7 +5486,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5567,7 +5497,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.suspenseCount).toBe(1);
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       ...mocks[0].result,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -5575,7 +5505,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
@@ -5623,7 +5553,7 @@ describe("useSuspenseQuery", () => {
     expect(fetchCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5670,7 +5600,7 @@ describe("useSuspenseQuery", () => {
     expect(fetchCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5718,7 +5648,7 @@ describe("useSuspenseQuery", () => {
     expect(fetchCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -5764,7 +5694,7 @@ describe("useSuspenseQuery", () => {
     expect(fetchCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6157,7 +6087,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...successMock.result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6171,10 +6101,10 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...successMock.result,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
       });
     });
 
@@ -6185,7 +6115,7 @@ describe("useSuspenseQuery", () => {
         error: f.error,
         networkStatus: f.networkStatus,
       }))
-    ).toMatchObject([
+    ).toStrictEqualTyped([
       {
         ...successMock.result,
         networkStatus: NetworkStatus.ready,
@@ -6199,7 +6129,7 @@ describe("useSuspenseQuery", () => {
       {
         ...successMock.result,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
       },
     ]);
   });
@@ -6212,9 +6142,13 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
-          context: operation.getContext(),
+          context: {
+            // Only apply serialized value to prevent comparing against object
+            // with additional client properties
+            phase: operation.getContext().phase,
+          },
         },
       });
     });
@@ -6230,7 +6164,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { context: { phase: "initialValue" } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6244,7 +6178,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           context: { phase: "rerender" },
         },
@@ -6253,7 +6187,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { context: { phase: "initialValue" } },
         networkStatus: NetworkStatus.ready,
@@ -6270,79 +6204,6 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       },
     ]);
-  });
-
-  // NOTE: We only test the `false` -> `true` path here. If the option changes
-  // from `true` -> `false`, the data has already been canonized, so it has no
-  // effect on the output.
-  it("returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders", async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    interface Data {
-      results: Result[];
-    }
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<Data> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: "Result", value: 0 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 2 },
-      { __typename: "Result", value: 3 },
-      { __typename: "Result", value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    function verifyCanonicalResults(data: Data, canonized: boolean) {
-      const resultSet = new Set(data.results);
-      const values = Array.from(resultSet).map((item) => item.value);
-
-      expect(data).toEqual({ results });
-
-      if (canonized) {
-        expect(data.results.length).toBe(6);
-        expect(resultSet.size).toBe(5);
-        expect(values).toEqual([0, 1, 2, 3, 5]);
-      } else {
-        expect(data.results.length).toBe(6);
-        expect(resultSet.size).toBe(6);
-        expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-      }
-    }
-
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
-      ({ canonizeResults }) => useSuspenseQuery(query, { canonizeResults }),
-      { cache, initialProps: { canonizeResults: false } }
-    );
-
-    verifyCanonicalResults(result.current.data, false);
-
-    await rerenderAsync({ canonizeResults: true });
-
-    verifyCanonicalResults(result.current.data, true);
-    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
   });
 
   it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {
@@ -6404,7 +6265,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6418,7 +6279,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6440,7 +6301,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6448,7 +6309,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6530,7 +6391,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6547,13 +6408,15 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.data).toEqual({
-        character: { __typename: "Character", id: "1" },
+      expect(result.current).toStrictEqualTyped({
+        data: { character: { __typename: "Character", id: "1" } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
       });
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6562,9 +6425,15 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
-        data: { character: { __typename: "Character", id: "1" } },
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Doctor Strange",
+          },
+        },
         networkStatus: NetworkStatus.ready,
         error: undefined,
       },
@@ -6632,12 +6501,12 @@ describe("useSuspenseQuery", () => {
         cache,
         mocks,
         initialProps: {
-          fetchPolicy: "cache-first" as SuspenseQueryHookFetchPolicy,
+          fetchPolicy: "cache-first" as useSuspenseQuery.FetchPolicy,
         },
       }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -6680,7 +6549,7 @@ describe("useSuspenseQuery", () => {
     // `console.log` statement to the `handleNext` function in `QueryReference`.
     // expect(renders.count).toBe(4);
     // expect(renders.suspenseCount).toBe(1);
-    // expect(renders.frames).toMatchObject([
+    // expect(renders.frames).toStrictEqualTyped([
     //   {
     //     data: {
     //       character: {
@@ -6774,7 +6643,7 @@ describe("useSuspenseQuery", () => {
       }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -6791,7 +6660,7 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           character: {
             __typename: "Character",
@@ -6810,12 +6679,12 @@ describe("useSuspenseQuery", () => {
       void result.current.refetch();
     });
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("oops")],
+    const expectedError = new CombinedGraphQLErrors({
+      errors: [{ message: "oops" }],
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           character: {
             __typename: "Character",
@@ -6876,7 +6745,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6888,7 +6757,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6900,7 +6769,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         ...mocks[2].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6941,7 +6810,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
         networkStatus: NetworkStatus.ready,
         error: undefined,
@@ -6964,7 +6833,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -6979,7 +6848,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
         networkStatus: NetworkStatus.ready,
@@ -6999,7 +6868,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -7039,7 +6908,7 @@ describe("useSuspenseQuery", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: {
             greeting: { message: "Hello world", __typename: "Greeting" },
           },
@@ -7064,7 +6933,7 @@ describe("useSuspenseQuery", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: {
             greeting: {
               __typename: "Greeting",
@@ -7079,7 +6948,7 @@ describe("useSuspenseQuery", () => {
 
       expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(1);
-      expect(renders.frames).toMatchObject([
+      expect(renders.frames).toStrictEqualTyped([
         {
           data: {
             greeting: { message: "Hello world", __typename: "Greeting" },
@@ -7134,7 +7003,7 @@ describe("useSuspenseQuery", () => {
       { cache }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: {
         greeting: {
           message: "Hello world",
@@ -7147,7 +7016,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           greeting: {
@@ -7203,7 +7072,7 @@ describe("useSuspenseQuery", () => {
       { cache, link }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -7222,7 +7091,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7251,7 +7120,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7266,7 +7135,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           greeting: {
@@ -7336,7 +7205,7 @@ describe("useSuspenseQuery", () => {
       { client }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: {
         greeting: {
           message: "Hello cached",
@@ -7356,7 +7225,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7385,7 +7254,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7400,7 +7269,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           greeting: {
@@ -7473,7 +7342,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greetings: [
             { __typename: "Greeting", message: "Hello world" },
@@ -7501,7 +7370,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -7536,7 +7405,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -7558,7 +7427,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           greetings: [
@@ -7661,7 +7530,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           allProducts: [
             {
@@ -7712,7 +7581,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           allProducts: [
             {
@@ -7774,7 +7643,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7804,7 +7673,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7820,7 +7689,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let refetchPromise: Promise<ApolloQueryResult<unknown>>;
+    let refetchPromise: Promise<QueryResult<unknown>>;
     await actAsync(async () => {
       refetchPromise = result.current.refetch();
     });
@@ -7838,7 +7707,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7872,7 +7741,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -7888,7 +7757,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -7899,14 +7768,11 @@ describe("useSuspenseQuery", () => {
           },
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
     });
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           greeting: {
@@ -7985,7 +7851,7 @@ describe("useSuspenseQuery", () => {
       { client, initialProps: { skip: true } }
     );
 
-    expect(result.current).toMatchObject({
+    expect(result.current).toStrictEqualTyped({
       data: undefined,
       networkStatus: NetworkStatus.ready,
       error: undefined,
@@ -8003,7 +7869,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -8033,7 +7899,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greeting: {
             __typename: "Greeting",
@@ -8051,7 +7917,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
       {
         data: {
@@ -8132,7 +7998,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -8164,7 +8030,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -8182,7 +8048,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
+    let fetchMorePromise: Promise<QueryResult<unknown>>;
     await actAsync(() => {
       fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
     });
@@ -8203,7 +8069,7 @@ describe("useSuspenseQuery", () => {
 
     // TODO: Re-enable once the core bug is fixed
     // await waitFor(() => {
-    //   expect(result.current).toMatchObject({
+    //   expect(result.current).toStrictEqualTyped({
     //     data: {
     //       greetings: [
     //         {
@@ -8243,7 +8109,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           greetings: [
             {
@@ -8269,7 +8135,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(fetchMorePromise!).resolves.toEqual({
+    await expect(fetchMorePromise!).resolves.toStrictEqualTyped({
       data: {
         greetings: [
           {
@@ -8282,14 +8148,11 @@ describe("useSuspenseQuery", () => {
           },
         ],
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
     });
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           greetings: [
@@ -8414,7 +8277,7 @@ describe("useSuspenseQuery", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: {
             greetings: [
               {
@@ -8446,7 +8309,7 @@ describe("useSuspenseQuery", () => {
       );
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: {
             greetings: [
               {
@@ -8464,7 +8327,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
+      let fetchMorePromise: Promise<QueryResult<unknown>>;
       await actAsync(() => {
         fetchMorePromise = result.current.fetchMore({
           variables: { offset: 1 },
@@ -8486,7 +8349,7 @@ describe("useSuspenseQuery", () => {
       });
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: {
             greetings: [
               {
@@ -8526,7 +8389,7 @@ describe("useSuspenseQuery", () => {
       );
 
       await waitFor(() => {
-        expect(result.current).toMatchObject({
+        expect(result.current).toStrictEqualTyped({
           data: {
             greetings: [
               {
@@ -8572,7 +8435,7 @@ describe("useSuspenseQuery", () => {
 
       expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
-      expect(renders.frames).toMatchObject([
+      expect(renders.frames).toStrictEqualTyped([
         {
           data: {
             greetings: [
@@ -8684,11 +8547,10 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error("Could not fetch"));
-    expect(error.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(new Error("Could not fetch"));
   });
 
   it("throws graphql errors returned by deferred queries", async () => {
@@ -8728,13 +8590,14 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("Could not fetch greeting"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Could not fetch greeting" }],
+      })
+    );
   });
 
   it("throws errors returned by deferred queries that include partial data", async () => {
@@ -8775,13 +8638,15 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("Could not fetch greeting"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({
+        data: { greeting: null },
+        errors: [{ message: "Could not fetch greeting" }],
+      })
+    );
   });
 
   it("discards partial data and throws errors returned in incremental chunks", async () => {
@@ -8831,7 +8696,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -8885,7 +8750,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           hero: {
@@ -8907,16 +8772,20 @@ describe("useSuspenseQuery", () => {
       },
     ]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError(
-        "homeWorld for character with ID 1000 could not be fetched.",
-        { path: ["hero", "heroFriends", 0, "homeWorld"] }
-      ),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
+      })
+    );
   });
 
   it("adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`", async () => {
@@ -8964,7 +8833,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9014,7 +8883,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9033,12 +8902,30 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
-              "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker",
+                  homeWorld: null,
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa",
+                  homeWorld: "Alderaan",
+                },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
+            },
           ],
         }),
       });
@@ -9046,7 +8933,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           hero: {
@@ -9085,12 +8972,30 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
-              "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker",
+                  homeWorld: null,
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa",
+                  homeWorld: "Alderaan",
+                },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
+            },
           ],
         }),
       },
@@ -9142,7 +9047,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9190,7 +9095,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9215,7 +9120,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           hero: {
@@ -9300,7 +9205,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9345,29 +9250,39 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
-              "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                { id: "1000", name: "Luke Skywalker", homeWorld: null },
+                { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
+            },
           ],
         }),
       });
     });
 
-    let refetchPromise: Promise<ApolloQueryResult<unknown>>;
+    let refetchPromise: Promise<QueryResult<unknown>>;
     await actAsync(async () => {
       refetchPromise = result.current.refetch();
     });
@@ -9388,12 +9303,12 @@ describe("useSuspenseQuery", () => {
     });
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
@@ -9427,7 +9342,7 @@ describe("useSuspenseQuery", () => {
     );
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9442,7 +9357,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toStrictEqualTyped({
       data: {
         hero: {
           heroFriends: [
@@ -9452,12 +9367,9 @@ describe("useSuspenseQuery", () => {
           name: "R2-D2",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      error: undefined,
     });
 
-    cache.updateQuery({ query }, (data) => ({
+    cache.updateQuery<any>({ query }, (data) => ({
       hero: {
         ...data.hero,
         name: "C3PO",
@@ -9465,7 +9377,7 @@ describe("useSuspenseQuery", () => {
     }));
 
     await waitFor(() => {
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: {
           hero: {
             heroFriends: [
@@ -9482,7 +9394,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.count).toBe(7 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toMatchObject([
+    expect(renders.frames).toStrictEqualTyped([
       {
         data: {
           hero: {
@@ -9500,19 +9412,29 @@ describe("useSuspenseQuery", () => {
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
-              "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
+        error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                { id: "1000", name: "Luke Skywalker", homeWorld: null },
+                { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
+              ],
+              name: "R2-D2",
+            },
+          },
+          errors: [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
+            },
           ],
         }),
       },
@@ -9520,8 +9442,8 @@ describe("useSuspenseQuery", () => {
         data: {
           hero: {
             heroFriends: [
-              { id: "1000", name: "Luke Skywalker" },
-              { id: "1003", name: "Leia Organa" },
+              { id: "1000", name: "Luke Skywalker", homeWorld: null },
+              { id: "1003", name: "Leia Organa", homeWorld: "Alderaan" },
             ],
             name: "R2-D2",
           },
@@ -9646,11 +9568,16 @@ describe("useSuspenseQuery", () => {
     );
 
     expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.frames).toMatchObject([
-      { data: { greeting: "Hello" }, networkStatus: NetworkStatus.ready },
+    expect(renders.frames).toStrictEqualTyped([
+      {
+        data: { greeting: "Hello" },
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      },
       {
         data: { greeting: "Subscription hello" },
         networkStatus: NetworkStatus.ready,
+        error: undefined,
       },
     ]);
   });
@@ -10209,18 +10136,20 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       // We should see the cached greeting while the network request is in flight
       // and the network status should be set to `loading`.
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.loading,
+        error: undefined,
       });
     });
 
     await waitFor(() => {
       // We should see the updated greeting once the network request finishes
       // and the network status should be set to `ready`.
-      expect(result.current).toMatchObject({
+      expect(result.current).toStrictEqualTyped({
         data: { greeting: "Hello" },
         networkStatus: NetworkStatus.ready,
+        error: undefined,
       });
     });
   });
@@ -10245,7 +10174,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
@@ -10416,7 +10345,7 @@ describe("useSuspenseQuery", () => {
       initialSnapshot: {
         isPending: false,
         result: null as Pick<
-          UseSuspenseQueryResult<Data>,
+          useSuspenseQuery.Result<Data>,
           "data" | "error" | "networkStatus"
         > | null,
       },
@@ -10623,7 +10552,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
@@ -10748,11 +10677,11 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
-        error: null as ApolloError | null,
+        error: null as Error | null,
       },
     });
 
@@ -10826,8 +10755,9 @@ describe("useSuspenseQuery", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [{ message: "Could not fetch letters" }],
+        new CombinedGraphQLErrors({
+          data: null,
+          errors: [{ message: "Could not fetch letters" }],
         })
       );
     }
@@ -10886,7 +10816,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -10978,7 +10908,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as useSuspenseQuery.Result<Query, never> | null,
       },
     });
 
@@ -11067,7 +10997,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as useSuspenseQuery.Result<Query, never> | null,
       },
     });
 
@@ -11157,7 +11087,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11276,7 +11206,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11404,7 +11334,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11503,7 +11433,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11622,7 +11552,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           DeepPartial<Masked<Query>>,
           never
         > | null,
@@ -11726,7 +11656,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           Masked<Query> | undefined,
           never
         > | null,
@@ -11769,8 +11699,16 @@ describe("useSuspenseQuery", () => {
       });
 
       expect(result?.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError("Couldn't get name")],
+        new CombinedGraphQLErrors({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: null,
+              age: 34,
+            },
+          },
+          errors: [{ message: "Couldn't get name" }],
         })
       );
     }
@@ -12785,7 +12723,7 @@ describe("useSuspenseQuery", () => {
         const result = await refetch();
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12797,7 +12735,9 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
@@ -12829,7 +12769,7 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12857,7 +12797,9 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();

@@ -1,16 +1,19 @@
-import gql from "graphql-tag";
-import { ApolloCache } from "../cache";
-import { Cache, DataProxy } from "../..";
-import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
+import { gql } from "graphql-tag";
 
-class TestCache extends ApolloCache<unknown> {
+import type { Cache, DataProxy } from "@apollo/client/cache";
+import { ApolloCache } from "@apollo/client/cache";
+import type { OperationVariables, Unmasked } from "@apollo/client/core";
+
+import type { Reference } from "../../../utilities/graphql/storeUtils.js";
+
+class TestCache extends ApolloCache {
   constructor() {
     super();
   }
 
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return {};
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {
@@ -21,20 +24,18 @@ class TestCache extends ApolloCache<unknown> {
     return undefined;
   }
 
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
+  public performTransaction(transaction: (c: ApolloCache) => void): void {
     transaction(this);
   }
 
-  public read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>
-  ): T | null {
+  public read<T = unknown, TVariables = OperationVariables>(
+    query: Cache.ReadOptions<TVariables, T>
+  ): Unmasked<T> | null {
     return null;
   }
 
   public recordOptimisticTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void,
+    transaction: (c: ApolloCache) => void,
     id: string
   ): void {}
 
@@ -44,15 +45,17 @@ class TestCache extends ApolloCache<unknown> {
     return new Promise<void>(() => null);
   }
 
-  public restore(serializedState: unknown): ApolloCache<unknown> {
+  public restore(serializedState: unknown) {
     return this;
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<T = unknown, TVariables = OperationVariables>(
+    watch: Cache.WatchOptions<T, TVariables>
+  ): () => void {
     return function () {};
   }
 
-  public write<TResult = any, TVariables = any>(
+  public write<TResult = unknown, TVariables = OperationVariables>(
     _: Cache.WriteOptions<TResult, TVariables>
   ): Reference | undefined {
     return;

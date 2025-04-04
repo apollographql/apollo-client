@@ -3,13 +3,27 @@ import type {
   ApolloQueryResult,
   DocumentNode,
   FetchResult,
+  ObservableQuery,
   OperationVariables,
 } from "../../core/index.js";
-import type { QueryRef, QueryResult } from "../../react/index.js";
+import type { QueryRef } from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
-import { CheckedKeys } from "./toEqualQueryResult.js";
+
+// Unfortunately TypeScript does not have a way to determine if a generic
+// argument is a class or not, so we need to manually keep track of known class
+// intances that we filter out.
+type KnownClassInstances = ApolloClient | ObservableQuery<any, any>;
+type FilterUnserializableProperties<T> =
+  T extends Array<infer TItem> ? Array<FilterUnserializableProperties<TItem>>
+  : T extends Record<string, any> ?
+    {
+      [K in keyof T as T[K] extends (...args: any[]) => any ? never
+      : T[K] extends KnownClassInstances ? never
+      : K]: T[K];
+    }
+  : T;
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -43,12 +57,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
-  toEmitApolloQueryResult: T extends ObservableStream<infer QueryResult> ?
-    QueryResult extends ApolloQueryResult<infer TData> ?
-      (value: ApolloQueryResult<TData>, options?: TakeOptions) => Promise<R>
-    : { error: "matcher needs to be matched with an ApolloQueryResult" }
-  : { error: "matcher needs to be called on an ObservableStream instance" };
-
   toEmitAnything: T extends ObservableStream<any> ?
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
@@ -56,12 +64,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toEmitError: T extends ObservableStream<any> ?
     (error?: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
-
-  toEmitFetchResult: T extends ObservableStream<FetchResult<infer TData>> ?
-    (value: FetchResult<TData>, options?: TakeOptions) => Promise<R>
-  : {
-      error: "matcher needs to be called on an ObservableStream<FetchResult<TData>> instance";
-    };
 
   /**
    * Used to determine if the observable stream emitted a `next` event. Use
@@ -71,39 +73,16 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
-  toEmitValue: T extends ObservableStream<any> ?
-    (value: any, options?: TakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableStream instance" };
+  toEmitTypedValue: T extends ObservableStream<infer TResult> ?
+    (
+      expected: FilterUnserializableProperties<TResult>,
+      options?: TakeOptions
+    ) => Promise<R>
+  : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
 
-  toEmitValueStrict: T extends ObservableStream<any> ?
-    (value: any, options?: TakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableStream instance" };
-
-  toEmitMatchedValue: T extends ObservableStream<any> ?
-    (value: any, options?: TakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableStream instance" };
-
-  toEqualApolloQueryResult: T extends ApolloQueryResult<infer TData> ?
-    (expected: ApolloQueryResult<TData>) => R
-  : T extends Promise<ApolloQueryResult<infer TData>> ?
-    (expected: ApolloQueryResult<TData>) => R
-  : { error: "matchers needs to be called on an ApolloQueryResult" };
-
-  toEqualQueryResult: T extends QueryResult<infer TData, infer TVariables> ?
-    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
-  : T extends Promise<QueryResult<infer TData, infer TVariables>> ?
-    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
-  : { error: "matchers needs to be called on a QueryResult" };
-
-  toEqualFetchResult: T extends (
-    FetchResult<infer TData, infer TContext, infer TExtensions>
-  ) ?
-    (expected: FetchResult<TData, TContext, TExtensions>) => R
-  : T extends (
-    Promise<FetchResult<infer TData, infer TContext, infer TExtensions>>
-  ) ?
-    (expected: FetchResult<TData, TContext, TExtensions>) => R
-  : { error: "matchers needs to be called on a FetchResult" };
+  toStrictEqualTyped: T extends Promise<infer TResult> ?
+    (expected: FilterUnserializableProperties<TResult>) => R
+  : (expected: FilterUnserializableProperties<T>) => R;
 }
 
 declare global {

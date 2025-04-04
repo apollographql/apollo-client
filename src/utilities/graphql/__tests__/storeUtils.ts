@@ -1,4 +1,4 @@
-import { getStoreKeyName } from "../storeUtils";
+import { getStoreKeyName } from "@apollo/client/utilities";
 
 describe("getStoreKeyName", () => {
   it(

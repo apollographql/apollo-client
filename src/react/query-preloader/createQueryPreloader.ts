@@ -8,14 +8,21 @@ import type {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "../../core/index.js";
+} from "@apollo/client/core";
+import type {
+  PreloadedQueryRef,
+  VariablesOption,
+} from "@apollo/client/react/internal";
+import {
+  InternalQueryReference,
+  wrapQueryRef,
+} from "@apollo/client/react/internal";
 import type {
   DeepPartial,
+  NoInfer,
   OnlyRequiredProperties,
-} from "../../utilities/index.js";
-import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
-import type { PreloadedQueryRef } from "../internal/index.js";
-import type { NoInfer, VariablesOption } from "../index.js";
+} from "@apollo/client/utilities";
+
 import { wrapHook } from "../hooks/internal/index.js";
 
 export type PreloadQueryFetchPolicy = Extract<
@@ -26,8 +33,6 @@ export type PreloadQueryFetchPolicy = Extract<
 export type PreloadQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
@@ -151,7 +156,7 @@ export interface PreloadQueryFunction {
  * @since 3.9.0
  */
 export function createQueryPreloader(
-  client: ApolloClient<any>
+  client: ApolloClient
 ): PreloadQueryFunction {
   return wrapHook(
     "createQueryPreloader",
@@ -167,7 +172,7 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> &
-      VariablesOption<TVariables> = Object.create(null)
+      VariablesOption<TVariables> = {} as any
   ): PreloadedQueryRef<TData, TVariables> {
     const queryRef = new InternalQueryReference(
       client.watchQuery({

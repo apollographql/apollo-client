@@ -1,10 +1,12 @@
+import { firstValueFrom, of } from "rxjs";
+
+import { gql } from "@apollo/client/core";
+import type { ApolloLink, Operation } from "@apollo/client/link/core";
 import {
   KEEP,
   removeTypenameFromVariables,
-} from "../removeTypenameFromVariables";
-import { ApolloLink, Operation } from "../../core";
-import { Observable, gql } from "../../../core";
-import { createOperation, toPromise } from "../../utils";
+} from "@apollo/client/link/remove-typename";
+import { createOperation } from "@apollo/client/link/utils";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &
   Pick<Operation, "query">;
@@ -16,10 +18,10 @@ async function execute(link: ApolloLink, operation: PartialOperation) {
   function forward(operation: Operation) {
     // use the `data` key to satisfy the TypeScript types required by
     // `forward`'s' return value
-    return Observable.of({ data: operation });
+    return of({ data: operation });
   }
 
-  const { data } = await toPromise(
+  const { data } = await firstValueFrom(
     link.request(createOperation({}, operation), forward)!
   );
 

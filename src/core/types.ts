@@ -1,16 +1,16 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 
-import type { ApolloCache } from "../cache/index.js";
-import type { FetchResult } from "../link/core/index.js";
-import type { ApolloError } from "../errors/index.js";
-import type { QueryInfo } from "./QueryInfo.js";
-import type { NetworkStatus } from "./networkStatus.js";
+import type { ApolloCache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
+import type { IsStrictlyAny } from "@apollo/client/utilities";
+
 import type { Resolver } from "./LocalState.js";
+import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
+import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
-import type { Cache } from "../cache/index.js";
-import type { IsStrictlyAny } from "../utilities/index.js";
-import type { Unmasked } from "../masking/index.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -21,6 +21,40 @@ export type MethodKeys<T> = {
 export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
+
+/**
+ * Represents an `Error` type, but used throughout Apollo Client to represent
+ * errors that may otherwise fail `instanceof` checks if they are cross-realm
+ * Error instances (see the [`Error.isError` proposal](https://github.com/tc39/proposal-is-error) for more details).
+ *
+ * Apollo Client uses several types of errors throughout the client which can be
+ * narrowed using `instanceof`:
+ * - `CombinedGraphQLErrors` - `errors` returned from a GraphQL result
+ * - `CombinedProtocolErrors` - Transport-level errors from multipart subscriptions.
+ * - `ServerParseError` - A JSON-parse error when parsing the server response.
+ * - `ServerError` - A non-200 server response.
+ *
+ * @example
+ * ```ts
+ * import { CombinedGraphQLErrors } from "@apollo/client";
+ *
+ * try {
+ *   await client.query({ query });
+ * } catch (error) {
+ *   // Use `instanceof` to check for more specific types of errors.
+ *   if (error instanceof CombinedGraphQLErrors) {
+ *     error.errors.map(graphQLError => console.log(graphQLError.message));
+ *   } else {
+ *     console.error(errors);
+ *   }
+ * }
+ * ```
+ */
+export interface ErrorLike {
+  message: string;
+  name: string;
+  stack?: string;
+}
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
@@ -45,10 +79,7 @@ export type InternalRefetchQueriesInclude =
 
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.
-export interface RefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
-  TResult,
-> {
+export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
   updateCache?: (cache: TCache) => void;
   // The client.refetchQueries method discourages passing QueryOptions, by
   // restricting the public type of options.include to exclude QueryOptions as
@@ -81,7 +112,7 @@ export type RefetchQueriesPromiseResults<TResult> =
   // query (false). Since refetching produces an ApolloQueryResult<any>, and
   // skipping produces nothing, the fully-resolved array of all results produced
   // will be an ApolloQueryResult<any>[], when TResult extends boolean.
-  TResult extends boolean ? ApolloQueryResult<any>[]
+  TResult extends boolean ? QueryResult<any>[]
   : // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
   // an array element to Promise.all, so we infer/unwrap the array type U here.
   TResult extends PromiseLike<infer U> ? U[]
@@ -108,7 +139,7 @@ export interface RefetchQueriesResult<TResult>
 
 // Used by QueryManager["refetchQueries"]
 export interface InternalRefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
+  TCache extends ApolloCache,
   TResult,
 > extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
   // Just like the refetchQueries option for a mutation, an array of strings,
@@ -124,7 +155,7 @@ export type InternalRefetchQueriesResult<TResult> =
   // If onQueryUpdated returns a boolean, that's equivalent to refetching the
   // query when the boolean is true and skipping the query when false, so the
   // internal type of refetched results is Promise<ApolloQueryResult<any>>.
-  TResult extends boolean ? Promise<ApolloQueryResult<any>>
+  TResult extends boolean ? Promise<QueryResult<any>>
   : // Otherwise, onQueryUpdated returns whatever it returns. If onQueryUpdated is
     // not provided, TResult defaults to Promise<ApolloQueryResult<any>> (see the
     // generic type parameters of client.refetchQueries).
@@ -141,24 +172,22 @@ export type { QueryOptions as PureQueryOptions };
 export type OperationVariables = Record<string, any>;
 
 export interface ApolloQueryResult<T> {
-  data: T;
-  /**
-   * A list of any errors that occurred during server-side execution of a GraphQL operation.
-   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
-   */
-  errors?: ReadonlyArray<GraphQLFormattedError>;
+  data: T | undefined;
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  error?: ApolloError;
+  error?: ErrorLike;
   loading: boolean;
   networkStatus: NetworkStatus;
-  // If result.data was read from the cache with missing fields,
-  // result.partial will be true. Otherwise, result.partial will be falsy
-  // (usually because the property is absent from the result object).
-  partial?: boolean;
+  /**
+   * Describes whether `data` is a complete or partial result. This flag is only
+   * set when `returnPartialData` is `true` in query options.
+   *
+   * @deprecated This field will be removed in a future version of Apollo Client.
+   */
+  partial: boolean;
 }
 
 // This is part of the public API, people write these functions in `updateQueries`.
@@ -182,7 +211,7 @@ export type MutationUpdaterFn<T = { [key: string]: any }> = (
   // The MutationUpdaterFn type is broken because it mistakenly uses the same
   // type parameter T for both the cache and the mutationResult. Do not use this
   // type unless you absolutely need it for backwards compatibility.
-  cache: ApolloCache<T>,
+  cache: ApolloCache,
   mutationResult: FetchResult<T>
 ) => void;
 
@@ -190,7 +219,7 @@ export type MutationUpdaterFunction<
   TData,
   TVariables,
   TContext,
-  TCache extends ApolloCache<any>,
+  TCache extends ApolloCache,
 > = (
   cache: TCache,
   result: Omit<FetchResult<Unmasked<TData>>, "context">,
@@ -203,4 +232,34 @@ export interface Resolvers {
   [key: string]: {
     [field: string]: Resolver;
   };
+}
+
+export interface MutateResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+  extensions?: Record<string, unknown>;
+}
+
+export interface SubscribeResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+  extensions?: Record<string, unknown>;
+}
+
+export interface QueryResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+  error?: ErrorLike;
 }

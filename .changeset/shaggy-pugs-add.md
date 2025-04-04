@@ -27,7 +27,7 @@ new MockLink(
       // altenatively use a callback which will be executed for each mock
       delay: () => getRandomNumber(),
 
-      // or use the built-in `realisticDelay`. This is th default
+      // or use the built-in `realisticDelay`. This is the default
       delay: realisticDelay(),
     }
   }

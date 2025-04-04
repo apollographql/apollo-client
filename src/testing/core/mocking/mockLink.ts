@@ -82,18 +82,11 @@ export class MockLink extends ApolloLink {
   }
 
   public addMockedResponse(mockedResponse: MockedResponse) {
+    validateMockedResponse(mockedResponse);
+
     const normalizedMockedResponse =
       this.normalizeMockedResponse(mockedResponse);
     const key = requestToKey(normalizedMockedResponse.request);
-
-    invariant(
-      normalizedMockedResponse.result ||
-        normalizedMockedResponse.error ||
-        normalizedMockedResponse.delay === Infinity,
-      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: \n${stringifyMockedResponse(
-        mockedResponse
-      )}`
-    );
 
     let mockedResponses = this.mockedResponsesByKey[key];
     if (!mockedResponses) {
@@ -223,11 +216,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     }
 
     response.maxUsageCount = response.maxUsageCount ?? 1;
-    invariant(
-      response.maxUsageCount > 0,
-      `Mock response maxUsageCount must be greater than 0, %s given`,
-      mockedResponse.maxUsageCount
-    );
 
     this.normalizeVariableMatching(response);
     return response;
@@ -235,11 +223,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
   private normalizeVariableMatching(mockedResponse: MockedResponse) {
     const request = mockedResponse.request;
-    if (mockedResponse.variableMatcher && request.variables) {
-      throw new Error(
-        "Mocked response should contain either variableMatcher or request.variables"
-      );
-    }
 
     if (!mockedResponse.variableMatcher) {
       request.variables = {
@@ -253,6 +236,28 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       };
     }
   }
+}
+
+function validateMockedResponse(mockedResponse: MockedResponse) {
+  invariant(
+    mockedResponse.result ||
+      mockedResponse.error ||
+      mockedResponse.delay === Infinity,
+    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: \n${stringifyMockedResponse(
+      mockedResponse
+    )}`
+  );
+
+  invariant(
+    (mockedResponse.maxUsageCount ?? 1) > 0,
+    `Mock response maxUsageCount must be greater than 0, %s given`,
+    mockedResponse.maxUsageCount
+  );
+
+  invariant(
+    !mockedResponse.variableMatcher || !mockedResponse.request.variables,
+    "Mocked response should contain either variableMatcher or request.variables"
+  );
 }
 
 /** @internal */

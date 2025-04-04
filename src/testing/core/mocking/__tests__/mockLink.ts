@@ -73,6 +73,27 @@ test("should require result or error when delay is just large", async () => {
   }
 });
 
+test("waits to return result based on static delay", async () => {
+  const query = gql`
+    query {
+      a
+    }
+  `;
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { a: "a" } },
+      delay: 100,
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).not.toEmitAnything({ timeout: 95 });
+  await expect(stream).toEmitNext({ timeout: 6 });
+  await expect(stream).toComplete();
+});
+
 test("returns matched mock", async () => {
   const query = gql`
     query {

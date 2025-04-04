@@ -1194,13 +1194,16 @@ test("uses a mock infinite number of times when `maxUsageCount` is configured wi
   const result = { data: { user: { __typename: "User", id: 1 } } };
   const variables = { username: "username" };
 
-  const link = new MockLink([
-    {
-      request: { query, variables },
-      maxUsageCount: Number.POSITIVE_INFINITY,
-      result,
-    },
-  ]);
+  const link = new MockLink(
+    [
+      {
+        request: { query, variables },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+        result,
+      },
+    ],
+    { defaultOptions: { delay: 0 } }
+  );
 
   for (let i = 0; i < 100; i++) {
     const stream = new ObservableStream(execute(link, { query, variables }));

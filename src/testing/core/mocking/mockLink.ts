@@ -123,17 +123,14 @@ export class MockLink extends ApolloLink {
       return throwError(() => new Error(message));
     }
 
-    if (matched.maxUsageCount > 1) {
-      matched.maxUsageCount--;
-    } else {
-      mocks.splice(index, 1);
-    }
-
     const { newData } = matched;
 
     if (newData) {
       matched.result = newData(operation.variables);
-      mocks.push(matched);
+    } else if (matched.maxUsageCount > 1) {
+      matched.maxUsageCount--;
+    } else {
+      mocks.splice(index, 1);
     }
 
     invariant(

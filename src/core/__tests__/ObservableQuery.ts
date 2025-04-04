@@ -110,13 +110,12 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
-        // TODO: This is what we want
-        // await expect(stream).toEmitTypedValue({
-        //   data: undefined,
-        //   loading: true,
-        //   networkStatus: NetworkStatus.ready,
-        //   partial: true,
-        // });
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        });
 
         await expect(stream).toEmitTypedValue({
           data: { count: 1 },
@@ -194,13 +193,12 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
-        // TODO: enable
-        // await expect(stream).toEmitTypedValue({
-        //   data: undefined,
-        //   loading: true,
-        //   networkStatus: NetworkStatus.loading,
-        //   partial: true,
-        // });
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
 
         await expect(stream).toEmitTypedValue({
           data: dataOne,
@@ -251,13 +249,12 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
-        // TODO: Enable
-        // await expect(stream).toEmitTypedValue({
-        //   data: undefined,
-        //   loading: true,
-        //   networkStatus: NetworkStatus.loading,
-        //   partial: true
-        // })
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
 
         await expect(stream).toEmitTypedValue({
           data: { count: 1 },
@@ -354,13 +351,12 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      // TODO: enable
-      // await expect(stream).toEmitTypedValue({
-      //   data: undefined,
-      //   loading: true,
-      //   networkStatus: NetworkStatus.ready,
-      //   partial: false
-      // })
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -424,13 +420,12 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      // TODO: enable
-      // await expect(stream).toEmitTypedValue({
-      //   data: undefined,
-      //   loading: true,
-      //   networkStatus: NetworkStatus.loading,
-      //   partial: true
-      // })
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -491,13 +486,12 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      // TODO: enable
-      // await expect(stream).toEmitTypedValue({
-      //   data: undefined,
-      //   loading: true,
-      //   networkStatus: NetworkStatus.loading,
-      //   partial: true
-      // })
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -557,13 +551,12 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      // TODO: enable
-      // await expect(stream).toEmitTypedValue({
-      //   data: undefined,
-      //   loading: true,
-      //   networkStatus: NetworkStatus.loading,
-      //   partial: true
-      // })
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
@@ -630,13 +623,12 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      // TODO: enable
-      // await expect(stream).toEmitTypedValue({
-      //   data: undefined,
-      //   loading: true,
-      //   networkStatus: NetworkStatus.loading,
-      //   partial: true
-      // })
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,

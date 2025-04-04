@@ -179,7 +179,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
   }
 
   private getMockedResponses(request: GraphQLRequest) {
-    const key = requestToKey(request);
+    const key = getRequestKey(request);
 
     let mockedResponses = this.mockedResponsesByKey[key];
 
@@ -192,7 +192,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
   }
 }
 
-function requestToKey(request: GraphQLRequest): string {
+function getRequestKey(request: GraphQLRequest): string {
   const queryString =
     request.query && print(addTypenameToDocument(request.query));
   const requestKey = { query: queryString };

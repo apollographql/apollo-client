@@ -269,7 +269,7 @@ function validateMockedResponse(mockedResponse: MockedResponse) {
 }
 
 /** @internal */
-export function stringifyMockedResponse(mockedResponse: MockedResponse) {
+function stringifyMockedResponse(mockedResponse: MockedResponse) {
   return JSON.stringify(
     mockedResponse,
     (_, value) => {

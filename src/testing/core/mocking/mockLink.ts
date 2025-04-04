@@ -53,6 +53,7 @@ export interface MockedResponse<
 }
 
 interface NormalizedMockedResponse {
+  original: MockedResponse;
   request: GraphQLRequest;
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
@@ -145,7 +146,7 @@ export class MockLink extends ApolloLink {
         () =>
           new Error(
             `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
-              matched
+              matched.original
             )}`
           )
       );
@@ -221,6 +222,8 @@ function normalizeMockedResponse(
   request.query = getServerQuery(request.query);
   response.maxUsageCount = response.maxUsageCount ?? 1;
 
+  (response as NormalizedMockedResponse).original = mockedResponse;
+
   const withDefaults = {
     ...getDefaultValues(getOperationDefinition(request.query)),
     ...request.variables,
@@ -280,7 +283,7 @@ function validateMockedResponse(mock: MockedResponse) {
 }
 
 /** @internal */
-function stringifyMockedResponse(mockedResponse: MockedResponse) {
+export function stringifyMockedResponse(mockedResponse: MockedResponse) {
   return JSON.stringify(
     mockedResponse,
     (_, value) => {

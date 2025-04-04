@@ -290,11 +290,16 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = setupTestWithResolvers({
+    const client = new ApolloClient({
       resolvers,
-      query,
-      queryOptions: { context: { id: 1 } },
+      cache: new InMemoryCache(),
+      // The resolvers will handle the full response
+      link: ApolloLink.empty(),
     });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, context: { id: 1 } })
+    );
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },

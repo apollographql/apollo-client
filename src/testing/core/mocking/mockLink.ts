@@ -105,11 +105,7 @@ export class MockLink extends ApolloLink {
     const mocks = this.getMockedResponses(operation);
 
     const index = mocks.findIndex((mock) => {
-      if (variablesEqual(operation.variables, mock.request.variables)) {
-        return true;
-      }
-
-      if (mock.variableMatcher && mock.variableMatcher(operation.variables)) {
+      if (mock.variableMatcher(operation.variables)) {
         return true;
       }
 
@@ -265,13 +261,6 @@ function validateMockedResponse(mockedResponse: MockedResponse) {
     !mockedResponse.variableMatcher || !mockedResponse.request.variables,
     "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
-}
-
-function variablesEqual(
-  vars1: OperationVariables | undefined,
-  vars2: OperationVariables | undefined
-) {
-  return equal(vars1 || {}, vars2 || {});
 }
 
 /** @internal */

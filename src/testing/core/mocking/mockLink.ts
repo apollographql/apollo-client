@@ -189,23 +189,8 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     mockedResponse: MockedResponse
   ): NormalizedMockedResponse {
     const response = cloneDeep(mockedResponse);
-    const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
-      [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
-      checkDocument(response.request.query)
-    );
 
-    invariant(queryWithoutClientOnlyDirectives, "query is required");
-
-    const query = removeClientSetsFromDocument(
-      queryWithoutClientOnlyDirectives
-    );
-
-    invariant(
-      query,
-      "Cannot mock a client-only query. Mocked responses should contain at least one non-client field."
-    );
-
-    response.request.query = query;
+    response.request.query = getServerQuery(response.request.query);
     response.maxUsageCount = response.maxUsageCount ?? 1;
 
     this.normalizeVariableMatching(response);
@@ -240,6 +225,26 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 
     return mockedResponses;
   }
+}
+
+function getServerQuery(query: DocumentNode) {
+  const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
+    [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
+    checkDocument(query)
+  );
+
+  invariant(queryWithoutClientOnlyDirectives, "query is required");
+
+  const serverQuery = removeClientSetsFromDocument(
+    queryWithoutClientOnlyDirectives
+  );
+
+  invariant(
+    serverQuery,
+    "Cannot mock a client-only query. Mocked responses should contain at least one non-client field."
+  );
+
+  return serverQuery;
 }
 
 function validateMockedResponse(mockedResponse: MockedResponse) {

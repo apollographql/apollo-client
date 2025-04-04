@@ -143,27 +143,6 @@ describe("mockLink", () => {
     );
   });
 
-  test("throws error when query is a plain string", async () => {
-    expect(
-      () =>
-        new MockLink([
-          {
-            request: {
-              // @ts-ignore
-              query: `
-                query {
-                  foo
-                }
-              `,
-            },
-            result: {
-              data: null,
-            },
-          },
-        ])
-    ).toThrow(/^Expecting a parsed GraphQL document/);
-  });
-
   it("should fill in default variables if they are missing in mocked requests", async () => {
     const query = gql`
       query GetTodo($done: Boolean = true, $user: String!) {
@@ -236,6 +215,27 @@ describe("mockLink", () => {
       await expect(stream).toEmitTypedValue({ data: { todo: { id: 2 } } });
     }
   });
+});
+
+test("throws error when query is a plain string", async () => {
+  expect(
+    () =>
+      new MockLink([
+        {
+          request: {
+            // @ts-ignore
+            query: `
+              query {
+                foo
+              }
+            `,
+          },
+          result: {
+            data: null,
+          },
+        },
+      ])
+  ).toThrow(/^Expecting a parsed GraphQL document/);
 });
 
 test("removes @nonreactive directives from fields", async () => {

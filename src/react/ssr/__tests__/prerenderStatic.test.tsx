@@ -618,7 +618,8 @@ test("`maxRerenders` will throw an error if exceeded", async () => {
       {
         request: { query },
         variableMatcher: () => true,
-        newData: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        result: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        maxUsageCount: Number.POSITIVE_INFINITY,
       } satisfies MockedResponse<{ hello: string }, { depth: number }>,
     ]),
   });
@@ -664,7 +665,8 @@ test("`maxRerenders` defaults to 50", async () => {
       {
         request: { query },
         variableMatcher: () => true,
-        newData: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        result: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        maxUsageCount: Number.POSITIVE_INFINITY,
       } satisfies MockedResponse<{ hello: string }, { depth: number }>,
     ]),
   });

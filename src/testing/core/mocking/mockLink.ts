@@ -129,15 +129,21 @@ export class MockLink extends ApolloLink {
       mocks.splice(index, 1);
     }
 
-    if (matched.delay === Infinity) {
-      return new Observable();
-    }
-
     const { newData } = matched;
 
     if (newData) {
       matched.result = newData(operation.variables);
       mocks.push(matched);
+    }
+
+    invariant(
+      matched.result || matched.error || matched.delay === Infinity,
+      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n%s`,
+      stringifyMockedResponse(matched)
+    );
+
+    if (matched.delay === Infinity) {
+      return new Observable();
     }
 
     const delay = matched.delay ?? 0;
@@ -249,14 +255,6 @@ function getServerQuery(query: DocumentNode) {
 
 function validateMockedResponse(mockedResponse: MockedResponse) {
   checkDocument(mockedResponse.request.query);
-
-  invariant(
-    mockedResponse.result ||
-      mockedResponse.error ||
-      mockedResponse.delay === Infinity,
-    `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n%s`,
-    stringifyMockedResponse(mockedResponse)
-  );
 
   invariant(
     (mockedResponse.maxUsageCount ?? 1) > 0,

@@ -299,7 +299,7 @@ test("allows resolving client-only queries", async () => {
   await expect(stream).toEmitTypedValue({ data: { foo: "never" } });
 });
 
-test("throws error when passing maxUsageCount < 0", async () => {
+test("throws error when passing maxUsageCount <= 0", async () => {
   expect(
     () =>
       new MockLink([
@@ -320,6 +320,29 @@ test("throws error when passing maxUsageCount < 0", async () => {
   ).toThrow(
     new InvariantError(
       "Mock response maxUsageCount must be greater than 0, -1 given"
+    )
+  );
+
+  expect(
+    () =>
+      new MockLink([
+        {
+          request: {
+            query: gql`
+              query {
+                foo
+              }
+            `,
+          },
+          maxUsageCount: 0,
+          result: {
+            data: null,
+          },
+        },
+      ])
+  ).toThrow(
+    new InvariantError(
+      "Mock response maxUsageCount must be greater than 0, 0 given"
     )
   );
 });

@@ -2,11 +2,7 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import { Observable, throwError } from "rxjs";
 
-import type {
-  FetchResult,
-  GraphQLRequest,
-  Operation,
-} from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
 import {
@@ -33,7 +29,7 @@ export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
 
 type VariableMatcher<V> = CovariantUnaryFunction<V, boolean>;
 
-interface MockedRequest<TVariables> {
+interface MockedRequest<TVariables = Record<string, any>> {
   query: DocumentNode;
   variables?: TVariables | VariableMatcher<TVariables>;
 }
@@ -54,7 +50,7 @@ export interface MockedResponse<
 
 interface NormalizedMockedResponse {
   original: MockedResponse;
-  request: GraphQLRequest;
+  request: MockedRequest;
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
@@ -197,7 +193,7 @@ export class MockLink extends ApolloLink {
     });
   }
 
-  private getMockedResponses(request: GraphQLRequest) {
+  private getMockedResponses(request: MockedRequest) {
     const key = JSON.stringify({
       query: print(addTypenameToDocument(request.query)),
     });

@@ -48,7 +48,7 @@ export interface MockedResponse<
     | FetchResult<Unmasked<TData>>
     | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
   error?: Error;
-  delay?: number;
+  delay?: number | MockLink.DelayFunction;
 }
 
 interface NormalizedMockedResponse {
@@ -58,11 +58,15 @@ interface NormalizedMockedResponse {
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
-  delay?: number;
+  delay?: number | MockLink.DelayFunction;
 }
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
+}
+
+export declare namespace MockLink {
+  export type DelayFunction = (operation: Operation) => number;
 }
 
 export class MockLink extends ApolloLink {

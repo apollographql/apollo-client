@@ -8,6 +8,9 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { stringifyMockedResponse } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {
@@ -109,11 +112,14 @@ describe("mockLink", () => {
   });
 
   it("should require result or error when delay is just large", () => {
-    expect(
-      () => new MockLink([{ request: { query }, delay: MAXIMUM_DELAY }])
-    ).toThrow(
-      /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
+    const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
+    const expectedError = new InvariantError(
+      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: \n${stringifyMockedResponse(
+        invalidResponse
+      )}`
     );
+
+    expect(() => new MockLink([invalidResponse])).toThrow(expectedError);
 
     expect(
       () =>
@@ -124,19 +130,14 @@ describe("mockLink", () => {
             error: new Error("test"),
             delay: MAXIMUM_DELAY,
           },
-          // This one is problematic
-          { request: { query }, delay: MAXIMUM_DELAY },
+          invalidResponse,
         ])
-    ).toThrow(
-      /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
-    );
+    ).toThrow(expectedError);
 
     const link = new MockLink([]);
 
-    expect(() =>
-      link.addMockedResponse({ request: { query }, delay: MAXIMUM_DELAY })
-    ).toThrow(
-      /^Mocked response should contain either `result`, `error` or a `delay` of `Infinity`: /
+    expect(() => link.addMockedResponse(invalidResponse)).toThrow(
+      expectedError
     );
   });
 

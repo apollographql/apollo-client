@@ -2,6 +2,7 @@ import { equal } from "@wry/equality";
 import { Observable } from "rxjs";
 
 import type {
+  DocumentNode,
   FetchResult,
   GraphQLRequest,
   Operation,
@@ -14,6 +15,7 @@ import {
   cloneDeep,
   getDefaultValues,
   getOperationDefinition,
+  isDocumentNode,
   makeUniqueId,
   print,
   removeClientSetsFromDocument,
@@ -88,7 +90,9 @@ export class MockLink extends ApolloLink {
       normalizedMockedResponse.result ||
         normalizedMockedResponse.error ||
         normalizedMockedResponse.delay === Infinity,
-      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: ${key}`
+      `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: \n${stringifyMockedResponse(
+        mockedResponse
+      )}`
     );
 
     let mockedResponses = this.mockedResponsesByKey[key];
@@ -249,6 +253,25 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       };
     }
   }
+}
+
+/** @internal */
+export function stringifyMockedResponse(mockedResponse: MockedResponse) {
+  return JSON.stringify(
+    mockedResponse,
+    (_, value) => {
+      if (isDocumentNode(value)) {
+        return print(value);
+      }
+
+      if (typeof value === "function") {
+        return "<function>";
+      }
+
+      return value;
+    },
+    2
+  );
 }
 
 export interface MockApolloLink extends ApolloLink {

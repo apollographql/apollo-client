@@ -676,6 +676,157 @@ test("shows undefined and NaN in debug messages", async () => {
   expect(error.message).toMatchSnapshot();
 });
 
+test("uses a mock a configured number of times when `maxUsageCount` is configured", async () => {
+  const query = gql`
+    query GetUser($username: String!) {
+      user(username: $username) {
+        id
+      }
+    }
+  `;
+
+  const result = { data: { user: { __typename: "User", id: 1 } } };
+  const variables = { username: "username" };
+
+  const link = new MockLink(
+    [
+      {
+        request: { query, variables },
+        maxUsageCount: 2,
+        result,
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result);
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result);
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    const error = await stream.takeError();
+    expect(error.message).toMatch(/^No more mocked responses/);
+  }
+});
+
+test("uses a mock infinite number of times when `maxUsageCount` is configured with Number.POSITIVE_INFINITY", async () => {
+  const query = gql`
+    query GetUser($username: String!) {
+      user(username: $username) {
+        id
+      }
+    }
+  `;
+
+  const result = { data: { user: { __typename: "User", id: 1 } } };
+  const variables = { username: "username" };
+
+  const link = new MockLink([
+    {
+      request: { query, variables },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+      result,
+    },
+  ]);
+
+  for (let i = 0; i < 100; i++) {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result);
+    await expect(stream).toComplete();
+  }
+});
+
+test("uses a mock once when `maxUsageCount` is not configured", async () => {
+  const query = gql`
+    query GetUser($username: String!) {
+      user(username: $username) {
+        id
+      }
+    }
+  `;
+
+  const result = { data: { user: { __typename: "User", id: 1 } } };
+  const variables = { username: "username" };
+
+  const link = new MockLink([{ request: { query, variables }, result }], {
+    showWarnings: false,
+  });
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result);
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    const error = await stream.takeError();
+    expect(error.message).toMatch(/^No more mocked responses/);
+  }
+});
+
+test("can still use other mocks after a mock has been fully consumed", async () => {
+  const query = gql`
+    query GetUser($username: String!) {
+      user(username: $username) {
+        id
+      }
+    }
+  `;
+
+  const result1 = { data: { user: { __typename: "User", id: 1 } } };
+  const result2 = { data: { user: { __typename: "User", id: 2 } } };
+  const variables = { username: "username" };
+
+  const link = new MockLink([
+    {
+      request: { query, variables },
+      maxUsageCount: 2,
+      result: result1,
+    },
+    {
+      request: { query, variables },
+      result: result2,
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result1);
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result1);
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue(result2);
+    await expect(stream).toComplete();
+  }
+});
+
 describe.skip("type tests", () => {
   const ANY = {} as any;
   test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {

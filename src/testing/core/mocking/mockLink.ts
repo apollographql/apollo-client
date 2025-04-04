@@ -151,7 +151,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       mocks.push(matched);
     }
 
-    const delay = matched.delay === Infinity ? 0 : matched?.delay ?? 0;
+    const delay = matched.delay ?? 0;
 
     return new Observable((observer) => {
       const timer = setTimeout(() => {

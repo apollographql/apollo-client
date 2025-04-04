@@ -238,6 +238,37 @@ test("throws error when query is a plain string", async () => {
   ).toThrow(/^Expecting a parsed GraphQL document/);
 });
 
+// TODO: Is this correct? We remove client-only fields in all other cases so I
+// think this should not be allowed.
+test("allows resolving client-only queries", async () => {
+  const query = gql`
+    query {
+      foo @client
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query {
+            foo @client
+          }
+        `,
+      },
+      result: {
+        data: {
+          foo: "never",
+        },
+      },
+    },
+  ]);
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({ data: { foo: "never" } });
+});
+
 test("removes @nonreactive directives from fields", async () => {
   const serverQuery = gql`
     query A {

@@ -129,7 +129,7 @@ export class MockSubscriptionLink extends ApolloLink {
 export function realisticDelay({ min, max, }?: {
     min?: number;
     max?: number;
-}): () => number;
+}): MockLink.DelayFunction;
 
 // Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
 //

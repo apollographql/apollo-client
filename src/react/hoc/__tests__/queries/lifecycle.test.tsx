@@ -719,7 +719,7 @@ describe("[queries] lifecycle", () => {
     });
   });
 
-  it.only("handles synchronous racecondition with prefilled data from the server", async () => {
+  it("handles synchronous racecondition with prefilled data from the server", async () => {
     using _act = disableActEnvironment();
     const renderStream = createRenderStream<ChildProps<Vars, Data>>();
 

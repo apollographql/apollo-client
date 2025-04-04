@@ -90,7 +90,7 @@ describe("mockLink", () => {
     }
   `;
 
-  it("should not require a result or error when delay equals Infinity", async () => {
+  test("should not require a result or error when delay equals Infinity", async () => {
     using _fakeTimers = enableFakeTimers();
 
     const mockLink = new MockLink([
@@ -113,7 +113,7 @@ describe("mockLink", () => {
     subscription.unsubscribe();
   });
 
-  it("should require result or error when delay is just large", () => {
+  test("should require result or error when delay is just large", () => {
     const invalidResponse = { request: { query }, delay: MAXIMUM_DELAY };
     const expectedError = new InvariantError(
       `Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:\n${stringifyMockedResponse(
@@ -143,7 +143,7 @@ describe("mockLink", () => {
     );
   });
 
-  it("should fill in default variables if they are missing in mocked requests", async () => {
+  test("should fill in default variables if they are missing in mocked requests", async () => {
     const query = gql`
       query GetTodo($done: Boolean = true, $user: String!) {
         todo(user: $user, done: $done) {

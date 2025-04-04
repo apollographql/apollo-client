@@ -55,6 +55,22 @@ Request variables: {}
 "
 `;
 
+exports[`shows <undefined> for mocks with no configured variables 1`] = `
+"No more mocked responses for the query:
+query ($id: ID!) {
+  user(id: $id) {
+    name
+  }
+}
+
+Request variables: {\\"id\\":3}
+
+Failed to match 2 mocks for this query. The mocked responses had the following variables:
+  <undefined>
+  {\\"id\\":2}
+"
+`;
+
 exports[`shows all configured variables for queries that did not match request 1`] = `
 "No more mocked responses for the query:
 query ($id: ID!) {

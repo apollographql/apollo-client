@@ -30,7 +30,7 @@ query ($id: ID!) {
 
 Request variables: {\\"id\\":1}
 
-Failed to match 1 mock for this query. The mocked responses had the following variables:
+Failed to match 1 mock for this query. The matched mocks had the following variables:
   <undefined>
 "
 `;
@@ -77,7 +77,7 @@ query ($id: ID!) {
 
 Request variables: {\\"id\\":3}
 
-Failed to match 2 mocks for this query. The mocked responses had the following variables:
+Failed to match 2 mocks for this query. The matched mocks had the following variables:
   <undefined>
   {\\"id\\":2}
 "
@@ -93,7 +93,7 @@ query ($id: ID!) {
 
 Request variables: {\\"id\\":4}
 
-Failed to match 3 mocks for this query. The mocked responses had the following variables:
+Failed to match 3 mocks for this query. The matched mocks had the following variables:
   {\\"id\\":1}
   {\\"id\\":2}
   {\\"id\\":3}
@@ -110,7 +110,7 @@ query ($id: ID! = 1) {
 
 Request variables: {\\"id\\":3}
 
-Failed to match 2 mocks for this query. The mocked responses had the following variables:
+Failed to match 2 mocks for this query. The matched mocks had the following variables:
   {\\"id\\":1}
   {\\"id\\":2}
 "
@@ -126,7 +126,7 @@ query ($id: ID!) {
 
 Request variables: {\\"id\\":3}
 
-Failed to match 2 mocks for this query. The mocked responses had the following variables:
+Failed to match 2 mocks for this query. The matched mocks had the following variables:
   {}
   {\\"id\\":2}
 "
@@ -142,7 +142,7 @@ query ($id: ID!, $filter: Boolean) {
 
 Request variables: {\\"id\\":NaN,\\"filter\\":<undefined>}
 
-Failed to match 1 mock for this query. The mocked responses had the following variables:
+Failed to match 1 mock for this query. The matched mocks had the following variables:
   {\\"id\\":1,\\"filter\\":true}
 "
 `;

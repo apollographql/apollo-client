@@ -809,9 +809,10 @@ describe("ObservableQuery", () => {
         () => {
           return new Observable((observer) => {
             timesFired += 1;
-            observer.next({ data });
-            observer.complete();
-            return;
+            setTimeout(() => {
+              observer.next({ data });
+              observer.complete();
+            }, 20);
           });
         },
       ]);
@@ -822,10 +823,16 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({
         query: testQuery,
         fetchPolicy: "cache-first",
-        notifyOnNetworkStatusChange: false,
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,

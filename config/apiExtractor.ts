@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -47,7 +48,11 @@ const configObjectFullPath = path.resolve(
 const baseConfig = ExtractorConfig.loadFile(configObjectFullPath);
 const packageJsonFullPath = path.resolve(
   import.meta.dirname,
-  "../dist/package.json"
+  "../package.json"
+);
+const reportFolder = baseConfig.apiReport.reportFolder!.replace(
+  "<projectFolder>",
+  join(import.meta.dirname, "..")
 );
 
 const entryPoints = Object.entries(pkg.exports as ExportsCondition)
@@ -104,17 +109,6 @@ try {
         mainEntryPointFilePath,
         "apiReport",
         reportFileName
-      );
-
-      await cleanupApiReport(
-        join(
-          baseConfig.apiReport.reportFolder!.replace(
-            "<projectFolder>",
-            join(import.meta.dirname, "..")
-          ),
-          reportFileName
-        ),
-        join(import.meta.dirname, "..", "src")
       );
     }
   }
@@ -175,26 +169,18 @@ async function buildReport(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
+    if (extractorResult.apiReportChanged) {
+      spawnSync(
+        "diff",
+        [
+          join(reportFolder, reportFileName),
+          join(reportFolder, "temp", reportFileName),
+        ],
+        {
+          stdio: "inherit",
+        }
+      );
+    }
     process.exitCode = 1;
   }
-}
-
-/**
- * Cleans up the "Warnings were encountered during analysis:" section of the api report in two steps:
- *
- * original:
- * // /Users/tronic/tmp/apollo-client/src/cache/core/types/DataProxy.ts:137:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
- * step 1: remove path
- * // src/cache/core/types/DataProxy.ts:137:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
- * step 2: remove line number
- * // src/cache/core/types/DataProxy.ts - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
- */
-async function cleanupApiReport(reportFileName: string, sourcePath: string) {
-  const contents = await readFile(reportFileName, { encoding: "utf-8" });
-  const newContents = contents
-    .split("\n")
-    .map((line) => line.replace(sourcePath, "src"))
-    .map((line) => line.replace(/:\d+:\d+ - \(/, " - ("))
-    .join("\n");
-  await writeFile(reportFileName, newContents, { encoding: "utf-8" });
 }

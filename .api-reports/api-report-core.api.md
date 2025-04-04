@@ -2017,18 +2017,18 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts - (ae-forgotten-export) The symbol "MissingFieldError_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "TypePolicy_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "FieldPolicy_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "FieldReadFunction_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts - (ae-forgotten-export) The symbol "FieldMergeFunction_2" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:139:9 - (ae-forgotten-export) The symbol "MissingFieldError_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:62:3 - (ae-forgotten-export) The symbol "TypePolicy_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:135:5 - (ae-forgotten-export) The symbol "FieldPolicy_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "FieldReadFunction_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldMergeFunction_2" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:130:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:131:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

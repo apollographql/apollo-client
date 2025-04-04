@@ -271,7 +271,7 @@ export function withProdMode(): {
 
 // Warnings were encountered during analysis:
 //
-// src/testing/internal/scenarios/index.ts - (ae-forgotten-export) The symbol "MaskedVariablesCaseFragment" needs to be exported by the entry point index.d.ts
+// src/testing/internal/scenarios/index.ts:80:7 - (ae-forgotten-export) The symbol "MaskedVariablesCaseFragment" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

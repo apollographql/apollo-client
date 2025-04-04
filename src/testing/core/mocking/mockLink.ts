@@ -154,20 +154,22 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
     }
 
     return new Observable((observer) => {
+      if (matched.delay === Infinity) {
+        return;
+      }
+
       const timer = setTimeout(() => {
-        if (matched && matched.delay !== Infinity) {
-          if (matched.error) {
-            observer.error(matched.error);
-          } else {
-            if (matched.result) {
-              observer.next(
-                typeof matched.result === "function" ?
-                  matched.result(operation.variables)
-                : matched.result
-              );
-            }
-            observer.complete();
+        if (matched.error) {
+          observer.error(matched.error);
+        } else {
+          if (matched.result) {
+            observer.next(
+              typeof matched.result === "function" ?
+                matched.result(operation.variables)
+              : matched.result
+            );
           }
+          observer.complete();
         }
       }, delay);
 

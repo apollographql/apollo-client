@@ -611,8 +611,7 @@ test("`maxRerenders` will throw an error if exceeded", async () => {
     cache: new InMemoryCache(),
     link: new MockLink([
       {
-        request: { query },
-        variableMatcher: () => true,
+        request: { query, variables: () => true },
         result: (arg) => ({ data: { hello: "world" + arg.depth } }),
         maxUsageCount: Number.POSITIVE_INFINITY,
       } satisfies MockedResponse<{ hello: string }, { depth: number }>,
@@ -658,8 +657,7 @@ test("`maxRerenders` defaults to 50", async () => {
     cache: new InMemoryCache(),
     link: new MockLink([
       {
-        request: { query },
-        variableMatcher: () => true,
+        request: { query, variables: () => true },
         result: (arg) => ({ data: { hello: "world" + arg.depth } }),
         maxUsageCount: Number.POSITIVE_INFINITY,
       } satisfies MockedResponse<{ hello: string }, { depth: number }>,

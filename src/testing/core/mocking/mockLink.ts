@@ -107,12 +107,6 @@ export class MockLink extends ApolloLink {
 
     const matched = index >= 0 ? mocks[index] : void 0;
 
-    // There have been platform- and engine-dependent differences with
-    // setInterval(fn, Infinity), so we pass 0 instead (but detect
-    // Infinity where we call observer.error or observer.next to pend
-    // indefinitely in those cases.)
-    const delay = matched?.delay === Infinity ? 0 : matched?.delay ?? 0;
-
     if (!matched) {
       const message = `No more mocked responses for the query:
 ${print(operation.query)}
@@ -152,6 +146,12 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
       matched.result = newData(operation.variables);
       mocks.push(matched);
     }
+
+    // There have been platform- and engine-dependent differences with
+    // setInterval(fn, Infinity), so we pass 0 instead (but detect
+    // Infinity where we call observer.error or observer.next to pend
+    // indefinitely in those cases.)
+    const delay = matched?.delay === Infinity ? 0 : matched?.delay ?? 0;
 
     return new Observable((observer) => {
       if (matched.delay === Infinity) {

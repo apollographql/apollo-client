@@ -555,36 +555,6 @@ test("throws error when query is a plain string", async () => {
   ).toThrow(/^Expecting a parsed GraphQL document/);
 });
 
-// TODO: Should we consider combining these options and allowing `variables` to
-// accept a callback function? Doing so would make this error obsolete.
-test("throws error when passing variableMatcher and variables", async () => {
-  expect(
-    () =>
-      new MockLink([
-        {
-          request: {
-            query: gql`
-              query ($id: ID!) {
-                user(id: $id) {
-                  name
-                }
-              }
-            `,
-            variables: { id: 1 },
-          },
-          variableMatcher: () => true,
-          result: {
-            data: null,
-          },
-        },
-      ])
-  ).toThrow(
-    new InvariantError(
-      "Mocked response should use either `request.variables` or `variableMatcher` but not both"
-    )
-  );
-});
-
 test("throws error when given a client-only query", async () => {
   expect(
     () =>
@@ -659,7 +629,7 @@ test("throws error when passing maxUsageCount <= 0", async () => {
   );
 });
 
-test("passes variables to the variableMatcher", async () => {
+test("passes variables to the `variables` callback function", async () => {
   const query = gql`
     query ($id: ID!) {
       user(id: $id) {
@@ -673,8 +643,7 @@ test("passes variables to the variableMatcher", async () => {
 
   const link = new MockLink([
     {
-      request: { query },
-      variableMatcher,
+      request: { query, variables: variableMatcher },
       result: { data: { user: { __typename: "User", name: "Test" } } },
     },
   ]);
@@ -700,13 +669,11 @@ test("uses mock when variableMatcher returns true", async () => {
 
   const link = new MockLink([
     {
-      request: { query },
-      variableMatcher: ({ id }) => id === 1,
+      request: { query, variables: ({ id }) => id === 1 },
       result: { data: { user: { __typename: "User", name: "User 1" } } },
     },
     {
-      request: { query },
-      variableMatcher: ({ id }) => id === 2,
+      request: { query, variables: ({ id }) => id === 2 },
       result: { data: { user: { __typename: "User", name: "User 2" } } },
     },
   ]);
@@ -720,7 +687,7 @@ test("uses mock when variableMatcher returns true", async () => {
   });
 });
 
-test("fails when variableMatcher returns false", async () => {
+test("fails when variables returns false", async () => {
   const query = gql`
     query ($id: ID!) {
       user(id: $id) {
@@ -732,8 +699,7 @@ test("fails when variableMatcher returns false", async () => {
   const link = new MockLink(
     [
       {
-        request: { query },
-        variableMatcher: () => false,
+        request: { query, variables: () => false },
         result: { data: { user: { __typename: "User", name: "User 1" } } },
       },
     ],

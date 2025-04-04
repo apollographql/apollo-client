@@ -113,7 +113,7 @@ describe("ObservableQuery", () => {
         await expect(stream).toEmitTypedValue({
           data: undefined,
           loading: true,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.loading,
           partial: true,
         });
 
@@ -354,8 +354,8 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitTypedValue({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
       });
 
       await expect(stream).toEmitTypedValue({

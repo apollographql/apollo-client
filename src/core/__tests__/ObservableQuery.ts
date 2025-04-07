@@ -2432,7 +2432,34 @@ describe("ObservableQuery", () => {
         variables,
       });
 
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       const stream = new ObservableStream(observable);
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataOneWithTypename,

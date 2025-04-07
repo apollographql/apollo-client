@@ -4334,7 +4334,7 @@ test("emits initial loading state using cache-and-network fetch policy with init
 
   const client = new ApolloClient({
     link: new MockLink([
-      { request: { query }, result: { data: { hello: "world" } } },
+      { request: { query }, result: { data: { hello: "world" } }, delay: 20 },
     ]),
     cache: new InMemoryCache(),
   });

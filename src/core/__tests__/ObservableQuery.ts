@@ -2965,27 +2965,19 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    // TODO: This test seems to conflict with many other tests that do not emit
-    // a loading state with a no-cache fetch policy. This should be more
-    // consistent when we update how it works with notifyOnNetworkStatusChange
-    // so I'm skipping this test which should be re-enabled when that work is
-    // completed.
-    it.skip("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
+    it("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables },
             result: { data: dataTwo },
+            delay: 20,
           },
         ]),
       });
 
-      await client.query({ query, variables });
+      client.writeQuery({ query, variables, data: dataOne });
 
       const observable = client.watchQuery({
         query,
@@ -3027,6 +3019,10 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
+
+      expect(client.readQuery({ query, variables })).toStrictEqualTyped(
+        dataOne
+      );
 
       await expect(stream).not.toEmitAnything();
     });

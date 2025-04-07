@@ -168,14 +168,22 @@ export class QueryInfo {
   getDiff(): Cache.DiffResult<any> {
     const options = this.getDiffOptions();
 
-    if (this.lastDiff && equal(options, this.lastDiff.options)) {
+    const oq = this.observableQuery;
+    const noCache = oq?.options.fetchPolicy === "no-cache";
+
+    if (
+      (this.lastWatch || noCache) &&
+      this.lastDiff &&
+      equal(options, this.lastDiff.options)
+    ) {
       return this.lastDiff.diff;
     }
 
-    this.updateWatch(this.variables);
+    if (this.lastWatch) {
+      this.updateWatch(this.variables);
+    }
 
-    const oq = this.observableQuery;
-    if (oq && oq.options.fetchPolicy === "no-cache") {
+    if (noCache) {
       return { complete: false };
     }
 

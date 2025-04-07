@@ -174,6 +174,12 @@ export class ObservableQuery<
             this.tearDownQuery();
           }
         },
+      }),
+      filter((result) => {
+        return (
+          this.options.notifyOnNetworkStatusChange ||
+          result !== this.initialResult
+        );
       })
     );
 

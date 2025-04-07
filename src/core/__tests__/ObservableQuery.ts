@@ -1731,6 +1731,7 @@ describe("ObservableQuery", () => {
               variables: variables1,
             },
             result: { data },
+            delay: 20,
           },
           {
             request: {
@@ -1738,6 +1739,7 @@ describe("ObservableQuery", () => {
               variables: variables2,
             },
             result: { data: data2 },
+            delay: 20,
           },
           {
             request: {
@@ -1745,6 +1747,7 @@ describe("ObservableQuery", () => {
               variables: variables1,
             },
             result: { data },
+            delay: 20,
           },
           {
             request: {
@@ -1752,6 +1755,7 @@ describe("ObservableQuery", () => {
               variables: variables2,
             },
             result: { data: data2 },
+            delay: 20,
           },
         ]),
       });
@@ -1777,6 +1781,13 @@ describe("ObservableQuery", () => {
       expect(observable.options.initialFetchPolicy).toBe("cache-and-network");
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,

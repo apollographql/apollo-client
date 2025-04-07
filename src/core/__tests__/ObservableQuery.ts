@@ -2293,6 +2293,13 @@ describe("ObservableQuery", () => {
         const stream = new ObservableStream(observableWithVariablesVar);
 
         await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
+
+        await expect(stream).toEmitTypedValue({
           data: {
             getVars: [
               { __typename: "Var", name: "a" },

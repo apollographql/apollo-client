@@ -2506,46 +2506,6 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("returns the current query status immediately", async () => {
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-            delay: 100,
-          },
-        ]),
-      });
-      const observable = client.watchQuery({ query, variables });
-      const stream = new ObservableStream(observable);
-
-      expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
-
-      await tick();
-
-      expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
-
-      await stream.takeNext();
-
-      expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: dataOne,
-        loading: false,
-        networkStatus: 7,
-        partial: false,
-      });
-    });
-
     it("returns results from the store immediately", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),

@@ -2858,17 +2858,14 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
         link: new MockLink([
           {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
             request: { query: superQuery, variables },
             result: { data: superDataOne },
+            delay: 20,
           },
         ]),
       });
 
-      await client.query({ query, variables });
+      client.writeQuery({ query, variables, data: dataOne });
 
       const observable = client.watchQuery({
         query: superQuery,

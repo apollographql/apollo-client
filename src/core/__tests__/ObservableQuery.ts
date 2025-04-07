@@ -2163,10 +2163,16 @@ describe("ObservableQuery", () => {
         const observableWithVarsVar = client.watchQuery({
           query: firstRequest.query,
           variables: firstRequest.variables,
-          notifyOnNetworkStatusChange: false,
         });
 
         const stream = new ObservableStream(observableWithVarsVar);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
 
         await expect(stream).toEmitTypedValue({
           data: {
@@ -2186,6 +2192,19 @@ describe("ObservableQuery", () => {
         const promise = observableWithVarsVar.refetch({
           // @ts-expect-error
           variables: { vars: ["d", "e"] },
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: {
+            getVars: [
+              { __typename: "Var", name: "a" },
+              { __typename: "Var", name: "b" },
+              { __typename: "Var", name: "c" },
+            ],
+          },
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          partial: false,
         });
 
         await expect(stream).toEmitTypedValue({

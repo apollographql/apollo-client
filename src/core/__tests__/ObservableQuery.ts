@@ -1610,8 +1610,7 @@ describe("ObservableQuery", () => {
     });
 
     it("calls ObservableQuery.next even after hitting cache", async () => {
-      // This query and variables are copied from react-apollo
-      const queryWithVars = gql`
+      const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {
             people {
@@ -1631,36 +1630,37 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
         link: new MockLink([
           {
-            request: {
-              query: queryWithVars,
-              variables: variables1,
-            },
+            request: { query, variables: variables1 },
             result: { data },
+            delay: 20,
           },
           {
-            request: {
-              query: queryWithVars,
-              variables: variables2,
-            },
+            request: { query, variables: variables2 },
             result: { data: data2 },
+            delay: 20,
           },
           {
-            request: {
-              query: queryWithVars,
-              variables: variables1,
-            },
+            request: { query, variables: variables1 },
             result: { data },
+            delay: 20,
           },
         ]),
       });
 
       const observable = client.watchQuery({
-        query: queryWithVars,
+        query,
         variables: variables1,
         fetchPolicy: "cache-and-network",
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,

@@ -1609,7 +1609,7 @@ describe("ObservableQuery", () => {
       expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
     });
 
-    it("calls ObservableQuery.next even after hitting cache", async () => {
+    it("returns cached results after refetch when changing variables using a cache-and-network fetch policy", async () => {
       const query = gql`
         query people($first: Int) {
           allPeople(first: $first) {

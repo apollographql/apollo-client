@@ -4583,7 +4583,10 @@ test("does not emit loading state on reobserve with notifyOnNetworkStatusChange:
 });
 
 test("does not emit loading state on fetchMore with notifyOnNetworkStatusChange: false", async () => {
-  const query = gql`
+  const query: TypedDocumentNode<
+    { comments: Array<{ __typename: "Comment"; id: number }> },
+    { limit: number; offset: number }
+  > = gql`
     query ($limit: Int!, $offset: Int!) {
       comments(limit: $limit, offset: $offset) {
         id
@@ -4639,7 +4642,10 @@ test("does not emit loading state on fetchMore with notifyOnNetworkStatusChange:
   });
 
   await expect(
-    observable.fetchMore({ variables: { offset: 2, limit: 2 } })
+    observable.fetchMore({
+      variables: { offset: 2, limit: 2 },
+      updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       comments: [

@@ -4224,8 +4224,15 @@ test("works with `from`", async () => {
 
   const observable = from(observableQuery);
   const stream = new ObservableStream(observable);
-  const result = await stream.takeNext();
-  expect(result).toStrictEqualTyped({
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
     data,
     loading: false,
     networkStatus: NetworkStatus.ready,

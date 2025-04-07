@@ -8,7 +8,7 @@ import type {
   Subscription,
 } from "rxjs";
 import type { Observable } from "rxjs";
-import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
+import { BehaviorSubject, filter, lastValueFrom, map, tap } from "rxjs";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -110,7 +110,6 @@ export class ObservableQuery<
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
 
   private isTornDown: boolean;
   private queryManager: QueryManager;
@@ -141,16 +140,11 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
+    const placeholderValue = {} as ApolloQueryResult<TData>;
     this.networkStatus = NetworkStatus.loading;
-    this.initialResult = {
-      data: undefined,
-      loading: true,
-      networkStatus: this.networkStatus,
-      partial: true,
-    };
 
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
-    this.subject = new BehaviorSubject(this.initialResult);
+    this.subject = new BehaviorSubject(placeholderValue);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -175,10 +169,16 @@ export class ObservableQuery<
           }
         },
       }),
+      map((result) => {
+        return result === placeholderValue ? this.getInitialResult() : result;
+      }),
       filter((result) => {
         return (
           this.options.notifyOnNetworkStatusChange ||
-          result !== this.initialResult
+          !result.loading ||
+          // data could be defined for cache-and-network fetch policies
+          // when emitting the cache result while loading the network result
+          !!result.data
         );
       })
     );
@@ -254,6 +254,58 @@ export class ObservableQuery<
   /** @internal */
   public resetDiff() {
     this.queryInfo.resetDiff();
+  }
+
+  private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
+    const { variables, returnPartialData = false } = this.options;
+    const fetchPolicy =
+      this.queryManager.prioritizeCacheValues ?
+        "cache-first"
+      : this.options.fetchPolicy;
+    const defaultResult = {
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    };
+
+    const cacheResult = () => {
+      const diff = this.queryManager.cache.diff({
+        query: this.query,
+        variables,
+        returnPartialData,
+        optimistic: true,
+      });
+
+      return this.maskResult({
+        data: (diff.result as TData) ?? undefined,
+        loading: !diff.complete,
+        networkStatus:
+          diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
+        partial: !diff.complete,
+      });
+    };
+
+    switch (fetchPolicy) {
+      case "cache-only":
+      case "cache-first":
+        return cacheResult();
+      case "cache-and-network":
+        return {
+          ...cacheResult(),
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+        };
+      case "standby":
+        return {
+          ...defaultResult,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
+
+      default:
+        return defaultResult;
+    }
   }
 
   private getCurrentFullResult(

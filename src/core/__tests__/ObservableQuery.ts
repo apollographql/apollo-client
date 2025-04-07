@@ -16,12 +16,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import {
-  MockLink,
-  MockSubscriptionLink,
-  tick,
-  wait,
-} from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,

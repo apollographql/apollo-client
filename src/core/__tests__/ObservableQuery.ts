@@ -1565,7 +1565,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy", async () => {
+    it("handles `no-cache` fetchPolicy with refetch", async () => {
       const mockedResponses = [
         {
           request: { query, variables },
@@ -1581,32 +1581,54 @@ describe("ObservableQuery", () => {
         cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
-      const firstRequest = mockedResponses[0].request;
       const observable = client.watchQuery({
-        query: firstRequest.query,
-        variables: firstRequest.variables,
+        query,
+        variables,
         fetchPolicy: "no-cache",
       });
 
-      // TODO: Determine how we can test this without looking at internal
-      // implementation details
-      const mocks = mockFetchQuery(client["queryManager"]);
       const stream = new ObservableStream(observable);
 
-      await stream.takeNext();
-      await observable.refetch(differentVariables);
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
-      const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
-      expect(fqbpCalls.length).toBe(2);
-      expect(fqbpCalls[1][1].fetchPolicy).toBe("no-cache");
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      expect(client.extract()).toEqual({});
+
+      await expect(
+        observable.refetch(differentVariables)
+      ).resolves.toStrictEqualTyped({ data: dataTwo });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      expect(client.extract()).toEqual({});
 
       // Unlike network-only or cache-and-network, the no-cache
       // FetchPolicy does not switch to cache-first after the first
       // network request.
       expect(observable.options.fetchPolicy).toBe("no-cache");
-      const fqoCalls = mocks.fetchObservableWithInfo.mock.calls;
-      expect(fqoCalls.length).toBe(2);
-      expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
     });
 
     it("returns cached results after refetch when changing variables using a cache-and-network fetch policy", async () => {

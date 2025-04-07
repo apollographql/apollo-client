@@ -2796,13 +2796,14 @@ describe("ObservableQuery", () => {
       expect(observable.getLastError()).toEqual(wrappedError);
     });
 
-    it.skip("ignores errors with data if errorPolicy is ignore", async () => {
+    it("ignores errors with data if errorPolicy is ignore", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
             result: { errors: [error], data: dataOne },
+            delay: 20,
           },
         ]),
       });
@@ -2814,6 +2815,13 @@ describe("ObservableQuery", () => {
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,

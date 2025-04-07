@@ -2502,9 +2502,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    // TODO: Need to handle cached data when emitting the first value from the
-    // stream.
-    it.failing("returns results from the store immediately", async () => {
+    it("returns results from the store immediately", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([

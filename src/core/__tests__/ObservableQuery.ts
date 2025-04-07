@@ -4781,6 +4781,34 @@ test("does not emit loading state on when evicting fields with notifyOnNetworkSt
   await expect(stream).not.toEmitAnything();
 });
 
+test("emits proper cache result if cache changes between watchQuery initialization and subscription", async () => {
+  const query = gql`
+    query {
+      value
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({ query, data: { value: "initial" } });
+  const observable = client.watchQuery({ query });
+  client.writeQuery({ query, data: { value: "updated" } });
+
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { value: "updated" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test.skip("type test for `from`", () => {
   expectTypeOf<
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>

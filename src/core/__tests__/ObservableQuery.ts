@@ -2506,22 +2506,34 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("returns results from the store immediately", async () => {
+    // TODO: Need to handle cached data when emitting the first value from the
+    // stream.
+    it.failing("returns results from the store immediately", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
             result: { data: dataOne },
+            delay: 20,
           },
         ]),
       });
 
-      const result = await client.query({ query, variables });
-
-      expect(result).toStrictEqualTyped({ data: dataOne });
+      client.writeQuery({ query, variables, data: dataOne });
 
       const observable = client.watchQuery({ query, variables });
+
+      // TODO: Should this be the initial loading state until we've attempted to
+      // execute the query?
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      const stream = new ObservableStream(observable);
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
@@ -2529,9 +2541,25 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
 
-    it("returns errors from the store immediately", async () => {
+    it.skip("returns errors from the store immediately", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([

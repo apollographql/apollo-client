@@ -2559,19 +2559,49 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it.skip("returns errors from the store immediately", async () => {
+    it("returns errors from the store immediately", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
             result: { errors: [error] },
+            delay: 20,
           },
         ]),
       });
 
       const observable = client.watchQuery({ query, variables });
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       const stream = new ObservableStream(observable);
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: undefined,

@@ -2913,25 +2913,19 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    // TODO: Update this behavior when enforcing notifyOnNetworkStatusChange
     it("returns loading even if full data is available when using network-only fetchPolicy", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables },
             result: { data: dataTwo },
+            delay: 20,
           },
         ]),
       });
 
-      const result = await client.query({ query, variables });
-
-      expect(result).toStrictEqualTyped({ data: dataOne });
+      client.writeQuery({ query, variables, data: dataOne });
 
       const observable = client.watchQuery({
         query,

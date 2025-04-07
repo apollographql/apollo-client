@@ -4235,6 +4235,547 @@ test("works with `from`", async () => {
   });
 });
 
+test("does not emit initial loading state with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const data = { hello: "world" };
+
+  const client = new ApolloClient({
+    link: new MockLink([{ request: { query }, result: { data } }]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit initial loading state using network-only fetch policy with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const data = { hello: "world" };
+
+  const client = new ApolloClient({
+    link: new MockLink([{ request: { query }, result: { data } }]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+    fetchPolicy: "network-only",
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit initial loading state using cache-and-network fetch policy with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const data = { hello: "world" };
+
+  const client = new ApolloClient({
+    link: new MockLink([{ request: { query }, result: { data } }]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+    fetchPolicy: "cache-and-network",
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("emits initial loading state using cache-and-network fetch policy with initial cached data with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: new MockLink([
+      { request: { query }, result: { data: { hello: "world" } } },
+    ]),
+    cache: new InMemoryCache(),
+  });
+
+  client.writeQuery({ query, data: { hello: "world (cached)" } });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+    fetchPolicy: "cache-and-network",
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { hello: "world (cached)" },
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { hello: "world" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit initial loading state using no-cache fetch policy with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const data = { hello: "world" };
+
+  const client = new ApolloClient({
+    link: new MockLink([{ request: { query }, result: { data } }]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+    fetchPolicy: "no-cache",
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on refetch with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: new MockLink([
+      { request: { query }, result: { data: { hello: "world" } }, delay: 20 },
+      { request: { query }, result: { data: { hello: "world 2" } }, delay: 20 },
+    ]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { hello: "world" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(observable.refetch()).resolves.toStrictEqualTyped({
+    data: { hello: "world 2" },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { hello: "world 2" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on refetch with new variables with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query ($recipient: String!) {
+      greeting(recipient: $recipient)
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { greeting: `Hello, ${operation.variables.recipient}` },
+          });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { recipient: "Test" },
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "Hello, Test" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.refetch({ recipient: "Test 2" })
+  ).resolves.toStrictEqualTyped({ data: { greeting: "Hello, Test 2" } });
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "Hello, Test 2" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on setVariables with notifyOnNetworkStatusChange: false", async () => {
+  const query: TypedDocumentNode<{ greeting: string }, { recipient: string }> =
+    gql`
+      query ($recipient: String!) {
+        greeting(recipient: $recipient)
+      }
+    `;
+
+  const client = new ApolloClient({
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { greeting: `Hello, ${operation.variables.recipient}` },
+          });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { recipient: "Test" },
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "Hello, Test" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.setVariables({ recipient: "Test 2" })
+  ).resolves.toStrictEqualTyped({ data: { greeting: "Hello, Test 2" } });
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "Hello, Test 2" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on reobserve with notifyOnNetworkStatusChange: false", async () => {
+  const query: TypedDocumentNode<{ greeting: string }, { recipient: string }> =
+    gql`
+      query ($recipient: String!) {
+        greeting(recipient: $recipient)
+      }
+    `;
+
+  const client = new ApolloClient({
+    link: new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { greeting: `Hello, ${operation.variables.recipient}` },
+          });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { recipient: "Test" },
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "Hello, Test" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.reobserve({ variables: { recipient: "Test 2" } })
+  ).resolves.toStrictEqualTyped({ data: { greeting: "Hello, Test 2" } });
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "Hello, Test 2" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on fetchMore with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query ($limit: Int!, $offset: Int!) {
+      comments(limit: $limit, offset: $offset) {
+        id
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: new MockLink([
+      {
+        request: { query, variables: { offset: 0, limit: 2 } },
+        result: {
+          data: {
+            comments: [
+              { __typename: "Comment", id: 1 },
+              { __typename: "Comment", id: 2 },
+            ],
+          },
+        },
+      },
+      {
+        request: { query, variables: { offset: 2, limit: 2 } },
+        result: {
+          data: {
+            comments: [
+              { __typename: "Comment", id: 3 },
+              { __typename: "Comment", id: 4 },
+            ],
+          },
+        },
+      },
+    ]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { offset: 0, limit: 2 },
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      comments: [
+        { __typename: "Comment", id: 1 },
+        { __typename: "Comment", id: 2 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.fetchMore({ variables: { offset: 2, limit: 2 } })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      comments: [
+        { __typename: "Comment", id: 3 },
+        { __typename: "Comment", id: 4 },
+      ],
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      comments: [
+        { __typename: "Comment", id: 3 },
+        { __typename: "Comment", id: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on client.resetStore with notifyOnNetworkStatusChange: false", async () => {
+  const query: TypedDocumentNode<
+    { count: number },
+    Record<string, never>
+  > = gql`
+    query {
+      count
+    }
+  `;
+
+  let count = 0;
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({
+            data: { count: ++count },
+          });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 1 },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await client.resetStore();
+
+  await expect(stream).toEmitTypedValue({
+    data: { count: 2 },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not emit loading state on when evicting fields with notifyOnNetworkStatusChange: false", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        username
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink([
+      {
+        request: { query },
+        result: {
+          data: { user: { __typename: "User", id: 1, username: "test1" } },
+        },
+      },
+      {
+        request: { query },
+        result: {
+          data: { user: { __typename: "User", id: 1, username: "test2" } },
+        },
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", id: 1, username: "test1" } },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  client.cache.modify({
+    id: cache.identify({ __typename: "User", id: 1 }),
+    fields: {
+      username: (_, { DELETE }) => DELETE,
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", id: 1, username: "test2" } },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test.skip("type test for `from`", () => {
   expectTypeOf<
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>

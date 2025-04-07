@@ -140,11 +140,11 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    const placeholderValue = {} as ApolloQueryResult<TData>;
+    const placeholder = {} as ApolloQueryResult<TData>;
     this.networkStatus = NetworkStatus.loading;
 
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
-    this.subject = new BehaviorSubject(placeholderValue);
+    this.subject = new BehaviorSubject(placeholder);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -170,7 +170,7 @@ export class ObservableQuery<
         },
       }),
       map((result) => {
-        return result === placeholderValue ? this.getInitialResult() : result;
+        return result === placeholder ? this.getInitialResult() : result;
       }),
       filter((result) => {
         return (

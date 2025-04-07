@@ -1647,6 +1647,7 @@ export class QueryManager<TStore> {
       variables,
       networkStatus,
     });
+    queryInfo["updateWatch"]();
 
     const readCache = () => queryInfo.getDiff();
 

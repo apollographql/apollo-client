@@ -2010,6 +2010,7 @@ describe("ObservableQuery", () => {
           return {
             request: requestWithoutVariables,
             result: resultWithVariables,
+            delay: 20,
           };
         }
 
@@ -2023,6 +2024,13 @@ describe("ObservableQuery", () => {
         });
 
         const stream = new ObservableStream(observableWithoutVariables);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
 
         await expect(stream).toEmitTypedValue({
           data: {

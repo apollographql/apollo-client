@@ -3051,6 +3051,20 @@ describe("ObservableQuery", () => {
       const obs = client.watchQuery({ query });
       const stream = new ObservableStream(obs);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      expect(obs.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       link.simulateResult({
         result: {
           data: {

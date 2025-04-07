@@ -1888,8 +1888,9 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    // TODO: The first emit should be the partial result from the resolvers
-    // since returnPartialData is true and `always: true` is set in client
+    // TODO: Revisit what this will look like when we move local resolvers to
+    // the link chain. This is not something that will work if its combined with
+    // other cached data.
     it.failing(
       "cache-and-network refetch should run @client(always: true) resolvers when network request fails",
       async () => {

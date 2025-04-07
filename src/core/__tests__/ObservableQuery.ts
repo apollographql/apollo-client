@@ -1516,6 +1516,13 @@ describe("ObservableQuery", () => {
       observers[0].complete();
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,

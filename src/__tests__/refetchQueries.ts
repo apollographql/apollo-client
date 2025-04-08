@@ -529,7 +529,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes queries named in refetchQueries even if they have no observers", async () => {
-    expect.assertions(13);
+    expect.assertions(14);
     const client = makeClient();
 
     const aObs = client.watchQuery({ query: aQuery });
@@ -567,6 +567,13 @@ describe("client.refetchQueries", () => {
     const stream = new ObservableStream(abObs);
     subs.push(stream as unknown as Subscription);
     expect(abObs.hasObservers()).toBe(true);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: { a: "A", b: "B" },

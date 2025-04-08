@@ -25,41 +25,10 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { MockApolloLink } from "../../../testing/core/mocking/mockLink.js";
-import type { QueryManager } from "../../QueryManager.js";
 import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../watchQueryOptions.js";
-
-// TODO: Remove eventually as we should not be testing internals like this.
-// This was originally imported from the ObservableQuery test, but the import
-// causes that test file to run when trying to run just this file so this is now
-// inlined.
-const mockFetchQuery = (queryManager: QueryManager) => {
-  const fetchObservableWithInfo = queryManager["fetchObservableWithInfo"];
-  const fetchQueryByPolicy: QueryManager["fetchQueryByPolicy"] = (
-    queryManager as any
-  ).fetchQueryByPolicy;
-
-  const mock = <
-    T extends typeof fetchObservableWithInfo | typeof fetchQueryByPolicy,
-  >(
-    original: T
-  ) =>
-    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
-      // @ts-expect-error
-      return original.apply(queryManager, arguments);
-    });
-
-  const mocks = {
-    fetchObservableWithInfo: mock(fetchObservableWithInfo),
-    fetchQueryByPolicy: mock(fetchQueryByPolicy),
-  };
-
-  Object.assign(queryManager, mocks);
-
-  return mocks;
-};
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

@@ -262,7 +262,7 @@ export function useLazyQuery<
     React.useCallback(
       (forceUpdate) => {
         const subscription = observable.subscribe((result) => {
-          if (!equal(resultRef.current, result)) {
+          if (!equal(resultRef.current || initialResult, result)) {
             updateResult(result, forceUpdate);
           }
         });

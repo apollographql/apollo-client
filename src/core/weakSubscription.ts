@@ -1,3 +1,8 @@
+declare class WeakRef<T> {
+  constructor(value: T);
+  deref(): T | undefined;
+}
+
 const _WeakRef =
   typeof WeakRef !== "undefined" ? WeakRef : (
     (function <T>(value: T) {

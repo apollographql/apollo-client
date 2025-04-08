@@ -140,11 +140,11 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    const placeholder = {} as ApolloQueryResult<TData>;
+    const uninitialized = {} as ApolloQueryResult<TData>;
     this.networkStatus = NetworkStatus.loading;
 
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
-    this.subject = new BehaviorSubject(placeholder);
+    this.subject = new BehaviorSubject(uninitialized);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -153,7 +153,7 @@ export class ObservableQuery<
             startedInactive = false;
           }
           if (!this.subject.observed) {
-            if (this.subject.value === placeholder) {
+            if (this.subject.value === uninitialized) {
               // Emitting a value in the `subscribe` callback of `tap` gives
               // the subject a chance to save this initial result without
               // emitting the placeholder value since this callback is executed

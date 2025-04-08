@@ -152,8 +152,12 @@ export class ObservableQuery<
               // updated between when the `ObservableQuery` was instantiated and
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
-              this.subject.next(this.getInitialResult());
-              this.networkStatus = this.subject.value.networkStatus;
+              const initialResult = this.getInitialResult();
+
+              if (initialResult) {
+                this.subject.next(this.getInitialResult());
+                this.networkStatus = initialResult.networkStatus;
+              }
             }
 
             this.reobserve();
@@ -174,11 +178,12 @@ export class ObservableQuery<
       }),
       filter((result) => {
         return (
-          this.options.notifyOnNetworkStatusChange ||
-          !result.loading ||
-          // data could be defined for cache-and-network fetch policies
-          // when emitting the cache result while loading the network result
-          !!result.data
+          result !== placeholder &&
+          (this.options.notifyOnNetworkStatusChange ||
+            !result.loading ||
+            // data could be defined for cache-and-network fetch policies
+            // when emitting the cache result while loading the network result
+            !!result.data)
         );
       })
     );
@@ -256,7 +261,9 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
-  private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
+  private getInitialResult():
+    | ApolloQueryResult<MaybeMasked<TData>>
+    | undefined {
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
@@ -296,11 +303,9 @@ export class ObservableQuery<
           networkStatus: NetworkStatus.loading,
         };
       case "standby":
-        return {
-          ...defaultResult,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        };
+        // We do not emit a value for standby fetch policy so we want to avoid
+        // setting the current value
+        return;
 
       default:
         return defaultResult;

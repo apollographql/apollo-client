@@ -1064,9 +1064,8 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    // TODO: Is this correct without returnPartialData: true?
     await expect(stream).toEmitTypedValue({
-      data: { count: 0 },
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1128,9 +1127,8 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    // TODO: Is this correct without returnPartialData: true?
     await expect(stream).toEmitTypedValue({
-      data: { user: { __typename: "User", firstName: "John" } },
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1227,9 +1225,8 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    // TODO: Is this correct without returnPartialData: true?
     await expect(stream).toEmitTypedValue({
-      data: { count: 0 },
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,

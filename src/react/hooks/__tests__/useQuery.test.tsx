@@ -1917,37 +1917,28 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    // TODO: Refactor the initial state of this test. This test states that
-    // `skip` goes from `true` -> `false`, but it starts out unskipped before
-    // enabling it.
     it("should start polling when skip goes from true to false", async () => {
       const query = gql`
         {
           hello
         }
       `;
+      let count = 0;
       const mocks = [
         {
           request: { query },
-          result: { data: { hello: "world 1" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 2" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 3" } },
+          result: () => ({ data: { hello: `world ${++count}` } }),
+          delay: 10,
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
       ];
 
       const cache = new InMemoryCache();
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ skip }: { skip?: boolean }) =>
-          useQuery(query, { pollInterval: 10, skip }),
+        ({ skip }) => useQuery(query, { pollInterval: 80, skip }),
         {
-          initialProps: {},
+          initialProps: { skip: false },
           wrapper: ({ children }) => (
             <MockedProvider
               mocks={mocks}
@@ -5103,7 +5094,7 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });
@@ -5392,7 +5383,7 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });
@@ -5647,7 +5638,7 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });

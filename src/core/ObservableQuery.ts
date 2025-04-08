@@ -1082,7 +1082,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldNetworkStatus = this.networkStatus;
 
     if (!newNetworkStatus) {
-      newNetworkStatus = NetworkStatus.loading;
+      // QueryManager does not emit any values for standby fetch policies so we
+      // have to ensure that we don't accidentally set the networkStatus to
+      // loading.
+      newNetworkStatus =
+        options.fetchPolicy === "standby" ?
+          NetworkStatus.ready
+        : NetworkStatus.loading;
 
       if (
         oldNetworkStatus !== NetworkStatus.loading &&

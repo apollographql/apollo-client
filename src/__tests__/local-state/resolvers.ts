@@ -70,6 +70,13 @@ describe("Basic resolver capabilities", () => {
     const stream = setupTestWithResolvers({ resolvers, query });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { foo: { bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -110,6 +117,13 @@ describe("Basic resolver capabilities", () => {
       query,
       serverQuery,
       serverResult: { data: { bar: { baz: true } } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -161,6 +175,13 @@ describe("Basic resolver capabilities", () => {
       query,
       serverQuery,
       serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -226,6 +247,13 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
@@ -263,6 +291,13 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -294,6 +329,13 @@ describe("Basic resolver capabilities", () => {
       resolvers,
       query,
       queryOptions: { context: { id: 1 } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -352,6 +394,13 @@ describe("Basic resolver capabilities", () => {
           },
         },
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -501,6 +550,7 @@ describe("Basic resolver capabilities", () => {
             variables: {
               id: developerId,
             },
+            notifyOnNetworkStatusChange: false,
           })
           .subscribe({
             next(result) {
@@ -554,6 +604,13 @@ describe("Basic resolver capabilities", () => {
       query,
       serverQuery,
       serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({

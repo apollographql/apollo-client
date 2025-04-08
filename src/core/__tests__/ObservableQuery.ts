@@ -4904,6 +4904,110 @@ test("emits loading state when switching from standby to non-standby fetch polic
   await expect(stream).not.toEmitAnything();
 });
 
+test("does not emit loading state when changing variables with standby fetch policy", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { id: 1 },
+    fetchPolicy: "standby",
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(
+    observable.reobserve({ variables: { id: 2 } })
+  ).resolves.toStrictEqualTyped({ data: undefined });
+
+  await expect(stream).not.toEmitAnything();
+
+  expect(observable.options.variables).toStrictEqualTyped({ id: 2 });
+});
+
+test("emits loading state when calling reobserve with new fetch policy after changing variables with standby fetch policy", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      user(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: { user: { __typename: "User", id: 2, name: "Test 2" } },
+        },
+        delay: 20,
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { id: 1 },
+    fetchPolicy: "standby",
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(
+    observable.reobserve({ variables: { id: 2 } })
+  ).resolves.toStrictEqualTyped({ data: undefined });
+
+  await expect(stream).not.toEmitAnything();
+
+  await expect(
+    observable.reobserve({ fetchPolicy: "cache-first" })
+  ).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", id: 2, name: "Test 2" } },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", id: 2, name: "Test 2" } },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test.skip("type test for `from`", () => {
   expectTypeOf<
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>

@@ -2153,7 +2153,6 @@ describe("ApolloClient", () => {
         const observable = client.watchQuery({
           query,
           fetchPolicy,
-          notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
         await expect(stream).toEmitTypedValue({

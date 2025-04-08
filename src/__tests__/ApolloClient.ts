@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { expectTypeOf } from "expect-type";
 import { Kind } from "graphql";
 import { gql } from "graphql-tag";
-import { Observable, of } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import type {
@@ -1162,7 +1162,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return of({ data });
+        return of({ data }).pipe(delay(20));
       });
       function newClient() {
         return new ApolloClient({
@@ -1216,6 +1216,13 @@ describe("ApolloClient", () => {
           const stream = new ObservableStream(observable);
 
           await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
+
+          await expect(stream).toEmitTypedValue({
             data,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -1263,6 +1270,13 @@ describe("ApolloClient", () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
+
+          await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
 
           await expect(stream).toEmitTypedValue({
             data,
@@ -1320,6 +1334,13 @@ describe("ApolloClient", () => {
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
 
+          await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
+
           {
             const result = await stream.takeNext();
 
@@ -1357,6 +1378,13 @@ describe("ApolloClient", () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
+
+          await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
 
           {
             const result = await stream.takeNext();

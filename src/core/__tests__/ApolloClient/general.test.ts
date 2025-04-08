@@ -108,6 +108,13 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
       error: new CombinedGraphQLErrors({
         errors: [{ message: "This is an error message." }],
       }),
@@ -137,6 +144,13 @@ describe("ApolloClient", () => {
       result: {
         errors: [new GraphQLError("This is an error message.")],
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -171,6 +185,13 @@ describe("ApolloClient", () => {
         },
         errors: [new GraphQLError("This is an error message.")],
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -211,6 +232,13 @@ describe("ApolloClient", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         allPeople: {
           people: {
@@ -244,6 +272,13 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
       error: new CombinedGraphQLErrors({ errors: [null as any] }),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -265,6 +300,13 @@ describe("ApolloClient", () => {
         }
       `,
       error: new Error("Network error"),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -297,6 +339,13 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
       error: new Error("Network error"),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -321,6 +370,13 @@ describe("ApolloClient", () => {
         errorPolicy: "ignore",
       },
       error: new Error("Network error"),
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -613,6 +669,13 @@ describe("ApolloClient", () => {
 
     const stream = new ObservableStream(observableQuery);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     // Kick off another request while the other is still pending
     await wait(10);
     void observableQuery.reobserve({ variables: { id: 2 } });
@@ -844,6 +907,25 @@ describe("ApolloClient", () => {
     const stream3 = new ObservableStream(ob3);
 
     await expect(stream1).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream2).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream3).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream1).toEmitTypedValue({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1045,6 +1127,12 @@ describe("ApolloClient", () => {
         "cache-first",
         [
           {
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -1071,6 +1159,12 @@ describe("ApolloClient", () => {
         "network-only",
         [
           {
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
+          {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -1096,6 +1190,12 @@ describe("ApolloClient", () => {
         true,
         "cache-and-network",
         [
+          {
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          },
           {
             data: data1,
             loading: false,
@@ -1195,6 +1295,13 @@ describe("ApolloClient", () => {
 
     const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: data1,
@@ -1509,6 +1616,13 @@ describe("ApolloClient", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1540,6 +1654,13 @@ describe("ApolloClient", () => {
     });
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data,
@@ -1971,6 +2092,19 @@ describe("ApolloClient", () => {
     const stream2 = new ObservableStream(observable2);
 
     await expect(stream1).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream2).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream1).toEmitTypedValue({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -2044,6 +2178,13 @@ describe("ApolloClient", () => {
 
     const observable = client.watchQuery({ query: query1 });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: data1,
@@ -2295,6 +2436,13 @@ describe("ApolloClient", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -2394,6 +2542,13 @@ describe("ApolloClient", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -2477,6 +2632,19 @@ describe("ApolloClient", () => {
 
     const stream1 = new ObservableStream(observable1);
     const stream2 = new ObservableStream(observable2);
+
+    await expect(stream1).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream2).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream1).toEmitTypedValue({
       data: data1,
@@ -2569,13 +2737,19 @@ describe("ApolloClient", () => {
       partial: true,
     });
     await expect(stream2).toEmitTypedValue({
-      data: data2,
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream1).toEmitTypedValue({
+      data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-    await expect(stream1).toEmitTypedValue({
-      data: data1,
+    await expect(stream2).toEmitTypedValue({
+      data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2915,6 +3089,19 @@ describe("ApolloClient", () => {
     const stream2 = new ObservableStream(observableWithId);
 
     await expect(stream1).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream2).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream1).toEmitTypedValue({
       data: dataWithoutId,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -2959,6 +3146,13 @@ describe("ApolloClient", () => {
 
     const handle = client.watchQuery(request);
     const stream = new ObservableStream(handle);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: firstResult.data,
@@ -3040,7 +3234,18 @@ describe("ApolloClient", () => {
     const streamA = new ObservableStream(observableA);
     const streamB = new ObservableStream(observableB);
 
-    await expect(streamA).toEmitNext();
+    await expect(streamA).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(streamA).toEmitTypedValue({
+      data: dataA,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
     expect(observableA.getCurrentResult()).toStrictEqualTyped({
       data: dataA,
       loading: false,
@@ -3054,7 +3259,18 @@ describe("ApolloClient", () => {
       partial: true,
     });
 
-    await expect(streamB).toEmitNext();
+    await expect(streamB).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(streamB).toEmitTypedValue({
+      data: dataB,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
     expect(observableA.getCurrentResult()).toStrictEqualTyped({
       data: dataA,
       loading: false,
@@ -3342,6 +3558,7 @@ describe("ApolloClient", () => {
         .watchQuery({
           query: query1,
           pollInterval: 150,
+          notifyOnNetworkStatusChange: false,
         })
         .subscribe({
           next() {
@@ -3358,6 +3575,7 @@ describe("ApolloClient", () => {
         .watchQuery({
           query: query2,
           pollInterval: 2000,
+          notifyOnNetworkStatusChange: false,
         })
         .subscribe({
           next() {
@@ -3630,6 +3848,13 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3689,6 +3914,13 @@ describe("ApolloClient", () => {
         pollInterval: 50,
       });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: data1,
@@ -3790,6 +4022,19 @@ describe("ApolloClient", () => {
 
       const stream = new ObservableStream(observable);
       const stream2 = new ObservableStream(observable2);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      await expect(stream2).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4353,6 +4598,19 @@ describe("ApolloClient", () => {
       const stream2 = new ObservableStream(observable2);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      await expect(stream2).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -4884,6 +5142,19 @@ describe("ApolloClient", () => {
       const stream2 = new ObservableStream(observable2);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      await expect(stream2).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5014,6 +5285,13 @@ describe("ApolloClient", () => {
             },
           },
         },
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
       });
 
       await expect(stream).toEmitTypedValue({
@@ -5386,6 +5664,13 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5460,6 +5745,13 @@ describe("ApolloClient", () => {
 
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -5537,6 +5829,13 @@ describe("ApolloClient", () => {
 
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -5617,6 +5916,13 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -5710,6 +6016,13 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -5812,6 +6125,13 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5907,6 +6227,13 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5976,6 +6303,13 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -7037,6 +7371,19 @@ describe("ApolloClient", () => {
         hasNext: true,
       });
 
+      await expect(query1).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      await expect(query2).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       await expect(query1).toEmitTypedValue(initialResult);
       await expect(query2).toEmitTypedValue(initialResult);
 
@@ -7170,6 +7517,13 @@ describe("ApolloClient", () => {
       });
 
       const stream1 = new ObservableStream(observable1);
+
+      await expect(stream1).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream1).toEmitTypedValue({
         data: data1,

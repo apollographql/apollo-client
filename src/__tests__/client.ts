@@ -5444,6 +5444,7 @@ describe("custom document transforms", () => {
     const observable = client.watchQuery({
       query: initialQuery,
       variables: { offset: 0 },
+      notifyOnNetworkStatusChange: false,
     });
     const handleNext = jest.fn();
 

@@ -555,6 +555,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // fetchMore to provide an updateQuery callback that determines how
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
+      notifyOnNetworkStatusChange: this.options.notifyOnNetworkStatusChange,
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
     combinedOptions.query = this.transformDocument(combinedOptions.query);

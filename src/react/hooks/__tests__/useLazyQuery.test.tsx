@@ -173,7 +173,7 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });
@@ -1113,7 +1113,7 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });
@@ -1521,7 +1521,7 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: "1" },
       });
@@ -1661,7 +1661,7 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: "1" },
       });
@@ -4244,7 +4244,7 @@ test("responds to cache updates after changing variables", async () => {
       data: undefined,
       called: true,
       loading: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -4414,7 +4414,7 @@ test("uses cached result when switching to variables already written to the cach
       data: undefined,
       called: true,
       loading: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -4695,7 +4695,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: undefined,
       called: true,
       loading: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -5067,7 +5067,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       data: undefined,
       called: true,
       loading: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { min: 0, max: 12 },
     });
@@ -5287,7 +5287,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: undefined,
       called: true,
       loading: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });

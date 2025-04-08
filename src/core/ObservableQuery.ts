@@ -938,10 +938,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     } = this;
 
     if (!pollInterval || !this.hasObservers()) {
-      if (pollingInfo) {
-        clearTimeout(pollingInfo.timeout);
-        delete this.pollingInfo;
-      }
+      this.cancelPolling();
       return;
     }
 
@@ -989,6 +986,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     poll();
+  }
+
+  // This differs from stopPolling in that it does not set pollInterval to 0
+  private cancelPolling() {
+    if (this.pollingInfo) {
+      clearTimeout(this.pollingInfo.timeout);
+      delete this.pollingInfo;
+    }
   }
 
   private updateLastResult(
@@ -1106,8 +1111,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     if (options.fetchPolicy === "standby") {
-      clearTimeout(this.pollingInfo?.timeout);
-      delete this.pollingInfo;
+      this.cancelPolling();
     }
 
     this.networkStatus = newNetworkStatus;

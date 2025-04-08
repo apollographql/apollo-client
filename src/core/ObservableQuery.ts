@@ -66,6 +66,7 @@ interface Last<TData, TVariables> {
 }
 
 const newNetworkStatusSymbol: any = Symbol();
+const uninitialized = {} as ApolloQueryResult<any>;
 
 export class ObservableQuery<
     TData = unknown,
@@ -130,9 +131,7 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    const uninitialized = {} as ApolloQueryResult<TData>;
     this.networkStatus = NetworkStatus.loading;
-
     this.subject = new BehaviorSubject(uninitialized);
     this.observable = this.subject.pipe(
       tap({

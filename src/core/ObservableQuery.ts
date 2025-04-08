@@ -167,12 +167,8 @@ export class ObservableQuery<
               // updated between when the `ObservableQuery` was instantiated and
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
-              const initialResult = this.getInitialResult();
-
-              if (initialResult) {
-                this.subject.next(initialResult);
-                this.networkStatus = initialResult.networkStatus;
-              }
+              this.subject.next(this.getInitialResult());
+              this.networkStatus = this.subject.value.networkStatus;
             }
 
             this.reobserve();
@@ -193,7 +189,7 @@ export class ObservableQuery<
       }),
       filter((result) => {
         return (
-          result !== placeholder &&
+          this.options.fetchPolicy !== "standby" &&
           (this.options.notifyOnNetworkStatusChange ||
             !result.loading ||
             // data could be defined for cache-and-network fetch policies
@@ -276,9 +272,7 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
-  private getInitialResult():
-    | ApolloQueryResult<MaybeMasked<TData>>
-    | undefined {
+  private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
@@ -318,9 +312,11 @@ export class ObservableQuery<
           networkStatus: NetworkStatus.loading,
         };
       case "standby":
-        // We do not emit a value for standby fetch policy so we want to avoid
-        // setting the current value
-        return;
+        return {
+          ...defaultResult,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
 
       default:
         return defaultResult;

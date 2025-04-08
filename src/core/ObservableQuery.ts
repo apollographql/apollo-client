@@ -271,7 +271,6 @@ export class ObservableQuery<
   }
 
   private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
-    const { variables, returnPartialData = false } = this.options;
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
@@ -284,12 +283,7 @@ export class ObservableQuery<
     };
 
     const cacheResult = () => {
-      const diff = this.queryManager.cache.diff({
-        query: this.query,
-        variables,
-        returnPartialData,
-        optimistic: true,
-      });
+      const diff = this.queryInfo.getDiff();
 
       return this.maskResult({
         data: (diff.result as TData) ?? undefined,

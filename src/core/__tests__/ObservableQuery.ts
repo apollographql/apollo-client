@@ -4855,6 +4855,55 @@ test("emits proper cache result if cache changes when subscribing after previous
   }
 });
 
+test("emits loading state when switching from standby to non-standby fetch policy", async () => {
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "hello" } },
+        delay: 20,
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({ query, fetchPolicy: "standby" });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(
+    observable.reobserve({ fetchPolicy: "cache-first" })
+  ).resolves.toStrictEqualTyped({ data: { greeting: "hello" } });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { greeting: "hello" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
 test.skip("type test for `from`", () => {
   expectTypeOf<
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>

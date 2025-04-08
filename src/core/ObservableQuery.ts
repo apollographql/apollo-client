@@ -1088,7 +1088,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    if (options.fetchPolicy === "standby") {
+    if (fetchPolicy === "standby") {
       this.cancelPolling();
     }
 

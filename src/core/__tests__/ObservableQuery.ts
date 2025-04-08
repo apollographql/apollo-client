@@ -4809,6 +4809,52 @@ test("emits proper cache result if cache changes between watchQuery initializati
   await expect(stream).not.toEmitAnything();
 });
 
+test("emits proper cache result if cache changes when subscribing after previously unsubscribing", async () => {
+  const query = gql`
+    query {
+      value
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({ query, data: { value: "initial" } });
+  const observable = client.watchQuery({ query });
+
+  {
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: { value: "initial" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+
+    stream.unsubscribe();
+  }
+
+  client.writeQuery({ query, data: { value: "updated" } });
+
+  {
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: { value: "updated" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  }
+});
+
 test.skip("type test for `from`", () => {
   expectTypeOf<
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>

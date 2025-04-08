@@ -4876,12 +4876,7 @@ test("emits loading state when switching from standby to non-standby fetch polic
   const observable = client.watchQuery({ query, fetchPolicy: "standby" });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: true,
-  });
+  await expect(stream).not.toEmitAnything();
 
   await expect(
     observable.reobserve({ fetchPolicy: "cache-first" })
@@ -4926,12 +4921,7 @@ test("does not emit loading state when changing variables with standby fetch pol
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: true,
-  });
+  await expect(stream).not.toEmitAnything();
 
   await expect(
     observable.reobserve({ variables: { id: 2 } })
@@ -4972,12 +4962,7 @@ test("emits loading state when calling reobserve with new fetch policy after cha
   });
   const stream = new ObservableStream(observable);
 
-  await expect(stream).toEmitTypedValue({
-    data: undefined,
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: true,
-  });
+  await expect(stream).not.toEmitAnything();
 
   await expect(
     observable.reobserve({ variables: { id: 2 } })

@@ -170,7 +170,7 @@ export class ObservableQuery<
               const initialResult = this.getInitialResult();
 
               if (initialResult) {
-                this.subject.next(this.getInitialResult());
+                this.subject.next(initialResult);
                 this.networkStatus = initialResult.networkStatus;
               }
             }

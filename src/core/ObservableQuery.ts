@@ -286,7 +286,12 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       return this.maskResult({
-        data: (diff.result as TData) ?? undefined,
+        data:
+          // TODO: queryInfo.getDiff should handle this since cache.diff returns a
+          // null when returnPartialData is false
+          this.options.returnPartialData || diff.complete ?
+            (diff.result as TData) ?? undefined
+          : undefined,
         loading: !diff.complete,
         networkStatus:
           diff.complete ? NetworkStatus.ready : NetworkStatus.loading,

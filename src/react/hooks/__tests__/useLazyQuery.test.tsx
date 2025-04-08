@@ -183,7 +183,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         // @ts-expect-error
         partial: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });
@@ -1205,7 +1205,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         // @ts-expect-error
         partial: true,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: 1 },
       });
@@ -1644,7 +1644,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         // @ts-expect-error
         partial: false,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: "1" },
       });
@@ -1793,7 +1793,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         // @ts-expect-error
         partial: false,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: "1" },
       });
@@ -4514,7 +4514,7 @@ test("responds to cache updates after changing variables", async () => {
       loading: true,
       // @ts-expect-error
       partial: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -4695,7 +4695,7 @@ test("uses cached result when switching to variables already written to the cach
       loading: true,
       // @ts-expect-error
       partial: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -4990,7 +4990,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       loading: true,
       // @ts-expect-error
       partial: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -5395,7 +5395,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       loading: true,
       // @ts-expect-error
       partial: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { min: 0, max: 12 },
     });
@@ -5631,7 +5631,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       loading: true,
       // @ts-expect-error
       partial: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });

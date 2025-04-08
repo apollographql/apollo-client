@@ -168,7 +168,6 @@ export class ObservableQuery<
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
               this.subject.next(this.getInitialResult());
-              this.networkStatus = this.subject.value.networkStatus;
             }
 
             this.reobserve();

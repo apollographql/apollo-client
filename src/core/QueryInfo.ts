@@ -18,6 +18,7 @@ import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
+import { subscribeWeak } from "./weakSubscription.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -323,7 +324,7 @@ export class QueryInfo {
     this.cancelWatch = void 0;
   }
 
-  private lastWatch?: Cache.WatchOptions;
+  private lastWatch?: Omit<Cache.WatchOptions, "callback">;
 
   private updateWatch(variables = this.variables) {
     const oq = this.observableQuery;
@@ -331,18 +332,20 @@ export class QueryInfo {
       return;
     }
 
-    const watchOptions: Cache.WatchOptions = {
+    const watchOptions: Omit<Cache.WatchOptions, "callback"> = {
       // Although this.getDiffOptions returns Cache.DiffOptions instead of
       // Cache.WatchOptions, all the overlapping options should be the same, so
       // we can reuse getDiffOptions here, for consistency.
       ...this.getDiffOptions(variables),
       watcher: this,
-      callback: (diff) => this.setDiff(diff),
     };
 
     if (!this.lastWatch || !equal(watchOptions, this.lastWatch)) {
       this.cancel();
-      this.cancelWatch = this.cache.watch((this.lastWatch = watchOptions));
+      this.lastWatch = watchOptions;
+      this.cancelWatch = subscribeWeak(this, cacheSubscriber, (callback) =>
+        this.cache.watch({ ...watchOptions, callback })
+      );
     }
   }
 
@@ -537,4 +540,12 @@ export function shouldWriteResult<T>(
     writeWithErrors = true;
   }
   return writeWithErrors;
+}
+
+/**
+ * This function is defined outside of `QueryInfo` to prevent any possible
+ * closure that could result in a memory leak.
+ */
+function cacheSubscriber(info: QueryInfo, diff: Cache.DiffResult<any>) {
+  info.setDiff(diff);
 }

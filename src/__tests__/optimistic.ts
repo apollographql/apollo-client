@@ -135,7 +135,10 @@ describe("optimistic mutation results", () => {
       connectToDevTools: true,
     });
 
-    const obsHandle = client.watchQuery({ query });
+    const obsHandle = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
     // We can't use firstValueFrom here because we need to unsubscribe in the
     // setTimeout
     await new Promise((resolve) => {
@@ -1115,7 +1118,9 @@ describe("optimistic mutation results", () => {
         connectToDevTools: true,
       });
 
-      const stream = new ObservableStream(client.watchQuery({ query }));
+      const stream = new ObservableStream(
+        client.watchQuery({ query, notifyOnNetworkStatusChange: false })
+      );
 
       await expect(stream).toEmitNext();
 
@@ -1387,11 +1392,13 @@ describe("optimistic mutation results", () => {
 
       // wrap the QueryObservable with an rxjs observable
       const promise = lastValueFrom(
-        client.watchQuery<any>({ query }).pipe(
-          map((value) => value.data.todoList.todos),
-          take(5),
-          toArray()
-        )
+        client
+          .watchQuery<any>({ query, notifyOnNetworkStatusChange: false })
+          .pipe(
+            map((value) => value.data.todoList.todos),
+            take(5),
+            toArray()
+          )
       );
 
       // Mutations will not trigger a watchQuery with the results of an optimistic response
@@ -1834,11 +1841,13 @@ describe("optimistic mutation results", () => {
       });
 
       const promise = lastValueFrom(
-        client.watchQuery<any>({ query }).pipe(
-          map((value) => value.data.todoList.todos),
-          take(5),
-          toArray()
-        )
+        client
+          .watchQuery<any>({ query, notifyOnNetworkStatusChange: false })
+          .pipe(
+            map((value) => value.data.todoList.todos),
+            take(5),
+            toArray()
+          )
       );
 
       await new Promise((resolve) => setTimeout(resolve));
@@ -2276,6 +2285,7 @@ describe("optimistic mutation - githunt comments", () => {
     const obsHandle = client.watchQuery({
       query,
       variables,
+      notifyOnNetworkStatusChange: false,
     });
 
     await firstValueFrom(from(obsHandle));

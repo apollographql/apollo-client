@@ -1287,6 +1287,13 @@ describe("mutation results", () => {
 
     const stream = new ObservableStream(watchedQuery);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     await watchedQuery.refetch(variables2);
 
     await expect(stream).toEmitTypedValue({

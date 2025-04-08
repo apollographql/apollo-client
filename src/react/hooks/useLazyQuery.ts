@@ -277,7 +277,6 @@ export function useLazyQuery<
     () => initialResult
   );
 
-  const [, forceUpdateState] = React.useReducer((tick) => tick + 1, 0);
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
@@ -355,19 +354,9 @@ export function useLazyQuery<
           options.fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        const promise = observable.reobserve(options);
-
-        // TODO: This should be fixed in core
-        if (
-          !resultRef.current &&
-          observable.options.notifyOnNetworkStatusChange
-        ) {
-          updateResult(observable.getCurrentResult(), forceUpdateState);
-        }
-
-        return promise;
+        return observable.reobserve(options);
       },
-      [observable, updateResult, calledDuringRender]
+      [observable, calledDuringRender]
     );
 
   const executeRef = React.useRef(execute);

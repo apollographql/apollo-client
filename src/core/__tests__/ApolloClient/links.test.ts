@@ -39,7 +39,7 @@ describe("Link interactions", () => {
             const cacheResult = cache.read({ query });
             expect(cacheResult).toEqual(initialData);
             expect(cacheResult).toEqual(result.data);
-            if (count === 1) {
+            if (count === 2) {
               done();
             }
           }, 10);
@@ -102,6 +102,7 @@ describe("Link interactions", () => {
     const observable = client.watchQuery({
       query,
       variables: {},
+      notifyOnNetworkStatusChange: false,
     });
 
     let count = 0;
@@ -177,6 +178,7 @@ describe("Link interactions", () => {
     const observable = client.watchQuery({
       query,
       variables: {},
+      notifyOnNetworkStatusChange: false,
     });
 
     let count = 0;

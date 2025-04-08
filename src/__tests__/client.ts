@@ -5414,7 +5414,7 @@ describe("custom document transforms", () => {
       { cache: false }
     );
 
-    let document: DocumentNode;
+    let document!: DocumentNode;
 
     const link = new ApolloLink((operation, forward) => {
       document = operation.query;
@@ -5446,26 +5446,22 @@ describe("custom document transforms", () => {
       variables: { offset: 0 },
       notifyOnNetworkStatusChange: false,
     });
-    const handleNext = jest.fn();
 
-    observable.subscribe(handleNext);
+    const stream = new ObservableStream(observable);
 
-    await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith({
-        data: {
-          currentUser: { id: 1 },
-          products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
-      expect(handleNext).toHaveBeenCalledTimes(1);
-      expect(document).toMatchDocument(enabledInitialQuery);
-      expect(observable.options.query).toMatchDocument(initialQuery);
-      expect(observable.query).toMatchDocument(enabledInitialQuery);
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: { id: 1 },
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    expect(document).toMatchDocument(enabledInitialQuery);
+    expect(observable.options.query).toMatchDocument(initialQuery);
+    expect(observable.query).toMatchDocument(enabledInitialQuery);
 
     enabled = false;
 
@@ -5488,12 +5484,7 @@ describe("custom document transforms", () => {
     // a field).
     expect(observable.query).toMatchDocument(disabledInitialQuery);
 
-    // QueryInfo.notify is run in a setTimeout, so give time for it to run
-    // before we make assertions on it.
-    await wait(0);
-
-    expect(handleNext).toHaveBeenCalledTimes(2);
-    expect(handleNext).toHaveBeenLastCalledWith({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentUser: { id: 1 },
         products: [
@@ -5505,6 +5496,8 @@ describe("custom document transforms", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("re-runs custom document transforms when calling `setVariables`", async () => {

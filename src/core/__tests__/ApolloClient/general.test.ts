@@ -7228,6 +7228,7 @@ describe("ApolloClient", () => {
           {
             request: { query: query1 },
             result: { data: data1 },
+            delay: 20,
           },
         ]),
       });
@@ -7240,6 +7241,13 @@ describe("ApolloClient", () => {
       });
 
       const stream1 = new ObservableStream(observable1);
+
+      await expect(stream1).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream1).toEmitTypedValue({
         data: data1,

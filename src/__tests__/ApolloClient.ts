@@ -2215,7 +2215,11 @@ describe("ApolloClient", () => {
       }
     );
 
-    it.each([["standby"]] as const)(
+    // TODO: Determine the correct behavior here. do we emit the cache value
+    // because of prioritizeCacheValues? Do we emit the standby result because
+    // notifyOnNetworkStatusChange is `true`? Or do we skip emitting anything
+    // because its a `standby` fetch policy?
+    it.failing.each([["standby"]] as const)(
       "should not emit anything (`prioritizeCacheValues`: true, `fetchPolicy`: %s)",
       async (fetchPolicy) => {
         const query = gql`

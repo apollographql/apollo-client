@@ -2157,12 +2157,16 @@ describe("ApolloClient", () => {
         });
         client.prioritizeCacheValues = true;
 
-        const observable = client.watchQuery({
-          query,
-          fetchPolicy,
-          notifyOnNetworkStatusChange: true,
-        });
+        const observable = client.watchQuery({ query, fetchPolicy });
         const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
+
         await expect(stream).toEmitTypedValue({
           loading: false,
           networkStatus: NetworkStatus.ready,

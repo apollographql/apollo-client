@@ -5444,10 +5444,16 @@ describe("custom document transforms", () => {
     const observable = client.watchQuery({
       query: initialQuery,
       variables: { offset: 0 },
-      notifyOnNetworkStatusChange: false,
     });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -5483,6 +5489,16 @@ describe("custom document transforms", () => {
     // condition that impacts the query in a significant way (such as removing
     // a field).
     expect(observable.query).toMatchDocument(disabledInitialQuery);
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: { id: 1 },
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      partial: false,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {

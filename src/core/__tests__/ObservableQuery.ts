@@ -3313,22 +3313,22 @@ describe("ObservableQuery", () => {
           partial: true,
         },
         resultAfterSubscribe: {
-          ...loadingStates.loading,
+          ...loadingStates.done,
           data: undefined,
           partial: true,
         },
         resultAfterCacheUpdate1: {
-          ...loadingStates.loading,
+          ...loadingStates.done,
           data: undefined,
           partial: true,
         },
         resultAfterLinkNext: {
-          ...loadingStates.loading,
+          ...loadingStates.done,
           data: undefined,
           partial: true,
         },
         resultAfterCacheUpdate2: {
-          ...loadingStates.loading,
+          ...loadingStates.done,
           data: undefined,
           partial: true,
         },

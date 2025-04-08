@@ -4325,22 +4325,20 @@ test("uses the updated client when executing the function after changing clients
     data: { greeting: "Hello client 2" },
   });
 
-  // TODO: Changing clients should emit a loading state. This should be fixed when
-  // we let ObservableQuery emit the initial loading state instead.
-  // {
-  //   const [, result] = await takeSnapshot();
-  //
-  //   expect(result).toStrictEqualTyped({
-  //     data: undefined,
-  //     called: true,
-  //     loading: true,
-  //     // @ts-expect-error
-  //     partial: true,
-  //     networkStatus: NetworkStatus.loading,
-  //     previousData: { greeting: "Hello client 1" },
-  //     variables: {},
-  //   });
-  // }
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      // @ts-expect-error
+      partial: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: { greeting: "Hello client 1" },
+      variables: {},
+    });
+  }
 
   {
     const [, result] = await takeSnapshot();

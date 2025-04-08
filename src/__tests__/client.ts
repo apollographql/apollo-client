@@ -914,6 +914,13 @@ describe("client", () => {
     const stream = new ObservableStream(handle);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1889,6 +1896,13 @@ describe("client", () => {
       const stream = new ObservableStream(obs);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: networkFetch,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1915,6 +1929,13 @@ describe("client", () => {
         fetchPolicy: "cache-and-network",
       });
       const stream = new ObservableStream(obs);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
@@ -1987,6 +2008,13 @@ describe("client", () => {
       const stream = new ObservableStream(obs);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2019,6 +2047,13 @@ describe("client", () => {
       const client = new ApolloClient({ link, cache: new InMemoryCache() });
       const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
       const stream = new ObservableStream(obs);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -2666,6 +2701,13 @@ describe("client", () => {
     const observable = client.watchQuery({ query });
 
     let stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       loading: false,
@@ -5276,6 +5318,13 @@ describe("custom document transforms", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
       },
@@ -6460,6 +6509,13 @@ describe("unconventional errors", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
       error: expectedError,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -6515,6 +6571,13 @@ describe("unconventional errors", () => {
       await expect(client.query({ query })).rejects.toEqual(expectedError);
 
       const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: undefined,

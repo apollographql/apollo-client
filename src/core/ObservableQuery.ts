@@ -1104,6 +1104,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
+    if (options.fetchPolicy === "standby") {
+      clearTimeout(this.pollingInfo?.timeout);
+      delete this.pollingInfo;
+    }
+
     this.networkStatus = newNetworkStatus;
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {

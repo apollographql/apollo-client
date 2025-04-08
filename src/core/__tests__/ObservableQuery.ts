@@ -221,6 +221,143 @@ describe("ObservableQuery", () => {
         await expect(stream).not.toEmitAnything();
       });
 
+      it("stops polling if goes from something -> fetchPolicy: standby", async () => {
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new MockLink([
+            {
+              request: { query, variables },
+              result: { data: dataOne },
+              delay: 20,
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+              delay: 20,
+            },
+          ]),
+        });
+
+        const observable = client.watchQuery({
+          query,
+          variables,
+          pollInterval: 10,
+        });
+
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: dataOne,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: dataTwo,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await observable.reobserve({ fetchPolicy: "standby" });
+
+        await expect(stream).not.toEmitAnything();
+      });
+
+      it("resumes polling if goes from fetchPolicy: standby to non-standby", async () => {
+        const query = gql`
+          query {
+            greeting
+          }
+        `;
+        let count = 0;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new MockLink([
+            {
+              request: { query },
+              result: () => ({ data: { greeting: `hello ${++count}` } }),
+              delay: 20,
+              maxUsageCount: Number.POSITIVE_INFINITY,
+            },
+          ]),
+        });
+
+        const observable = client.watchQuery({ query, pollInterval: 10 });
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { greeting: "hello 1" },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { greeting: "hello 1" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { greeting: "hello 2" },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await expect(
+          observable.reobserve({ fetchPolicy: "standby" })
+        ).resolves.toStrictEqualTyped({ data: undefined });
+
+        await expect(stream).not.toEmitAnything();
+
+        await expect(
+          observable.reobserve({ fetchPolicy: "cache-first" })
+        ).resolves.toStrictEqualTyped({ data: { greeting: "hello 2" } });
+
+        await expect(stream).toEmitTypedValue({
+          data: { greeting: "hello 2" },
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { greeting: "hello 3" },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        observable.stopPolling();
+
+        await expect(stream).not.toEmitAnything();
+      });
+
       it("can change pollInterval from one value to another", async () => {
         const query = gql`
           query {

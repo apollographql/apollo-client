@@ -694,11 +694,10 @@ describe("error handling with class", () => {
       }
     `;
 
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return new Observable((obs) => {
         setTimeout(() => {
           obs.next({ data: { foo: { id: 1 } } });
@@ -712,7 +711,9 @@ describe("error handling with class", () => {
 
     stream.unsubscribe();
 
-    await expect(stream).not.toEmitAnything();
+    await wait(10);
+
+    expect(callback).not.toHaveBeenCalled();
   });
 });
 

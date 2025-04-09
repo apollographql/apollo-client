@@ -14,6 +14,7 @@ import type {
   Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
+import { maybeWrapError } from "@apollo/client/utilities/internal";
 
 export interface ErrorResponse {
   /**
@@ -36,7 +37,6 @@ export namespace ErrorLink {
 
 // For backwards compatibility.
 export import ErrorHandler = ErrorLink.ErrorHandler;
-import { maybeWrapError } from "../../utilities/internal/errors.js";
 
 export function onError(errorHandler: ErrorHandler): ApolloLink {
   return new ApolloLink((operation, forward) => {

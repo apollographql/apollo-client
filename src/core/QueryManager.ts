@@ -25,7 +25,6 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
-  UnconventionalError,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
@@ -58,7 +57,11 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  maybeWrapError,
+  onAnyEvent,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -79,7 +82,6 @@ import {
 import type {
   ApolloQueryResult,
   DefaultContext,
-  ErrorLike,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
@@ -1853,29 +1855,6 @@ export class QueryManager {
       clientAwareness: this.clientAwareness,
     };
   }
-}
-
-function isErrorLike(error: unknown): error is ErrorLike {
-  return (
-    error !== null &&
-    typeof error === "object" &&
-    typeof (error as ErrorLike).message === "string" &&
-    typeof (error as ErrorLike).name === "string" &&
-    (typeof (error as ErrorLike).stack === "undefined" ||
-      typeof (error as ErrorLike).stack === "string")
-  );
-}
-
-function maybeWrapError(error: unknown) {
-  if (isErrorLike(error)) {
-    return error;
-  }
-
-  if (typeof error === "string") {
-    return new Error(error, { cause: error });
-  }
-
-  return new UnconventionalError(error);
 }
 
 function validateDidEmitValue<T>() {

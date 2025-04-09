@@ -61,7 +61,7 @@ describe("error handling", () => {
     const callback = jest.fn();
     const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       throw error;
     });
 
@@ -92,7 +92,7 @@ describe("error handling", () => {
     const callback = jest.fn();
     const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return new Observable((observer) => {
         observer.error(error);
       });

@@ -47,7 +47,7 @@ describe("error handling", () => {
     });
   });
 
-  it("has an easy way to log client side (network) errors", async () => {
+  it("handles errors thrown in request handler", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -56,24 +56,59 @@ describe("error handling", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = onError(({ operation, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      expect(operation.operationName).toBe("Foo");
-      called = true;
-    });
+    const error = new Error("app is crashing");
+
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
     const mockLink = new ApolloLink((operation) => {
-      throw new Error("app is crashing");
+      throw error;
     });
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
+    await expect(stream).toEmitError(error);
 
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      error,
+    });
+  });
+
+  it("handles errors emitted on from observable", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const error = new Error("app is crashing");
+
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        observer.error(error);
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(error);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      error,
+    });
   });
 
   it.failing("handles protocol errors (@defer)", async () => {

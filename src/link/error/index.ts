@@ -73,18 +73,8 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
 
             observer.next(result);
           },
-          error: (networkError) => {
-            retriedResult = errorHandler({
-              operation,
-              networkError,
-              //Network errors can return GraphQL errors on for example a 403
-              graphQLErrors:
-                (networkError &&
-                  networkError.result &&
-                  networkError.result.errors) ||
-                void 0,
-              forward,
-            });
+          error: (error) => {
+            retriedResult = errorHandler({ operation, error, forward });
             if (retriedResult) {
               retriedSub = retriedResult.subscribe({
                 next: observer.next.bind(observer),
@@ -93,7 +83,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
               });
               return;
             }
-            observer.error(networkError);
+            observer.error(error);
           },
           complete: () => {
             // disable the previous sub from calling complete on observable
@@ -104,7 +94,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           },
         });
       } catch (e) {
-        errorHandler({ networkError: e as Error, operation, forward });
+        errorHandler({ error: e as ErrorLike, operation, forward });
         observer.error(e);
       }
 

@@ -77,7 +77,6 @@ function cancelNotifyTimeout(info: QueryInfo) {
 // many public fields. The effort to lock down and simplify the QueryInfo
 // interface is ongoing, and further improvements are welcome.
 export class QueryInfo {
-  listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
@@ -239,59 +238,44 @@ export class QueryInfo {
   }
 
   public readonly observableQuery: ObservableQuery<any, any> | null = null;
-  private oqListener?: QueryListener;
-
   setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
-
-    if (this.oqListener) {
-      this.listeners.delete(this.oqListener);
-    }
-
     (this as any).observableQuery = oq;
-
     if (oq) {
       oq["queryInfo"] = this;
-      this.listeners.add(
-        (this.oqListener = () => {
-          const diff = this.getDiff();
-          if (diff.fromOptimisticTransaction) {
-            // If this diff came from an optimistic transaction, deliver the
-            // current cache data to the ObservableQuery, but don't perform a
-            // reobservation, since oq.reobserveCacheFirst might make a network
-            // request, and we never want to trigger network requests in the
-            // middle of optimistic updates.
-            oq["observe"]();
-          } else {
-            // Otherwise, make the ObservableQuery "reobserve" the latest data
-            // using a temporary fetch policy of "cache-first", so complete cache
-            // results have a chance to be delivered without triggering additional
-            // network requests, even when options.fetchPolicy is "network-only"
-            // or "cache-and-network". All other fetch policies are preserved by
-            // this method, and are handled by calling oq.reobserve(). If this
-            // reobservation is spurious, isDifferentFromLastResult still has a
-            // chance to catch it before delivery to ObservableQuery subscribers.
-            reobserveCacheFirst(oq);
-          }
-        })
-      );
-    } else {
-      delete this.oqListener;
     }
   }
 
   notify() {
     cancelNotifyTimeout(this);
 
-    if (this.shouldNotify()) {
-      this.listeners.forEach((listener) => listener(this));
+    if (this.observableQuery && this.shouldNotify()) {
+      const diff = this.getDiff();
+      if (diff.fromOptimisticTransaction) {
+        // If this diff came from an optimistic transaction, deliver the
+        // current cache data to the ObservableQuery, but don't perform a
+        // reobservation, since oq.reobserveCacheFirst might make a network
+        // request, and we never want to trigger network requests in the
+        // middle of optimistic updates.
+        this.observableQuery["observe"]();
+      } else {
+        // Otherwise, make the ObservableQuery "reobserve" the latest data
+        // using a temporary fetch policy of "cache-first", so complete cache
+        // results have a chance to be delivered without triggering additional
+        // network requests, even when options.fetchPolicy is "network-only"
+        // or "cache-and-network". All other fetch policies are preserved by
+        // this method, and are handled by calling oq.reobserve(). If this
+        // reobservation is spurious, isDifferentFromLastResult still has a
+        // chance to catch it before delivery to ObservableQuery subscribers.
+        reobserveCacheFirst(this.observableQuery);
+      }
     }
 
     this.dirty = false;
   }
 
   private shouldNotify() {
-    if (!this.dirty || !this.listeners.size) {
+    if (!this.dirty) {
       return false;
     }
 

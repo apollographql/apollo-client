@@ -1175,6 +1175,64 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       : result;
   }
+
+  private dirty: boolean = false;
+
+  private notifyTimeout?: ReturnType<typeof setTimeout>;
+
+  reset() {
+    this.cancelNotifyTimeout();
+    this.dirty = false;
+  }
+
+  private cancelNotifyTimeout() {
+    if (this.notifyTimeout) {
+      clearTimeout(this.notifyTimeout);
+      this.notifyTimeout = void 0;
+    }
+  }
+
+  private scheduleNotify() {
+    if (this.dirty) return;
+    this.dirty = true;
+    if (!this.notifyTimeout) {
+      this.notifyTimeout = setTimeout(() => this.notify(), 0);
+    }
+  }
+
+  notify() {
+    this.cancelNotifyTimeout();
+
+    if (this.dirty) {
+      if (
+        this.options.fetchPolicy == "cache-only" ||
+        this.options.fetchPolicy == "cache-and-network" ||
+        !isNetworkRequestInFlight(this.queryInfo.networkStatus)
+      ) {
+        const diff = this.queryInfo.getDiff();
+        if (diff.fromOptimisticTransaction) {
+          // If this diff came from an optimistic transaction, deliver the
+          // current cache data to the ObservableQuery, but don't perform a
+          // reobservation, since oq.reobserveCacheFirst might make a network
+          // request, and we never want to trigger network requests in the
+          // middle of optimistic updates.
+          this.observe();
+        } else {
+          // Otherwise, make the ObservableQuery "reobserve" the latest data
+          // using a temporary fetch policy of "cache-first", so complete cache
+          // results have a chance to be delivered without triggering additional
+          // network requests, even when options.fetchPolicy is "network-only"
+          // or "cache-and-network". All other fetch policies are preserved by
+          // this method, and are handled by calling oq.reobserve(). If this
+          // reobservation is spurious, isDifferentFromLastResult still has a
+          // chance to catch it before delivery to ObservableQuery subscribers.
+          reobserveCacheFirst(this);
+        }
+      }
+    }
+
+    this.dirty = false;
+  }
 }
 
 // Necessary because the ObservableQuery constructor has a different

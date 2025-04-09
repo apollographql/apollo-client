@@ -1128,7 +1128,7 @@ export class QueryManager<TStore> {
 
   public broadcastQueries() {
     if (this.onBroadcast) this.onBroadcast();
-    this.queries.forEach((info) => info.notify());
+    this.queries.forEach((info) => info.observableQuery?.notify());
   }
 
   public getLocalState(): LocalState<TStore> {

@@ -6,14 +6,13 @@ import { DeepMerger } from "../utilities/index.js";
 import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import { reobserveCacheFirst } from "./ObservableQuery.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
 } from "../utilities/index.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import { NetworkStatus } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
@@ -213,7 +212,7 @@ export class QueryInfo {
     this.updateLastDiff(diff);
 
     if (!equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.scheduleNotify();
+      this.observableQuery?.["scheduleNotify"]();
     }
   }
 
@@ -226,71 +225,12 @@ export class QueryInfo {
     }
   }
 
-  private dirty: boolean = false;
-
-  private notifyTimeout?: ReturnType<typeof setTimeout>;
-
-  reset() {
-    this.cancelNotifyTimeout();
-    this.dirty = false;
-  }
-
-  private cancelNotifyTimeout() {
-    if (this.notifyTimeout) {
-      clearTimeout(this.notifyTimeout);
-      this.notifyTimeout = void 0;
-    }
-  }
-
-  private scheduleNotify() {
-    if (this.dirty) return;
-    this.dirty = true;
-    if (!this.notifyTimeout) {
-      this.notifyTimeout = setTimeout(() => this.notify(), 0);
-    }
-  }
-
-  notify() {
-    this.cancelNotifyTimeout();
-
-    if (this.observableQuery && this.dirty) {
-      const { fetchPolicy } = this.observableQuery.options;
-      if (
-        fetchPolicy == "cache-only" ||
-        fetchPolicy == "cache-and-network" ||
-        !isNetworkRequestInFlight(this.networkStatus)
-      ) {
-        const diff = this.getDiff();
-        if (diff.fromOptimisticTransaction) {
-          // If this diff came from an optimistic transaction, deliver the
-          // current cache data to the ObservableQuery, but don't perform a
-          // reobservation, since oq.reobserveCacheFirst might make a network
-          // request, and we never want to trigger network requests in the
-          // middle of optimistic updates.
-          this.observableQuery["observe"]();
-        } else {
-          // Otherwise, make the ObservableQuery "reobserve" the latest data
-          // using a temporary fetch policy of "cache-first", so complete cache
-          // results have a chance to be delivered without triggering additional
-          // network requests, even when options.fetchPolicy is "network-only"
-          // or "cache-and-network". All other fetch policies are preserved by
-          // this method, and are handled by calling oq.reobserve(). If this
-          // reobservation is spurious, isDifferentFromLastResult still has a
-          // chance to catch it before delivery to ObservableQuery subscribers.
-          reobserveCacheFirst(this.observableQuery);
-        }
-      }
-    }
-
-    this.dirty = false;
-  }
-
   public stop() {
     if (!this.stopped) {
       this.stopped = true;
 
       // Cancel the pending notify timeout
-      this.reset();
+      this.observableQuery?.reset();
       this.cancel();
 
       const oq = this.observableQuery;
@@ -367,7 +307,7 @@ export class QueryInfo {
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
-    this.reset();
+    this.observableQuery?.reset();
 
     if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(this.getDiff().result, result);
@@ -493,7 +433,7 @@ export class QueryInfo {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
 
-    this.reset();
+    this.observableQuery?.reset();
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

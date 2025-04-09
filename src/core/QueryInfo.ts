@@ -56,13 +56,6 @@ function wrapDestructiveCacheMethod(
   }
 }
 
-function cancelNotifyTimeout(info: QueryInfo) {
-  if (info["notifyTimeout"]) {
-    clearTimeout(info["notifyTimeout"]);
-    info["notifyTimeout"] = void 0;
-  }
-}
-
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
 // this.queries Map. QueryInfo objects store the latest results and errors
@@ -150,15 +143,6 @@ export class QueryInfo {
     return this;
   }
 
-  private dirty: boolean = false;
-
-  private notifyTimeout?: ReturnType<typeof setTimeout>;
-
-  reset() {
-    cancelNotifyTimeout(this);
-    this.dirty = false;
-  }
-
   resetDiff() {
     this.lastDiff = void 0;
   }
@@ -228,11 +212,8 @@ export class QueryInfo {
 
     this.updateLastDiff(diff);
 
-    if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.dirty = true;
-      if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
-      }
+    if (!equal(oldDiff && oldDiff.result, diff && diff.result)) {
+      this.scheduleNotify();
     }
   }
 
@@ -245,8 +226,32 @@ export class QueryInfo {
     }
   }
 
+  private dirty: boolean = false;
+
+  private notifyTimeout?: ReturnType<typeof setTimeout>;
+
+  reset() {
+    this.cancelNotifyTimeout();
+    this.dirty = false;
+  }
+
+  private cancelNotifyTimeout() {
+    if (this.notifyTimeout) {
+      clearTimeout(this.notifyTimeout);
+      this.notifyTimeout = void 0;
+    }
+  }
+
+  private scheduleNotify() {
+    if (this.dirty) return;
+    this.dirty = true;
+    if (!this.notifyTimeout) {
+      this.notifyTimeout = setTimeout(() => this.notify(), 0);
+    }
+  }
+
   notify() {
-    cancelNotifyTimeout(this);
+    this.cancelNotifyTimeout();
 
     if (this.observableQuery && this.dirty) {
       const { fetchPolicy } = this.observableQuery.options;

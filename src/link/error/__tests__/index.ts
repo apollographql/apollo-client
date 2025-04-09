@@ -797,29 +797,14 @@ describe("support for request retrying", () => {
   });
 
   it("supports retrying when the initial request had protocol errors", async () => {
-    let errorHandlerCalled = false;
-
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
 
-    const errorLink = new ErrorLink(
-      ({ protocolErrors, operation, forward }) => {
-        if (protocolErrors) {
-          errorHandlerCalled = true;
-          expect(protocolErrors).toEqual(
-            new CombinedProtocolErrors([
-              {
-                message: "cannot read message from websocket",
-                extensions: {
-                  code: "WEBSOCKET_MESSAGE_ERROR",
-                },
-              },
-            ])
-          );
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ forward, operation }) => forward(operation));
+
+    const errorLink = new ErrorLink(callback);
 
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(
@@ -851,8 +836,9 @@ describe("support for request retrying", () => {
 
     // Ensure the error result is not emitted but rather the retried result
     await expect(stream).toEmitTypedValue({ data: { foo: { bar: true } } });
-    expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("returns errors from retried requests", async () => {

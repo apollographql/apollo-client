@@ -1,4 +1,4 @@
-import type { ErrorLike } from "@apollo/client";
+import type { ErrorLike } from "@apollo/client/core";
 import { UnconventionalError } from "@apollo/client/errors";
 
 function isErrorLike(error: unknown): error is ErrorLike {

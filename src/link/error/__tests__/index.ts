@@ -504,23 +504,25 @@ describe("error handling with class", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      called = true;
-    });
+    const callback = jest.fn();
+    const error = new Error("app is crashing");
+    const errorLink = new ErrorLink(callback);
 
-    const mockLink = new ApolloLink((operation) => {
-      throw new Error("app is crashing");
+    const mockLink = new ApolloLink(() => {
+      throw error;
     });
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
+    await expect(stream).toEmitError(error);
 
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query }),
+      error,
+    });
   });
 
   it("handles protocol errors (multipart subscription)", async () => {

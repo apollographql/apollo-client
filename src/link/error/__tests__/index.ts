@@ -10,6 +10,7 @@ import {
 } from "@apollo/client/errors";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ErrorLink, onError } from "@apollo/client/link/error";
+import { wait } from "@apollo/client/testing";
 import {
   mockDeferStream,
   mockMultipartSubscriptionStream,
@@ -395,11 +396,10 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return new Observable((obs) => {
         setTimeout(() => {
           obs.next({ data: { foo: { id: 1 } } });
@@ -413,7 +413,9 @@ describe("error handling", () => {
 
     stream.unsubscribe();
 
-    await expect(stream).not.toEmitAnything();
+    await wait(10);
+
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it("includes the operation and any data along with a graphql error", async () => {

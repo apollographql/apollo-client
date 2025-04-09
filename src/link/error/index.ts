@@ -1,4 +1,5 @@
 import type { FormattedExecutionResult } from "graphql";
+import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
 import type { ErrorLike } from "@apollo/client";
@@ -39,9 +40,9 @@ export import ErrorHandler = ErrorLink.ErrorHandler;
 export function onError(errorHandler: ErrorHandler): ApolloLink {
   return new ApolloLink((operation, forward) => {
     return new Observable((observer) => {
-      let sub: any;
-      let retriedSub: any;
-      let retriedResult: any;
+      let sub: Subscription | undefined;
+      let retriedSub: Subscription | undefined;
+      let retriedResult: ReturnType<ErrorHandler>;
 
       try {
         sub = forward(operation).subscribe({

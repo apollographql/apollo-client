@@ -111,10 +111,7 @@ describe("error handling", () => {
     });
   });
 
-  it.failing("handles protocol errors (@defer)", async () => {
-    // TODO: this test doesn't execute the `errorHandler` yet. Should be 4, is 2.
-    fail();
-    expect.assertions(4);
+  it.failing("handles errors emitted in incremental chunks", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -125,17 +122,8 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ operation, protocolErrors }) => {
-      expect(operation.operationName).toBe("Foo");
-      expect(protocolErrors).toEqual([
-        {
-          message: "could not read data",
-          extensions: {
-            code: "INCREMENTAL_ERROR",
-          },
-        },
-      ]);
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
     const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
       mockDeferStream();
@@ -155,6 +143,7 @@ describe("error handling", () => {
         },
       },
     ]);
+
     await expect(stream).toEmitTypedValue({
       data: {},
       hasNext: true,
@@ -163,9 +152,10 @@ describe("error handling", () => {
     await expect(stream).toEmitTypedValue({
       hasNext: true,
       incremental: [
+        // @ts-expect-error Our defer type and GraphQL incremental type do not
+        // line up. Our type request data and path but enqueueErrorChunk does
+        // not emit those values
         {
-          data: null,
-          path: [],
           errors: [
             {
               message: "could not read data",
@@ -176,6 +166,23 @@ describe("error handling", () => {
           ],
         },
       ],
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      error: new CombinedGraphQLErrors({
+        errors: [
+          {
+            message: "could not read data",
+            extensions: {
+              code: "INCREMENTAL_ERROR",
+            },
+          },
+        ],
+      }),
+      result: {},
     });
   });
 

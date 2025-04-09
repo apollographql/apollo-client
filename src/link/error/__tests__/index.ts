@@ -8,6 +8,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
 } from "@apollo/client/errors";
+import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 import { wait } from "@apollo/client/testing";
@@ -427,24 +428,15 @@ describe("error handling", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = onError(({ graphQLErrors, response, operation }) => {
-      expect(graphQLErrors![0].message).toBe("resolver blew up");
-      expect(response!.data!.foo).toBe(true);
-      expect(operation.operationName).toBe("Foo");
-      expect(operation.getContext().bar).toBe(true);
-      called = true;
-    });
+    const callback = jest.fn();
+    const error: GraphQLFormattedError = { message: "resolver blew up" };
+    const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) =>
+    const mockLink = new ApolloLink(() =>
       of({
         data: { foo: true },
-        errors: [
-          {
-            message: "resolver blew up",
-          },
-        ],
-      } as any)
+        errors: [error],
+      })
     );
 
     const link = errorLink.concat(mockLink);
@@ -452,10 +444,24 @@ describe("error handling", () => {
       execute(link, { query, context: { bar: true } })
     );
 
-    const result = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: { foo: true },
+      errors: [{ message: "resolver blew up" }],
+    });
 
-    expect(result.errors![0].message).toBe("resolver blew up");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      response: { data: { foo: true }, errors: [error] },
+      error: new CombinedGraphQLErrors({
+        data: { foo: true },
+        errors: [error],
+      }),
+    });
+
+    const operation = callback.mock.calls[0][0].operation as Operation;
+    expect(operation.getContext().bar).toBe(true);
   });
 });
 

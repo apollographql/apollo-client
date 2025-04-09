@@ -302,33 +302,33 @@ describe("error handling", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = onError(({ operation, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      expect(networkError!.name).toBe("ServerError");
-      expect((networkError as ServerError).statusCode).toBe(500);
-      expect((networkError as ServerError).response.ok).toBe(false);
-      expect(operation.operationName).toBe("Foo");
-      called = true;
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+    const error = new ServerError("app is crashing", {
+      response: new Response("", { status: 500 }),
+      result: "ServerError",
     });
 
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        const response = { status: 500, ok: false } as Response;
-        throw new ServerError("app is crashing", {
-          response,
-          result: "ServerError",
-        });
+    const mockLink = new ApolloLink(() => {
+      return new Observable(() => {
+        throw error;
       });
     });
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
+    await expect(stream).toEmitError(error);
 
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      error,
+    });
+
+    const capturedError = callback.mock.calls[0][0].error as ServerError;
+    expect(capturedError.statusCode).toBe(500);
   });
 
   it("sets graphQLErrors to undefined if networkError.result is an empty string", async () => {

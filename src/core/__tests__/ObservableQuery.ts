@@ -5130,6 +5130,177 @@ test("emits loading state when calling reobserve with new fetch policy after cha
   await expect(stream).not.toEmitAnything();
 });
 
+describe(".variables", () => {
+  test("returns undefined when no variables are passed", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql`
+      query {
+        greeting
+      }
+    `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({ query });
+
+    expect(observable.variables).toBeUndefined();
+  });
+
+  test("returns configured variables", () => {
+    const query: TypedDocumentNode<{ user: { name: string } }, { id: number }> =
+      gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            name
+          }
+        }
+      `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 1 });
+  });
+
+  test("contains default variables from query", () => {
+    const query: TypedDocumentNode<{ user: { name: string } }, { id: number }> =
+      gql`
+        query ($id: ID! = 1) {
+          user(id: $id) {
+            name
+          }
+        }
+      `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({ query });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 1 });
+  });
+
+  test("contains combined default variables from query and configured variables", () => {
+    const query: TypedDocumentNode<
+      { users: Array<{ name: string }> },
+      { limit?: number; offset: number }
+    > = gql`
+      query ($limit: Int = 10, $offset: Int!) {
+        users(limit: $limit, offset: $offset) {
+          name
+        }
+      }
+    `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({ query, variables: { offset: 0 } });
+
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+  });
+
+  test("handles default variables in query overwritten by configured variables", () => {
+    const query: TypedDocumentNode<
+      { users: Array<{ name: string }> },
+      { limit?: number; offset: number }
+    > = gql`
+      query ($limit: Int = 10, $offset: Int!) {
+        users(limit: $limit, offset: $offset) {
+          name
+        }
+      }
+    `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { limit: 5, offset: 0 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({ limit: 5, offset: 0 });
+  });
+
+  test("returns updated variables set from setVariables", () => {
+    const query: TypedDocumentNode<{ user: { name: string } }, { id: number }> =
+      gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            name
+          }
+        }
+      `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { id: 1 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 1 });
+
+    void observable.setVariables({ id: 2 });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 2 });
+  });
+
+  test("returns updated variables set from refetch", () => {
+    const query: TypedDocumentNode<{ user: { name: string } }, { id: number }> =
+      gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            name
+          }
+        }
+      `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { id: 1 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 1 });
+
+    void observable.refetch({ id: 2 });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 2 });
+  });
+
+  test("returns updated variables set from reobserve", () => {
+    const query: TypedDocumentNode<{ user: { name: string } }, { id: number }> =
+      gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            name
+          }
+        }
+      `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { id: 1 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({ id: 1 });
+
+    void observable.reobserve({ variables: { id: 2 } }).catch(() => {});
+
+    expect(observable.variables).toStrictEqualTyped({ id: 2 });
+  });
+
+  test("does not return variables given to fetchMore", () => {
+    const query: TypedDocumentNode<
+      { users: Array<{ name: string }> },
+      { limit: number; offset: number }
+    > = gql`
+      query ($limit: Int!, $offset: Int!) {
+        users(limit: $limit, offset: $offset) {
+          name
+        }
+      }
+    `;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { limit: 10, offset: 0 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+
+    void observable.fetchMore({ variables: { offset: 5 } }).catch(() => {});
+
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+  });
+});
+
 test.skip("type test for `from`", () => {
   expectTypeOf<
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>

@@ -104,11 +104,7 @@ export class ObservableQuery<
    * An object containing the variables that were provided for the query.
    */
   public get variables(): TVariables | undefined {
-    const variables = this.options.variables;
-
-    if (variables && Object.keys(variables).length > 0) {
-      return variables;
-    }
+    return this.options.variables;
   }
 
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
@@ -231,6 +227,7 @@ export class ObservableQuery<
       initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
         fetchPolicy
       ),
+      variables,
     } = options;
 
     this.options = {
@@ -244,6 +241,11 @@ export class ObservableQuery<
       // This ensures this.options.fetchPolicy always has a string value, in
       // case options.fetchPolicy was not provided.
       fetchPolicy,
+
+      // `variables` might be an empty object due to QueryManager.getVariables,
+      // so we reset to `undefined` if there are no values
+      variables:
+        variables && Object.keys(variables).length > 0 ? variables : undefined,
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();

@@ -63,11 +63,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
             }
 
             if (retriedResult) {
-              retriedSub = retriedResult.subscribe({
-                next: observer.next.bind(observer),
-                error: observer.error.bind(observer),
-                complete: observer.complete.bind(observer),
-              });
+              retriedSub = retriedResult.subscribe(observer);
               return;
             }
 
@@ -76,11 +72,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           error: (error) => {
             retriedResult = errorHandler({ operation, error, forward });
             if (retriedResult) {
-              retriedSub = retriedResult.subscribe({
-                next: observer.next.bind(observer),
-                error: observer.error.bind(observer),
-                complete: observer.complete.bind(observer),
-              });
+              retriedSub = retriedResult.subscribe(observer);
               return;
             }
             observer.error(error);

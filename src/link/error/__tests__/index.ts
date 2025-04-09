@@ -340,11 +340,10 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ graphQLErrors, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return of({ data: { foo: { id: 1 } } });
     });
 
@@ -353,6 +352,8 @@ describe("error handling", () => {
 
     await expect(stream).toEmitNext();
     await expect(stream).toComplete();
+
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it("allows an error to be ignored", async () => {

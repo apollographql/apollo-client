@@ -365,16 +365,15 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ graphQLErrors, response }) => {
-      expect(graphQLErrors![0].message).toBe("ignore");
+    const errorLink = onError(({ response }) => {
       // ignore errors
-      response!.errors = null as any;
+      delete response!.errors;
     });
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return of({
         data: { foo: { id: 1 } },
-        errors: [{ message: "ignore" } as any],
+        errors: [{ message: "ignore" }],
       });
     });
 
@@ -382,8 +381,6 @@ describe("error handling", () => {
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitTypedValue({
-      // @ts-expect-error TODO: Need to determine a better way to handle this
-      errors: null,
       data: { foo: { id: 1 } },
     });
     await expect(stream).toComplete();

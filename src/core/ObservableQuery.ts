@@ -104,7 +104,11 @@ export class ObservableQuery<
    * An object containing the variables that were provided for the query.
    */
   public get variables(): TVariables | undefined {
-    return this.options.variables;
+    const variables = this.options.variables;
+
+    if (variables && Object.keys(variables).length > 0) {
+      return variables;
+    }
   }
 
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;

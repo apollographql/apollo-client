@@ -7,6 +7,7 @@ import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
+  toErrorLike,
 } from "@apollo/client/errors";
 import type {
   FetchResult,
@@ -14,7 +15,6 @@ import type {
   Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { maybeWrapError } from "@apollo/client/utilities/internal";
 
 export interface ErrorResponse {
   /**
@@ -73,7 +73,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           error: (error) => {
             retriedResult = errorHandler({
               operation,
-              error: maybeWrapError(error),
+              error: toErrorLike(error),
               forward,
             });
             retriedSub = retriedResult?.subscribe(observer);
@@ -91,7 +91,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           },
         });
       } catch (e) {
-        errorHandler({ error: maybeWrapError(e), operation, forward });
+        errorHandler({ error: toErrorLike(e), operation, forward });
         observer.error(e);
       }
 

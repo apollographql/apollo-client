@@ -6,4 +6,3 @@ export {
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
-export { maybeWrapError } from "./errors.js";

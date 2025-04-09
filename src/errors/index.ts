@@ -1,8 +1,10 @@
+import type { ErrorLike } from "@apollo/client/core";
 import type { FetchResult } from "@apollo/client/link/core";
 
 import { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 import type { ServerError } from "./ServerError.js";
 import type { ServerParseError } from "./ServerParseError.js";
+import { UnconventionalError } from "./UnconventionalError.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain
 // into QueryManager/client internals without risking a naming collision within
@@ -24,6 +26,29 @@ export function graphQLResultHasProtocolErrors<T>(
     );
   }
   return false;
+}
+
+function isErrorLike(error: unknown): error is ErrorLike {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    typeof (error as ErrorLike).message === "string" &&
+    typeof (error as ErrorLike).name === "string" &&
+    (typeof (error as ErrorLike).stack === "undefined" ||
+      typeof (error as ErrorLike).stack === "string")
+  );
+}
+
+export function toErrorLike(error: unknown) {
+  if (isErrorLike(error)) {
+    return error;
+  }
+
+  if (typeof error === "string") {
+    return new Error(error, { cause: error });
+  }
+
+  return new UnconventionalError(error);
 }
 
 export type NetworkError = Error | ServerParseError | ServerError | null;

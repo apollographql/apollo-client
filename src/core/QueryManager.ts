@@ -25,6 +25,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
+  toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
@@ -57,11 +58,7 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  maybeWrapError,
-  onAnyEvent,
-  toQueryResult,
-} from "@apollo/client/utilities/internal";
+import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -413,7 +410,7 @@ export class QueryManager {
           },
 
           error: (err) => {
-            const error = maybeWrapError(err);
+            const error = toErrorLike(err);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
@@ -1095,7 +1092,7 @@ export class QueryManager {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          return of({ data: undefined, error: maybeWrapError(error) });
+          return of({ data: undefined, error: toErrorLike(error) });
         }),
         filter((result) => !!(result.data || result.error))
       );
@@ -1299,7 +1296,7 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        error = maybeWrapError(error);
+        error = toErrorLike(error);
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {

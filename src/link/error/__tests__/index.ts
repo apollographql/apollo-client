@@ -1,7 +1,9 @@
+import type { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
 import {
+  CombinedGraphQLErrors,
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
@@ -24,29 +26,25 @@ describe("error handling", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = onError(({ graphQLErrors, networkError }) => {
-      expect(graphQLErrors![0].message).toBe("resolver blew up");
-      called = true;
-    });
+    const error: GraphQLFormattedError = { message: "resolver blew up" };
 
-    const mockLink = new ApolloLink((operation) =>
-      of({
-        errors: [
-          {
-            message: "resolver blew up",
-          },
-        ],
-      } as any)
-    );
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() => of({ errors: [error] }));
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const result = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({ errors: [error] });
 
-    expect(result.errors![0].message).toBe("resolver blew up");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query }),
+      response: { errors: [error] },
+      error: new CombinedGraphQLErrors({ errors: [error] }),
+    });
   });
 
   it("has an easy way to log client side (network) errors", async () => {

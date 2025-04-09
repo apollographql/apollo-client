@@ -3,6 +3,7 @@ import { Observable } from "rxjs";
 
 import type { ErrorLike } from "@apollo/client";
 import {
+  CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
@@ -47,7 +48,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           next: (result) => {
             if (result.errors) {
               retriedResult = errorHandler({
-                graphQLErrors: result.errors,
+                error: new CombinedGraphQLErrors(result),
                 response: result,
                 operation,
                 forward,

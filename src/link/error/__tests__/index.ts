@@ -17,7 +17,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 describe("error handling", () => {
-  it("has an easy way to handle GraphQL errors", async () => {
+  it("calls onError when GraphQL errors are returned", async () => {
     const query = gql`
       {
         foo {
@@ -47,7 +47,7 @@ describe("error handling", () => {
     });
   });
 
-  it("handles errors thrown in request handler", async () => {
+  it("calls onError with error when thrown from request handler", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -78,7 +78,7 @@ describe("error handling", () => {
     });
   });
 
-  it("handles errors emitted on from observable", async () => {
+  it("calls onError with error emitted from observable", async () => {
     const query = gql`
       query Foo {
         foo {

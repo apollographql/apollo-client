@@ -7,7 +7,6 @@ import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,

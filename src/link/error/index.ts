@@ -63,20 +63,19 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
               });
             }
 
-            if (retriedResult) {
-              retriedSub = retriedResult.subscribe(observer);
-              return;
-            }
+            retriedSub = retriedResult?.subscribe(observer);
 
-            observer.next(result);
+            if (!retriedSub) {
+              observer.next(result);
+            }
           },
           error: (error) => {
             retriedResult = errorHandler({ operation, error, forward });
-            if (retriedResult) {
-              retriedSub = retriedResult.subscribe(observer);
-              return;
+            retriedSub = retriedResult?.subscribe(observer);
+
+            if (!retriedSub) {
+              observer.error(error);
             }
-            observer.error(error);
           },
           complete: () => {
             // disable the previous sub from calling complete on observable

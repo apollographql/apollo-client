@@ -186,9 +186,8 @@ describe("error handling", () => {
     });
   });
 
-  it("handles protocol errors (multipart subscription)", async () => {
-    expect.assertions(4);
-    const sampleSubscription = gql`
+  it("calls onError with protocol errors from multipart subscriptions", async () => {
+    const subscription = gql`
       subscription MySubscription {
         aNewDieWasCreated {
           die {
@@ -200,25 +199,14 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError((args) => {
-      const { operation, protocolErrors } = args;
-      expect(operation.operationName).toBe("MySubscription");
-      expect(protocolErrors).toEqual(
-        new CombinedProtocolErrors([
-          {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ])
-      );
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
+
     const link = errorLink.concat(httpLink);
-    const stream = new ObservableStream(
-      execute(link, { query: sampleSubscription })
-    );
+    const stream = new ObservableStream(execute(link, { query: subscription }));
 
     enqueuePayloadResult({
       data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
@@ -243,6 +231,33 @@ describe("error handling", () => {
           },
         ]),
       },
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query: subscription,
+        operationName: "MySubscription",
+      }),
+      response: {
+        extensions: {
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+            {
+              extensions: {
+                code: "INTERNAL_SERVER_ERROR",
+              },
+              message: "Error field",
+            },
+          ]),
+        },
+      },
+      error: new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ]),
     });
   });
 

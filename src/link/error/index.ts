@@ -55,7 +55,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
               });
             } else if (graphQLResultHasProtocolErrors(result)) {
               retriedResult = errorHandler({
-                protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
+                error: result.extensions[PROTOCOL_ERRORS_SYMBOL],
                 response: result,
                 operation,
                 forward,

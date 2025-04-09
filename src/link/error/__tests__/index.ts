@@ -766,34 +766,24 @@ describe("support for request retrying", () => {
   });
 
   it("supports retrying when the initial request had networkError", async () => {
-    let errorHandlerCalled = false;
-
     let timesCalled = 0;
-    const mockHttpLink = new ApolloLink((operation) => {
-      if (timesCalled === 0) {
-        timesCalled++;
-        // simulate the first request being an error
-        return new Observable((observer) => {
+    const mockHttpLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        if (timesCalled++ === 0) {
+          // simulate the first request being an error
           observer.error(NETWORK_ERROR);
-        });
-      } else {
-        return new Observable((observer) => {
+        } else {
           observer.next(GOOD_RESPONSE);
           observer.complete();
-        });
-      }
+        }
+      });
     });
 
-    const errorLink = new ErrorLink(
-      ({ networkError, response, operation, forward }) => {
-        if (networkError) {
-          errorHandlerCalled = true;
-          expect(networkError).toEqual(NETWORK_ERROR);
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ forward, operation }) => forward(operation));
 
+    const errorLink = new ErrorLink(callback);
     const link = errorLink.concat(mockHttpLink);
 
     const stream = new ObservableStream(
@@ -801,8 +791,9 @@ describe("support for request retrying", () => {
     );
 
     await expect(stream).toEmitTypedValue(GOOD_RESPONSE);
-    expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("supports retrying when the initial request had protocol errors", async () => {

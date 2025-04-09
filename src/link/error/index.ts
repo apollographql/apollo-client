@@ -36,6 +36,7 @@ export namespace ErrorLink {
 
 // For backwards compatibility.
 export import ErrorHandler = ErrorLink.ErrorHandler;
+import { maybeWrapError } from "../../utilities/internal/errors.js";
 
 export function onError(errorHandler: ErrorHandler): ApolloLink {
   return new ApolloLink((operation, forward) => {
@@ -70,7 +71,11 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
             }
           },
           error: (error) => {
-            retriedResult = errorHandler({ operation, error, forward });
+            retriedResult = errorHandler({
+              operation,
+              error: maybeWrapError(error),
+              forward,
+            });
             retriedSub = retriedResult?.subscribe(observer);
 
             if (!retriedSub) {
@@ -86,7 +91,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           },
         });
       } catch (e) {
-        errorHandler({ error: e as ErrorLike, operation, forward });
+        errorHandler({ error: maybeWrapError(e), operation, forward });
         observer.error(e);
       }
 

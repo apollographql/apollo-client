@@ -7,6 +7,7 @@ import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
+  UnconventionalError,
 } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
@@ -119,6 +120,82 @@ describe("error handling", () => {
       }),
       error,
     });
+  });
+
+  test("wraps strings emitted from terminating link in Error", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        observer.error("Oops");
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    // Let core wrap the error as it sees fit. Only onError should see the
+    // wrapped error.
+    await expect(stream).toEmitError("Oops");
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error: new Error("Oops"),
+    });
+  });
+
+  test("wraps unconventional error types in UnconventionalError", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
+      const callback = jest.fn();
+      const errorLink = onError(callback);
+
+      const mockLink = new ApolloLink(() => {
+        return new Observable((observer) => {
+          observer.error(type);
+        });
+      });
+
+      const link = errorLink.concat(mockLink);
+      const stream = new ObservableStream(execute(link, { query }));
+
+      // Let core wrap the error as it sees fit. Only onError should see the
+      // wrapped error
+      await expect(stream).toEmitError(type);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenLastCalledWith({
+        forward: expect.any(Function),
+        operation: expect.objectContaining({
+          query,
+          operationName: "Foo",
+          variables: {},
+        }),
+        error: new UnconventionalError(type),
+      });
+    }
   });
 
   it.failing("handles errors emitted in incremental chunks", async () => {

@@ -1911,6 +1911,8 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
+    // @internal (undocumented)
+    protected notify(): void;
     // (undocumented)
     readonly options: WatchQueryOptions<TVariables, TData>;
     // (undocumented)
@@ -1930,6 +1932,8 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
+    // @internal (undocumented)
+    protected resetNotifications(): void;
     // (undocumented)
     resetQueryStoreErrors(): void;
     // (undocumented)
@@ -1938,6 +1942,8 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     resubscribeAfterError(observer: Observer<ApolloQueryResult<TData>>): ObservableSubscription;
     // (undocumented)
     result(): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    // @internal (undocumented)
+    protected scheduleNotify(): void;
     // (undocumented)
     setOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>> | void>;
@@ -2211,8 +2217,6 @@ class QueryInfo {
     // (undocumented)
     lastRequestId: number;
     // (undocumented)
-    listeners: Set<QueryListener>;
-    // (undocumented)
     markError(error: ApolloError): ApolloError;
     // (undocumented)
     markReady(): NetworkStatus;
@@ -2225,13 +2229,9 @@ class QueryInfo {
     // (undocumented)
     networkStatus?: NetworkStatus;
     // (undocumented)
-    notify(): void;
-    // (undocumented)
     readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
-    // (undocumented)
-    reset(): void;
     // (undocumented)
     resetDiff(): void;
     // (undocumented)
@@ -2253,9 +2253,6 @@ export interface QueryLazyOptions<TVariables> {
     context?: DefaultContext;
     variables?: TVariables;
 }
-
-// @public (undocumented)
-export type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager<TStore> {

@@ -230,7 +230,7 @@ export class QueryInfo {
       this.stopped = true;
 
       // Cancel the pending notify timeout
-      this.observableQuery?.reset();
+      this.observableQuery?.["resetNotifications"]();
       this.cancel();
 
       const oq = this.observableQuery;
@@ -307,7 +307,7 @@ export class QueryInfo {
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
-    this.observableQuery?.reset();
+    this.observableQuery?.["resetNotifications"]();
 
     if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(this.getDiff().result, result);
@@ -433,7 +433,7 @@ export class QueryInfo {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
 
-    this.observableQuery?.reset();
+    this.observableQuery?.["resetNotifications"]();
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

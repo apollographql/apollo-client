@@ -1180,7 +1180,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
-  reset() {
+  /** @internal */
+  protected resetNotifications() {
     this.cancelNotifyTimeout();
     this.dirty = false;
   }
@@ -1192,6 +1193,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
+  /** @internal */
   protected scheduleNotify() {
     if (this.dirty) return;
     this.dirty = true;
@@ -1200,7 +1202,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  notify() {
+  /** @internal */
+  protected notify() {
     this.cancelNotifyTimeout();
 
     if (this.dirty) {

@@ -526,7 +526,6 @@ describe("error handling with class", () => {
   });
 
   it("handles protocol errors (multipart subscription)", async () => {
-    expect.assertions(4);
     const subscription = gql`
       subscription MySubscription {
         aNewDieWasCreated {
@@ -542,17 +541,8 @@ describe("error handling with class", () => {
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
 
-    const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
-      expect(operation.operationName).toBe("MySubscription");
-      expect(protocolErrors).toEqual(
-        new CombinedProtocolErrors([
-          {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ])
-      );
-    });
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
 
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(execute(link, { query: subscription }));
@@ -580,6 +570,36 @@ describe("error handling with class", () => {
           },
         ]),
       },
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query: subscription,
+        operationName: "MySubscription",
+        variables: {},
+      }),
+      response: {
+        extensions: {
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+            {
+              extensions: {
+                code: "INTERNAL_SERVER_ERROR",
+              },
+              message: "Error field",
+            },
+          ]),
+        },
+      },
+      error: new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: {
+            code: "INTERNAL_SERVER_ERROR",
+          },
+        },
+      ]),
     });
   });
 

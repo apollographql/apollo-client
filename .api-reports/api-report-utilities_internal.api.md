@@ -5,7 +5,6 @@
 ```ts
 
 import type { ApolloQueryResult } from '@apollo/client';
-import type { ErrorLike } from '@apollo/client';
 import { Observable } from 'rxjs';
 import type { QueryResult } from '@apollo/client';
 
@@ -76,9 +75,6 @@ const globalCaches: {
     parser?: () => number;
     canonicalStringify?: () => number;
 };
-
-// @public (undocumented)
-export function maybeWrapError(error: unknown): ErrorLike;
 
 // @public (undocumented)
 type ObservableEvent<T> = {

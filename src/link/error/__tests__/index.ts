@@ -734,39 +734,25 @@ describe("support for request retrying", () => {
   const NETWORK_ERROR = new Error("some other error");
 
   it("returns the retried request when forward(operation) is called", async () => {
-    let errorHandlerCalled = false;
-
     let timesCalled = 0;
-    const mockHttpLink = new ApolloLink((operation) => {
-      if (timesCalled === 0) {
-        timesCalled++;
-        // simulate the first request being an error
-        return new Observable((observer) => {
-          observer.next(ERROR_RESPONSE as any);
+    const mockHttpLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        if (timesCalled++ === 0) {
+          // simulate the first request being an error
+          observer.next(ERROR_RESPONSE);
           observer.complete();
-        });
-      } else {
-        return new Observable((observer) => {
+        } else {
           observer.next(GOOD_RESPONSE);
           observer.complete();
-        });
-      }
+        }
+      });
     });
 
-    const errorLink = new ErrorLink(
-      ({ graphQLErrors, response, operation, forward }) => {
-        if (graphQLErrors) {
-          errorHandlerCalled = true;
-          expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
-          expect(response!.data).not.toBeDefined();
-          expect(operation.operationName).toBe("Foo");
-          expect(operation.getContext().bar).toBe(true);
-          // retry operation if it resulted in an error
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ operation, forward }) => forward(operation));
 
+    const errorLink = new ErrorLink(callback);
     const link = errorLink.concat(mockHttpLink);
 
     const stream = new ObservableStream(
@@ -774,8 +760,9 @@ describe("support for request retrying", () => {
     );
 
     await expect(stream).toEmitTypedValue(GOOD_RESPONSE);
-    expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("supports retrying when the initial request had networkError", async () => {

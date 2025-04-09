@@ -134,6 +134,7 @@ Array [
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "toErrorLike",
 ]
 `;
 

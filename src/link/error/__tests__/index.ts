@@ -8,7 +8,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
 } from "@apollo/client/errors";
-import type { Operation } from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 import { wait } from "@apollo/client/testing";
@@ -726,19 +726,12 @@ describe("support for request retrying", () => {
     }
   `;
   const ERROR_RESPONSE = {
-    errors: [
-      {
-        name: "something bad happened",
-        message: "resolver blew up",
-      },
-    ],
-  };
+    errors: [{ message: "resolver blew up" }],
+  } satisfies FetchResult;
   const GOOD_RESPONSE = {
     data: { foo: true },
-  };
-  const NETWORK_ERROR = {
-    message: "some other error",
-  };
+  } satisfies FetchResult;
+  const NETWORK_ERROR = new Error("some other error");
 
   it("returns the retried request when forward(operation) is called", async () => {
     let errorHandlerCalled = false;

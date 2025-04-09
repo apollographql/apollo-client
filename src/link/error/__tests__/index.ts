@@ -43,7 +43,7 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query }),
+      operation: expect.objectContaining({ query, variables: {} }),
       response: { errors: [error] },
       error: new CombinedGraphQLErrors({ errors: [error] }),
     });
@@ -75,7 +75,11 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
       error,
     });
   });
@@ -108,7 +112,11 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
       error,
     });
   });
@@ -173,7 +181,11 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
       error: new CombinedGraphQLErrors({
         errors: [
           {
@@ -241,6 +253,7 @@ describe("error handling", () => {
       operation: expect.objectContaining({
         query: subscription,
         operationName: "MySubscription",
+        variables: {},
       }),
       response: {
         extensions: {
@@ -290,7 +303,11 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
       error,
     });
   });
@@ -325,7 +342,11 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
       error,
     });
 
@@ -452,7 +473,11 @@ describe("error handling", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query, operationName: "Foo" }),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
       response: { data: { foo: true }, errors: [error] },
       error: new CombinedGraphQLErrors({
         data: { foo: true },
@@ -489,7 +514,7 @@ describe("error handling with class", () => {
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
-      operation: expect.objectContaining({ query }),
+      operation: expect.objectContaining({ query, variables: {} }),
       response: { errors: [error] },
       error: new CombinedGraphQLErrors({ errors: [error] }),
     });

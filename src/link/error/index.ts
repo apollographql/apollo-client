@@ -81,7 +81,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
             // disable the previous sub from calling complete on observable
             // if retry is in flight.
             if (!retriedResult) {
-              observer.complete.bind(observer)();
+              observer.complete();
             }
           },
         });

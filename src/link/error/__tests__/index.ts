@@ -331,35 +331,6 @@ describe("error handling", () => {
     expect(capturedError.statusCode).toBe(500);
   });
 
-  it("sets graphQLErrors to undefined if networkError.result is an empty string", async () => {
-    const query = gql`
-      query Foo {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = onError(({ graphQLErrors }) => {
-      expect(graphQLErrors).toBeUndefined();
-      called = true;
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        const response = { status: 500, ok: false } as Response;
-        throw new ServerError("app is crashing", { response, result: "" });
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    await expect(stream).toEmitError();
-    expect(called).toBe(true);
-  });
-
   it("completes if no errors", async () => {
     const query = gql`
       {

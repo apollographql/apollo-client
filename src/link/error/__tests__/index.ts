@@ -669,20 +669,20 @@ describe("error handling with class", () => {
       }
     `;
 
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return of({ data: { foo: { id: 1 } } });
     });
 
     const link = errorLink.concat(mockLink);
-
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitNext();
     await expect(stream).toComplete();
+
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it("can be unsubcribed", async () => {

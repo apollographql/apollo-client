@@ -43,6 +43,7 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
+import { Slot } from "optimism";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -75,6 +76,15 @@ export class ObservableQuery<
     Subscribable<ApolloQueryResult<MaybeMasked<TData>>>,
     InteropObservable<ApolloQueryResult<MaybeMasked<TData>>>
 {
+  /**
+   * @internal
+   * A slot used by the `useQuery` hook to indicate that `client.watchQuery`
+   * should not register the query immediately, but instead wait for the query to
+   * be started registered with the `QueryManager` when `useSyncExternalStore`
+   * actively subscribes to it.
+   */
+  private static inactiveOnCreation = new Slot<boolean>();
+
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
@@ -139,10 +149,15 @@ export class ObservableQuery<
       partial: true,
     };
 
+    let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
     this.subject = new BehaviorSubject(this.initialResult);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
+          if (startedInactive) {
+            queryManager["queries"].set(this.queryId, queryInfo);
+            startedInactive = false;
+          }
           if (!this.subject.observed) {
             this.reobserve();
 
@@ -835,9 +850,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
-    this.queryManager.setObservableQuery(this);
+    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
+    queryInfo.setObservableQuery(this);
     return this.queryManager.fetchObservableWithInfo(
-      this.queryId,
+      queryInfo,
       options,
       newNetworkStatus,
       query,

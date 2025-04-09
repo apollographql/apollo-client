@@ -31,11 +31,10 @@ import type {
 import type {
   ApolloQueryResult,
   DocumentNode,
-  ObservableQuery,
   TypedDocumentNode,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import { NetworkStatus } from "@apollo/client/core";
+import { NetworkStatus, ObservableQuery } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
@@ -258,7 +257,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   function createState(
     previous?: InternalState<TData, TVariables>
   ): InternalState<TData, TVariables> {
-    const observable = client.watchQuery(watchQueryOptions);
+    const observable = ObservableQuery["inactiveOnCreation"].withValue(
+      true,
+      () => client.watchQuery(watchQueryOptions)
+    );
 
     return {
       client,

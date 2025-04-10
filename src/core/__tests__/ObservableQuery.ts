@@ -5299,6 +5299,63 @@ describe(".variables", () => {
 
     expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
   });
+
+  test("handles undefined keys", () => {
+    const query: TypedDocumentNode<
+      { users: Array<{ name: string }> },
+      { limit?: number; offset: number }
+    > = gql`
+      query ($limit: Int, $offset: Int!) {
+        users(limit: $limit, offset: $offset) {
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { limit: undefined, offset: 0 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({
+      limit: undefined,
+      offset: 0,
+    });
+
+    void observable.setVariables({ limit: 10, offset: 0 }).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+
+    void observable
+      .setVariables({ limit: undefined, offset: 0 })
+      .catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({
+      limit: undefined,
+      offset: 0,
+    });
+
+    void observable.refetch({ limit: 10, offset: 0 }).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+
+    void observable.refetch({ limit: undefined, offset: 0 }).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({
+      limit: undefined,
+      offset: 0,
+    });
+
+    void observable
+      .reobserve({ variables: { limit: 10, offset: 0 } })
+      .catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+
+    void observable
+      .reobserve({ variables: { limit: undefined, offset: 0 } })
+      .catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({
+      limit: undefined,
+      offset: 0,
+    });
+  });
 });
 
 test.skip("type test for `from`", () => {

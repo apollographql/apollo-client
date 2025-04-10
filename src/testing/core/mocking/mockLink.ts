@@ -62,7 +62,7 @@ interface NormalizedMockedResponse {
 }
 
 type UnmatchedVariables = Array<
-  Record<string, any> | "<undefined>" | "<function>"
+  Record<string, any> | "<undefined>" | `<function ${string}>`
 >;
 
 export interface MockLinkOptions {
@@ -110,7 +110,7 @@ export class MockLink extends ApolloLink {
         const matched = variables(operation.variables);
 
         if (!matched) {
-          unmatchedVars.push("<function>");
+          unmatchedVars.push(`<function ${variables.name}>`);
         }
 
         return matched;

@@ -43,7 +43,7 @@ query ($id: ID!) {
 Request variables: {\\"id\\":1}
 
 Failed to match variables against 1 mock for this query. The available mocks had the following variables:
-  <function>
+  <function variables>
 "
 `;
 

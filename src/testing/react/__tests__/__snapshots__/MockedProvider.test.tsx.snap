@@ -19,7 +19,7 @@ query GetUser($username: String!) {
 Request variables: {"username":"mock_username"}
 
 Failed to match variables against 1 mock for this query. The available mocks had the following variables:
-  <function>
+  <function variables>
 ]
 `;
 

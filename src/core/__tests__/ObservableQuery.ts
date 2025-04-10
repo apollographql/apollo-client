@@ -1447,6 +1447,41 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    it("treats setVariables({}) as unchanged if previous variables are undefined", async () => {
+      const query = gql`
+        query ($offset: Int) {
+          users(offset: $offset) {
+            id
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data: { users: [{ __typename: "User", id: 1 }] } },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: { users: [{ __typename: "User", id: 1 }] },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      await expect(observable.setVariables({})).resolves.toStrictEqualTyped({
+        data: { users: [{ __typename: "User", id: 1 }] },
+      });
+
+      await expect(stream).not.toEmitAnything();
+    });
+
     it("handles variables changing while a query is in-flight", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),

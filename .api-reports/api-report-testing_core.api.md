@@ -79,6 +79,8 @@ export class MockLink extends ApolloLink {
     // (undocumented)
     addMockedResponse(mockedResponse: MockedResponse): void;
     // (undocumented)
+    static defaultOptions: MockLink.DefaultOptions;
+    // (undocumented)
     operation: Operation;
     // (undocumented)
     request(operation: Operation): Observable<FetchResult> | null;

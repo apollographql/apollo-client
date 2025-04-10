@@ -1982,7 +1982,7 @@ describe("ObservableQuery", () => {
           },
           error: expect.objectContaining({
             message: expect.stringMatching(
-              /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
+              /No more mocked responses for the query:\s+query QueryWithVarsVar\(\$vars: \[String!\]\)/
             ),
           }),
           loading: false,
@@ -1993,7 +1993,7 @@ describe("ObservableQuery", () => {
         await expect(promise).rejects.toEqual(
           expect.objectContaining({
             message: expect.stringMatching(
-              /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
+              /No more mocked responses for the query:\s+query QueryWithVarsVar\(\$vars: \[String!\]\)/
             ),
           })
         );

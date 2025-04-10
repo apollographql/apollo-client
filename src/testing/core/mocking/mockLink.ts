@@ -95,6 +95,10 @@ export class MockLink extends ApolloLink {
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};
 
+  public static defaultOptions: MockLink.DefaultOptions = {
+    delay: realisticDelay(),
+  };
+
   constructor(
     mockedResponses: ReadonlyArray<
       MockedResponse<Record<string, any>, Record<string, any>>
@@ -102,8 +106,10 @@ export class MockLink extends ApolloLink {
     options: MockLinkOptions = {}
   ) {
     super();
+    const defaultOptions = options.defaultOptions ?? MockLink.defaultOptions;
+
     this.showWarnings = options.showWarnings ?? true;
-    this.defaultDelay = options.defaultOptions?.delay ?? realisticDelay();
+    this.defaultDelay = defaultOptions?.delay ?? realisticDelay();
 
     if (mockedResponses) {
       mockedResponses.forEach((mockedResponse) => {

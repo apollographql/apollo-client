@@ -19,6 +19,7 @@ export interface MockedProviderProps {
   children?: any;
   link?: ApolloLink;
   showWarnings?: boolean;
+  mockLinkDefaultOptions?: MockLink.DefaultOptions;
   /**
    * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
    * Defaults to false.
@@ -44,13 +45,19 @@ export class MockedProvider extends React.Component<
       resolvers,
       link,
       showWarnings,
+      mockLinkDefaultOptions,
       connectToDevTools = false,
     } = this.props;
     const client = new ApolloClient({
       cache: cache || new Cache(),
       defaultOptions,
       connectToDevTools,
-      link: link || new MockLink(mocks || [], { showWarnings }),
+      link:
+        link ||
+        new MockLink(mocks || [], {
+          showWarnings,
+          defaultOptions: mockLinkDefaultOptions,
+        }),
       resolvers,
     });
 

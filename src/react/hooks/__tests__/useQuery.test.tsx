@@ -48,6 +48,7 @@ import {
   wait,
 } from "@apollo/client/testing";
 import {
+  enableFakeTimers,
   setupPaginatedCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
@@ -1920,7 +1921,11 @@ describe("useQuery Hook", () => {
         {
           initialProps: {},
           wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
+            <MockedProvider
+              mocks={mocks}
+              cache={cache}
+              mockLinkDefaultOptions={{ delay: 0 }}
+            >
               {children}
             </MockedProvider>
           ),
@@ -2642,16 +2647,8 @@ describe("useQuery Hook", () => {
     });
 
     describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
-      beforeEach(() => {
-        jest.useFakeTimers();
-      });
-
-      afterEach(() => {
-        jest.runOnlyPendingTimers();
-        jest.useRealTimers();
-      });
-
       it("when defined as a global default option", async () => {
+        using _ = enableFakeTimers();
         const skipPollAttempt = jest.fn().mockImplementation(() => false);
 
         const query = gql`
@@ -2659,19 +2656,22 @@ describe("useQuery Hook", () => {
             hello
           }
         `;
-        const link = mockSingleLink(
-          {
-            request: { query },
-            result: { data: { hello: "world 1" } },
-          },
-          {
-            request: { query },
-            result: { data: { hello: "world 2" } },
-          },
-          {
-            request: { query },
-            result: { data: { hello: "world 3" } },
-          }
+        const link = new MockLink(
+          [
+            {
+              request: { query },
+              result: { data: { hello: "world 1" } },
+            },
+            {
+              request: { query },
+              result: { data: { hello: "world 2" } },
+            },
+            {
+              request: { query },
+              result: { data: { hello: "world 3" } },
+            },
+          ],
+          { defaultOptions: { delay: 0 } }
         );
 
         const client = new ApolloClient({
@@ -2765,6 +2765,7 @@ describe("useQuery Hook", () => {
       });
 
       it("when defined for a single query", async () => {
+        using _ = enableFakeTimers();
         const skipPollAttempt = jest.fn().mockImplementation(() => false);
 
         const query = gql`
@@ -2789,7 +2790,12 @@ describe("useQuery Hook", () => {
 
         const cache = new InMemoryCache();
         const wrapper = ({ children }: any) => (
-          <MockedProvider mocks={mocks} cache={cache}>
+          <MockedProvider
+            mocks={mocks}
+            cache={cache}
+            // This test uses fake timers and does not expect a delay
+            mockLinkDefaultOptions={{ delay: 0 }}
+          >
             {children}
           </MockedProvider>
         );

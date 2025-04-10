@@ -48,7 +48,7 @@ export interface MockedResponse<
     | FetchResult<Unmasked<TData>>
     | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
   error?: Error;
-  delay?: number;
+  delay?: number | MockLink.DelayFunction;
 }
 
 interface NormalizedMockedResponse {
@@ -58,7 +58,7 @@ interface NormalizedMockedResponse {
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
-  delay?: number;
+  delay: number | MockLink.DelayFunction;
 }
 
 type UnmatchedVariables = Array<
@@ -67,13 +67,37 @@ type UnmatchedVariables = Array<
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
+  defaultOptions?: MockLink.DefaultOptions;
+}
+
+export declare namespace MockLink {
+  export type DelayFunction = (operation: Operation) => number;
+  export type Delay = number | DelayFunction;
+  export interface DefaultOptions {
+    delay?: MockLink.Delay;
+  }
+}
+
+export function realisticDelay({
+  min = 20,
+  max = 50,
+}: { min?: number; max?: number } = {}): MockLink.DelayFunction {
+  invariant(max > min, "realisticDelay: `min` must be less than `max`");
+
+  return () => Math.floor(Math.random() * (max - min) + min);
 }
 
 export class MockLink extends ApolloLink {
   public operation!: Operation;
   public showWarnings: boolean = true;
+
+  private defaultDelay: MockLink.Delay;
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};
+
+  public static defaultOptions: MockLink.DefaultOptions = {
+    delay: realisticDelay(),
+  };
 
   constructor(
     mockedResponses: ReadonlyArray<
@@ -82,7 +106,10 @@ export class MockLink extends ApolloLink {
     options: MockLinkOptions = {}
   ) {
     super();
+    const defaultOptions = options.defaultOptions ?? MockLink.defaultOptions;
+
     this.showWarnings = options.showWarnings ?? true;
+    this.defaultDelay = defaultOptions?.delay ?? realisticDelay();
 
     if (mockedResponses) {
       mockedResponses.forEach((mockedResponse) => {
@@ -94,7 +121,7 @@ export class MockLink extends ApolloLink {
   public addMockedResponse(mockedResponse: MockedResponse) {
     validateMockedResponse(mockedResponse);
 
-    const normalized = normalizeMockedResponse(mockedResponse);
+    const normalized = this.normalizeMockedResponse(mockedResponse);
     this.getMockedResponses(normalized.request).push(normalized);
   }
 
@@ -161,7 +188,12 @@ export class MockLink extends ApolloLink {
       mocks.splice(index, 1);
     }
 
-    if (!matched.result && !matched.error && matched.delay !== Infinity) {
+    const delay =
+      typeof matched.delay === "function" ?
+        matched.delay(operation)
+      : matched.delay;
+
+    if (!matched.result && !matched.error && delay !== Infinity) {
       return throwError(
         () =>
           new Error(
@@ -190,7 +222,7 @@ export class MockLink extends ApolloLink {
           );
         }
         observer.complete();
-      }, matched.delay ?? 0);
+      }, delay);
 
       return () => {
         clearTimeout(timer);
@@ -210,6 +242,24 @@ export class MockLink extends ApolloLink {
     }
 
     return mockedResponses;
+  }
+
+  private normalizeMockedResponse(
+    mockedResponse: MockedResponse
+  ): NormalizedMockedResponse {
+    const { request } = mockedResponse;
+    const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
+
+    response.original = mockedResponse;
+    response.request.query = getServerQuery(request.query);
+    response.maxUsageCount ??= 1;
+    response.variablesWithDefaults = {
+      ...getDefaultValues(getOperationDefinition(request.query)),
+      ...request.variables,
+    };
+    response.delay ??= this.defaultDelay;
+
+    return response;
   }
 }
 
@@ -231,23 +281,6 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 `
   : ""
 }`;
-}
-
-function normalizeMockedResponse(
-  mockedResponse: MockedResponse
-): NormalizedMockedResponse {
-  const { request } = mockedResponse;
-  const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
-
-  response.original = mockedResponse;
-  response.request.query = getServerQuery(request.query);
-  response.maxUsageCount ??= 1;
-  response.variablesWithDefaults = {
-    ...getDefaultValues(getOperationDefinition(request.query)),
-    ...request.variables,
-  };
-
-  return response;
 }
 
 function getServerQuery(query: DocumentNode) {

@@ -1049,6 +1049,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});
+
+    // Allow variables to be reset back to `undefined` if explicitly passed as
+    // variables: undefined to reobserve.
+    mergedOptions.variables =
+      newOptions && hasOwnProperty.call(newOptions, "variables") ?
+        newOptions.variables
+      : this.options.variables;
+
     const options =
       useDisposableObservable ?
         // Disposable Observable fetches receive a shallow copy of this.options

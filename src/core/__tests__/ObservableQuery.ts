@@ -5356,6 +5356,31 @@ describe(".variables", () => {
       offset: 0,
     });
   });
+
+  test("resets variables to undefined when passing variables as undefined", () => {
+    const query: TypedDocumentNode<
+      { users: Array<{ name: string }> },
+      { limit?: number; offset?: number }
+    > = gql`
+      query ($limit: Int, $offset: Int) {
+        users(limit: $limit, offset: $offset) {
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: { limit: 10, offset: 0 },
+    });
+
+    expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
+
+    void observable.reobserve({ variables: undefined }).catch(() => {});
+
+    expect(observable.variables).toBeUndefined();
+  });
 });
 
 test.skip("type test for `from`", () => {

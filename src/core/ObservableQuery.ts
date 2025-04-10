@@ -793,6 +793,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public async setVariables(
     variables: TVariables
   ): Promise<QueryResult<TData>> {
+    if (variables && Object.keys(variables).length === 0) {
+      (variables as any) = undefined;
+    }
+
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick

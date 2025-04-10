@@ -5381,6 +5381,46 @@ describe(".variables", () => {
 
     expect(observable.variables).toBeUndefined();
   });
+
+  test("sets variables as undefined when using empty object as variables", () => {
+    const query: TypedDocumentNode<
+      { users: Array<{ name: string }> },
+      { limit?: number; offset?: number }
+    > = gql`
+      query ($limit: Int, $offset: Int) {
+        users(limit: $limit, offset: $offset) {
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const observable = client.watchQuery({
+      query,
+      variables: {},
+    });
+
+    expect(observable.variables).toBeUndefined();
+
+    void observable.setVariables({ limit: 10 }).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10 });
+
+    void observable.setVariables({}).catch(() => {});
+    expect(observable.variables).toBeUndefined();
+
+    void observable.refetch({ limit: 10 }).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10 });
+
+    // Since `refetch` merges variables, we don't expect variables to change
+    void observable.refetch({}).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10 });
+
+    void observable.reobserve({ variables: { limit: 10 } }).catch(() => {});
+    expect(observable.variables).toStrictEqualTyped({ limit: 10 });
+
+    void observable.reobserve({ variables: {} }).catch(() => {});
+    expect(observable.variables).toBeUndefined();
+  });
 });
 
 test.skip("type test for `from`", () => {

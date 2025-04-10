@@ -606,6 +606,11 @@
 - [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - `@apollo/client`, `@apollo/client/core` and `@apollo/client/cache` no longer export an empty `Cache` runtime object. This is meant to be a type-only namespace.
 
 - [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't emit a partial cache result from `cache-only` queries when `returnPartialData` is `false`.
+## 3.13.6
+
+### Patch Changes
+
+- [#12285](https://github.com/apollographql/apollo-client/pull/12285) [`cdc55ff`](https://github.com/apollographql/apollo-client/commit/cdc55ff54bf4c83ec8571508ec4bf8156af1bc97) Thanks [@phryneas](https://github.com/phryneas)! - keep ObservableQuery created by useQuery non-active before it is first subscribed
 
 ## 3.13.5
 

@@ -1,4 +1,4 @@
-import type { ErrorLike } from "@apollo/client";
+import { hasName } from "./utils.js";
 
 /**
  * A wrapper error type that represents a non-standard error thrown from a
@@ -7,13 +7,13 @@ import type { ErrorLike } from "@apollo/client";
  */
 export class UnconventionalError extends Error {
   /** Determine if an error is an `UnconventionalError` instance */
-  static is(error: ErrorLike): error is UnconventionalError {
+  static is(error: unknown): error is UnconventionalError {
     return (
       error instanceof UnconventionalError ||
       // Fallback to check for the name property in case there are multiple
       // versions of Apollo Client installed, or something else causes
       // instanceof to return false.
-      error.name === "UnconventionalError"
+      hasName(error, "UnconventionalError")
     );
   }
 

@@ -1,6 +1,6 @@
 import type { GraphQLFormattedError } from "graphql";
 
-import type { ErrorLike } from "@apollo/client";
+import { hasName } from "./utils.js";
 
 /**
  * Fatal transport-level errors returned when executing a subscription using the
@@ -9,13 +9,13 @@ import type { ErrorLike } from "@apollo/client";
  */
 export class CombinedProtocolErrors extends Error {
   /** Determine if an error is a `CombinedProtocolErrors` instance */
-  static is(error: ErrorLike): error is CombinedProtocolErrors {
+  static is(error: unknown): error is CombinedProtocolErrors {
     return (
       error instanceof CombinedProtocolErrors ||
-      // Fallback to check for the name property in case there are multiple
-      // versions of Apollo Client installed, or something else causes
-      // instanceof to return false.
-      error.name === "CombinedProtocolErrors"
+      // Fallback to check for the name in case there are multiple versions of
+      // Apollo Client installed, or something else causes instanceof to
+      // return false.
+      hasName(error, "CombinedProtocolErrors")
     );
   }
 

@@ -1,4 +1,4 @@
-import type { ErrorLike } from "@apollo/client";
+import { hasName } from "./utils.js";
 
 interface ServerErrorOptions {
   response: Response;
@@ -10,13 +10,13 @@ interface ServerErrorOptions {
  */
 export class ServerError extends Error {
   /** Determine if an error is a `ServerError` instance */
-  static is(error: ErrorLike): error is ServerError {
+  static is(error: unknown): error is ServerError {
     return (
       error instanceof ServerError ||
       // Fallback to check for the name property in case there are multiple
       // versions of Apollo Client installed, or something else causes
       // instanceof to return false.
-      error.name === "ServerError"
+      hasName(error, "ServerError")
     );
   }
 

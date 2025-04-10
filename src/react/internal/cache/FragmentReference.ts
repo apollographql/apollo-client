@@ -1,11 +1,11 @@
 import { equal } from "@wry/equality";
 import type { Observable, Subscription } from "rxjs";
 
+import type { ApolloClient, OperationVariables } from "@apollo/client";
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { PromiseWithState } from "@apollo/client/utilities";
 import {

@@ -26,7 +26,11 @@ test.suite("Node with CJS require", () => {
 
     assert.equal(
       require.resolve("@apollo/client"),
-      path.posix.join(basedir, "/__cjs/index.cjs")
+      path.posix.join(basedir, "/__cjs/core/index.cjs")
+    );
+    assert.equal(
+      require.resolve("@apollo/client/core"),
+      path.posix.join(basedir, "/__cjs/core/index.cjs")
     );
     assert.equal(
       require.resolve("@apollo/client/react"),

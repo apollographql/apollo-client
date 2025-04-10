@@ -1,4 +1,4 @@
-import type { DocumentNode } from "@apollo/client/core";
+import type { DocumentNode } from "@apollo/client";
 
 import { getOperationDefinition } from "./getFromAST.js";
 

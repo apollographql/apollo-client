@@ -11,10 +11,7 @@ import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
-import type {
-  OperationVariables,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -22,7 +19,7 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { Masked } from "@apollo/client/masking";
 import {
   ApolloProvider,

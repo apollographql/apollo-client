@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import React, { useContext } from "react";
 
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react";
 

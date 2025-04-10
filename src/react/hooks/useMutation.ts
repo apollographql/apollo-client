@@ -20,7 +20,7 @@ import type {
   OnQueryUpdated,
   OperationVariables,
   Unmasked,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { NoInfer } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
 

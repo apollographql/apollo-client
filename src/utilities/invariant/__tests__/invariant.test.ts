@@ -33,14 +33,12 @@ function withDev(): typeof import("@apollo/client/dev") & AsyncDisposable {
 }
 
 function disableErrorMessageHandler() {
-  // eslint-disable-next-line local-rules/require-using-disposable
   const dev = withDev();
   delete window[ApolloErrorMessageHandler];
   return dev;
 }
 
 function mockErrorMessageHandler() {
-  // eslint-disable-next-line local-rules/require-using-disposable
   const dev = withDev();
   delete window[ApolloErrorMessageHandler];
 

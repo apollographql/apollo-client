@@ -22,7 +22,7 @@ import type {
   QueryResult,
   SubscribeToMoreOptions,
   TypedDocumentNode,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -31,7 +31,7 @@ import {
   InMemoryCache,
   NetworkStatus,
   split,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type {
   Masked,
   MaskedDocumentNode,

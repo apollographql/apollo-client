@@ -4,20 +4,20 @@ import { Kind } from "graphql";
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
-import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import type {
   ApolloQueryResult,
   DefaultOptions,
   MutateResult,
   ObservableQuery,
   QueryOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   makeReference,
   NetworkStatus,
   setLogVerbosity,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
 import type { Masked } from "@apollo/client/masking";

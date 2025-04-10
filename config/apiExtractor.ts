@@ -1,5 +1,6 @@
-import { readFileSync } from "fs";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import * as path from "path";
 
@@ -10,9 +11,11 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 
-import { buildDocEntryPoints, entryPoints } from "./entryPoints.ts";
+import pkg from "../dist/package.json" with { type: "json" };
+
+import type { ExportsCondition } from "./entryPoints.ts";
+import { buildDocEntryPoints } from "./entryPoints.ts";
 import { withPseudoNodeModules } from "./helpers.ts";
-import { join } from "node:path";
 
 const parsed = parseArgs({
   options: {
@@ -46,6 +49,20 @@ const packageJsonFullPath = path.resolve(
   import.meta.dirname,
   "../package.json"
 );
+const reportFolder = baseConfig.apiReport.reportFolder!.replace(
+  "<projectFolder>",
+  join(import.meta.dirname, "..")
+);
+
+const entryPoints = Object.entries(pkg.exports as ExportsCondition)
+  .filter(([key]) => !(key.includes("*") || key.includes(".json")))
+  .map(([key, value]) => {
+    return {
+      path: key.slice("./".length),
+      key,
+      value,
+    };
+  });
 
 process.exitCode = 0;
 
@@ -72,17 +89,25 @@ try {
 
   if (parsed.values.generate?.includes("apiReport")) {
     for (const entryPoint of entryPoints) {
-      const path = entryPoint.dirs.join("/");
-      const mainEntryPointFilePath =
-        `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
+      let entry = entryPoint.value;
+      while (typeof entry === "object") {
+        entry = entry.types || Object.values(entry).at(-1);
+      }
+      const mainEntryPointFilePath = `<projectFolder>/dist/${entry}`.replace(
+        "//",
+        "/"
+      );
       console.log(
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );
+      const reportFileName = `api-report${
+        entryPoint.path ? "-" + entryPoint.path.replace(/\//g, "_") : ""
+      }.api.md`;
       await buildReport(
         join("@apollo/client", entryPoint.key),
         mainEntryPointFilePath,
         "apiReport",
-        `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
+        reportFileName
       );
     }
   }
@@ -143,6 +168,18 @@ async function buildReport(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
+    if (extractorResult.apiReportChanged) {
+      spawnSync(
+        "diff",
+        [
+          join(reportFolder, reportFileName),
+          join(reportFolder, "temp", reportFileName),
+        ],
+        {
+          stdio: "inherit",
+        }
+      );
+    }
     process.exitCode = 1;
   }
 }

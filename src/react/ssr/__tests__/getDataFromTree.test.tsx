@@ -5,9 +5,9 @@ import type { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient, CombinedGraphQLErrors } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { ApolloClient, CombinedGraphQLErrors } from "@apollo/client/core";
 import {
   ApolloProvider,
   getApolloContext,

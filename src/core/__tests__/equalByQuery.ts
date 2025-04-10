@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql";
 
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { CombinedGraphQLErrors, gql } from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client";
+import { CombinedGraphQLErrors, gql } from "@apollo/client";
 
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports

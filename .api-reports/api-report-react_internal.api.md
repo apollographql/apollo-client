@@ -4,20 +4,20 @@
 
 ```ts
 
-import type { ApolloClient } from '@apollo/client/core';
-import type { ApolloQueryResult } from '@apollo/client/core';
+import type { ApolloClient } from '@apollo/client';
+import type { ApolloQueryResult } from '@apollo/client';
 import type { createQueryPreloader } from '@apollo/client/react';
 import type { DocumentNode } from 'graphql';
-import type { FetchMoreQueryOptions } from '@apollo/client/core';
+import type { FetchMoreQueryOptions } from '@apollo/client';
 import type { MaybeMasked } from '@apollo/client/masking';
-import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client/core';
+import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { Observable } from 'rxjs';
-import type { ObservableQuery } from '@apollo/client/core';
+import type { ObservableQuery } from '@apollo/client';
 import type { OnlyRequiredProperties } from '@apollo/client/utilities';
-import type { OperationVariables } from '@apollo/client/core';
+import type { OperationVariables } from '@apollo/client';
 import type { PromiseWithState } from '@apollo/client/utilities';
-import type { QueryResult } from '@apollo/client/core';
-import type { Unmasked } from '@apollo/client/core';
+import type { QueryResult } from '@apollo/client';
+import type { Unmasked } from '@apollo/client';
 import type { useBackgroundQuery } from '@apollo/client/react';
 import type { useFragment } from '@apollo/client/react';
 import type { useQuery } from '@apollo/client/react';
@@ -25,10 +25,10 @@ import type { useQueryRefHandlers } from '@apollo/client/react';
 import type { useReadQuery } from '@apollo/client/react';
 import type { useSuspenseFragment } from '@apollo/client/react';
 import type { useSuspenseQuery } from '@apollo/client/react';
-import type { WatchFragmentOptions } from '@apollo/client/core';
+import type { WatchFragmentOptions } from '@apollo/client';
 import type { WatchFragmentOptions as WatchFragmentOptions_2 } from '@apollo/client/cache';
 import type { WatchFragmentResult } from '@apollo/client/cache';
-import type { WatchQueryOptions } from '@apollo/client/core';
+import type { WatchQueryOptions } from '@apollo/client';
 
 // Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
 //

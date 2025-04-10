@@ -2,17 +2,17 @@ import equal from "@wry/equality";
 import * as React from "react";
 
 import type {
+  ApolloClient,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
+import type {
   Cache,
   MissingTree,
   Reference,
   StoreObject,
 } from "@apollo/client/cache";
-import type {
-  ApolloClient,
-  DocumentNode,
-  OperationVariables,
-  TypedDocumentNode,
-} from "@apollo/client/core";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { ApolloClient } from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import type { MockedProviderProps } from "@apollo/client/testing/react";
 import { MockedProvider } from "@apollo/client/testing/react";

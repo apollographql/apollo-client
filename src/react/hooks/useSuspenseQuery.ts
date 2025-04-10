@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -13,9 +12,10 @@ import type {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "@apollo/client/core";
-import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import { NetworkStatus } from "@apollo/client/core";
+} from "@apollo/client";
+import type { SubscribeToMoreFunction } from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
+import { canonicalStringify } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   CacheKey,

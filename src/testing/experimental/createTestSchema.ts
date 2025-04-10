@@ -2,7 +2,7 @@ import { mergeResolvers } from "@graphql-tools/merge";
 import { addResolversToSchema } from "@graphql-tools/schema";
 import type { GraphQLSchema } from "graphql";
 
-import type { Resolvers } from "@apollo/client/core";
+import type { Resolvers } from "@apollo/client";
 
 import { createMockSchema } from "./graphql-tools/utils.js";
 

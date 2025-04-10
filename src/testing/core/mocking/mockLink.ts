@@ -61,6 +61,10 @@ interface NormalizedMockedResponse {
   delay?: number;
 }
 
+type UnmatchedVariables = Array<
+  Record<string, any> | "<undefined>" | "<function>"
+>;
+
 export interface MockLinkOptions {
   showWarnings?: boolean;
 }
@@ -96,9 +100,7 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
-    const unmatchedVars: Array<
-      Record<string, any> | "<undefined>" | "<function>"
-    > = [];
+    const unmatchedVars: UnmatchedVariables = [];
     const mocks = this.getMockedResponses(operation);
 
     const index = mocks.findIndex((mock) => {
@@ -213,7 +215,7 @@ export class MockLink extends ApolloLink {
 
 function getErrorMessage(
   operation: Operation,
-  unmatchedVars: Array<Record<string, any> | "<undefined>" | "<function>">
+  unmatchedVars: UnmatchedVariables
 ) {
   return `No more mocked responses for the query:
 ${print(operation.query)}

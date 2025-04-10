@@ -1,6 +1,6 @@
 import type { GraphQLFormattedError } from "graphql";
 
-import type { FetchResult } from "@apollo/client";
+import type { ErrorLike, FetchResult } from "@apollo/client";
 import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
 
 /**
@@ -8,6 +8,17 @@ import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
  * GraphQL response.
  */
 export class CombinedGraphQLErrors extends Error {
+  /** Determine if an error is a `CombinedGraphQLErrors` instance */
+  static is(error: ErrorLike): error is CombinedGraphQLErrors {
+    return (
+      error instanceof CombinedGraphQLErrors ||
+      // Fallback to check for the name property in case there are multiple
+      // versions of Apollo Client installed, or something else causes
+      // instanceof to return false.
+      error.name === "CombinedGraphQLErrors"
+    );
+  }
+
   /**
    * The raw list of GraphQL errors returned in a GraphQL response.
    */

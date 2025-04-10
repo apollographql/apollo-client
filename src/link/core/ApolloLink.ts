@@ -1,4 +1,4 @@
-import type { Observable, Subscriber } from "rxjs";
+import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
 import {
@@ -136,29 +136,6 @@ export class ApolloLink {
     forward?: NextLink
   ): Observable<FetchResult> | null {
     throw newInvariantError("request is not implemented");
-  }
-
-  protected onError(
-    error: any,
-    observer?: Subscriber<FetchResult>
-  ): false | void {
-    if (observer && observer.error) {
-      observer.error(error);
-      // Returning false indicates that observer.error does not need to be
-      // called again, since it was already called (on the previous line).
-      // Calling observer.error again would not cause any real problems,
-      // since only the first call matters, but custom onError functions
-      // might have other reasons for wanting to prevent the default
-      // behavior by returning false.
-      return false;
-    }
-    // Throw errors will be passed to observer.error.
-    throw error;
-  }
-
-  public setOnError(fn: ApolloLink["onError"]): this {
-    this.onError = fn;
-    return this;
   }
 
   /**

@@ -84,8 +84,6 @@ Object {
 }
 `;
 
-exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 1`] = `[Error: oh no!]`;
-
 exports[`General use should return "Mocked response should contain" errors in response 1`] = `
 [Error: Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`:
 {
@@ -108,32 +106,6 @@ query GetUser($username: String!) {
 }
 
 Request variables: {}
-]
-`;
-
-exports[`General use should support custom error handling using setOnError 1`] = `
-[Error: No more mocked responses for the query:
-query GetUser($username: String!) {
-  user(username: $username) {
-    id
-    __typename
-  }
-}
-
-Request variables: {"username":"mock_username"}
-]
-`;
-
-exports[`General use should support custom error handling using setOnError 2`] = `
-[Error: No more mocked responses for the query:
-query GetUser($username: String!) {
-  user(username: $username) {
-    id
-    __typename
-  }
-}
-
-Request variables: {"username":"mock_username"}
 ]
 `;
 

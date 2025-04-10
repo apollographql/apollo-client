@@ -6,6 +6,7 @@ import {
   InMemoryCache,
   from,
   ApolloLink,
+  CombinedGraphQLErrors,
 } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 import merge from "deepmerge";
@@ -18,14 +19,16 @@ export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__";
 
 let apolloClient: ApolloClient;
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors)
-    graphQLErrors.forEach(({ message, locations, path }) =>
+const errorLink = onError(({ error }) => {
+  if (error instanceof CombinedGraphQLErrors) {
+    error.errors.forEach(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
     );
-  if (networkError) console.log(`[Network error]: ${networkError}`);
+  } else {
+    console.log(`[Network error]: ${error}`);
+  }
 });
 
 const delayLink = new ApolloLink((operation, forward) => {

@@ -25,7 +25,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
-  UnconventionalError,
+  toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
@@ -79,7 +79,6 @@ import {
 import type {
   ApolloQueryResult,
   DefaultContext,
-  ErrorLike,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
@@ -411,7 +410,7 @@ export class QueryManager {
           },
 
           error: (err) => {
-            const error = maybeWrapError(err);
+            const error = toErrorLike(err);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
@@ -1093,7 +1092,7 @@ export class QueryManager {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          return of({ data: undefined, error: maybeWrapError(error) });
+          return of({ data: undefined, error: toErrorLike(error) });
         }),
         filter((result) => !!(result.data || result.error))
       );
@@ -1297,7 +1296,7 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        error = maybeWrapError(error);
+        error = toErrorLike(error);
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
@@ -1853,29 +1852,6 @@ export class QueryManager {
       clientAwareness: this.clientAwareness,
     };
   }
-}
-
-function isErrorLike(error: unknown): error is ErrorLike {
-  return (
-    error !== null &&
-    typeof error === "object" &&
-    typeof (error as ErrorLike).message === "string" &&
-    typeof (error as ErrorLike).name === "string" &&
-    (typeof (error as ErrorLike).stack === "undefined" ||
-      typeof (error as ErrorLike).stack === "string")
-  );
-}
-
-function maybeWrapError(error: unknown) {
-  if (isErrorLike(error)) {
-    return error;
-  }
-
-  if (typeof error === "string") {
-    return new Error(error, { cause: error });
-  }
-
-  return new UnconventionalError(error);
 }
 
 function validateDidEmitValue<T>() {

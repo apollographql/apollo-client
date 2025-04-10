@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.13.7
+
+### Patch Changes
+
+- [#12540](https://github.com/apollographql/apollo-client/pull/12540) [`0098932`](https://github.com/apollographql/apollo-client/commit/009893220934081f6e5733bff5863c768a597117) Thanks [@phryneas](https://github.com/phryneas)! - Refactor: Move notification scheduling logic from `QueryInfo` to `ObservableQuery`
+
+- [#12540](https://github.com/apollographql/apollo-client/pull/12540) [`0098932`](https://github.com/apollographql/apollo-client/commit/009893220934081f6e5733bff5863c768a597117) Thanks [@phryneas](https://github.com/phryneas)! - Refactored cache emit logic for ObservableQuery. This should be an invisible change.
+
 ## 3.13.6
 
 ### Patch Changes

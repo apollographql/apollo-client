@@ -1,4 +1,4 @@
-import type { ErrorLike } from "@apollo/client/core";
+import type { ErrorLike } from "@apollo/client";
 import type { FetchResult } from "@apollo/client/link/core";
 
 import { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
@@ -19,10 +19,10 @@ export function graphQLResultHasProtocolErrors<T>(
   result: FetchResult<T>
 ): result is FetchResultWithSymbolExtensions<T> {
   if (result.extensions) {
-    return (
+    return CombinedProtocolErrors.is(
       (result as FetchResultWithSymbolExtensions<T>).extensions[
         PROTOCOL_ERRORS_SYMBOL
-      ] instanceof CombinedProtocolErrors
+      ]
     );
   }
   return false;

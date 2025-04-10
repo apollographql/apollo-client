@@ -7,8 +7,8 @@ export const areCombinedProtocolErrorsEqual: Tester = function (
   b,
   customTesters
 ) {
-  const isACombinedProtocolErrors = a && CombinedProtocolErrors.is(a);
-  const isBCombinedProtocolErrors = b && CombinedProtocolErrors.is(b);
+  const isACombinedProtocolErrors = CombinedProtocolErrors.is(a);
+  const isBCombinedProtocolErrors = CombinedProtocolErrors.is(b);
 
   if (isACombinedProtocolErrors && isBCombinedProtocolErrors) {
     return (

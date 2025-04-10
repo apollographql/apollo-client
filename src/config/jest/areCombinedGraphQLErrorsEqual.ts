@@ -7,8 +7,8 @@ export const areCombinedGraphQLErrorsEqual: Tester = function (
   b,
   customTesters
 ) {
-  const isACombinedGraphQLErrors = a && CombinedGraphQLErrors.is(a);
-  const isBCombinedGraphQLErrors = b && CombinedGraphQLErrors.is(b);
+  const isACombinedGraphQLErrors = CombinedGraphQLErrors.is(a);
+  const isBCombinedGraphQLErrors = CombinedGraphQLErrors.is(b);
 
   if (isACombinedGraphQLErrors && isBCombinedGraphQLErrors) {
     return (

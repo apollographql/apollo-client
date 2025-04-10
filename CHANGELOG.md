@@ -1,5 +1,157 @@
 # @apollo/client
 
+## 4.0.0-alpha.8
+
+### Major Changes
+
+- [#12539](https://github.com/apollographql/apollo-client/pull/12539) [`dd0d6d6`](https://github.com/apollographql/apollo-client/commit/dd0d6d6d96d8b810e30dc2fdee2ac8a2477d0017) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `onError` link now uses a single `error` property to report the error that caused the link callback to be called. This will be an instance of `CombinedGraphQLErrors` in the event GraphQL errors were emitted from the terminating link, `CombinedProtocolErrors` if the terminating link emitted protocol errors, or the unwrapped error type if any other non-GraphQL error was thrown or emitted.
+
+  ```diff
+  - const errorLink = onError(({ graphQLErrors, networkError, protocolErrors }) => {
+  -   graphQLErrors.forEach(error => console.log(error.message));
+  + const errorLink = onError(({ error }) => {
+  +   if (error.name === 'CombinedGraphQLErrors') {
+  +     error.errors.forEach(rawError => console.log(rawError.message));
+  +   }
+  });
+  ```
+
+- [#12533](https://github.com/apollographql/apollo-client/pull/12533) [`73221d8`](https://github.com/apollographql/apollo-client/commit/73221d87bd5640986f86fe3ee50c63ed49834cbb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `onError` and `setOnError` methods from `ApolloLink`. `onError` was only used by `MockLink` to rewrite errors if `setOnError` was used.
+
+- [#12531](https://github.com/apollographql/apollo-client/pull/12531) [`7784b46`](https://github.com/apollographql/apollo-client/commit/7784b46117a4f91a270a020ed1a24f042cb9ee17) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Mocked responses passed to `MockLink` now accept a callback for the `request.variables` option. This is used to determine if the mock should be matched for a set of request variables. With this change, the `variableMatcher` option has been removed in favor of passing a callback to `variables`. Update by moving the callback function from `variableMatcher` to `request.variables`.
+
+  ```diff
+  new MockLink([
+    {
+      request: {
+        query,
+  +     variables: (requestVariables) => true
+      },
+  -   variableMatcher: (requestVariables) => true
+    }
+  ]);
+  ```
+
+- [#12526](https://github.com/apollographql/apollo-client/pull/12526) [`391af1d`](https://github.com/apollographql/apollo-client/commit/391af1dd733219b7e1e14cfff9d5e3ce3967242f) Thanks [@phryneas](https://github.com/phryneas)! - The `@apollo/client` and `@apollo/client/core` entry points are now equal.
+  In the next major, the `@apollo/client/core` entry point will be removed.
+  Please change imports over from `@apollo/client/core` to `@apollo/client`.
+
+- [#12525](https://github.com/apollographql/apollo-client/pull/12525) [`8785186`](https://github.com/apollographql/apollo-client/commit/87851863b94eebbc208671b17aeca73748ac41f6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Throw an error when a client-only query is used in a mocked response passed to `MockLink`.
+
+- [#12532](https://github.com/apollographql/apollo-client/pull/12532) [`ae0dcad`](https://github.com/apollographql/apollo-client/commit/ae0dcad89924e6b8090ca3182df30e528589b562) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Default the `delay` for all mocked responses passed to `MockLink` using `realisticDelay`. This ensures your test handles loading states by default and is not reliant on a specific timing.
+
+  If you would like to restore the old behavior, use a global default delay of `0`.
+
+  ```ts
+  MockLink.defaultOptions = {
+    delay: 0,
+  };
+  ```
+
+- [#12530](https://github.com/apollographql/apollo-client/pull/12530) [`2973e2a`](https://github.com/apollographql/apollo-client/commit/2973e2a6e6fd81fa59b769d84c252c98ca69440d) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `newData` option for mocked responses passed to `MockLink` or the `mocks` option on `MockedProvider`. This option was undocumented and was nearly identical to using the `result` option as a callback.
+
+  To replicate the old behavior of `newData`, use `result` as a callback and add the `maxUsageCount` option with a value set to `Number.POSITIVE_INFINITY`.
+
+  **with `MockLink`**
+
+  ```diff
+  new MockLink([
+    {
+      request: { query, variables },
+  -   newData: (variables) => ({ data: { greeting: "Hello " + variables.greeting } }),
+  +   result: (variables) => ({ data: { greeting: "Hello " + variables.greeting } }),
+  +   maxUsageCount: Number.POSITIVE_INFINITY,
+    }
+  ])
+  ```
+
+  **with `MockedProvider`**
+
+  ```diff
+  <MockedProvider
+    mocks={[
+      {
+        request: { query, variables },
+  -     newData: (variables) => ({ data: { greeting: "Hello " + variables.greeting } }),
+  +     result: (variables) => ({ data: { greeting: "Hello " + variables.greeting } }),
+  +     maxUsageCount: Number.POSITIVE_INFINITY,
+      }
+    ]}
+  />
+  ```
+
+### Minor Changes
+
+- [#12532](https://github.com/apollographql/apollo-client/pull/12532) [`ae0dcad`](https://github.com/apollographql/apollo-client/commit/ae0dcad89924e6b8090ca3182df30e528589b562) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow mocked responses passed to `MockLink` to accept a callback for the `delay` option. The `delay` callback will be given the current operation which can be used to determine what delay should be used for the mock.
+
+- [#12532](https://github.com/apollographql/apollo-client/pull/12532) [`ae0dcad`](https://github.com/apollographql/apollo-client/commit/ae0dcad89924e6b8090ca3182df30e528589b562) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduce a new `realisticDelay` helper function for use with the `delay` callback for mocked responses used with `MockLink`. `realisticDelay` will generate a random value between 20 and 50ms to provide an experience closer to unpredictable network latency. `realisticDelay` can be configured with a `min` and `max` to set different thresholds if the defaults are not sufficient.
+
+  ```ts
+  import { realisticDelay } from "@apollo/client/testing";
+
+  new MockLink([
+    {
+      request: { query },
+      result: { data: { greeting: "Hello" } },
+      delay: realisticDelay(),
+    },
+    {
+      request: { query },
+      result: { data: { greeting: "Hello" } },
+      delay: realisticDelay({ min: 10, max: 100 }),
+    },
+  ]);
+  ```
+
+- [#12532](https://github.com/apollographql/apollo-client/pull/12532) [`ae0dcad`](https://github.com/apollographql/apollo-client/commit/ae0dcad89924e6b8090ca3182df30e528589b562) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add ability to specify a default `delay` for all mocked responses passed to `MockLink`. This `delay` can be configured globally (all instances of `MockLink` will use the global defaults), or per-instance (all mocks in a single instance will use the defaults). A `delay` defined on a single mock will supercede all default delays. Per-instance defaults supercede global defaults.
+
+  **Global defaults**
+
+  ```ts
+  MockLink.defaultOptions = {
+    // Use a default delay of 20ms for all mocks in all instances without a specified delay
+    delay: 20,
+
+    // altenatively use a callback which will be executed for each mock
+    delay: () => getRandomNumber(),
+
+    // or use the built-in `realisticDelay`. This is the default
+    delay: realisticDelay(),
+  };
+  ```
+
+  **Per-instance defaults**
+
+  ```ts
+  new MockLink(
+    [
+      // Use the default delay
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+      },
+      {
+        request: { query },
+        result: { data: { greeting: "Hello" } },
+        // Override the default for this mock
+        delay: 10,
+      },
+    ],
+    {
+      defaultOptions: {
+        // Use a default delay of 20ms for all mocks without a specified delay
+        delay: 20,
+
+        // altenatively use a callback which will be executed for each mock
+        delay: () => getRandomNumber(),
+
+        // or use the built-in `realisticDelay`. This is the default
+        delay: realisticDelay(),
+      },
+    }
+  );
+  ```
+
 ## 4.0.0-alpha.7
 
 ### Major Changes

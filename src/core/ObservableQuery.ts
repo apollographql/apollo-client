@@ -1063,6 +1063,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const query = this.transformDocument(options.query);
     const { fetchPolicy } = options;
 
+    // note: This may mutate this.options.variables when not using a disposable
+    // observable. This is intentional
     if (options.variables && Object.keys(options.variables).length === 0) {
       options.variables = undefined;
     }

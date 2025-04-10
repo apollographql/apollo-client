@@ -1076,9 +1076,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Reset options.fetchPolicy to its original value when variables change,
       // unless a new fetchPolicy was provided by newOptions.
       if (
-        newOptions &&
-        newOptions.variables &&
-        !equal(newOptions.variables, oldVariables) &&
+        !equal(options.variables, oldVariables) &&
         // Don't mess with the fetchPolicy if it's currently "standby".
         fetchPolicy !== "standby" &&
         // If we're changing the fetchPolicy anyway, don't try to change it here
@@ -1102,8 +1100,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
       if (
         oldNetworkStatus !== NetworkStatus.loading &&
-        newOptions?.variables &&
-        !equal(newOptions.variables, oldVariables)
+        !equal(options.variables, oldVariables)
       ) {
         newNetworkStatus = NetworkStatus.setVariables;
       }

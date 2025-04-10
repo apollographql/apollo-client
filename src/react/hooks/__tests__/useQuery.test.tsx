@@ -5042,7 +5042,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: undefined,
       });
     }
@@ -5068,7 +5067,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: undefined,
       });
     }
@@ -5331,7 +5329,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: undefined,
       });
     }
@@ -5357,7 +5354,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: undefined,
       });
     }
@@ -5586,7 +5582,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: undefined,
       });
     }
@@ -5612,7 +5607,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: undefined,
       });
     }

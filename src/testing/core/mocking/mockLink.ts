@@ -95,7 +95,7 @@ export class MockLink extends ApolloLink {
   private mockedResponsesByKey: { [key: string]: NormalizedMockedResponse[] } =
     {};
 
-  public static defaultOptions: MockLink.DefaultOptions = {
+  public static defaultOptions: MockLink.DefaultOptions | undefined = {
     delay: realisticDelay(),
   };
 

@@ -1,3 +1,5 @@
+import type { ErrorLike } from "@apollo/client";
+
 interface ServerParseErrorOptions {
   response: Response;
   bodyText: string;
@@ -7,6 +9,16 @@ interface ServerParseErrorOptions {
  * Thrown when failing to parse the response as JSON from the server.
  */
 export class ServerParseError extends Error {
+  /** Determine if an error is an `ServerParseError` instance */
+  static is(error: ErrorLike): error is ServerParseError {
+    return (
+      error instanceof ServerParseError ||
+      // Fallback to check for the name property in case there are multiple
+      // versions of Apollo Client installed, or something else causes
+      // instanceof to return false.
+      error.name === "ServerParseError"
+    );
+  }
   /**
    * The server response.
    */

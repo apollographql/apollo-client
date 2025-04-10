@@ -445,7 +445,9 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   const link = new ApolloLink((operation) => {
     fetchCount++;
     const mock = mocks.find(
-      (mock) => mock.request.variables?.id === operation.variables.id
+      (mock) =>
+        typeof mock.request.variables === "object" &&
+        mock.request.variables?.id === operation.variables.id
     );
 
     if (!mock) {

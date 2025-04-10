@@ -9,11 +9,11 @@ import { ApolloLink } from '@apollo/client';
 import type { ApolloPayloadResult } from '@apollo/client';
 import { FetchResult } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql-17-alpha2';
-import { GraphQLRequest } from '@apollo/client';
 import { HttpLink } from '@apollo/client/link/http';
 import type { InitialIncrementalExecutionResult } from 'graphql-17-alpha2';
 import type { MaskedDocumentNode } from '@apollo/client/masking';
 import type { MockedProviderProps } from '@apollo/client/testing/react';
+import { MockedRequest } from '@apollo/client/testing/core';
 import type { MockedResponse } from '@apollo/client/testing/core';
 import type { Observable } from 'rxjs';
 import type { Queries } from '@testing-library/dom';
@@ -35,11 +35,10 @@ export function actAsync<T>(scope: () => T | Promise<T>): Promise<T>;
 // @public (undocumented)
 export function addDelayToMocks<T extends MockedResponse<unknown>[]>(mocks: T, delay?: number, override?: boolean): {
     delay: number;
-    request: GraphQLRequest<Record<string, any>>;
+    request: MockedRequest<Record<string, any>>;
     maxUsageCount?: number;
     result?: FetchResult<unknown> | ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
     error?: Error;
-    variableMatcher?: ((arg: Record<string, any>) => boolean) | undefined;
 }[];
 
 // @public (undocumented)
@@ -212,7 +211,7 @@ export function setupSimpleCase(): {
 
 // @public (undocumented)
 export function setupVariablesCase(): {
-    mocks: MockedResponse<VariablesCaseData, Record<string, any>>[];
+    mocks: MockedResponse<VariablesCaseData, VariablesCaseVariables>[];
     query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
 };
 

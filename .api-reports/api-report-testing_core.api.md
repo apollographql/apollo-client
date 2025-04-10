@@ -8,7 +8,6 @@ import { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link/core';
 import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client/link/core';
-import type { GraphQLRequest } from '@apollo/client/link/core';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link/core';
 import type { Unmasked } from '@apollo/client/masking';
@@ -28,6 +27,16 @@ interface MockApolloLink extends ApolloLink {
 }
 
 // @public (undocumented)
+export interface MockedRequest<TVariables = Record<string, any>> {
+    // (undocumented)
+    query: DocumentNode;
+    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    variables?: TVariables | VariableMatcher<TVariables>;
+}
+
+// @public (undocumented)
 export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
     // (undocumented)
     delay?: number;
@@ -36,13 +45,9 @@ export interface MockedResponse<out TData = Record<string, any>, out TVariables 
     // (undocumented)
     maxUsageCount?: number;
     // (undocumented)
-    request: GraphQLRequest<TVariables>;
+    request: MockedRequest<TVariables>;
     // (undocumented)
     result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    variableMatcher?: VariableMatcher<TVariables>;
 }
 
 // @public (undocumented)
@@ -57,7 +62,7 @@ interface MockedSubscriptionResult {
 
 // @public (undocumented)
 export class MockLink extends ApolloLink {
-    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, options?: MockLinkOptions);
+    constructor(mockedResponses: ReadonlyArray<MockedResponse<Record<string, any>, Record<string, any>>>, options?: MockLinkOptions);
     // (undocumented)
     addMockedResponse(mockedResponse: MockedResponse): void;
     // (undocumented)

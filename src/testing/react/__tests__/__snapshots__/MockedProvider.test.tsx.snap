@@ -7,20 +7,7 @@ Object {
 }
 `;
 
-exports[`General use should error if the query in the mock and component do not match 1`] = `
-[Error: No more mocked responses for the query:
-query GetUser($username: String!) {
-  user(username: $username) {
-    id
-    __typename
-  }
-}
-
-Request variables: {"username":"mock_username"}
-]
-`;
-
-exports[`General use should error if the variableMatcher returns false 1`] = `
+exports[`General use should error if the \`variables\` as callback returns false 1`] = `
 [Error: No more mocked responses for the query:
 query GetUser($username: String!) {
   user(username: $username) {
@@ -32,7 +19,20 @@ query GetUser($username: String!) {
 Request variables: {"username":"mock_username"}
 
 Failed to match variables against 1 mock for this query. The available mocks had the following variables:
-  <undefined>
+  <function variables>
+]
+`;
+
+exports[`General use should error if the query in the mock and component do not match 1`] = `
+[Error: No more mocked responses for the query:
+query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+
+Request variables: {"username":"mock_username"}
 ]
 `;
 
@@ -137,7 +137,7 @@ Request variables: {"username":"mock_username"}
 ]
 `;
 
-exports[`General use should use a mock if the variableMatcher returns true 1`] = `
+exports[`General use should use the mock if the \`variables\` callback function returns true 1`] = `
 Object {
   "__typename": "User",
   "id": "user_id",

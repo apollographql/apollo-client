@@ -1,12 +1,8 @@
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
 import { Observable, throwError } from "rxjs";
 
-import type {
-  DocumentNode,
-  FetchResult,
-  GraphQLRequest,
-  Operation,
-} from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
 import {
@@ -36,30 +32,38 @@ type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
   boolean
 >;
 
+export interface MockedRequest<TVariables = Record<string, any>> {
+  query: DocumentNode;
+  variables?: TVariables | VariableMatcher<TVariables>;
+}
+
 export interface MockedResponse<
   // @ts-ignore
   out TData = Record<string, any>,
   out TVariables = Record<string, any>,
 > {
-  request: GraphQLRequest<TVariables>;
+  request: MockedRequest<TVariables>;
   maxUsageCount?: number;
   result?:
     | FetchResult<Unmasked<TData>>
     | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
   error?: Error;
   delay?: number;
-  variableMatcher?: VariableMatcher<TVariables>;
 }
 
 interface NormalizedMockedResponse {
   original: MockedResponse;
-  request: GraphQLRequest;
+  request: MockedRequest;
+  variablesWithDefaults: Record<string, any>;
   maxUsageCount: number;
   result?: FetchResult | ResultFunction<FetchResult, any>;
   error?: Error;
   delay?: number;
-  variableMatcher: VariableMatcher;
 }
+
+type UnmatchedVariables = Array<
+  Record<string, any> | "<undefined>" | `<function ${string}>`
+>;
 
 export interface MockLinkOptions {
   showWarnings?: boolean;
@@ -72,7 +76,9 @@ export class MockLink extends ApolloLink {
     {};
 
   constructor(
-    mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
+    mockedResponses: ReadonlyArray<
+      MockedResponse<Record<string, any>, Record<string, any>>
+    >,
     options: MockLinkOptions = {}
   ) {
     super();
@@ -94,15 +100,35 @@ export class MockLink extends ApolloLink {
 
   public request(operation: Operation): Observable<FetchResult> | null {
     this.operation = operation;
-    const unmatchedVars: Array<Record<string, any> | "<undefined>"> = [];
+    const unmatchedVars: UnmatchedVariables = [];
     const mocks = this.getMockedResponses(operation);
 
     const index = mocks.findIndex((mock) => {
-      if (mock.variableMatcher(operation.variables)) {
+      const { variables } = mock.request;
+
+      if (typeof variables === "function") {
+        const matched = variables(operation.variables);
+
+        if (!matched) {
+          unmatchedVars.push(`<function ${variables.name}>`);
+        }
+
+        return matched;
+      }
+
+      const withDefaults = mock.variablesWithDefaults;
+
+      if (equal(withDefaults, operation.variables)) {
         return true;
       }
 
-      unmatchedVars.push(mock.request.variables || "<undefined>");
+      unmatchedVars.push(
+        // Include default variables from the query in unmatched variables
+        // output
+        Object.keys(withDefaults).length > 0 ?
+          withDefaults
+        : variables || "<undefined>"
+      );
       return false;
     });
 
@@ -172,7 +198,7 @@ export class MockLink extends ApolloLink {
     });
   }
 
-  private getMockedResponses(request: GraphQLRequest) {
+  private getMockedResponses(request: MockedRequest) {
     const key = JSON.stringify({
       query: print(addTypenameToDocument(request.query)),
     });
@@ -189,7 +215,7 @@ export class MockLink extends ApolloLink {
 
 function getErrorMessage(
   operation: Operation,
-  unmatchedVars: Array<Record<string, any> | "<undefined>">
+  unmatchedVars: UnmatchedVariables
 ) {
   return `No more mocked responses for the query:
 ${print(operation.query)}
@@ -210,31 +236,18 @@ ${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 function normalizeMockedResponse(
   mockedResponse: MockedResponse
 ): NormalizedMockedResponse {
-  const response = cloneDeep(mockedResponse);
-  const request = response.request;
+  const { request } = mockedResponse;
+  const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
 
-  request.query = getServerQuery(request.query);
-  response.maxUsageCount = response.maxUsageCount ?? 1;
-
-  (response as NormalizedMockedResponse).original = mockedResponse;
-
-  const withDefaults = {
+  response.original = mockedResponse;
+  response.request.query = getServerQuery(request.query);
+  response.maxUsageCount ??= 1;
+  response.variablesWithDefaults = {
     ...getDefaultValues(getOperationDefinition(request.query)),
     ...request.variables,
   };
 
-  if (Object.keys(withDefaults).length) {
-    request.variables = withDefaults;
-  }
-
-  response.variableMatcher ||= (vars) => {
-    return equal(vars || {}, {
-      ...getDefaultValues(getOperationDefinition(request.query)),
-      ...request.variables,
-    });
-  };
-
-  return response as NormalizedMockedResponse;
+  return response;
 }
 
 function getServerQuery(query: DocumentNode) {
@@ -264,11 +277,6 @@ function validateMockedResponse(mock: MockedResponse) {
     (mock.maxUsageCount ?? 1) > 0,
     "Mocked response `maxUsageCount` must be greater than 0. Given %s",
     mock.maxUsageCount
-  );
-
-  invariant(
-    !mock.variableMatcher || !mock.request.variables,
-    "Mocked response should use either `request.variables` or `variableMatcher` but not both"
   );
 }
 

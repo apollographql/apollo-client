@@ -346,8 +346,7 @@ export function useLazyQuery<
 
         const options: Partial<WatchQueryOptions<TVariables, TData>> = {
           ...executeOptions,
-          // TODO: Figure out a better way to reset variables back to empty
-          variables: (executeOptions?.variables ?? {}) as TVariables,
+          variables: executeOptions?.variables as TVariables,
         };
 
         if (observable.options.fetchPolicy === "standby") {

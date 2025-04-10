@@ -1,12 +1,14 @@
 import type { Tester } from "@jest/expect-utils";
 
+import { CombinedProtocolErrors } from "@apollo/client";
+
 export const areCombinedProtocolErrorsEqual: Tester = function (
   a,
   b,
   customTesters
 ) {
-  const isACombinedProtocolErrors = a && a.name === "CombinedProtocolErrors";
-  const isBCombinedProtocolErrors = b && b.name === "CombinedProtocolErrors";
+  const isACombinedProtocolErrors = CombinedProtocolErrors.is(a);
+  const isBCombinedProtocolErrors = CombinedProtocolErrors.is(b);
 
   if (isACombinedProtocolErrors && isBCombinedProtocolErrors) {
     return (

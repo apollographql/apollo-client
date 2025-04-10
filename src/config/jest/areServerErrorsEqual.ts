@@ -1,8 +1,10 @@
 import type { Tester } from "@jest/expect-utils";
 
+import { ServerError } from "@apollo/client";
+
 export const areServerErrorsEqual: Tester = function (a, b, customTesters) {
-  const isAServerError = a && a.name === "ServerError";
-  const isBServerError = b && b.name === "ServerError";
+  const isAServerError = ServerError.is(a);
+  const isBServerError = ServerError.is(b);
 
   if (isAServerError && isBServerError) {
     return (

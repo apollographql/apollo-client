@@ -1,3 +1,5 @@
+import { hasName } from "./utils.js";
+
 interface ServerErrorOptions {
   response: Response;
   result: Record<string, any> | string;
@@ -7,6 +9,17 @@ interface ServerErrorOptions {
  * Thrown when a non-200 response is returned from the server.
  */
 export class ServerError extends Error {
+  /** Determine if an error is a `ServerError` instance */
+  static is(error: unknown): error is ServerError {
+    return (
+      error instanceof ServerError ||
+      // Fallback to check for the name property in case there are multiple
+      // versions of Apollo Client installed, or something else causes
+      // instanceof to return false.
+      hasName(error, "ServerError")
+    );
+  }
+
   /**
    * The server response.
    */

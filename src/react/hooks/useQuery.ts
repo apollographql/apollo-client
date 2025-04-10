@@ -17,7 +17,9 @@ import { asapScheduler, observeOn } from "rxjs";
 
 import type {
   ApolloClient,
+  ApolloQueryResult,
   DefaultContext,
+  DocumentNode,
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
@@ -25,16 +27,12 @@ import type {
   QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
+  TypedDocumentNode,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-} from "@apollo/client";
-import type {
-  ApolloQueryResult,
-  DocumentNode,
-  TypedDocumentNode,
   WatchQueryOptions,
-} from "@apollo/client/core";
-import { NetworkStatus, ObservableQuery } from "@apollo/client/core";
+} from "@apollo/client";
+import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";

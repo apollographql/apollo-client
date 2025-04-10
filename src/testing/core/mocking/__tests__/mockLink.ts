@@ -309,7 +309,7 @@ test("allows global default dynamic delay to be defined for all instances of Moc
   }
 });
 
-test("allows default static delay to be defined for all mocks", async () => {
+test("allows per-instance default static delay to be defined for all mocks", async () => {
   const aQuery = gql`
     query {
       a
@@ -351,7 +351,7 @@ test("allows default static delay to be defined for all mocks", async () => {
   }
 });
 
-test("allows default dynamic delay to be defined for all mocks", async () => {
+test("allows per-instance default dynamic delay to be defined for all mocks", async () => {
   const aQuery = gql`
     query A {
       a

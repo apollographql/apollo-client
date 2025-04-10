@@ -34,8 +34,8 @@ function isErrorLike(error: unknown): error is ErrorLike {
     typeof error === "object" &&
     typeof (error as ErrorLike).message === "string" &&
     typeof (error as ErrorLike).name === "string" &&
-    (typeof (error as ErrorLike).stack === "undefined" ||
-      typeof (error as ErrorLike).stack === "string")
+    (typeof (error as ErrorLike).stack === "string" ||
+      typeof (error as ErrorLike).stack === "undefined")
   );
 }
 

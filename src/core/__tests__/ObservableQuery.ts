@@ -2291,7 +2291,10 @@ describe("ObservableQuery", () => {
       it("should warn if passed { variables } and query does not declare $variables", async () => {
         using _ = spyOnConsole("warn");
 
-        const queryWithVarsVar = gql`
+        const queryWithVarsVar: TypedDocumentNode<
+          { getVars: Array<{ __typename: "Var"; name: string }> },
+          { vars: string[] }
+        > = gql`
           query QueryWithVarsVar($vars: [String!]) {
             getVars(variables: $vars) {
               __typename

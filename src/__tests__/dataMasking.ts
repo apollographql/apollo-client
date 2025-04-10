@@ -5671,7 +5671,7 @@ describe("client.mutate", () => {
           },
         },
       },
-      { context: undefined, variables: {} }
+      { context: undefined, variables: undefined }
     );
   });
 

@@ -4545,7 +4545,7 @@ describe("data masking", () => {
           },
         },
       },
-      { context: undefined, variables: {} }
+      { context: undefined, variables: undefined }
     );
   });
 });

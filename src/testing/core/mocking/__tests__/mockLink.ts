@@ -14,128 +14,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 // eslint-disable-next-line local-rules/no-relative-imports
 import { stringifyMockedResponse } from "../mockLink.js";
 
-describe("MockedResponse.newData", () => {
-  const setup = () => {
-    const weaklyTypedMockResponse: MockedResponse = {
-      request: {
-        query: gql`
-          query A {
-            a
-          }
-        `,
-      },
-    };
-
-    const stronglyTypedMockResponse: MockedResponse<
-      { a: string },
-      { input: string }
-    > = {
-      request: {
-        query: gql`
-          query A {
-            a
-          }
-        `,
-      },
-    };
-
-    return {
-      weaklyTypedMockResponse,
-      stronglyTypedMockResponse,
-    };
-  };
-
-  test("returned 'data' can be any object with untyped response", () => {
-    const { weaklyTypedMockResponse } = setup();
-
-    weaklyTypedMockResponse.newData = ({ fake: { faker } }) => ({
-      data: {
-        pretend: faker,
-      },
-    });
-  });
-
-  test("can't return output that doesn't match TData", () => {
-    const { stronglyTypedMockResponse } = setup();
-
-    // @ts-expect-error return type does not match `TData`
-    stronglyTypedMockResponse.newData = () => ({
-      data: {
-        a: 123,
-      },
-    });
-  });
-
-  test("can't use input variables that don't exist in TVariables", () => {
-    const { stronglyTypedMockResponse } = setup();
-
-    // @ts-expect-error unknown variables
-    stronglyTypedMockResponse.newData = ({ fake: { faker } }) => ({
-      data: {
-        a: faker,
-      },
-    });
-  });
-
-  // TODO: Determine if we want to keep newData. `result` also accepts a callback
-  // function. The only difference between the two is that newData keeps the
-  // mock without consuming it.
-  test("does not consume mock if newData is defined", async () => {
-    const query = gql`
-      query {
-        count
-      }
-    `;
-    let count = 1;
-    const link = new MockLink([
-      {
-        request: { query },
-        newData: () => ({ data: { count: count++ } }),
-      },
-    ]);
-
-    {
-      const stream = new ObservableStream(execute(link, { query }));
-
-      await expect(stream).toEmitTypedValue({ data: { count: 1 } });
-      await expect(stream).toComplete();
-    }
-
-    {
-      const stream = new ObservableStream(execute(link, { query }));
-
-      await expect(stream).toEmitTypedValue({ data: { count: 2 } });
-      await expect(stream).toComplete();
-    }
-
-    {
-      const stream = new ObservableStream(execute(link, { query }));
-
-      await expect(stream).toEmitTypedValue({ data: { count: 3 } });
-      await expect(stream).toComplete();
-    }
-  });
-
-  test("warns if maxUsageCount and newData is used together", async () => {
-    using _ = spyOnConsole("warn");
-
-    const query = gql`
-      query {
-        count
-      }
-    `;
-
-    new MockLink([
-      { request: { query }, maxUsageCount: 2, newData: () => ({ data: null }) },
-    ]);
-
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      "`maxUsageCount` has no effect when `newData` is used"
-    );
-  });
-});
-
 /*
 We've chosen this value as the MAXIMUM_DELAY since values that don't fit into a 32-bit signed int cause setTimeout to fire immediately
 */
@@ -1334,6 +1212,56 @@ test("mocks is consumed after running `result` callback function", async () => {
   }
 });
 
+test("can use `result` as callback with `maxUsageCount`", async () => {
+  const query = gql`
+    query GetUser($username: String!) {
+      user(username: $username) {
+        id
+      }
+    }
+  `;
+
+  const variables = { username: "username" };
+
+  const link = new MockLink(
+    [
+      {
+        request: { query, variables },
+        result: (vars) => ({
+          data: { user: { __typename: "User", name: vars.username } },
+        }),
+        maxUsageCount: 2,
+      },
+    ],
+    { showWarnings: false }
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", name: variables.username } },
+    });
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({
+      data: { user: { __typename: "User", name: variables.username } },
+    });
+    await expect(stream).toComplete();
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    const error = await stream.takeError();
+    expect(error.message).toMatchSnapshot();
+  }
+});
+
 describe.skip("type tests", () => {
   const ANY = {} as any;
   test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {
@@ -1363,5 +1291,69 @@ describe.skip("type tests", () => {
     unspecificResponse = specificResponse;
     // @ts-expect-error
     specificResponse = unspecificResponse;
+  });
+
+  describe("MockedResponse.result as a callback", () => {
+    const setup = () => {
+      const weaklyTypedMockResponse: MockedResponse = {
+        request: {
+          query: gql`
+            query A {
+              a
+            }
+          `,
+        },
+      };
+
+      const stronglyTypedMockResponse: MockedResponse<
+        { a: string },
+        { input: string }
+      > = {
+        request: {
+          query: gql`
+            query A {
+              a
+            }
+          `,
+        },
+      };
+
+      return {
+        weaklyTypedMockResponse,
+        stronglyTypedMockResponse,
+      };
+    };
+
+    test("returned 'data' can be any object with untyped response", () => {
+      const { weaklyTypedMockResponse } = setup();
+
+      weaklyTypedMockResponse.result = ({ fake: { faker } }) => ({
+        data: {
+          pretend: faker,
+        },
+      });
+    });
+
+    test("can't return output that doesn't match TData", () => {
+      const { stronglyTypedMockResponse } = setup();
+
+      // @ts-expect-error return type does not match `TData`
+      stronglyTypedMockResponse.result = () => ({
+        data: {
+          a: 123,
+        },
+      });
+    });
+
+    test("can't use input variables that don't exist in TVariables", () => {
+      const { stronglyTypedMockResponse } = setup();
+
+      // @ts-expect-error unknown variables
+      stronglyTypedMockResponse.result = ({ fake: { faker } }) => ({
+        data: {
+          a: faker,
+        },
+      });
+    });
   });
 });

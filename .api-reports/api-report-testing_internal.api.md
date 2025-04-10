@@ -40,7 +40,6 @@ export function addDelayToMocks<T extends MockedResponse<unknown>[]>(mocks: T, d
     result?: FetchResult<unknown> | ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
     error?: Error;
     variableMatcher?: ((arg: Record<string, any>) => boolean) | undefined;
-    newData?: ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
 }[];
 
 // @public (undocumented)

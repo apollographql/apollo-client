@@ -33,14 +33,12 @@ function withDev(): typeof import("@apollo/client/dev") & AsyncDisposable {
 }
 
 function disableErrorMessageHandler() {
-   
   const dev = withDev();
   delete window[ApolloErrorMessageHandler];
   return dev;
 }
 
 function mockErrorMessageHandler() {
-   
   const dev = withDev();
   delete window[ApolloErrorMessageHandler];
 

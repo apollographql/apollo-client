@@ -21,7 +21,10 @@ import {
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  normalizeVariables,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
@@ -1366,13 +1369,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.reobserve();
-  }
-}
-
-// Treat {} and undefined as the same variables
-function normalizeVariables<TVariables>(variables: TVariables) {
-  if (variables && Object.keys(variables).length > 0) {
-    return variables;
   }
 }
 

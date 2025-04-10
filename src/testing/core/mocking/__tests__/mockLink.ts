@@ -309,6 +309,76 @@ test("allows global default dynamic delay to be defined for all instances of Moc
   }
 });
 
+test("can change global defaults between creation of instances", async () => {
+  using _ = withRestoredDefaults();
+
+  MockLink.defaultOptions = {
+    delay: 50,
+  };
+
+  const aQuery = gql`
+    query {
+      a
+    }
+  `;
+  const bQuery = gql`
+    query {
+      b
+    }
+  `;
+
+  {
+    const link = new MockLink([
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ]);
+
+    const streamA = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(streamA).not.toEmitAnything({ timeout: 45 });
+    await expect(streamA).toEmitNext({ timeout: 6 });
+    await expect(streamA).toComplete();
+
+    const streamB = new ObservableStream(execute(link, { query: bQuery }));
+    await expect(streamB).not.toEmitAnything({ timeout: 45 });
+    await expect(streamB).toEmitNext({ timeout: 6 });
+    await expect(streamB).toComplete();
+  }
+
+  MockLink.defaultOptions = {
+    delay: 20,
+  };
+
+  {
+    const link = new MockLink([
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ]);
+
+    const streamA = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(streamA).toEmitNext({ timeout: 25 });
+    await expect(streamA).toComplete();
+
+    const streamB = new ObservableStream(execute(link, { query: bQuery }));
+
+    await expect(streamB).toEmitNext({ timeout: 25 });
+    await expect(streamB).toComplete();
+  }
+});
+
 test("allows per-instance default static delay to be defined for all mocks", async () => {
   const aQuery = gql`
     query {

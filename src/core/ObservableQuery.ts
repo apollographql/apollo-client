@@ -1052,7 +1052,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const mergedOptions = compact(this.options, newOptions || {});
 
     // Allow variables to be reset back to `undefined` if explicitly passed as
-    // variables: undefined to reobserve.
+    // variables: undefined to reobserve, otherwise `compact` will ignore the
+    // `variables` key from from `newOptions`.
     mergedOptions.variables =
       newOptions && hasOwnProperty.call(newOptions, "variables") ?
         newOptions.variables

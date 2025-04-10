@@ -31,7 +31,7 @@ query GetUser($username: String!) {
 
 Request variables: {"username":"mock_username"}
 
-Failed to match variables against 1 mock for this query. The matched mocks had the following variables:
+Failed to match variables against 1 mock for this query. The available mocks had the following variables:
   <undefined>
 ]
 `;
@@ -47,7 +47,7 @@ query GetUser($username: String!) {
 
 Request variables: {"username":"some_user","age":42}
 
-Failed to match variables against 1 mock for this query. The matched mocks had the following variables:
+Failed to match variables against 1 mock for this query. The available mocks had the following variables:
   {"age":13,"username":"some_user"}
 ]
 `;
@@ -63,7 +63,7 @@ query GetUser($username: String!) {
 
 Request variables: {"username":"other_user"}
 
-Failed to match variables against 1 mock for this query. The matched mocks had the following variables:
+Failed to match variables against 1 mock for this query. The available mocks had the following variables:
   {"username":"mock_username"}
 ]
 `;

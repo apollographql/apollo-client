@@ -606,6 +606,15 @@
 - [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - `@apollo/client`, `@apollo/client/core` and `@apollo/client/cache` no longer export an empty `Cache` runtime object. This is meant to be a type-only namespace.
 
 - [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't emit a partial cache result from `cache-only` queries when `returnPartialData` is `false`.
+
+## 3.13.7
+
+### Patch Changes
+
+- [#12540](https://github.com/apollographql/apollo-client/pull/12540) [`0098932`](https://github.com/apollographql/apollo-client/commit/009893220934081f6e5733bff5863c768a597117) Thanks [@phryneas](https://github.com/phryneas)! - Refactor: Move notification scheduling logic from `QueryInfo` to `ObservableQuery`
+
+- [#12540](https://github.com/apollographql/apollo-client/pull/12540) [`0098932`](https://github.com/apollographql/apollo-client/commit/009893220934081f6e5733bff5863c768a597117) Thanks [@phryneas](https://github.com/phryneas)! - Refactored cache emit logic for ObservableQuery. This should be an invisible change.
+
 ## 3.13.6
 
 ### Patch Changes

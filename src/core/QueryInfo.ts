@@ -6,15 +6,13 @@ import { DeepMerger } from "../utilities/index.js";
 import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
 } from "../utilities/index.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import { NetworkStatus } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
@@ -57,13 +55,6 @@ function wrapDestructiveCacheMethod(
   }
 }
 
-function cancelNotifyTimeout(info: QueryInfo) {
-  if (info["notifyTimeout"]) {
-    clearTimeout(info["notifyTimeout"]);
-    info["notifyTimeout"] = void 0;
-  }
-}
-
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
 // this.queries Map. QueryInfo objects store the latest results and errors
@@ -77,7 +68,6 @@ function cancelNotifyTimeout(info: QueryInfo) {
 // many public fields. The effort to lock down and simplify the QueryInfo
 // interface is ongoing, and further improvements are welcome.
 export class QueryInfo {
-  listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
@@ -152,15 +142,6 @@ export class QueryInfo {
     return this;
   }
 
-  private dirty: boolean = false;
-
-  private notifyTimeout?: ReturnType<typeof setTimeout>;
-
-  reset() {
-    cancelNotifyTimeout(this);
-    this.dirty = false;
-  }
-
   resetDiff() {
     this.lastDiff = void 0;
   }
@@ -230,79 +211,18 @@ export class QueryInfo {
 
     this.updateLastDiff(diff);
 
-    if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.dirty = true;
-      if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
-      }
+    if (!equal(oldDiff && oldDiff.result, diff && diff.result)) {
+      this.observableQuery?.["scheduleNotify"]();
     }
   }
 
   public readonly observableQuery: ObservableQuery<any, any> | null = null;
-  private oqListener?: QueryListener;
-
   setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
-
-    if (this.oqListener) {
-      this.listeners.delete(this.oqListener);
-    }
-
     (this as any).observableQuery = oq;
-
     if (oq) {
       oq["queryInfo"] = this;
-      this.listeners.add(
-        (this.oqListener = () => {
-          const diff = this.getDiff();
-          if (diff.fromOptimisticTransaction) {
-            // If this diff came from an optimistic transaction, deliver the
-            // current cache data to the ObservableQuery, but don't perform a
-            // reobservation, since oq.reobserveCacheFirst might make a network
-            // request, and we never want to trigger network requests in the
-            // middle of optimistic updates.
-            oq["observe"]();
-          } else {
-            // Otherwise, make the ObservableQuery "reobserve" the latest data
-            // using a temporary fetch policy of "cache-first", so complete cache
-            // results have a chance to be delivered without triggering additional
-            // network requests, even when options.fetchPolicy is "network-only"
-            // or "cache-and-network". All other fetch policies are preserved by
-            // this method, and are handled by calling oq.reobserve(). If this
-            // reobservation is spurious, isDifferentFromLastResult still has a
-            // chance to catch it before delivery to ObservableQuery subscribers.
-            reobserveCacheFirst(oq);
-          }
-        })
-      );
-    } else {
-      delete this.oqListener;
     }
-  }
-
-  notify() {
-    cancelNotifyTimeout(this);
-
-    if (this.shouldNotify()) {
-      this.listeners.forEach((listener) => listener(this));
-    }
-
-    this.dirty = false;
-  }
-
-  private shouldNotify() {
-    if (!this.dirty || !this.listeners.size) {
-      return false;
-    }
-
-    if (isNetworkRequestInFlight(this.networkStatus) && this.observableQuery) {
-      const { fetchPolicy } = this.observableQuery.options;
-      if (fetchPolicy !== "cache-only" && fetchPolicy !== "cache-and-network") {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   public stop() {
@@ -310,7 +230,7 @@ export class QueryInfo {
       this.stopped = true;
 
       // Cancel the pending notify timeout
-      this.reset();
+      this.observableQuery?.["resetNotifications"]();
       this.cancel();
 
       const oq = this.observableQuery;
@@ -387,7 +307,7 @@ export class QueryInfo {
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
-    this.reset();
+    this.observableQuery?.["resetNotifications"]();
 
     if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(this.getDiff().result, result);
@@ -513,7 +433,7 @@ export class QueryInfo {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
 
-    this.reset();
+    this.observableQuery?.["resetNotifications"]();
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

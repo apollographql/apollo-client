@@ -1225,6 +1225,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
+    // @internal (undocumented)
+    protected notify(): void;
     // (undocumented)
     readonly options: WatchQueryOptions<TVariables, TData>;
     // (undocumented)
@@ -1244,6 +1246,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
+    // @internal (undocumented)
+    protected resetNotifications(): void;
     // (undocumented)
     resetQueryStoreErrors(): void;
     // (undocumented)
@@ -1252,6 +1256,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     resubscribeAfterError(observer: Observer<ApolloQueryResult<TData>>): Subscription;
     // (undocumented)
     result(): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    // @internal (undocumented)
+    protected scheduleNotify(): void;
     // (undocumented)
     setOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>> | void>;
@@ -1372,10 +1378,6 @@ class QueryInfo {
     }): this;
     // (undocumented)
     lastRequestId: number;
-    // Warning: (ae-forgotten-export) The symbol "QueryListener" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    listeners: Set<QueryListener>;
     // (undocumented)
     markError(error: ApolloError): ApolloError;
     // (undocumented)
@@ -1389,13 +1391,9 @@ class QueryInfo {
     // (undocumented)
     networkStatus?: NetworkStatus;
     // (undocumented)
-    notify(): void;
-    // (undocumented)
     readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
-    // (undocumented)
-    reset(): void;
     // (undocumented)
     resetDiff(): void;
     // (undocumented)
@@ -1411,9 +1409,6 @@ class QueryInfo {
     // (undocumented)
     variables?: Record<string, any>;
 }
-
-// @public (undocumented)
-type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager<TStore> {
@@ -1962,8 +1957,8 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:172:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:201:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:357:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

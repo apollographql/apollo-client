@@ -3,7 +3,6 @@ import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { ApolloCache } from "../cache/index.js";
 import type { FetchResult } from "../link/core/index.js";
 import type { ApolloError } from "../errors/index.js";
-import type { QueryInfo } from "./QueryInfo.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { Resolver } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -19,8 +18,6 @@ export type MethodKeys<T> = {
 }[keyof T];
 
 export interface DefaultContext extends Record<string, any> {}
-
-export type QueryListener = (queryInfo: QueryInfo) => void;
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,

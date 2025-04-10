@@ -1128,7 +1128,7 @@ export class QueryManager<TStore> {
 
   public broadcastQueries() {
     if (this.onBroadcast) this.onBroadcast();
-    this.queries.forEach((info) => info.notify());
+    this.queries.forEach((info) => info.observableQuery?.["notify"]());
   }
 
   public getLocalState(): LocalState<TStore> {
@@ -1545,9 +1545,7 @@ export class QueryManager<TStore> {
         // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
-            const info = oq["queryInfo"];
-            info.reset(); // Force info.getDiff() to read from cache.
-            diff = info.getDiff();
+            diff = this.cache.diff(oq["queryInfo"]["getDiffOptions"]());
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }

@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Read values for `refetchQueries` `onQueryUpdated` directly from cache instead of a `QueryInfo`
+Refactored cache emit logic for ObservableQuery. This should be an invisible change.

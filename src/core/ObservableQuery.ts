@@ -244,8 +244,7 @@ export class ObservableQuery<
 
       // `variables` might be an empty object due to QueryManager.getVariables,
       // so we reset to `undefined` if there are no values
-      variables:
-        variables && Object.keys(variables).length > 0 ? variables : undefined,
+      variables: normalizeVariables(variables),
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
@@ -793,9 +792,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public async setVariables(
     variables: TVariables
   ): Promise<QueryResult<TData>> {
-    if (variables && Object.keys(variables).length === 0) {
-      (variables as any) = undefined;
-    }
+    variables = normalizeVariables(variables) as TVariables;
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
@@ -1077,9 +1074,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     // note: This may mutate this.options.variables when not using a disposable
     // observable. This is intentional
-    if (options.variables && Object.keys(options.variables).length === 0) {
-      options.variables = undefined;
-    }
+    options.variables = normalizeVariables(options.variables);
 
     this.lastQuery = query;
 
@@ -1370,6 +1365,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.reobserve();
+  }
+}
+
+// Treat {} and undefined as the same variables
+function normalizeVariables<TVariables>(variables: TVariables) {
+  if (variables && Object.keys(variables).length > 0) {
+    return variables;
   }
 }
 

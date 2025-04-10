@@ -3563,7 +3563,10 @@ describe("ObservableQuery", () => {
     const queryInfo = observable["queryInfo"];
     const cache = queryInfo["cache"];
     const setDiffSpy = jest.spyOn(queryInfo, "setDiff");
-    const notifySpy = jest.spyOn(queryInfo, "notify");
+    const notifySpy = jest.spyOn(
+      observable,
+      "notify" as any /* this is not a public method so we cast */
+    );
 
     const stream = new ObservableStream(observable);
 

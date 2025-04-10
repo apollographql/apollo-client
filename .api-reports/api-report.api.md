@@ -1648,6 +1648,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
+    // @internal (undocumented)
+    protected notify(): void;
     // (undocumented)
     readonly options: WatchQueryOptions<TVariables, TData>;
     // (undocumented)
@@ -1664,6 +1666,10 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
+    // @internal (undocumented)
+    protected resetNotifications(): void;
+    // @internal (undocumented)
+    protected scheduleNotify(): void;
     setVariables(variables: TVariables): Promise<QueryResult<TData>>;
     // @internal (undocumented)
     silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
@@ -1799,20 +1805,14 @@ class QueryInfo {
     }): this;
     // (undocumented)
     lastRequestId: number;
-    // (undocumented)
-    listeners: Set<QueryListener>;
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
     // (undocumented)
-    notify(): void;
-    // (undocumented)
     readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
-    // (undocumented)
-    reset(): void;
     // (undocumented)
     resetDiff(): void;
     // (undocumented)

@@ -1136,7 +1136,7 @@ export class QueryManager {
 
   public broadcastQueries() {
     if (this.onBroadcast) this.onBroadcast();
-    this.queries.forEach((info) => info.notify());
+    this.queries.forEach((info) => info.observableQuery?.["notify"]());
   }
 
   public getLocalState() {
@@ -1259,7 +1259,7 @@ export class QueryManager {
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.resetLastWrite();
-            queryInfo.reset();
+            queryInfo.observableQuery?.["resetNotifications"]();
             // Throwing here effectively calls observer.error.
             throw new CombinedGraphQLErrors(result);
           }
@@ -1302,7 +1302,7 @@ export class QueryManager {
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
           queryInfo.resetLastWrite();
-          queryInfo.reset();
+          queryInfo.observableQuery?.["resetNotifications"]();
           throw error;
         }
 
@@ -1571,9 +1571,7 @@ export class QueryManager {
         // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
-            const info = oq["queryInfo"];
-            info.reset(); // Force info.getDiff() to read from cache.
-            diff = info.getDiff();
+            diff = this.cache.diff(oq["queryInfo"]["getDiffOptions"]());
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }

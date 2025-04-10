@@ -1,5 +1,6 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
+import { Slot } from "optimism";
 import type {
   InteropObservable,
   Observer,
@@ -43,7 +44,6 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
-import { Slot } from "optimism";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -632,7 +632,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
         if (isCached && !updatedQuerySet.has(this.query)) {
-          reobserveCacheFirst(this);
+          this.reobserveCacheFirst();
         }
       });
   }
@@ -1177,45 +1177,104 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       : result;
   }
-}
 
-// Reobserve with fetchPolicy effectively set to "cache-first", triggering
-// delivery of any new data from the cache, possibly falling back to the network
-// if any cache data are missing. This allows _complete_ cache results to be
-// delivered without also kicking off unnecessary network requests when
-// this.options.fetchPolicy is "cache-and-network" or "network-only". When
-// this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
-// "standby", or "no-cache"), we call this.reobserve() as usual.
-export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
-  obsQuery: ObservableQuery<TData, TVars>
-) {
-  const { fetchPolicy, nextFetchPolicy } = obsQuery.options;
+  private dirty: boolean = false;
 
-  if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-    return obsQuery.reobserve({
-      fetchPolicy: "cache-first",
-      // Use a temporary nextFetchPolicy function that replaces itself with the
-      // previous nextFetchPolicy value and returns the original fetchPolicy.
-      nextFetchPolicy(
-        this: WatchQueryOptions<TVars, TData>,
-        currentFetchPolicy: WatchQueryFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVars>
-      ) {
-        // Replace this nextFetchPolicy function in the options object with the
-        // original this.options.nextFetchPolicy value.
-        this.nextFetchPolicy = nextFetchPolicy;
-        // If the original nextFetchPolicy value was a function, give it a
-        // chance to decide what happens here.
-        if (typeof this.nextFetchPolicy === "function") {
-          return this.nextFetchPolicy(currentFetchPolicy, context);
-        }
-        // Otherwise go back to the original this.options.fetchPolicy.
-        return fetchPolicy!;
-      },
-    });
+  private notifyTimeout?: ReturnType<typeof setTimeout>;
+
+  /** @internal */
+  protected resetNotifications() {
+    this.cancelNotifyTimeout();
+    this.dirty = false;
   }
 
-  return obsQuery.reobserve();
+  private cancelNotifyTimeout() {
+    if (this.notifyTimeout) {
+      clearTimeout(this.notifyTimeout);
+      this.notifyTimeout = void 0;
+    }
+  }
+
+  /** @internal */
+  protected scheduleNotify() {
+    if (this.dirty) return;
+    this.dirty = true;
+    if (!this.notifyTimeout) {
+      this.notifyTimeout = setTimeout(() => this.notify(), 0);
+    }
+  }
+
+  /** @internal */
+  protected notify() {
+    this.cancelNotifyTimeout();
+
+    if (this.dirty) {
+      if (
+        this.options.fetchPolicy == "cache-only" ||
+        this.options.fetchPolicy == "cache-and-network" ||
+        !isNetworkRequestInFlight(this.networkStatus)
+      ) {
+        const diff = this.queryInfo.getDiff();
+        if (diff.fromOptimisticTransaction) {
+          // If this diff came from an optimistic transaction, deliver the
+          // current cache data to the ObservableQuery, but don't perform a
+          // reobservation, since oq.reobserveCacheFirst might make a network
+          // request, and we never want to trigger network requests in the
+          // middle of optimistic updates.
+          this.observe();
+        } else {
+          // Otherwise, make the ObservableQuery "reobserve" the latest data
+          // using a temporary fetch policy of "cache-first", so complete cache
+          // results have a chance to be delivered without triggering additional
+          // network requests, even when options.fetchPolicy is "network-only"
+          // or "cache-and-network". All other fetch policies are preserved by
+          // this method, and are handled by calling oq.reobserve(). If this
+          // reobservation is spurious, isDifferentFromLastResult still has a
+          // chance to catch it before delivery to ObservableQuery subscribers.
+          this.reobserveCacheFirst();
+        }
+      }
+    }
+
+    this.dirty = false;
+  }
+
+  // Reobserve with fetchPolicy effectively set to "cache-first", triggering
+  // delivery of any new data from the cache, possibly falling back to the network
+  // if any cache data are missing. This allows _complete_ cache results to be
+  // delivered without also kicking off unnecessary network requests when
+  // this.options.fetchPolicy is "cache-and-network" or "network-only". When
+  // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
+  // "standby", or "no-cache"), we call this.reobserve() as usual.
+  private reobserveCacheFirst() {
+    const { fetchPolicy, nextFetchPolicy } = this.options;
+
+    if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
+      return this.reobserve({
+        fetchPolicy: "cache-first",
+        // Use a temporary nextFetchPolicy function that replaces itself with the
+        // previous nextFetchPolicy value and returns the original fetchPolicy.
+        nextFetchPolicy(
+          this: WatchQueryOptions<TVariables, TData>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) {
+          // Replace this nextFetchPolicy function in the options object with the
+          // original this.options.nextFetchPolicy value.
+          this.nextFetchPolicy = nextFetchPolicy;
+          // If the original nextFetchPolicy value was a function, give it a
+          // chance to decide what happens here.
+          if (typeof this.nextFetchPolicy === "function") {
+            return this.nextFetchPolicy(currentFetchPolicy, context);
+          }
+          // Otherwise go back to the original this.options.fetchPolicy.
+          return fetchPolicy!;
+        },
+      });
+    }
+
+    return this.reobserve();
+  }
 }
 
 export function logMissingFieldErrors(

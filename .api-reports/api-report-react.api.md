@@ -583,6 +583,8 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
+    // @internal (undocumented)
+    protected notify(): void;
     // (undocumented)
     readonly options: WatchQueryOptions_2<TVariables, TData>;
     // (undocumented)
@@ -599,6 +601,10 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
+    // @internal (undocumented)
+    protected resetNotifications(): void;
+    // @internal (undocumented)
+    protected scheduleNotify(): void;
     setVariables(variables: TVariables): Promise<QueryResult_2<TData>>;
     // @internal (undocumented)
     silentSetOptions(newOptions: Partial<WatchQueryOptions_2<TVariables, TData>>): void;
@@ -682,22 +688,14 @@ class QueryInfo {
     }): this;
     // (undocumented)
     lastRequestId: number;
-    // Warning: (ae-forgotten-export) The symbol "QueryListener" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    listeners: Set<QueryListener>;
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions_2, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
     // (undocumented)
-    notify(): void;
-    // (undocumented)
     readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
-    // (undocumented)
-    reset(): void;
     // (undocumented)
     resetDiff(): void;
     // (undocumented)
@@ -713,9 +711,6 @@ class QueryInfo {
     // (undocumented)
     variables?: Record<string, any>;
 }
-
-// @public (undocumented)
-type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager {

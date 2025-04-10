@@ -7,12 +7,21 @@ import {
   enableFakeTimers,
   ObservableStream,
   spyOnConsole,
+  withCleanup,
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 // This isn't a public API and won't be exposed
 // eslint-disable-next-line local-rules/no-relative-imports
 import { stringifyMockedResponse } from "../mockLink.js";
+
+const withRestoredDefaults = function () {
+  const originalDefaults = MockLink.defaultOptions;
+
+  return withCleanup(originalDefaults, (originalDefaults) => {
+    MockLink.defaultOptions = originalDefaults;
+  });
+};
 
 /*
 We've chosen this value as the MAXIMUM_DELAY since values that don't fit into a 32-bit signed int cause setTimeout to fire immediately
@@ -167,144 +176,136 @@ test("returns matched mock", async () => {
 });
 
 test("allows global default static delay to be defined for all instances of MockLink", async () => {
-  const originalDefaults = MockLink.defaultOptions;
+  using _ = withRestoredDefaults();
 
-  try {
-    MockLink.defaultOptions = {
-      delay: 50,
-    };
+  MockLink.defaultOptions = {
+    delay: 50,
+  };
 
-    const aQuery = gql`
-      query {
-        a
-      }
-    `;
-    const bQuery = gql`
-      query {
-        b
-      }
-    `;
-
-    {
-      const link = new MockLink([
-        {
-          request: { query: aQuery },
-          result: { data: { a: "a" } },
-        },
-        {
-          request: { query: bQuery },
-          result: { data: { a: "b" } },
-        },
-      ]);
-
-      const streamA = new ObservableStream(execute(link, { query: aQuery }));
-
-      await expect(streamA).not.toEmitAnything({ timeout: 45 });
-      await expect(streamA).toEmitNext({ timeout: 6 });
-      await expect(streamA).toComplete();
-
-      const streamB = new ObservableStream(execute(link, { query: bQuery }));
-      await expect(streamB).not.toEmitAnything({ timeout: 45 });
-      await expect(streamB).toEmitNext({ timeout: 6 });
-      await expect(streamB).toComplete();
+  const aQuery = gql`
+    query {
+      a
     }
-
-    {
-      const link = new MockLink([
-        {
-          request: { query: aQuery },
-          result: { data: { a: "a" } },
-        },
-        {
-          request: { query: bQuery },
-          result: { data: { a: "b" } },
-        },
-      ]);
-
-      const streamA = new ObservableStream(execute(link, { query: aQuery }));
-
-      await expect(streamA).not.toEmitAnything({ timeout: 45 });
-      await expect(streamA).toEmitNext({ timeout: 6 });
-      await expect(streamA).toComplete();
-
-      const streamB = new ObservableStream(execute(link, { query: bQuery }));
-      await expect(streamB).not.toEmitAnything({ timeout: 45 });
-      await expect(streamB).toEmitNext({ timeout: 6 });
-      await expect(streamB).toComplete();
+  `;
+  const bQuery = gql`
+    query {
+      b
     }
-  } finally {
-    MockLink.defaultOptions = originalDefaults;
+  `;
+
+  {
+    const link = new MockLink([
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ]);
+
+    const streamA = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(streamA).not.toEmitAnything({ timeout: 45 });
+    await expect(streamA).toEmitNext({ timeout: 6 });
+    await expect(streamA).toComplete();
+
+    const streamB = new ObservableStream(execute(link, { query: bQuery }));
+    await expect(streamB).not.toEmitAnything({ timeout: 45 });
+    await expect(streamB).toEmitNext({ timeout: 6 });
+    await expect(streamB).toComplete();
+  }
+
+  {
+    const link = new MockLink([
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ]);
+
+    const streamA = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(streamA).not.toEmitAnything({ timeout: 45 });
+    await expect(streamA).toEmitNext({ timeout: 6 });
+    await expect(streamA).toComplete();
+
+    const streamB = new ObservableStream(execute(link, { query: bQuery }));
+    await expect(streamB).not.toEmitAnything({ timeout: 45 });
+    await expect(streamB).toEmitNext({ timeout: 6 });
+    await expect(streamB).toComplete();
   }
 });
 
 test("allows global default dynamic delay to be defined for all instances of MockLink", async () => {
-  const originalDefaults = MockLink.defaultOptions;
+  using _ = withRestoredDefaults();
 
-  try {
-    MockLink.defaultOptions = {
-      delay: (operation) => (operation.operationName === "A" ? 50 : 20),
-    };
+  MockLink.defaultOptions = {
+    delay: (operation) => (operation.operationName === "A" ? 50 : 20),
+  };
 
-    const aQuery = gql`
-      query A {
-        a
-      }
-    `;
-    const bQuery = gql`
-      query B {
-        b
-      }
-    `;
-
-    {
-      const link = new MockLink([
-        {
-          request: { query: aQuery },
-          result: { data: { a: "a" } },
-        },
-        {
-          request: { query: bQuery },
-          result: { data: { a: "b" } },
-        },
-      ]);
-
-      const streamA = new ObservableStream(execute(link, { query: aQuery }));
-
-      await expect(streamA).not.toEmitAnything({ timeout: 45 });
-      await expect(streamA).toEmitNext({ timeout: 6 });
-      await expect(streamA).toComplete();
-
-      const streamB = new ObservableStream(execute(link, { query: bQuery }));
-      await expect(streamB).not.toEmitAnything({ timeout: 15 });
-      await expect(streamB).toEmitNext({ timeout: 6 });
-      await expect(streamB).toComplete();
+  const aQuery = gql`
+    query A {
+      a
     }
-
-    {
-      const link = new MockLink([
-        {
-          request: { query: aQuery },
-          result: { data: { a: "a" } },
-        },
-        {
-          request: { query: bQuery },
-          result: { data: { a: "b" } },
-        },
-      ]);
-
-      const streamA = new ObservableStream(execute(link, { query: aQuery }));
-
-      await expect(streamA).not.toEmitAnything({ timeout: 45 });
-      await expect(streamA).toEmitNext({ timeout: 6 });
-      await expect(streamA).toComplete();
-
-      const streamB = new ObservableStream(execute(link, { query: bQuery }));
-      await expect(streamB).not.toEmitAnything({ timeout: 15 });
-      await expect(streamB).toEmitNext({ timeout: 6 });
-      await expect(streamB).toComplete();
+  `;
+  const bQuery = gql`
+    query B {
+      b
     }
-  } finally {
-    MockLink.defaultOptions = originalDefaults;
+  `;
+
+  {
+    const link = new MockLink([
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ]);
+
+    const streamA = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(streamA).not.toEmitAnything({ timeout: 45 });
+    await expect(streamA).toEmitNext({ timeout: 6 });
+    await expect(streamA).toComplete();
+
+    const streamB = new ObservableStream(execute(link, { query: bQuery }));
+    await expect(streamB).not.toEmitAnything({ timeout: 15 });
+    await expect(streamB).toEmitNext({ timeout: 6 });
+    await expect(streamB).toComplete();
+  }
+
+  {
+    const link = new MockLink([
+      {
+        request: { query: aQuery },
+        result: { data: { a: "a" } },
+      },
+      {
+        request: { query: bQuery },
+        result: { data: { a: "b" } },
+      },
+    ]);
+
+    const streamA = new ObservableStream(execute(link, { query: aQuery }));
+
+    await expect(streamA).not.toEmitAnything({ timeout: 45 });
+    await expect(streamA).toEmitNext({ timeout: 6 });
+    await expect(streamA).toComplete();
+
+    const streamB = new ObservableStream(execute(link, { query: bQuery }));
+    await expect(streamB).not.toEmitAnything({ timeout: 15 });
+    await expect(streamB).toEmitNext({ timeout: 6 });
+    await expect(streamB).toComplete();
   }
 });
 
@@ -397,14 +398,84 @@ test("allows default dynamic delay to be defined for all mocks", async () => {
 });
 
 test("prefers configured delay over default delay", async () => {
-  const originalDefaults = MockLink.defaultOptions;
+  using _ = withRestoredDefaults();
 
-  try {
-    const query = gql`
-      query {
-        a
-      }
-    `;
+  const query = gql`
+    query {
+      a
+    }
+  `;
+  const link = new MockLink(
+    [
+      {
+        request: { query },
+        result: { data: { a: "a" } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { a: "a" } },
+      },
+    ],
+    { defaultOptions: { delay: 50 } }
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitNext({ timeout: 25 });
+    await expect(stream).toComplete();
+  }
+
+  // This uses the default delay
+  {
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).not.toEmitAnything({ timeout: 45 });
+    await expect(stream).toEmitNext({ timeout: 6 });
+    await expect(stream).toComplete();
+  }
+});
+
+test("prefers configured delay > instance defaults > global defaults", async () => {
+  using _ = withRestoredDefaults();
+
+  MockLink.defaultOptions = {
+    delay: 50,
+  };
+
+  const query = gql`
+    query {
+      a
+    }
+  `;
+
+  {
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: { a: "a" } },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: { data: { a: "a" } },
+      },
+    ]);
+
+    const stream1 = new ObservableStream(execute(link, { query }));
+
+    await expect(stream1).toEmitNext({ timeout: 25 });
+    await expect(stream1).toComplete();
+
+    const stream2 = new ObservableStream(execute(link, { query }));
+
+    await expect(stream2).not.toEmitAnything({ timeout: 45 });
+    await expect(stream2).toEmitNext({ timeout: 6 });
+    await expect(stream2).toComplete();
+  }
+
+  {
     const link = new MockLink(
       [
         {
@@ -417,97 +488,19 @@ test("prefers configured delay over default delay", async () => {
           result: { data: { a: "a" } },
         },
       ],
-      { defaultOptions: { delay: 50 } }
+      { defaultOptions: { delay: 30 } }
     );
 
-    {
-      const stream = new ObservableStream(execute(link, { query }));
+    const stream1 = new ObservableStream(execute(link, { query }));
 
-      await expect(stream).toEmitNext({ timeout: 25 });
-      await expect(stream).toComplete();
-    }
+    await expect(stream1).toEmitNext({ timeout: 25 });
+    await expect(stream1).toComplete();
 
-    // This uses the default delay
-    {
-      const stream = new ObservableStream(execute(link, { query }));
+    const stream2 = new ObservableStream(execute(link, { query }));
 
-      await expect(stream).not.toEmitAnything({ timeout: 45 });
-      await expect(stream).toEmitNext({ timeout: 6 });
-      await expect(stream).toComplete();
-    }
-  } finally {
-    MockLink.defaultOptions = originalDefaults;
-  }
-});
-
-test("prefers configured delay > instance defaults > global defaults", async () => {
-  const originalDefaults = MockLink.defaultOptions;
-
-  try {
-    MockLink.defaultOptions = {
-      delay: 50,
-    };
-
-    const query = gql`
-      query {
-        a
-      }
-    `;
-
-    {
-      const link = new MockLink([
-        {
-          request: { query },
-          result: { data: { a: "a" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { a: "a" } },
-        },
-      ]);
-
-      const stream1 = new ObservableStream(execute(link, { query }));
-
-      await expect(stream1).toEmitNext({ timeout: 25 });
-      await expect(stream1).toComplete();
-
-      const stream2 = new ObservableStream(execute(link, { query }));
-
-      await expect(stream2).not.toEmitAnything({ timeout: 45 });
-      await expect(stream2).toEmitNext({ timeout: 6 });
-      await expect(stream2).toComplete();
-    }
-
-    {
-      const link = new MockLink(
-        [
-          {
-            request: { query },
-            result: { data: { a: "a" } },
-            delay: 20,
-          },
-          {
-            request: { query },
-            result: { data: { a: "a" } },
-          },
-        ],
-        { defaultOptions: { delay: 30 } }
-      );
-
-      const stream1 = new ObservableStream(execute(link, { query }));
-
-      await expect(stream1).toEmitNext({ timeout: 25 });
-      await expect(stream1).toComplete();
-
-      const stream2 = new ObservableStream(execute(link, { query }));
-
-      await expect(stream2).not.toEmitAnything({ timeout: 25 });
-      await expect(stream2).toEmitNext({ timeout: 6 });
-      await expect(stream2).toComplete();
-    }
-  } finally {
-    MockLink.defaultOptions = originalDefaults;
+    await expect(stream2).not.toEmitAnything({ timeout: 25 });
+    await expect(stream2).toEmitNext({ timeout: 6 });
+    await expect(stream2).toComplete();
   }
 });
 

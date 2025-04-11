@@ -1,5 +1,27 @@
 # @apollo/client
 
+## 4.0.0-alpha.10
+
+### Minor Changes
+
+- [#12543](https://github.com/apollographql/apollo-client/pull/12543) [`8b1de2e`](https://github.com/apollographql/apollo-client/commit/8b1de2ec945ba7f22e96835415b767b4d3c10773) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery` `variables` can now be reset back to `undefined` by calling `reobserve` with a `variables` key set to `undefined`:
+
+  ```ts
+  observable.reobserve({ variables: undefined });
+  ```
+
+  Previously this would leave `variables` unchanged and would require setting `variables` to an empty object.
+
+  Calling `reobserve({ variables: {} })` has the same effect as `undefined` and will reset `ObservableQuery.variables` back to `undefined`.
+
+### Patch Changes
+
+- [#12543](https://github.com/apollographql/apollo-client/pull/12543) [`8b1de2e`](https://github.com/apollographql/apollo-client/commit/8b1de2ec945ba7f22e96835415b767b4d3c10773) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery.variables` now returns `undefined` if no variables were set from `watchQuery` or if `variables` was set to an empty object. This ensures the value of `variables` lines up with the type.
+
+  This change also propogates to `useQuery` and `useLazyQuery`. The `variables` property returned from these hooks will be `undefined` instead of an empty object if no `variables` were set.
+
+- [#12543](https://github.com/apollographql/apollo-client/pull/12543) [`8b1de2e`](https://github.com/apollographql/apollo-client/commit/8b1de2ec945ba7f22e96835415b767b4d3c10773) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `variables` passed to the `update` callback is `undefined` instead of an empty object when `variables` are not defined.
+
 ## 4.0.0-alpha.9
 
 ### Major Changes

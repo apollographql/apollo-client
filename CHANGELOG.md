@@ -1,5 +1,34 @@
 # @apollo/client
 
+## 4.0.0-alpha.9
+
+### Major Changes
+
+- [#12536](https://github.com/apollographql/apollo-client/pull/12536) [`e14205a`](https://github.com/apollographql/apollo-client/commit/e14205ad5909f95aa04684acd0ca2f25956ee50c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - An initial loading state is now emitted from `ObservableQuery` when subscribing if `notifyOnNetworkStatusChange` is set to `true`.
+
+- [#12512](https://github.com/apollographql/apollo-client/pull/12512) [`e809b71`](https://github.com/apollographql/apollo-client/commit/e809b71aa9a02917a286afdbb03d5be8e5947c53) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `notifyOnNetworkStatusChange` now defaults to `true`. This means that loading states will be emitted (core API) or rendered (React) by default when calling `refetch`, `fetchMore`, etc. To maintain the old behavior, set `notifyOnNetworkStatusChange` to `false` in `defaultOptions`.
+
+  ```ts
+  new ApolloClient({
+    defaultOptions: {
+      watchQuery: {
+        // Use the v3 default
+        notifyOnNetworkStatusChange: false,
+      },
+    },
+  });
+  ```
+
+### Patch Changes
+
+- [#12536](https://github.com/apollographql/apollo-client/pull/12536) [`e14205a`](https://github.com/apollographql/apollo-client/commit/e14205ad5909f95aa04684acd0ca2f25956ee50c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The returned `networkStatus` in `useLazyQuery` is now set to `setVariables` when calling the `useLazyQuery` `execute` function for the first time with variables.
+
+- [#12536](https://github.com/apollographql/apollo-client/pull/12536) [`e14205a`](https://github.com/apollographql/apollo-client/commit/e14205ad5909f95aa04684acd0ca2f25956ee50c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `ObservableQuery` stops polling if switching to a `standby` `fetchPolicy`. When switching back to a non-`standby` `fetchPolicy`, polling will resume.
+
+- [#12536](https://github.com/apollographql/apollo-client/pull/12536) [`e14205a`](https://github.com/apollographql/apollo-client/commit/e14205ad5909f95aa04684acd0ca2f25956ee50c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure a loading state is emitted when calling the `execute` function after changing clients in `useLazyQuery`.
+
+- [#12542](https://github.com/apollographql/apollo-client/pull/12542) [`afb4fce`](https://github.com/apollographql/apollo-client/commit/afb4fce08859b2c6eebf288230a7c35b7acf2da6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `useLazyQuery` does not return a `partial` property which is not specified by the result type.
+
 ## 4.0.0-alpha.8
 
 ### Major Changes

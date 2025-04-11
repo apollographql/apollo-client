@@ -521,7 +521,6 @@ describe("ApolloClient", () => {
         watchQuery: {
           fetchPolicy: "cache-and-network",
           returnPartialData: false,
-          notifyOnNetworkStatusChange: true,
         },
         query: {
           fetchPolicy: "network-only",
@@ -619,6 +618,13 @@ describe("ApolloClient", () => {
     void observableQuery.reobserve({ variables: { id: 2 } });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         person: {
           __typename: "Person",
@@ -710,6 +716,19 @@ describe("ApolloClient", () => {
     void observable.refetch();
 
     await expect(stream1).toEmitTypedValue({
+      data: data1,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+    await expect(stream2).toEmitTypedValue({
+      data: data1,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
+    await expect(stream1).toEmitTypedValue({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -724,6 +743,13 @@ describe("ApolloClient", () => {
 
     stream1.unsubscribe();
     void observable.refetch();
+
+    await expect(stream2).toEmitTypedValue({
+      data: data2,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
 
     await expect(stream2).toEmitTypedValue({
       data: data3,
@@ -745,7 +771,6 @@ describe("ApolloClient", () => {
       variables: {
         id: "1",
       },
-      notifyOnNetworkStatusChange: true,
     };
     const request2 = {
       query: gql`
@@ -758,7 +783,6 @@ describe("ApolloClient", () => {
       variables: {
         id: "2",
       },
-      notifyOnNetworkStatusChange: true,
     };
     const request3 = {
       query: gql`
@@ -771,7 +795,6 @@ describe("ApolloClient", () => {
       variables: {
         id: "3",
       },
-      notifyOnNetworkStatusChange: true,
     };
 
     const data1 = {
@@ -1482,7 +1505,6 @@ describe("ApolloClient", () => {
     const observable = client.watchQuery({
       query,
       pollInterval: 30,
-      notifyOnNetworkStatusChange: true,
     });
     const stream = new ObservableStream(observable);
 
@@ -2950,6 +2972,14 @@ describe("ApolloClient", () => {
     });
 
     await expect(handle.refetch()).rejects.toThrow(expectedError);
+
+    await expect(stream).toEmitTypedValue({
+      data: firstResult.data,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
     await expect(stream).toEmitTypedValue({
       data: firstResult.data,
       error: expectedError,
@@ -3667,6 +3697,8 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
+      observable.stopPolling();
+
       const result = await client.query({
         query,
         variables,
@@ -3856,6 +3888,13 @@ describe("ApolloClient", () => {
 
       // reset the store after data has returned
       void client.resetStore();
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: true,
+      });
 
       // only refetch once and make sure data has changed
       await expect(stream).toEmitTypedValue({
@@ -4396,6 +4435,13 @@ describe("ApolloClient", () => {
 
       // refetch the observed queries after data has returned
       void client.reFetchObservableQueries();
+
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: data2,
@@ -5678,6 +5724,13 @@ describe("ApolloClient", () => {
         refetchQueries: [query],
       });
 
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+
       await expect(stream).toEmitTypedValue(
         {
           data: secondReqData,
@@ -5770,6 +5823,13 @@ describe("ApolloClient", () => {
         variables: mutationVariables,
         // spread the query into a new object to simulate multiple instances
         refetchQueries: [{ ...query }],
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
 
       await expect(stream).toEmitTypedValue(
@@ -6769,6 +6829,13 @@ describe("ApolloClient", () => {
         fetchPolicy: "no-cache",
       });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,

@@ -2966,8 +2966,8 @@ describe("ApolloClient", () => {
       const stream2 = new ObservableStream(result.queries[0]);
 
       await expect(stream2).toEmitTypedValue({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
         partial: false,
         data: { foo: { bar: 1 } },
       });

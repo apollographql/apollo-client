@@ -729,6 +729,7 @@ describe("client", () => {
           hello
         }
       `,
+      notifyOnNetworkStatusChange: false,
     });
 
     const stream = new ObservableStream(observable);
@@ -2662,10 +2663,7 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    const observable = client.watchQuery({
-      query,
-      notifyOnNetworkStatusChange: true,
-    });
+    const observable = client.watchQuery({ query });
 
     let stream = new ObservableStream(observable);
 
@@ -3672,6 +3670,13 @@ describe("@connection", () => {
       void obs.refetch();
 
       await expect(stream).toEmitTypedValue({
+        data: { count: "initial" },
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: { count: 0 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3695,6 +3700,13 @@ describe("@connection", () => {
       expect(nextFetchPolicyCallCount).toBe(3);
 
       client.cache.evict({ fieldName: "count" });
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: { count: 1 },
@@ -3771,6 +3783,12 @@ describe("@connection", () => {
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
       await expect(stream).toEmitTypedValue({
+        data: { linkCount: 1 },
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+      await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3779,8 +3797,6 @@ describe("@connection", () => {
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
       const finalResult = await observable.reobserve({
-        // Allow delivery of loading:true result.
-        notifyOnNetworkStatusChange: true,
         // Force a network request in addition to loading:true cache result.
         fetchPolicy: "cache-and-network",
       });
@@ -5282,6 +5298,15 @@ describe("custom document transforms", () => {
 
     expect(data).toEqual({
       products: [{ __typename: "Product", id: 2 }],
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      partial: false,
     });
 
     await expect(stream).toEmitTypedValue({

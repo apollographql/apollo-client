@@ -11,7 +11,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { MockedResponse } from "@apollo/client/testing";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink, mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -647,19 +647,22 @@ describe("mutation results", () => {
     };
 
     const client = new ApolloClient({
-      link: mockSingleLink(
-        {
-          request: { query: queryWithTypename } as any,
-          result,
-        },
-        {
-          request: { query: queryTodos },
-          result: queryTodosResult,
-        },
-        {
-          request: { query: mutationTodo },
-          result: mutationTodoResult,
-        }
+      link: new MockLink(
+        [
+          {
+            request: { query: queryWithTypename } as any,
+            result,
+          },
+          {
+            request: { query: queryTodos },
+            result: queryTodosResult,
+          },
+          {
+            request: { query: mutationTodo },
+            result: mutationTodoResult,
+          },
+        ],
+        { defaultOptions: { delay: 0 } }
       ),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {

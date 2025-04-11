@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { ErrorLike } from '@apollo/client/core';
+import type { ErrorLike } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link/core';
 import type { FetchResult as FetchResult_2 } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql';

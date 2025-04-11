@@ -1469,6 +1469,13 @@ describe("ObservableQuery", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data: { users: [{ __typename: "User", id: 1 }] },
         loading: false,
         networkStatus: NetworkStatus.ready,

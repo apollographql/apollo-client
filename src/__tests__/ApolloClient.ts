@@ -2987,7 +2987,19 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
       link.simulateResult({ result: { data: { foo: { bar: 1 } } } }, true);
 
-      await stream.takeNext();
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: { foo: { bar: 1 } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       const result = client.refetchQueries({
         include: "all",

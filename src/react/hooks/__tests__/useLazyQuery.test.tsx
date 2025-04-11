@@ -101,8 +101,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -175,8 +173,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: { id: 1 },
@@ -317,8 +313,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -448,8 +442,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -680,8 +672,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -972,8 +962,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -1125,8 +1113,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: { id: 1 },
@@ -1773,7 +1759,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -1800,8 +1785,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: "1" },
@@ -1825,8 +1808,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -1892,8 +1873,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -2016,8 +1995,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -2375,8 +2352,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -2905,8 +2880,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -2986,8 +2959,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -3064,8 +3035,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -3140,8 +3109,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -3252,8 +3219,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -3368,8 +3333,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -3484,8 +3447,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -3587,8 +3548,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -3722,8 +3681,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
           variables: {},
@@ -4075,8 +4032,6 @@ test("uses the updated client when executing the function after changing clients
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: {},
@@ -4124,8 +4079,6 @@ test("uses the updated client when executing the function after changing clients
   //     data: undefined,
   //     called: true,
   //     loading: true,
-  //     // @ts-expect-error
-  //     partial: true,
   //     networkStatus: NetworkStatus.loading,
   //     previousData: { greeting: "Hello client 1" },
   //     variables: {},
@@ -4198,8 +4151,6 @@ test("responds to cache updates after executing query", async () => {
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: {},
@@ -4293,8 +4244,6 @@ test("responds to cache updates after changing variables", async () => {
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: { id: "1" },
@@ -4465,8 +4414,6 @@ test("uses cached result when switching to variables already written to the cach
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: { id: "1" },
@@ -4748,8 +4695,6 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: { id: "1" },
@@ -4890,8 +4835,6 @@ test("applies `context` on next fetch when it changes between renders", async ()
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: {},
@@ -5124,8 +5067,6 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: { min: 0, max: 12 },
@@ -5346,8 +5287,6 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: { id: "1" },

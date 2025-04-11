@@ -10,6 +10,7 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { DeepMerger } from "@apollo/client/utilities";
+import { normalizeVariables } from "@apollo/client/utilities/internal";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -89,7 +90,9 @@ export class QueryInfo {
     document: DocumentNode;
     variables: Record<string, any> | undefined;
   }): this {
-    if (!equal(query.variables, this.variables)) {
+    const variables = normalizeVariables(query.variables);
+
+    if (!equal(variables, this.variables)) {
       this.lastDiff = void 0;
       // Ensure we don't continue to receive cache updates for old variables
       this.cancel();
@@ -97,7 +100,7 @@ export class QueryInfo {
 
     Object.assign(this, {
       document: query.document,
-      variables: query.variables,
+      variables,
     });
 
     return this;

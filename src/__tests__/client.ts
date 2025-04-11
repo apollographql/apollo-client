@@ -1360,15 +1360,18 @@ describe("client", () => {
       fortuneCookie: "The waiter spit in your food",
     };
 
-    const link = mockSingleLink(
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: mutation },
-        result: { data: mutationResult },
-      }
+    const link = new MockLink(
+      [
+        {
+          request: { query },
+          result: { data: result },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationResult },
+        },
+      ],
+      { defaultOptions: { delay: 0 } }
     );
 
     const client = new ApolloClient({

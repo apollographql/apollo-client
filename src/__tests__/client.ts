@@ -1380,11 +1380,7 @@ describe("client", () => {
       }),
     });
 
-    const queryUpdaterSpy = jest.fn();
-    const queryUpdater = (prev: any) => {
-      queryUpdaterSpy();
-      return prev;
-    };
+    const queryUpdater = jest.fn((prev) => prev);
     const updateQueries = {
       items: queryUpdater,
     };
@@ -1397,7 +1393,7 @@ describe("client", () => {
     await expect(stream).toEmitNext();
     await client.mutate({ mutation, updateQueries, update: updateSpy });
 
-    expect(queryUpdaterSpy).toHaveBeenCalled();
+    expect(queryUpdater).toHaveBeenCalled();
     expect(updateSpy).toHaveBeenCalled();
   });
 

@@ -6,7 +6,7 @@ export function isBranded(error: unknown, name: string) {
   );
 }
 
-export function brand<T extends Error>(error: T) {
+export function brand(error: Error) {
   Object.defineProperty(error, Symbol.for("apollo.error"), {
     value: error.name,
     enumerable: false,

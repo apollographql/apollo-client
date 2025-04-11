@@ -377,10 +377,12 @@ export function useLazyQuery<
     []
   );
 
-  const result = React.useMemo(
-    () => ({
+  const result = React.useMemo(() => {
+    const { partial, ...result } = observableResult;
+
+    return {
       ...eagerMethods,
-      ...observableResult,
+      ...result,
       client,
       // eslint-disable-next-line react-compiler/react-compiler
       previousData: previousDataRef.current,
@@ -388,9 +390,8 @@ export function useLazyQuery<
       observable,
       // eslint-disable-next-line react-compiler/react-compiler
       called: !!resultRef.current,
-    }),
-    [client, observableResult, eagerMethods, observable]
-  );
+    };
+  }, [client, observableResult, eagerMethods, observable]);
 
   return [stableExecute, result];
 }

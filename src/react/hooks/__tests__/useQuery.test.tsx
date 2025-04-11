@@ -4956,7 +4956,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -4983,7 +4982,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -5012,8 +5010,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: { id: 1 },
@@ -5054,8 +5050,6 @@ describe("useQuery Hook", () => {
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -5079,8 +5073,6 @@ describe("useQuery Hook", () => {
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -5121,8 +5113,6 @@ describe("useQuery Hook", () => {
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -5255,7 +5245,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -5282,7 +5271,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -5311,8 +5299,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: { id: 1 },
@@ -5348,8 +5334,6 @@ describe("useQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -5384,8 +5368,6 @@ describe("useQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -5518,7 +5500,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -5545,7 +5526,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -5574,8 +5554,6 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: { id: 1 },
@@ -5607,8 +5585,6 @@ describe("useQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },

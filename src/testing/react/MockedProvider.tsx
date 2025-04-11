@@ -1,25 +1,25 @@
 import * as React from "react";
 
-import type { DefaultOptions } from "../../core/index.js";
-import { ApolloClient } from "../../core/index.js";
-import { InMemoryCache as Cache } from "../../cache/index.js";
-import { ApolloProvider } from "../../react/context/index.js";
-import type { MockedResponse } from "../core/index.js";
-import { MockLink } from "../core/index.js";
-import type { ApolloLink } from "../../link/core/index.js";
-import type { Resolvers } from "../../core/index.js";
-import type { ApolloCache } from "../../cache/index.js";
+import type { DefaultOptions } from "@apollo/client";
+import type { Resolvers } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
+import type { ApolloCache } from "@apollo/client/cache";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import type { ApolloLink } from "@apollo/client/link/core";
+import { ApolloProvider } from "@apollo/client/react";
+import type { MockedResponse } from "@apollo/client/testing/core";
+import { MockLink } from "@apollo/client/testing/core";
 
-export interface MockedProviderProps<TSerializedCache = {}> {
+export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
-  addTypename?: boolean;
   defaultOptions?: DefaultOptions;
-  cache?: ApolloCache<TSerializedCache>;
+  cache?: ApolloCache;
   resolvers?: Resolvers;
   childProps?: object;
   children?: any;
   link?: ApolloLink;
   showWarnings?: boolean;
+  mockLinkDefaultOptions?: MockLink.DefaultOptions;
   /**
    * If set to true, the MockedProvider will try to connect to the Apollo DevTools.
    * Defaults to false.
@@ -27,36 +27,37 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   connectToDevTools?: boolean;
 }
 
-export interface MockedProviderState {
-  client: ApolloClient<any>;
+interface MockedProviderState {
+  client: ApolloClient;
 }
 
 export class MockedProvider extends React.Component<
   MockedProviderProps,
   MockedProviderState
 > {
-  public static defaultProps: MockedProviderProps = {
-    addTypename: true,
-  };
-
   constructor(props: MockedProviderProps) {
     super(props);
 
     const {
       mocks,
-      addTypename,
       defaultOptions,
       cache,
       resolvers,
       link,
       showWarnings,
+      mockLinkDefaultOptions,
       connectToDevTools = false,
     } = this.props;
     const client = new ApolloClient({
-      cache: cache || new Cache({ addTypename }),
+      cache: cache || new Cache(),
       defaultOptions,
       connectToDevTools,
-      link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
+      link:
+        link ||
+        new MockLink(mocks || [], {
+          showWarnings,
+          defaultOptions: mockLinkDefaultOptions,
+        }),
       resolvers,
     });
 

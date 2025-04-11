@@ -75,3 +75,4 @@ esbuild-why-*.html
 yalc.lock
 
 .attest
+.ignore

@@ -1,20 +1,22 @@
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql";
 
-import type { FetchResult } from "../link/core/index.js";
+import type { ApolloCache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
+
+import type { IgnoreModifier } from "../cache/core/types/common.js";
+
+import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
+  InternalRefetchQueriesInclude,
   MutationQueryReducersMap,
-  OperationVariables,
   MutationUpdaterFunction,
   OnQueryUpdated,
-  InternalRefetchQueriesInclude,
+  OperationVariables,
 } from "./types.js";
-import type { ApolloCache } from "../cache/index.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { Unmasked } from "../masking/index.js";
-import type { DeepPartial, NoInfer } from "../utilities/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -53,7 +55,10 @@ export type ErrorPolicy = "none" | "ignore" | "all";
 /**
  * Query options.
  */
-export interface QueryOptions<TVariables = OperationVariables, TData = any> {
+export interface QueryOptions<
+  TVariables = OperationVariables,
+  TData = unknown,
+> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
@@ -77,12 +82,6 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
-  partialRefetch?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
 }
 
 /**
@@ -90,15 +89,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
  */
 export interface WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
-  TData = any,
-> extends SharedWatchQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-export interface SharedWatchQueryOptions<
-  TVariables extends OperationVariables,
-  TData,
+  TData = unknown,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: WatchQueryFetchPolicy;
@@ -119,7 +110,7 @@ export interface SharedWatchQueryOptions<
   refetchWritePolicy?: RefetchWritePolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
+  variables?: NoInfer<TVariables>;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
@@ -136,14 +127,11 @@ export interface SharedWatchQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
-  partialRefetch?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
   skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface NextFetchPolicyContext<
@@ -156,30 +144,13 @@ export interface NextFetchPolicyContext<
   initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
-export interface FetchMoreQueryOptions<TVariables, TData = any> {
+export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: Partial<TVariables>;
   context?: DefaultContext;
 }
-
-/**
- * @deprecated `UpdateQueryFn` is deprecated and will be removed or updated in a
- * future version of Apollo Client. Use `SubscribeToMoreUpdateQueryFn` instead
- * which provides a more type-safe result.
- */
-export type UpdateQueryFn<
-  TData = any,
-  TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData,
-> = (
-  previousQueryResult: Unmasked<TData>,
-  options: {
-    subscriptionData: { data: Unmasked<TSubscriptionData> };
-    variables?: TSubscriptionVariables;
-  }
-) => Unmasked<TData>;
 
 export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;
@@ -202,7 +173,7 @@ export type UpdateQueryOptions<TData, TVariables> = {
 );
 
 export interface UpdateQueryMapFn<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
 > {
   (
@@ -217,7 +188,7 @@ export interface UpdateQueryMapFn<
 }
 
 export type SubscribeToMoreUpdateQueryFn<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   TSubscriptionData = TData,
 > = {
@@ -235,7 +206,7 @@ export type SubscribeToMoreUpdateQueryFn<
 };
 
 export interface SubscribeToMoreOptions<
-  TData = any,
+  TData = unknown,
   TSubscriptionVariables extends OperationVariables = OperationVariables,
   TSubscriptionData = TData,
   TVariables extends OperationVariables = TSubscriptionVariables,
@@ -272,7 +243,7 @@ export interface SubscribeToMoreFunction<
 
 export interface SubscriptionOptions<
   TVariables = OperationVariables,
-  TData = any,
+  TData = unknown,
 > {
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -293,11 +264,11 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-export interface MutationBaseOptions<
-  TData = any,
+export interface MutationOptions<
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
@@ -332,26 +303,13 @@ export interface MutationBaseOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
   context?: TContext;
-}
 
-export interface MutationOptions<
-  TData = any,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
-> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-export interface MutationSharedOptions<
-  TData = any,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
-> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: MutationFetchPolicy;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
   keepRootFields?: boolean;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }

@@ -2,6 +2,7 @@
 // https://github.com/ardatan/graphql-tools/blob/4b56b04d69b02919f6c5fa4f97d33da63f36e8c8/packages/mock/tests/addMocksToSchema.spec.ts
 
 import { buildSchema, graphql } from "graphql";
+
 import { createMockSchema } from "./utils.js";
 
 const mockDate = new Date().toJSON().split("T")[0];

@@ -1,4 +1,4 @@
-import { spyOnConsole } from "../index.js";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 
 const originalLog = console.log;
 const originalWarn = console.warn;

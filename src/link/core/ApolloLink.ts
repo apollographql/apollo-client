@@ -1,22 +1,26 @@
-import { newInvariantError, invariant } from "../../utilities/globals/index.js";
+import type { Observable } from "rxjs";
+import { EMPTY } from "rxjs";
 
-import type { Observer } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import {
+  createOperation,
+  transformOperation,
+  validateOperation,
+} from "@apollo/client/link/utils";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import type {
+  FetchResult,
+  GraphQLRequest,
   NextLink,
   Operation,
   RequestHandler,
-  FetchResult,
-  GraphQLRequest,
 } from "./types.js";
-import {
-  validateOperation,
-  createOperation,
-  transformOperation,
-} from "../utils/index.js";
 
 function passthrough(op: Operation, forward: NextLink) {
-  return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;
+  return (forward ? forward(op) : EMPTY) as Observable<FetchResult>;
 }
 
 function toLink(handler: RequestHandler | ApolloLink) {
@@ -29,7 +33,7 @@ function isTerminating(link: ApolloLink): boolean {
 
 export class ApolloLink {
   public static empty(): ApolloLink {
-    return new ApolloLink(() => Observable.of());
+    return new ApolloLink(() => EMPTY);
   }
 
   public static from(links: (ApolloLink | RequestHandler)[]): ApolloLink {
@@ -49,14 +53,14 @@ export class ApolloLink {
     if (isTerminating(leftLink) && isTerminating(rightLink)) {
       ret = new ApolloLink((operation) => {
         return test(operation) ?
-            leftLink.request(operation) || Observable.of()
-          : rightLink.request(operation) || Observable.of();
+            leftLink.request(operation) || EMPTY
+          : rightLink.request(operation) || EMPTY;
       });
     } else {
       ret = new ApolloLink((operation, forward) => {
         return test(operation) ?
-            leftLink.request(operation, forward) || Observable.of()
-          : rightLink.request(operation, forward) || Observable.of();
+            leftLink.request(operation, forward) || EMPTY
+          : rightLink.request(operation, forward) || EMPTY;
       });
     }
     return Object.assign(ret, { left: leftLink, right: rightLink });
@@ -72,7 +76,7 @@ export class ApolloLink {
           operation.context,
           transformOperation(validateOperation(operation))
         )
-      ) || Observable.of()
+      ) || EMPTY
     );
   }
 
@@ -94,17 +98,15 @@ export class ApolloLink {
     if (isTerminating(nextLink)) {
       ret = new ApolloLink(
         (operation) =>
-          firstLink.request(
-            operation,
-            (op) => nextLink.request(op) || Observable.of()
-          ) || Observable.of()
+          firstLink.request(operation, (op) => nextLink.request(op) || EMPTY) ||
+          EMPTY
       );
     } else {
       ret = new ApolloLink((operation, forward) => {
         return (
           firstLink.request(operation, (op) => {
-            return nextLink.request(op, forward) || Observable.of();
-          }) || Observable.of()
+            return nextLink.request(op, forward) || EMPTY;
+          }) || EMPTY
         );
       });
     }
@@ -134,29 +136,6 @@ export class ApolloLink {
     forward?: NextLink
   ): Observable<FetchResult> | null {
     throw newInvariantError("request is not implemented");
-  }
-
-  protected onError(
-    error: any,
-    observer?: Observer<FetchResult>
-  ): false | void {
-    if (observer && observer.error) {
-      observer.error(error);
-      // Returning false indicates that observer.error does not need to be
-      // called again, since it was already called (on the previous line).
-      // Calling observer.error again would not cause any real problems,
-      // since only the first call matters, but custom onError functions
-      // might have other reasons for wanting to prevent the default
-      // behavior by returning false.
-      return false;
-    }
-    // Throw errors will be passed to observer.error.
-    throw error;
-  }
-
-  public setOnError(fn: ApolloLink["onError"]): this {
-    this.onError = fn;
-    return this;
   }
 
   /**

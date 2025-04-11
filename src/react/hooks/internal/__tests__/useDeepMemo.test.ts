@@ -1,5 +1,8 @@
 import { renderHook } from "@testing-library/react";
-import { useDeepMemo } from "../useDeepMemo";
+
+//not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { useDeepMemo } from "../useDeepMemo.js";
 
 describe("useDeepMemo", () => {
   it("ensures the value is initialized", () => {

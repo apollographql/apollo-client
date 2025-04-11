@@ -1,15 +1,16 @@
-import { Subscription } from "zen-observable-ts";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
+import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
-  InMemoryCache,
   gql,
-  Observable,
-  TypedDocumentNode,
+  InMemoryCache,
+  NetworkStatus,
   ObservableQuery,
-} from "../core";
-import { ObservableStream } from "../testing/internal";
+} from "@apollo/client";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {
@@ -66,13 +67,18 @@ describe("client.refetchQueries", () => {
             operation.operationName.split("").forEach((letter) => {
               data[letter.toLowerCase()] = letter.toUpperCase();
             });
-            function finish() {
-              observer.next({ data });
-              observer.complete();
+            function finish(delay: number) {
+              // We need to add a delay here since RxJS emits synchronously.
+              // Some tests fail if this value is emitted synchronously.
+              // TODO: Determine root cause
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              }, delay);
             }
             if (typeof operation.variables.delay === "number") {
-              setTimeout(finish, operation.variables.delay);
-            } else finish();
+              finish(operation.variables.delay);
+            } else finish(0);
           })
       ),
     });
@@ -85,7 +91,10 @@ describe("client.refetchQueries", () => {
 
   function setup(client = makeClient()) {
     function watch<T>(query: TypedDocumentNode<T>) {
-      const obsQuery = client.watchQuery({ query });
+      const obsQuery = client.watchQuery({
+        query,
+        notifyOnNetworkStatusChange: false,
+      });
       return new Promise<ObservableQuery<T>>((resolve, reject) => {
         subs.push(
           obsQuery.subscribe({
@@ -115,7 +124,7 @@ describe("client.refetchQueries", () => {
   }
 
   it("includes watched queries affected by updateCache", async () => {
-    expect.assertions(9);
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -191,7 +200,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes watched queries named in options.include", async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -275,7 +284,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes query DocumentNode objects specified in options.include", async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -360,7 +369,7 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all queries when options.include === "all"', async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -473,7 +482,12 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqual({ a: "A", b: "B" });
+          expect(result).toStrictEqualTyped({
+            data: { a: "A", b: "B" },
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         },
       })
     );
@@ -515,7 +529,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes queries named in refetchQueries even if they have no observers", async () => {
-    expect.assertions(13);
+    expect.assertions(14);
     const client = makeClient();
 
     const aObs = client.watchQuery({ query: aQuery });
@@ -535,10 +549,10 @@ describe("client.refetchQueries", () => {
       onQueryUpdated(obs, diff) {
         if (obs === aObs) {
           expect(diff.complete).toBe(false);
-          expect(diff.result).toEqual({});
+          expect(diff.result).toEqual(null);
         } else if (obs === abObs) {
           expect(diff.complete).toBe(false);
-          expect(diff.result).toEqual({});
+          expect(diff.result).toEqual(null);
         } else {
           throw new Error(
             `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
@@ -548,14 +562,25 @@ describe("client.refetchQueries", () => {
       },
     });
 
-    sortObjects(activeResults);
-    expect(activeResults).toEqual([{}, {}]);
+    expect(activeResults).toEqual([null, null]);
 
     const stream = new ObservableStream(abObs);
     subs.push(stream as unknown as Subscription);
     expect(abObs.hasObservers()).toBe(true);
 
-    await expect(stream).toEmitMatchedValue({ data: { a: "A", b: "B" } });
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { a: "A", b: "B" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     const resultsAfterSubscribe = await client.refetchQueries({
       include: [aQuery, "B"],
@@ -819,11 +844,7 @@ describe("client.refetchQueries", () => {
 
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
-      expect(Object.keys(result).sort()).toEqual([
-        "data",
-        "loading",
-        "networkStatus",
-      ]);
+      expect(Object.keys(result).sort()).toEqual(["data"]);
       return result.data;
     });
 
@@ -887,12 +908,8 @@ describe("client.refetchQueries", () => {
     ).toEqual(["AB", "B"]);
 
     const results = (await refetchResult).map((result) => {
-      // These results are ApolloQueryResult<any>, as inferred by TypeScript.
-      expect(Object.keys(result).sort()).toEqual([
-        "data",
-        "loading",
-        "networkStatus",
-      ]);
+      // These results are QueryResult<any>, as inferred by TypeScript.
+      expect(Object.keys(result).sort()).toEqual(["data"]);
       return result.data;
     });
 
@@ -954,11 +971,7 @@ describe("client.refetchQueries", () => {
 
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
-      expect(Object.keys(result).sort()).toEqual([
-        "data",
-        "loading",
-        "networkStatus",
-      ]);
+      expect(Object.keys(result).sort()).toEqual(["data"]);
       return result.data;
     });
 

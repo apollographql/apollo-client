@@ -11,7 +11,7 @@ api_reference: true
 
 
 ```js
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 ```
 
 The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send network requests to your API. Instead, it allows you to specify the exact response payload for a given GraphQL operation. This enables you to test your application's operations without communicating with a server.
@@ -37,23 +37,6 @@ The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks
 <td>
 
 An array containing GraphQL operation definitions and their corresponding mocked responses. See [Defining mocked responses](../../development-testing/testing/#defining-mocked-responses).
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `addTypename`
-
-`Boolean`
-</td>
-<td>
-
-If `true`, the `MockedProvider` automatically adds the `__typename` field to every object type included in every executed query. Set this to `false` if the responses in your `mocks` array do _not_ include `__typename` fields. See [Setting `addTypename`](../../development-testing/testing/#setting-addtypename).
-
-The default value is `true`.
-
 </td>
 </tr>
 

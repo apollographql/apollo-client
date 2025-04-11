@@ -1,37 +1,33 @@
-import {
-  useSuspenseFragment,
-  UseSuspenseFragmentResult,
-} from "../useSuspenseFragment";
-import {
-  ApolloClient,
-  FragmentType,
-  gql,
-  InMemoryCache,
-  Masked,
-  MaskedDocumentNode,
-  MaybeMasked,
-  OperationVariables,
-  TypedDocumentNode,
-} from "../../../core";
-import React, { Suspense } from "react";
-import { ApolloProvider } from "../../context";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { renderAsync, spyOnConsole } from "../../../testing/internal";
-import { act, renderHook, screen, waitFor } from "@testing-library/react";
-import { InvariantError } from "ts-invariant";
-import { MockedProvider, MockSubscriptionLink, wait } from "../../../testing";
+import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
-import userEvent from "@testing-library/user-event";
+import React, { Suspense } from "react";
+
+import type {
+  FragmentType,
+  Masked,
+  MaskedDocumentNode,
+  MaybeMasked,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
-      result: null as UseSuspenseFragmentResult<MaybeMasked<TData>> | null,
+      result: null as useSuspenseFragment.Result<MaybeMasked<TData>> | null,
     },
   });
 }
@@ -1367,8 +1363,8 @@ test("updates child fragments for cache updates to masked fields", async () => {
 
   const { render, mergeSnapshot, takeRender } = createRenderStream({
     initialSnapshot: {
-      parent: null as UseSuspenseFragmentResult<Masked<Post>> | null,
-      child: null as UseSuspenseFragmentResult<Masked<PostFields>> | null,
+      parent: null as useSuspenseFragment.Result<Masked<Post>> | null,
+      child: null as useSuspenseFragment.Result<Masked<PostFields>> | null,
     },
   });
 

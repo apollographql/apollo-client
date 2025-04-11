@@ -3,7 +3,7 @@ import type { Primitive } from "./Primitive.js";
 // DeepOmit primitives include functions since these are unmodified.
 type DeepOmitPrimitive = Primitive | Function;
 
-export type DeepOmitArray<T extends any[], K> = {
+type DeepOmitArray<T extends any[], K> = {
   [P in keyof T]: DeepOmit<T[P], K>;
 };
 

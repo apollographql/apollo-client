@@ -1,30 +1,99 @@
-import { invariant } from "../../utilities/globals/index.js";
-import * as React from "rehackt";
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
+import * as React from "react";
+import { Observable } from "rxjs";
 
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
-import type {
-  NoInfer,
-  SubscriptionHookOptions,
-  SubscriptionResult,
-} from "../types/types.js";
 import type {
   ApolloClient,
   DefaultContext,
+  ErrorLike,
   ErrorPolicy,
   FetchPolicy,
-  FetchResult,
   OperationVariables,
-} from "../../core/index.js";
-import { ApolloError, Observable } from "../../core/index.js";
-import { useApolloClient } from "./useApolloClient.js";
+  SubscribeResult,
+} from "@apollo/client";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { NoInfer } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { useDeepMemo } from "./internal/useDeepMemo.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import { toApolloError } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
-import type { MaybeMasked } from "../../masking/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
+
+export declare namespace useSubscription {
+  export interface Options<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
+    variables?: TVariables;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
+    shouldResubscribe?:
+      | boolean
+      | ((options: Options<TData, TVariables>) => boolean);
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
+    client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
+    skip?: boolean;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+    extensions?: Record<string, any>;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
+    onComplete?: () => void;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
+    onData?: (options: OnDataOptions<TData>) => any;
+
+    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
+    onError?: (error: ErrorLike) => void;
+
+    /**
+     * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
+     * @defaultValue `false`
+     */
+    ignoreResults?: boolean;
+  }
+
+  export interface Result<TData = unknown> {
+    /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
+    loading: boolean;
+
+    /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
+    data?: MaybeMasked<TData>;
+
+    /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    restart: () => void;
+  }
+
+  export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
+
+  export interface OnDataOptions<TData = unknown> {
+    client: ApolloClient;
+    data: OnDataResult<TData>;
+  }
+
+  export interface OnSubscriptionDataOptions<TData = unknown> {
+    client: ApolloClient;
+    subscriptionData: OnDataResult<TData>;
+  }
+}
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -108,39 +177,13 @@ import type { MaybeMasked } from "../../masking/index.js";
  * @returns Query result object
  */
 export function useSubscription<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SubscriptionHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
-) {
-  const hasIssuedDeprecationWarningRef = React.useRef(false);
+  options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
+): useSubscription.Result<TData> {
   const client = useApolloClient(options.client);
-  verifyDocumentType(subscription, DocumentType.Subscription);
-
-  if (!hasIssuedDeprecationWarningRef.current) {
-    // eslint-disable-next-line react-compiler/react-compiler
-    hasIssuedDeprecationWarningRef.current = true;
-
-    if (options.onSubscriptionData) {
-      invariant.warn(
-        options.onData ?
-          "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
-        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
-      );
-    }
-
-    if (options.onSubscriptionComplete) {
-      invariant.warn(
-        options.onComplete ?
-          "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
-        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
-      );
-    }
-  }
 
   const {
     skip,
@@ -197,14 +240,13 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<SubscriptionResult<TData, TVariables>>(
+  const fallbackResult = React.useMemo(
     () => ({
       loading: fallbackLoading,
       error: void 0,
       data: void 0,
-      variables,
     }),
-    [fallbackLoading, variables]
+    [fallbackLoading]
   );
 
   const ignoreResultsRef = React.useRef(ignoreResults);
@@ -220,7 +262,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
+  const ret = useSyncExternalStore(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -228,22 +270,19 @@ export function useSubscription<
         }
 
         let subscriptionStopped = false;
-        const variables = observable.__.variables;
         const client = observable.__.client;
         const subscription = observable.subscribe({
-          next(fetchResult) {
+          next(value) {
             if (subscriptionStopped) {
               return;
             }
 
             const result = {
               loading: false,
-              // TODO: fetchResult.data can be null but SubscriptionResult.data
-              // expects TData | undefined only
-              data: fetchResult.data!,
-              error: toApolloError(fetchResult),
-              variables,
+              data: value.data,
+              error: value.error,
             };
+
             observable.__.setResult(result);
             if (!ignoreResultsRef.current) update();
 
@@ -254,36 +293,11 @@ export function useSubscription<
                 client,
                 data: result,
               });
-            } else if (optionsRef.current.onSubscriptionData) {
-              optionsRef.current.onSubscriptionData({
-                client,
-                subscriptionData: result,
-              });
-            }
-          },
-          error(error) {
-            error =
-              error instanceof ApolloError ? error : (
-                new ApolloError({ protocolErrors: [error] })
-              );
-            if (!subscriptionStopped) {
-              observable.__.setResult({
-                loading: false,
-                data: void 0,
-                error,
-                variables,
-              });
-              if (!ignoreResultsRef.current) update();
-              optionsRef.current.onError?.(error);
             }
           },
           complete() {
-            if (!subscriptionStopped) {
-              if (optionsRef.current.onComplete) {
-                optionsRef.current.onComplete();
-              } else if (optionsRef.current.onSubscriptionComplete) {
-                optionsRef.current.onSubscriptionComplete();
-              }
+            if (!subscriptionStopped && optionsRef.current.onComplete) {
+              optionsRef.current.onComplete();
             }
           },
         });
@@ -318,11 +332,13 @@ export function useSubscription<
   return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }
 
+type SubscriptionResult<TData> = Omit<useSubscription.Result<TData>, "restart">;
+
 function createSubscription<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  client: ApolloClient<any>,
+  client: ApolloClient,
   query: TypedDocumentNode<TData, TVariables>,
   variables: TVariables | undefined,
   fetchPolicy: FetchPolicy | undefined,
@@ -345,16 +361,15 @@ function createSubscription<
       loading: true,
       data: void 0,
       error: void 0,
-      variables,
-    } as SubscriptionResult<TData, TVariables>,
-    setResult(result: SubscriptionResult<TData, TVariables>) {
+    } as SubscriptionResult<TData>,
+    setResult(result: SubscriptionResult<TData>) {
       __.result = result;
     },
   };
 
-  let observable: Observable<FetchResult<MaybeMasked<TData>>> | null = null;
+  let observable: Observable<SubscribeResult<MaybeMasked<TData>>> | null = null;
   return Object.assign(
-    new Observable<FetchResult<MaybeMasked<TData>>>((observer) => {
+    new Observable<SubscribeResult<MaybeMasked<TData>>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {

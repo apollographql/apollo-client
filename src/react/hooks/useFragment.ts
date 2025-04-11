@@ -1,59 +1,93 @@
-import * as React from "rehackt";
-import type { DeepPartial } from "../../utilities/index.js";
-import { mergeDeepArray } from "../../utilities/index.js";
+import equal from "@wry/equality";
+import * as React from "react";
+
+import type {
+  ApolloClient,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import type {
   Cache,
+  MissingTree,
   Reference,
   StoreObject,
-  MissingTree,
-} from "../../cache/index.js";
+} from "@apollo/client/cache";
+import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloClient, OperationVariables } from "../../core/index.js";
-import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, wrapHook } from "./internal/index.js";
-import equal from "@wry/equality";
-import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 
-export interface UseFragmentOptions<TData, TVars>
-  extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
-      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
-    >,
-    Omit<
-      Cache.ReadFragmentOptions<TData, TVars>,
-      "id" | "variables" | "returnPartialData"
-    > {
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
-  // Override this field to make it optional (default: true).
-  optimistic?: boolean;
-  /**
-   * The instance of `ApolloClient` to use to look up the fragment.
-   *
-   * By default, the instance that's passed down via context is used, but you
-   * can provide a different instance here.
-   *
-   * @docGroup 1. Operation options
-   */
-  client?: ApolloClient<any>;
+export declare namespace useFragment {
+  export interface Options<TData, TVariables> {
+    /**
+     * A GraphQL document created using the `gql` template string tag from
+     * `graphql-tag` with one or more fragments which will be used to determine
+     * the shape of data to read. If you provide more than one fragment in this
+     * document then you must also specify `fragmentName` to select a single.
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /**
+     * The name of the fragment in your GraphQL document to be used. If you do
+     * not provide a `fragmentName` and there is only one fragment in your
+     * `fragment` document then that fragment will be used.
+     */
+    fragmentName?: string;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: NoInfer<TVariables>;
+
+    from:
+      | StoreObject
+      | Reference
+      | FragmentType<NoInfer<TData>>
+      | string
+      | null;
+
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted.
+     *
+     * @defaultValue true
+     */
+    optimistic?: boolean;
+
+    /**
+     * The instance of `ApolloClient` to use to look up the fragment.
+     *
+     * By default, the instance that's passed down via context is used, but you
+     * can provide a different instance here.
+     *
+     * @docGroup 1. Operation options
+     */
+    client?: ApolloClient;
+  }
+
+  // TODO: Update this to return `null` when there is no data returned from the
+  // fragment.
+  export type Result<TData> =
+    | {
+        data: MaybeMasked<TData>;
+        complete: true;
+        missing?: never;
+      }
+    | {
+        data: DeepPartial<MaybeMasked<TData>>;
+        complete: false;
+        missing?: MissingTree;
+      };
 }
 
-export type UseFragmentResult<TData> =
-  | {
-      data: MaybeMasked<TData>;
-      complete: true;
-      missing?: never;
-    }
-  | {
-      data: DeepPartial<MaybeMasked<TData>>;
-      complete: false;
-      missing?: MissingTree;
-    };
-
-export function useFragment<TData = any, TVars = OperationVariables>(
-  options: UseFragmentOptions<TData, TVars>
-): UseFragmentResult<TData> {
+export function useFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData> {
   return wrapHook(
     "useFragment",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -62,9 +96,9 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   )(options);
 }
 
-function useFragment_<TData = any, TVars = OperationVariables>(
-  options: UseFragmentOptions<TData, TVars>
-): UseFragmentResult<TData> {
+function useFragment_<TData, TVariables extends OperationVariables>(
+  options: useFragment.Options<TData, TVariables>
+): useFragment.Result<TData> {
   const client = useApolloClient(options.client);
   const { cache } = client;
   const { from, ...rest } = options;
@@ -91,14 +125,14 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     if (from === null) {
       return {
         result: diffToResult({
-          result: {} as TData,
+          result: {},
           complete: false,
-        }),
+        } as Cache.DiffResult<TData>),
       };
     }
 
     const { cache } = client;
-    const diff = cache.diff<TData>({
+    const diff = cache.diff<TData, TVariables>({
       ...stableOptions,
       returnPartialData: true,
       id: from,
@@ -107,14 +141,18 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     });
 
     return {
-      result: diffToResult({
-        ...diff,
-        result: client["queryManager"].maskFragment({
-          fragment,
-          fragmentName,
-          data: diff.result,
-        }),
-      }),
+      result: diffToResult(
+        {
+          ...diff,
+          result: client["queryManager"].maskFragment({
+            fragment,
+            fragmentName,
+            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+            // valid return value
+            data: diff.result === null ? {} : diff.result,
+          }),
+        } as Cache.DiffResult<TData> // TODO: Remove assertion
+      ),
     };
   }, [client, stableOptions]);
 
@@ -159,14 +197,14 @@ function useFragment_<TData = any, TVars = OperationVariables>(
 
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>
-): UseFragmentResult<TData> {
+): useFragment.Result<TData> {
   const result = {
-    data: diff.result!,
+    data: diff.result,
     complete: !!diff.complete,
-  } as UseFragmentResult<TData>;
+  } as useFragment.Result<TData>; // TODO: Remove assertion once useFragment returns null
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
+    result.missing = diff.missing.missing;
   }
 
   return result;

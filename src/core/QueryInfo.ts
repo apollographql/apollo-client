@@ -1,26 +1,20 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
 
-import type { Cache, ApolloCache } from "../cache/index.js";
-import { DeepMerger } from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/index.js";
-import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-import type { FetchResult } from "../link/core/index.js";
+import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
 import {
-  isNonEmptyArray,
   graphQLResultHasError,
-  canUseWeakMap,
-} from "../utilities/index.js";
-import { NetworkStatus } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
-import type { QueryManager } from "./QueryManager.js";
-import type { Unmasked } from "../masking/index.js";
+  isNonEmptyArray,
+} from "@apollo/client/utilities";
+import { mergeIncrementalData } from "@apollo/client/utilities";
+import { DeepMerger } from "@apollo/client/utilities";
+import { normalizeVariables } from "@apollo/client/utilities/internal";
 
-export type QueryStoreValue = Pick<
-  QueryInfo,
-  "variables" | "networkStatus" | "networkError" | "graphQLErrors"
->;
+import type { ObservableQuery } from "./ObservableQuery.js";
+import type { QueryManager } from "./QueryManager.js";
+import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -28,13 +22,10 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
-  ApolloCache<any>,
-  number
->();
+const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
 function wrapDestructiveCacheMethod(
-  cache: ApolloCache<any>,
+  cache: ApolloCache,
   methodName: "evict" | "modify" | "reset"
 ) {
   const original = cache[methodName];
@@ -71,16 +62,13 @@ export class QueryInfo {
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
-  networkStatus?: NetworkStatus;
-  networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   stopped = false;
 
   private cancelWatch?: () => void;
-  private cache: ApolloCache<any>;
+  private cache: ApolloCache;
 
   constructor(
-    queryManager: QueryManager<any>,
+    queryManager: QueryManager,
     public readonly queryId = queryManager.generateQueryId()
   ) {
     const cache = (this.cache = queryManager.cache);
@@ -101,23 +89,10 @@ export class QueryInfo {
   public init(query: {
     document: DocumentNode;
     variables: Record<string, any> | undefined;
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus?: NetworkStatus;
-    observableQuery?: ObservableQuery<any, any>;
-    lastRequestId?: number;
   }): this {
-    let networkStatus = query.networkStatus || NetworkStatus.loading;
-    if (
-      this.variables &&
-      this.networkStatus !== NetworkStatus.loading &&
-      !equal(this.variables, query.variables)
-    ) {
-      networkStatus = NetworkStatus.setVariables;
-    }
+    const variables = normalizeVariables(query.variables);
 
-    if (!equal(query.variables, this.variables)) {
+    if (!equal(variables, this.variables)) {
       this.lastDiff = void 0;
       // Ensure we don't continue to receive cache updates for old variables
       this.cancel();
@@ -125,19 +100,8 @@ export class QueryInfo {
 
     Object.assign(this, {
       document: query.document,
-      variables: query.variables,
-      networkError: null,
-      graphQLErrors: this.graphQLErrors || [],
-      networkStatus,
+      variables,
     });
-
-    if (query.observableQuery) {
-      this.setObservableQuery(query.observableQuery);
-    }
-
-    if (query.lastRequestId) {
-      this.lastRequestId = query.lastRequestId;
-    }
 
     return this;
   }
@@ -157,7 +121,7 @@ export class QueryInfo {
 
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {
-      return { complete: false };
+      return { result: null, complete: false };
     }
 
     const diff = this.cache.diff(options);
@@ -189,7 +153,6 @@ export class QueryInfo {
       variables,
       returnPartialData: true,
       optimistic: true,
-      canonizeResults: this.observableQuery?.options.canonizeResults,
     };
   }
 
@@ -301,9 +264,8 @@ export class QueryInfo {
     >,
     cacheWriteBehavior: CacheWriteBehavior
   ) {
+    const variables = normalizeVariables(options.variables);
     const merger = new DeepMerger();
-    const graphQLErrors =
-      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -323,12 +285,10 @@ export class QueryInfo {
       result.data = merger.merge(diff.result, result.data);
     }
 
-    this.graphQLErrors = graphQLErrors;
-
     if (options.fetchPolicy === "no-cache") {
       this.updateLastDiff(
         { result: result.data, complete: true },
-        this.getDiffOptions(options.variables)
+        this.getDiffOptions(variables)
       );
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
@@ -337,17 +297,17 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction((cache) => {
-          if (this.shouldWrite(result, options.variables)) {
+          if (this.shouldWrite(result, variables)) {
             cache.writeQuery({
               query: document,
               data: result.data as Unmasked<T>,
-              variables: options.variables,
+              variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
             });
 
             this.lastWrite = {
               result,
-              variables: options.variables,
+              variables,
               dmCount: destructiveMethodCounts.get(this.cache),
             };
           } else {
@@ -393,7 +353,7 @@ export class QueryInfo {
             // re-reading the latest data with cache.diff, below.
           }
 
-          const diffOptions = this.getDiffOptions(options.variables);
+          const diffOptions = this.getDiffOptions(variables);
           const diff = cache.diff<T>(diffOptions);
 
           // In case the QueryManager stops this QueryInfo before its
@@ -402,10 +362,10 @@ export class QueryInfo {
           // the watch if we are writing a result that doesn't match the current
           // variables to avoid race conditions from broadcasting the wrong
           // result.
-          if (!this.stopped && equal(this.variables, options.variables)) {
+          if (!this.stopped && equal(this.variables, variables)) {
             // Any time we're about to update this.diff, we need to make
             // sure we've started watching the cache.
-            this.updateWatch(options.variables);
+            this.updateWatch(variables);
           }
 
           // If we're allowed to write to the cache, and we can read a
@@ -422,28 +382,6 @@ export class QueryInfo {
         this.lastWrite = void 0;
       }
     }
-  }
-
-  public markReady() {
-    this.networkError = null;
-    return (this.networkStatus = NetworkStatus.ready);
-  }
-
-  public markError(error: ApolloError) {
-    this.networkStatus = NetworkStatus.error;
-    this.lastWrite = void 0;
-
-    this.observableQuery?.["resetNotifications"]();
-
-    if (error.graphQLErrors) {
-      this.graphQLErrors = error.graphQLErrors;
-    }
-
-    if (error.networkError) {
-      this.networkError = error.networkError;
-    }
-
-    return error;
   }
 }
 

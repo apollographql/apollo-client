@@ -1,6 +1,7 @@
 import { __rest } from "tslib";
 
-import type { FieldPolicy, Reference } from "../../cache/index.js";
+import type { FieldPolicy, Reference } from "@apollo/client/cache";
+
 import { mergeDeep } from "../common/mergeDeep.js";
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
@@ -58,7 +59,7 @@ export function offsetLimitPagination<T = Reference>(
 // attempting to update the cursor field of the normalized StoreObject
 // that the reference refers to, or managing edge wrapper objects
 // (something I attempted in #7023, but abandoned because of #7088).
-export type TRelayEdge<TNode> =
+type TRelayEdge<TNode> =
   | {
       cursor?: string;
       node: TNode;
@@ -72,17 +73,17 @@ export type TRelayPageInfo = {
   endCursor: string;
 };
 
-export type TExistingRelay<TNode> = Readonly<{
+type TExistingRelay<TNode> = Readonly<{
   edges: TRelayEdge<TNode>[];
   pageInfo: TRelayPageInfo;
 }>;
 
-export type TIncomingRelay<TNode> = {
+type TIncomingRelay<TNode> = {
   edges?: TRelayEdge<TNode>[];
   pageInfo?: TRelayPageInfo;
 };
 
-export type RelayFieldPolicy<TNode> = FieldPolicy<
+type RelayFieldPolicy<TNode> = FieldPolicy<
   TExistingRelay<TNode> | null,
   TIncomingRelay<TNode> | null,
   TIncomingRelay<TNode> | null

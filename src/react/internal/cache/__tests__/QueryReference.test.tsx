@@ -1,17 +1,15 @@
-import {
-  ApolloClient,
-  ApolloLink,
-  InMemoryCache,
-  Observable,
-} from "../../../../core";
-import { setupSimpleCase } from "../../../../testing/internal";
-import {
-  InternalQueryReference,
+import React from "react";
+import { of } from "rxjs";
+
+import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
+import { InternalQueryReference } from "@apollo/client/react/internal";
+import { setupSimpleCase } from "@apollo/client/testing/internal";
+
+import type {
   PreloadedQueryRef,
   QueryRef,
   QueryReference,
-} from "../QueryReference";
-import React from "react";
+} from "../QueryReference.js";
 
 test("kicks off request immediately when created", async () => {
   const { query } = setupSimpleCase();
@@ -21,7 +19,7 @@ test("kicks off request immediately when created", async () => {
     cache: new InMemoryCache(),
     link: new ApolloLink((operation) => {
       fetchCount++;
-      return Observable.of({ data: { greeting: "Hello" } });
+      return of({ data: { greeting: "Hello" } });
     }),
   });
 

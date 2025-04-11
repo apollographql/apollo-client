@@ -1,8 +1,13 @@
-import { DocumentTransform } from "../DocumentTransform";
-import { isMutationOperation, isQueryOperation } from "../operations";
-import { removeDirectivesFromDocument } from "../transform";
+import type { DocumentNode } from "graphql";
+import { Kind, visit } from "graphql";
 import { gql } from "graphql-tag";
-import { DocumentNode, visit, Kind } from "graphql";
+
+import {
+  DocumentTransform,
+  isMutationOperation,
+  isQueryOperation,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
 
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {

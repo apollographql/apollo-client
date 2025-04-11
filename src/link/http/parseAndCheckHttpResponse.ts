@@ -1,17 +1,16 @@
-import { responseIterator } from "./responseIterator.js";
-import type { Operation } from "../core/index.js";
-import { throwServerError } from "../utils/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
-import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
-import type { SubscriptionObserver } from "zen-observable-ts";
+import type { Observer } from "rxjs";
+
+import {
+  CombinedProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+  ServerError,
+  ServerParseError,
+} from "@apollo/client/errors";
+import type { Operation } from "@apollo/client/link/core";
+import { isApolloPayloadResult } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const { hasOwnProperty } = Object.prototype;
-
-export type ServerParseError = Error & {
-  response: Response;
-  statusCode: number;
-  bodyText: string;
-};
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>,
@@ -40,11 +39,15 @@ export async function readMultipartBody<
 
   const boundary = `\r\n--${boundaryVal}`;
   let buffer = "";
-  const iterator = responseIterator(response);
+  invariant(
+    response.body && typeof response.body.getReader === "function",
+    "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
+  );
+  const iterator = response.body.getReader();
   let running = true;
 
   while (running) {
-    const { value, done } = await iterator.next();
+    const { value, done } = await iterator.read();
     const chunk = typeof value === "string" ? value : decoder.decode(value);
     const searchFrom = buffer.length - boundary.length + 1;
     running = !done;
@@ -94,7 +97,9 @@ export async function readMultipartBody<
                 ...next,
                 extensions: {
                   ...("extensions" in next ? next.extensions : (null as any)),
-                  [PROTOCOL_ERRORS_SYMBOL]: result.errors,
+                  [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
+                    result.errors ?? []
+                  ),
                 },
               };
             }
@@ -119,7 +124,7 @@ export async function readMultipartBody<
   }
 }
 
-export function parseHeaders(headerText: string): Record<string, string> {
+function parseHeaders(headerText: string): Record<string, string> {
   const headersInit: Record<string, string> = {};
   headerText.split("\n").forEach((line) => {
     const i = line.indexOf(":");
@@ -133,7 +138,7 @@ export function parseHeaders(headerText: string): Record<string, string> {
   return headersInit;
 }
 
-export function parseJsonBody<T>(response: Response, bodyText: string): T {
+function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
     // Network error
     const getResult = (): Record<string, unknown> | string => {
@@ -143,26 +148,20 @@ export function parseJsonBody<T>(response: Response, bodyText: string): T {
         return bodyText;
       }
     };
-    throwServerError(
-      response,
-      getResult(),
-      `Response not successful: Received status code ${response.status}`
+    throw new ServerError(
+      `Response not successful: Received status code ${response.status}`,
+      { response, result: getResult() }
     );
   }
 
   try {
     return JSON.parse(bodyText) as T;
   } catch (err) {
-    const parseError = err as ServerParseError;
-    parseError.name = "ServerParseError";
-    parseError.response = response;
-    parseError.statusCode = response.status;
-    parseError.bodyText = bodyText;
-    throw parseError;
+    throw new ServerParseError(err, { response, bodyText });
   }
 }
 
-export function handleError(err: any, observer: SubscriptionObserver<any>) {
+export function handleError(err: any, observer: Observer<any>) {
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
   // (and react-apollo) the `graphqlErrors` and `networkErrors` to
@@ -213,15 +212,13 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
           !hasOwnProperty.call(result, "data") &&
           !hasOwnProperty.call(result, "errors")
         ) {
-          // Data error
-          throwServerError(
-            response,
-            result,
+          throw new ServerError(
             `Server response was missing for query '${
               Array.isArray(operations) ?
                 operations.map((op) => op.operationName)
               : operations.operationName
-            }'.`
+            }'.`,
+            { response, result }
           );
         }
         return result;

@@ -6,11 +6,11 @@ This type was first suggested [in this Github discussion](https://github.com/mic
 Example usage:
 ```ts
 export function useQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = Object.create(null),
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {},
 )
 ```
 In this case, `TData` and `TVariables` should be inferred from `query`, but never widened from something in `options`.

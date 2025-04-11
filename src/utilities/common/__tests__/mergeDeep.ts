@@ -1,4 +1,8 @@
-import { mergeDeep, mergeDeepArray, DeepMerger } from "../mergeDeep";
+import {
+  DeepMerger,
+  mergeDeep,
+  mergeDeepArray,
+} from "@apollo/client/utilities";
 
 describe("mergeDeep", function () {
   it("should return an object if first argument falsy", function () {
@@ -8,7 +12,7 @@ describe("mergeDeep", function () {
   });
 
   it("should preserve identity for single arguments", function () {
-    const arg = Object.create(null);
+    const arg = {};
     expect(mergeDeep(arg)).toBe(arg);
   });
 

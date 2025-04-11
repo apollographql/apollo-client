@@ -1,38 +1,173 @@
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import * as React from "rehackt";
+import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
+import * as React from "react";
 
 import type {
   ApolloClient,
   ApolloQueryResult,
+  DefaultContext,
+  ErrorLike,
+  ErrorPolicy,
+  FetchMoreQueryOptions,
+  MaybeMasked,
   ObservableQuery,
   OperationVariables,
-  WatchQueryOptions,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
-import type {
-  LazyQueryHookExecOptions,
-  LazyQueryHookOptions,
-  LazyQueryResultTuple,
-  NoInfer,
-  QueryHookOptions,
   QueryResult,
-} from "../types/types.js";
-import type { InternalResult } from "./useQuery.js";
-import {
-  createMakeWatchQueryOptions,
-  getDefaultFetchPolicy,
-  getObsQueryOptions,
-  toQueryResult,
-  useQueryInternals,
-} from "./useQuery.js";
+  RefetchWritePolicy,
+  SubscribeToMoreFunction,
+  Unmasked,
+  UpdateQueryMapFn,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
+import type { VariablesOption } from "@apollo/client/react/internal";
+import type { NoInfer, OnlyRequiredProperties } from "@apollo/client/utilities";
+import { maybeDeepFreeze } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
+
+import { useRenderGuard } from "./internal/index.js";
+import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
+
+export declare namespace useLazyQuery {
+  export interface Options<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TVariables, TData>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+    client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+  }
+
+  export interface Result<TData, TVariables extends OperationVariables> {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+    startPolling: (pollInterval: number) => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+    stopPolling: () => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+    refetch: (
+      variables?: Partial<TVariables>
+    ) => Promise<QueryResult<MaybeMasked<TData>>>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+    variables: TVariables | undefined;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+
+    fetchMore: <
+      TFetchData = TData,
+      TFetchVars extends OperationVariables = TVariables,
+    >(
+      fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+        updateQuery?: (
+          previousQueryResult: Unmasked<TData>,
+          options: {
+            fetchMoreResult: Unmasked<TFetchData>;
+            variables: TFetchVars;
+          }
+        ) => Unmasked<TData>;
+      }
+    ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
+    client: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
+    observable: ObservableQuery<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+    data: MaybeMasked<TData> | undefined;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
+    previousData?: MaybeMasked<TData>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+    loading: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+    networkStatus: NetworkStatus;
+
+    /**
+     * If `true`, the associated lazy query has been executed.
+     *
+     * @docGroup 2. Network info
+     */
+    called: boolean;
+  }
+
+  export type ExecOptions<
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+  } & VariablesOption<TVariables>;
+
+  export type ResultTuple<TData, TVariables extends OperationVariables> = [
+    execute: ExecFunction<TData, TVariables>,
+    result: useLazyQuery.Result<TData, TVariables>,
+  ];
+
+  export type ExecFunction<TData, TVariables extends OperationVariables> = (
+    ...args: [TVariables] extends [never] ?
+      [options?: useLazyQuery.ExecOptions<TVariables>]
+    : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+      [options?: useLazyQuery.ExecOptions<TVariables>]
+    : [options: useLazyQuery.ExecOptions<TVariables>]
+  ) => Promise<QueryResult<TData>>;
+}
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
 const EAGER_METHODS = [
   "refetch",
-  "reobserve",
   "fetchMore",
   "updateQuery",
   "startPolling",
@@ -76,119 +211,152 @@ const EAGER_METHODS = [
  * @returns A tuple in the form of `[execute, result]`
  */
 export function useLazyQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): LazyQueryResultTuple<TData, TVariables> {
-  const execOptionsRef =
-    React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>(void 0);
-  const optionsRef =
-    React.useRef<LazyQueryHookOptions<TData, TVariables>>(void 0);
-  const queryRef = React.useRef<
-    DocumentNode | TypedDocumentNode<TData, TVariables>
-  >(void 0);
-  const merged = mergeOptions(options, execOptionsRef.current || {});
-  const document = merged?.query ?? query;
+  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+): useLazyQuery.ResultTuple<TData, TVariables> {
+  const client = useApolloClient(options?.client);
+  const previousDataRef = React.useRef<TData>(undefined);
+  const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
+  const stableOptions = useDeepMemo(() => options, [options]);
+  const calledDuringRender = useRenderGuard();
 
-  // Use refs to track options and the used query to ensure the `execute`
-  // function remains referentially stable between renders.
-  optionsRef.current = options;
-  queryRef.current = document;
+  function createObservable() {
+    return client.watchQuery({
+      ...options,
+      query,
+      initialFetchPolicy: options?.fetchPolicy,
+      fetchPolicy: "standby",
+    });
+  }
 
-  const queryHookOptions = {
-    ...merged,
-    skip: !execOptionsRef.current,
-  };
-  const {
-    obsQueryFields,
-    result: useQueryResult,
-    client,
-    resultData,
-    observable,
-    onQueryExecuted,
-  } = useQueryInternals(document, queryHookOptions);
+  const [currentClient, setCurrentClient] = React.useState(client);
+  const [observable, setObservable] = React.useState(createObservable);
 
-  const initialFetchPolicy =
-    observable.options.initialFetchPolicy ||
-    getDefaultFetchPolicy(
-      queryHookOptions.defaultOptions,
-      client.defaultOptions
-    );
+  if (currentClient !== client) {
+    setCurrentClient(client);
+    setObservable(createObservable());
+  }
 
-  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+  // TODO: Revisit after we have RxJS in place. We should be able to use
+  // observable.getCurrentResult() (or equivalent) to get these values which
+  // will hopefully alleviate the need for us to use refs to track these values.
+  const updateResult = React.useCallback(
+    (result: ApolloQueryResult<TData>, forceUpdate: () => void) => {
+      const previousData = resultRef.current?.data;
+
+      if (previousData && !equal(previousData, result.data)) {
+        previousDataRef.current = previousData;
+      }
+
+      resultRef.current = result;
+
+      forceUpdate();
+    },
+    []
+  );
+
+  const observableResult = useSyncExternalStore(
+    React.useCallback(
+      (forceUpdate) => {
+        const subscription = observable.subscribe((result) => {
+          if (!equal(resultRef.current || initialResult, result)) {
+            updateResult(result, forceUpdate);
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      },
+      [observable, updateResult]
+    ),
+    () => resultRef.current || initialResult,
+    () => initialResult
+  );
+
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      const method = obsQueryFields[key];
-      eagerMethods[key] = function () {
-        if (!execOptionsRef.current) {
-          execOptionsRef.current = Object.create(null);
-          // Only the first time populating execOptionsRef.current matters here.
-          forceUpdateState();
-        }
-        // @ts-expect-error this is just too generic to type
-        return method.apply(this, arguments);
+      // eslint-disable-next-line react-compiler/react-compiler
+      eagerMethods[key] = function (...args: any[]) {
+        invariant(
+          resultRef.current,
+          "useLazyQuery: '%s' cannot be called before executing the query.",
+          key
+        );
+
+        // @ts-expect-error this is just to generic to type
+        return observable[key](...args);
       };
     }
 
-    return eagerMethods as typeof obsQueryFields;
-  }, [forceUpdateState, obsQueryFields]);
+    return eagerMethods as Pick<
+      useLazyQuery.Result<TData, TVariables>,
+      (typeof EAGER_METHODS)[number]
+    >;
+  }, [observable]);
 
-  const called = !!execOptionsRef.current;
-  const result = React.useMemo(
-    () => ({
-      ...useQueryResult,
-      ...eagerMethods,
-      called,
-    }),
-    [useQueryResult, eagerMethods, called]
-  );
+  React.useEffect(() => {
+    const updatedOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
+      query,
+      errorPolicy: stableOptions?.errorPolicy,
+      context: stableOptions?.context,
+      refetchWritePolicy: stableOptions?.refetchWritePolicy,
+      returnPartialData: stableOptions?.returnPartialData,
+      notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
+      nextFetchPolicy: options?.nextFetchPolicy,
+      skipPollAttempt: options?.skipPollAttempt,
+    };
 
-  const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
-    (executeOptions) => {
-      execOptionsRef.current =
-        executeOptions ?
-          {
-            ...executeOptions,
-            fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
-          }
-        : {
-            fetchPolicy: initialFetchPolicy,
-          };
+    // Wait to apply the changed fetch policy until after the execute
+    // function has been called. The execute function will handle setting the
+    // the fetch policy away from standby for us when called for the first time.
+    if (
+      observable.options.fetchPolicy !== "standby" &&
+      stableOptions?.fetchPolicy
+    ) {
+      updatedOptions.fetchPolicy = stableOptions?.fetchPolicy;
+    }
 
-      const options = mergeOptions(optionsRef.current, {
-        query: queryRef.current,
-        ...execOptionsRef.current,
-      });
+    observable.silentSetOptions(updatedOptions);
+  }, [
+    query,
+    observable,
+    stableOptions,
+    // Ensure inline functions don't suffer from stale closures by checking for
+    // these deps separately. @wry/equality doesn't compare function identity
+    // so `stableOptions` isn't updated when using inline functions.
+    options?.nextFetchPolicy,
+    options?.skipPollAttempt,
+  ]);
 
-      const promise = executeQuery(
-        resultData,
-        observable,
-        client,
-        document,
-        { ...options, skip: false },
-        onQueryExecuted
-      ).then((queryResult) => Object.assign(queryResult, eagerMethods));
+  const execute: useLazyQuery.ExecFunction<TData, TVariables> =
+    React.useCallback(
+      (...args) => {
+        invariant(
+          !calledDuringRender(),
+          "useLazyQuery: 'execute' should not be called during render. To start a query during render, use the 'useQuery' hook."
+        );
 
-      // Because the return value of `useLazyQuery` is usually floated, we need
-      // to catch the promise to prevent unhandled rejections.
-      promise.catch(() => {});
+        const [executeOptions] = args;
 
-      return promise;
-    },
-    [
-      client,
-      document,
-      eagerMethods,
-      initialFetchPolicy,
-      observable,
-      resultData,
-      onQueryExecuted,
-    ]
-  );
+        const options: Partial<WatchQueryOptions<TVariables, TData>> = {
+          ...executeOptions,
+          variables: executeOptions?.variables as TVariables,
+        };
+
+        if (observable.options.fetchPolicy === "standby") {
+          options.fetchPolicy = observable.options.initialFetchPolicy;
+        }
+
+        return observable.reobserve(options);
+      },
+      [observable, calledDuringRender]
+    );
 
   const executeRef = React.useRef(execute);
   useIsomorphicLayoutEffect(() => {
@@ -199,65 +367,29 @@ export function useLazyQuery<
     (...args) => executeRef.current(...args),
     []
   );
+
+  const result = React.useMemo(() => {
+    const { partial, ...result } = observableResult;
+
+    return {
+      ...eagerMethods,
+      ...result,
+      client,
+      // eslint-disable-next-line react-compiler/react-compiler
+      previousData: previousDataRef.current,
+      variables: observable.variables,
+      observable,
+      // eslint-disable-next-line react-compiler/react-compiler
+      called: !!resultRef.current,
+    };
+  }, [client, observableResult, eagerMethods, observable]);
+
   return [stableExecute, result];
 }
 
-function executeQuery<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>,
-  currentQuery: DocumentNode,
-  options: QueryHookOptions<TData, TVariables> & {
-    query?: DocumentNode;
-  },
-  onQueryExecuted: (options: WatchQueryOptions<TVariables, TData>) => void
-) {
-  const query = options.query || currentQuery;
-  const watchQueryOptions = createMakeWatchQueryOptions(
-    client,
-    query,
-    options,
-    false
-  )(observable);
-
-  const concast = observable.reobserveAsConcast(
-    getObsQueryOptions(observable, client, options, watchQueryOptions)
-  );
-  onQueryExecuted(watchQueryOptions);
-
-  return new Promise<
-    Omit<QueryResult<TData, TVariables>, (typeof EAGER_METHODS)[number]>
-  >((resolve) => {
-    let result: ApolloQueryResult<TData>;
-
-    // Subscribe to the concast independently of the ObservableQuery in case
-    // the component gets unmounted before the promise resolves. This prevents
-    // the concast from terminating early and resolving with `undefined` when
-    // there are no more subscribers for the concast.
-    concast.subscribe({
-      next: (value) => {
-        result = value;
-      },
-      error: () => {
-        resolve(
-          toQueryResult(
-            observable.getCurrentResult(),
-            resultData.previousData,
-            observable,
-            client
-          )
-        );
-      },
-      complete: () => {
-        resolve(
-          toQueryResult(
-            observable["maskResult"](result),
-            resultData.previousData,
-            observable,
-            client
-          )
-        );
-      },
-    });
-  });
-}
+const initialResult: ApolloQueryResult<any> = maybeDeepFreeze({
+  data: undefined,
+  loading: false,
+  networkStatus: NetworkStatus.ready,
+  partial: true,
+});

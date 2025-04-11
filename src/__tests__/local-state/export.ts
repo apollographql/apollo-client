@@ -1,11 +1,14 @@
-import gql from "graphql-tag";
 import { print } from "graphql";
+import { gql } from "graphql-tag";
+import { of } from "rxjs";
 
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { ApolloClient } from "../../core";
-import { InMemoryCache } from "../../cache";
-import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloLink } from "@apollo/client/link/core";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 describe("@client @export tests", () => {
   it("should not break @client only queries when the @export directive is used", async () => {
@@ -155,7 +158,7 @@ describe("@client @export tests", () => {
 
     const { data } = await client.query({ query });
 
-    expect({ ...data }).toMatchObject({
+    expect(data).toMatchObject({
       currentAuthor: testAuthor,
       postCount: testPostCount,
     });
@@ -183,7 +186,7 @@ describe("@client @export tests", () => {
       const testPostCount = 200;
 
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: {
             postCount: testPostCount,
           },
@@ -244,7 +247,7 @@ describe("@client @export tests", () => {
     const testPostCount = 200;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           postCount: testPostCount,
         },
@@ -295,7 +298,7 @@ describe("@client @export tests", () => {
     const testPostCount = 200;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           currentAuthor: testAuthor,
           postCount: testPostCount,
@@ -345,7 +348,7 @@ describe("@client @export tests", () => {
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ reviewerId: loggedInReviewerId });
 
-      return Observable.of({
+      return of({
         data: {
           postRequiringReview,
           reviewerDetails,
@@ -419,7 +422,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ reviewerId: currentReviewer.id });
-      return Observable.of({
+      return of({
         data: {
           postRequiringReview,
           reviewerDetails,
@@ -484,7 +487,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ postId: testPostId });
-      return Observable.of({
+      return of({
         data: {
           upvotePost: testPost,
         },
@@ -531,7 +534,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ postId: testPostId });
-      return Observable.of({
+      return of({
         data: {
           upvotePost: testPost,
         },
@@ -614,11 +617,9 @@ describe("@client @export tests", () => {
       link: new ApolloLink((request) => {
         expect(request.variables.where).toEqual(currentFilter);
         expect(print(request.query)).toBe(print(expectedServerQuery));
-        return Observable.of({ data });
+        return of({ data });
       }),
-      cache: new InMemoryCache({
-        addTypename: true,
-      }),
+      cache: new InMemoryCache(),
       resolvers: {
         Query: {
           currentFilter() {
@@ -656,7 +657,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ reviewerId: secondaryReviewerId });
-      return Observable.of({
+      return of({
         data: {
           post,
         },
@@ -708,7 +709,7 @@ describe("@client @export tests", () => {
     let currentAuthorId = testAuthorId1;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           postCount:
             currentAuthorId === testAuthorId1 ? testPostCount1 : testPostCount2,
@@ -731,11 +732,21 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     currentAuthorId = testAuthorId2;
@@ -744,11 +755,21 @@ describe("@client @export tests", () => {
       data: { currentAuthorId },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -769,7 +790,7 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink(() => {
       fetchCount += 1;
-      return Observable.of({
+      return of({
         data: {
           postCount: testPostCount1,
         },
@@ -791,11 +812,21 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(fetchCount).toBe(1);
 
@@ -826,7 +857,7 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink(() => {
       fetchCount += 1;
-      return Observable.of({
+      return of({
         data: {
           postCount: testPostCount1,
         },
@@ -852,11 +883,21 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // The initial result is fetched over the network.
     expect(fetchCount).toBe(1);
@@ -875,11 +916,14 @@ describe("@client @export tests", () => {
       data: { currentAuthorId: testAuthorId2 },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // The updated result should not have been fetched over the
     // network, as it can be found in the cache.
@@ -922,11 +966,21 @@ describe("@client @export tests", () => {
     const obs = client.watchQuery({ query: doubleWidgetsQuery });
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         widgetCount: 100,
         doubleWidgets: 200,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     client.writeQuery({
@@ -936,11 +990,21 @@ describe("@client @export tests", () => {
       },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         widgetCount: 500,
         doubleWidgets: 1000,
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });

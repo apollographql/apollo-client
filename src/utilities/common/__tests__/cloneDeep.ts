@@ -1,4 +1,4 @@
-import { cloneDeep } from "../cloneDeep";
+import { cloneDeep } from "@apollo/client/utilities";
 
 describe("cloneDeep", () => {
   it("will clone primitive values", () => {

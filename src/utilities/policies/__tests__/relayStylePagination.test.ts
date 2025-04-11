@@ -1,11 +1,12 @@
+import type { FieldFunctionOptions, StoreObject } from "@apollo/client/cache";
 import {
-  FieldFunctionOptions,
   InMemoryCache,
   isReference,
   makeReference,
-  StoreObject,
-} from "../../../cache";
-import { relayStylePagination, TRelayPageInfo } from "../pagination";
+} from "@apollo/client/cache";
+import { relayStylePagination } from "@apollo/client/utilities";
+
+import type { TRelayPageInfo } from "../pagination.js";
 
 describe("relayStylePagination", () => {
   const policy = relayStylePagination();

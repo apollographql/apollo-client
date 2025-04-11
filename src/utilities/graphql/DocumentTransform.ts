@@ -1,11 +1,13 @@
-import { Trie } from "@wry/trie";
-import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
-import { checkDocument } from "./getFromAST.js";
-import { invariant } from "../globals/index.js";
-import type { DocumentNode } from "graphql";
 import { WeakCache } from "@wry/caches";
+import { Trie } from "@wry/trie";
+import type { DocumentNode } from "graphql";
 import { wrap } from "optimism";
+
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { cacheSizes } from "../caching/index.js";
+
+import { checkDocument } from "./getFromAST.js";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -38,8 +40,7 @@ export class DocumentTransform {
   private readonly transform: TransformFn;
   private cached: boolean;
 
-  private readonly resultCache =
-    canUseWeakSet ? new WeakSet<DocumentNode>() : new Set<DocumentNode>();
+  private readonly resultCache = new WeakSet<DocumentNode>();
 
   // This default implementation of getCacheKey can be overridden by providing
   // options.getCacheKey to the DocumentTransform constructor. In general, a
@@ -78,10 +79,7 @@ export class DocumentTransform {
     );
   }
 
-  constructor(
-    transform: TransformFn,
-    options: DocumentTransformOptions = Object.create(null)
-  ) {
+  constructor(transform: TransformFn, options: DocumentTransformOptions = {}) {
     this.transform = transform;
 
     if (options.getCacheKey) {
@@ -98,7 +96,7 @@ export class DocumentTransform {
    */
   resetCache() {
     if (this.cached) {
-      const stableCacheKeys = new Trie<WeakKey>(canUseWeakMap);
+      const stableCacheKeys = new Trie<WeakKey>();
       this.performWork = wrap(
         DocumentTransform.prototype.performWork.bind(this),
         {

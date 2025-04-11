@@ -1,12 +1,13 @@
-import gql from "graphql-tag";
-import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import type { ASTNode, print } from "graphql";
+import { stripIgnoredCharacters } from "graphql";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
 import {
+  fallbackHttpConfig,
   selectHttpOptionsAndBody,
   selectHttpOptionsAndBodyInternal,
-  fallbackHttpConfig,
-} from "../selectHttpOptionsAndBody";
+} from "@apollo/client/link/http";
+import { createOperation } from "@apollo/client/link/utils";
 
 const query = gql`
   query SampleQuery {
@@ -36,7 +37,7 @@ describe("selectHttpOptionsAndBody", () => {
 
   it("the fallbackConfig is used if no other configs are specified", () => {
     const defaultHeaders = {
-      accept: "*/*",
+      accept: "application/graphql-response+json",
       "content-type": "application/json",
     };
 

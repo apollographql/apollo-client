@@ -2,14 +2,26 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import type {
   InteropObservable,
+  ObservableNotification,
   Observer,
+  OperatorFunction,
   Subscribable,
   Subscription,
 } from "rxjs";
-import type { Observable } from "rxjs";
-import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
+import { merge, Observable, partition } from "rxjs";
+import {
+  BehaviorSubject,
+  dematerialize,
+  filter,
+  lastValueFrom,
+  map,
+  pipe,
+  Subject,
+  tap,
+} from "rxjs";
 
-import type { MissingFieldError } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client";
+import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import {
@@ -65,6 +77,21 @@ interface Last<TData, TVariables> {
   error?: ErrorLike;
 }
 
+interface Meta {
+  source: "cache" | "network" | "fetchMore";
+  query: DocumentNode;
+  variables: OperationVariables | undefined;
+}
+
+type NetworkTransportValue = ObservableNotification<FetchResult> & {
+  meta: Meta & { source: "network" | "fetchMore" };
+};
+type CacheTransportValue = ObservableNotification<Cache.DiffResult<any>> & {
+  meta: Meta & { source: "cache" };
+};
+
+type TransportValue = CacheTransportValue | NetworkTransportValue;
+
 const newNetworkStatusSymbol: any = Symbol();
 const uninitialized = {} as ApolloQueryResult<any>;
 
@@ -97,6 +124,8 @@ export class ObservableQuery<
     return this.options.variables;
   }
 
+  private cacheSubscription?: Subscription;
+  private input: Subject<TransportValue>;
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
@@ -132,7 +161,10 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     this.networkStatus = NetworkStatus.loading;
+
+    this.input = new Subject();
     this.subject = new BehaviorSubject(uninitialized);
+    this.input.pipe(this.operator).subscribe(this.subject);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -197,7 +229,6 @@ export class ObservableQuery<
     this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
-    this.subscribe = this.subscribe.bind(this);
     this.subscribeToMore = this.subscribeToMore.bind(this);
     this.maskResult = this.maskResult.bind(this);
 
@@ -304,6 +335,35 @@ export class ObservableQuery<
       default:
         return defaultResult;
     }
+  }
+
+  private resubscribeCache({
+    variables = this.variables,
+    query = this.query,
+  } = {}) {
+    this.cacheSubscription?.unsubscribe();
+    console.log("subscribing to cache for", { query, variables });
+    const observable = new Observable<TransportValue>((observer) => {
+      return this.queryManager.cache.watch({
+        query,
+        variables,
+        optimistic: true,
+        callback: (diff) => {
+          if (diff.result) {
+            observer.next({
+              kind: "N",
+              value: diff,
+              meta: {
+                source: "cache",
+                query,
+                variables,
+              },
+            });
+          }
+        },
+      });
+    });
+    this.cacheSubscription = observable.subscribe(this.input);
   }
 
   private getCurrentFullResult(
@@ -891,6 +951,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     emitLoadingState: boolean,
     query?: DocumentNode
   ) {
+    console.log("fetch", options);
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
@@ -1000,6 +1061,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
+    this.resubscribeCache(newOptions);
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
 
@@ -1176,7 +1238,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.updateLastResult(result, variables);
     this.networkStatus = result.networkStatus;
     if (lastError || isDifferent) {
-      this.subject.next(this.maskResult(result));
+      // this.subject.next(this.maskResult(result));
     }
   }
 
@@ -1195,7 +1257,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.updateLastResult(errorResult, variables);
     this.networkStatus = NetworkStatus.error;
     this.last!.error = error;
-    this.subject.next(errorResult);
+    // this.subject.next(errorResult);
   }
 
   public hasObservers() {
@@ -1235,6 +1297,32 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       : result;
   }
+
+  private operator: OperatorFunction<TransportValue, ApolloQueryResult<any>> =
+    pipe((obs) => {
+      const [fromCache, fromNetwork] = partition(
+        obs,
+        (v): v is CacheTransportValue => v.meta.source === "cache"
+      );
+
+      return merge(
+        fromCache.pipe(
+          map((cacheValue): ApolloQueryResult<any> => {
+            if (cacheValue.kind !== "N")
+              throw new Error("Impossible value from cache");
+            const diff = cacheValue.value;
+            return {
+              data: diff.result,
+              networkStatus: NetworkStatus.ready,
+              loading: false,
+              error: undefined,
+              partial: !diff.complete,
+            };
+          })
+        ),
+        fromNetwork.pipe(dematerialize()).pipe(map(() => uninitialized))
+      );
+    });
 }
 
 // Reobserve with fetchPolicy effectively set to "cache-first", triggering

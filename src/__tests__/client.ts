@@ -1397,8 +1397,8 @@ describe("client", () => {
     await expect(stream).toEmitNext();
     await client.mutate({ mutation, updateQueries, update: updateSpy });
 
-    expect(queryUpdaterSpy).toBeCalled();
-    expect(updateSpy).toBeCalled();
+    expect(queryUpdaterSpy).toHaveBeenCalled();
+    expect(updateSpy).toHaveBeenCalled();
   });
 
   it("should send operationName along with the query to the server", () => {

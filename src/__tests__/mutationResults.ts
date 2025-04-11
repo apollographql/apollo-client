@@ -646,16 +646,37 @@ describe("mutation results", () => {
       },
     };
 
-    const { client, obsQuery } = setupObsQuery(
-      {
-        request: { query: queryTodos },
-        result: queryTodosResult,
-      },
-      {
-        request: { query: mutationTodo },
-        result: mutationTodoResult,
-      }
-    );
+    const client = new ApolloClient({
+      link: mockSingleLink(
+        {
+          request: { query: queryWithTypename } as any,
+          result,
+        },
+        {
+          request: { query: queryTodos },
+          result: queryTodosResult,
+        },
+        {
+          request: { query: mutationTodo },
+          result: mutationTodoResult,
+        }
+      ),
+      cache: new InMemoryCache({
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
+        },
+        // Passing an empty map enables warnings about missing fields:
+        possibleTypes: {},
+      }),
+    });
+
+    const obsQuery = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
 
     await firstValueFrom(from(obsQuery));
 

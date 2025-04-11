@@ -3697,6 +3697,8 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
+      observable.stopPolling();
+
       const result = await client.query({
         query,
         variables,

@@ -58,7 +58,11 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  normalizeVariables,
+  onAnyEvent,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -106,7 +110,7 @@ const IGNORE = {} as IgnoreModifier;
 
 interface MutationStoreValue {
   mutation: DocumentNode;
-  variables: Record<string, any>;
+  variables: Record<string, any> | undefined;
   loading: boolean;
   error: Error | null;
 }
@@ -293,6 +297,8 @@ export class QueryManager {
         context
       )) as TVariables;
     }
+
+    variables = normalizeVariables(variables);
 
     const mutationStoreValue =
       this.mutationStore &&

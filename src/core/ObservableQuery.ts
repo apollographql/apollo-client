@@ -21,7 +21,10 @@ import {
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  normalizeVariables,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
@@ -227,6 +230,7 @@ export class ObservableQuery<
       initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
         fetchPolicy
       ),
+      variables,
     } = options;
 
     this.options = {
@@ -240,6 +244,10 @@ export class ObservableQuery<
       // This ensures this.options.fetchPolicy always has a string value, in
       // case options.fetchPolicy was not provided.
       fetchPolicy,
+
+      // `variables` might be an empty object due to QueryManager.getVariables,
+      // so we reset to `undefined` if there are no values
+      variables: normalizeVariables(variables),
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
@@ -787,6 +795,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public async setVariables(
     variables: TVariables
   ): Promise<QueryResult<TData>> {
+    variables = normalizeVariables(variables) as TVariables;
+
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
@@ -1043,6 +1053,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});
+
+    // Allow variables to be reset back to `undefined` if explicitly passed as
+    // variables: undefined to reobserve, otherwise `compact` will ignore the
+    // `variables` key from from `newOptions`.
+    mergedOptions.variables =
+      newOptions && "variables" in newOptions ?
+        newOptions.variables
+      : this.options.variables;
+
     const options =
       useDisposableObservable ?
         // Disposable Observable fetches receive a shallow copy of this.options
@@ -1057,6 +1076,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const query = this.transformDocument(options.query);
     const { fetchPolicy } = options;
 
+    // note: This may mutate this.options.variables when not using a disposable
+    // observable. This is intentional
+    options.variables = normalizeVariables(options.variables);
+
     this.lastQuery = query;
 
     if (!useDisposableObservable) {
@@ -1066,9 +1089,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Reset options.fetchPolicy to its original value when variables change,
       // unless a new fetchPolicy was provided by newOptions.
       if (
-        newOptions &&
-        newOptions.variables &&
-        !equal(newOptions.variables, oldVariables) &&
+        !equal(options.variables, oldVariables) &&
         // Don't mess with the fetchPolicy if it's currently "standby".
         fetchPolicy !== "standby" &&
         // If we're changing the fetchPolicy anyway, don't try to change it here
@@ -1092,8 +1113,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
       if (
         oldNetworkStatus !== NetworkStatus.loading &&
-        newOptions?.variables &&
-        !equal(newOptions.variables, oldVariables)
+        !equal(options.variables, oldVariables)
       ) {
         newNetworkStatus = NetworkStatus.setVariables;
       }

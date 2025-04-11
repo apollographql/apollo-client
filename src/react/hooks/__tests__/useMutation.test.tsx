@@ -2711,7 +2711,7 @@ describe("useMutation Hook", () => {
           networkStatus: NetworkStatus.ready,
           loading: false,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
         expect(mutation).toStrictEqualTyped({
           data: undefined,
@@ -2748,7 +2748,7 @@ describe("useMutation Hook", () => {
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: undefined,
-            variables: {},
+            variables: undefined,
           });
 
           expect(mutation).toStrictEqualTyped({
@@ -2763,7 +2763,7 @@ describe("useMutation Hook", () => {
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: { todoCount: 0 },
-            variables: {},
+            variables: undefined,
           });
         }
 
@@ -2795,7 +2795,7 @@ describe("useMutation Hook", () => {
           networkStatus: NetworkStatus.ready,
           loading: false,
           previousData: { todoCount: 0 },
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -2816,7 +2816,7 @@ describe("useMutation Hook", () => {
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: { todoCount: 0 },
-            variables: {},
+            variables: undefined,
           });
 
           expect(mutation).toStrictEqualTyped({
@@ -2838,7 +2838,7 @@ describe("useMutation Hook", () => {
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: { todoCount: 0 },
-            variables: {},
+            variables: undefined,
           });
 
           expect(mutation).toStrictEqualTyped({
@@ -2914,7 +2914,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -2936,7 +2936,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -2969,7 +2969,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -2991,7 +2991,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: GET_TODOS_RESULT_1,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3013,7 +3013,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: GET_TODOS_RESULT_1,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3035,7 +3035,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: GET_TODOS_RESULT_1,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3113,7 +3113,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3135,7 +3135,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3168,7 +3168,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3190,7 +3190,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: GET_TODOS_RESULT_1,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3212,7 +3212,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: GET_TODOS_RESULT_1,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3234,7 +3234,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: GET_TODOS_RESULT_1,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3312,7 +3312,7 @@ describe("useMutation Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3334,7 +3334,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -3370,7 +3370,7 @@ describe("useMutation Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
 
         expect(mutation).toStrictEqualTyped({
@@ -4545,7 +4545,7 @@ describe("data masking", () => {
           },
         },
       },
-      { context: undefined, variables: {} }
+      { context: undefined, variables: undefined }
     );
   });
 });

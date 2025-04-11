@@ -76,6 +76,9 @@ const globalCaches: {
     canonicalStringify?: () => number;
 };
 
+// @public
+export function normalizeVariables<TVariables>(variables: TVariables): NonNullable<TVariables> | undefined;
+
 // @public (undocumented)
 type ObservableEvent<T> = {
     type: "complete";

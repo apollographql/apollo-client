@@ -5476,3 +5476,62 @@ test.skip("type test for `from`", () => {
     ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>
   >().toEqualTypeOf<ApolloQueryResult<{ foo: string }>>();
 });
+
+test.only("manual mini test", async () => {
+  const query = gql`
+    query ($bar: Int) {
+      hello(bar: $bar)
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: new MockLink([
+      {
+        request: { query },
+        newData(variables) {
+          return {
+            data: {
+              hello: "world" + variables.bar,
+            },
+          };
+        },
+        variableMatcher(arg) {
+          console.log("variableMatcher", arg);
+          return true;
+        },
+      },
+    ]),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { bar: 0 },
+  });
+
+  const stream = new ObservableStream(observable);
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: true,
+    networkStatus: 1,
+    partial: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { hello: "world0" },
+    networkStatus: 7,
+    loading: false,
+    error: undefined,
+    partial: false,
+  });
+
+  observable.reobserve({ variables: { bar: 1 } });
+
+  await expect(stream).toEmitTypedValue({
+    data: { hello: "world1" },
+    networkStatus: 7,
+    loading: false,
+    error: undefined,
+    partial: false,
+  });
+});

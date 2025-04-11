@@ -3,7 +3,7 @@ import type { GraphQLFormattedError } from "graphql";
 import type { FetchResult } from "@apollo/client";
 import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
 
-import { hasName } from "./utils.js";
+import { brand, isBranded } from "./utils.js";
 
 /**
  * Represents the combined list of GraphQL errors returned from the server in a
@@ -12,13 +12,7 @@ import { hasName } from "./utils.js";
 export class CombinedGraphQLErrors extends Error {
   /** Determine if an error is a `CombinedGraphQLErrors` instance */
   static is(error: unknown): error is CombinedGraphQLErrors {
-    return (
-      error instanceof CombinedGraphQLErrors ||
-      // Fallback to check for the name in case there are multiple versions of
-      // Apollo Client installed, or something else causes instanceof to
-      // return false.
-      hasName(error, "CombinedGraphQLErrors")
-    );
+    return isBranded(error, "CombinedGraphQLErrors");
   }
 
   /**
@@ -39,6 +33,7 @@ export class CombinedGraphQLErrors extends Error {
     this.data = result.data as Record<string, unknown>;
     this.name = "CombinedGraphQLErrors";
 
+    brand(this);
     Object.setPrototypeOf(this, CombinedGraphQLErrors.prototype);
   }
 }

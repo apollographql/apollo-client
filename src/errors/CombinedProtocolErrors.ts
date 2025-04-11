@@ -1,6 +1,6 @@
 import type { GraphQLFormattedError } from "graphql";
 
-import { hasName } from "./utils.js";
+import { brand, isBranded } from "./utils.js";
 
 /**
  * Fatal transport-level errors returned when executing a subscription using the
@@ -10,13 +10,7 @@ import { hasName } from "./utils.js";
 export class CombinedProtocolErrors extends Error {
   /** Determine if an error is a `CombinedProtocolErrors` instance */
   static is(error: unknown): error is CombinedProtocolErrors {
-    return (
-      error instanceof CombinedProtocolErrors ||
-      // Fallback to check for the name in case there are multiple versions of
-      // Apollo Client installed, or something else causes instanceof to
-      // return false.
-      hasName(error, "CombinedProtocolErrors")
-    );
+    return isBranded(error, "CombinedProtocolErrors");
   }
 
   errors: ReadonlyArray<GraphQLFormattedError>;
@@ -30,6 +24,7 @@ export class CombinedProtocolErrors extends Error {
     this.name = "CombinedProtocolErrors";
     this.errors = protocolErrors;
 
+    brand(this);
     Object.setPrototypeOf(this, CombinedProtocolErrors.prototype);
   }
 }

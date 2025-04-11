@@ -1,4 +1,4 @@
-import { hasName } from "./utils.js";
+import { brand, isBranded } from "./utils.js";
 
 interface ServerParseErrorOptions {
   response: Response;
@@ -11,13 +11,7 @@ interface ServerParseErrorOptions {
 export class ServerParseError extends Error {
   /** Determine if an error is an `ServerParseError` instance */
   static is(error: unknown): error is ServerParseError {
-    return (
-      error instanceof ServerParseError ||
-      // Fallback to check for the name in case there are multiple versions of
-      // Apollo Client installed, or something else causes instanceof to
-      // return false.
-      hasName(error, "ServerParseError")
-    );
+    return isBranded(error, "ServerParseError");
   }
   /**
    * The server response.
@@ -44,6 +38,7 @@ export class ServerParseError extends Error {
     this.statusCode = options.response.status;
     this.bodyText = options.bodyText;
 
+    brand(this);
     Object.setPrototypeOf(this, ServerParseError.prototype);
   }
 }

@@ -1,4 +1,4 @@
-import { hasName } from "./utils.js";
+import { brand, isBranded } from "./utils.js";
 
 /**
  * A wrapper error type that represents a non-standard error thrown from a
@@ -8,19 +8,14 @@ import { hasName } from "./utils.js";
 export class UnconventionalError extends Error {
   /** Determine if an error is an `UnconventionalError` instance */
   static is(error: unknown): error is UnconventionalError {
-    return (
-      error instanceof UnconventionalError ||
-      // Fallback to check for the name property in case there are multiple
-      // versions of Apollo Client installed, or something else causes
-      // instanceof to return false.
-      hasName(error, "UnconventionalError")
-    );
+    return isBranded(error, "UnconventionalError");
   }
 
   constructor(errorType: unknown) {
     super("An error of unexpected shape occurred.", { cause: errorType });
     this.name = "UnconventionalError";
 
+    brand(this);
     Object.setPrototypeOf(this, UnconventionalError.prototype);
   }
 }

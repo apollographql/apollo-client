@@ -1,13 +1,13 @@
-import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
+import type { FormattedExecutionResult } from "graphql";
+import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type {
-  CombinedProtocolErrors,
-  NetworkError,
-} from "@apollo/client/errors";
+import type { ErrorLike } from "@apollo/client";
 import {
+  CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
+  toErrorLike,
 } from "@apollo/client/errors";
 import type {
   FetchResult,
@@ -18,20 +18,9 @@ import { ApolloLink } from "@apollo/client/link/core";
 
 export interface ErrorResponse {
   /**
-   * Errors returned in the `errors` property of the GraphQL response.
+   * Error that caused the callback to be triggered.
    */
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  /**
-   * Errors thrown during a network request. This is usually an error thrown
-   * during a `fetch` call or an error while parsing the response from the
-   * network.
-   */
-  networkError?: NetworkError;
-  /**
-   * Fatal transport-level errors from multipart subscriptions.
-   * See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
-   */
-  protocolErrors?: CombinedProtocolErrors;
+  error: ErrorLike;
   response?: FormattedExecutionResult;
   operation: Operation;
   forward: NextLink;
@@ -52,78 +41,63 @@ export import ErrorHandler = ErrorLink.ErrorHandler;
 export function onError(errorHandler: ErrorHandler): ApolloLink {
   return new ApolloLink((operation, forward) => {
     return new Observable((observer) => {
-      let sub: any;
-      let retriedSub: any;
-      let retriedResult: any;
+      let sub: Subscription | undefined;
+      let retriedSub: Subscription | undefined;
+      let retriedResult: ReturnType<ErrorHandler>;
 
       try {
         sub = forward(operation).subscribe({
           next: (result) => {
             if (result.errors) {
               retriedResult = errorHandler({
-                graphQLErrors: result.errors,
+                error: new CombinedGraphQLErrors(result),
                 response: result,
                 operation,
                 forward,
               });
             } else if (graphQLResultHasProtocolErrors(result)) {
               retriedResult = errorHandler({
-                protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
+                error: result.extensions[PROTOCOL_ERRORS_SYMBOL],
                 response: result,
                 operation,
                 forward,
               });
             }
 
-            if (retriedResult) {
-              retriedSub = retriedResult.subscribe({
-                next: observer.next.bind(observer),
-                error: observer.error.bind(observer),
-                complete: observer.complete.bind(observer),
-              });
-              return;
-            }
+            retriedSub = retriedResult?.subscribe(observer);
 
-            observer.next(result);
+            if (!retriedSub) {
+              observer.next(result);
+            }
           },
-          error: (networkError) => {
+          error: (error) => {
             retriedResult = errorHandler({
               operation,
-              networkError,
-              //Network errors can return GraphQL errors on for example a 403
-              graphQLErrors:
-                (networkError &&
-                  networkError.result &&
-                  networkError.result.errors) ||
-                void 0,
+              error: toErrorLike(error),
               forward,
             });
-            if (retriedResult) {
-              retriedSub = retriedResult.subscribe({
-                next: observer.next.bind(observer),
-                error: observer.error.bind(observer),
-                complete: observer.complete.bind(observer),
-              });
-              return;
+            retriedSub = retriedResult?.subscribe(observer);
+
+            if (!retriedSub) {
+              observer.error(error);
             }
-            observer.error(networkError);
           },
           complete: () => {
             // disable the previous sub from calling complete on observable
             // if retry is in flight.
             if (!retriedResult) {
-              observer.complete.bind(observer)();
+              observer.complete();
             }
           },
         });
       } catch (e) {
-        errorHandler({ networkError: e as Error, operation, forward });
+        errorHandler({ error: toErrorLike(e), operation, forward });
         observer.error(e);
       }
 
       return () => {
         if (sub) sub.unsubscribe();
-        if (retriedSub) sub.unsubscribe();
+        if (retriedSub) retriedSub.unsubscribe();
       };
     });
   });

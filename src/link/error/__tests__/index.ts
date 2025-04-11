@@ -1,13 +1,18 @@
+import type { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
 import {
+  CombinedGraphQLErrors,
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
+  UnconventionalError,
 } from "@apollo/client/errors";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ErrorLink, onError } from "@apollo/client/link/error";
+import { wait } from "@apollo/client/testing";
 import {
   mockDeferStream,
   mockMultipartSubscriptionStream,
@@ -15,7 +20,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 describe("error handling", () => {
-  it("has an easy way to handle GraphQL errors", async () => {
+  it("calls onError when GraphQL errors are returned", async () => {
     const query = gql`
       {
         foo {
@@ -24,32 +29,28 @@ describe("error handling", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = onError(({ graphQLErrors, networkError }) => {
-      expect(graphQLErrors![0].message).toBe("resolver blew up");
-      called = true;
-    });
+    const error: GraphQLFormattedError = { message: "resolver blew up" };
 
-    const mockLink = new ApolloLink((operation) =>
-      of({
-        errors: [
-          {
-            message: "resolver blew up",
-          },
-        ],
-      } as any)
-    );
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() => of({ errors: [error] }));
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const result = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({ errors: [error] });
 
-    expect(result.errors![0].message).toBe("resolver blew up");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, variables: {} }),
+      response: { errors: [error] },
+      error: new CombinedGraphQLErrors({ errors: [error] }),
+    });
   });
 
-  it("has an easy way to log client side (network) errors", async () => {
+  it("calls onError with error when thrown from request handler", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -58,30 +59,146 @@ describe("error handling", () => {
       }
     `;
 
-    let called = false;
-    const errorLink = onError(({ operation, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      expect(operation.operationName).toBe("Foo");
-      called = true;
-    });
+    const error = new Error("app is crashing");
 
-    const mockLink = new ApolloLink((operation) => {
-      throw new Error("app is crashing");
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() => {
+      throw error;
     });
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
+    await expect(stream).toEmitError(error);
 
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error,
+    });
   });
 
-  it.failing("handles protocol errors (@defer)", async () => {
-    // TODO: this test doesn't execute the `errorHandler` yet. Should be 4, is 2.
-    fail();
-    expect.assertions(4);
+  it("calls onError with error emitted from observable", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const error = new Error("app is crashing");
+
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        observer.error(error);
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(error);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error,
+    });
+  });
+
+  test("wraps strings emitted from terminating link in Error", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        observer.error("Oops");
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    // Let core wrap the error as it sees fit. Only onError should see the
+    // wrapped error.
+    await expect(stream).toEmitError("Oops");
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error: new Error("Oops"),
+    });
+  });
+
+  test("wraps unconventional error types in UnconventionalError", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
+      const callback = jest.fn();
+      const errorLink = onError(callback);
+
+      const mockLink = new ApolloLink(() => {
+        return new Observable((observer) => {
+          observer.error(type);
+        });
+      });
+
+      const link = errorLink.concat(mockLink);
+      const stream = new ObservableStream(execute(link, { query }));
+
+      // Let core wrap the error as it sees fit. Only onError should see the
+      // wrapped error
+      await expect(stream).toEmitError(type);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenLastCalledWith({
+        forward: expect.any(Function),
+        operation: expect.objectContaining({
+          query,
+          operationName: "Foo",
+          variables: {},
+        }),
+        error: new UnconventionalError(type),
+      });
+    }
+  });
+
+  it.failing("handles errors emitted in incremental chunks", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -92,17 +209,8 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ operation, protocolErrors }) => {
-      expect(operation.operationName).toBe("Foo");
-      expect(protocolErrors).toEqual([
-        {
-          message: "could not read data",
-          extensions: {
-            code: "INCREMENTAL_ERROR",
-          },
-        },
-      ]);
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
     const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
       mockDeferStream();
@@ -122,6 +230,7 @@ describe("error handling", () => {
         },
       },
     ]);
+
     await expect(stream).toEmitTypedValue({
       data: {},
       hasNext: true,
@@ -130,9 +239,10 @@ describe("error handling", () => {
     await expect(stream).toEmitTypedValue({
       hasNext: true,
       incremental: [
+        // @ts-expect-error Our defer type and GraphQL incremental type do not
+        // line up. Our type request data and path but enqueueErrorChunk does
+        // not emit those values
         {
-          data: null,
-          path: [],
           errors: [
             {
               message: "could not read data",
@@ -144,359 +254,30 @@ describe("error handling", () => {
         },
       ],
     });
-  });
 
-  it("handles protocol errors (multipart subscription)", async () => {
-    expect.assertions(4);
-    const sampleSubscription = gql`
-      subscription MySubscription {
-        aNewDieWasCreated {
-          die {
-            roll
-            sides
-            color
-          }
-        }
-      }
-    `;
-
-    const errorLink = onError((args) => {
-      const { operation, protocolErrors } = args;
-      expect(operation.operationName).toBe("MySubscription");
-      expect(protocolErrors).toEqual(
-        new CombinedProtocolErrors([
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error: new CombinedGraphQLErrors({
+        errors: [
           {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ])
-      );
-    });
-
-    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
-      mockMultipartSubscriptionStream();
-    const link = errorLink.concat(httpLink);
-    const stream = new ObservableStream(
-      execute(link, { query: sampleSubscription })
-    );
-
-    enqueuePayloadResult({
-      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
-    });
-
-    enqueueProtocolErrors([
-      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
-    ]);
-
-    await expect(stream).toEmitTypedValue({
-      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
-    });
-
-    await expect(stream).toEmitTypedValue({
-      extensions: {
-        [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
-          {
+            message: "could not read data",
             extensions: {
-              code: "INTERNAL_SERVER_ERROR",
+              code: "INCREMENTAL_ERROR",
             },
-            message: "Error field",
-          },
-        ]),
-      },
-    });
-  });
-
-  it("captures errors within links", async () => {
-    const query = gql`
-      query Foo {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = onError(({ operation, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      expect(operation.operationName).toBe("Foo");
-      called = true;
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        throw new Error("app is crashing");
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
-  });
-
-  it("captures networkError.statusCode within links", async () => {
-    const query = gql`
-      query Foo {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = onError(({ operation, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      expect(networkError!.name).toBe("ServerError");
-      expect((networkError as ServerError).statusCode).toBe(500);
-      expect((networkError as ServerError).response.ok).toBe(false);
-      expect(operation.operationName).toBe("Foo");
-      called = true;
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        const response = { status: 500, ok: false } as Response;
-        throw new ServerError("app is crashing", {
-          response,
-          result: "ServerError",
-        });
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
-  });
-
-  it("sets graphQLErrors to undefined if networkError.result is an empty string", async () => {
-    const query = gql`
-      query Foo {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = onError(({ graphQLErrors }) => {
-      expect(graphQLErrors).toBeUndefined();
-      called = true;
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        const response = { status: 500, ok: false } as Response;
-        throw new ServerError("app is crashing", { response, result: "" });
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    await expect(stream).toEmitError();
-    expect(called).toBe(true);
-  });
-
-  it("completes if no errors", async () => {
-    const query = gql`
-      {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    const errorLink = onError(({ graphQLErrors, networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return of({ data: { foo: { id: 1 } } });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    await expect(stream).toEmitNext();
-    await expect(stream).toComplete();
-  });
-
-  it("allows an error to be ignored", async () => {
-    const query = gql`
-      {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    const errorLink = onError(({ graphQLErrors, response }) => {
-      expect(graphQLErrors![0].message).toBe("ignore");
-      // ignore errors
-      response!.errors = null as any;
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return of({
-        data: { foo: { id: 1 } },
-        errors: [{ message: "ignore" } as any],
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    await expect(stream).toEmitTypedValue({
-      // @ts-expect-error TODO: Need to determine a better way to handle this
-      errors: null,
-      data: { foo: { id: 1 } },
-    });
-    await expect(stream).toComplete();
-  });
-
-  it("can be unsubcribed", async () => {
-    const query = gql`
-      {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    const errorLink = onError(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        setTimeout(() => {
-          obs.next({ data: { foo: { id: 1 } } });
-          obs.complete();
-        }, 5);
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    stream.unsubscribe();
-
-    await expect(stream).not.toEmitAnything();
-  });
-
-  it("includes the operation and any data along with a graphql error", async () => {
-    const query = gql`
-      query Foo {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = onError(({ graphQLErrors, response, operation }) => {
-      expect(graphQLErrors![0].message).toBe("resolver blew up");
-      expect(response!.data!.foo).toBe(true);
-      expect(operation.operationName).toBe("Foo");
-      expect(operation.getContext().bar).toBe(true);
-      called = true;
-    });
-
-    const mockLink = new ApolloLink((operation) =>
-      of({
-        data: { foo: true },
-        errors: [
-          {
-            message: "resolver blew up",
           },
         ],
-      } as any)
-    );
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(
-      execute(link, { query, context: { bar: true } })
-    );
-
-    const result = await stream.takeNext();
-
-    expect(result.errors![0].message).toBe("resolver blew up");
-    expect(called).toBe(true);
-  });
-});
-
-describe("error handling with class", () => {
-  it("has an easy way to handle GraphQL errors", async () => {
-    const query = gql`
-      {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = new ErrorLink(({ graphQLErrors, networkError }) => {
-      expect(graphQLErrors![0].message).toBe("resolver blew up");
-      called = true;
+      }),
+      result: {},
     });
-
-    const mockLink = new ApolloLink((operation) =>
-      of({
-        errors: [
-          {
-            message: "resolver blew up",
-          },
-        ],
-      } as any)
-    );
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    const result = await stream.takeNext();
-
-    expect(result!.errors![0].message).toBe("resolver blew up");
-    expect(called).toBe(true);
   });
 
-  it("has an easy way to log client side (network) errors", async () => {
-    const query = gql`
-      {
-        foo {
-          bar
-        }
-      }
-    `;
-
-    let called = false;
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      called = true;
-    });
-
-    const mockLink = new ApolloLink((operation) => {
-      throw new Error("app is crashing");
-    });
-
-    const link = errorLink.concat(mockLink);
-    const stream = new ObservableStream(execute(link, { query }));
-
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
-  });
-
-  it("handles protocol errors (multipart subscription)", async () => {
-    expect.assertions(4);
+  it("calls onError with protocol errors from multipart subscriptions", async () => {
     const subscription = gql`
       subscription MySubscription {
         aNewDieWasCreated {
@@ -509,20 +290,11 @@ describe("error handling with class", () => {
       }
     `;
 
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
-
-    const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
-      expect(operation.operationName).toBe("MySubscription");
-      expect(protocolErrors).toEqual(
-        new CombinedProtocolErrors([
-          {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ])
-      );
-    });
 
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(execute(link, { query: subscription }));
@@ -551,36 +323,112 @@ describe("error handling with class", () => {
         ]),
       },
     });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query: subscription,
+        operationName: "MySubscription",
+        variables: {},
+      }),
+      response: {
+        extensions: {
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+            {
+              extensions: {
+                code: "INTERNAL_SERVER_ERROR",
+              },
+              message: "Error field",
+            },
+          ]),
+        },
+      },
+      error: new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ]),
+    });
   });
 
   it("captures errors within links", async () => {
     const query = gql`
-      {
+      query Foo {
         foo {
           bar
         }
       }
     `;
 
-    let called = false;
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-      called = true;
-    });
+    const callback = jest.fn();
+    const error = new Error("app is crashing");
+    const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
-      return new Observable((obs) => {
-        throw new Error("app is crashing");
+    const mockLink = new ApolloLink(() => {
+      return new Observable(() => {
+        throw error;
       });
     });
 
     const link = errorLink.concat(mockLink);
     const stream = new ObservableStream(execute(link, { query }));
 
-    const error = await stream.takeError();
+    await expect(stream).toEmitError(error);
 
-    expect(error.message).toBe("app is crashing");
-    expect(called).toBe(true);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error,
+    });
+  });
+
+  it("captures networkError.statusCode within links", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = onError(callback);
+    const error = new ServerError("app is crashing", {
+      response: new Response("", { status: 500 }),
+      result: "ServerError",
+    });
+
+    const mockLink = new ApolloLink(() => {
+      return new Observable(() => {
+        throw error;
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(error);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      error,
+    });
+
+    const capturedError = callback.mock.calls[0][0].error as ServerError;
+    expect(capturedError.statusCode).toBe(500);
   });
 
   it("completes if no errors", async () => {
@@ -592,19 +440,49 @@ describe("error handling with class", () => {
       }
     `;
 
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return of({ data: { foo: { id: 1 } } });
     });
 
     const link = errorLink.concat(mockLink);
-
     const stream = new ObservableStream(execute(link, { query }));
 
     await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("allows an error to be ignored", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const errorLink = onError(({ response }) => {
+      // ignore errors
+      delete response!.errors;
+    });
+
+    const mockLink = new ApolloLink(() => {
+      return of({
+        data: { foo: { id: 1 } },
+        errors: [{ message: "ignore" }],
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: { foo: { id: 1 } },
+    });
     await expect(stream).toComplete();
   });
 
@@ -617,11 +495,10 @@ describe("error handling with class", () => {
       }
     `;
 
-    const errorLink = new ErrorLink(({ networkError }) => {
-      expect(networkError!.message).toBe("app is crashing");
-    });
+    const callback = jest.fn();
+    const errorLink = onError(callback);
 
-    const mockLink = new ApolloLink((operation) => {
+    const mockLink = new ApolloLink(() => {
       return new Observable((obs) => {
         setTimeout(() => {
           obs.next({ data: { foo: { id: 1 } } });
@@ -635,7 +512,285 @@ describe("error handling with class", () => {
 
     stream.unsubscribe();
 
-    await expect(stream).not.toEmitAnything();
+    await wait(10);
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("includes the operation and any data along with a graphql error", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const error: GraphQLFormattedError = { message: "resolver blew up" };
+    const errorLink = onError(callback);
+
+    const mockLink = new ApolloLink(() =>
+      of({
+        data: { foo: true },
+        errors: [error],
+      })
+    );
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(
+      execute(link, { query, context: { bar: true } })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { foo: true },
+      errors: [{ message: "resolver blew up" }],
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query,
+        operationName: "Foo",
+        variables: {},
+      }),
+      response: { data: { foo: true }, errors: [error] },
+      error: new CombinedGraphQLErrors({
+        data: { foo: true },
+        errors: [error],
+      }),
+    });
+
+    const operation = callback.mock.calls[0][0].operation as Operation;
+    expect(operation.getContext().bar).toBe(true);
+  });
+});
+
+describe("error handling with class", () => {
+  it("has an easy way to handle GraphQL errors", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const error: GraphQLFormattedError = { message: "resolver blew up" };
+    const errorLink = new ErrorLink(callback);
+
+    const mockLink = new ApolloLink(() => of({ errors: [error] }));
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitTypedValue({ errors: [error] });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, variables: {} }),
+      response: { errors: [error] },
+      error: new CombinedGraphQLErrors({ errors: [error] }),
+    });
+  });
+
+  it("has an easy way to log client side (network) errors", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const error = new Error("app is crashing");
+    const errorLink = new ErrorLink(callback);
+
+    const mockLink = new ApolloLink(() => {
+      throw error;
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(error);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query }),
+      error,
+    });
+  });
+
+  it("handles protocol errors (multipart subscription)", async () => {
+    const subscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
+
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(execute(link, { query: subscription }));
+
+    enqueuePayloadResult({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    enqueueProtocolErrors([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    await expect(stream).toEmitTypedValue({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+          {
+            extensions: {
+              code: "INTERNAL_SERVER_ERROR",
+            },
+            message: "Error field",
+          },
+        ]),
+      },
+    });
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({
+        query: subscription,
+        operationName: "MySubscription",
+        variables: {},
+      }),
+      response: {
+        extensions: {
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+            {
+              extensions: {
+                code: "INTERNAL_SERVER_ERROR",
+              },
+              message: "Error field",
+            },
+          ]),
+        },
+      },
+      error: new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: {
+            code: "INTERNAL_SERVER_ERROR",
+          },
+        },
+      ]),
+    });
+  });
+
+  it("captures errors within links", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const error = new Error("app is crashing");
+    const errorLink = new ErrorLink(callback);
+
+    const mockLink = new ApolloLink(() => {
+      return new Observable(() => {
+        throw error;
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(error);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenLastCalledWith({
+      forward: expect.any(Function),
+      operation: expect.objectContaining({ query, variables: {} }),
+      error,
+    });
+  });
+
+  it("completes if no errors", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
+
+    const mockLink = new ApolloLink(() => {
+      return of({ data: { foo: { id: 1 } } });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
+  it("can be unsubcribed", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const callback = jest.fn();
+    const errorLink = new ErrorLink(callback);
+
+    const mockLink = new ApolloLink(() => {
+      return new Observable((obs) => {
+        setTimeout(() => {
+          obs.next({ data: { foo: { id: 1 } } });
+          obs.complete();
+        }, 5);
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    stream.unsubscribe();
+
+    await wait(10);
+
+    expect(callback).not.toHaveBeenCalled();
   });
 });
 
@@ -648,54 +803,33 @@ describe("support for request retrying", () => {
     }
   `;
   const ERROR_RESPONSE = {
-    errors: [
-      {
-        name: "something bad happened",
-        message: "resolver blew up",
-      },
-    ],
-  };
+    errors: [{ message: "resolver blew up" }],
+  } satisfies FetchResult;
   const GOOD_RESPONSE = {
     data: { foo: true },
-  };
-  const NETWORK_ERROR = {
-    message: "some other error",
-  };
+  } satisfies FetchResult;
+  const NETWORK_ERROR = new Error("some other error");
 
   it("returns the retried request when forward(operation) is called", async () => {
-    let errorHandlerCalled = false;
-
     let timesCalled = 0;
-    const mockHttpLink = new ApolloLink((operation) => {
-      if (timesCalled === 0) {
-        timesCalled++;
-        // simulate the first request being an error
-        return new Observable((observer) => {
-          observer.next(ERROR_RESPONSE as any);
+    const mockHttpLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        if (timesCalled++ === 0) {
+          // simulate the first request being an error
+          observer.next(ERROR_RESPONSE);
           observer.complete();
-        });
-      } else {
-        return new Observable((observer) => {
+        } else {
           observer.next(GOOD_RESPONSE);
           observer.complete();
-        });
-      }
+        }
+      });
     });
 
-    const errorLink = new ErrorLink(
-      ({ graphQLErrors, response, operation, forward }) => {
-        if (graphQLErrors) {
-          errorHandlerCalled = true;
-          expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
-          expect(response!.data).not.toBeDefined();
-          expect(operation.operationName).toBe("Foo");
-          expect(operation.getContext().bar).toBe(true);
-          // retry operation if it resulted in an error
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ operation, forward }) => forward(operation));
 
+    const errorLink = new ErrorLink(callback);
     const link = errorLink.concat(mockHttpLink);
 
     const stream = new ObservableStream(
@@ -703,39 +837,30 @@ describe("support for request retrying", () => {
     );
 
     await expect(stream).toEmitTypedValue(GOOD_RESPONSE);
-    expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("supports retrying when the initial request had networkError", async () => {
-    let errorHandlerCalled = false;
-
     let timesCalled = 0;
-    const mockHttpLink = new ApolloLink((operation) => {
-      if (timesCalled === 0) {
-        timesCalled++;
-        // simulate the first request being an error
-        return new Observable((observer) => {
+    const mockHttpLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        if (timesCalled++ === 0) {
+          // simulate the first request being an error
           observer.error(NETWORK_ERROR);
-        });
-      } else {
-        return new Observable((observer) => {
+        } else {
           observer.next(GOOD_RESPONSE);
           observer.complete();
-        });
-      }
+        }
+      });
     });
 
-    const errorLink = new ErrorLink(
-      ({ networkError, response, operation, forward }) => {
-        if (networkError) {
-          errorHandlerCalled = true;
-          expect(networkError).toEqual(NETWORK_ERROR);
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ forward, operation }) => forward(operation));
 
+    const errorLink = new ErrorLink(callback);
     const link = errorLink.concat(mockHttpLink);
 
     const stream = new ObservableStream(
@@ -743,34 +868,20 @@ describe("support for request retrying", () => {
     );
 
     await expect(stream).toEmitTypedValue(GOOD_RESPONSE);
-    expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("supports retrying when the initial request had protocol errors", async () => {
-    let errorHandlerCalled = false;
-
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
 
-    const errorLink = new ErrorLink(
-      ({ protocolErrors, operation, forward }) => {
-        if (protocolErrors) {
-          errorHandlerCalled = true;
-          expect(protocolErrors).toEqual(
-            new CombinedProtocolErrors([
-              {
-                message: "cannot read message from websocket",
-                extensions: {
-                  code: "WEBSOCKET_MESSAGE_ERROR",
-                },
-              },
-            ])
-          );
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ forward, operation }) => forward(operation));
+
+    const errorLink = new ErrorLink(callback);
 
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(
@@ -802,43 +913,30 @@ describe("support for request retrying", () => {
 
     // Ensure the error result is not emitted but rather the retried result
     await expect(stream).toEmitTypedValue({ data: { foo: { bar: true } } });
-    expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 
   it("returns errors from retried requests", async () => {
-    let errorHandlerCalled = false;
-
     let timesCalled = 0;
-    const mockHttpLink = new ApolloLink((operation) => {
-      if (timesCalled === 0) {
-        timesCalled++;
-        // simulate the first request being an error
-        return new Observable((observer) => {
-          observer.next(ERROR_RESPONSE as any);
+    const mockHttpLink = new ApolloLink(() => {
+      return new Observable((observer) => {
+        if (timesCalled++ === 0) {
+          // simulate the first request being an error
+          observer.next(ERROR_RESPONSE);
           observer.complete();
-        });
-      } else {
-        return new Observable((observer) => {
+        } else {
           observer.error(NETWORK_ERROR);
-        });
-      }
+        }
+      });
     });
 
-    const errorLink = new ErrorLink(
-      ({ graphQLErrors, networkError, response, operation, forward }) => {
-        if (graphQLErrors) {
-          errorHandlerCalled = true;
-          expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
-          expect(response!.data).not.toBeDefined();
-          expect(operation.operationName).toBe("Foo");
-          expect(operation.getContext().bar).toBe(true);
-          // retry operation if it resulted in an error
-          return forward(operation);
-        }
-      }
-    );
+    const callback = jest
+      .fn()
+      .mockImplementationOnce(({ forward, operation }) => forward(operation));
 
+    const errorLink = new ErrorLink(callback);
     const link = errorLink.concat(mockHttpLink);
 
     const stream = new ObservableStream(
@@ -846,6 +944,7 @@ describe("support for request retrying", () => {
     );
 
     await expect(stream).toEmitError(NETWORK_ERROR);
-    expect(errorHandlerCalled).toBe(true);
+
+    expect(callback).toHaveBeenCalledTimes(1);
   });
 });

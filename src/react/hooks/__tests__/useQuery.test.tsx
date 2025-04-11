@@ -18,19 +18,19 @@ import type { ReactNode } from "react";
 import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, Observable, observeOn, of } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   FetchPolicy,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
   NetworkStatus,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
 import {
@@ -48,6 +48,7 @@ import {
   wait,
 } from "@apollo/client/testing";
 import {
+  enableFakeTimers,
   setupPaginatedCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
@@ -822,7 +823,11 @@ describe("useQuery Hook", () => {
           },
           {
             wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks} cache={cache}>
+              <MockedProvider
+                mocks={mocks}
+                cache={cache}
+                mockLinkDefaultOptions={{ delay: 0 }}
+              >
                 {children}
               </MockedProvider>
             ),
@@ -1920,7 +1925,11 @@ describe("useQuery Hook", () => {
         {
           initialProps: {},
           wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
+            <MockedProvider
+              mocks={mocks}
+              cache={cache}
+              mockLinkDefaultOptions={{ delay: 0 }}
+            >
               {children}
             </MockedProvider>
           ),
@@ -2101,8 +2110,6 @@ describe("useQuery Hook", () => {
 
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
       const wrapper = ({ children }: any) => (
         <MockedProvider link={link} cache={cache}>
           {children}
@@ -2157,10 +2164,6 @@ describe("useQuery Hook", () => {
         )
       ).rejects.toThrow();
 
-      await waitFor(() => {
-        expect(onErrorFn).toHaveBeenCalledTimes(0);
-      });
-
       requestSpy.mockRestore();
     });
 
@@ -2196,8 +2199,6 @@ describe("useQuery Hook", () => {
 
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
 
       const client = new ApolloClient({
         queryDeduplication: false,
@@ -2270,7 +2271,6 @@ describe("useQuery Hook", () => {
       jest.advanceTimersByTime(200);
 
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       jest.useRealTimers();
     });
@@ -2302,8 +2302,6 @@ describe("useQuery Hook", () => {
       const cache = new InMemoryCache();
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
       const wrapper = ({ children }: any) => (
         <React.StrictMode>
           <MockedProvider link={link} cache={cache}>
@@ -2357,7 +2355,6 @@ describe("useQuery Hook", () => {
         )
       ).rejects.toThrow();
       expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       requestSpy.mockRestore();
     });
@@ -2393,8 +2390,6 @@ describe("useQuery Hook", () => {
 
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
 
       const client = new ApolloClient({ link, cache });
 
@@ -2459,7 +2454,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender({ timeout: 50 });
       // TODO rarely seeing 3 here investigate further
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
     });
 
     it("should start and stop polling in Strict Mode", async () => {
@@ -2490,8 +2484,6 @@ describe("useQuery Hook", () => {
       const cache = new InMemoryCache();
       const link = new MockLink(mocks);
       const requestSpy = jest.spyOn(link, "request");
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
       const wrapper = ({ children }: any) => (
         <React.StrictMode>
           <MockedProvider link={link} cache={cache}>
@@ -2550,7 +2542,6 @@ describe("useQuery Hook", () => {
       getCurrentSnapshot().startPolling(20);
 
       expect(requestSpy).toHaveBeenCalledTimes(2);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
 
       {
         const result = await takeSnapshot();
@@ -2577,7 +2568,6 @@ describe("useQuery Hook", () => {
       }
 
       expect(requestSpy).toHaveBeenCalledTimes(4);
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();
     });
 
@@ -2642,16 +2632,8 @@ describe("useQuery Hook", () => {
     });
 
     describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
-      beforeEach(() => {
-        jest.useFakeTimers();
-      });
-
-      afterEach(() => {
-        jest.runOnlyPendingTimers();
-        jest.useRealTimers();
-      });
-
       it("when defined as a global default option", async () => {
+        using _ = enableFakeTimers();
         const skipPollAttempt = jest.fn().mockImplementation(() => false);
 
         const query = gql`
@@ -2659,19 +2641,22 @@ describe("useQuery Hook", () => {
             hello
           }
         `;
-        const link = mockSingleLink(
-          {
-            request: { query },
-            result: { data: { hello: "world 1" } },
-          },
-          {
-            request: { query },
-            result: { data: { hello: "world 2" } },
-          },
-          {
-            request: { query },
-            result: { data: { hello: "world 3" } },
-          }
+        const link = new MockLink(
+          [
+            {
+              request: { query },
+              result: { data: { hello: "world 1" } },
+            },
+            {
+              request: { query },
+              result: { data: { hello: "world 2" } },
+            },
+            {
+              request: { query },
+              result: { data: { hello: "world 3" } },
+            },
+          ],
+          { defaultOptions: { delay: 0 } }
         );
 
         const client = new ApolloClient({
@@ -2765,6 +2750,7 @@ describe("useQuery Hook", () => {
       });
 
       it("when defined for a single query", async () => {
+        using _ = enableFakeTimers();
         const skipPollAttempt = jest.fn().mockImplementation(() => false);
 
         const query = gql`
@@ -2789,7 +2775,12 @@ describe("useQuery Hook", () => {
 
         const cache = new InMemoryCache();
         const wrapper = ({ children }: any) => (
-          <MockedProvider mocks={mocks} cache={cache}>
+          <MockedProvider
+            mocks={mocks}
+            cache={cache}
+            // This test uses fake timers and does not expect a delay
+            mockLinkDefaultOptions={{ delay: 0 }}
+          >
             {children}
           </MockedProvider>
         );

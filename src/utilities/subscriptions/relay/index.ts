@@ -1,8 +1,8 @@
 import type { GraphQLResponse, RequestParameters } from "relay-runtime";
 import { Observable } from "relay-runtime";
 
-import type { OperationVariables } from "@apollo/client/core";
-import { serializeFetchParameter } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client";
+import { serializeFetchParameter } from "@apollo/client";
 import { maybe } from "@apollo/client/utilities";
 
 import {

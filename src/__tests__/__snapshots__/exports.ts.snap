@@ -134,6 +134,7 @@ Array [
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "toErrorLike",
 ]
 `;
 
@@ -320,6 +321,7 @@ Array [
   "createMockClient",
   "mockObservableLink",
   "mockSingleLink",
+  "realisticDelay",
   "tick",
   "wait",
   "withErrorSpy",
@@ -335,6 +337,7 @@ Array [
   "createMockClient",
   "mockObservableLink",
   "mockSingleLink",
+  "realisticDelay",
   "tick",
   "wait",
   "withErrorSpy",

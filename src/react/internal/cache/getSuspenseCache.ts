@@ -1,9 +1,9 @@
-import type { ApolloClient } from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client";
 import type { SuspenseCacheOptions } from "@apollo/client/react/internal";
 
 import { SuspenseCache } from "./SuspenseCache.js";
 
-declare module "@apollo/client/core" {
+declare module "@apollo/client" {
   interface DefaultOptions {
     react?: {
       suspense?: Readonly<SuspenseCacheOptions>;

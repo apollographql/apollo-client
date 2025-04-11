@@ -6,13 +6,13 @@ import { gql } from "graphql-tag";
 import type { ObservedValueOf, Observer } from "rxjs";
 import { from, Observable, of, Subject } from "rxjs";
 
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   ApolloQueryResult,
   ObservableQuery,
   WatchQueryFetchPolicy,
-} from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+} from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
@@ -1982,7 +1982,7 @@ describe("ObservableQuery", () => {
           },
           error: expect.objectContaining({
             message: expect.stringMatching(
-              /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
+              /No more mocked responses for the query:\s+query QueryWithVarsVar\(\$vars: \[String!\]\)/
             ),
           }),
           loading: false,
@@ -1993,7 +1993,7 @@ describe("ObservableQuery", () => {
         await expect(promise).rejects.toEqual(
           expect.objectContaining({
             message: expect.stringMatching(
-              /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
+              /No more mocked responses for the query:\s+query QueryWithVarsVar\(\$vars: \[String!\]\)/
             ),
           })
         );
@@ -3563,7 +3563,10 @@ describe("ObservableQuery", () => {
     const queryInfo = observable["queryInfo"];
     const cache = queryInfo["cache"];
     const setDiffSpy = jest.spyOn(queryInfo, "setDiff");
-    const notifySpy = jest.spyOn(queryInfo, "notify");
+    const notifySpy = jest.spyOn(
+      observable,
+      "notify" as any /* this is not a public method so we cast */
+    );
 
     const stream = new ObservableStream(observable);
 

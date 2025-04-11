@@ -5,11 +5,9 @@
 ```ts
 
 import { ApolloLink } from '@apollo/client/link/core';
-import type { CombinedProtocolErrors } from '@apollo/client/errors';
+import type { ErrorLike } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link/core';
 import type { FormattedExecutionResult } from 'graphql';
-import type { GraphQLFormattedError } from 'graphql';
-import type { NetworkError } from '@apollo/client/errors';
 import type { NextLink } from '@apollo/client/link/core';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link/core';
@@ -36,13 +34,11 @@ export class ErrorLink extends ApolloLink {
 
 // @public (undocumented)
 export interface ErrorResponse {
+    error: ErrorLike;
     // (undocumented)
     forward: NextLink;
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-    networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
-    protocolErrors?: CombinedProtocolErrors;
     // (undocumented)
     response?: FormattedExecutionResult;
 }

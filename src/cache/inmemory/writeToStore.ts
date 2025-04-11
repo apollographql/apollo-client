@@ -3,7 +3,7 @@ import { Trie } from "@wry/trie";
 import type { FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 
-import type { Cache, OperationVariables } from "@apollo/client/core";
+import type { Cache, OperationVariables } from "@apollo/client";
 import type {
   FragmentMap,
   FragmentMapFunction,

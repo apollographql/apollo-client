@@ -5,7 +5,7 @@
 ```ts
 
 import type { GraphQLSchema } from 'graphql';
-import type { Resolvers } from '@apollo/client/core';
+import type { Resolvers } from '@apollo/client';
 
 // @alpha @deprecated
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {

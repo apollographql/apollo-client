@@ -188,7 +188,7 @@ function getPublicExports(path: string) {
 
 /**
  * to be used in tests, so the test does a
- * `import { InMemoryCache } from "@apollo/client/core";`
+ * `import { InMemoryCache } from "@apollo/client";`
  * instead of a
  * `import { InMemoryCache } from "../inMemoryCache.js";`
  */

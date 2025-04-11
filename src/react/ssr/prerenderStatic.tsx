@@ -8,7 +8,7 @@ import type {
   DocumentNode,
   ObservableQuery,
   OperationVariables,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import { getApolloContext } from "@apollo/client/react";
 import { wrapperSymbol } from "@apollo/client/react/internal";
 import { canonicalStringify } from "@apollo/client/utilities";

@@ -11,10 +11,7 @@ import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
-import type {
-  OperationVariables,
-  TypedDocumentNode,
-} from "@apollo/client/core";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -22,7 +19,7 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { Masked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -448,7 +445,9 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   const link = new ApolloLink((operation) => {
     fetchCount++;
     const mock = mocks.find(
-      (mock) => mock.request.variables?.id === operation.variables.id
+      (mock) =>
+        typeof mock.request.variables === "object" &&
+        mock.request.variables?.id === operation.variables.id
     );
 
     if (!mock) {

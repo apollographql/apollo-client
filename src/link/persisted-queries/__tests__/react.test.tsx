@@ -7,9 +7,9 @@ import { gql } from "graphql-tag";
 import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
+import type { OperationVariables } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import type { OperationVariables } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink as createPersistedQuery,

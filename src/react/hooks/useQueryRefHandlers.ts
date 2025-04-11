@@ -1,10 +1,10 @@
 import * as React from "react";
 
-import type { OperationVariables } from "@apollo/client/core";
-import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import type { FetchMoreQueryOptions } from "@apollo/client/core";
-import type { ApolloClient } from "@apollo/client/core";
-import type { ObservableQuery } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client";
+import type { SubscribeToMoreFunction } from "@apollo/client";
+import type { FetchMoreQueryOptions } from "@apollo/client";
+import type { ApolloClient } from "@apollo/client";
+import type { ObservableQuery } from "@apollo/client";
 import type {
   FetchMoreFunction,
   QueryRef,

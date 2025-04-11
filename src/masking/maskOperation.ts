@@ -2,7 +2,7 @@ import type {
   ApolloCache,
   DocumentNode,
   TypedDocumentNode,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import {
   createFragmentMap,
   getFragmentDefinitions,

@@ -1,9 +1,14 @@
 export type {
+  MockedRequest,
   MockedResponse,
   MockLinkOptions,
   ResultFunction,
 } from "./mocking/mockLink.js";
-export { MockLink, mockSingleLink } from "./mocking/mockLink.js";
+export {
+  MockLink,
+  mockSingleLink,
+  realisticDelay,
+} from "./mocking/mockLink.js";
 export {
   mockObservableLink,
   MockSubscriptionLink,

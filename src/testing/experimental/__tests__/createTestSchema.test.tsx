@@ -10,13 +10,13 @@ import * as React from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
-import type { TypedDocumentNode } from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
   gql,
   InMemoryCache,
-} from "@apollo/client/core";
+} from "@apollo/client";
 import type { UseSuspenseQueryResult } from "@apollo/client/react";
 import { useMutation, useSuspenseQuery } from "@apollo/client/react";
 import {

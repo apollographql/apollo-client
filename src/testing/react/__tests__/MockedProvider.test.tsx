@@ -129,7 +129,7 @@ describe("General use", () => {
     });
   });
 
-  it("should pass the variables to the variableMatcher", async () => {
+  it("should pass the variables to the `variables` callback function", async () => {
     function Component({ ...variables }: Variables) {
       useQuery<Data, Variables>(query, { variables });
       return null;
@@ -138,8 +138,8 @@ describe("General use", () => {
     const mock2: MockedResponse<Data, Variables> = {
       request: {
         query,
+        variables: jest.fn().mockReturnValue(true),
       },
-      variableMatcher: jest.fn().mockReturnValue(true),
       result: { data: { user } },
     };
 
@@ -150,13 +150,11 @@ describe("General use", () => {
     );
 
     await waitFor(() => {
-      expect(mock2.variableMatcher as jest.Mock).toHaveBeenCalledWith(
-        variables
-      );
+      expect(mock2.request.variables).toHaveBeenCalledWith(variables);
     });
   });
 
-  it("should use a mock if the variableMatcher returns true", async () => {
+  it("should use the mock if the `variables` callback function returns true", async () => {
     let finished = false;
 
     function Component({ username }: Variables) {
@@ -173,8 +171,8 @@ describe("General use", () => {
     const mock2: MockedResponse<Data, Variables> = {
       request: {
         query,
+        variables: (v) => v.username === variables.username,
       },
-      variableMatcher: (v) => v.username === variables.username,
       result: { data: { user } },
     };
 
@@ -279,7 +277,7 @@ describe("General use", () => {
     });
   });
 
-  it("should error if the variableMatcher returns false", async () => {
+  it("should error if the `variables` as callback returns false", async () => {
     let finished = false;
     function Component({ ...variables }: Variables) {
       const { loading, error } = useQuery<Data, Variables>(query, {
@@ -295,8 +293,8 @@ describe("General use", () => {
     const mock2: MockedResponse<Data, Variables> = {
       request: {
         query,
+        variables: () => false,
       },
-      variableMatcher: () => false,
       result: { data: { user } },
     };
 
@@ -683,6 +681,7 @@ describe("General use", () => {
         },
         maxUsageCount: Number.POSITIVE_INFINITY,
         result: { data: { user } },
+        delay: 0,
       },
     ];
 
@@ -997,61 +996,6 @@ describe("General use", () => {
     expect(console.warn).not.toHaveBeenCalled();
 
     consoleSpy.mockRestore();
-  });
-
-  it("should support custom error handling using setOnError", async () => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      useQuery<Data, Variables>(query, { variables });
-      return null;
-    }
-
-    const mockLink = new MockLink([], { showWarnings: false });
-    mockLink.setOnError((error) => {
-      expect(error).toMatchSnapshot();
-      finished = true;
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    });
-  });
-
-  it("should pipe exceptions thrown in custom onError functions through the link chain", async () => {
-    let finished = false;
-    function Component({ ...variables }: Variables) {
-      const { loading, error } = useQuery<Data, Variables>(query, {
-        variables,
-      });
-      if (!loading) {
-        expect(error).toMatchSnapshot();
-        finished = true;
-      }
-      return null;
-    }
-
-    const mockLink = new MockLink([], { showWarnings: false });
-    mockLink.setOnError(() => {
-      throw new Error("oh no!");
-    });
-    const link = ApolloLink.from([errorLink, mockLink]);
-
-    render(
-      <MockedProvider link={link}>
-        <Component {...variables} />
-      </MockedProvider>
-    );
-
-    await waitFor(() => {
-      expect(finished).toBe(true);
-    });
   });
 
   it("should support loading state testing with delay", async () => {

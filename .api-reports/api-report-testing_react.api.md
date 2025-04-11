@@ -5,12 +5,13 @@
 ```ts
 
 import type { ApolloCache } from '@apollo/client/cache';
-import { ApolloClient } from '@apollo/client/core';
+import { ApolloClient } from '@apollo/client';
 import type { ApolloLink } from '@apollo/client/link/core';
-import type { DefaultOptions } from '@apollo/client/core';
+import type { DefaultOptions } from '@apollo/client';
 import type { MockedResponse } from '@apollo/client/testing/core';
+import { MockLink } from '@apollo/client/testing/core';
 import * as React_2 from 'react';
-import type { Resolvers } from '@apollo/client/core';
+import type { Resolvers } from '@apollo/client';
 
 // Warning: (ae-forgotten-export) The symbol "MockedProviderState" needs to be exported by the entry point index.d.ts
 //
@@ -36,6 +37,8 @@ export interface MockedProviderProps {
     defaultOptions?: DefaultOptions;
     // (undocumented)
     link?: ApolloLink;
+    // (undocumented)
+    mockLinkDefaultOptions?: MockLink.DefaultOptions;
     // (undocumented)
     mocks?: ReadonlyArray<MockedResponse<any, any>>;
     // (undocumented)

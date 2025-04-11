@@ -7,7 +7,7 @@ import type {
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type { OperationVariables } from "@apollo/client/core";
+import type { OperationVariables } from "@apollo/client";
 import type {
   DeepPartial,
   Reference,
@@ -25,9 +25,9 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
-import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { hasOwn, normalizeConfig } from "./helpers.js";

@@ -4,11 +4,10 @@
 
 ```ts
 
-import { ApolloClient } from '@apollo/client/core';
+import { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link/core';
 import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client/link/core';
-import type { GraphQLRequest } from '@apollo/client/link/core';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link/core';
 import type { Unmasked } from '@apollo/client/masking';
@@ -28,23 +27,27 @@ interface MockApolloLink extends ApolloLink {
 }
 
 // @public (undocumented)
+export interface MockedRequest<TVariables = Record<string, any>> {
+    // (undocumented)
+    query: DocumentNode;
+    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    variables?: TVariables | VariableMatcher<TVariables>;
+}
+
+// @public (undocumented)
 export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
     // (undocumented)
-    delay?: number;
+    delay?: number | MockLink.DelayFunction;
     // (undocumented)
     error?: Error;
     // (undocumented)
     maxUsageCount?: number;
     // (undocumented)
-    newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-    // (undocumented)
-    request: GraphQLRequest<TVariables>;
+    request: MockedRequest<TVariables>;
     // (undocumented)
     result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    variableMatcher?: VariableMatcher<TVariables>;
 }
 
 // @public (undocumented)
@@ -58,10 +61,25 @@ interface MockedSubscriptionResult {
 }
 
 // @public (undocumented)
+export namespace MockLink {
+    // (undocumented)
+    export interface DefaultOptions {
+        // (undocumented)
+        delay?: MockLink.Delay;
+    }
+    // (undocumented)
+    export type Delay = number | DelayFunction;
+    // (undocumented)
+    export type DelayFunction = (operation: Operation) => number;
+}
+
+// @public (undocumented)
 export class MockLink extends ApolloLink {
-    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, options?: MockLinkOptions);
+    constructor(mockedResponses: ReadonlyArray<MockedResponse<Record<string, any>, Record<string, any>>>, options?: MockLinkOptions);
     // (undocumented)
     addMockedResponse(mockedResponse: MockedResponse): void;
+    // (undocumented)
+    static defaultOptions: MockLink.DefaultOptions;
     // (undocumented)
     operation: Operation;
     // (undocumented)
@@ -72,6 +90,8 @@ export class MockLink extends ApolloLink {
 
 // @public (undocumented)
 export interface MockLinkOptions {
+    // (undocumented)
+    defaultOptions?: MockLink.DefaultOptions;
     // (undocumented)
     showWarnings?: boolean;
 }
@@ -106,6 +126,12 @@ export class MockSubscriptionLink extends ApolloLink {
     // (undocumented)
     unsubscribers: any[];
 }
+
+// @public (undocumented)
+export function realisticDelay({ min, max, }?: {
+    min?: number;
+    max?: number;
+}): MockLink.DelayFunction;
 
 // Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
 //

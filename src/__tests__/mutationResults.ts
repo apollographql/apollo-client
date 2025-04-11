@@ -5,9 +5,9 @@ import { cloneDeep } from "lodash";
 import type { Subscription } from "rxjs";
 import { firstValueFrom, from, Observable } from "rxjs";
 
+import type { FetchResult } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/core";
-import { ApolloClient } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { MockedResponse } from "@apollo/client/testing";
@@ -164,9 +164,7 @@ describe("mutation results", () => {
           delay,
         },
         ...mockedResponses
-      ).setOnError((error) => {
-        throw error;
-      }),
+      ),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {

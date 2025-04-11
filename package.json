@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "4.0.0-alpha.7",
+  "version": "4.0.0-alpha.8",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -14,9 +14,9 @@
   "author": "packages@apollographql.com",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/__cjs/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/__cjs/core/index.cjs",
+  "module": "./dist/core/index.js",
+  "types": "./dist/core/index.d.ts",
   "sideEffects": false,
   "react-native": {
     "react-dom/server": false
@@ -30,7 +30,7 @@
   },
   "homepage": "https://www.apollographql.com/docs/react/",
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./src/core/index.ts",
     "./cache": "./src/cache/index.ts",
     "./core": "./src/core/index.ts",
     "./dev": "./src/dev/index.ts",
@@ -98,7 +98,7 @@
     "coverage": "node --experimental-import-meta-resolve --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.ts --logHeapUsage --coverage --watchAll=false",
     "bundlesize": "npm run build && node ./config/bundlesize.ts",
     "deploy": "cd dist && npm publish --tag next",
-    "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
+    "typedoc": "typedoc src/core/index.ts --json docs/public/docs.json",
     "docmodel": "node config/build.ts --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --main-only --generate docModel",
     "changeset-publish": "node config/build.ts --step=build --step=prepareChangesetsRelease && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",

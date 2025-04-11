@@ -13,13 +13,8 @@ import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { prerender } from "react-dom/static";
 import { prerenderToNodeStream } from "react-dom/static.node";
 
-import type { TypedDocumentNode } from "@apollo/client/core";
-import {
-  ApolloClient,
-  ApolloLink,
-  gql,
-  InMemoryCache,
-} from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import {
   ApolloProvider,
   getApolloContext,
@@ -616,9 +611,9 @@ test("`maxRerenders` will throw an error if exceeded", async () => {
     cache: new InMemoryCache(),
     link: new MockLink([
       {
-        request: { query },
-        variableMatcher: () => true,
-        newData: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        request: { query, variables: () => true },
+        result: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        maxUsageCount: Number.POSITIVE_INFINITY,
       } satisfies MockedResponse<{ hello: string }, { depth: number }>,
     ]),
   });
@@ -662,9 +657,9 @@ test("`maxRerenders` defaults to 50", async () => {
     cache: new InMemoryCache(),
     link: new MockLink([
       {
-        request: { query },
-        variableMatcher: () => true,
-        newData: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        request: { query, variables: () => true },
+        result: (arg) => ({ data: { hello: "world" + arg.depth } }),
+        maxUsageCount: Number.POSITIVE_INFINITY,
       } satisfies MockedResponse<{ hello: string }, { depth: number }>,
     ]),
   });

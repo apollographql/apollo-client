@@ -5,7 +5,7 @@
 ```ts
 
 import { ApolloCache } from '@apollo/client/cache';
-import type { ApolloCache as ApolloCache_3 } from '@apollo/client/core';
+import type { ApolloCache as ApolloCache_3 } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link/core';
 import { ApolloPayloadResult } from '@apollo/client/link/core';
 import type { AsStoreObject } from '@apollo/client/utilities';
@@ -75,7 +75,7 @@ import { Observable } from '@apollo/client/utilities';
 import { Observable as Observable_2 } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link/core';
-import type { OperationVariables as OperationVariables_2 } from '@apollo/client/core';
+import type { OperationVariables as OperationVariables_2 } from '@apollo/client';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { Path } from '@apollo/client/link/core';
 import { PossibleTypesMap } from '@apollo/client/cache';
@@ -102,7 +102,7 @@ import type { Subscription } from 'rxjs';
 import { Transaction } from '@apollo/client/cache';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client/core';
+import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
@@ -1353,6 +1353,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
+    // @internal (undocumented)
+    protected notify(): void;
     // (undocumented)
     readonly options: WatchQueryOptions<TVariables, TData>;
     // (undocumented)
@@ -1369,6 +1371,10 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
+    // @internal (undocumented)
+    protected resetNotifications(): void;
+    // @internal (undocumented)
+    protected scheduleNotify(): void;
     setVariables(variables: TVariables): Promise<QueryResult<TData>>;
     // @internal (undocumented)
     silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
@@ -1463,20 +1469,14 @@ class QueryInfo {
     }): this;
     // (undocumented)
     lastRequestId: number;
-    // (undocumented)
-    listeners: Set<QueryListener>;
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     markResult<T>(result: FetchResult<T>, document: DocumentNode_2, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
     // (undocumented)
-    notify(): void;
-    // (undocumented)
     readonly observableQuery: ObservableQuery<any, any> | null;
     // (undocumented)
     readonly queryId: string;
-    // (undocumented)
-    reset(): void;
     // (undocumented)
     resetDiff(): void;
     // (undocumented)
@@ -2027,8 +2027,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:140:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:141:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:184:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:454:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

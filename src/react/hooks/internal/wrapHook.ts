@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import type { ApolloClient } from "@apollo/client/core";
-import type { ObservableQuery } from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client";
+import type { ObservableQuery } from "@apollo/client";
 import type { createQueryPreloader } from "@apollo/client/react";
 import type {
   useBackgroundQuery,

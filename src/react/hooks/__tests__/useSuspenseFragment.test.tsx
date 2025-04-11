@@ -16,8 +16,8 @@ import type {
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
-} from "@apollo/client/core";
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client/core";
+} from "@apollo/client";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";

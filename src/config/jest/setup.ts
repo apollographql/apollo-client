@@ -21,6 +21,7 @@ import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.j
 import { areCombinedProtocolErrorsEqual } from "./areCombinedProtocolErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
+import { areServerErrorsEqual } from "./areServerErrorsEqual.js";
 
 setLogVerbosity("log");
 
@@ -59,6 +60,7 @@ if (!Symbol.asyncDispose) {
 
 // @ts-ignore
 expect.addEqualityTesters([
+  areServerErrorsEqual,
   areCombinedGraphQLErrorsEqual,
   areCombinedProtocolErrorsEqual,
   areGraphQLErrorsEqual,

@@ -1,18 +1,18 @@
 import { gql } from "graphql-tag";
 
-import {
-  InMemoryCache,
-  makeVar,
-  MissingFieldError,
-} from "@apollo/client/cache";
 import type {
   DocumentNode,
   OperationVariables,
   Reference,
   StoreObject,
   TypedDocumentNode,
-} from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+} from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import {
+  InMemoryCache,
+  makeVar,
+  MissingFieldError,
+} from "@apollo/client/cache";
 import { MockLink } from "@apollo/client/testing/core";
 import {
   ObservableStream,
@@ -3654,9 +3654,7 @@ describe("type policies", function () {
             },
           },
         },
-      ]).setOnError((error) => {
-        throw new Error(error);
-      });
+      ]);
 
       const client = new ApolloClient({ link, cache });
 
@@ -4095,9 +4093,7 @@ describe("type policies", function () {
             },
           },
         },
-      ]).setOnError((error) => {
-        throw new Error(error);
-      });
+      ]);
 
       const client = new ApolloClient({ link, cache });
 

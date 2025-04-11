@@ -2,8 +2,8 @@ import { render, waitFor } from "@testing-library/react";
 import { gql } from "graphql-tag";
 import React from "react";
 
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import { ApolloClient } from "@apollo/client/core";
 import { ApolloProvider, useSubscription } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 

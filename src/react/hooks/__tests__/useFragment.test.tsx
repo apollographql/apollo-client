@@ -26,13 +26,8 @@ import type {
   Reference,
   StoreObject,
   TypedDocumentNode,
-} from "@apollo/client/core";
-import {
-  ApolloClient,
-  ApolloLink,
-  gql,
-  InMemoryCache,
-} from "@apollo/client/core";
+} from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import type { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider, useFragment, useQuery } from "@apollo/client/react";
 import { spyOnConsole } from "@apollo/client/testing/internal";

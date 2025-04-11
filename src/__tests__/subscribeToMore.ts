@@ -1,11 +1,12 @@
 import type { DocumentNode, OperationDefinitionNode } from "graphql";
 import { gql } from "graphql-tag";
 
+import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient } from "@apollo/client/core";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import {
+  MockLink,
   mockObservableLink,
   mockSingleLink,
   wait,
@@ -120,7 +121,7 @@ describe("subscribeToMore", () => {
 
   it("calls error callback on error", async () => {
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = new MockLink([req1]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
@@ -147,16 +148,16 @@ describe("subscribeToMore", () => {
       onError,
     });
 
-    for (const result of results2) {
-      wSLink.simulateResult(result);
-    }
-
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
       partial: false,
     });
+
+    for (const result of results2) {
+      wSLink.simulateResult(result);
+    }
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },

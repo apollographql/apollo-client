@@ -5,7 +5,7 @@ import type {
   ObservableQuery,
   OperationVariables,
   WatchFragmentOptions,
-} from "@apollo/client/core";
+} from "@apollo/client";
 
 import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";

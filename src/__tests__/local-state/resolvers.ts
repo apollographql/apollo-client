@@ -2,9 +2,9 @@ import type { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
+import type { QueryResult, Resolvers } from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
-import type { QueryResult, Resolvers } from "@apollo/client/core";
-import { ApolloClient, NetworkStatus } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
@@ -67,7 +67,14 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = setupTestWithResolvers({ resolvers, query });
+    const client = new ApolloClient({
+      resolvers,
+      cache: new InMemoryCache(),
+      // Local resolvers handle this query
+      link: ApolloLink.empty(),
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { bar: true } },
@@ -256,11 +263,16 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = setupTestWithResolvers({
+    const client = new ApolloClient({
       resolvers,
-      query,
-      variables: { id: 1 },
+      cache: new InMemoryCache(),
+      // Local resolvers handle this query
+      link: ApolloLink.empty(),
     });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, variables: { id: 1 } })
+    );
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
@@ -290,11 +302,16 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = setupTestWithResolvers({
+    const client = new ApolloClient({
       resolvers,
-      query,
-      queryOptions: { context: { id: 1 } },
+      cache: new InMemoryCache(),
+      // The resolvers will handle the full response
+      link: ApolloLink.empty(),
     });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, context: { id: 1 } })
+    );
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },

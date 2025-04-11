@@ -3,14 +3,14 @@ import { assign, cloneDeep } from "lodash";
 import { firstValueFrom, from, lastValueFrom, Observable } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
-import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
-import { InMemoryCache } from "@apollo/client/cache";
 import type {
   ApolloCache,
   MutationQueryReducersMap,
   TypedDocumentNode,
-} from "@apollo/client/core";
-import { ApolloClient, ApolloLink, makeReference } from "@apollo/client/core";
+} from "@apollo/client";
+import { ApolloClient, ApolloLink, makeReference } from "@apollo/client";
+import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
+import { InMemoryCache } from "@apollo/client/cache";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, mockSingleLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
@@ -1325,6 +1325,7 @@ describe("optimistic mutation results", () => {
         {
           request: { query },
           result,
+          delay: 0,
         },
         {
           request: { query: mutation },
@@ -1751,10 +1752,11 @@ describe("optimistic mutation results", () => {
 
     it("will handle dependent updates", async () => {
       expect.assertions(1);
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query },
           result,
+          delay: 0,
         },
         {
           request: { query: mutation },
@@ -1765,8 +1767,8 @@ describe("optimistic mutation results", () => {
           request: { query: mutation },
           result: mutationResult2,
           delay: 20,
-        }
-      );
+        },
+      ]);
 
       const customOptimisticResponse1 = {
         __typename: "Mutation",

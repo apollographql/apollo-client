@@ -4,17 +4,18 @@
 
 ```ts
 
-import type { ApolloClient } from '@apollo/client/core';
-import { ApolloLink } from '@apollo/client/core';
-import type { ApolloPayloadResult } from '@apollo/client/core';
-import { FetchResult } from '@apollo/client/core';
+import type { ApolloClient } from '@apollo/client';
+import { ApolloLink } from '@apollo/client';
+import type { ApolloPayloadResult } from '@apollo/client';
+import { FetchResult } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql-17-alpha2';
-import { GraphQLRequest } from '@apollo/client/core';
 import { HttpLink } from '@apollo/client/link/http';
 import type { InitialIncrementalExecutionResult } from 'graphql-17-alpha2';
 import type { MaskedDocumentNode } from '@apollo/client/masking';
 import type { MockedProviderProps } from '@apollo/client/testing/react';
+import { MockedRequest } from '@apollo/client/testing/core';
 import type { MockedResponse } from '@apollo/client/testing/core';
+import { MockLink } from '@apollo/client/testing/core';
 import type { Observable } from 'rxjs';
 import type { Queries } from '@testing-library/dom';
 import type { queries } from '@testing-library/dom';
@@ -27,20 +28,18 @@ import type { RenderResult } from '@testing-library/react';
 import { ResultFunction } from '@apollo/client/testing/core';
 import type { Subscribable } from 'rxjs';
 import type { SubsequentIncrementalExecutionResult } from 'graphql-17-alpha2';
-import type { TypedDocumentNode } from '@apollo/client/core';
+import type { TypedDocumentNode } from '@apollo/client';
 
 // @public (undocumented)
 export function actAsync<T>(scope: () => T | Promise<T>): Promise<T>;
 
 // @public (undocumented)
 export function addDelayToMocks<T extends MockedResponse<unknown>[]>(mocks: T, delay?: number, override?: boolean): {
-    delay: number;
-    request: GraphQLRequest<Record<string, any>>;
+    request: MockedRequest<Record<string, any>>;
     maxUsageCount?: number;
     result?: FetchResult<unknown> | ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
     error?: Error;
-    variableMatcher?: ((arg: Record<string, any>) => boolean) | undefined;
-    newData?: ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
+    delay: number | MockLink.DelayFunction;
 }[];
 
 // @public (undocumented)
@@ -213,7 +212,7 @@ export function setupSimpleCase(): {
 
 // @public (undocumented)
 export function setupVariablesCase(): {
-    mocks: MockedResponse<VariablesCaseData, Record<string, any>>[];
+    mocks: MockedResponse<VariablesCaseData, VariablesCaseVariables>[];
     query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
 };
 

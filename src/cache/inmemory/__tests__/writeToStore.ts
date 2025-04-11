@@ -9,8 +9,8 @@ import type {
 import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
+import type { TypedDocumentNode } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { TypedDocumentNode } from "@apollo/client/core";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {

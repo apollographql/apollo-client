@@ -45,6 +45,13 @@ describe("mutiple results", () => {
     });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
@@ -103,6 +110,13 @@ describe("mutiple results", () => {
       errorPolicy: "ignore",
     });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
@@ -174,6 +188,13 @@ describe("mutiple results", () => {
       errorPolicy: "ignore",
     });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
@@ -310,13 +331,26 @@ describe("mutiple results", () => {
       next: (result) => {
         // errors should never be passed since they are ignored
         count++;
+        // loading
         if (count === 1) {
           expect(result.error).toBeUndefined();
         }
+        // first result
         if (count === 2) {
+          expect(result.error).toBeUndefined();
+        }
+        // error
+        if (count === 3) {
           expect(result.error).toBeDefined();
         }
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     // fire off first result

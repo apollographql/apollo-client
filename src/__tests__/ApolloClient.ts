@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { expectTypeOf } from "expect-type";
 import { Kind } from "graphql";
 import { gql } from "graphql-tag";
-import { Observable, of } from "rxjs";
+import { delay, Observable, of } from "rxjs";
 
 import type {
   ApolloQueryResult,
@@ -1163,7 +1163,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return of({ data });
+        return of({ data }).pipe(delay(20));
       });
       function newClient() {
         return new ApolloClient({
@@ -1217,6 +1217,13 @@ describe("ApolloClient", () => {
           const stream = new ObservableStream(observable);
 
           await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
+
+          await expect(stream).toEmitTypedValue({
             data,
             loading: false,
             networkStatus: NetworkStatus.ready,
@@ -1264,6 +1271,13 @@ describe("ApolloClient", () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
+
+          await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
 
           await expect(stream).toEmitTypedValue({
             data,
@@ -1321,6 +1335,13 @@ describe("ApolloClient", () => {
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
 
+          await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
+
           {
             const result = await stream.takeNext();
 
@@ -1358,6 +1379,13 @@ describe("ApolloClient", () => {
           const client = newClient();
           const observable = client.watchQuery<Data>({ query });
           const stream = new ObservableStream(observable);
+
+          await expect(stream).toEmitTypedValue({
+            data: undefined,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            partial: true,
+          });
 
           {
             const result = await stream.takeNext();
@@ -2125,7 +2153,6 @@ describe("ApolloClient", () => {
         const observable = client.watchQuery({
           query,
           fetchPolicy,
-          notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
         await expect(stream).toEmitTypedValue({
@@ -2158,12 +2185,16 @@ describe("ApolloClient", () => {
         });
         client.prioritizeCacheValues = true;
 
-        const observable = client.watchQuery({
-          query,
-          fetchPolicy,
-          notifyOnNetworkStatusChange: true,
-        });
+        const observable = client.watchQuery({ query, fetchPolicy });
         const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
+
         await expect(stream).toEmitTypedValue({
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2197,8 +2228,7 @@ describe("ApolloClient", () => {
           notifyOnNetworkStatusChange: true,
         });
         const stream = new ObservableStream(observable);
-        // not really part of this test case but I decided to leave it here to highlight this
-        // in the case of a network request, `no-cache` emits a `loading` state while `network-only` etc. do not?
+
         await expect(stream).toEmitTypedValue({
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2957,7 +2987,19 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
       link.simulateResult({ result: { data: { foo: { bar: 1 } } } }, true);
 
-      await stream.takeNext();
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: { foo: { bar: 1 } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       const result = client.refetchQueries({
         include: "all",

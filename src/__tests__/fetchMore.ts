@@ -56,6 +56,13 @@ describe("updateQuery on a simple query", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -109,6 +116,7 @@ describe("updateQuery on a query with required and optional variables", () => {
         variables,
       },
       result,
+      delay: 20,
     });
 
     const client = new ApolloClient({
@@ -122,6 +130,13 @@ describe("updateQuery on a query with required and optional variables", () => {
     });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
@@ -298,6 +313,13 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       {
         const result = await stream.takeNext();
 
@@ -367,6 +389,13 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       {
         const result = await stream.takeNext();
 
@@ -420,6 +449,13 @@ describe("fetchMore on an observable query", () => {
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       {
         const result = await stream.takeNext();
@@ -495,6 +531,13 @@ describe("fetchMore on an observable query", () => {
       );
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       {
         const result = await stream.takeNext();
@@ -1186,6 +1229,13 @@ describe("fetchMore on an observable query", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -1251,6 +1301,13 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const result = await stream.takeNext();
 
@@ -1274,6 +1331,18 @@ describe("fetchMore on an observable query", () => {
 
       expect(fetchMoreResult.data!.comments).toHaveLength(10);
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        entry: {
+          __typename: "Entry",
+          comments: expect.arrayWithLength(10),
+        },
+      },
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      partial: false,
+    });
 
     {
       const result = await stream.takeNext();
@@ -1316,6 +1385,13 @@ describe("fetchMore on an observable query", () => {
 
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       const { data, networkStatus } = await stream.takeNext();
 
@@ -1374,6 +1450,13 @@ describe("fetchMore on an observable query", () => {
 
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       const { data, networkStatus } = await stream.takeNext();
 
@@ -1451,6 +1534,13 @@ describe("fetchMore on an observable query", () => {
     const observable = client.watchQuery({ query, variables });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       loading: false,
@@ -1630,6 +1720,13 @@ describe("fetchMore on an observable query with connection", () => {
 
       const stream = new ObservableStream(observable);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       {
         const result = await stream.takeNext();
 
@@ -1700,6 +1797,13 @@ describe("fetchMore on an observable query with connection", () => {
 
       const stream = new ObservableStream(observable);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       {
         const result = await stream.takeNext();
 
@@ -1767,6 +1871,13 @@ describe("fetchMore on an observable query with connection", () => {
 
       const stream = new ObservableStream(observable);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       {
         const { data, networkStatus } = await stream.takeNext();
 
@@ -1833,6 +1944,13 @@ describe("fetchMore on an observable query with connection", () => {
       const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       {
         const { data, networkStatus } = await stream.takeNext();

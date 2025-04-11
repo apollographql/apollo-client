@@ -759,6 +759,13 @@ describe("cache-and-network", function () {
     }
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: dataWithId(1),
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -919,6 +926,13 @@ describe("nextFetchPolicy", () => {
     observable,
     stream,
   }) => {
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     await expect(stream).toEmitTypedValue({
       data: {
         echo: {
@@ -1095,6 +1109,13 @@ describe("nextFetchPolicy", () => {
     observable,
     stream,
   }) => {
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     await expect(stream).toEmitTypedValue({
       data: {
         echo: {
@@ -1277,6 +1298,13 @@ describe("nextFetchPolicy", () => {
     observable,
     stream,
   }) => {
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     await expect(stream).toEmitTypedValue({
       data: {
         echo: {

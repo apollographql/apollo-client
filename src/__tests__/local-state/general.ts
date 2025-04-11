@@ -12,7 +12,7 @@ import {
 } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observable } from "rxjs";
-import { defer, of } from "rxjs";
+import { defer, delay, of } from "rxjs";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
@@ -319,6 +319,13 @@ describe("Cache manipulation", () => {
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { field: 0 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -427,6 +434,13 @@ describe("Cache manipulation", () => {
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         serverData,
         selectedItemId: -1,
@@ -525,6 +539,13 @@ describe("Cache manipulation", () => {
     const stream = new ObservableStream(
       client.watchQuery<any>({ query, variables: { id: entityId } })
     );
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const result = await stream.takeNext();
@@ -635,6 +656,13 @@ describe("Sample apps", () => {
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { count: 0, lastCount: 1 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -717,6 +745,13 @@ describe("Sample apps", () => {
     client.addResolvers(resolvers);
     const stream = new ObservableStream(client.watchQuery<any>({ query }));
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -770,7 +805,7 @@ describe("Combining client and server state/operations", () => {
       },
     };
 
-    const link = new ApolloLink(() => of({ data }));
+    const link = new ApolloLink(() => of({ data }).pipe(delay(20)));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -813,6 +848,13 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(observer);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const response = await stream.takeNext();
       const initial = { ...data };
@@ -821,7 +863,7 @@ describe("Combining client and server state/operations", () => {
         isSelected: false,
       }));
 
-      expect(response.data).toMatchObject(initial);
+      expect(response.data).toStrictEqualTyped(initial);
     }
 
     await client.mutate({
@@ -909,6 +951,13 @@ describe("Combining client and server state/operations", () => {
 
     const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: { people: { __typename: "Person", id: "1", name: "John Smith" } },
@@ -1016,6 +1065,13 @@ describe("Combining client and server state/operations", () => {
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { count: 0, lastCount: 1 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1049,7 +1105,7 @@ describe("Combining client and server state/operations", () => {
             lastName: "Doe",
           },
         },
-      });
+      }).pipe(delay(20));
     });
 
     const client = new ApolloClient({
@@ -1070,6 +1126,13 @@ describe("Combining client and server state/operations", () => {
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -1122,16 +1185,16 @@ describe("Combining client and server state/operations", () => {
       if (operation.operationName === "SampleQuery") {
         return of({
           data: { user: { __typename: "User", firstName: "John" } },
-        });
+        }).pipe(delay(20));
       }
       if (operation.operationName === "SampleMutation") {
         return of({
           data: { updateUser: { __typename: "User", firstName: "Harry" } },
-        });
+        }).pipe(delay(20));
       }
       return of({
         errors: [new Error(`Unknown operation ${operation.operationName}`)],
-      });
+      }).pipe(delay(20));
     });
 
     const cache = new InMemoryCache();
@@ -1161,6 +1224,13 @@ describe("Combining client and server state/operations", () => {
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -1228,6 +1298,13 @@ describe("Combining client and server state/operations", () => {
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: undefined,

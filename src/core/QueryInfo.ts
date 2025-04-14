@@ -10,7 +10,6 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { DeepMerger } from "@apollo/client/utilities";
-import { normalizeVariables } from "@apollo/client/utilities/internal";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -90,9 +89,7 @@ export class QueryInfo {
     document: DocumentNode;
     variables: Record<string, any> | undefined;
   }): this {
-    const variables = normalizeVariables(query.variables);
-
-    if (!equal(variables, this.variables)) {
+    if (!equal(query.variables, this.variables)) {
       this.lastDiff = void 0;
       // Ensure we don't continue to receive cache updates for old variables
       this.cancel();
@@ -100,7 +97,7 @@ export class QueryInfo {
 
     Object.assign(this, {
       document: query.document,
-      variables,
+      variables: query.variables,
     });
 
     return this;
@@ -264,7 +261,6 @@ export class QueryInfo {
     >,
     cacheWriteBehavior: CacheWriteBehavior
   ) {
-    const variables = normalizeVariables(options.variables);
     const merger = new DeepMerger();
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
@@ -288,7 +284,7 @@ export class QueryInfo {
     if (options.fetchPolicy === "no-cache") {
       this.updateLastDiff(
         { result: result.data, complete: true },
-        this.getDiffOptions(variables)
+        this.getDiffOptions(options.variables)
       );
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
@@ -297,17 +293,17 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction((cache) => {
-          if (this.shouldWrite(result, variables)) {
+          if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
               query: document,
               data: result.data as Unmasked<T>,
-              variables,
+              variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
             });
 
             this.lastWrite = {
               result,
-              variables,
+              variables: options.variables,
               dmCount: destructiveMethodCounts.get(this.cache),
             };
           } else {
@@ -353,7 +349,7 @@ export class QueryInfo {
             // re-reading the latest data with cache.diff, below.
           }
 
-          const diffOptions = this.getDiffOptions(variables);
+          const diffOptions = this.getDiffOptions(options.variables);
           const diff = cache.diff<T>(diffOptions);
 
           // In case the QueryManager stops this QueryInfo before its
@@ -362,10 +358,10 @@ export class QueryInfo {
           // the watch if we are writing a result that doesn't match the current
           // variables to avoid race conditions from broadcasting the wrong
           // result.
-          if (!this.stopped && equal(this.variables, variables)) {
+          if (!this.stopped && equal(this.variables, options.variables)) {
             // Any time we're about to update this.diff, we need to make
             // sure we've started watching the cache.
-            this.updateWatch(variables);
+            this.updateWatch(options.variables);
           }
 
           // If we're allowed to write to the cache, and we can read a

@@ -510,7 +510,7 @@ interface MutationStoreValue {
     // (undocumented)
     mutation: DocumentNode;
     // (undocumented)
-    variables: Record<string, any> | undefined;
+    variables: Record<string, any>;
 }
 
 // @public @deprecated (undocumented)
@@ -1598,16 +1598,16 @@ interface WatchQueryOptions_2<TVariables extends OperationVariables_2 = Operatio
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
-    variables?: NoInfer_2<TVariables>;
+    variables?: TVariables;
 }
 
 // Warnings were encountered during analysis:
 //
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:143:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:144:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:460:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:140:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:141:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:184:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:454:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:233:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:195:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts

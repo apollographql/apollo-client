@@ -487,7 +487,6 @@ Array [
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",
   "getInMemoryCacheMemoryInternals",
-  "normalizeVariables",
   "onAnyEvent",
   "registerGlobalCache",
   "toQueryResult",

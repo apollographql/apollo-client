@@ -5086,7 +5086,7 @@ describe("observableQuery.subscribeToMore", () => {
       },
       {
         complete: true,
-        variables: undefined,
+        variables: {},
         previousData: {
           recentComment: {
             __typename: "Comment",
@@ -5229,7 +5229,7 @@ describe("observableQuery.subscribeToMore", () => {
       },
       {
         complete: true,
-        variables: undefined,
+        variables: {},
         previousData: {
           recentComment: {
             __typename: "Comment",
@@ -5378,7 +5378,7 @@ describe("observableQuery.subscribeToMore", () => {
       },
       {
         complete: true,
-        variables: undefined,
+        variables: {},
         previousData: {
           recentComment: {
             __typename: "Comment",
@@ -5671,7 +5671,7 @@ describe("client.mutate", () => {
           },
         },
       },
-      { context: undefined, variables: undefined }
+      { context: undefined, variables: {} }
     );
   });
 

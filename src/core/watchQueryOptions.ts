@@ -110,7 +110,7 @@ export interface WatchQueryOptions<
   refetchWritePolicy?: RefetchWritePolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
+  variables?: NoInfer<TVariables>;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;

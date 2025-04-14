@@ -788,6 +788,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public async setVariables(
     variables: TVariables
   ): Promise<QueryResult<TData>> {
+    variables = this.queryManager.getVariables(this.query, variables);
+
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
@@ -795,10 +797,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return toQueryResult(this.subject.getValue());
     }
 
-    this.options.variables = this.queryManager.getVariables(
-      this.query,
-      variables
-    );
+    this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {

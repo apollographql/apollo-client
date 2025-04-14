@@ -12,10 +12,7 @@ test("Uses default message format", () => {
     errors: [{ message: "Email already taken" }],
   });
 
-  expect(error.message).toMatchInlineSnapshot(`
-"The GraphQL server returned with errors:
-- Email already taken"
-`);
+  expect(error.message).toMatchInlineSnapshot(`"Email already taken"`);
 
   const multipleErrors = new CombinedGraphQLErrors({
     errors: [
@@ -25,9 +22,25 @@ test("Uses default message format", () => {
   });
 
   expect(multipleErrors.message).toMatchInlineSnapshot(`
-"The GraphQL server returned with errors:
-- Username already in use
-- Password doesn't match"
+"Username already in use
+Password doesn't match"
+`);
+});
+
+test("adds default message for empty error messages", () => {
+  const error = new CombinedGraphQLErrors({
+    errors: [{ message: "" }],
+  });
+
+  expect(error.message).toMatchInlineSnapshot(`"Error message not found."`);
+
+  const multipleErrors = new CombinedGraphQLErrors({
+    errors: [{ message: "Username already in use" }, { message: "" }],
+  });
+
+  expect(multipleErrors.message).toMatchInlineSnapshot(`
+"Username already in use
+Error message not found."
 `);
 });
 

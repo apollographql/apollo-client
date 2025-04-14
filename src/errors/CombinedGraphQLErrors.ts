@@ -25,14 +25,13 @@ export class CombinedGraphQLErrors extends Error {
    * to provide your own formatting.
    */
   static formatMessage: CombinedGraphQLErrorsMessageFormatter = (errors) => {
-    const messageList = errors
-      // Handle non-spec-compliant servers: See #1185
-      .filter((e) => e)
-      .map((e) => `- ${e.message}`)
-      .join("\n");
-
-    return `The GraphQL server returned with errors:
-${messageList}`;
+    return (
+      errors
+        // Handle non-spec-compliant servers: See #1185
+        .filter((e) => e)
+        .map((e) => e.message || "Error message not found.")
+        .join("\n")
+    );
   };
 
   /**

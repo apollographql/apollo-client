@@ -9,10 +9,7 @@ afterEach(() => {
 test("uses default message format", () => {
   const error = new CombinedProtocolErrors([{ message: "Could not connect" }]);
 
-  expect(error.message).toMatchInlineSnapshot(`
-"The GraphQL server returned with errors:
-- Could not connect"
-`);
+  expect(error.message).toMatchInlineSnapshot(`"Could not connect"`);
 
   const multipleErrors = new CombinedProtocolErrors([
     { message: "Username already in use" },
@@ -20,19 +17,15 @@ test("uses default message format", () => {
   ]);
 
   expect(multipleErrors.message).toMatchInlineSnapshot(`
-"The GraphQL server returned with errors:
-- Username already in use
-- Password doesn't match"
+"Username already in use
+Password doesn't match"
 `);
 });
 
 test("adds default message for empty error messages", () => {
   const error = new CombinedProtocolErrors([{ message: "" }]);
 
-  expect(error.message).toMatchInlineSnapshot(`
-"The GraphQL server returned with errors:
-- "
-`);
+  expect(error.message).toMatchInlineSnapshot(`"Error message not found."`);
 
   const multipleErrors = new CombinedProtocolErrors([
     { message: "Username already in use" },
@@ -40,9 +33,8 @@ test("adds default message for empty error messages", () => {
   ]);
 
   expect(multipleErrors.message).toMatchInlineSnapshot(`
-"The GraphQL server returned with errors:
-- Username already in use
-- "
+"Username already in use
+Error message not found."
 `);
 });
 

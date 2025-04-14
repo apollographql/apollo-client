@@ -18,10 +18,9 @@ export class CombinedProtocolErrors extends Error {
   }
 
   static formatMessage: CombinedGraphQLErrorsMessageFormatter = (errors) => {
-    const messageList = errors.map((e) => `- ${e.message}`).join("\n");
-
-    return `The GraphQL server returned with errors:
-${messageList}`;
+    return errors
+      .map((e) => e.message || "Error message not found.")
+      .join("\n");
   };
 
   errors: ReadonlyArray<GraphQLFormattedError>;

@@ -48,7 +48,9 @@ test("allows message formatter to be overwritten", () => {
     const error = new CombinedProtocolErrors(errors);
 
     expect(error.message).toBe("Errors happened");
-    expect(formatMessage).toHaveBeenCalledWith(errors);
+    expect(formatMessage).toHaveBeenCalledWith(errors, {
+      defaultFormatMessage: expect.any(Function),
+    });
   }
 
   {
@@ -58,6 +60,33 @@ test("allows message formatter to be overwritten", () => {
     const error = new CombinedProtocolErrors(errors);
 
     expect(error.message).toBe("Oops. Something went wrong");
-    expect(formatMessage).toHaveBeenCalledWith(errors);
+    expect(formatMessage).toHaveBeenCalledWith(errors, {
+      defaultFormatMessage: expect.any(Function),
+    });
   }
+});
+
+test("can use default formatter from options", () => {
+  CombinedProtocolErrors.formatMessage = (_, { defaultFormatMessage }) =>
+    `Overwritten error message:\n ${defaultFormatMessage()}`;
+
+  const error = new CombinedProtocolErrors([
+    { message: "Email already taken" },
+  ]);
+
+  expect(error.message).toMatchInlineSnapshot(`
+"Overwritten error message:
+ Email already taken"
+`);
+
+  const multipleErrors = new CombinedProtocolErrors([
+    { message: "Username already in use" },
+    { message: "Password doesn't match" },
+  ]);
+
+  expect(multipleErrors.message).toMatchInlineSnapshot(`
+"Overwritten error message:
+ Username already in use
+Password doesn't match"
+`);
 });

@@ -7,7 +7,7 @@ afterEach(() => {
   CombinedGraphQLErrors.formatMessage = defaultFormatMessage;
 });
 
-test("Uses default message format", () => {
+test("uses default message format", () => {
   const error = new CombinedGraphQLErrors({
     errors: [{ message: "Email already taken" }],
   });
@@ -55,7 +55,10 @@ test("allows message formatter to be overwritten", () => {
     const error = new CombinedGraphQLErrors(result);
 
     expect(error.message).toBe("Errors happened");
-    expect(formatMessage).toHaveBeenCalledWith(errors, result);
+    expect(formatMessage).toHaveBeenCalledWith(errors, {
+      defaultFormatMessage: expect.any(Function),
+      result,
+    });
   }
 
   {
@@ -65,6 +68,36 @@ test("allows message formatter to be overwritten", () => {
     const error = new CombinedGraphQLErrors(result);
 
     expect(error.message).toBe("Oops. Something went wrong");
-    expect(formatMessage).toHaveBeenCalledWith(errors, result);
+    expect(formatMessage).toHaveBeenCalledWith(errors, {
+      defaultFormatMessage: expect.any(Function),
+      result,
+    });
   }
+});
+
+test("can use default formatter from options", () => {
+  CombinedGraphQLErrors.formatMessage = (_, { defaultFormatMessage }) =>
+    `Overwritten error message:\n ${defaultFormatMessage()}`;
+
+  const error = new CombinedGraphQLErrors({
+    errors: [{ message: "Email already taken" }],
+  });
+
+  expect(error.message).toMatchInlineSnapshot(`
+"Overwritten error message:
+ Email already taken"
+`);
+
+  const multipleErrors = new CombinedGraphQLErrors({
+    errors: [
+      { message: "Username already in use" },
+      { message: "Password doesn't match" },
+    ],
+  });
+
+  expect(multipleErrors.message).toMatchInlineSnapshot(`
+"Overwritten error message:
+ Username already in use
+Password doesn't match"
+`);
 });

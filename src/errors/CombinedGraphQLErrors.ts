@@ -6,10 +6,25 @@ import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
 import { brand, isBranded } from "./utils.js";
 
 export declare namespace CombinedGraphQLErrors {
+  export interface MessageFormatterOptions {
+    result: FetchResult<unknown>;
+    defaultFormatMessage: () => string;
+  }
+
   export type MessageFormatter = (
     errors: ReadonlyArray<GraphQLFormattedError>,
-    result: FetchResult<unknown>
+    options: MessageFormatterOptions
   ) => string;
+}
+
+function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
+  return (
+    errors
+      // Handle non-spec-compliant servers: See #1185
+      .filter((e) => e)
+      .map((e) => e.message || "Error message not found.")
+      .join("\n")
+  );
 }
 
 /**
@@ -26,15 +41,8 @@ export class CombinedGraphQLErrors extends Error {
    * Formats the error message used for the error `message` property. Override
    * to provide your own formatting.
    */
-  static formatMessage: CombinedGraphQLErrors.MessageFormatter = (errors) => {
-    return (
-      errors
-        // Handle non-spec-compliant servers: See #1185
-        .filter((e) => e)
-        .map((e) => e.message || "Error message not found.")
-        .join("\n")
-    );
-  };
+  static formatMessage: CombinedGraphQLErrors.MessageFormatter =
+    defaultFormatMessage;
 
   /**
    * The raw list of GraphQL errors returned in a GraphQL response.
@@ -49,7 +57,12 @@ export class CombinedGraphQLErrors extends Error {
   constructor(result: FetchResult<unknown>) {
     const errors = getGraphQLErrorsFromResult(result);
 
-    super(CombinedGraphQLErrors.formatMessage(errors, result));
+    super(
+      CombinedGraphQLErrors.formatMessage(errors, {
+        result,
+        defaultFormatMessage: () => defaultFormatMessage(errors),
+      })
+    );
     this.errors = errors;
     this.data = result.data as Record<string, unknown>;
     this.name = "CombinedGraphQLErrors";

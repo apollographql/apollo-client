@@ -3,9 +3,18 @@ import type { GraphQLFormattedError } from "graphql";
 import { brand, isBranded } from "./utils.js";
 
 export declare namespace CombinedProtocolErrors {
+  export interface MessageFormatterOptions {
+    defaultFormatMessage: () => string;
+  }
+
   export type MessageFormatter = (
-    errors: ReadonlyArray<GraphQLFormattedError>
+    errors: ReadonlyArray<GraphQLFormattedError>,
+    options: MessageFormatterOptions
   ) => string;
+}
+
+function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
+  return errors.map((e) => e.message || "Error message not found.").join("\n");
 }
 
 /**
@@ -19,11 +28,8 @@ export class CombinedProtocolErrors extends Error {
     return isBranded(error, "CombinedProtocolErrors");
   }
 
-  static formatMessage: CombinedProtocolErrors.MessageFormatter = (errors) => {
-    return errors
-      .map((e) => e.message || "Error message not found.")
-      .join("\n");
-  };
+  static formatMessage: CombinedProtocolErrors.MessageFormatter =
+    defaultFormatMessage;
 
   errors: ReadonlyArray<GraphQLFormattedError>;
 
@@ -32,7 +38,11 @@ export class CombinedProtocolErrors extends Error {
       | Array<GraphQLFormattedError>
       | ReadonlyArray<GraphQLFormattedError>
   ) {
-    super(CombinedProtocolErrors.formatMessage(protocolErrors));
+    super(
+      CombinedProtocolErrors.formatMessage(protocolErrors, {
+        defaultFormatMessage: () => defaultFormatMessage(protocolErrors),
+      })
+    );
     this.name = "CombinedProtocolErrors";
     this.errors = protocolErrors;
 

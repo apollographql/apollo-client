@@ -18,6 +18,7 @@ import {
   compact,
   getOperationDefinition,
   getQueryDefinition,
+  OnlyRequiredProperties,
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -103,8 +104,9 @@ export class ObservableQuery<
   /**
    * An object containing the variables that were provided for the query.
    */
-  public get variables(): TVariables | undefined {
-    return this.options.variables;
+  public get variables(): [TVariables] extends [never] ? Record<string, never>
+  : TVariables {
+    return this.options.variables as any;
   }
 
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;

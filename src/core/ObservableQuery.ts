@@ -1058,7 +1058,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { fetchPolicy } = options;
 
     // Allow variables to get reevaluated when passing variables: undefined,
-    // otherwise `compact` will ignore the `variables` key.
+    // otherwise `compact` will ignore the `variables` key. Note: This may
+    // mutate this.options.variables when not using a disposable observable.
+    // This is intentional
     options.variables =
       newOptions && "variables" in newOptions ?
         (this.queryManager.getVariables(

@@ -5344,7 +5344,7 @@ describe(".variables", () => {
     expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
   });
 
-  test("handles undefined keys", () => {
+  test("handles undefined values", () => {
     const query: TypedDocumentNode<
       { users: Array<{ name: string }> },
       { limit?: number; offset: number }

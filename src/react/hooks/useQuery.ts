@@ -338,7 +338,7 @@ function useObservableSubscriptionResult<
   }
 ) {
   const callbackRef = React.useRef<Callbacks<TData>>(callbacks);
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     // Make sure state.onCompleted and state.onError always reflect the latest
     // options.onCompleted and options.onError callbacks provided to useQuery,
     // since those functions are often recreated every time useQuery is called.

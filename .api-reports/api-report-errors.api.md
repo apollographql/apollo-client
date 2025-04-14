@@ -9,12 +9,25 @@ import type { FetchResult } from '@apollo/client/link/core';
 import type { FetchResult as FetchResult_2 } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql';
 
+// @public (undocumented)
+export namespace CombinedGraphQLErrors {
+    // (undocumented)
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, result: FetchResult_2<unknown>) => string;
+}
+
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FetchResult_2<unknown>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    static formatMessage: CombinedGraphQLErrors.MessageFormatter;
     static is(error: unknown): error is CombinedGraphQLErrors;
+}
+
+// @public (undocumented)
+export namespace CombinedProtocolErrors {
+    // (undocumented)
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>) => string;
 }
 
 // @public
@@ -22,6 +35,8 @@ export class CombinedProtocolErrors extends Error {
     constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
     // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    static formatMessage: CombinedProtocolErrors.MessageFormatter;
     static is(error: unknown): error is CombinedProtocolErrors;
 }
 

@@ -777,9 +777,14 @@ export class QueryManager {
     document: DocumentNode,
     variables?: TVariables
   ): OperationVariables {
+    const defaultVars = this.getDocumentInfo(document).defaultVars;
+    const varsWithDefaults = Object.entries(variables ?? {}).map(
+      ([key, value]) => [key, value === undefined ? defaultVars[key] : value]
+    );
+
     return {
-      ...this.getDocumentInfo(document).defaultVars,
-      ...variables,
+      ...defaultVars,
+      ...Object.fromEntries(varsWithDefaults),
     };
   }
 

@@ -12,7 +12,14 @@ import type { GraphQLFormattedError } from 'graphql';
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
     // (undocumented)
-    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, result: FetchResult_2<unknown>) => string;
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: () => string;
+        // (undocumented)
+        result: FetchResult_2<unknown>;
+    }
 }
 
 // @public
@@ -27,7 +34,12 @@ export class CombinedGraphQLErrors extends Error {
 // @public (undocumented)
 export namespace CombinedProtocolErrors {
     // (undocumented)
-    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: () => string;
+    }
 }
 
 // @public

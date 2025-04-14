@@ -393,7 +393,14 @@ type CombineByTypeName<T extends {
 // @public (undocumented)
 export namespace CombinedGraphQLErrors {
     // (undocumented)
-    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, result: FetchResult<unknown>) => string;
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: () => string;
+        // (undocumented)
+        result: FetchResult<unknown>;
+    }
 }
 
 // @public
@@ -408,7 +415,12 @@ export class CombinedGraphQLErrors extends Error {
 // @public (undocumented)
 export namespace CombinedProtocolErrors {
     // (undocumented)
-    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: () => string;
+    }
 }
 
 // @public

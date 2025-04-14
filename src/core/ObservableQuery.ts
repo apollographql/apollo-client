@@ -513,10 +513,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (variables && !equal(this.options.variables, variables)) {
       // Update the existing options with new variables
-      reobserveOptions.variables = this.options.variables = {
-        ...this.options.variables,
-        ...variables,
-      } as TVariables;
+      reobserveOptions.variables = this.options.variables =
+        this.queryManager.getVariables(this.query, {
+          ...this.options.variables,
+          ...variables,
+        }) as TVariables;
     }
 
     this.queryInfo.resetLastWrite();

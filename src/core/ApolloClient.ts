@@ -443,7 +443,7 @@ export class ApolloClient implements DataProxy {
     options: WatchQueryOptions<TVariables, TData>
   ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
-      options = mergeOptions(this.defaultOptions.watchQuery, options);
+      options = mergeOptions(this.defaultOptions.watchQuery, options as any);
     }
 
     return this.queryManager.watchQuery<TData, TVariables>(options);

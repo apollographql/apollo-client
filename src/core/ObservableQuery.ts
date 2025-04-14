@@ -422,7 +422,7 @@ export class ObservableQuery<
   // first received.
   public isDifferentFromLastResult(
     newResult: ApolloQueryResult<TData>,
-    variables?: TVariables
+    variables?: typeof this.variables
   ) {
     if (!this.last) {
       return true;
@@ -484,7 +484,7 @@ export class ObservableQuery<
    * the previous values of those variables will be used.
    */
   public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
-    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
+    const reobserveOptions: Partial<WatchQueryOptions> = {
       // Always disable polling for refetches.
       pollInterval: 0,
     };
@@ -518,14 +518,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({
           ...this.options.variables,
           ...variables,
-        } as TVariables);
+        } as any);
     }
 
     this.queryInfo.resetLastWrite();
     return this.reobserve({
       ...reobserveOptions,
       [newNetworkStatusSymbol]: NetworkStatus.refetch,
-    });
+    } as WatchQueryOptions<TVariables, TData>);
   }
 
   /**
@@ -622,7 +622,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.updateQuery(
                   {
                     query: this.query,
-                    variables: this.variables,
+                    variables: this.variables as TVariables,
                     returnPartialData: true,
                     optimistic: false,
                   },
@@ -640,7 +640,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 // original field value, keyed by the original variables).
                 cache.writeQuery({
                   query: combinedOptions.query,
-                  variables: combinedOptions.variables,
+                  variables: combinedOptions.variables as TFetchVars,
                   data: fetchMoreResult.data as Unmasked<TFetchData>,
                 });
               }
@@ -787,9 +787,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * the previous values of those variables will be used.
    */
   public async setVariables(
-    variables: TVariables
+    variables: [TVariables] extends [never] ? Record<string, never> : TVariables
   ): Promise<QueryResult<TData>> {
-    variables = this.getVariablesWithDefaults(variables);
+    variables = this.getVariablesWithDefaults(variables as any);
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
@@ -810,7 +810,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       fetchPolicy: this.options.initialFetchPolicy,
       variables,
       [newNetworkStatusSymbol]: NetworkStatus.setVariables,
-    });
+    } as Partial<WatchQueryOptions<TVariables, TData>>);
   }
 
   /**
@@ -840,7 +840,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       queryManager.cache.writeQuery({
         query: this.options.query,
         data: newResult,
-        variables: this.variables,
+        variables: this.variables as TVariables,
       });
 
       queryManager.broadcastQueries();
@@ -889,7 +889,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // that end, the options.nextFetchPolicy option provides an easy way to
         // update options.fetchPolicy after the initial network request, without
         // having to call observableQuery.reobserve.
-        options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
+        options.fetchPolicy = (options as any).nextFetchPolicy(fetchPolicy, {
           reason,
           options,
           observable: this,
@@ -969,7 +969,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 "no-cache"
               : "network-only",
             [newNetworkStatusSymbol]: NetworkStatus.poll,
-          }).then(poll, poll);
+          } as Partial<WatchQueryOptions<TVariables, TData>>).then(poll, poll);
         } else {
           poll();
         }
@@ -997,7 +997,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private updateLastResult(
     newResult: ApolloQueryResult<TData>,
-    variables = this.variables
+    variables: typeof this.variables = this.variables
   ) {
     let error = this.getLastError();
     // Preserve this.last.error unless the variables have changed.
@@ -1009,7 +1009,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.queryManager.assumeImmutableResults ?
           newResult
         : cloneDeep(newResult),
-      variables,
+      variables: variables as TVariables,
       ...(error ? { error } : null),
     });
   }
@@ -1071,7 +1071,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // intentional.
     options.variables =
       newOptions && "variables" in newOptions ?
-        this.getVariablesWithDefaults(newOptions.variables)
+        this.getVariablesWithDefaults(newOptions.variables as any)
       : options.variables;
 
     if (!useDisposableObservable) {
@@ -1146,13 +1146,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       next: (result) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
-          this.reportResult(result, variables);
+          this.reportResult(result, variables as any);
         }
       },
       error: (error) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
-          this.reportError(error, variables);
+          this.reportError(error, variables as any);
         }
       },
     };
@@ -1197,7 +1197,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private reportResult(
     result: ApolloQueryResult<TData>,
-    variables: TVariables | undefined
+    variables: typeof this.variables
   ) {
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
@@ -1212,7 +1212,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  private reportError(error: Error, variables: TVariables | undefined) {
+  private reportError(error: Error, variables: typeof this.variables) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {
@@ -1360,13 +1360,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // Otherwise go back to the original this.options.fetchPolicy.
           return fetchPolicy!;
         },
-      });
+      } as WatchQueryOptions<TVariables, TData>);
     }
 
     return this.reobserve();
   }
 
-  private getVariablesWithDefaults(variables: TVariables | undefined) {
+  private getVariablesWithDefaults(
+    variables: [TVariables] extends [never] ? Record<string, never> : TVariables
+  ) {
     return this.queryManager.getVariables(this.query, variables);
   }
 }

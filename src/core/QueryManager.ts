@@ -836,7 +836,10 @@ export class QueryManager {
 
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+    return this.fetchQuery<TData, TVars>(queryId, {
+      ...(options as any),
+      query,
+    })
       .then((value) => ({
         ...value,
         data: this.maskOperation({
@@ -1233,13 +1236,16 @@ export class QueryManager {
     return observable;
   }
 
-  private getResultsFromLink<TData, TVars extends OperationVariables>(
+  private getResultsFromLink<TData>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
-    options: Pick<
-      WatchQueryOptions<TVars, TData>,
-      "query" | "variables" | "context" | "fetchPolicy" | "errorPolicy"
-    >
+    options: {
+      query: DocumentNode;
+      variables: OperationVariables;
+      context: DefaultContext | undefined;
+      fetchPolicy: WatchQueryFetchPolicy | undefined;
+      errorPolicy: ErrorPolicy | undefined;
+    }
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
@@ -1386,7 +1392,7 @@ export class QueryManager {
       ) {
         queryInfo.observableQuery["applyNextFetchPolicy"](
           "after-fetch",
-          options
+          options as any
         );
       }
 
@@ -1757,9 +1763,9 @@ export class QueryManager {
       : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
+      this.getResultsFromLink<TData>(queryInfo, cacheWriteBehavior, {
         query,
-        variables,
+        variables: variables as any,
         context,
         fetchPolicy,
         errorPolicy,

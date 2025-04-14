@@ -18,7 +18,6 @@ import {
   compact,
   getOperationDefinition,
   getQueryDefinition,
-  OnlyRequiredProperties,
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";

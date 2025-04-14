@@ -2,24 +2,21 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Attach to Node.js inspector",
-      "port": 9229,
-      "request": "attach",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "pwa-node"
-    },
-    {
       "type": "node",
       "request": "launch",
-      "name": "Jest Current File",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["${relativeFile}", "--config", "./config/jest.config.js"],
+      "name": "Jest Attach Node Inspector for Current File",
+      "cwd": "${workspaceFolder}",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/.bin/jest",
+        "${relativeFile}",
+        "--config",
+        "./config/jest.config.js",
+        "--runInBand",
+        "--watch"
+      ],
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      }
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }

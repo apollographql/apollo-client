@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  secops: apollo/circleci-secops-orb@2.0.7
-
 jobs:
   # Filesize:
   #   docker:
@@ -15,7 +12,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm version
@@ -24,7 +21,7 @@ jobs:
 
   Formatting:
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm ci
@@ -32,25 +29,36 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:23.9.0
+    parameters:
+      project:
+        type: string
     steps:
       - checkout
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
+      - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
       - run:
           name: Jest suite with coverage
-          command: npm run test:ci
+          command: npm run test:ci -- --selectProjects "<< parameters.project >>"
           environment:
-            JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results.xml"
+            JEST_JUNIT_OUTPUT_FILE: "reports/junit/js-test-results-<< parameters.project >>.xml"
       - store_test_results:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
+  Attest:
+    docker:
+      - image: cimg/node:23.9.0
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run test:type-benches
 
   BuildTarball:
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -66,21 +74,34 @@ jobs:
     parameters:
       framework:
         type: string
+      react:
+        type: string
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:23.9.0-browsers
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
       - run: npm version
       - run:
+          command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          working_directory: integration-tests
+      - run:
+          command: |
+            export VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r)
+            npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+          working_directory: integration-tests
+      - run:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install @apollo/client@/tmp/workspace/apollo-client.tgz --workspace=<< parameters.framework >>
+          command: npm install
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps
+          working_directory: integration-tests
+      - run:
+          command: npx playwright install
           working_directory: integration-tests
       - run:
           command: npm run build --workspace=<< parameters.framework >> --if-present
@@ -94,7 +115,7 @@ jobs:
       externalPackage:
         type: string
     docker:
-      - image: cimg/node:21.7.1
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - attach_workspace:
@@ -111,12 +132,17 @@ workflows:
   Build and Test:
     jobs:
       # - Filesize
-      - Tests
+      - Tests:
+          matrix:
+            parameters:
+              project:
+                ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
+      - Attest
       - Formatting
       - Lint
       - BuildTarball
       - IntegrationTests:
-          name: Integration Test << matrix.framework >>
+          name: Integration Test << matrix.framework >> with React << matrix.react >>
           requires:
             - BuildTarball
           matrix:
@@ -130,6 +156,15 @@ workflows:
                 - vite
                 - vite-swc
                 # -browser-esm would need a package publish to npm/CDNs
+              react:
+                - latest
+                - next
+            exclude:
+              - framework: cra4
+                react: next
+              # next ships it's own React version anyways, no need to run this test twice
+              - framework: next
+                react: next
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:
@@ -143,18 +178,5 @@ workflows:
                 - "@types/react@16.8 @types/react-dom@16.8"
                 - "@types/react@17 @types/react-dom@17"
                 - "@types/react@18 @types/react-dom@18"
+                - "@types/react@19 @types/react-dom@19"
                 - "typescript@next"
-  security-scans:
-    jobs:
-      - secops/gitleaks:
-          context:
-            - platform-docker-ro
-            - github-orb
-            - secops-oidc
-          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>
-          git-revision: << pipeline.git.revision >>
-      - secops/semgrep:
-          context:
-            - secops-oidc
-            - github-orb
-          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>

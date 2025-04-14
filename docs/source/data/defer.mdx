@@ -1,13 +1,14 @@
 ---
 title: "Using the @defer directive in Apollo Client"
 description: Receive query response data incrementally
+minVersion: 3.7.0
 ---
 
 > **The `@defer` directive is currently at the [General Availability stage](/resources/product-launch-stages/#general-availability) in Apollo Client, and is available by installing `@apollo/client@latest`.** If you have feedback on it, please let us know via [GitHub issues](https://github.com/apollographql/apollo-client/issues/new?assignees=&labels=&template=bug.md).
 
 Beginning with version `3.7.0`, Apollo Client provides preview support for [the `@defer` directive](https://github.com/graphql/graphql-wg/blob/main/rfcs/DeferStream.md). This directive enables your queries to receive data for specific fields _incrementally_, instead of receiving all field data at the same time. This is helpful whenever some fields in a query take much longer to resolve than others.
 
-> For a query to defer fields successfully, the queried endpoint must _also_ support the `@defer` directive. Entity-based `@defer` support is also at the General Availability stage in [Apollo Router](/router/executing-operations/defer-support/) and is compatible with all [federation-compatible subgraph libraries](/federation/building-supergraphs/supported-subgraphs/).
+> For a query to defer fields successfully, the queried endpoint must _also_ support the `@defer` directive. Entity-based `@defer` support is also at the General Availability stage in [GraphOS Router](/router/executing-operations/defer-support/) and is compatible with all [federation-compatible subgraph libraries](/federation/building-supergraphs/supported-subgraphs/).
 
 ## Example
 

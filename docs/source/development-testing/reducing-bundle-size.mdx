@@ -3,8 +3,10 @@ title: Reducing bundle size
 description: Squeeze those last few bytes out of your production build
 ---
 
-Two quick configuration changes can help you reduce your bundle size: turning off Apollo Client's development mode and picking a consistent style for your imports.
-Every byte counts in optimizing your app's performance.
+Every byte counts in optimizing your app's performance. This page covers some configuration changes that can help reduce Apollo Client's bundle size:
+
+- Turn off Apollo Client's development mode
+- Pick a consistent style for your imports
 
 ## Turning off development mode
 
@@ -183,4 +185,22 @@ With many modern bundlers, it should not matter which of these styles you choose
 It is important to keep in mind though that bundlers are complex and it might make a difference - especially when your bundler picks up the CommonJS artifacts instead of the ESM artifacts.<br />
 Every bundling setup is different and we cannot guarantee which style results in the smallest bundle size. We recommend trying out these styles in a small setup to determine which results in the best outcome in your environment.
 
-**Note:** some entry points are not part of the "main" entrypoint `'@apollo/client'` and can only be imported directly (e.g. from `'@apollo/client/link/batch'`). It's perfectly fine to use these, even when using the "main" entrypoint.
+<Note>
+
+Some entry points are not part of the "main" entry point `'@apollo/client'` and can only be imported directly, for example, from `'@apollo/client/link/batch'`. It's fine to use these, even when using the "main" entry point.
+
+</Note>
+
+## Why have a larger library in the first place?
+
+Apollo Client is more than a data fetcher. It's a normalized request and response cache, state manager, and React component integration, including React testing utilities.
+
+To build a similar experience with other libraries, you need to write custom logic, libraries, and component wrappers. Scaling this custom code to all your app components often creates a bundle larger than Apollo Client's.
+
+A custom implementation also means extra maintenance work for your team. By using Apollo Client, you hand off that ownership to a team specializing in GraphQL clients.
+
+### Legacy support
+
+Apollo Client v3 supports legacy JavaScript syntax. It also includes support for some now deprecated features. Similarly, v3 offers broad browser compatibility, extending back to IE11.
+
+The next major version will prioritize contemporary browser support. This transition will streamline the client by removing unnecessary polyfills and phasing out support for legacy syntax and features. Ultimately, these changes reduce bundle size but require a major version release.

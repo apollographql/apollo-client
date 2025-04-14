@@ -1,5 +1,6 @@
 import { ApolloLink, Observable, gql } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
+import type { MaskedDocumentNode } from "../../../masking/index.js";
 import type { MockedResponse } from "../../core/index.js";
 
 export interface SimpleCaseData {
@@ -17,7 +18,7 @@ export function setupSimpleCase() {
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
-      delay: 10,
+      delay: 20,
     },
   ];
 
@@ -63,7 +64,82 @@ export function setupVariablesCase() {
   return { mocks, query };
 }
 
+export type MaskedVariablesCaseFragment = {
+  __typename: "Character";
+  name: string;
+} & { " $fragmentName"?: "MaskedVariablesCaseFragment" };
+
+export interface MaskedVariablesCaseData {
+  character: {
+    __typename: "Character";
+    id: string;
+  } & {
+    " $fragmentRefs"?: {
+      MaskedVariablesCaseFragment: MaskedVariablesCaseFragment;
+    };
+  };
+}
+
+export interface UnmaskedVariablesCaseData {
+  character: {
+    __typename: "Character";
+    id: string;
+    name: string;
+  };
+}
+
+export function setupMaskedVariablesCase() {
+  const document = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        ...CharacterFragment
+      }
+    }
+
+    fragment CharacterFragment on Character {
+      name
+    }
+  `;
+  const query: MaskedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
+  const unmaskedQuery: TypedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
+  const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
+
+  const mocks: MockedResponse<MaskedVariablesCaseData>[] = [...CHARACTERS].map(
+    (name, index) => ({
+      request: { query, variables: { id: String(index + 1) } },
+      result: {
+        data: {
+          character: { __typename: "Character", id: String(index + 1), name },
+        },
+      },
+      delay: 20,
+    })
+  );
+
+  return { mocks, query, unmaskedQuery };
+}
+
+export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
+  mocks: T,
+  delay = 150,
+  override = false
+) {
+  return mocks.map((mock) =>
+    override ? { ...mock, delay } : { delay, ...mock }
+  );
+}
+
 interface Letter {
+  __typename: "Letter";
   letter: string;
   position: number;
 }
@@ -106,5 +182,5 @@ export function setupPaginatedCase() {
     });
   });
 
-  return { query, link };
+  return { query, link, data };
 }

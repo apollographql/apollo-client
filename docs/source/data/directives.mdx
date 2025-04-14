@@ -175,3 +175,69 @@ const Trail = ({ id }) => {
 ```
 
 Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently. Updates to a trail's `status` will not cause the parent `App` component to rerender since the `@nonreactive` directive is applied to the `TrailFragment` spread, a fragment that includes the `status` field.
+
+
+<MinVersion version="3.12.0">
+## `@unmask`
+</MinVersion>
+
+The `@unmask` directive is used to make fragment data available when using [data masking](./fragments#data-masking). It is primarily used to [incrementally adopt data masking in an existing application](./fragments#incremental-adoption-in-an-existing-application). It is considered an escape hatch for all other cases where working with masked data would otherwise be difficult.
+
+```graphql
+query GetPosts {
+  posts {
+    id
+    ...PostDetails @unmask
+  }
+}
+
+fragment PostDetails on Post {
+  title
+  publishedAt
+  topComment {
+    id
+    ...CommentFragment @unmask
+  }
+}
+
+fragment CommentFragment on Comment {
+  content
+}
+```
+
+<Note>
+When the `dataMasking` option is omitted or set to `false`, this directive has no effect.
+</Note>
+
+### Migrate mode
+
+`@unmask` is best used to [incrementally adopt data masking in existing applications](./fragments#incremental-adoption-in-an-existing-application) by providing development-only warnings when accessing would-be masked fields throughout your application. To use `@unmask` in migrate mode, set the `mode` argument to `migrate`.
+
+```graphql
+query GetPost(id: $id) {
+  post(id: $id) {
+    id
+    ...PostDetails @unmask(mode: "migrate")
+  }
+}
+
+fragment PostDetails on Post {
+  title
+}
+```
+
+Now when you access fields that would otherwise be masked, you will see a warning in the console.
+
+```tsx
+const { data } = useQuery(GET_POST);
+
+const title = data.post.title;
+```
+
+In this example, accessing `title` on the `post` from the query result will result in the following warning:
+
+```disableCopy=true showLineNumbers=false
+Accessing unmasked field on query 'GetPost' at path 'post.title'. This field will not be available when masking is enabled. Please read the field from the fragment instead.
+```
+
+For more information on data masking, see the [data masking docs](./fragments#data-masking).

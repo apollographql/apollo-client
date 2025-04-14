@@ -1,10 +1,10 @@
 import { maybe } from "../globals/index.js";
 
+const isReactNative = maybe(() => navigator.product) == "ReactNative";
+
 export const canUseWeakMap =
   typeof WeakMap === "function" &&
-  !maybe(
-    () => navigator.product == "ReactNative" && !(global as any).HermesInternal
-  );
+  !(isReactNative && !(global as any).HermesInternal);
 
 export const canUseWeakSet = typeof WeakSet === "function";
 
@@ -33,4 +33,4 @@ const usingJSDOM: boolean =
 // warnings about useLayoutEffect doing nothing on the server. While these
 // warnings are harmless, this !usingJSDOM condition seems to be the best way to
 // prevent them (i.e. skipping useLayoutEffect when using jsdom).
-export const canUseLayoutEffect = canUseDOM && !usingJSDOM;
+export const canUseLayoutEffect = (canUseDOM || isReactNative) && !usingJSDOM;

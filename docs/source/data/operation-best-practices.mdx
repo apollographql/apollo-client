@@ -32,7 +32,7 @@ You should define a name for _every_ GraphQL operation in your application. Doin
 * You clarify the purpose of each operation for both yourself and your teammates.
 * You avoid unexpected errors when combining multiple operations in a single query document (an anonymous operation can only appear alone).
 * You improve debugging output in both client _and_ server code, helping you identify exactly which operation is causing issues.
-* [Apollo Studio](/studio/) provides helpful operation-level metrics, which require named operations.
+* [Apollo GraphOS Studio](/graphos/graphs/studio-features) provides helpful operation-level metrics, which require named operations.
 
 ## Use GraphQL variables to provide arguments
 
@@ -94,7 +94,7 @@ The server-side cache also powers features like [automatic persisted queries](/a
 
 The value of a GraphQL argument might include sensitive information, such as an access token or a user's personal info. If this information is included in a query string, it's cached with the rest of that query string.
 
-Variable values are _not_ included in query strings. You can also specify _which_ variable values (if any) are [included in metrics reporting](/apollo-server/api/plugin/usage-reporting/#sendvariablevalues) to Apollo Studio.
+Variable values are _not_ included in query strings. You can also specify _which_ variable values (if any) are [included in metrics reporting](/apollo-server/api/plugin/usage-reporting/#sendvariablevalues) to Studio.
 
 ## Query only the data you need, where you need it
 
@@ -193,7 +193,7 @@ To improve the performance of your [server-side response cache](/apollo-server/p
 
 ## Set your app's `name` and `version` for metrics reporting (paid)
 
-> This recommendation is _most_ pertinent to Apollo Studio organizations with a [paid plan](https://www.apollographql.com/pricing/), however it can be helpful for all apps.
+> This recommendation is _most_ pertinent to Studio organizations with a [paid plan](https://www.apollographql.com/pricing/), however it can be helpful for all apps.
 
 The constructor of `ApolloClient` accepts the `name` and `version` options:
 
@@ -208,4 +208,4 @@ const client = new ApolloClient({
 
 If you specify these values, Apollo Client automatically adds them to each operation request as HTTP headers (`apollographql-client-name` and `apollographql-client-version`).
 
-Then if you've configured [metrics reporting in Apollo Studio](/graphos/metrics/usage-reporting/), Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/graphos/metrics/client-awareness/).
+Then if you've configured metrics reporting in Studio, Apollo Server includes your app's `name` and `version` in the operation traces it reports to Studio. This enables you to [segment metrics by client](/graphos/metrics/client-awareness/).

@@ -1,5 +1,6 @@
 import { invariant, newInvariantError } from "../globals/index.js";
 
+import { BREAK, visit } from "graphql";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
@@ -142,4 +143,22 @@ export function getFragmentFromSelection(
     default:
       return null;
   }
+}
+
+export function isFullyUnmaskedOperation(document: DocumentNode) {
+  let isUnmasked = true;
+
+  visit(document, {
+    FragmentSpread: (node) => {
+      isUnmasked =
+        !!node.directives &&
+        node.directives.some((directive) => directive.name.value === "unmask");
+
+      if (!isUnmasked) {
+        return BREAK;
+      }
+    },
+  });
+
+  return isUnmasked;
 }

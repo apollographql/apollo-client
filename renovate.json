@@ -31,10 +31,16 @@
     "typedoc",
     "react-17",
     "react-dom-17",
+    "react-18",
+    "react-dom-18",
     "@testing-library/react-12",
     "@rollup/plugin-node-resolve",
     "rollup",
     "glob",
-    "prettier"
-  ]
+    "prettier",
+    "eslint-plugin-react-compiler"
+  ],
+  "reviewers": [],
+  "reviewersFromCodeOwners": false,
+  "ignoreReviewers": ["team:@apollographql/client-typescript"]
 }

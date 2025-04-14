@@ -1,14 +1,31 @@
-import type { ExecutionResult } from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
-import type { NetworkError, GraphQLErrors } from "../../errors/index.js";
+import {
+  graphQLResultHasProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+} from "../../errors/index.js";
+import type { NetworkError } from "../../errors/index.js";
 import { Observable } from "../../utilities/index.js";
 import type { Operation, FetchResult, NextLink } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 
 export interface ErrorResponse {
-  graphQLErrors?: GraphQLErrors;
+  /**
+   * Errors returned in the `errors` property of the GraphQL response.
+   */
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
+  /**
+   * Errors thrown during a network request. This is usually an error thrown
+   * during a `fetch` call or an error while parsing the response from the
+   * network.
+   */
   networkError?: NetworkError;
-  response?: ExecutionResult;
+  /**
+   * Fatal transport-level errors from multipart subscriptions.
+   * See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
+   */
+  protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
+  response?: FormattedExecutionResult;
   operation: Operation;
   forward: NextLink;
 }
@@ -42,16 +59,24 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
                 operation,
                 forward,
               });
-
-              if (retriedResult) {
-                retriedSub = retriedResult.subscribe({
-                  next: observer.next.bind(observer),
-                  error: observer.error.bind(observer),
-                  complete: observer.complete.bind(observer),
-                });
-                return;
-              }
+            } else if (graphQLResultHasProtocolErrors(result)) {
+              retriedResult = errorHandler({
+                protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
+                response: result,
+                operation,
+                forward,
+              });
             }
+
+            if (retriedResult) {
+              retriedSub = retriedResult.subscribe({
+                next: observer.next.bind(observer),
+                error: observer.error.bind(observer),
+                complete: observer.complete.bind(observer),
+              });
+              return;
+            }
+
             observer.next(result);
           },
           error: (networkError) => {
@@ -60,9 +85,10 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
               networkError,
               //Network errors can return GraphQL errors on for example a 403
               graphQLErrors:
-                networkError &&
-                networkError.result &&
-                networkError.result.errors,
+                (networkError &&
+                  networkError.result &&
+                  networkError.result.errors) ||
+                void 0,
               forward,
             });
             if (retriedResult) {

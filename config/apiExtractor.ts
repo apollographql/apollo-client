@@ -64,7 +64,7 @@ try {
       buildReport(
         mainEntryPointFilePath,
         "apiReport",
-        `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.md`
+        `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
       );
     });
   }

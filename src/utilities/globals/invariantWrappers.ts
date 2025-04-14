@@ -117,9 +117,15 @@ declare global {
 }
 
 function stringify(arg: any) {
-  return typeof arg == "string" ? arg : (
-      stringifyForDisplay(arg, 2).slice(0, 1000)
-    );
+  if (typeof arg == "string") {
+    return arg;
+  }
+
+  try {
+    return stringifyForDisplay(arg, 2).slice(0, 1000);
+  } catch {
+    return "<non-serializable>";
+  }
 }
 
 function getHandledErrorMsg(

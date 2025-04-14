@@ -5,8 +5,15 @@
 {
   "compilerOptions": {
     "noEmit": true,
-    "lib": ["es2015", "esnext.asynciterable", "ES2021.WeakRef"],
-    "types": ["jest", "node", "./testing/matchers/index.d.ts"]
+    "declaration": false,
+    "declarationMap": false,
+    "lib": ["DOM", "es2015", "esnext.asynciterable", "ES2021.WeakRef"],
+    "types": [
+      "jest",
+      "node",
+      "./testing/matchers/index.d.ts",
+      "@testing-library/react-render-stream/expect"
+    ]
   },
   "extends": "../tsconfig.json",
   "include": ["./**/*.ts", "./**/*.tsx"],

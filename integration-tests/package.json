@@ -2,8 +2,8 @@
   "name": "integration-tests",
   "license": "UNLICENSED",
   "overrides": {
-    "@playwright/test": "^1.35.1",
-    "playwright": "^1.35.1",
+    "@playwright/test": "1.43.1",
+    "playwright": "1.43.1",
     "serve": "^14.2.0"
   },
   "workspaces": [

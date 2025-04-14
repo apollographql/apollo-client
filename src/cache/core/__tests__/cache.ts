@@ -3,6 +3,7 @@ import { ApolloCache } from "../cache";
 import { Cache, DataProxy } from "../..";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
+
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();
@@ -501,6 +502,72 @@ describe.skip("Cache type tests", () => {
           p1(field) {
             expectTypeOf(field).toEqualTypeOf<any>();
             return field;
+          },
+        },
+      });
+    });
+
+    test("allows undefined as return value", () => {
+      const cache = new TestCache();
+      cache.modify<{ foo: string }>({
+        id: "foo",
+        fields: {
+          foo: () => undefined,
+          // @ts-expect-error needs return statement
+          bar: () => {},
+        },
+      });
+    });
+
+    test("Allow for mixed arrays on union fields", () => {
+      const cache = new TestCache();
+      cache.modify<{
+        union: Array<
+          | { __typename: "Type1"; a: string }
+          | { __typename: "Type2"; b: string }
+        >;
+      }>({
+        fields: {
+          union(field) {
+            expectTypeOf(field).toEqualTypeOf<
+              ReadonlyArray<
+                | Reference
+                | { __typename: "Type1"; a: string }
+                | { __typename: "Type2"; b: string }
+              >
+            >();
+            return field;
+          },
+        },
+      });
+    });
+
+    test("Allows partial return data", () => {
+      const cache = new TestCache();
+      cache.modify<{
+        union: Array<
+          | { __typename: "Type1"; a: string; c: { foo: string } }
+          | { __typename: "Type2"; b: string; d: { bar: number } }
+        >;
+      }>({
+        fields: {
+          union(field) {
+            expectTypeOf(field).toEqualTypeOf<
+              ReadonlyArray<
+                | Reference
+                | {
+                    __typename: "Type1";
+                    a: string;
+                    c: { foo: string };
+                  }
+                | {
+                    __typename: "Type2";
+                    b: string;
+                    d: { bar: number };
+                  }
+              >
+            >();
+            return [{ __typename: "Type1", a: "foo" }];
           },
         },
       });

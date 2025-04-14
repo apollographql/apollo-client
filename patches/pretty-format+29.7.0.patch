@@ -1,0 +1,14 @@
+diff --git a/node_modules/pretty-format/build/index.js b/node_modules/pretty-format/build/index.js
+index 8d3a562..879eed7 100644
+--- a/node_modules/pretty-format/build/index.js
++++ b/node_modules/pretty-format/build/index.js
+@@ -103,6 +103,9 @@ function printBasicValue(val, printFunctionName, escapeRegex, escapeString) {
+   if (val === null) {
+     return 'null';
+   }
++  if (val.name === 'ApolloError' || val.name === 'GraphQLError') {
++    return null
++  }
+   const typeOf = typeof val;
+   if (typeOf === 'number') {
+     return printNumber(val);

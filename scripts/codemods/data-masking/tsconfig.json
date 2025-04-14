@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "target": "es5",
+    "module": "es2015",
+    "esModuleInterop": true,
+    "lib": ["es2015", "esnext.asynciterable"],
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["./unmask.ts"]
+}

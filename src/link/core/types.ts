@@ -1,4 +1,4 @@
-import type { ExecutionResult, GraphQLError } from "graphql";
+import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { DefaultContext } from "../../core/index.js";
 export type { DocumentNode };
@@ -18,7 +18,7 @@ export interface ExecutionPatchInitialResult<
   // if data is present, incremental is not
   data: TData | null | undefined;
   incremental?: never;
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: TExtensions;
 }
 
@@ -28,7 +28,7 @@ export interface IncrementalPayload<TData, TExtensions> {
   data: TData | null;
   label?: string;
   path: Path;
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: TExtensions;
 }
 
@@ -50,10 +50,13 @@ export interface ApolloPayloadResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
 > {
-  payload: SingleExecutionResult | ExecutionPatchResult | null;
+  payload:
+    | SingleExecutionResult<TData, DefaultContext, TExtensions>
+    | ExecutionPatchResult<TData, TExtensions>
+    | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
   // these are fatal errors that will include done: true.
-  errors?: ReadonlyArray<Error | string>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
 export type ExecutionPatchResult<
@@ -76,7 +79,14 @@ export interface Operation {
   variables: Record<string, any>;
   operationName: string;
   extensions: Record<string, any>;
-  setContext: (context: DefaultContext) => DefaultContext;
+  setContext: {
+    (context: Partial<DefaultContext>): void;
+    (
+      updateContext: (
+        previousContext: DefaultContext
+      ) => Partial<DefaultContext>
+    ): void;
+  };
   getContext: () => DefaultContext;
 }
 
@@ -84,10 +94,12 @@ export interface SingleExecutionResult<
   TData = Record<string, any>,
   TContext = DefaultContext,
   TExtensions = Record<string, any>,
-> extends ExecutionResult<TData, TExtensions> {
+> {
   // data might be undefined if errorPolicy was set to 'ignore'
   data?: TData | null;
   context?: TContext;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
+  extensions?: TExtensions;
 }
 
 export type FetchResult<

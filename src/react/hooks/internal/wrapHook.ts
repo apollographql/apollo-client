@@ -4,19 +4,25 @@ import type {
   useBackgroundQuery,
   useReadQuery,
   useFragment,
+  useQueryRefHandlers,
+  useSuspenseFragment,
 } from "../index.js";
 import type { QueryManager } from "../../../core/QueryManager.js";
 import type { ApolloClient } from "../../../core/ApolloClient.js";
 import type { ObservableQuery } from "../../../core/ObservableQuery.js";
+import type { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 
 interface WrappableHooks {
+  createQueryPreloader: typeof createQueryPreloader;
   useQuery: typeof useQuery;
   useSuspenseQuery: typeof useSuspenseQuery;
+  useSuspenseFragment: typeof useSuspenseFragment;
   useBackgroundQuery: typeof useBackgroundQuery;
   useReadQuery: typeof useReadQuery;
   useFragment: typeof useFragment;
+  useQueryRefHandlers: typeof useQueryRefHandlers;
 }
 
 /**

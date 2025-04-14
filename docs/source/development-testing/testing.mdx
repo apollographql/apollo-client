@@ -62,7 +62,7 @@ const mocks = []; // We'll fill this in next
 
 it("renders without error", async () => {
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <Dog name="Buck" />
     </MockedProvider>
   );
@@ -87,7 +87,7 @@ const mocks = [
     },
     result: {
       data: {
-        dog: { id: "1", name: "Buck", breed: "bulldog" }
+        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" }
       }
     }
   }
@@ -106,7 +106,7 @@ result: (variables) => { // `variables` is optional
 
   return {
     data: {
-      dog: { id: '1', name: 'Buck', breed: 'bulldog' },
+      dog: { __typename: 'Dog', id: '1', name: 'Buck', breed: 'bulldog' },
     },
   }
 },
@@ -132,7 +132,7 @@ const mocks = [
     },
     result: {
       data: {
-        dog: { id: "1", name: "Buck", breed: "bulldog" }
+        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" }
       }
     }
   }
@@ -140,7 +140,7 @@ const mocks = [
 
 it("renders without error", async () => {
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <Dog name="Buck" />
     </MockedProvider>
   );
@@ -169,7 +169,7 @@ const mocks = [
     },
     result: {
       data: {
-        dog: { id: "1", name: "Buck", breed: "bulldog" }
+        dog: { __typename: "Dog", id: "1", name: "Buck", breed: "bulldog" }
       }
     },
     maxUsageCount: 2, // The mock can be used twice before it's removed, default is 1
@@ -196,7 +196,7 @@ const dogMock: MockedResponse<Data, Variables> = {
   },
   variableMatcher: (variables) => true,
   result: {
-    data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } },
+    data: { dog: { __typename: 'Dog', id: 1, name: 'Buck', breed: 'poodle' } },
   },
 };
 ```
@@ -212,7 +212,7 @@ const dogMock: MockedResponse<Data, Variables> = {
   },
   variableMatcher: jest.fn().mockReturnValue(true),
   result: {
-    data: { dog: { id: 1, name: 'Buck', breed: 'poodle' } },
+    data: { dog: { __typename: 'Dog', id: 1, name: 'Buck', breed: 'poodle' } },
   },
 };
 
@@ -220,14 +220,6 @@ expect(variableMatcher).toHaveBeenCalledWith(expect.objectContaining({
   name: 'Buck'
 }));
 ```
-
-### Setting `addTypename`
-
-In the example above, we set the `addTypename` prop of `MockedProvider` to `false`. This prevents Apollo Client from automatically adding the special `__typename` field to every object it queries for (it does this by default to support data normalization in the cache).
-
-We _don't_ want to automatically add `__typename` to `GET_DOG_QUERY` in our test, because then it won't match the shape of the query that our mock is expecting.
-
-Unless you explicitly configure your mocks to expect a `__typename` field, always set `addTypename` to `false` in your tests.
 
 ## Testing the "loading" and "success" states
 
@@ -248,11 +240,11 @@ it("should render dog", async () => {
       variables: { name: "Buck" }
     },
     result: {
-      data: { dog: { id: 1, name: "Buck", breed: "poodle" } }
+      data: { dog: { __typename: "Dog", id: 1, name: "Buck", breed: "poodle" } }
     }
   };
   render(
-    <MockedProvider mocks={[dogMock]} addTypename={false}>
+    <MockedProvider mocks={[dogMock]}>
       <Dog name="Buck" />
     </MockedProvider>
   );
@@ -282,7 +274,7 @@ it("should show error UI", async () => {
     error: new Error("An error occurred")
   };
   render(
-    <MockedProvider mocks={[dogMock]} addTypename={false}>
+    <MockedProvider mocks={[dogMock]}>
       <Dog name="Buck" />
     </MockedProvider>
   );
@@ -368,7 +360,7 @@ The following test _does_ execute the mutation by clicking the button:
 
 ```jsx title="delete-dog.test.js"
 it("should render loading and success states on delete", async () => {
-  const deleteDog = { name: "Buck", breed: "Poodle", id: 1 };
+  const deleteDog = { __typename: "Dog", name: "Buck", breed: "Poodle", id: 1 };
   const mocks = [
     {
       request: {
@@ -380,7 +372,7 @@ it("should render loading and success states on delete", async () => {
   ];
 
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks}>
       <DeleteButton />
     </MockedProvider>
   );
@@ -514,4 +506,12 @@ This is necessary because otherwise, the `MockedProvider` component doesn't know
 
 For a working example that demonstrates how to test components, check out this project on CodeSandbox:
 
-[![Edit Testing React Components](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/testing-react-components?file=/src/dog.test.js)
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-client/v3/testing-react-components?file=/src/dog.test.js">
+  <img
+    src="https://codesandbox.io/static/img/play-codesandbox.svg"
+    width="12em"
+    alt="Edit Testing React Components"
+    style="display: inline;"
+    noZoom
+  />
+</a>

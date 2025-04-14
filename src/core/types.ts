@@ -1,15 +1,15 @@
-import type { DocumentNode, GraphQLError } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 
 import type { ApolloCache } from "../cache/index.js";
 import type { FetchResult } from "../link/core/index.js";
 import type { ApolloError } from "../errors/index.js";
-import type { QueryInfo } from "./QueryInfo.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { Resolver } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
 import type { Cache } from "../cache/index.js";
 import type { IsStrictlyAny } from "../utilities/index.js";
+import type { Unmasked } from "../masking/index.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -18,8 +18,6 @@ export type MethodKeys<T> = {
 }[keyof T];
 
 export interface DefaultContext extends Record<string, any> {}
-
-export type QueryListener = (queryInfo: QueryInfo) => void;
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
@@ -145,7 +143,7 @@ export interface ApolloQueryResult<T> {
    * A list of any errors that occurred during server-side execution of a GraphQL operation.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
@@ -164,7 +162,7 @@ export interface ApolloQueryResult<T> {
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FetchResult<T>;
+    mutationResult: FetchResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }
@@ -192,7 +190,7 @@ export type MutationUpdaterFunction<
   TCache extends ApolloCache<any>,
 > = (
   cache: TCache,
-  result: Omit<FetchResult<TData>, "context">,
+  result: Omit<FetchResult<Unmasked<TData>>, "context">,
   options: {
     context?: TContext;
     variables?: TVariables;

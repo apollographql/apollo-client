@@ -1,5 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`GraphQL Subscriptions should throw an error if the result has errors on it 1`] = `[ApolloError: This is an error]`;
-
-exports[`GraphQL Subscriptions should throw an error if the result has protocolErrors on it 1`] = `[ApolloError: cannot read message from websocket]`;

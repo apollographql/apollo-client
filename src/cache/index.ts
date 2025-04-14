@@ -1,6 +1,10 @@
 import "../utilities/globals/index.js";
 
-export type { Transaction } from "./core/cache.js";
+export type {
+  Transaction,
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "./core/cache.js";
 export { ApolloCache } from "./core/cache.js";
 export { Cache } from "./core/types/Cache.js";
 export type { DataProxy } from "./core/types/DataProxy.js";
@@ -45,4 +49,4 @@ export { Policies } from "./inmemory/policies.js";
 export type { FragmentRegistryAPI } from "./inmemory/fragmentRegistry.js";
 export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
-export * from "./inmemory/types.js";
+export type * from "./inmemory/types.js";

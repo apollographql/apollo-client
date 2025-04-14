@@ -256,7 +256,7 @@ await client.refetchQueries({
 
   // Called once for every active query, allowing dynamic filtering:
   onQueryUpdated(observableQuery) {
-    return !shouldIngoreQuery(observableQuery);
+    return !shouldIgnoreQuery(observableQuery);
   },
 });
 ```

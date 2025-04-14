@@ -11,6 +11,7 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { ApolloError, NetworkStatus } from "../../core/index.js";
+import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import { isNonEmptyArray } from "../../utilities/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -26,13 +27,14 @@ import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey, QueryKey } from "../internal/index.js";
+import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
   client: ApolloClient<any>;
-  data: TData;
+  data: MaybeMasked<TData>;
   error: ApolloError | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
@@ -43,24 +45,19 @@ export interface UseSuspenseQueryResult<
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
-      previousQueryResult: TData,
+      previousQueryResult: Unmasked<TData>,
       options: {
-        fetchMoreResult: TData;
+        fetchMoreResult: Unmasked<TData>;
         variables: TVariables;
       }
-    ) => TData;
+    ) => Unmasked<TData>;
   }
-) => Promise<ApolloQueryResult<TData>>;
+) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
 
 export type RefetchFunction<
   TData,
   TVariables extends OperationVariables,
 > = ObservableQueryFields<TData, TVariables>["refetch"];
-
-export type SubscribeToMoreFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>["subscribeToMore"];
 
 export function useSuspenseQuery<
   TData,
@@ -177,12 +174,13 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
-    _useSuspenseQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
-function _useSuspenseQuery<
+function useSuspenseQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -217,6 +215,7 @@ function _useSuspenseQuery<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
+    // eslint-disable-next-line react-compiler/react-compiler
     current[0] = queryRef.key;
     current[1] = queryRef.promise;
   }
@@ -239,34 +238,6 @@ function _useSuspenseQuery<
     };
   }, [queryRef]);
 
-  // This effect handles the case where strict mode causes the queryRef to get
-  // disposed early. Previously this was done by using a `setTimeout` inside the
-  // dispose function, but this could cause some issues in cases where someone
-  // might expect the queryRef to be disposed immediately. For example, when
-  // using the same client instance across multiple tests in a test suite, the
-  // `setTimeout` has the possibility of retaining the suspense cache entry for
-  // too long, which means that two tests might accidentally share the same
-  // `queryRef` instance. By immediately disposing, we can avoid this situation.
-  //
-  // Instead we can leverage the work done to allow the queryRef to "resume"
-  // after it has been disposed without executing an additional network request.
-  // This is done by calling the `initialize` function below.
-  React.useEffect(() => {
-    if (queryRef.disposed) {
-      // Calling the `dispose` function removes it from the suspense cache, so
-      // when the component rerenders, it instantiates a fresh query ref.
-      // We address this by adding the queryRef back to the suspense cache
-      // so that the lookup on the next render uses the existing queryRef rather
-      // than instantiating a new one.
-      suspenseCache.add(cacheKey, queryRef);
-      queryRef.reinitialize();
-    }
-    // We can omit the deps here to get a fresh closure each render since the
-    // conditional will prevent the logic from running in most cases. This
-    // should also be a touch faster since it should be faster to check the `if`
-    // statement than for React to compare deps on this effect.
-  });
-
   const skipResult = React.useMemo(() => {
     const error = toApolloError(queryRef.result);
 
@@ -279,18 +250,18 @@ function _useSuspenseQuery<
   }, [queryRef.result]);
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
-  const fetchMore = React.useCallback(
-    ((options) => {
+
+  const fetchMore = React.useCallback<
+    FetchMoreFunction<unknown, OperationVariables>
+  >(
+    (options) => {
       const promise = queryRef.fetchMore(options);
       setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
-    }) satisfies FetchMoreFunction<
-      unknown,
-      OperationVariables
-    > as FetchMoreFunction<TData | undefined, TVariables>,
+    },
     [queryRef]
-  );
+  ) as FetchMoreFunction<TData | undefined, TVariables>;
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
@@ -302,13 +273,9 @@ function _useSuspenseQuery<
     [queryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<
-    TData | undefined,
-    TVariables
-  > = React.useCallback(
-    (options) => queryRef.observable.subscribeToMore(options),
-    [queryRef]
-  );
+  // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
+  const subscribeToMore = queryRef.observable
+    .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
     UseSuspenseQueryResult<TData | undefined, TVariables>

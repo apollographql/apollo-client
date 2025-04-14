@@ -10,7 +10,10 @@ import { mockSingleLink } from "../../../../testing";
 import { Query as QueryComponent } from "../../../components";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { profile } from "../../../../testing/internal";
+import {
+  disableActEnvironment,
+  createRenderStream,
+} from "@testing-library/react-render-stream";
 
 describe("[queries] lifecycle", () => {
   // lifecycle
@@ -52,46 +55,45 @@ describe("[queries] lifecycle", () => {
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         render() {
-          ProfiledApp.replaceSnapshot(this.props.data!);
+          replaceSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const ProfiledApp = profile<DataValue<Data, Vars>, Vars>({
-      Component: Container,
-    });
-
-    const { rerender } = render(<ProfiledApp first={1} />, {
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<DataValue<Data, Vars>>();
+    const { rerender } = await render(<Container first={1} />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(true);
       expect(snapshot!.allPeople).toBe(undefined);
     }
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(false);
       expect(snapshot!.variables).toEqual(variables1);
       expect(snapshot!.allPeople).toEqual(data1.allPeople);
     }
 
-    rerender(<ProfiledApp first={2} />);
+    await rerender(<Container first={2} />);
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(true);
       expect(snapshot!.variables).toEqual(variables2);
       expect(snapshot!.allPeople).toBe(undefined);
     }
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(false);
       expect(snapshot!.variables).toEqual(variables2);
       expect(snapshot!.allPeople).toEqual(data2.allPeople);
@@ -395,7 +397,7 @@ describe("[queries] lifecycle", () => {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
               expect(props.data!.allPeople).toEqual(data1.allPeople);
-              props.data!.refetch();
+              void props.data!.refetch();
             } else if (count === 3) {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
@@ -718,6 +720,9 @@ describe("[queries] lifecycle", () => {
   });
 
   it("handles synchronous racecondition with prefilled data from the server", async () => {
+    using _act = disableActEnvironment();
+    const renderStream = createRenderStream<ChildProps<Vars, Data>>();
+
     const query: DocumentNode = gql`
       query GetUser($first: Int) {
         user(first: $first) {
@@ -752,36 +757,40 @@ describe("[queries] lifecycle", () => {
       cache: new Cache({ addTypename: false }).restore(initialState),
     });
 
-    let count = 0;
-    let done = false;
     const Container = graphql<Vars, Data>(query)(
       class extends React.Component<ChildProps<Vars, Data>> {
-        componentDidMount() {
-          this.props.data!.refetch().then((result) => {
-            expect(result.data!.user.name).toBe("Luke Skywalker");
-            done = true;
-          });
-        }
-
         render() {
-          count++;
-          const user = this.props.data!.user;
-          const name = user ? user.name : "";
-          if (count === 2) {
-            expect(name).toBe("Luke Skywalker");
-          }
+          renderStream.replaceSnapshot(this.props);
           return null;
         }
       }
     );
 
-    render(
+    await renderStream.render(
       <ApolloProvider client={client}>
         <Container first={1} />
       </ApolloProvider>
     );
+    {
+      await renderStream.takeRender();
+    }
+    const done = renderStream
+      .getCurrentRender()
+      .snapshot.data!.refetch()
+      .then((result) => {
+        expect(result.data!.user.name).toBe("Luke Skywalker");
+      });
 
-    await waitFor(() => expect(done).toBeTruthy());
+    {
+      const { snapshot } = await renderStream.takeRender();
+
+      const user = snapshot.data!.user;
+      const name = user ? user.name : "";
+
+      expect(name).toBe("Luke Skywalker");
+    }
+
+    await done;
   });
 
   it("handles asynchronous racecondition with prefilled data from the server", async () => {

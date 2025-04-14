@@ -2,12 +2,17 @@
 import React from "react";
 import { DocumentNode } from "graphql";
 import gql from "graphql-tag";
-import { MockedProvider, mockSingleLink } from "../../../testing";
+import {
+  MockedProvider,
+  MockedResponse,
+  mockSingleLink,
+} from "../../../testing";
 import { ApolloClient } from "../../../core";
 import { InMemoryCache } from "../../../cache";
-import { ApolloProvider } from "../../context";
+import { ApolloProvider, getApolloContext } from "../../context";
 import { useApolloClient, useQuery } from "../../hooks";
 import { renderToStringWithData } from "..";
+import type { Trie } from "@wry/trie";
 
 describe("useQuery Hook SSR", () => {
   const CAR_QUERY: DocumentNode = gql`
@@ -332,5 +337,51 @@ describe("useQuery Hook SSR", () => {
       expect(markup).toMatch(/<div.*>3<\/div>/);
       expect(cache.extract()).toMatchSnapshot();
     });
+  });
+
+  it("should deduplicate `variables` with identical content, but different order", async () => {
+    const mocks: MockedResponse[] = [
+      {
+        request: {
+          query: CAR_QUERY,
+          variables: { foo: "a", bar: 1 },
+        },
+        result: { data: CAR_RESULT_DATA },
+        maxUsageCount: 1,
+      },
+    ];
+
+    let trie: Trie<any> | undefined;
+    const Component = ({
+      variables,
+    }: {
+      variables: { foo: string; bar: number };
+    }) => {
+      const { loading, data } = useQuery(CAR_QUERY, { variables, ssr: true });
+      trie ||=
+        React.useContext(getApolloContext()).renderPromises!["queryInfoTrie"];
+      if (!loading) {
+        expect(data).toEqual(CAR_RESULT_DATA);
+        const { make, model, vin } = data.cars[0];
+        return (
+          <div>
+            {make}, {model}, {vin}
+          </div>
+        );
+      }
+      return null;
+    };
+
+    await renderToStringWithData(
+      <MockedProvider mocks={mocks}>
+        <>
+          <Component variables={{ foo: "a", bar: 1 }} />
+          <Component variables={{ bar: 1, foo: "a" }} />
+        </>
+      </MockedProvider>
+    );
+    expect(
+      Array.from(trie!["getChildTrie"](CAR_QUERY)["strong"].keys())
+    ).toEqual(['{"bar":1,"foo":"a"}']);
   });
 });

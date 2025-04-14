@@ -31,21 +31,21 @@ Using persisted queries for safelisting has the following requirements:
 - Apollo Client Web (v3.7.0+)
 - The [`@apollo/generate-persisted-query-manifest` package](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest)
 - The [`@apollo/persisted-query-lists` package](https://www.npmjs.com/package/@apollo/persisted-query-lists)
-- [Apollo Router](/router) (v1.25.0+)
-- [GraphOS Enterprise plan](/graphos/enterprise/)
+- [GraphOS Router](/router) (v1.25.0+)
+- [GraphOS Enterprise plan](https://www.apollographql.com/pricing)
 
-You can use APQ with the following versions of Apollo Client Web, Apollo Server, and Apollo Router:
+You can use APQ with the following versions of Apollo Client Web, Apollo Server, and Apollo Router Core:
 - Apollo Client Web (v3.2.0+)
 - [Apollo Server](/apollo-server/) (v1.0.0+)
-- [Apollo Router](/router) (v0.1.0+)
+- [Apollo Router Core](/router) (v0.1.0+)
 
-> **Note:** You can use _either_ Apollo Server _or_ Apollo Router for APQs. They don't need to be used together.
+> **Note:** You can use _either_ Apollo Server _or_ Apollo Router Core for APQs. They don't need to be used together.
 
 ## 1. Generate operation manifests
 
 > **This step is only required for persisted queries, not APQ.**
 
-An operation manifest acts as a safelist the [Apollo Router](/router/) can check incoming requests against.
+An operation manifest acts as a safelist the [GraphOS Router](/router/) can check incoming requests against.
 You can generate the manifest using the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package:
 
 1. Install the [`@apollo/generate-persisted-query-manifest`](https://www.npmjs.com/package/@apollo/generate-persisted-query-manifest) package as a dev dependency:

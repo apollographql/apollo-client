@@ -1,15 +1,22 @@
 import * as React from "rehackt";
 import {
+  assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "../internal/index.js";
-import type { QueryReference } from "../internal/index.js";
+import type { QueryRef } from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
-import type { NetworkStatus } from "../../core/index.js";
+import type {
+  ApolloClient,
+  NetworkStatus,
+  ObservableQuery,
+} from "../../core/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import type { MaybeMasked } from "../../masking/index.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -18,7 +25,7 @@ export interface UseReadQueryResult<TData = unknown> {
    * This value might be `undefined` if a query results in one or more errors
    * (depending on the query's `errorPolicy`).
    */
-  data: TData;
+  data: MaybeMasked<TData>;
   /**
    * If the query produces one or more errors, this object contains either an
    * array of `graphQLErrors` or a single `networkError`. Otherwise, this value
@@ -37,18 +44,29 @@ export interface UseReadQueryResult<TData = unknown> {
 }
 
 export function useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
+  const unwrapped = unwrapQueryRef(queryRef);
+  const clientOrObsQuery = useApolloClient(
+    unwrapped ?
+      // passing an `ObservableQuery` is not supported by the types, but it will
+      // return any truthy value that is passed in as an override so we cast the result
+      (unwrapped["observable"] as any)
+    : undefined
+  ) as ApolloClient<any> | ObservableQuery<TData>;
+
   return wrapHook(
     "useReadQuery",
-    _useReadQuery,
-    unwrapQueryRef(queryRef)["observable"]
+    // eslint-disable-next-line react-compiler/react-compiler
+    useReadQuery_,
+    clientOrObsQuery
   )(queryRef);
 }
 
-function _useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+function useReadQuery_<TData>(
+  queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
+  assertWrappedQueryRef(queryRef);
   const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
     [queryRef]
@@ -64,17 +82,7 @@ function _useReadQuery<TData>(
     updateWrappedQueryRef(queryRef, internalQueryRef.promise);
   }
 
-  React.useEffect(() => {
-    // It may seem odd that we are trying to reinitialize the queryRef even
-    // though we reinitialize in render above, but this is necessary to
-    // handle strict mode where this useEffect will be run twice resulting in a
-    // disposed queryRef before the next render.
-    if (internalQueryRef.disposed) {
-      internalQueryRef.reinitialize();
-    }
-
-    return internalQueryRef.retain();
-  }, [internalQueryRef]);
+  React.useEffect(() => internalQueryRef.retain(), [internalQueryRef]);
 
   const promise = useSyncExternalStore(
     React.useCallback(
@@ -84,7 +92,7 @@ function _useReadQuery<TData>(
           forceUpdate();
         });
       },
-      [internalQueryRef]
+      [internalQueryRef, queryRef]
     ),
     getPromise,
     getPromise

@@ -1,6 +1,10 @@
 import React, { useState, PropsWithChildren } from "react";
 import gql from "graphql-tag";
-import { ExecutionResult, GraphQLError } from "graphql";
+import {
+  ExecutionResult,
+  FormattedExecutionResult,
+  GraphQLError,
+} from "graphql";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
@@ -301,7 +305,9 @@ describe("General Mutation testing", () => {
         {(createTodo: any) => {
           if (!called) {
             createTodo().catch((error: any) => {
-              expect(error).toEqual(new Error("Error 1"));
+              expect(error).toEqual(
+                new ApolloError({ networkError: new Error("Error 1") })
+              );
               done = true;
             });
           }
@@ -378,9 +384,13 @@ describe("General Mutation testing", () => {
 
     const onError = (error: Error) => {
       if (count === 1) {
-        expect(error).toEqual(new Error("Error 1"));
+        expect(error).toEqual(
+          new ApolloError({ networkError: new Error("Error 1") })
+        );
       } else if (count === 3) {
-        expect(error).toEqual(new Error("Error 2"));
+        expect(error).toEqual(
+          new ApolloError({ networkError: new Error("Error 2") })
+        );
       }
     };
     const Component = () => (
@@ -398,7 +408,9 @@ describe("General Mutation testing", () => {
             expect(result.loading).toEqual(false);
             expect(result.data).toEqual(undefined);
             expect(result.called).toEqual(true);
-            expect(result.error).toEqual(new Error("Error 2"));
+            expect(result.error).toEqual(
+              new ApolloError({ networkError: new Error("Error 2") })
+            );
           }
           count++;
           return <div />;
@@ -495,12 +507,16 @@ describe("General Mutation testing", () => {
         {(createTodo: any, result: any) => {
           if (count === 0) {
             createTodo().catch((err: any) => {
-              expect(err).toEqual(new Error("error occurred"));
+              expect(err).toEqual(
+                new ApolloError({ networkError: new Error("error occurred") })
+              );
             });
           } else if (count === 1) {
             expect(result.loading).toBeTruthy();
           } else if (count === 2) {
-            expect(result.error).toEqual(new Error("error occurred"));
+            expect(result.error).toEqual(
+              new ApolloError({ networkError: new Error("error occurred") })
+            );
           }
           count++;
           return <div />;
@@ -1195,7 +1211,7 @@ describe("General Mutation testing", () => {
     }));
 
   it("has an update prop for updating the store after the mutation", async () => {
-    const update = (_proxy: DataProxy, response: ExecutionResult) => {
+    const update = (_proxy: DataProxy, response: FormattedExecutionResult) => {
       expect(response.data).toEqual(data);
     };
 
@@ -1348,7 +1364,7 @@ describe("General Mutation testing", () => {
                 if (count === 0) {
                   expect(result.called).toEqual(false);
                   expect(result.loading).toEqual(false);
-                  createTodo();
+                  setTimeout(createTodo, 10);
                 } else if (count === 2 && result) {
                   expect(result.data).toEqual(data);
                   setTimeout(() => {
@@ -1358,7 +1374,7 @@ describe("General Mutation testing", () => {
                   });
                 } else if (count === 3) {
                   expect(result.loading).toEqual(false);
-                  createTodo();
+                  setTimeout(createTodo, 10);
                 } else if (count === 5) {
                   expect(result.data).toEqual(data3);
                 }
@@ -1510,7 +1526,6 @@ describe("General Mutation testing", () => {
       // expect(waitFor(() => didError)).resolves.toBe(true);
       //
       // ...however it also causes the test to fail against React 17.
-      // eslint-disable-next-line testing-library/await-async-utils
       expect(didError).toBe(true);
     });
 
@@ -1601,7 +1616,6 @@ describe("General Mutation testing", () => {
       // expect(waitFor(() => didError)).resolves.toBe(true);
       //
       // ...however it also causes the test to fail against React 17.
-      // eslint-disable-next-line testing-library/await-async-utils
       expect(didError).toBe(true);
     });
     console.log = errorLogger;
@@ -1641,7 +1655,6 @@ describe("General Mutation testing", () => {
                       finished = true;
                     });
                     expect(onCompletedFn).toHaveBeenCalledWith;
-                    // eslint-disable-next-line testing-library/await-async-utils
                     this.setState({ called: true }, checker);
                   });
                   return null;
@@ -1665,7 +1678,6 @@ describe("General Mutation testing", () => {
           // expect(waitFor(() => finished)).resolves.toBe(true);
           //
           // ...however it also causes the test to fail against React 17.
-          // eslint-disable-next-line testing-library/await-async-utils
           expect(finished).toBe(true);
         },
         { interval: 1 }
@@ -1677,7 +1689,6 @@ describe("General Mutation testing", () => {
           // expect(waitFor(() => success)).resolves.toBe(true);
           //
           // ...however it also causes the test to fail against React 17.
-          // eslint-disable-next-line testing-library/await-async-utils
           expect(success).toBe(true);
         },
         { interval: 1 }
@@ -1728,7 +1739,6 @@ describe("General Mutation testing", () => {
         // expect(waitFor(() => onErrorCalled)).resolves.toBe(true);
         //
         // ...however it also causes the test to fail against React 17.
-        // eslint-disable-next-line testing-library/await-async-utils
         expect(onErrorCalled).toBe(true);
       },
       { interval: 1 }
@@ -1740,7 +1750,6 @@ describe("General Mutation testing", () => {
         // expect(waitFor(() => finished)).resolves.toBe(true);
         //
         // ...however it also causes the test to fail against React 17.
-        // eslint-disable-next-line testing-library/await-async-utils
         expect(finished).toBe(true);
       },
       { interval: 1 }

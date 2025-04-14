@@ -11,7 +11,10 @@ import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
 import { QueryResult } from "../../../types/types";
-import { profile } from "../../../../testing/internal";
+import {
+  disableActEnvironment,
+  createRenderStream,
+} from "@testing-library/react-render-stream";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -207,13 +210,15 @@ describe("Query component", () => {
       ];
 
       const Component = () => (
-        <Query query={allPeopleQuery} data-ref={React.useRef()}>
+        <Query query={allPeopleQuery} data-ref={React.useRef(void 0)}>
           {(result: any) => {
             if (result.loading) {
               return null;
             }
             try {
-              expect(result.error).toEqual(new Error("error occurred"));
+              expect(result.error).toEqual(
+                new ApolloError({ networkError: new Error("error occurred") })
+              );
               finished = true;
             } catch (error) {
               reject(error);
@@ -1491,30 +1496,29 @@ describe("Query component", () => {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
           {(r: any) => {
-            ProfiledContainer.replaceSnapshot(r);
+            replaceSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>
       );
     }
 
-    const ProfiledContainer = profile<QueryResult>({
-      Component: Container,
-    });
-
-    render(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<QueryResult>();
+    await render(
       <ApolloProvider client={client}>
-        <ProfiledContainer />
+        <Container />
       </ApolloProvider>
     );
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.data.allPeople).toEqual(data.allPeople);
       // First result is loaded, run a refetch to get the second result
@@ -1525,13 +1529,13 @@ describe("Query component", () => {
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       // Waiting for the second result to load
       expect(snapshot.loading).toBe(true);
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.error).toBeTruthy();
       // The error arrived, run a refetch to get the third result
@@ -1542,13 +1546,13 @@ describe("Query component", () => {
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.error).toBeFalsy();
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.error).toBeFalsy();
       expect(snapshot.data.allPeople).toEqual(dataTwo.allPeople);

@@ -1,0 +1,40 @@
+diff --git a/node_modules/react-dom-17/cjs/react-dom.development.js b/node_modules/react-dom-17/cjs/react-dom.development.js
+index f0b9ee7..b02eb8e 100644
+--- a/node_modules/react-dom-17/cjs/react-dom.development.js
++++ b/node_modules/react-dom-17/cjs/react-dom.development.js
+@@ -15728,7 +15728,7 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
+ function mountEffect(create, deps) {
+   {
+     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+-    if ('undefined' !== typeof jest) {
++    if (globalThis.IS_REACT_ACT_ENVIRONMENT) {
+       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber$1);
+     }
+   }
+@@ -15739,7 +15739,7 @@ function mountEffect(create, deps) {
+ function updateEffect(create, deps) {
+   {
+     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+-    if ('undefined' !== typeof jest) {
++    if (globalThis.IS_REACT_ACT_ENVIRONMENT) {
+       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber$1);
+     }
+   }
+@@ -16130,7 +16130,7 @@ function dispatchAction(fiber, queue, action) {
+ 
+     {
+       // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+-      if ('undefined' !== typeof jest) {
++      if (globalThis.IS_REACT_ACT_ENVIRONMENT) {
+         warnIfNotScopedWithMatchingAct(fiber);
+         warnIfNotCurrentlyActingUpdatesInDev(fiber);
+       }
+@@ -25436,7 +25436,7 @@ function updateContainer(element, container, parentComponent, callback) {
+ 
+   {
+     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+-    if ('undefined' !== typeof jest) {
++    if (globalThis.IS_REACT_ACT_ENVIRONMENT) {
+       warnIfUnmockedScheduler(current$1);
+       warnIfNotScopedWithMatchingAct(current$1);
+     }

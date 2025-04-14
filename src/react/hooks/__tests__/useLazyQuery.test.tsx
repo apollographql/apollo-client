@@ -1,7 +1,7 @@
 import React from "react";
 import { GraphQLError } from "graphql";
 import gql from "graphql-tag";
-import { act, render, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 import {
   ApolloClient,
@@ -12,7 +12,7 @@ import {
   NetworkStatus,
   TypedDocumentNode,
 } from "../../../core";
-import { Observable } from "../../../utilities";
+import { DeepPartial, Observable } from "../../../utilities";
 import { ApolloProvider } from "../../../react";
 import {
   MockedProvider,
@@ -24,8 +24,15 @@ import {
 } from "../../../testing";
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
-import { profileHook } from "../../../testing/internal";
+import { InvariantError } from "../../../utilities/globals";
+import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
+import { expectTypeOf } from "expect-type";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
+const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
 
 describe("useLazyQuery Hook", () => {
@@ -42,53 +49,77 @@ describe("useLazyQuery Hook", () => {
       {
         request: { query: helloQuery },
         result: { data: { hello: "world" } },
-        delay: 20,
+        delay: 50,
       },
     ];
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world" });
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
   });
 
   it("should set `called` to false by default", async () => {
-    const mocks = [
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(helloQuery),
       {
-        request: { query: helloQuery },
-        result: { data: { hello: "world" } },
-        delay: 20,
-      },
-    ];
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={[]}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].called).toBe(false);
+    const [, { called }] = await takeSnapshot();
+
+    expect(called).toBe(false);
   });
 
   it("should set `called` to true after calling the lazy execute function", async () => {
@@ -100,73 +131,34 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
-
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].called).toBe(false);
-    const execute = result.current[0];
-    setTimeout(() => execute());
-
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].called).toBe(true);
-
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].called).toBe(true);
-  });
-
-  it("should override `skip` if lazy mode execution function is called", async () => {
-    const mocks = [
-      {
-        request: { query: helloQuery },
-        result: { data: { hello: "world" } },
-        delay: 20,
-      },
-    ];
-
-    const { result } = renderHook(
-      // skip isn’t actually an option on the types
-      () => useLazyQuery(helloQuery, { skip: true } as any),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
-      }
-    );
+      });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].called).toBe(false);
-    const execute = result.current[0];
+    {
+      const [, { loading, called }] = await takeSnapshot();
+      expect(loading).toBe(false);
+      expect(called).toBe(false);
+    }
+
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].called).toBe(true);
+    {
+      const [, { loading, called }] = await takeSnapshot();
+      expect(loading).toBe(true);
+      expect(called).toBe(true);
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].called).toBe(true);
+    {
+      const [, { loading, called }] = await takeSnapshot();
+      expect(loading).toBe(false);
+      expect(called).toBe(true);
+    }
   });
 
   it("should use variables defined in hook options (if any), when running the lazy execution function", async () => {
@@ -184,36 +176,61 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(
-      () =>
-        useLazyQuery(query, {
-          variables: { id: 1 },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(query, {
+            variables: { id: 1 },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
 
-    expect(result.current[1].data).toEqual({ hello: "world 1" });
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
   });
 
   it("should use variables passed into lazy execution function, overriding similar variables defined in Hook options", async () => {
@@ -236,41 +253,69 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(
-      () =>
-        useLazyQuery(query, {
-          variables: { id: 1 },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(query, {
+            variables: { id: 1 },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
     setTimeout(() => execute({ variables: { id: 2 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 2" });
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 2 },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 2 },
+      });
+    }
   });
 
   it("should merge variables from original hook and execution function", async () => {
     const counterQuery: TypedDocumentNode<
       {
         counter: number;
+        vars: Record<string, boolean>;
       },
       {
         hookVar?: boolean;
@@ -304,15 +349,15 @@ describe("useLazyQuery Hook", () => {
         (request) =>
           new Observable((observer) => {
             if (request.operationName === "GetCounter") {
-              observer.next({
-                data: {
-                  counter: ++count,
-                  vars: request.variables,
-                },
-              });
               setTimeout(() => {
+                observer.next({
+                  data: {
+                    counter: ++count,
+                    vars: request.variables,
+                  },
+                });
                 observer.complete();
-              }, 10);
+              }, 50);
             } else {
               observer.error(
                 new Error(
@@ -324,49 +369,46 @@ describe("useLazyQuery Hook", () => {
       ),
     });
 
-    const { result } = renderHook(
-      () => {
-        const [exec, query] = useLazyQuery(counterQuery, {
-          notifyOnNetworkStatusChange: true,
-          variables: {
-            hookVar: true,
-          },
-          defaultOptions: {
+    using __disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => {
+          return useLazyQuery(counterQuery, {
+            notifyOnNetworkStatusChange: true,
             variables: {
-              localDefaultVar: true,
+              hookVar: true,
             },
-          },
-        });
-        return {
-          exec,
-          query,
-        };
-      },
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+            defaultOptions: {
+              variables: {
+                localDefaultVar: true,
+              },
+            },
+          });
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.data).toBeUndefined();
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+        },
+      });
+    }
 
     const expectedFinalData = {
       counter: 1,
@@ -378,92 +420,107 @@ describe("useLazyQuery Hook", () => {
       },
     };
 
-    const execResult = await result.current.exec({
+    const [execute] = getCurrentSnapshot();
+    const execResult = await execute({
       variables: {
         execVar: true,
       },
     });
 
-    await waitFor(
-      () => {
-        expect(execResult.loading).toBe(false);
+    // TODO: Determine if the return value makes sense. Other fetching functions
+    // (`refetch`, `fetchMore`, etc.) resolve with an `ApolloQueryResult` type
+    // which contain a subset of this data.
+    expect(execResult).toEqualQueryResult({
+      data: expectedFinalData,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {
+        globalDefaultVar: true,
+        localDefaultVar: true,
+        hookVar: true,
+        execVar: true,
       },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.networkStatus).toBe(NetworkStatus.ready);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.data).toEqual(expectedFinalData);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 10 }
-    );
+    });
 
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toEqual(expectedFinalData);
+    {
+      const [, result] = await takeSnapshot();
 
-    const refetchResult = await result.current.query.reobserve({
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: expectedFinalData,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
+      });
+    }
+
+    const refetchResult = await getCurrentSnapshot()[1].reobserve({
       fetchPolicy: "network-only",
       nextFetchPolicy: "cache-first",
       variables: {
         execVar: false,
       },
     });
-    expect(refetchResult.loading).toBe(false);
-    expect(refetchResult.data).toEqual({
-      counter: 2,
-      vars: {
-        execVar: false,
-      },
+
+    expect(refetchResult).toEqual({
+      data: { counter: 2, vars: { execVar: false } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.data).toEqual({
-          counter: 2,
-          vars: {
-            execVar: false,
-          },
-        });
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    const execResult2 = await result.current.exec({
+      expect(result).toEqualQueryResult({
+        data: expectedFinalData,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: expectedFinalData,
+        variables: { execVar: false },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { counter: 2, vars: { execVar: false } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: expectedFinalData,
+        variables: { execVar: false },
+      });
+    }
+
+    const execResult2 = await getCurrentSnapshot()[0]({
       fetchPolicy: "cache-and-network",
       nextFetchPolicy: "cache-first",
       variables: {
@@ -471,52 +528,77 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    await waitFor(
-      () => {
-        expect(execResult2.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult2.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult2.data).toEqual({
-          counter: 3,
-          vars: {
-            ...expectedFinalData.vars,
-            execVar: true,
-          },
-        });
-      },
-      { interval: 1 }
-    );
-
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 10 }
-    );
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toEqual({
-      counter: 3,
-      vars: {
-        ...expectedFinalData.vars,
+    expect(execResult2).toEqualQueryResult({
+      data: { counter: 3, vars: { ...expectedFinalData.vars, execVar: true } },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { counter: 2, vars: { execVar: false } },
+      variables: {
+        globalDefaultVar: true,
+        localDefaultVar: true,
+        hookVar: true,
         execVar: true,
       },
     });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { counter: 2, vars: { execVar: false } },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { counter: 2, vars: { execVar: false } },
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
+      });
+    }
+
+    // For some reason we get an extra render in React 18 of the same thing
+    if (IS_REACT_18) {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { counter: 2, vars: { execVar: false } },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { counter: 2, vars: { execVar: false } },
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: {
+          counter: 3,
+          vars: { ...expectedFinalData.vars, execVar: true },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { counter: 2, vars: { execVar: false } },
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
+      });
+    }
   });
 
   it("changing queries", async () => {
@@ -544,51 +626,85 @@ describe("useLazyQuery Hook", () => {
     ];
 
     const cache = new InMemoryCache();
-    const { result } = renderHook(() => useLazyQuery(query1), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(query1), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks} cache={cache}>
+            {children}
+          </MockedProvider>
+        ),
+      });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
 
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world" });
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
     setTimeout(() => execute({ query: query2 }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ name: "changed" });
+      expect(result).toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { hello: "world" },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { name: "changed" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world" },
+        variables: {},
+      });
+    }
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
@@ -605,54 +721,88 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(
-      () =>
-        useLazyQuery(helloQuery, {
-          fetchPolicy: "network-only",
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(helloQuery, {
+            fetchPolicy: "network-only",
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    expect(result.current[1].loading).toBe(false);
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: false,
+        error: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 1" });
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 1" });
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 2" });
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
   });
 
   it("should persist previous data when a query is re-run", async () => {
@@ -669,62 +819,89 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(
-      () =>
-        useLazyQuery(helloQuery, {
-          notifyOnNetworkStatusChange: true,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(helloQuery, {
+            notifyOnNetworkStatusChange: true,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toBe(undefined);
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toBe(undefined);
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 1" });
-    expect(result.current[1].previousData).toBe(undefined);
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    const refetch = result.current[1].refetch;
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const refetch = getCurrentSnapshot()[1].refetch;
     setTimeout(() => refetch!());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 1" });
-    expect(result.current[1].previousData).toEqual({ hello: "world 1" });
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 2" });
-    expect(result.current[1].previousData).toEqual({ hello: "world 1" });
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
   });
 
   it("should allow for the query to start with polling", async () => {
@@ -748,45 +925,84 @@ describe("useLazyQuery Hook", () => {
       <MockedProvider mocks={mocks}>{children}</MockedProvider>
     );
 
-    const ProfiledHook = profileHook(() => useLazyQuery(helloQuery));
-
-    render(<ProfiledHook />, { wrapper });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper,
+      });
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBe(undefined);
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     await tick();
-    ProfiledHook.getCurrentSnapshot()[1].startPolling(10);
+    getCurrentSnapshot()[1].startPolling(10);
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(true);
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 1" });
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 2" });
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 3" });
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 3" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
     }
 
-    ProfiledHook.getCurrentSnapshot()[1].stopPolling();
+    getCurrentSnapshot()[1].stopPolling();
 
-    expect(ProfiledHook).not.toRerender();
+    expect(takeSnapshot).not.toRerender();
   });
 
   it("should persist previous data when a query is re-run and variable changes", async () => {
@@ -828,55 +1044,81 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(CAR_QUERY_BY_ID), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(CAR_QUERY_BY_ID), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toBe(undefined);
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute({ variables: { id: 1 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toBe(undefined);
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual(data1);
-    expect(result.current[1].previousData).toBe(undefined);
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: data1,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
 
     setTimeout(() => execute({ variables: { id: 2 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].previousData).toEqual(data1);
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual(data2);
-    expect(result.current[1].previousData).toEqual(data1);
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: data1,
+        variables: { id: 2 },
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: data2,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: data1,
+        variables: { id: 2 },
+      });
+    }
   });
 
   it("should work with cache-and-network fetch policy", async () => {
@@ -894,37 +1136,61 @@ describe("useLazyQuery Hook", () => {
 
     cache.writeQuery({ query: helloQuery, data: { hello: "from cache" } });
 
-    const { result } = renderHook(
-      () => useLazyQuery(helloQuery, { fetchPolicy: "cache-and-network" }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useLazyQuery(helloQuery, { fetchPolicy: "cache-and-network" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    // TODO: FIXME
-    expect(result.current[1].data).toEqual({ hello: "from cache" });
+      expect(result).toEqualQueryResult({
+        // TODO: FIXME
+        data: { hello: "from cache" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "from link" });
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "from link" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "from cache" },
+        variables: {},
+      });
+    }
   });
 
   it("should return a promise from the execution function which resolves with the result", async () => {
@@ -935,39 +1201,67 @@ describe("useLazyQuery Hook", () => {
         delay: 20,
       },
     ];
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
 
-    const executeResult = new Promise<QueryResult<any, any>>((resolve) => {
-      setTimeout(() => resolve(execute()));
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    let latestRenderResult: QueryResult;
-    await waitFor(() => {
-      latestRenderResult = result.current[1];
-      expect(latestRenderResult.loading).toBe(false);
-    });
-    await waitFor(() => {
-      latestRenderResult = result.current[1];
-      expect(latestRenderResult.data).toEqual({ hello: "world" });
-    });
+    const [execute] = getCurrentSnapshot();
 
-    return executeResult.then((finalResult) => {
-      expect(finalResult).toEqual(latestRenderResult);
+    await tick();
+    const executeResult = execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(executeResult).resolves.toEqualQueryResult({
+      data: { hello: "world" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
     });
   });
 
@@ -1018,76 +1312,109 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(query), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(query), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await tick();
+    let executeResult = execute({ variables: { filter: "PA" } });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { filter: "PA" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { countries: { code: "PA", name: "Panama" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { filter: "PA" },
+      });
+    }
+
+    await expect(executeResult).resolves.toEqualQueryResult({
+      data: {
+        countries: {
+          code: "PA",
+          name: "Panama",
+        },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { filter: "PA" },
     });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
-    let executeResult: any;
-    setTimeout(() => {
-      executeResult = execute({ variables: { filter: "PA" } });
-    });
+    await tick();
+    executeResult = execute({ variables: { filter: "BA" } });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({
-      countries: {
-        code: "PA",
-        name: "Panama",
-      },
-    });
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { countries: { code: "PA", name: "Panama" } },
+        variables: { filter: "BA" },
+      });
+    }
 
-    expect(executeResult).toBeInstanceOf(Promise);
-    expect((await executeResult).data).toEqual({
-      countries: {
-        code: "PA",
-        name: "Panama",
-      },
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    setTimeout(() => {
-      executeResult = execute({ variables: { filter: "BA" } });
-    });
+      expect(result).toEqualQueryResult({
+        data: { countries: { code: "BA", name: "Bahamas" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { countries: { code: "PA", name: "Panama" } },
+        variables: { filter: "BA" },
+      });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toEqual({
-          countries: {
-            code: "BA",
-            name: "Bahamas",
-          },
-        });
-      },
-      { interval: 1 }
-    );
-
-    expect(executeResult).toBeInstanceOf(Promise);
-    expect((await executeResult).data).toEqual({
-      countries: {
-        code: "BA",
-        name: "Bahamas",
-      },
+    await expect(executeResult).resolves.toEqualQueryResult({
+      data: { countries: { code: "BA", name: "Bahamas" } },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { countries: { code: "PA", name: "Panama" } },
+      variables: { filter: "BA" },
     });
   });
 
@@ -1096,72 +1423,118 @@ describe("useLazyQuery Hook", () => {
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError("error 1")],
+          errors: [{ message: "error 1" }],
         },
         delay: 20,
       },
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError("error 2")],
+          errors: [{ message: "error 2" }],
         },
         delay: 20,
       },
     ];
 
-    const ProfiledHook = profileHook(() => useLazyQuery(helloQuery));
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(helloQuery),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
-
-    const [execute] = await ProfiledHook.peekSnapshot();
+    const [execute] = await peekSnapshot();
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     const executePromise = Promise.resolve().then(() => execute());
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toBe(undefined);
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(new Error("error 1"));
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        variables: {},
+      });
     }
 
-    await executePromise.then((result) => {
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error!.message).toBe("error 1");
+    await expect(executePromise).resolves.toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: undefined,
+      error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+      errors: [{ message: "error 1" }],
+      variables: {},
     });
 
-    execute();
+    void execute();
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(new Error("error 1"));
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        // TODO: Why is this only populated when in loading state?
+        errors: [{ message: "error 1" }],
+        variables: {},
+      });
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(new Error("error 2"));
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+        variables: {},
+      });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("the promise should not cause an unhandled rejection", async () => {
@@ -1171,30 +1544,37 @@ describe("useLazyQuery Hook", () => {
         result: {
           errors: [new GraphQLError("error 1")],
         },
+        delay: 20,
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(helloQuery),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    const execute = result.current[0];
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-        execute();
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toBe(undefined);
-        execute();
-      },
-      { interval: 1 }
-    );
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    void execute();
 
     // Making sure the rejection triggers a test failure.
     await wait(50);
@@ -1221,11 +1601,14 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    const queryResult = await promise!;
-
-    expect(queryResult.data).toEqual({ hello: "Greetings" });
-    expect(queryResult.loading).toBe(false);
-    expect(queryResult.networkStatus).toBe(NetworkStatus.ready);
+    await expect(promise!).resolves.toEqualQueryResult({
+      data: { hello: "Greetings" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
   });
 
   it("handles resolving multiple in-flight requests when component unmounts", async () => {
@@ -1253,12 +1636,15 @@ describe("useLazyQuery Hook", () => {
 
     const expectedResult = {
       data: { hello: "Greetings" },
+      called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
     };
 
-    await expect(promise1!).resolves.toMatchObject(expectedResult);
-    await expect(promise2!).resolves.toMatchObject(expectedResult);
+    await expect(promise1!).resolves.toEqualQueryResult(expectedResult);
+    await expect(promise2!).resolves.toEqualQueryResult(expectedResult);
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
@@ -1293,36 +1679,93 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(query), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    const [execute] = result.current;
+    const [execute] = await peekSnapshot();
 
-    await act(async () => {
-      const promise1 = execute({ variables: { id: "1" } });
-      const promise2 = execute({ variables: { id: "2" } });
+    {
+      const [, result] = await takeSnapshot();
 
-      await expect(promise1).resolves.toMatchObject({
-        ...mocks[0].result,
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
         loading: false,
-        called: true,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {} as Variables,
       });
+    }
 
-      await expect(promise2).resolves.toMatchObject({
-        ...mocks[1].result,
-        loading: false,
-        called: true,
-      });
-    });
+    const promise1 = execute({ variables: { id: "1" } });
+    const promise2 = execute({ variables: { id: "2" } });
 
-    expect(result.current[1]).toMatchObject({
-      ...mocks[1].result,
+    await expect(promise1).resolves.toEqualQueryResult({
+      data: mocks[0].result.data,
       loading: false,
       called: true,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "2" },
     });
+
+    await expect(promise2).resolves.toEqualQueryResult({
+      data: mocks[1].result.data,
+      loading: false,
+      called: true,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "2" },
+    });
+
+    if (IS_REACT_17) {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: mocks[1].result.data,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("uses the most recent options when the hook rerenders before execution", async () => {
@@ -1356,31 +1799,84 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result, rerender } = renderHook(
-      ({ id }) => useLazyQuery(query, { variables: { id } }),
-      {
-        initialProps: { id: "1" },
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(
+        ({ id }) => useLazyQuery(query, { variables: { id } }),
+        {
+          initialProps: { id: "1" },
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    rerender({ id: "2" });
+    {
+      const [, result] = await takeSnapshot();
 
-    const [execute] = result.current;
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
 
-    let promise: Promise<QueryResult<Data, Variables>>;
-    act(() => {
-      promise = execute();
-    });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual(mocks[1].result.data);
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    await expect(promise!).resolves.toMatchObject({
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+    const promise = execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: mocks[1].result.data,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(promise).resolves.toEqualQueryResult({
       data: mocks[1].result.data,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "2" },
     });
   });
 
@@ -1400,31 +1896,82 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result, rerender } = renderHook(
-      ({ query }) => useLazyQuery(query),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(({ query }) => useLazyQuery(query), {
         initialProps: { query },
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
-      }
-    );
+      });
 
-    rerender({ query: helloQuery });
+    {
+      const [, result] = await takeSnapshot();
 
-    const [execute] = result.current;
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    let promise: Promise<QueryResult<{ hello: string }>>;
-    act(() => {
-      promise = execute();
-    });
+    await rerender({ query: helloQuery });
 
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({ hello: "Greetings" });
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    await expect(promise!).resolves.toMatchObject({
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    const promise = execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "Greetings" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(promise).resolves.toEqualQueryResult({
       data: { hello: "Greetings" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
     });
   });
 
@@ -1490,7 +2037,7 @@ describe("useLazyQuery Hook", () => {
     "does not issue multiple network calls when calling execute again without variables with a %s fetch policy",
     async (fetchPolicy) => {
       interface Data {
-        user: { id: string; name: string };
+        user: { id: string | null; name: string };
       }
 
       interface Variables {
@@ -1546,8 +2093,13 @@ describe("useLazyQuery Hook", () => {
       expect(fetchCount).toBe(1);
 
       await waitFor(() => {
-        expect(result.current[1].data).toEqual({
-          user: { id: "2", name: "John Doe" },
+        expect(result.current[1]).toEqualQueryResult({
+          data: { user: { id: "2", name: "John Doe" } },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: "2" },
         });
       });
 
@@ -1556,8 +2108,13 @@ describe("useLazyQuery Hook", () => {
       await act(() => result.current[0]());
 
       await waitFor(() => {
-        expect(result.current[1].data).toEqual({
-          user: { id: null, name: "John Default" },
+        expect(result.current[1]).toEqualQueryResult({
+          data: { user: { id: null, name: "John Default" } },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { user: { id: "2", name: "John Doe" } },
+          variables: {},
         });
       });
 
@@ -1608,50 +2165,103 @@ describe("useLazyQuery Hook", () => {
 
     const trackClosureValue = jest.fn();
 
-    const { result, rerender } = renderHook(
-      () => {
-        let count = countRef.current;
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(
+        () => {
+          let count = countRef.current;
 
-        return useLazyQuery(query, {
-          fetchPolicy: "cache-first",
-          variables: { id: "1" },
-          onCompleted: () => {
-            trackClosureValue("onCompleted", count);
-          },
-          onError: () => {
-            trackClosureValue("onError", count);
-          },
-          skipPollAttempt: () => {
-            trackClosureValue("skipPollAttempt", count);
-            return false;
-          },
-          nextFetchPolicy: (currentFetchPolicy) => {
-            trackClosureValue("nextFetchPolicy", count);
-            return currentFetchPolicy;
-          },
-        });
-      },
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+          return useLazyQuery(query, {
+            fetchPolicy: "cache-first",
+            variables: { id: "1" },
+            onCompleted: () => {
+              trackClosureValue("onCompleted", count);
+            },
+            onError: () => {
+              trackClosureValue("onError", count);
+            },
+            skipPollAttempt: () => {
+              trackClosureValue("skipPollAttempt", count);
+              return false;
+            },
+            nextFetchPolicy: (currentFetchPolicy) => {
+              trackClosureValue("nextFetchPolicy", count);
+              return currentFetchPolicy;
+            },
+          });
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    const [originalExecute] = result.current;
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    const [originalExecute] = getCurrentSnapshot();
 
     countRef.current++;
-    rerender();
+    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
+    await rerender(undefined);
 
-    expect(result.current[0]).toBe(originalExecute);
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    let [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
 
     // Check for stale closures with onCompleted
-    await act(() => result.current[0]());
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({
-        user: { id: "1", name: "John Doe" },
+    await execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "1" },
       });
-    });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { user: { id: "1", name: "John Doe" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
 
     // after fetch
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 1);
@@ -1659,17 +2269,55 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     countRef.current++;
-    rerender();
 
-    expect(result.current[0]).toBe(originalExecute);
+    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
+    await rerender(undefined);
+
+    [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
 
     // Check for stale closures with onError
-    await act(() => result.current[0]({ variables: { id: "2" } }));
-    await waitFor(() => {
-      expect(result.current[1].error).toEqual(
-        new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
-      );
-    });
+    await execute({ variables: { id: "2" } });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { user: { id: "1", name: "John Doe" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
+      });
+    }
 
     // variables changed
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 2);
@@ -1679,16 +2327,53 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     countRef.current++;
-    rerender();
+    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
+    await rerender(undefined);
 
-    expect(result.current[0]).toBe(originalExecute);
+    [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
 
-    await act(() => result.current[0]({ variables: { id: "3" } }));
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({
-        user: { id: "3", name: "Johnny Three" },
+    await execute({ variables: { id: "3" } });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
       });
-    });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "3" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { user: { id: "3", name: "Johnny Three" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "3" },
+      });
+    }
 
     // variables changed
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 3);
@@ -1698,9 +2383,9 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     // Test for stale closures for skipPollAttempt
-    result.current[1].startPolling(20);
+    getCurrentSnapshot()[1].startPolling(20);
     await wait(50);
-    result.current[1].stopPolling();
+    getCurrentSnapshot()[1].stopPolling();
 
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
@@ -1769,72 +2454,62 @@ describe("useLazyQuery Hook", () => {
         ),
       });
 
-      const { result } = renderHook(
-        () =>
-          useLazyQuery(helloQuery, {
-            errorPolicy,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useLazyQuery(helloQuery, {
+              errorPolicy,
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      const execute = result.current[0];
-      expect(result.current[1].loading).toBe(false);
-      expect(result.current[1].networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current[1].data).toBeUndefined();
+      {
+        const [, result] = await takeSnapshot();
 
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const execute = getCurrentSnapshot()[0];
       setTimeout(execute);
 
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          if (IS_REACT_18) {
-            expect(result.current[1].networkStatus).toBe(NetworkStatus.loading);
-          } else {
-            expect(result.current[1].networkStatus).toBe(NetworkStatus.error);
-          }
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
+      {
+        const [, result] = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].networkStatus).toBe(NetworkStatus.error);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current[1].error!.message).toBe("from the network");
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ networkError }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
     }
 
     // For errorPolicy:"none", we expect result.error to be defined and
@@ -1869,14 +2544,14 @@ describe("useLazyQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "GetCounter") {
-                observer.next({
-                  data: {
-                    counter: ++count,
-                  },
-                });
                 setTimeout(() => {
+                  observer.next({
+                    data: {
+                      counter: ++count,
+                    },
+                  });
                   observer.complete();
-                }, 10);
+                }, 20);
               } else {
                 observer.error(
                   new Error(
@@ -1890,90 +2565,719 @@ describe("useLazyQuery Hook", () => {
 
       const defaultFetchPolicy = "network-only";
 
-      const { result } = renderHook(
-        () => {
-          const [exec, query] = useLazyQuery(counterQuery, {
-            defaultOptions: {
-              fetchPolicy: defaultFetchPolicy,
-              notifyOnNetworkStatusChange: true,
-            },
-          });
-          return {
-            exec,
-            query,
-          };
-        },
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => {
+            return useLazyQuery(counterQuery, {
+              defaultOptions: {
+                fetchPolicy: defaultFetchPolicy,
+                notifyOnNetworkStatusChange: true,
+              },
+            });
+          },
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const [execute] = getCurrentSnapshot();
+      const execResult = await execute();
+
+      expect(execResult).toEqualQueryResult({
+        data: { counter: 1 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { counter: 1 },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const { options } = getCurrentSnapshot()[1].observable;
+      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+    });
+  });
+
+  // regression for https://github.com/apollographql/apollo-client/issues/11988
+  test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
+    const link = new MockSubscriptionLink();
+    let requests = 0;
+    link.onSetup(() => requests++);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const execute = getCurrentSnapshot()[0];
+
+    const promise = execute();
+    expect(requests).toBe(1);
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await client.clearStore();
+
+    await expect(promise).resolves.toEqualQueryResult({
+      data: undefined,
+      error: new ApolloError({
+        networkError: new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        ),
+      }),
+      errors: [],
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      called: true,
+      previousData: undefined,
+      variables: {},
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({
+          networkError: new InvariantError(
+            "Store reset while query was in flight (not completed in link chain)"
+          ),
+        }),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+    await expect(takeSnapshot).not.toRerender({ timeout: 50 });
+    expect(requests).toBe(1);
+  });
+
+  describe("data masking", () => {
+    it("masks queries when dataMasking is `true`", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
         {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result).toEqualQueryResult({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
+
+    it("does not mask queries when dataMasking is `false`", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<
+        Unmasked<Query>,
+        Record<string, never>
+      > = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
         }
-      );
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
+        fragment UserFields on User {
+          age
+        }
+      `;
 
-      const execResult = await result.current.exec();
-      expect(execResult.loading).toBe(false);
-      expect(execResult.called).toBe(true);
-      expect(execResult.data).toEqual({ counter: 1 });
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toMatchObject({ counter: 1 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(true);
-        },
-        { interval: 1 }
-      );
+      const client = new ApolloClient({
+        dataMasking: false,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toEqual({ counter: 1 });
-        },
-        { interval: 1 }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
 
-      const { options } = result.current.query.observable;
-      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result).toEqualQueryResult({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
+
+    it("does not mask queries by default", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<
+        Unmasked<Query>,
+        Record<string, never>
+      > = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result).toEqualQueryResult({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
+
+    it("masks queries updated by the cache", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      await execute();
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+            age: 35,
+          },
+        },
+      });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (updated)",
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            currentUser: { __typename: "User", id: 1, name: "Test User" },
+          },
+          variables: {},
+        });
+      }
+    });
+
+    it("does not rerender when updating field in named fragment", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 20,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      await execute();
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 35,
+          },
+        },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+
+      expect(client.readQuery({ query })).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 35,
+        },
+      });
     });
   });
 });
@@ -1991,5 +3295,240 @@ describe.skip("Type Tests", () => {
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;
+  });
+
+  test("uses masked types when using masked document", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedQuery {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    interface Subscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedSubscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: MaskedDocumentNode<Query> = gql``;
+
+    const [
+      execute,
+      { data, previousData, subscribeToMore, fetchMore, refetch, updateQuery },
+    ] = useLazyQuery(query, {
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Masked<Query> | undefined>();
+
+    subscribeToMore({
+      document: gql`` as TypedDocumentNode<Subscription, never>,
+      updateQuery(queryData, { subscriptionData, complete, previousData }) {
+        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(complete).toEqualTypeOf<boolean>();
+        expectTypeOf(previousData).toEqualTypeOf<
+          UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+        >();
+
+        if (complete) {
+          expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+        } else {
+          expectTypeOf(previousData).toEqualTypeOf<
+            DeepPartial<UnmaskedQuery> | undefined
+          >();
+        }
+        expectTypeOf(
+          subscriptionData.data
+        ).toEqualTypeOf<UnmaskedSubscription>();
+
+        return {} as UnmaskedQuery;
+      },
+    });
+
+    updateQuery((_previousData, { complete, previousData }) => {
+      expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
+      expectTypeOf(complete).toEqualTypeOf<boolean>();
+      expectTypeOf(previousData).toEqualTypeOf<
+        UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+      >();
+
+      return {} as UnmaskedQuery;
+    });
+
+    {
+      const { data } = await execute();
+
+      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+    }
+
+    {
+      const { data } = await fetchMore({
+        variables: {},
+        updateQuery: (queryData, { fetchMoreResult }) => {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).toEqualTypeOf<UnmaskedQuery>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+
+      expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+    }
+
+    {
+      const { data } = await refetch();
+
+      expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+    }
+  });
+
+  test("uses unmodified types when using TypedDocumentNode", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedQuery {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    interface Subscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedSubscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query> = gql``;
+
+    const [
+      execute,
+      { data, previousData, fetchMore, refetch, subscribeToMore, updateQuery },
+    ] = useLazyQuery(query, {
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<Query>();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
+
+    subscribeToMore({
+      document: gql`` as TypedDocumentNode<Subscription, never>,
+      updateQuery(queryData, { subscriptionData, complete, previousData }) {
+        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(previousData).toEqualTypeOf<
+          UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+        >();
+        expectTypeOf(
+          subscriptionData.data
+        ).toEqualTypeOf<UnmaskedSubscription>();
+
+        if (complete) {
+          expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+        } else {
+          expectTypeOf(previousData).toEqualTypeOf<
+            DeepPartial<UnmaskedQuery> | undefined
+          >();
+        }
+
+        return {} as UnmaskedQuery;
+      },
+    });
+
+    updateQuery((_previousData, { complete, previousData }) => {
+      expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
+      expectTypeOf(complete).toEqualTypeOf<boolean>();
+      expectTypeOf(previousData).toEqualTypeOf<
+        UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+      >();
+
+      if (complete) {
+        expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+      } else {
+        expectTypeOf(previousData).toEqualTypeOf<
+          DeepPartial<UnmaskedQuery> | undefined
+        >();
+      }
+    });
+
+    {
+      const { data } = await execute();
+
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    }
+
+    {
+      const { data } = await fetchMore({
+        variables: {},
+        updateQuery: (queryData, { fetchMoreResult }) => {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).toEqualTypeOf<UnmaskedQuery>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+
+      expectTypeOf(data).toEqualTypeOf<Query>();
+    }
+
+    {
+      const { data } = await refetch();
+
+      expectTypeOf(data).toEqualTypeOf<Query>();
+    }
   });
 });

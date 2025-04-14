@@ -21,7 +21,6 @@ import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx'
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
-import { UseLoadableQueryResult } from '../../../shared/Overrides/UseLoadableQueryResult'
 
 ## The `ApolloProvider` component
 
@@ -73,85 +72,77 @@ function WithApolloClient() {
 
 <FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} />
 
-<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}
-result={<div>
-<pre><code class="language-ts">
-[execute: LazyQueryExecFunction&lt;TData, TVariables&gt;, result: QueryResult&lt;TData, TVariables&gt;]
-</code></pre>
+<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}>
+  ```ts
+  [execute: LazyQueryExecFunction<TData, TVariables>, result: QueryResult<TData, TVariables>]
+  ```
 
-A tuple of two values:
+  A tuple of two values:
 
-<ManualTuple idPrefix="uselazyquery-result" elements={[
-  {
-    name: "execute",
-    type: "(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>",
-    description: "Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails."
-  },
-  {
-    name: "result",
-    type: "QueryResult<TData, TVariables>",
-    description: "The result of the query. See the `useQuery` hook for more details.",
-    canonicalReference: "@apollo/client!QueryResult:interface"
-  }
-]}/>
-</div>}
-/>
+  <ManualTuple>
+    <ManualTupleItem
+      name="execute"
+      type="(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>"
+    >
+      Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails.
+    </ManualTupleItem>
+    <ManualTupleItem
+      name="result"
+      type="QueryResult<TData, TVariables>"
+      canonicalReference="@apollo/client!QueryResult:interface"
+    >
+      The result of the query. See the `useQuery` hook for more details.
+    </ManualTupleItem>
+  </ManualTuple>
+</FunctionDetails>
 
 <FunctionDetails
   canonicalReference="@apollo/client!useMutation:function(1)"
   headingLevel={2}
-  result={
-    <div>
-      <pre>
-        <code class="language-ts">
-        {`[
-  mutate: (options?: MutationFunctionOptions<TData, TVariables>) => Promise<FetchResult<TData>>,
-  result: MutationResult<TData>
-]`}
-        </code>
-      </pre>
-      A tuple of two values:
-      <ManualTuple
-        idPrefix="usemutation-result"
-        elements={[
-          {
-            name: "mutate",
-            type: `(
-    options?: MutationFunctionOptions<TData, TVariables>
-  ) => Promise<FetchResult<TData>>`,
-            description: <div>
-A function to trigger the mutation from your UI. You can optionally pass this function any of the following options:
+>
+  ```ts
+  [
+    mutate: (options?: MutationFunctionOptions<TData, TVariables>) => Promise<FetchResult<TData>>,
+    result: MutationResult<TData>
+  ]
+  ```
+  A tuple of two values:
+  <ManualTuple>
+    <ManualTupleItem
+      name="mutate"
+      type={`(
+        options?: MutationFunctionOptions<TData, TVariables>
+      ) => Promise<FetchResult<TData>>`}
+      idPrefix="usemutation-result"
+    >
+      A function to trigger the mutation from your UI. You can optionally pass this function any of the following options:
 
-<ul>
-<li><code>awaitRefetchQueries</code></li>
-<li><code>context</code></li>
-<li><code>fetchPolicy</code></li>
-<li><code>onCompleted</code></li>
-<li><code>onError</code></li>
-<li><code>optimisticResponse</code></li>
-<li><code>refetchQueries</code></li>
-<li><code>onQueryUpdated</code></li>
-<li><code>update</code></li>
-<li><code>variables</code></li>
-<li><code>client</code></li>
-</ul>
+      - `awaitRefetchQueries`
+      - `context`
+      - `fetchPolicy`
+      - `onCompleted`
+      - `onError`
+      - `optimisticResponse`
+      - `refetchQueries`
+      - `onQueryUpdated`
+      - `update`
+      - `variables`
+      - `client`
 
-Any option you pass here overrides any existing value for that option that you passed to <code>useMutation</code>.
+      Any option you pass here overrides any existing value for that option that you passed to `useMutation`.
 
-The mutate function returns a promise that fulfills with your mutation result.
-</div>,
-          },
-          {
-            name: "result",
-            type: "MutationResult<TData>",
-            description: "The result of the mutation.",
-            canonicalReference: "@apollo/client!MutationResult:interface",
-          },
-        ]}
-      />
-    </div>
-  }
-/>
+      The mutate function returns a promise that fulfills with your mutation result.
+    </ManualTupleItem>
+    <ManualTupleItem
+      name="result"
+      type="MutationResult<TData>"
+      canonicalReference="@apollo/client!MutationResult:interface"
+      idPrefix="usemutation-result"
+    >
+      The result of the mutation.
+    </ManualTupleItem>
+  </ManualTuple>
+</FunctionDetails>
 
 <FunctionDetails canonicalReference="@apollo/client!useSubscription:function(1)" headingLevel={2} />
 
@@ -343,7 +334,7 @@ function useBackgroundQuery<TData, TVariables>(
 ): [
   // Will return `undefined` here if no query has been executed yet and the query
   // is currently skipped using `skipToken` or { skip: true }
-  QueryReference<TData> | undefined,
+  QueryRef<TData> | undefined,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -388,7 +379,7 @@ See the [example](#example-10) in the `useBackgroundQuery` section above.
 
 ```ts
 function useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryRef<TData>
 ): {
   data: TData;
   networkStatus: NetworkStatus;
@@ -402,7 +393,7 @@ function useReadQuery<TData>(
 
 | Param   | Type         | Description                                                   |
 | ------- | ------------ | ------------------------------------------------------------- |
-| `queryRef` | QueryReference | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
+| `queryRef` | QueryRef | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
 
 ### Result
 
@@ -411,8 +402,45 @@ function useReadQuery<TData>(
 <FunctionDetails
   canonicalReference="@apollo/client!useLoadableQuery:function(5)"
   headingLevel={2}
-  result={<UseLoadableQueryResult />}
-/>
+>
+  ```ts
+  [
+    loadQuery: LoadQueryFunction<TVariables>,
+    queryRef: QueryRef<TData, TVariables> | null,
+    {
+      fetchMore: FetchMoreFunction<TData, TVariables>;
+      refetch: RefetchFunction<TData, TVariables>;
+      reset: ResetFunction;
+    }
+  ]
+  ```
+
+  A tuple of three values:
+  <ManualTuple>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="loadQuery"
+      type="LoadQueryFunction<TVariables>"
+    >
+      A function used to imperatively load a query. Calling this function will create or update the `queryRef` returned by `useLoadableQuery`, which should be passed to `useReadQuery`.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="queryRef"
+      type="QueryRef<TData, TVariables> | null"
+      canonicalReference="@apollo/client!QueryRef:interface"
+    >
+      The `queryRef` used by `useReadQuery` to read the query result.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="handlers"
+      type="{ fetchMore: FetchMoreFunction<TData, TVariables>; refetch: RefetchFunction<TData, TVariables>; reset: ResetFunction; }"
+    >
+      Additional handlers used for the query, such as `refetch`.
+    </ManualTupleItem>
+  </ManualTuple>
+</FunctionDetails>
 
 <FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
 

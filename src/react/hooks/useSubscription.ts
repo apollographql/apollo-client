@@ -10,8 +10,22 @@ import type {
   SubscriptionHookOptions,
   SubscriptionResult,
 } from "../types/types.js";
-import type { OperationVariables } from "../../core/index.js";
+import type {
+  ApolloClient,
+  DefaultContext,
+  ErrorPolicy,
+  FetchPolicy,
+  FetchResult,
+  OperationVariables,
+} from "../../core/index.js";
+import { ApolloError, Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
+import { useDeepMemo } from "./internal/useDeepMemo.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { toApolloError } from "./useQuery.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import type { MaybeMasked } from "../../masking/index.js";
+
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
  *
@@ -35,11 +49,11 @@ import { useApolloClient } from "./useApolloClient.js";
  * }
  * ```
  * @remarks
- * #### Subscriptions and React 18 Automatic Batching
+ * #### Consider using `onData` instead of `useEffect`
  *
- * With React 18's [automatic batching](https://react.dev/blog/2022/03/29/react-v18#new-feature-automatic-batching), multiple state updates may be grouped into a single re-render for better performance.
- *
- * If your subscription API sends multiple messages at the same time or in very fast succession (within fractions of a millisecond), it is likely that only the last message received in that narrow time frame will result in a re-render.
+ * If you want to react to incoming data, please use the `onData` option instead of `useEffect`.
+ * State updates you make inside a `useEffect` hook might cause additional rerenders, and `useEffect` is mostly meant for side effects of rendering, not as an event handler.
+ * State updates made in an event handler like `onData` might - depending on the React version - be batched and cause only a single rerender.
  *
  * Consider the following component:
  *
@@ -60,10 +74,6 @@ import { useApolloClient } from "./useApolloClient.js";
  *   );
  * }
  * ```
- *
- * If your subscription back-end emits two messages with the same timestamp, only the last message received by Apollo Client will be rendered. This is because React 18 will batch these two state updates into a single re-render.
- *
- * Since the component above is using `useEffect` to push `data` into a piece of local state on each `Subscriptions` re-render, the first message will never be added to the `accumulatedData` array since its render was skipped.
  *
  * Instead of using `useEffect` here, we can re-write this component to use the `onData` callback function accepted in `useSubscription`'s `options` object:
  *
@@ -102,24 +112,20 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options: SubscriptionHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = Object.create(null)
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
-  const client = useApolloClient(options?.client);
+  const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-  const [result, setResult] = React.useState<
-    SubscriptionResult<TData, TVariables>
-  >({
-    loading: !options?.skip,
-    error: void 0,
-    data: void 0,
-    variables: options?.variables,
-  });
 
   if (!hasIssuedDeprecationWarningRef.current) {
+    // eslint-disable-next-line react-compiler/react-compiler
     hasIssuedDeprecationWarningRef.current = true;
 
-    if (options?.onSubscriptionData) {
+    if (options.onSubscriptionData) {
       invariant.warn(
         options.onData ?
           "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
@@ -127,7 +133,7 @@ export function useSubscription<
       );
     }
 
-    if (options?.onSubscriptionComplete) {
+    if (options.onSubscriptionComplete) {
       invariant.warn(
         options.onComplete ?
           "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
@@ -136,142 +142,232 @@ export function useSubscription<
     }
   }
 
-  const [observable, setObservable] = React.useState(() => {
-    if (options?.skip) {
-      return null;
-    }
+  const {
+    skip,
+    fetchPolicy,
+    errorPolicy,
+    shouldResubscribe,
+    context,
+    extensions,
+    ignoreResults,
+  } = options;
+  const variables = useDeepMemo(() => options.variables, [options.variables]);
 
-    return client.subscribe({
-      query: subscription,
-      variables: options?.variables,
-      fetchPolicy: options?.fetchPolicy,
-      context: options?.context,
-    });
+  const recreate = () =>
+    createSubscription(
+      client,
+      subscription,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      context,
+      extensions
+    );
+
+  let [observable, setObservable] = React.useState(
+    options.skip ? null : recreate
+  );
+
+  const recreateRef = React.useRef(recreate);
+  useIsomorphicLayoutEffect(() => {
+    recreateRef.current = recreate;
   });
 
-  const canResetObservableRef = React.useRef(false);
-  React.useEffect(() => {
-    return () => {
-      canResetObservableRef.current = true;
-    };
-  }, []);
-
-  const ref = React.useRef({ client, subscription, options });
-  React.useEffect(() => {
-    let shouldResubscribe = options?.shouldResubscribe;
-    if (typeof shouldResubscribe === "function") {
-      shouldResubscribe = !!shouldResubscribe(options!);
+  if (skip) {
+    if (observable) {
+      setObservable((observable = null));
     }
+  } else if (
+    !observable ||
+    ((client !== observable.__.client ||
+      subscription !== observable.__.query ||
+      fetchPolicy !== observable.__.fetchPolicy ||
+      errorPolicy !== observable.__.errorPolicy ||
+      !equal(variables, observable.__.variables)) &&
+      (typeof shouldResubscribe === "function" ?
+        !!shouldResubscribe(options!)
+      : shouldResubscribe) !== false)
+  ) {
+    setObservable((observable = recreate()));
+  }
 
-    if (options?.skip) {
-      if (
-        !options?.skip !== !ref.current.options?.skip ||
-        canResetObservableRef.current
-      ) {
-        setResult({
-          loading: false,
-          data: void 0,
-          error: void 0,
-          variables: options?.variables,
+  const optionsRef = React.useRef(options);
+  React.useEffect(() => {
+    optionsRef.current = options;
+  });
+
+  const fallbackLoading = !skip && !ignoreResults;
+  const fallbackResult = React.useMemo<SubscriptionResult<TData, TVariables>>(
+    () => ({
+      loading: fallbackLoading,
+      error: void 0,
+      data: void 0,
+      variables,
+    }),
+    [fallbackLoading, variables]
+  );
+
+  const ignoreResultsRef = React.useRef(ignoreResults);
+  useIsomorphicLayoutEffect(() => {
+    // We cannot reference `ignoreResults` directly in the effect below
+    // it would add a dependency to the `useEffect` deps array, which means the
+    // subscription would be recreated if `ignoreResults` changes
+    // As a result, on resubscription, the last result would be re-delivered,
+    // rendering the component one additional time, and re-triggering `onData`.
+    // The same applies to `fetchPolicy`, which results in a new `observable`
+    // being created. We cannot really avoid it in that case, but we can at least
+    // avoid it for `ignoreResults`.
+    ignoreResultsRef.current = ignoreResults;
+  });
+
+  const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
+    React.useCallback(
+      (update) => {
+        if (!observable) {
+          return () => {};
+        }
+
+        let subscriptionStopped = false;
+        const variables = observable.__.variables;
+        const client = observable.__.client;
+        const subscription = observable.subscribe({
+          next(fetchResult) {
+            if (subscriptionStopped) {
+              return;
+            }
+
+            const result = {
+              loading: false,
+              // TODO: fetchResult.data can be null but SubscriptionResult.data
+              // expects TData | undefined only
+              data: fetchResult.data!,
+              error: toApolloError(fetchResult),
+              variables,
+            };
+            observable.__.setResult(result);
+            if (!ignoreResultsRef.current) update();
+
+            if (result.error) {
+              optionsRef.current.onError?.(result.error);
+            } else if (optionsRef.current.onData) {
+              optionsRef.current.onData({
+                client,
+                data: result,
+              });
+            } else if (optionsRef.current.onSubscriptionData) {
+              optionsRef.current.onSubscriptionData({
+                client,
+                subscriptionData: result,
+              });
+            }
+          },
+          error(error) {
+            error =
+              error instanceof ApolloError ? error : (
+                new ApolloError({ protocolErrors: [error] })
+              );
+            if (!subscriptionStopped) {
+              observable.__.setResult({
+                loading: false,
+                data: void 0,
+                error,
+                variables,
+              });
+              if (!ignoreResultsRef.current) update();
+              optionsRef.current.onError?.(error);
+            }
+          },
+          complete() {
+            if (!subscriptionStopped) {
+              if (optionsRef.current.onComplete) {
+                optionsRef.current.onComplete();
+              } else if (optionsRef.current.onSubscriptionComplete) {
+                optionsRef.current.onSubscriptionComplete();
+              }
+            }
+          },
         });
-        setObservable(null);
-        canResetObservableRef.current = false;
-      }
-    } else if (
-      (shouldResubscribe !== false &&
-        (client !== ref.current.client ||
-          subscription !== ref.current.subscription ||
-          options?.fetchPolicy !== ref.current.options?.fetchPolicy ||
-          !options?.skip !== !ref.current.options?.skip ||
-          !equal(options?.variables, ref.current.options?.variables))) ||
-      canResetObservableRef.current
-    ) {
-      setResult({
-        loading: true,
-        data: void 0,
-        error: void 0,
-        variables: options?.variables,
-      });
-      setObservable(
-        client.subscribe({
-          query: subscription,
-          variables: options?.variables,
-          fetchPolicy: options?.fetchPolicy,
-          context: options?.context,
-        })
-      );
-      canResetObservableRef.current = false;
-    }
 
-    Object.assign(ref.current, { client, subscription, options });
-  }, [client, subscription, options, canResetObservableRef.current]);
-
-  React.useEffect(() => {
-    if (!observable) {
-      return;
-    }
-
-    let subscriptionStopped = false;
-    const subscription = observable.subscribe({
-      next(fetchResult) {
-        if (subscriptionStopped) {
-          return;
-        }
-
-        const result = {
-          loading: false,
-          // TODO: fetchResult.data can be null but SubscriptionResult.data
-          // expects TData | undefined only
-          data: fetchResult.data!,
-          error: void 0,
-          variables: options?.variables,
+        return () => {
+          // immediately stop receiving subscription values, but do not unsubscribe
+          // until after a short delay in case another useSubscription hook is
+          // reusing the same underlying observable and is about to subscribe
+          subscriptionStopped = true;
+          setTimeout(() => {
+            subscription.unsubscribe();
+          });
         };
-        setResult(result);
-
-        if (ref.current.options?.onData) {
-          ref.current.options.onData({
-            client,
-            data: result,
-          });
-        } else if (ref.current.options?.onSubscriptionData) {
-          ref.current.options.onSubscriptionData({
-            client,
-            subscriptionData: result,
-          });
-        }
       },
-      error(error) {
-        if (!subscriptionStopped) {
-          setResult({
-            loading: false,
-            data: void 0,
-            error,
-            variables: options?.variables,
-          });
-          ref.current.options?.onError?.(error);
-        }
-      },
-      complete() {
-        if (!subscriptionStopped) {
-          if (ref.current.options?.onComplete) {
-            ref.current.options.onComplete();
-          } else if (ref.current.options?.onSubscriptionComplete) {
-            ref.current.options.onSubscriptionComplete();
-          }
-        }
-      },
-    });
+      [observable]
+    ),
+    () =>
+      observable && !skip && !ignoreResults ?
+        observable.__.result
+      : fallbackResult,
+    () => fallbackResult
+  );
 
-    return () => {
-      // immediately stop receiving subscription values, but do not unsubscribe
-      // until after a short delay in case another useSubscription hook is
-      // reusing the same underlying observable and is about to subscribe
-      subscriptionStopped = true;
-      setTimeout(() => {
-        subscription.unsubscribe();
-      });
-    };
-  }, [observable]);
+  const restart = React.useCallback(() => {
+    invariant(
+      !optionsRef.current.skip,
+      "A subscription that is skipped cannot be restarted."
+    );
+    setObservable(recreateRef.current());
+  }, [optionsRef, recreateRef]);
 
-  return result;
+  return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
+}
+
+function createSubscription<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  client: ApolloClient<any>,
+  query: TypedDocumentNode<TData, TVariables>,
+  variables: TVariables | undefined,
+  fetchPolicy: FetchPolicy | undefined,
+  errorPolicy: ErrorPolicy | undefined,
+  context: DefaultContext | undefined,
+  extensions: Record<string, any> | undefined
+) {
+  const options = {
+    query,
+    variables,
+    fetchPolicy,
+    errorPolicy,
+    context,
+    extensions,
+  };
+  const __ = {
+    ...options,
+    client,
+    result: {
+      loading: true,
+      data: void 0,
+      error: void 0,
+      variables,
+    } as SubscriptionResult<TData, TVariables>,
+    setResult(result: SubscriptionResult<TData, TVariables>) {
+      __.result = result;
+    },
+  };
+
+  let observable: Observable<FetchResult<MaybeMasked<TData>>> | null = null;
+  return Object.assign(
+    new Observable<FetchResult<MaybeMasked<TData>>>((observer) => {
+      // lazily start the subscription when the first observer subscribes
+      // to get around strict mode
+      if (!observable) {
+        observable = client.subscribe(options);
+      }
+      const sub = observable.subscribe(observer);
+      return () => sub.unsubscribe();
+    }),
+    {
+      /**
+       * A tracking object to store details about the observable and the latest result of the subscription.
+       */
+      __,
+    }
+  );
 }

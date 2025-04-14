@@ -5,7 +5,7 @@ import {
   invariant,
 } from "../invariantWrappers";
 
-function withDev() {
+function withDev(): typeof import("../../../dev") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];
   window[ApolloErrorMessageHandler] = undefined;
   let dev: typeof import("../../../dev");
@@ -166,6 +166,28 @@ test("base invariant(false, 6, ...), raises fallback", async () => {
             version: "local",
             message: 6,
             args: ["hello"],
+          })
+        )
+    )
+  );
+});
+
+test("base invariant(false, 6, ...) with non-serializable param", async () => {
+  await using _ = mockErrorMessageHandler();
+
+  const obj: any = {};
+  obj.self = obj;
+
+  expect(() => {
+    invariant(false, 6, obj);
+  }).toThrow(
+    new InvariantError(
+      "An error occurred! For more details, see the full error text at https://go.apollo.dev/c/err#" +
+        encodeURIComponent(
+          JSON.stringify({
+            version: "local",
+            message: 6,
+            args: ["<non-serializable>"],
           })
         )
     )

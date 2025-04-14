@@ -15,6 +15,23 @@ export interface RenderWithClientOptions<
   client: ApolloClient<any>;
 }
 
+export function createClientWrapper(
+  client: ApolloClient<any>,
+  Wrapper: React.JSXElementConstructor<{
+    children: React.ReactNode;
+  }> = React.Fragment
+): React.JSXElementConstructor<{
+  children: React.ReactNode;
+}> {
+  return ({ children }) => {
+    return (
+      <ApolloProvider client={client}>
+        <Wrapper>{children}</Wrapper>
+      </ApolloProvider>
+    );
+  };
+}
+
 export function renderWithClient<
   Q extends Queries = typeof queries,
   Container extends Element | DocumentFragment = HTMLElement,
@@ -23,19 +40,13 @@ export function renderWithClient<
   ui: ReactElement,
   {
     client,
-    wrapper: Wrapper = React.Fragment,
+    wrapper,
     ...renderOptions
   }: RenderWithClientOptions<Q, Container, BaseElement>
 ) {
   return render(ui, {
     ...renderOptions,
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Wrapper>{children}</Wrapper>
-        </ApolloProvider>
-      );
-    },
+    wrapper: createClientWrapper(client, wrapper),
   });
 }
 
@@ -46,6 +57,23 @@ export interface RenderWithMocksOptions<
 > extends RenderOptions<Q, Container, BaseElement>,
     MockedProviderProps<any> {}
 
+export function createMockWrapper(
+  renderOptions: MockedProviderProps<any>,
+  Wrapper: React.JSXElementConstructor<{
+    children: React.ReactNode;
+  }> = React.Fragment
+): React.JSXElementConstructor<{
+  children: React.ReactNode;
+}> {
+  return ({ children }) => {
+    return (
+      <MockedProvider {...renderOptions}>
+        <Wrapper>{children}</Wrapper>
+      </MockedProvider>
+    );
+  };
+}
+
 export function renderWithMocks<
   Q extends Queries = typeof queries,
   Container extends Element | DocumentFragment = HTMLElement,
@@ -53,18 +81,12 @@ export function renderWithMocks<
 >(
   ui: ReactElement,
   {
-    wrapper: Wrapper = React.Fragment,
+    wrapper,
     ...renderOptions
   }: RenderWithMocksOptions<Q, Container, BaseElement>
 ) {
   return render(ui, {
     ...renderOptions,
-    wrapper: ({ children }) => {
-      return (
-        <MockedProvider {...renderOptions}>
-          <Wrapper>{children}</Wrapper>
-        </MockedProvider>
-      );
-    },
+    wrapper: createMockWrapper(renderOptions, wrapper),
   });
 }

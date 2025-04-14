@@ -205,7 +205,7 @@ function removeDuplicateHeaders(
 ): typeof headers {
   // If we're not preserving the case, just remove duplicates w/ normalization.
   if (!preserveHeaderCase) {
-    const normalizedHeaders = Object.create(null);
+    const normalizedHeaders: Record<string, string> = {};
     Object.keys(Object(headers)).forEach((name) => {
       normalizedHeaders[name.toLowerCase()] = headers[name];
     });
@@ -216,7 +216,8 @@ function removeDuplicateHeaders(
   // preserving the original name.
   // This allows for non-http-spec-compliant servers that expect intentionally
   // capitalized header names (See #6741).
-  const headerData = Object.create(null);
+  const headerData: Record<string, { originalName: string; value: string }> =
+    {};
   Object.keys(Object(headers)).forEach((name) => {
     headerData[name.toLowerCase()] = {
       originalName: name,
@@ -224,7 +225,7 @@ function removeDuplicateHeaders(
     };
   });
 
-  const normalizedHeaders = Object.create(null);
+  const normalizedHeaders: Record<string, string> = {};
   Object.keys(headerData).forEach((name) => {
     normalizedHeaders[headerData[name].originalName] = headerData[name].value;
   });

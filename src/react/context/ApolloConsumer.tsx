@@ -7,7 +7,7 @@ import type { ApolloClient } from "../../core/index.js";
 import { getApolloContext } from "./ApolloContext.js";
 
 export interface ApolloConsumerProps {
-  children: (client: ApolloClient<object>) => ReactTypes.ReactChild | null;
+  children: (client: ApolloClient<object>) => ReactTypes.ReactNode;
 }
 
 export const ApolloConsumer: ReactTypes.FC<ApolloConsumerProps> = (props) => {

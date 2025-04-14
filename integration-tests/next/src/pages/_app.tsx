@@ -1,5 +1,5 @@
 import { ApolloProvider } from "@apollo/client";
-import { useApollo } from "../libs/apolloClient";
+import { useApollo } from "../libs/apolloClient.ts";
 import type { AppProps } from "next/app";
 
 export default function App({ Component, pageProps }: AppProps) {

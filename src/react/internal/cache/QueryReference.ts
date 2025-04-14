@@ -16,8 +16,12 @@ import {
 } from "../../../utilities/index.js";
 import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
+import { invariant } from "../../../utilities/globals/invariantWrappers.js";
+import type { MaybeMasked } from "../../../masking/index.js";
 
-type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
+type QueryRefPromise<TData> = PromiseWithState<
+  ApolloQueryResult<MaybeMasked<TData>>
+>;
 
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
@@ -25,19 +29,55 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>["fetchMore"]
 >[0];
 
-const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
-const PROMISE_SYMBOL: unique symbol = Symbol();
-
+const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol.for(
+  "apollo.internal.queryRef"
+);
+const PROMISE_SYMBOL: unique symbol = Symbol.for("apollo.internal.refPromise");
+declare const QUERY_REF_BRAND: unique symbol;
 /**
  * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
  * A child component reading the `QueryReference` via `useReadQuery` will
  * suspend until the promise resolves.
  */
-export interface QueryReference<TData = unknown, TVariables = unknown> {
+export interface QueryRef<TData = unknown, TVariables = unknown> {
+  /** @internal */
+  [QUERY_REF_BRAND]?(variables: TVariables): TData;
+}
+
+/**
+ * @internal
+ * For usage in internal helpers only.
+ */
+interface WrappedQueryRef<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
   /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+  /** @internal */
+  toPromise?(): Promise<unknown>;
+}
+
+/**
+ * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+ *
+ * {@inheritDoc @apollo/client!QueryRef:interface}
+ */
+export interface QueryReference<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
+  /**
+   * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+   *
+   * {@inheritDoc @apollo/client!PreloadedQueryRef#toPromise:member(1)}
+   */
+  toPromise?: unknown;
+}
+
+/**
+ * {@inheritDoc @apollo/client!QueryRef:interface}
+ */
+export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
   /**
    * A function that returns a promise that resolves when the query has finished
    * loading. The promise resolves with the `QueryReference` itself.
@@ -73,9 +113,9 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
    * }
    * ```
    *
-   * @alpha
+   * @since 3.9.0
    */
-  toPromise(): Promise<QueryReference<TData, TVariables>>;
+  toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -86,7 +126,7 @@ interface InternalQueryReferenceOptions {
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   internalQueryRef: InternalQueryReference<TData>
 ) {
-  const ref: QueryReference<TData, TVariables> = {
+  const ref: WrappedQueryRef<TData, TVariables> = {
     toPromise() {
       // We avoid resolving this promise with the query data because we want to
       // discourage using the server data directly from the queryRef. Instead,
@@ -108,7 +148,24 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   return ref;
 }
 
-export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables>
+): asserts queryRef is WrappedQueryRef<TData, TVariables>;
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables> | undefined | null
+): asserts queryRef is WrappedQueryRef<TData, TVariables> | undefined | null;
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables> | undefined | null
+) {
+  invariant(
+    !queryRef || QUERY_REFERENCE_SYMBOL in queryRef,
+    "Expected a QueryRef object, but got something else instead."
+  );
+}
+
+export function getWrappedPromise<TData>(
+  queryRef: WrappedQueryRef<TData, any>
+) {
   const internalQueryRef = unwrapQueryRef(queryRef);
 
   return internalQueryRef.promise.status === "fulfilled" ?
@@ -117,13 +174,19 @@ export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
 }
 
 export function unwrapQueryRef<TData>(
-  queryRef: QueryReference<TData>
-): InternalQueryReference<TData> {
+  queryRef: WrappedQueryRef<TData>
+): InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<WrappedQueryRef<TData>>
+): undefined | InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<WrappedQueryRef<TData>>
+) {
   return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 export function updateWrappedQueryRef<TData>(
-  queryRef: QueryReference<TData>,
+  queryRef: WrappedQueryRef<TData>,
   promise: QueryRefPromise<TData>
 ) {
   queryRef[PROMISE_SYMBOL] = promise;
@@ -144,7 +207,7 @@ type ObservedOptions = Pick<
 >;
 
 export class InternalQueryReference<TData = unknown> {
-  public result!: ApolloQueryResult<TData>;
+  public result!: ApolloQueryResult<MaybeMasked<TData>>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
@@ -154,7 +217,9 @@ export class InternalQueryReference<TData = unknown> {
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
-  private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
+  private resolve:
+    | ((result: ApolloQueryResult<MaybeMasked<TData>>) => void)
+    | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
@@ -244,9 +309,11 @@ export class InternalQueryReference<TData = unknown> {
       disposed = true;
       this.references--;
 
-      if (!this.references) {
-        this.dispose();
-      }
+      setTimeout(() => {
+        if (!this.references) {
+          this.dispose();
+        }
+      });
     };
   }
 
@@ -330,7 +397,7 @@ export class InternalQueryReference<TData = unknown> {
     // noop. overridable by options
   }
 
-  private handleNext(result: ApolloQueryResult<TData>) {
+  private handleNext(result: ApolloQueryResult<MaybeMasked<TData>>) {
     switch (this.promise.status) {
       case "pending": {
         // Maintain the last successful `data` value if the next result does not
@@ -380,7 +447,7 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       default: {
-        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
+        this.promise = createRejectedPromise(error);
         this.deliver(this.promise);
       }
     }
@@ -390,7 +457,9 @@ export class InternalQueryReference<TData = unknown> {
     this.listeners.forEach((listener) => listener(promise));
   }
 
-  private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
+  private initiateFetch(
+    returnedPromise: Promise<ApolloQueryResult<MaybeMasked<TData>>>
+  ) {
     this.promise = this.createPendingPromise();
     this.promise.catch(() => {});
 
@@ -426,7 +495,7 @@ export class InternalQueryReference<TData = unknown> {
           }
         });
       })
-      .catch(() => {});
+      .catch((error) => this.reject?.(error));
 
     return returnedPromise;
   }
@@ -460,7 +529,7 @@ export class InternalQueryReference<TData = unknown> {
 
   private createPendingPromise() {
     return wrapPromiseWithState(
-      new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+      new Promise<ApolloQueryResult<MaybeMasked<TData>>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
       })

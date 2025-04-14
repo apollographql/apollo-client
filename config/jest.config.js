@@ -1,7 +1,7 @@
 const defaults = {
   rootDir: "src",
   preset: "ts-jest",
-  testEnvironment: "jsdom",
+  testEnvironment: require.resolve("./FixJSDOMEnvironment.js"),
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   globals: {
     __DEV__: true,
@@ -29,10 +29,22 @@ const defaults = {
 const ignoreTSFiles = ".ts$";
 const ignoreTSXFiles = ".tsx$";
 
+const react19TestFileIgnoreList = [
+  ignoreTSFiles,
+  // The HOCs and Render Prop Components have been deprecated since March 2020,
+  // and to test them we would need to rewrite a lot of our test suites.
+  // We will not support them any more for React 19.
+  // They will probably work, but we make no more guarantees.
+  "src/react/hoc/.*",
+  "src/react/components/.*",
+];
+
 const react17TestFileIgnoreList = [
   ignoreTSFiles,
   // We only support Suspense with React 18, so don't test suspense hooks with
   // React 17
+  "src/testing/experimental/__tests__/createTestSchema.test.tsx",
+  "src/react/hooks/__tests__/useSuspenseFragment.test.tsx",
   "src/react/hooks/__tests__/useSuspenseQuery.test.tsx",
   "src/react/hooks/__tests__/useBackgroundQuery.test.tsx",
   "src/react/hooks/__tests__/useLoadableQuery.test.tsx",
@@ -48,10 +60,21 @@ const tsStandardConfig = {
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
 // do not import React, to avoid running them twice.
+const standardReact19Config = {
+  ...defaults,
+  displayName: "ReactDOM 19",
+  testPathIgnorePatterns: react19TestFileIgnoreList,
+};
+
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: [ignoreTSFiles],
+  moduleNameMapper: {
+    "^react$": "react-18",
+    "^react-dom$": "react-dom-18",
+    "^react-dom/(.*)$": "react-dom-18/$1",
+  },
 };
 
 const standardReact17Config = {
@@ -61,12 +84,17 @@ const standardReact17Config = {
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",
+    "^react-dom/client$": "<rootDir>/../config/jest/react-dom-17-client.js",
     "^react-dom/server$": "react-dom-17/server",
     "^react-dom/test-utils$": "react-dom-17/test-utils",
-    "^@testing-library/react$": "@testing-library/react-12",
   },
 };
 
 module.exports = {
-  projects: [tsStandardConfig, standardReact17Config, standardReact18Config],
+  projects: [
+    tsStandardConfig,
+    standardReact17Config,
+    standardReact18Config,
+    standardReact19Config,
+  ],
 };

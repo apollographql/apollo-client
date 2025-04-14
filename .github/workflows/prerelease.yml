@@ -73,25 +73,10 @@ jobs:
           git commit -m 'Enter prerelease mode'
           git push
 
-      - name: Get prerelease changesets
-        id: prerelease-changesets
-        uses: notiz-dev/github-action-json-property@release
-        with:
-          path: ".changeset/pre.json"
-          prop_path: "changesets"
-
-      - name: Get changesets array length
-        id: number-of-changesets
-        run: |
-          arrayLength=$(echo '${{steps.prerelease-changesets.outputs.prop}}' | jq '. | length')
-          echo "length=$arrayLength" >> "$GITHUB_OUTPUT"
-
       - name: Create prerelease PR
-        # Only attempt to create a PR if:
-        # 1. .changeset/pre.json exists
-        # 2. we are not actively publishing after merging a Version Packages PR
-        # 3. AND we have prerelease changesets to publish (otherwise it errors)
-        if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages') && steps.number-of-changesets.outputs.length > 0
+        # If .changeset/pre.json exists and we are not currently cutting a
+        # release after merging a Version Packages PR
+        if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
           version: npm run changeset-version
@@ -100,8 +85,8 @@ jobs:
 
       - name: Publish to npm + GitHub
         id: changesets
-        # Only publish if we're still in pre mode and the last commit was
-        # from an automatically created Version Packages PR
+        # Only run publish if we're still in pre mode and the last commit was
+        # via an automatically created Version Packages PR
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
@@ -118,7 +103,7 @@ jobs:
       - name: Send a Slack notification on publish
         if: steps.changesets.outcome == 'success'
         id: slack
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v1.27.0
         with:
           # Slack channel id, channel name, or user id to post message
           # See also: https://api.slack.com/methods/chat.postMessage#channels

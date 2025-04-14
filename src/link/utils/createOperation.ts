@@ -5,14 +5,14 @@ export function createOperation(
   operation: GraphQLRequest
 ): Operation {
   let context = { ...starting };
-  const setContext = (next: any) => {
+  const setContext: Operation["setContext"] = (next) => {
     if (typeof next === "function") {
       context = { ...context, ...next(context) };
     } else {
       context = { ...context, ...next };
     }
   };
-  const getContext = () => ({ ...context });
+  const getContext: Operation["getContext"] = () => ({ ...context });
 
   Object.defineProperty(operation, "setContext", {
     enumerable: false,

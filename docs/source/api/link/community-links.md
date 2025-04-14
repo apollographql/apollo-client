@@ -27,3 +27,4 @@ Thank you to all the Apollo community members who have contributed custom Apollo
 | [apollo-link-observable](https://github.com/dragozin/apollo-link-observable) | [@dragozin](https://github.com/dragozin) | Link that allows you to make side effects of graphql queries using [RxJS](http://github.com/ReactiveX/RxJS). |
 | [apollo-multi-endpoint-link](https://github.com/habx/apollo-multi-endpoint-link) | [@habx](https://github.com/habx) | Add directive to redirect requests to right endpoint |
 | [@grafbase/apollo-link](https://github.com/grafbase/playground/tree/main/packages/grafbase-apollo-link) | [@grafbase](https://github.com/grafbase) | Use GraphQL `@live` queries with Server-Sent Events.
+| [apollo-link-printer](https://github.com/egorlem/apollo-link-printer) | [@egorlem](https://github.com/egorlem) | Pretty logger of Apollo GraphQL network operations.

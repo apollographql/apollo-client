@@ -29,12 +29,13 @@
 // THE SOFTWARE.
 
 import { print } from "../../utilities/index.js";
-import type { Client } from "graphql-ws";
+import type { Client, Sink } from "graphql-ws";
 
 import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 import { isNonNullObject, Observable } from "../../utilities/index.js";
 import { ApolloError } from "../../errors/index.js";
+import type { FormattedExecutionResult } from "graphql";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
 function isLikeCloseEvent(val: unknown): val is CloseEvent {
@@ -80,7 +81,8 @@ export class GraphQLWsLink extends ApolloLink {
               })
             );
           },
-        }
+          // casting around a wrong type in graphql-ws, which incorrectly expects `Sink<ExecutionResult>`
+        } satisfies Sink<FormattedExecutionResult> as any
       );
     });
   }

@@ -1,6 +1,11 @@
 import gql from "graphql-tag";
 import { MockLink, MockedResponse } from "../mockLink";
 import { execute } from "../../../../link/core/execute";
+import {
+  ObservableStream,
+  enableFakeTimers,
+  spyOnConsole,
+} from "../../../internal";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {
@@ -72,9 +77,6 @@ We've chosen this value as the MAXIMUM_DELAY since values that don't fit into a 
 const MAXIMUM_DELAY = 0x7f_ff_ff_ff;
 
 describe("mockLink", () => {
-  beforeAll(() => jest.useFakeTimers());
-  afterAll(() => jest.useRealTimers());
-
   const query = gql`
     query A {
       a
@@ -82,6 +84,8 @@ describe("mockLink", () => {
   `;
 
   it("should not require a result or error when delay equals Infinity", async () => {
+    using _fakeTimers = enableFakeTimers();
+
     const mockLink = new MockLink([
       {
         request: {
@@ -103,6 +107,8 @@ describe("mockLink", () => {
   });
 
   it("should require result or error when delay is just large", (done) => {
+    using _fakeTimers = enableFakeTimers();
+
     const mockLink = new MockLink([
       {
         request: {
@@ -124,5 +130,293 @@ describe("mockLink", () => {
     );
 
     jest.advanceTimersByTime(MAXIMUM_DELAY);
+  });
+
+  it("should fill in default variables if they are missing in mocked requests", async () => {
+    const query = gql`
+      query GetTodo($done: Boolean = true, $user: String!) {
+        todo(user: $user, done: $done) {
+          id
+        }
+      }
+    `;
+    const mocks = [
+      {
+        // default should get filled in here
+        request: { query, variables: { user: "Tim" } },
+        result: {
+          data: { todo: { id: 1 } },
+        },
+      },
+      {
+        // we provide our own `done`, so it should not get filled in
+        request: { query, variables: { user: "Tim", done: false } },
+        result: {
+          data: { todo: { id: 2 } },
+        },
+      },
+      {
+        // one more that has a different user variable and should never match
+        request: { query, variables: { user: "Tom" } },
+        result: {
+          data: { todo: { id: 2 } },
+        },
+      },
+    ];
+
+    // Apollo Client will always fill in default values for missing variables
+    // in the operation before calling the Link, so we have to do the same here
+    // when we call `execute`
+    const defaults = { done: true };
+    const link = new MockLink(mocks, false, { showWarnings: false });
+    {
+      // Non-optional variable is missing, should not match.
+      const stream = new ObservableStream(
+        execute(link, { query, variables: { ...defaults } })
+      );
+      await stream.takeError();
+    }
+    {
+      // Execute called incorrectly without a default variable filled in.
+      // This will never happen in Apollo Client since AC always fills these
+      // before calling `execute`, so it's okay if it results in a "no match"
+      // scenario here.
+      const stream = new ObservableStream(
+        execute(link, { query, variables: { user: "Tim" } })
+      );
+      await stream.takeError();
+    }
+    {
+      // Expect default value to be filled in the mock request.
+      const stream = new ObservableStream(
+        execute(link, { query, variables: { ...defaults, user: "Tim" } })
+      );
+      const result = await stream.takeNext();
+      expect(result).toEqual({ data: { todo: { id: 1 } } });
+    }
+    {
+      // Test that defaults don't overwrite explicitly different values in a mock request.
+      const stream = new ObservableStream(
+        execute(link, {
+          query,
+          variables: { ...defaults, user: "Tim", done: false },
+        })
+      );
+      const result = await stream.takeNext();
+      expect(result).toEqual({ data: { todo: { id: 2 } } });
+    }
+  });
+});
+
+test("removes @nonreactive directives from fields", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      b
+      c
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @nonreactive
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2, c: 3 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c
+          }
+        `,
+      },
+      result: { data: { a: 4, b: 5, c: 6 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3 },
+    });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 4, b: 5, c: 6 },
+    });
+  }
+});
+
+test("removes @connection directives", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      b
+      c
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @connection(key: "test")
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2, c: 3 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c
+          }
+        `,
+      },
+      result: { data: { a: 4, b: 5, c: 6 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3 },
+    });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 4, b: 5, c: 6 },
+    });
+  }
+});
+
+test("removes fields with @client directives", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      b
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @client
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+          }
+        `,
+      },
+      result: { data: { a: 3, b: 4 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 1, b: 2 } });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 3, b: 4 } });
+  }
+});
+
+test("shows undefined and NaN in debug messages", async () => {
+  using _ = spyOnConsole("warn");
+
+  const query = gql`
+    query ($id: ID!, $filter: Boolean) {
+      usersByTestId(id: $id, filter: $filter) {
+        id
+      }
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: { query, variables: { id: 1, filter: true } },
+      // The actual response data makes no difference in this test
+      result: { data: { usersByTestId: null } },
+    },
+  ]);
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { id: NaN, filter: undefined } })
+  );
+
+  const error = await stream.takeError();
+
+  expect(error.message).toMatchSnapshot();
+});
+
+describe.skip("type tests", () => {
+  const ANY = {} as any;
+  test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {
+    let unspecificArray: MockedResponse[] = [];
+    let specificArray: MockedResponse<{ foo: string }, { foo: string }>[] = [];
+    let unspecificResponse: MockedResponse = ANY;
+    let specificResponse: MockedResponse<{ foo: string }, { foo: string }> =
+      ANY;
+
+    unspecificArray.push(specificResponse);
+    unspecificArray.push(unspecificResponse);
+
+    specificArray.push(specificResponse);
+    // @ts-expect-error
+    specificArray.push(unspecificResponse);
+
+    unspecificArray = [specificResponse];
+    unspecificArray = [unspecificResponse];
+    unspecificArray = [specificResponse, unspecificResponse];
+
+    specificArray = [specificResponse];
+    // @ts-expect-error
+    specificArray = [unspecificResponse];
+    // @ts-expect-error
+    specificArray = [specificResponse, unspecificResponse];
+
+    unspecificResponse = specificResponse;
+    // @ts-expect-error
+    specificResponse = unspecificResponse;
   });
 });

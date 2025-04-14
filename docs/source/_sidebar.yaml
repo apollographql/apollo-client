@@ -1,0 +1,179 @@
+switcher:
+  heading: "Apollo Client (Web)"
+  versions:
+    - label: v3
+      latest: true
+      href: ./
+    - label: v2
+      href: ./v2
+items:
+  - label: Introduction
+    href: "."
+  - label: Why Apollo Client?
+    href: ./why-apollo
+  - label: Get started
+    href: ./get-started
+  - label: Changelog
+    href: https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md
+  - label: Fetching
+    children:
+      - label: Queries
+        href: ./data/queries
+      - label: Suspense
+        href: ./data/suspense
+      - label: Fragments
+        href: ./data/fragments
+      - label: Mutations
+        href: ./data/mutations
+      - label: Refetching
+        href: ./data/refetching
+      - label: Subscriptions
+        href: ./data/subscriptions
+      - label: Directives
+        href: ./data/directives
+      - label: Error handling
+        href: ./data/error-handling
+      - label: Document transforms
+        href: ./data/document-transforms
+      - label: Deferring response data
+        href: ./data/defer
+      - label: Best practices
+        href: ./data/operation-best-practices
+  - label: Caching
+    children:
+      - label: Overview
+        href: ./caching/overview
+      - label: Configuration
+        href: ./caching/cache-configuration
+      - label: Reading and writing
+        href: ./caching/cache-interaction
+      - label: Garbage collection and eviction
+        href: ./caching/garbage-collection
+      - label: Customizing field behavior
+        href: ./caching/cache-field-behavior
+      - label: Memory Management
+        href: ./caching/memory-management
+      - label: Advanced topics
+        href: ./caching/advanced-topics
+  - label: Pagination
+    children:
+      - label: Overview
+        href: ./pagination/overview
+      - label: Core API
+        href: ./pagination/core-api
+      - label: Offset-based
+        href: ./pagination/offset-based
+      - label: Cursor-based
+        href: ./pagination/cursor-based
+      - label: keyArgs
+        href: ./pagination/key-args
+  - label: Local State
+    children:
+      - label: Overview
+        href: ./local-state/local-state-management
+      - label: Local-only fields
+        href: ./local-state/managing-state-with-field-policies
+      - label: Reactive variables
+        href: ./local-state/reactive-variables
+      - label: Client-side schema
+        href: ./local-state/client-side-schema
+      - label: Local resolvers
+        href: ./local-state/local-resolvers
+  - label: Development & Testing
+    children:
+      - label: Developer tools
+        href: ./development-testing/developer-tooling
+      - label: Using TypeScript
+        href: ./development-testing/static-typing
+      - label: Testing React components
+        href: ./development-testing/testing
+      - label: Schema-driven testing
+        href: ./development-testing/schema-driven-testing
+      - label: Mocking schema capabilities
+        href: ./development-testing/client-schema-mocking
+      - label: Reducing bundle size
+        href: ./development-testing/reducing-bundle-size
+  - label: Performance
+    children:
+      - label: Improving performance
+        href: ./performance/performance
+      - label: Optimistic mutation results
+        href: ./performance/optimistic-ui
+      - label: Server-side rendering
+        href: ./performance/server-side-rendering
+      - label: Compiling queries with Babel
+        href: ./performance/babel
+  - label: Integrations
+    children:
+      - label: Using Apollo Client with your view layer
+        href: ./integrations/integrations
+      - label: Integrating with React Native
+        href: ./integrations/react-native
+      - label: Loading queries with Webpack
+        href: ./integrations/webpack
+  - label: Networking
+    children:
+      - label: Basic HTTP networking
+        href: ./networking/basic-http-networking
+      - label: Advanced HTTP networking
+        href: ./networking/advanced-http-networking
+      - label: Authentication
+        href: ./networking/authentication
+  - label: Migrating
+    children:
+      - label: Migrating to Apollo Client 3.0
+        href: ./migrating/apollo-client-3-migration
+      - label: Hooks migration guide
+        href: ./migrating/hooks-migration
+  - label: API Reference
+    children:
+      - label: Core
+        children:
+          - label: ApolloClient
+            href: ./api/core/ApolloClient
+          - label: InMemoryCache
+            href: ./api/cache/InMemoryCache
+          - label: ObservableQuery
+            href: ./api/core/ObservableQuery
+      - label: React
+        children:
+          - label: Hooks
+            href: ./api/react/hooks
+          - label: Preloading
+            href: ./api/react/preloading
+          - label: Testing
+            href: ./api/react/testing
+          - label: SSR
+            href: ./api/react/ssr
+          - label: Components (deprecated)
+            href: ./api/react/components
+          - label: HOC (deprecated)
+            href: ./api/react/hoc
+      - label: Apollo Link
+        children:
+          - label: Overview
+            href: ./api/link/introduction
+          - label: HTTP
+            href: ./api/link/apollo-link-http
+          - label: HTTP Batch
+            href: ./api/link/apollo-link-batch-http
+          - label: Context
+            href: ./api/link/apollo-link-context
+          - label: Error
+            href: ./api/link/apollo-link-error
+          - label: Persisted Queries
+            href: ./api/link/persisted-queries
+          - label: Remove Typename
+            href: ./api/link/apollo-link-remove-typename
+          - label: REST
+            href: ./api/link/apollo-link-rest
+          - label: Retry
+            href: ./api/link/apollo-link-retry
+          - label: Schema
+            href: ./api/link/apollo-link-schema
+          - label: Subscriptions (newer protocol)
+            href: ./api/link/apollo-link-subscriptions
+          - label: WebSocket (older protocol)
+            href: ./api/link/apollo-link-ws
+          - label: Community links
+            href: ./api/link/community-links

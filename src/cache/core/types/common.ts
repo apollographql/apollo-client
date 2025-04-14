@@ -6,6 +6,7 @@ import type {
   StoreValue,
   isReference,
   AsStoreObject,
+  DeepPartial,
 } from "../../../utilities/index.js";
 
 import type { StorageType } from "../../inmemory/policies.js";
@@ -107,12 +108,12 @@ export type ModifierDetails = {
 export type Modifier<T> = (
   value: T,
   details: ModifierDetails
-) => T | DeleteModifier | InvalidateModifier;
+) => DeepPartial<T> | DeleteModifier | InvalidateModifier | undefined;
 
 type StoreObjectValueMaybeReference<StoreVal> =
   StoreVal extends Array<Record<string, any>> ?
     StoreVal extends Array<infer Item> ?
-      Item extends Record<string, any> ?
+      [Item] extends [Record<string, any>] ?
         ReadonlyArray<AsStoreObject<Item> | Reference>
       : never
     : never

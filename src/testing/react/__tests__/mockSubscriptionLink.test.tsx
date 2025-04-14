@@ -8,8 +8,6 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../../react/context";
 import { useSubscription } from "../../../react/hooks";
 
-const IS_REACT_18 = React.version.startsWith("18");
-
 describe("mockSubscriptionLink", () => {
   it("should work with multiple subscribers to the same mock websocket", async () => {
     const subscription = gql`
@@ -64,7 +62,7 @@ describe("mockSubscriptionLink", () => {
       </ApolloProvider>
     );
 
-    const numRenders = IS_REACT_18 ? 2 : results.length + 1;
+    const numRenders = results.length + 1;
 
     // automatic batching in React 18 means we only see 2 renders vs. 5 in v17
     await waitFor(

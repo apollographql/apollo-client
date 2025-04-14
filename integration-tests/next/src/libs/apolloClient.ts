@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import * as React from "react";
 import type { NormalizedCacheObject } from "@apollo/client";
 import {
   ApolloClient,
@@ -12,7 +12,7 @@ import { onError } from "@apollo/client/link/error";
 import merge from "deepmerge";
 import isEqual from "lodash/isEqual";
 import type { GetServerSidePropsResult } from "next";
-import { schemaLink } from "./schemaLink";
+import { schemaLink } from "./schemaLink.ts";
 
 export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__";
 
@@ -48,7 +48,9 @@ function createApolloClient() {
     link: from([
       errorLink,
       delayLink,
-      typeof window === "undefined" ? schemaLink : httpLink,
+      typeof window === "undefined" ?
+        (schemaLink as ApolloLink)
+      : (httpLink as ApolloLink),
     ]),
     cache: new InMemoryCache(),
   });
@@ -103,7 +105,7 @@ export function addApolloState(
 
 export function useApollo(pageProps?: ApolloProps) {
   const state = pageProps?.[APOLLO_STATE_PROP_NAME];
-  const storeRef = useRef<ApolloClient<NormalizedCacheObject>>();
+  const storeRef = React.useRef<ApolloClient<NormalizedCacheObject>>();
   if (!storeRef.current) {
     storeRef.current = initializeApollo(state);
   }

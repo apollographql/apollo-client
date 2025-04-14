@@ -1,7 +1,11 @@
 import { invariant } from "../../utilities/globals/index.js";
 
 import { print } from "../../utilities/index.js";
-import type { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+} from "graphql";
 
 import type { Operation } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
@@ -21,9 +25,9 @@ import {
 export const VERSION = 1;
 
 export interface ErrorResponse {
-  graphQLErrors?: readonly GraphQLError[];
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   networkError?: NetworkError;
-  response?: ExecutionResult;
+  response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;
 }
@@ -59,7 +63,10 @@ export namespace PersistedQueryLink {
 }
 
 function processErrors(
-  graphQLErrors: GraphQLError[] | readonly GraphQLError[] | undefined
+  graphQLErrors:
+    | GraphQLFormattedError[]
+    | ReadonlyArray<GraphQLFormattedError>
+    | undefined
 ): ErrorMeta {
   const byMessage = Object.create(null),
     byCode = Object.create(null);
@@ -151,7 +158,7 @@ export const createPersistedQueryLink = (
           defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
       );
     }
-    let hash = hashesByQuery.get(query)!;
+    let hash = hashesByQuery.get(query);
     if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
     return hash;
   }
@@ -165,7 +172,7 @@ export const createPersistedQueryLink = (
 
       const { query } = operation;
 
-      return new Observable((observer: Observer<ExecutionResult>) => {
+      return new Observable((observer: Observer<FormattedExecutionResult>) => {
         let subscription: ObservableSubscription;
         let retried = false;
         let originalFetchOptions: any;
@@ -174,13 +181,16 @@ export const createPersistedQueryLink = (
           {
             response,
             networkError,
-          }: { response?: ExecutionResult; networkError?: ServerError },
+          }: {
+            response?: FormattedExecutionResult;
+            networkError?: ServerError;
+          },
           cb: () => void
         ) => {
           if (!retried && ((response && response.errors) || networkError)) {
             retried = true;
 
-            const graphQLErrors: GraphQLError[] = [];
+            const graphQLErrors: GraphQLFormattedError[] = [];
 
             const responseErrors = response && response.errors;
             if (isNonEmptyArray(responseErrors)) {
@@ -193,7 +203,7 @@ export const createPersistedQueryLink = (
               networkErrors =
                 networkError &&
                 networkError.result &&
-                (networkError.result.errors as GraphQLError[]);
+                (networkError.result.errors as GraphQLFormattedError[]);
             }
             if (isNonEmptyArray(networkErrors)) {
               graphQLErrors.push(...networkErrors);
@@ -243,7 +253,7 @@ export const createPersistedQueryLink = (
           cb();
         };
         const handler = {
-          next: (response: ExecutionResult) => {
+          next: (response: FormattedExecutionResult) => {
             maybeRetry({ response }, () => observer.next!(response));
           },
           error: (networkError: ServerError) => {

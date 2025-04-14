@@ -6,11 +6,12 @@ import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
 import {
   Observable,
+  ObservableSubscription,
   Observer,
 } from "../../../utilities/observables/Observable";
 import { BatchHttpLink } from "../batchHttpLink";
-import { itAsync } from "../../../testing";
 import { FetchResult } from "../../core";
+import { ObservableStream } from "../../../testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -27,22 +28,6 @@ const sampleMutation = gql`
     }
   }
 `;
-
-function makeCallback<TArgs extends any[]>(
-  resolve: () => void,
-  reject: (error: Error) => void,
-  callback: (...args: TArgs) => any
-) {
-  return function () {
-    try {
-      // @ts-expect-error
-      callback.apply(this, arguments);
-      resolve();
-    } catch (error) {
-      reject(error as Error);
-    }
-  } as typeof callback;
-}
 
 describe("BatchHttpLink", () => {
   beforeAll(() => {
@@ -75,7 +60,7 @@ describe("BatchHttpLink", () => {
     expect(() => new BatchHttpLink()).not.toThrow();
   });
 
-  itAsync("handles batched requests", (resolve, reject) => {
+  it("handles batched requests", (done) => {
     const clientAwareness = {
       name: "Some Client Name",
       version: "1.0.1",
@@ -90,45 +75,37 @@ describe("BatchHttpLink", () => {
     let nextCalls = 0;
     let completions = 0;
     const next = (expectedData: any) => (data: any) => {
-      try {
-        expect(data).toEqual(expectedData);
-        nextCalls++;
-      } catch (error) {
-        reject(error);
-      }
+      expect(data).toEqual(expectedData);
+      nextCalls++;
     };
 
     const complete = () => {
-      try {
-        const calls = fetchMock.calls("begin:/batch");
-        expect(calls.length).toBe(1);
-        expect(nextCalls).toBe(2);
+      const calls = fetchMock.calls("begin:/batch");
+      expect(calls.length).toBe(1);
+      expect(nextCalls).toBe(2);
 
-        const options: any = fetchMock.lastOptions("begin:/batch");
-        expect(options.credentials).toEqual("two");
+      const options: any = fetchMock.lastOptions("begin:/batch");
+      expect(options.credentials).toEqual("two");
 
-        const { headers } = options;
-        expect(headers["apollographql-client-name"]).toBeDefined();
-        expect(headers["apollographql-client-name"]).toEqual(
-          clientAwareness.name
-        );
-        expect(headers["apollographql-client-version"]).toBeDefined();
-        expect(headers["apollographql-client-version"]).toEqual(
-          clientAwareness.version
-        );
+      const { headers } = options;
+      expect(headers["apollographql-client-name"]).toBeDefined();
+      expect(headers["apollographql-client-name"]).toEqual(
+        clientAwareness.name
+      );
+      expect(headers["apollographql-client-version"]).toBeDefined();
+      expect(headers["apollographql-client-version"]).toEqual(
+        clientAwareness.version
+      );
 
-        completions++;
+      completions++;
 
-        if (completions === 2) {
-          resolve();
-        }
-      } catch (error) {
-        reject(error);
+      if (completions === 2) {
+        done();
       }
     };
 
     const error = (error: any) => {
-      reject(error);
+      throw error;
     };
 
     execute(link, {
@@ -145,37 +122,34 @@ describe("BatchHttpLink", () => {
     }).subscribe(next(data2), error, complete);
   });
 
-  itAsync(
-    "errors on an incorrect number of results for a batch",
-    (resolve, reject) => {
-      const link = new BatchHttpLink({
-        uri: "/batch",
-        batchInterval: 0,
-        batchMax: 3,
-      });
+  it("errors on an incorrect number of results for a batch", (done) => {
+    const link = new BatchHttpLink({
+      uri: "/batch",
+      batchInterval: 0,
+      batchMax: 3,
+    });
 
-      let errors = 0;
-      const next = (data: any) => {
-        reject("next should not have been called");
-      };
+    let errors = 0;
+    const next = (data: any) => {
+      throw new Error("next should not have been called");
+    };
 
-      const complete = () => {
-        reject("complete should not have been called");
-      };
+    const complete = () => {
+      throw new Error("complete should not have been called");
+    };
 
-      const error = (error: any) => {
-        errors++;
+    const error = (error: any) => {
+      errors++;
 
-        if (errors === 3) {
-          resolve();
-        }
-      };
+      if (errors === 3) {
+        done();
+      }
+    };
 
-      execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-      execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-      execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-    }
-  );
+    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
+    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
+    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
+  });
 
   describe("batchKey", () => {
     const query = gql`
@@ -187,71 +161,64 @@ describe("BatchHttpLink", () => {
       }
     `;
 
-    itAsync(
-      "should batch queries with different options separately",
-      (resolve, reject) => {
-        let key = true;
-        const batchKey = () => {
-          key = !key;
-          return "" + !key;
-        };
+    it("should batch queries with different options separately", (done) => {
+      let key = true;
+      const batchKey = () => {
+        key = !key;
+        return "" + !key;
+      };
 
-        const link = ApolloLink.from([
-          new BatchHttpLink({
-            uri: (operation) => {
-              return operation.variables.endpoint;
-            },
-            batchInterval: 1,
-            //if batchKey does not work, then the batch size would be 3
-            batchMax: 2,
-            batchKey,
-          }),
-        ]);
+      const link = ApolloLink.from([
+        new BatchHttpLink({
+          uri: (operation) => {
+            return operation.variables.endpoint;
+          },
+          batchInterval: 1,
+          //if batchKey does not work, then the batch size would be 3
+          batchMax: 2,
+          batchKey,
+        }),
+      ]);
 
-        let count = 0;
-        const next = (expected: any) => (received: any) => {
-          try {
-            expect(received).toEqual(expected);
-          } catch (e) {
-            reject(e);
-          }
-        };
-        const complete = () => {
-          count++;
-          if (count === 4) {
-            try {
-              const lawlCalls = fetchMock.calls("begin:/lawl");
-              expect(lawlCalls.length).toBe(1);
-              const roflCalls = fetchMock.calls("begin:/rofl");
-              expect(roflCalls.length).toBe(1);
-              resolve();
-            } catch (e) {
-              reject(e);
-            }
-          }
-        };
+      let count = 0;
+      const next = (expected: any) => (received: any) => {
+        expect(received).toEqual(expected);
+      };
+      const complete = () => {
+        count++;
+        if (count === 4) {
+          const lawlCalls = fetchMock.calls("begin:/lawl");
+          expect(lawlCalls.length).toBe(1);
+          const roflCalls = fetchMock.calls("begin:/rofl");
+          expect(roflCalls.length).toBe(1);
+          done();
+        }
+      };
 
-        [1, 2].forEach((x) => {
-          execute(link, {
-            query,
-            variables: { endpoint: "/rofl" },
-          }).subscribe({
-            next: next(roflData),
-            error: reject,
-            complete,
-          });
-
-          execute(link, {
-            query,
-            variables: { endpoint: "/lawl" },
-          }).subscribe({
-            next: next(lawlData),
-            error: reject,
-            complete,
-          });
+      [1, 2].forEach((x) => {
+        execute(link, {
+          query,
+          variables: { endpoint: "/rofl" },
+        }).subscribe({
+          next: next(roflData),
+          error: (error) => {
+            throw error;
+          },
+          complete,
         });
-      }
-    );
+
+        execute(link, {
+          query,
+          variables: { endpoint: "/lawl" },
+        }).subscribe({
+          next: next(lawlData),
+          error: (error) => {
+            throw error;
+          },
+          complete,
+        });
+      });
+    });
   });
 });
 
@@ -270,6 +237,8 @@ const createHttpLink = (httpArgs?: any) => {
   };
   return new BatchHttpLink(args);
 };
+
+const subscriptions = new Set<ObservableSubscription>();
 
 describe("SharedHttpTest", () => {
   const data = { data: { hello: "world" } };
@@ -300,10 +269,16 @@ describe("SharedHttpTest", () => {
       error,
       complete,
     };
+    subscriptions.clear();
   });
 
   afterEach(() => {
     fetchMock.restore();
+    if (subscriptions.size) {
+      // Tests within this describe block can add subscriptions to this Set
+      // that they want to be canceled/unsubscribed after the test finishes.
+      subscriptions.forEach((sub) => sub.unsubscribe());
+    }
   });
 
   it("raises warning if called with concat", () => {
@@ -324,127 +299,101 @@ describe("SharedHttpTest", () => {
     expect(() => createHttpLink()).not.toThrow();
   });
 
-  itAsync("calls next and then complete", (resolve, reject) => {
-    const next = jest.fn();
+  it("calls next and then complete", async () => {
     const link = createHttpLink({ uri: "/data" });
     const observable = execute(link, {
       query: sampleQuery,
     });
-    observable.subscribe({
-      next,
-      error: (error) => reject(error),
-      complete: makeCallback(resolve, reject, () => {
-        expect(next).toHaveBeenCalledTimes(1);
-      }),
-    });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
   });
 
-  itAsync("calls error when fetch fails", (resolve, reject) => {
+  it("calls error when fetch fails", async () => {
     const link = createHttpLink({ uri: "/error" });
     const observable = execute(link, {
       query: sampleQuery,
     });
-    observable.subscribe(
-      (result) => reject("next should not have been called"),
-      makeCallback(resolve, reject, (error: any) => {
-        expect(error).toEqual(mockError.throws);
-      }),
-      () => reject("complete should not have been called")
-    );
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitError(mockError.throws);
   });
 
-  itAsync("calls error when fetch fails", (resolve, reject) => {
+  it("calls error when fetch fails", async () => {
     const link = createHttpLink({ uri: "/error" });
     const observable = execute(link, {
       query: sampleMutation,
     });
-    observable.subscribe(
-      (result) => reject("next should not have been called"),
-      makeCallback(resolve, reject, (error: any) => {
-        expect(error).toEqual(mockError.throws);
-      }),
-      () => reject("complete should not have been called")
-    );
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitError(mockError.throws);
   });
 
-  itAsync(
-    "strips unused variables, respecting nested fragments",
-    (resolve, reject) => {
-      const link = createHttpLink({ uri: "/data" });
+  it("strips unused variables, respecting nested fragments", async () => {
+    const link = createHttpLink({ uri: "/data" });
 
-      const query = gql`
-        query PEOPLE($declaredAndUsed: String, $declaredButUnused: Int) {
-          people(surprise: $undeclared, noSurprise: $declaredAndUsed) {
-            ... on Doctor {
-              specialty(var: $usedByInlineFragment)
-            }
-            ...LawyerFragment
+    const query = gql`
+      query PEOPLE($declaredAndUsed: String, $declaredButUnused: Int) {
+        people(surprise: $undeclared, noSurprise: $declaredAndUsed) {
+          ... on Doctor {
+            specialty(var: $usedByInlineFragment)
           }
+          ...LawyerFragment
         }
-        fragment LawyerFragment on Lawyer {
-          caseCount(var: $usedByNamedFragment)
-        }
-      `;
+      }
+      fragment LawyerFragment on Lawyer {
+        caseCount(var: $usedByNamedFragment)
+      }
+    `;
 
-      const variables = {
-        unused: "strip",
-        declaredButUnused: "strip",
-        declaredAndUsed: "keep",
-        undeclared: "keep",
-        usedByInlineFragment: "keep",
-        usedByNamedFragment: "keep",
-      };
+    const variables = {
+      unused: "strip",
+      declaredButUnused: "strip",
+      declaredAndUsed: "keep",
+      undeclared: "keep",
+      usedByInlineFragment: "keep",
+      usedByNamedFragment: "keep",
+    };
 
-      execute(link, {
-        query,
-        variables,
-      }).subscribe({
-        next: makeCallback(resolve, reject, () => {
-          const [uri, options] = fetchMock.lastCall()!;
-          const { method, body } = options!;
-          expect(JSON.parse(body as string)).toEqual([
-            {
-              operationName: "PEOPLE",
-              query: print(query),
-              variables: {
-                declaredAndUsed: "keep",
-                undeclared: "keep",
-                usedByInlineFragment: "keep",
-                usedByNamedFragment: "keep",
-              },
-            },
-          ]);
-          expect(method).toBe("POST");
-          expect(uri).toBe("/data");
-        }),
-        error: (error) => reject(error),
-      });
-    }
-  );
+    const stream = new ObservableStream(execute(link, { query, variables }));
 
-  itAsync("unsubscribes without calling subscriber", (resolve, reject) => {
+    await expect(stream).toEmitNext();
+
+    const [uri, options] = fetchMock.lastCall()!;
+    const { method, body } = options!;
+    expect(JSON.parse(body as string)).toEqual([
+      {
+        operationName: "PEOPLE",
+        query: print(query),
+        variables: {
+          declaredAndUsed: "keep",
+          undeclared: "keep",
+          usedByInlineFragment: "keep",
+          usedByNamedFragment: "keep",
+        },
+      },
+    ]);
+    expect(method).toBe("POST");
+    expect(uri).toBe("/data");
+  });
+
+  it("unsubscribes without calling subscriber", async () => {
     const link = createHttpLink({ uri: "/data" });
     const observable = execute(link, {
       query: sampleQuery,
     });
-    const subscription = observable.subscribe(
-      (result) => reject("next should not have been called"),
-      (error) => reject(error),
-      () => reject("complete should not have been called")
-    );
-    subscription.unsubscribe();
-    expect(subscription.closed).toBe(true);
-    setTimeout(resolve, 50);
+    const stream = new ObservableStream(observable);
+    stream.unsubscribe();
+
+    await expect(stream).not.toEmitAnything();
   });
 
-  const verifyRequest = (
+  const verifyRequest = async (
     link: ApolloLink,
-    after: () => void,
     includeExtensions: boolean,
-    includeUnusedVariables: boolean,
-    reject: (e: Error) => void
+    includeUnusedVariables: boolean
   ) => {
-    const next = jest.fn();
     const context = { info: "stub" };
     const variables = { params: "stub" };
 
@@ -453,61 +402,37 @@ describe("SharedHttpTest", () => {
       context,
       variables,
     });
-    observable.subscribe({
-      next,
-      error: (error) => reject(error),
-      complete: () => {
-        try {
-          let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
-          expect(body.query).toBe(print(sampleMutation));
-          expect(body.variables).toEqual(
-            includeUnusedVariables ? variables : {}
-          );
-          expect(body.context).not.toBeDefined();
-          if (includeExtensions) {
-            expect(body.extensions).toBeDefined();
-          } else {
-            expect(body.extensions).not.toBeDefined();
-          }
-          expect(next).toHaveBeenCalledTimes(1);
+    const stream = new ObservableStream(observable);
 
-          after();
-        } catch (e) {
-          reject(e as Error);
-        }
-      },
-    });
+    await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
+
+    let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
+    expect(body.query).toBe(print(sampleMutation));
+    expect(body.variables).toEqual(includeUnusedVariables ? variables : {});
+    expect(body.context).not.toBeDefined();
+    if (includeExtensions) {
+      expect(body.extensions).toBeDefined();
+    } else {
+      expect(body.extensions).not.toBeDefined();
+    }
   };
 
-  itAsync(
-    "passes all arguments to multiple fetch body including extensions",
-    (resolve, reject) => {
-      const link = createHttpLink({ uri: "/data", includeExtensions: true });
-      verifyRequest(
-        link,
-        () => verifyRequest(link, resolve, true, false, reject),
-        true,
-        false,
-        reject
-      );
-    }
-  );
+  it("passes all arguments to multiple fetch body including extensions", async () => {
+    const link = createHttpLink({ uri: "/data", includeExtensions: true });
 
-  itAsync(
-    "passes all arguments to multiple fetch body excluding extensions",
-    (resolve, reject) => {
-      const link = createHttpLink({ uri: "/data" });
-      verifyRequest(
-        link,
-        () => verifyRequest(link, resolve, false, false, reject),
-        false,
-        false,
-        reject
-      );
-    }
-  );
+    await verifyRequest(link, true, false);
+    await verifyRequest(link, true, false);
+  });
 
-  itAsync("calls multiple subscribers", (resolve, reject) => {
+  it("passes all arguments to multiple fetch body excluding extensions", async () => {
+    const link = createHttpLink({ uri: "/data" });
+
+    await verifyRequest(link, false, false);
+    await verifyRequest(link, false, false);
+  });
+
+  it("calls multiple subscribers", (done) => {
     const link = createHttpLink({ uri: "/data" });
     const context = { info: "stub" };
     const variables = { params: "stub" };
@@ -527,57 +452,52 @@ describe("SharedHttpTest", () => {
       // only one call because batchHttpLink can handle more than one subscriber
       // without starting a new request
       expect(fetchMock.calls().length).toBe(1);
-      resolve();
+      done();
     }, 50);
   });
 
-  itAsync(
-    "calls remaining subscribers after unsubscribe",
-    (resolve, reject) => {
-      const link = createHttpLink({ uri: "/data" });
-      const context = { info: "stub" };
-      const variables = { params: "stub" };
+  it("calls remaining subscribers after unsubscribe", (done) => {
+    const link = createHttpLink({ uri: "/data" });
+    const context = { info: "stub" };
+    const variables = { params: "stub" };
 
-      const observable = execute(link, {
-        query: sampleMutation,
-        context,
-        variables,
-      });
+    const observable = execute(link, {
+      query: sampleMutation,
+      context,
+      variables,
+    });
 
-      observable.subscribe(subscriber);
+    observable.subscribe(subscriber);
 
-      setTimeout(() => {
-        const subscription = observable.subscribe(subscriber);
-        subscription.unsubscribe();
-      }, 10);
+    setTimeout(() => {
+      const subscription = observable.subscribe(subscriber);
+      subscription.unsubscribe();
+    }, 10);
 
-      setTimeout(
-        makeCallback(resolve, reject, () => {
-          expect(subscriber.next).toHaveBeenCalledTimes(1);
-          expect(subscriber.complete).toHaveBeenCalledTimes(1);
-          expect(subscriber.error).not.toHaveBeenCalled();
-          resolve();
-        }),
-        50
-      );
-    }
-  );
+    setTimeout(() => {
+      expect(subscriber.next).toHaveBeenCalledTimes(1);
+      expect(subscriber.complete).toHaveBeenCalledTimes(1);
+      expect(subscriber.error).not.toHaveBeenCalled();
+      done();
+    }, 50);
+  });
 
-  itAsync("allows for dynamic endpoint setting", (resolve, reject) => {
+  it("allows for dynamic endpoint setting", async () => {
     const variables = { params: "stub" };
     const link = createHttpLink({ uri: "/data" });
 
-    execute(link, {
-      query: sampleQuery,
-      variables,
-      context: { uri: "/data2" },
-    }).subscribe((result) => {
-      expect(result).toEqual(data2);
-      resolve();
-    });
+    const stream = new ObservableStream(
+      execute(link, {
+        query: sampleQuery,
+        variables,
+        context: { uri: "/data2" },
+      })
+    );
+
+    await expect(stream).toEmitValue(data2);
   });
 
-  itAsync("adds headers to the request from the context", (resolve, reject) => {
+  it("adds headers to the request from the context", async () => {
     const variables = { params: "stub" };
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
@@ -585,177 +505,226 @@ describe("SharedHttpTest", () => {
       });
       return forward(operation).map((result) => {
         const { headers } = operation.getContext();
-        try {
-          expect(headers).toBeDefined();
-        } catch (e) {
-          reject(e);
-        }
+        expect(headers).toBeDefined();
         return result;
       });
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
-
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const headers: Record<string, string> = fetchMock.lastCall()![1]!
-          .headers as Record<string, string>;
-        expect(headers.authorization).toBe("1234");
-        expect(headers["content-type"]).toBe("application/json");
-        expect(headers.accept).toBe("*/*");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const headers: Record<string, string> = fetchMock.lastCall()![1]!
+      .headers as Record<string, string>;
+    expect(headers.authorization).toBe("1234");
+    expect(headers["content-type"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
   });
 
-  itAsync("adds headers to the request from the setup", (resolve, reject) => {
+  it("adds headers to the request from the setup", async () => {
     const variables = { params: "stub" };
     const link = createHttpLink({
       uri: "/data",
       headers: { authorization: "1234" },
     });
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const headers: Record<string, string> = fetchMock.lastCall()![1]!
-          .headers as Record<string, string>;
-        expect(headers.authorization).toBe("1234");
-        expect(headers["content-type"]).toBe("application/json");
-        expect(headers.accept).toBe("*/*");
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
+
+    await expect(stream).toEmitNext();
+
+    const headers: Record<string, string> = fetchMock.lastCall()![1]!
+      .headers as Record<string, string>;
+    expect(headers.authorization).toBe("1234");
+    expect(headers["content-type"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
+  });
+
+  it("uses the latest window.fetch function if options.fetch not configured", (done) => {
+    const httpLink = createHttpLink({ uri: "data" });
+
+    const fetch = window.fetch;
+    expect(typeof fetch).toBe("function");
+
+    const fetchSpy = jest.spyOn(window, "fetch");
+    fetchSpy.mockImplementation(() =>
+      Promise.resolve<Response>({
+        text() {
+          return Promise.resolve(
+            JSON.stringify({
+              data: { hello: "from spy" },
+            })
+          );
+        },
+      } as Response)
+    );
+
+    const spyFn = window.fetch;
+    expect(spyFn).not.toBe(fetch);
+
+    subscriptions.add(
+      execute(httpLink, {
+        query: sampleQuery,
+      }).subscribe({
+        error: done.fail,
+
+        next(result) {
+          expect(fetchSpy).toHaveBeenCalledTimes(1);
+          expect(result).toEqual({
+            data: { hello: "from spy" },
+          });
+
+          fetchSpy.mockRestore();
+          expect(window.fetch).toBe(fetch);
+
+          subscriptions.add(
+            execute(httpLink, {
+              query: sampleQuery,
+            }).subscribe({
+              error: done.fail,
+              next(result) {
+                expect(result).toEqual({
+                  data: { hello: "world" },
+                });
+                done();
+              },
+            })
+          );
+        },
       })
     );
   });
 
-  itAsync(
-    "prioritizes context headers over setup headers",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const middleware = new ApolloLink((operation, forward) => {
-        operation.setContext({
-          headers: { authorization: "1234" },
-        });
-        return forward(operation);
-      });
-      const link = middleware.concat(
-        createHttpLink({ uri: "/data", headers: { authorization: "no user" } })
-      );
-
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const headers: Record<string, string> = fetchMock.lastCall()![1]!
-            .headers as Record<string, string>;
-          expect(headers.authorization).toBe("1234");
-          expect(headers["content-type"]).toBe("application/json");
-          expect(headers.accept).toBe("*/*");
-        })
-      );
-    }
-  );
-
-  itAsync(
-    "adds headers to the request from the context on an operation",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "/data" });
-
-      const context = {
+  it("prioritizes context headers over setup headers", async () => {
+    const variables = { params: "stub" };
+    const middleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
         headers: { authorization: "1234" },
-      };
+      });
+      return forward(operation);
+    });
+    const link = middleware.concat(
+      createHttpLink({ uri: "/data", headers: { authorization: "no user" } })
+    );
+
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
+
+    await expect(stream).toEmitNext();
+
+    const headers: Record<string, string> = fetchMock.lastCall()![1]!
+      .headers as Record<string, string>;
+    expect(headers.authorization).toBe("1234");
+    expect(headers["content-type"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
+  });
+
+  it("adds headers to the request from the context on an operation", async () => {
+    const variables = { params: "stub" };
+    const link = createHttpLink({ uri: "/data" });
+
+    const context = {
+      headers: { authorization: "1234" },
+    };
+    const stream = new ObservableStream(
       execute(link, {
         query: sampleQuery,
         variables,
         context,
-      }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const headers: Record<string, string> = fetchMock.lastCall()![1]!
-            .headers as Record<string, string>;
-          expect(headers.authorization).toBe("1234");
-          expect(headers["content-type"]).toBe("application/json");
-          expect(headers.accept).toBe("*/*");
-        })
-      );
-    }
-  );
+      })
+    );
 
-  itAsync(
-    "adds headers w/ preserved case to the request from the setup",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const link = createHttpLink({
-        uri: "/data",
-        headers: {
-          authorization: "1234",
-          AUTHORIZATION: "1234",
-          "CONTENT-TYPE": "application/json",
-        },
-        preserveHeaderCase: true,
-      });
+    await expect(stream).toEmitNext();
 
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const headers: any = fetchMock.lastCall()![1]!.headers;
-          expect(headers.AUTHORIZATION).toBe("1234");
-          expect(headers["CONTENT-TYPE"]).toBe("application/json");
-          expect(headers.accept).toBe("*/*");
-        })
-      );
-    }
-  );
+    const headers: Record<string, string> = fetchMock.lastCall()![1]!
+      .headers as Record<string, string>;
+    expect(headers.authorization).toBe("1234");
+    expect(headers["content-type"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
+  });
 
-  itAsync(
-    "prioritizes context headers w/ preserved case over setup headers",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const middleware = new ApolloLink((operation, forward) => {
-        operation.setContext({
-          headers: { AUTHORIZATION: "1234" },
-          http: { preserveHeaderCase: true },
-        });
-        return forward(operation);
-      });
-      const link = middleware.concat(
-        createHttpLink({
-          uri: "/data",
-          headers: { authorization: "no user" },
-          preserveHeaderCase: false,
-        })
-      );
+  it("adds headers w/ preserved case to the request from the setup", async () => {
+    const variables = { params: "stub" };
+    const link = createHttpLink({
+      uri: "/data",
+      headers: {
+        authorization: "1234",
+        AUTHORIZATION: "1234",
+        "CONTENT-TYPE": "application/json",
+      },
+      preserveHeaderCase: true,
+    });
 
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const headers: any = fetchMock.lastCall()![1]!.headers;
-          expect(headers.AUTHORIZATION).toBe("1234");
-          expect(headers["content-type"]).toBe("application/json");
-          expect(headers.accept).toBe("*/*");
-        })
-      );
-    }
-  );
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
 
-  itAsync(
-    "adds headers w/ preserved case to the request from the context on an operation",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const link = createHttpLink({ uri: "/data" });
+    await expect(stream).toEmitNext();
 
-      const context = {
+    const headers: any = fetchMock.lastCall()![1]!.headers;
+    expect(headers.AUTHORIZATION).toBe("1234");
+    expect(headers["CONTENT-TYPE"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
+  });
+
+  it("prioritizes context headers w/ preserved case over setup headers", async () => {
+    const variables = { params: "stub" };
+    const middleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
         headers: { AUTHORIZATION: "1234" },
         http: { preserveHeaderCase: true },
-      };
+      });
+      return forward(operation);
+    });
+    const link = middleware.concat(
+      createHttpLink({
+        uri: "/data",
+        headers: { authorization: "no user" },
+        preserveHeaderCase: false,
+      })
+    );
+
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
+
+    await expect(stream).toEmitNext();
+
+    const headers: any = fetchMock.lastCall()![1]!.headers;
+    expect(headers.AUTHORIZATION).toBe("1234");
+    expect(headers["content-type"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
+  });
+
+  it("adds headers w/ preserved case to the request from the context on an operation", async () => {
+    const variables = { params: "stub" };
+    const link = createHttpLink({ uri: "/data" });
+
+    const context = {
+      headers: { AUTHORIZATION: "1234" },
+      http: { preserveHeaderCase: true },
+    };
+    const stream = new ObservableStream(
       execute(link, {
         query: sampleQuery,
         variables,
         context,
-      }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const headers: any = fetchMock.lastCall()![1]!.headers;
-          expect(headers.AUTHORIZATION).toBe("1234");
-          expect(headers["content-type"]).toBe("application/json");
-          expect(headers.accept).toBe("*/*");
-        })
-      );
-    }
-  );
+      })
+    );
 
-  itAsync("adds creds to the request from the context", (resolve, reject) => {
+    await expect(stream).toEmitNext();
+
+    const headers: any = fetchMock.lastCall()![1]!.headers;
+    expect(headers.AUTHORIZATION).toBe("1234");
+    expect(headers["content-type"]).toBe("application/json");
+    expect(headers.accept).toBe("*/*");
+  });
+
+  it("adds creds to the request from the context", async () => {
     const variables = { params: "stub" };
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
@@ -765,50 +734,53 @@ describe("SharedHttpTest", () => {
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const creds = fetchMock.lastCall()![1]!.credentials;
-        expect(creds).toBe("same-team-yo");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const creds = fetchMock.lastCall()![1]!.credentials;
+    expect(creds).toBe("same-team-yo");
   });
 
-  itAsync("adds creds to the request from the setup", (resolve, reject) => {
+  it("adds creds to the request from the setup", async () => {
     const variables = { params: "stub" };
     const link = createHttpLink({ uri: "/data", credentials: "same-team-yo" });
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const creds = fetchMock.lastCall()![1]!.credentials;
-        expect(creds).toBe("same-team-yo");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const creds = fetchMock.lastCall()![1]!.credentials;
+    expect(creds).toBe("same-team-yo");
   });
 
-  itAsync(
-    "prioritizes creds from the context over the setup",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const middleware = new ApolloLink((operation, forward) => {
-        operation.setContext({
-          credentials: "same-team-yo",
-        });
-        return forward(operation);
+  it("prioritizes creds from the context over the setup", async () => {
+    const variables = { params: "stub" };
+    const middleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        credentials: "same-team-yo",
       });
-      const link = middleware.concat(
-        createHttpLink({ uri: "/data", credentials: "error" })
-      );
+      return forward(operation);
+    });
+    const link = middleware.concat(
+      createHttpLink({ uri: "/data", credentials: "error" })
+    );
 
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const creds = fetchMock.lastCall()![1]!.credentials;
-          expect(creds).toBe("same-team-yo");
-        })
-      );
-    }
-  );
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
 
-  itAsync("adds uri to the request from the context", (resolve, reject) => {
+    await expect(stream).toEmitNext();
+
+    const creds = fetchMock.lastCall()![1]!.credentials;
+    expect(creds).toBe("same-team-yo");
+  });
+
+  it("adds uri to the request from the context", async () => {
     const variables = { params: "stub" };
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
@@ -818,27 +790,31 @@ describe("SharedHttpTest", () => {
     });
     const link = middleware.concat(createHttpLink());
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const uri = fetchMock.lastUrl();
-        expect(uri).toBe("/data");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const uri = fetchMock.lastUrl();
+    expect(uri).toBe("/data");
   });
 
-  itAsync("adds uri to the request from the setup", (resolve, reject) => {
+  it("adds uri to the request from the setup", async () => {
     const variables = { params: "stub" };
     const link = createHttpLink({ uri: "/data" });
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const uri = fetchMock.lastUrl();
-        expect(uri).toBe("/data");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const uri = fetchMock.lastUrl();
+    expect(uri).toBe("/data");
   });
 
-  itAsync("prioritizes context uri over setup uri", (resolve, reject) => {
+  it("prioritizes context uri over setup uri", async () => {
     const variables = { params: "stub" };
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
@@ -850,82 +826,77 @@ describe("SharedHttpTest", () => {
       createHttpLink({ uri: "/data", credentials: "error" })
     );
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const uri = fetchMock.lastUrl();
-
-        expect(uri).toBe("/apollo");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const uri = fetchMock.lastUrl();
+    expect(uri).toBe("/apollo");
   });
 
-  itAsync("allows uri to be a function", (resolve, reject) => {
+  it("allows uri to be a function", async () => {
     const variables = { params: "stub" };
     const customFetch = (_uri: any, options: any) => {
       const { operationName } = convertBatchedBody(options.body);
-      try {
-        expect(operationName).toBe("SampleQuery");
-      } catch (e) {
-        reject(e);
-      }
+      expect(operationName).toBe("SampleQuery");
       return fetch("/dataFunc", options);
     };
 
     const link = createHttpLink({ fetch: customFetch });
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        expect(fetchMock.lastUrl()).toBe("/dataFunc");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    expect(fetchMock.lastUrl()).toBe("/dataFunc");
   });
 
-  itAsync(
-    "adds fetchOptions to the request from the setup",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const link = createHttpLink({
-        uri: "/data",
-        fetchOptions: { someOption: "foo", mode: "no-cors" },
+  it("adds fetchOptions to the request from the setup", async () => {
+    const variables = { params: "stub" };
+    const link = createHttpLink({
+      uri: "/data",
+      fetchOptions: { someOption: "foo", mode: "no-cors" },
+    });
+
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
+
+    await expect(stream).toEmitNext();
+
+    const { someOption, mode, headers } = fetchMock.lastCall()![1]! as any;
+    expect(someOption).toBe("foo");
+    expect(mode).toBe("no-cors");
+    expect(headers["content-type"]).toBe("application/json");
+  });
+
+  it("adds fetchOptions to the request from the context", async () => {
+    const variables = { params: "stub" };
+    const middleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        fetchOptions: {
+          someOption: "foo",
+        },
       });
+      return forward(operation);
+    });
+    const link = middleware.concat(createHttpLink({ uri: "/data" }));
 
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const { someOption, mode, headers } =
-            fetchMock.lastCall()![1]! as any;
-          expect(someOption).toBe("foo");
-          expect(mode).toBe("no-cors");
-          expect(headers["content-type"]).toBe("application/json");
-        })
-      );
-    }
-  );
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
 
-  itAsync(
-    "adds fetchOptions to the request from the context",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const middleware = new ApolloLink((operation, forward) => {
-        operation.setContext({
-          fetchOptions: {
-            someOption: "foo",
-          },
-        });
-        return forward(operation);
-      });
-      const link = middleware.concat(createHttpLink({ uri: "/data" }));
+    await expect(stream).toEmitNext();
 
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          const { someOption } = fetchMock.lastCall()![1]! as any;
-          expect(someOption).toBe("foo");
-          resolve();
-        })
-      );
-    }
-  );
+    const { someOption } = fetchMock.lastCall()![1]! as any;
+    expect(someOption).toBe("foo");
+  });
 
-  itAsync("uses the print option function when defined", (resolve, reject) => {
+  it("uses the print option function when defined", async () => {
     const customPrinter = jest.fn(
       (ast: ASTNode, originalPrint: typeof print) => {
         return stripIgnoredCharacters(originalPrint(ast));
@@ -934,16 +905,16 @@ describe("SharedHttpTest", () => {
 
     const httpLink = createHttpLink({ uri: "data", print: customPrinter });
 
-    execute(httpLink, {
-      query: sampleQuery,
-    }).subscribe(
-      makeCallback(resolve, reject, () => {
-        expect(customPrinter).toHaveBeenCalledTimes(1);
-      })
+    const stream = new ObservableStream(
+      execute(httpLink, { query: sampleQuery })
     );
+
+    await expect(stream).toEmitNext();
+
+    expect(customPrinter).toHaveBeenCalledTimes(1);
   });
 
-  itAsync("prioritizes context over setup", (resolve, reject) => {
+  it("prioritizes context over setup", async () => {
     const variables = { params: "stub" };
     const middleware = new ApolloLink((operation, forward) => {
       operation.setContext({
@@ -957,53 +928,53 @@ describe("SharedHttpTest", () => {
       createHttpLink({ uri: "/data", fetchOptions: { someOption: "bar" } })
     );
 
-    execute(link, { query: sampleQuery, variables }).subscribe(
-      makeCallback(resolve, reject, (result: any) => {
-        const { someOption } = fetchMock.lastCall()![1]! as any;
-        expect(someOption).toBe("foo");
-      })
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
     );
+
+    await expect(stream).toEmitNext();
+
+    const { someOption } = fetchMock.lastCall()![1]! as any;
+    expect(someOption).toBe("foo");
   });
 
-  itAsync(
-    "allows for not sending the query with the request",
-    (resolve, reject) => {
-      const variables = { params: "stub" };
-      const middleware = new ApolloLink((operation, forward) => {
-        operation.setContext({
-          http: {
-            includeQuery: false,
-            includeExtensions: true,
-          },
-        });
-        operation.extensions.persistedQuery = { hash: "1234" };
-        return forward(operation);
+  it("allows for not sending the query with the request", async () => {
+    const variables = { params: "stub" };
+    const middleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        http: {
+          includeQuery: false,
+          includeExtensions: true,
+        },
       });
-      const link = middleware.concat(createHttpLink({ uri: "/data" }));
+      operation.extensions.persistedQuery = { hash: "1234" };
+      return forward(operation);
+    });
+    const link = middleware.concat(createHttpLink({ uri: "/data" }));
 
-      execute(link, { query: sampleQuery, variables }).subscribe(
-        makeCallback(resolve, reject, (result: any) => {
-          let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery, variables })
+    );
 
-          expect(body.query).not.toBeDefined();
-          expect(body.extensions).toEqual({ persistedQuery: { hash: "1234" } });
-          resolve();
-        })
-      );
-    }
-  );
+    await expect(stream).toEmitNext();
 
-  itAsync("sets the raw response on context", (resolve, reject) => {
+    let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
+
+    expect(body.query).not.toBeDefined();
+    expect(body.extensions).toEqual({ persistedQuery: { hash: "1234" } });
+  });
+
+  it("sets the raw response on context", async () => {
     const middleware = new ApolloLink((operation, forward) => {
       return new Observable((ob) => {
         const op = forward(operation);
         const sub = op.subscribe({
           next: ob.next.bind(ob),
           error: ob.error.bind(ob),
-          complete: makeCallback(resolve, reject, () => {
+          complete: () => {
             expect(operation.getContext().response.headers.toBeDefined);
             ob.complete();
-          }),
+          },
         });
 
         return () => {
@@ -1014,12 +985,10 @@ describe("SharedHttpTest", () => {
 
     const link = middleware.concat(createHttpLink({ uri: "/data", fetch }));
 
-    execute(link, { query: sampleQuery }).subscribe(
-      (result) => {
-        resolve();
-      },
-      () => {}
-    );
+    const stream = new ObservableStream(execute(link, { query: sampleQuery }));
+
+    await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
   });
 
   it("removes @client fields from the query before sending it to the server", async () => {

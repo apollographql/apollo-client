@@ -52,6 +52,7 @@ import {
   keyArgsFnFromSpecifier,
   keyFieldsFnFromSpecifier,
 } from "./key-extractor.js";
+import { disableWarningsSlot } from "../../masking/index.js";
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -391,15 +392,18 @@ export class Policies {
 
     const policy = typename && this.getTypePolicy(typename);
     let keyFn = (policy && policy.keyFn) || this.config.dataIdFromObject;
-    while (keyFn) {
-      const specifierOrId = keyFn({ ...object, ...storeObject }, context);
-      if (isArray(specifierOrId)) {
-        keyFn = keyFieldsFnFromSpecifier(specifierOrId);
-      } else {
-        id = specifierOrId;
-        break;
+
+    disableWarningsSlot.withValue(true, () => {
+      while (keyFn) {
+        const specifierOrId = keyFn({ ...object, ...storeObject }, context);
+        if (isArray(specifierOrId)) {
+          keyFn = keyFieldsFnFromSpecifier(specifierOrId);
+        } else {
+          id = specifierOrId;
+          break;
+        }
       }
-    }
+    });
 
     id = id ? String(id) : void 0;
     return context.keyObject ? [id, context.keyObject] : [id];

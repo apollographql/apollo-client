@@ -465,9 +465,15 @@ export interface MutationOptionsDocumentation {
    */
   onError: unknown;
   /**
-   * If `true`, the mutation's `data` property is not updated with the mutation's result.
+   * If `true`:
+   *
+   * - The initial state update (setting loading to true) is skipped
+   * - The success state update (setting data and setting loading to false) is skipped
+   * - Error updates will still occur
    *
    * The default value is `false`.
+   *
+   * This option is useful when you want to execute a mutation but don't need to track its progress or result in the UI, potentially improving performance by reducing re-renders.
    *
    * @docGroup 1. Operation options
    */
@@ -532,6 +538,12 @@ export interface SubscriptionOptionsDocumentation {
   shouldResubscribe: unknown;
 
   /**
+   * If `true`, the hook will not cause the component to rerender. This is useful when you want to control the rendering of your component yourself with logic in the `onData` and `onError` callbacks.
+   *
+   * Changing this to `true` when the hook already has `data` will reset the `data` to `undefined`.
+   */
+  ignoreResults: unknown;
+  /**
    * An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in.
    */
   client: unknown;
@@ -545,6 +557,11 @@ export interface SubscriptionOptionsDocumentation {
    * Shared context between your component and your network interface (Apollo Link).
    */
   context: unknown;
+
+  /**
+   * Shared context between your component and your network interface (Apollo Link).
+   */
+  extensions: unknown;
 
   /**
    * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component completes the subscription.

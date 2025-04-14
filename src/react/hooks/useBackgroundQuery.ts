@@ -6,6 +6,7 @@ import type {
   TypedDocumentNode,
   WatchQueryOptions,
 } from "../../core/index.js";
+import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
   getSuspenseCache,
@@ -13,7 +14,7 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type { CacheKey, QueryReference } from "../internal/index.js";
+import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
@@ -26,7 +27,11 @@ export type UseBackgroundQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = {
+  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
 };
 
@@ -44,7 +49,7 @@ export function useBackgroundQuery<
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions
 ): [
   (
-    | QueryReference<
+    | QueryRef<
         TOptions["errorPolicy"] extends "ignore" | "all" ?
           TOptions["returnPartialData"] extends true ?
             DeepPartial<TData> | undefined
@@ -68,7 +73,7 @@ export function useBackgroundQuery<
     errorPolicy: "ignore" | "all";
   }
 ): [
-  QueryReference<DeepPartial<TData> | undefined, TVariables>,
+  QueryRef<DeepPartial<TData> | undefined, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -81,7 +86,7 @@ export function useBackgroundQuery<
     errorPolicy: "ignore" | "all";
   }
 ): [
-  QueryReference<TData | undefined, TVariables>,
+  QueryRef<TData | undefined, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -95,7 +100,7 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): [
-  QueryReference<DeepPartial<TData>, TVariables> | undefined,
+  QueryRef<DeepPartial<TData>, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -108,7 +113,7 @@ export function useBackgroundQuery<
     returnPartialData: true;
   }
 ): [
-  QueryReference<DeepPartial<TData>, TVariables>,
+  QueryRef<DeepPartial<TData>, TVariables>,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -121,7 +126,7 @@ export function useBackgroundQuery<
     skip: boolean;
   }
 ): [
-  QueryReference<TData, TVariables> | undefined,
+  QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -131,10 +136,7 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>
-): [
-  QueryReference<TData, TVariables>,
-  UseBackgroundQueryResult<TData, TVariables>,
-];
+): [QueryRef<TData, TVariables>, UseBackgroundQueryResult<TData, TVariables>];
 
 export function useBackgroundQuery<
   TData = unknown,
@@ -155,7 +157,7 @@ export function useBackgroundQuery<
         returnPartialData: true;
       })
 ): [
-  QueryReference<DeepPartial<TData>, TVariables> | undefined,
+  QueryRef<DeepPartial<TData>, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -166,7 +168,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): [
-  QueryReference<TData, TVariables> | undefined,
+  QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ];
 
@@ -180,17 +182,18 @@ export function useBackgroundQuery<
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
     | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
 ): [
-  QueryReference<TData, TVariables> | undefined,
+  QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
   return wrapHook(
     "useBackgroundQuery",
-    _useBackgroundQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useBackgroundQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
-function _useBackgroundQuery<
+function useBackgroundQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -200,7 +203,7 @@ function _useBackgroundQuery<
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
     | BackgroundQueryHookOptionsNoInfer<TData, TVariables>
 ): [
-  QueryReference<TData, TVariables> | undefined,
+  QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
   const client = useApolloClient(options.client);
@@ -239,16 +242,21 @@ function _useBackgroundQuery<
     updateWrappedQueryRef(wrappedQueryRef, promise);
   }
 
-  // Handle strict mode where the query ref might be disposed when useEffect
-  // runs twice. We add the queryRef back in the suspense cache so that the next
-  // render will reuse this queryRef rather than initializing a new instance.
-  // This also prevents issues where rerendering useBackgroundQuery after the
-  // queryRef has been disposed, either automatically or by unmounting
-  // useReadQuery will ensure the same queryRef is maintained.
+  // This prevents issues where rerendering useBackgroundQuery after the
+  // queryRef has been disposed would cause the hook to return a new queryRef
+  // instance since disposal also removes it from the suspense cache. We add
+  // the queryRef back in the suspense cache so that the next render will reuse
+  // this queryRef rather than initializing a new instance.
   React.useEffect(() => {
-    if (queryRef.disposed) {
-      suspenseCache.add(cacheKey, queryRef);
-    }
+    // Since the queryRef is disposed async via `setTimeout`, we have to wait a
+    // tick before checking it and adding back to the suspense cache.
+    const id = setTimeout(() => {
+      if (queryRef.disposed) {
+        suspenseCache.add(cacheKey, queryRef);
+      }
+    });
+
+    return () => clearTimeout(id);
     // Omitting the deps is intentional. This avoids stale closures and the
     // conditional ensures we aren't running the logic on each render.
   });
@@ -279,6 +287,12 @@ function _useBackgroundQuery<
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,
-    { fetchMore, refetch },
+    {
+      fetchMore,
+      refetch,
+      // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
+      subscribeToMore: queryRef.observable
+        .subscribeToMore as SubscribeToMoreFunction<TData, TVariables>,
+    },
   ];
 }

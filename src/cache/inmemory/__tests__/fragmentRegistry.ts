@@ -1,7 +1,7 @@
 import { ApolloClient, ApolloLink, gql, NetworkStatus } from "../../../core";
 import { getFragmentDefinitions, Observable } from "../../../utilities";
 import { InMemoryCache, createFragmentRegistry } from "../../index";
-import { itAsync, subscribeAndCount } from "../../../testing";
+import { ObservableStream } from "../../../testing/internal";
 
 describe("FragmentRegistry", () => {
   it("can be passed to InMemoryCache", () => {
@@ -38,7 +38,7 @@ describe("FragmentRegistry", () => {
     });
   });
 
-  itAsync("influences ApolloClient and ApolloLink", (resolve, reject) => {
+  it("influences ApolloClient and ApolloLink", async () => {
     const cache = new InMemoryCache({
       fragments: createFragmentRegistry(gql`
         fragment SourceFragment on Query {
@@ -86,42 +86,31 @@ describe("FragmentRegistry", () => {
       },
     });
 
-    subscribeAndCount(
-      reject,
-      client.watchQuery({
-        query,
-        fetchPolicy: "cache-and-network",
-      }),
-      (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {
-              __typename: "Query",
-              source: "local",
-            },
-          });
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              __typename: "Query",
-              source: "link",
-            },
-          });
-
-          expect(cache.readQuery({ query })).toEqual({
-            source: "link",
-          });
-
-          setTimeout(resolve, 10);
-        } else {
-          reject(`Unexpectedly many results (${count})`);
-        }
-      }
+    const stream = new ObservableStream(
+      client.watchQuery({ query, fetchPolicy: "cache-and-network" })
     );
+
+    await expect(stream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {
+        __typename: "Query",
+        source: "local",
+      },
+    });
+
+    await expect(stream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        __typename: "Query",
+        source: "link",
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      source: "link",
+    });
   });
 
   it("throws an error when not all used fragments are defined", () => {

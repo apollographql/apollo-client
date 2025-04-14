@@ -1,11 +1,12 @@
 import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
-import type { ExecutionResult, DocumentNode } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform, Observable } from "../utilities/index.js";
+import type { DocumentTransform } from "../utilities/index.js";
+import type { Observable } from "../utilities/index.js";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";
@@ -39,6 +40,22 @@ export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;
   mutate?: Partial<MutationOptions<any, any, any>>;
+}
+
+export interface DevtoolsOptions {
+  /**
+   * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
+   *
+   * The default value is `false` in production and `true` in development if there is a `window` object.
+   */
+  enabled?: boolean;
+
+  /**
+   * Optional name for this `ApolloClient` instance in the devtools. This is
+   * useful when you instantiate multiple clients and want to be able to
+   * identify them by name.
+   */
+  name?: string;
 }
 
 let hasSuggestedDevtools = false;
@@ -85,6 +102,7 @@ export interface ApolloClientOptions<TCacheShape> {
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to Apollo Client.
    *
    * The default value is `false` in production and `true` in development (if there is a `window` object).
+   * @deprecated Please use the `devtools.enabled` option.
    */
   connectToDevTools?: boolean;
   /**
@@ -120,6 +138,20 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   version?: string;
   documentTransform?: DocumentTransform;
+
+  /**
+   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+   *
+   * @since 3.11.0
+   */
+  devtools?: DevtoolsOptions;
+
+  /**
+   * Determines if data masking is enabled for the client.
+   *
+   * @defaultValue false
+   */
+  dataMasking?: boolean;
 }
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -128,6 +160,11 @@ export interface ApolloClientOptions<TCacheShape> {
 // solution is to reexport mergeOptions where it was previously declared (here).
 import { mergeOptions } from "../utilities/index.js";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
+import type {
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "../cache/core/cache.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -144,6 +181,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
   public readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
+  public readonly devtoolsConfig: DevtoolsOptions;
 
   private queryManager: QueryManager<TCacheShape>;
   private devToolsHookCb?: Function;
@@ -197,9 +235,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       // Expose the client instance as window.__APOLLO_CLIENT__ and call
       // onBroadcast in queryManager.broadcastQueries to enable browser
       // devtools, but disable them by default in production.
-      connectToDevTools = typeof window === "object" &&
-        !(window as any).__APOLLO_CLIENT__ &&
-        __DEV__,
+      connectToDevTools,
       queryDeduplication = true,
       defaultOptions,
       defaultContext,
@@ -209,6 +245,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
+      devtools,
+      dataMasking,
     } = options;
 
     let { link } = options;
@@ -224,6 +262,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || Object.create(null);
     this.typeDefs = typeDefs;
+    this.devtoolsConfig = {
+      ...devtools,
+      enabled: devtools?.enabled ?? connectToDevTools,
+    };
+
+    if (this.devtoolsConfig.enabled === undefined) {
+      this.devtoolsConfig.enabled = __DEV__;
+    }
 
     if (ssrForceFetchDelay) {
       setTimeout(
@@ -235,6 +281,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.watchQuery = this.watchQuery.bind(this);
     this.query = this.query.bind(this);
     this.mutate = this.mutate.bind(this);
+    this.watchFragment = this.watchFragment.bind(this);
     this.resetStore = this.resetStore.bind(this);
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
@@ -255,6 +302,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       documentTransform,
       queryDeduplication,
       ssrMode,
+      dataMasking: !!dataMasking,
       clientAwareness: {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,
@@ -262,7 +310,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       localState: this.localState,
       assumeImmutableResults,
       onBroadcast:
-        connectToDevTools ?
+        this.devtoolsConfig.enabled ?
           () => {
             if (this.devToolsHookCb) {
               this.devToolsHookCb({
@@ -278,60 +326,63 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         : void 0,
     });
 
-    if (connectToDevTools) this.connectToDevTools();
+    if (this.devtoolsConfig.enabled) this.connectToDevTools();
   }
 
   private connectToDevTools() {
-    if (typeof window === "object") {
-      type DevToolsConnector = {
-        push(client: ApolloClient<any>): void;
-      };
-      const windowWithDevTools = window as Window & {
-        [devtoolsSymbol]?: DevToolsConnector;
-        __APOLLO_CLIENT__?: ApolloClient<any>;
-      };
-      const devtoolsSymbol = Symbol.for("apollo.devtools");
-      (windowWithDevTools[devtoolsSymbol] =
-        windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
-        this
-      );
-      windowWithDevTools.__APOLLO_CLIENT__ = this;
+    if (typeof window === "undefined") {
+      return;
     }
+
+    type DevToolsConnector = {
+      push(client: ApolloClient<any>): void;
+    };
+    const windowWithDevTools = window as Window & {
+      [devtoolsSymbol]?: DevToolsConnector;
+      __APOLLO_CLIENT__?: ApolloClient<any>;
+    };
+    const devtoolsSymbol = Symbol.for("apollo.devtools");
+    (windowWithDevTools[devtoolsSymbol] =
+      windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
+      this
+    );
+    windowWithDevTools.__APOLLO_CLIENT__ = this;
 
     /**
      * Suggest installing the devtools for developers who don't have them
      */
     if (!hasSuggestedDevtools && __DEV__) {
       hasSuggestedDevtools = true;
-      setTimeout(() => {
-        if (
-          typeof window !== "undefined" &&
-          window.document &&
-          window.top === window.self &&
-          !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__
-        ) {
-          const nav = window.navigator;
-          const ua = nav && nav.userAgent;
-          let url: string | undefined;
-          if (typeof ua === "string") {
-            if (ua.indexOf("Chrome/") > -1) {
-              url =
-                "https://chrome.google.com/webstore/detail/" +
-                "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
-            } else if (ua.indexOf("Firefox/") > -1) {
-              url =
-                "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
+      if (
+        window.document &&
+        window.top === window.self &&
+        /^(https?|file):$/.test(window.location.protocol)
+      ) {
+        setTimeout(() => {
+          if (!(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__) {
+            const nav = window.navigator;
+            const ua = nav && nav.userAgent;
+            let url: string | undefined;
+            if (typeof ua === "string") {
+              if (ua.indexOf("Chrome/") > -1) {
+                url =
+                  "https://chrome.google.com/webstore/detail/" +
+                  "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
+              } else if (ua.indexOf("Firefox/") > -1) {
+                url =
+                  "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
+              }
+            }
+            if (url) {
+              invariant.log(
+                "Download the Apollo DevTools for a better development " +
+                  "experience: %s",
+                url
+              );
             }
           }
-          if (url) {
-            invariant.log(
-              "Download the Apollo DevTools for a better development " +
-                "experience: %s",
-              url
-            );
-          }
-        }
-      }, 10000);
+        }, 10000);
+      }
     }
   }
 
@@ -355,7 +406,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * This watches the cache store of the query according to the options specified and
    * returns an `ObservableQuery`. We can subscribe to this `ObservableQuery` and
-   * receive updated results through a GraphQL observer when the cache store changes.
+   * receive updated results through an observer when the cache store changes.
    *
    * Note that this method is not an implementation of GraphQL subscriptions. Rather,
    * it uses Apollo's store in order to reactively deliver updates to your query results.
@@ -403,7 +454,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public query<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<T>> {
+  >(
+    options: QueryOptions<TVariables, T>
+  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -438,7 +491,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<TData>> {
+  ): Promise<FetchResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
@@ -454,8 +507,22 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public subscribe<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>> {
-    return this.queryManager.startGraphQLSubscription<T>(options);
+  >(
+    options: SubscriptionOptions<TVariables, T>
+  ): Observable<FetchResult<MaybeMasked<T>>> {
+    const id = this.queryManager.generateQueryId();
+
+    return this.queryManager
+      .startGraphQLSubscription<T>(options)
+      .map((result) => ({
+        ...result,
+        data: this.queryManager.maskOperation({
+          document: options.query,
+          data: result.data,
+          fetchPolicy: options.fetchPolicy,
+          id,
+        }),
+      }));
   }
 
   /**
@@ -470,8 +537,37 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readQuery<T = any, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false
-  ): T | null {
+  ): Unmasked<T> | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
+  }
+
+  /**
+   * Watches the cache store of the fragment according to the options specified
+   * and returns an `Observable`. We can subscribe to this
+   * `Observable` and receive updated results through an
+   * observer when the cache store changes.
+   *
+   * You must pass in a GraphQL document with a single fragment or a document
+   * with multiple fragments that represent what you are reading. If you pass
+   * in a document with multiple fragments then you must also specify a
+   * `fragmentName`.
+   *
+   * @since 3.10.0
+   * @param options - An object of type `WatchFragmentOptions` that allows
+   * the cache to identify the fragment and optionally specify whether to react
+   * to optimistic updates.
+   */
+
+  public watchFragment<
+    TFragmentData = unknown,
+    TVariables = OperationVariables,
+  >(
+    options: WatchFragmentOptions<TFragmentData, TVariables>
+  ): Observable<WatchFragmentResult<TFragmentData>> {
+    return this.cache.watchFragment({
+      ...options,
+      [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
+    });
   }
 
   /**
@@ -491,7 +587,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readFragment<T = any, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
-  ): T | null {
+  ): Unmasked<T> | null {
     return this.cache.readFragment<T, TVariables>(options, optimistic);
   }
 
@@ -539,7 +635,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.devToolsHookCb = cb;
   }
 
-  public __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult> {
+  public __requestRaw(
+    payload: GraphQLRequest
+  ): Observable<FormattedExecutionResult> {
     return execute(this.link, payload);
   }
 

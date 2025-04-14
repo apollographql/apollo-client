@@ -1,6 +1,6 @@
-# 🔮 Apollo Client Roadmap
+# 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-04-22**
+**Last updated: 2025-04-11**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,18 +13,45 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.10.0](https://github.com/apollographql/apollo-client/milestone/33) - April 24th, 2024
+## In progress
 
-- Core `watchFragment` API to provide `useFragment`-like functionality for non-React envs
-- schema-driven testing utilities
+### Apollo Client
 
-## Upcoming features
+#### 3.14.0 - May 20th, 2025
+_Release candidate - May 15th, 2025
 
-- Data masking
-- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
-- leaner client (under alternate entry point)
-- Better types for `useQuery`/`useMutation`/`useSubscription`
+- 4.0 compatibility release/deprecations
 
-## 4.0
+#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - June 10th, 2025
+_Release candidate - May 15th 2025_
 
-- `Release 4.0` will be our next major release of the Client and is still in early planning.  See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.
+### GraphQL Testing Library
+
+- New documentation
+- Subscription support
+
+_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+
+### VSCode Extension
+
+_No outstanding work_
+
+### GraphQL Tag
+
+- `Release 3.0` will be our next major release of `graphql-tag` and is still in planning. See Github [3.0 Milestone](https://github.com/apollographql/graphql-tag/milestone/3) for more details.
+
+### Apollo Client DevTools
+
+- Memory panel
+
+_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
+
+### Apollo Client React Framework Integrations
+
+- New/more robust documentation
+
+**TanStack Start**
+- Support for Apollo Client Streaming in TanStack Router - will stay alpha
+
+**React Router**
+- Support for Apollo Client Streaming in React Router 7 - will stay alpha

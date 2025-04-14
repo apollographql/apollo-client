@@ -1,8 +1,15 @@
-import type { CommonCache } from "@wry/caches";
 import { WeakCache, StrongCache } from "@wry/caches";
 
-const scheduledCleanup = new WeakSet<CommonCache<any, any>>();
-function schedule(cache: CommonCache<any, any>) {
+interface CleanableCache {
+  size: number;
+  max?: number;
+  clean: () => void;
+}
+const scheduledCleanup = new WeakSet<CleanableCache>();
+function schedule(cache: CleanableCache) {
+  if (cache.size <= (cache.max || -1)) {
+    return;
+  }
   if (!scheduledCleanup.has(cache)) {
     scheduledCleanup.add(cache);
     setTimeout(() => {
@@ -14,7 +21,7 @@ function schedule(cache: CommonCache<any, any>) {
 /**
  * @internal
  * A version of WeakCache that will auto-schedule a cleanup of the cache when
- * a new item is added.
+ * a new item is added and the cache reached maximum size.
  * Throttled to once per 100ms.
  *
  * @privateRemarks
@@ -35,8 +42,9 @@ export const AutoCleanedWeakCache = function (
   */
   const cache = new WeakCache(max, dispose);
   cache.set = function (key: any, value: any) {
-    schedule(this);
-    return WeakCache.prototype.set.call(this, key, value);
+    const ret = WeakCache.prototype.set.call(this, key, value);
+    schedule(this as any as CleanableCache);
+    return ret;
   };
   return cache;
 } as any as typeof WeakCache;
@@ -48,7 +56,7 @@ export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 /**
  * @internal
  * A version of StrongCache that will auto-schedule a cleanup of the cache when
- * a new item is added.
+ * a new item is added and the cache reached maximum size.
  * Throttled to once per 100ms.
  *
  * @privateRemarks
@@ -69,8 +77,9 @@ export const AutoCleanedStrongCache = function (
   */
   const cache = new StrongCache(max, dispose);
   cache.set = function (key: any, value: any) {
-    schedule(this);
-    return StrongCache.prototype.set.call(this, key, value);
+    const ret = StrongCache.prototype.set.call(this, key, value);
+    schedule(this as any as CleanableCache);
+    return ret;
   };
   return cache;
 } as any as typeof StrongCache;

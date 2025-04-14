@@ -3,7 +3,7 @@
 import type { TypedDocumentNode } from "@apollo/client";
 import { gql, useQuery } from "@apollo/client";
 import type { GetStaticProps } from "next";
-import { addApolloState, initializeApollo } from "@/libs/apolloClient";
+import { addApolloState, initializeApollo } from "@/libs/apolloClient.ts";
 
 const QUERY: TypedDocumentNode<{
   products: {

@@ -154,7 +154,7 @@ if (error) return `Submission error! ${error.message}`;
 
 ### Resetting mutation status
 
-The mutation result object returned by `useMutation` includes a [`reset` function](#reset):
+The mutation result object returned by `useMutation` includes a [`reset` function](#mutationresult-interface-reset):
 
 ```js
 const [login, { data, loading, error, reset }] = useMutation(LOGIN_MUTATION);

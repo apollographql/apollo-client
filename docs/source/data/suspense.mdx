@@ -437,7 +437,7 @@ function Dog({ id, queryRef }: DogProps) {
 }
 
 interface BreedsProps {
-  queryRef: QueryReference<BreedData>;
+  queryRef: QueryRef<BreedData>;
 }
 
 function Breeds({ queryRef }: BreedsProps) {
@@ -535,12 +535,6 @@ We begin fetching our `GET_DOG_QUERY` by calling the `loadDog` function inside o
 
 </MinVersion>
 
-<ExperimentalFeature>
-
-This feature is in [alpha](https://www.apollographql.com/docs/resources/product-launch-stages/#alpha--beta) in version `3.9.0` and is subject to change before `3.10.0`. We consider this feature production-ready, but it may change depending on feedback. If you'd like to provide feedback before it is stabilized in `3.10.0`, please comment on [#11519](https://github.com/apollographql/apollo-client/issues/11519).
-
-</ExperimentalFeature>
-
 Starting with Apollo Client `3.9.0`, queries can be initiated outside of React. This allows your app to begin fetching data before React renders your components, and can provide performance benefits.
 
 To preload queries, you first need to create a preload function with `createQueryPreloader`. `createQueryPreloader` takes an `ApolloClient` instance as an argument and returns a function that, when called, initiates a network request.
@@ -570,7 +564,7 @@ const preloadedQueryRef = preloadQuery(GET_DOGS_QUERY);
 
 function App() {
   const { data } = useReadQuery(preloadedQueryRef);
-  const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
+  const [loadDog, queryRef] = useLoadableQuery(GET_DOG_QUERY)
 
   return (
     <>
@@ -677,12 +671,6 @@ export function RouteComponent() {
 
 This instructs React Router to wait for the query to finish loading before the route transitions. When the route transitions after the promise resolves, the data is rendered immediately without the need to show a loading fallback in the route component.
 
-<ExperimentalFeature>
-
-`queryRef.toPromise` is [experimental](https://www.apollographql.com/docs/resources/product-launch-stages/#experimental-features) in version `3.9.0` and is subject to breaking changes before `3.10.0`. If you'd like to provide feedback for this feature before it is stabilized in `3.10.0`, please comment on [#11519](https://github.com/apollographql/apollo-client/issues/11519).
-
-</ExperimentalFeature>
-
 #### Why prevent access to `data` in `toPromise`?
 
 You may be wondering why we resolve `toPromise` with the `queryRef` itself, rather than the data loaded from the query. We want to encourage you to leverage `useReadQuery` to avoid missing out on cache updates for your query. If `data` were available, it would be tempting to consume it in your `loader` functions and expose it to your route components. Doing so means missing out on cache updates.
@@ -703,7 +691,7 @@ import {
   useReadQuery,
   gql,
   TypedDocumentNode,
-  QueryReference,
+  QueryRef,
 } from "@apollo/client";
 
 function App() {
@@ -877,7 +865,7 @@ For more information, see the [`useSuspenseQuery`](../api/react/hooks/#usesuspen
 While `useSuspenseQuery` and `useBackgroundQuery` both have a `skip` option, that option is only present to ease migration from `useQuery` with as few code changes as possible.
 It should not be used in the long term.
 
-Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken`):
+Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken):
 
 ```js title="Recommended usage of skipToken with useSuspenseQuery"
 import { skipToken, useSuspenseQuery } from '@apollo/client';

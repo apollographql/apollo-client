@@ -73,3 +73,5 @@ esbuild-why-*.html
 
 .yalc
 yalc.lock
+
+.attest

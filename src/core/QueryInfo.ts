@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLError } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -6,17 +6,16 @@ import { DeepMerger } from "../utilities/index.js";
 import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import {
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
 } from "../utilities/index.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import { NetworkStatus } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
+import type { Unmasked } from "../masking/index.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -56,13 +55,6 @@ function wrapDestructiveCacheMethod(
   }
 }
 
-function cancelNotifyTimeout(info: QueryInfo) {
-  if (info["notifyTimeout"]) {
-    clearTimeout(info["notifyTimeout"]);
-    info["notifyTimeout"] = void 0;
-  }
-}
-
 // A QueryInfo object represents a single query managed by the
 // QueryManager, which tracks all QueryInfo objects by queryId in its
 // this.queries Map. QueryInfo objects store the latest results and errors
@@ -76,15 +68,15 @@ function cancelNotifyTimeout(info: QueryInfo) {
 // many public fields. The effort to lock down and simplify the QueryInfo
 // interface is ongoing, and further improvements are welcome.
 export class QueryInfo {
-  listeners = new Set<QueryListener>();
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   stopped = false;
 
+  private cancelWatch?: () => void;
   private cache: ApolloCache<any>;
 
   constructor(
@@ -127,6 +119,8 @@ export class QueryInfo {
 
     if (!equal(query.variables, this.variables)) {
       this.lastDiff = void 0;
+      // Ensure we don't continue to receive cache updates for old variables
+      this.cancel();
     }
 
     Object.assign(this, {
@@ -146,15 +140,6 @@ export class QueryInfo {
     }
 
     return this;
-  }
-
-  private dirty: boolean = false;
-
-  private notifyTimeout?: ReturnType<typeof setTimeout>;
-
-  reset() {
-    cancelNotifyTimeout(this);
-    this.dirty = false;
   }
 
   resetDiff() {
@@ -211,100 +196,33 @@ export class QueryInfo {
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
 
-    // If we do not tolerate partial results, skip this update to prevent it
-    // from being reported. This prevents a situtuation where a query that
-    // errors and another succeeds with overlapping data does not report the
-    // partial data result to the errored query.
+    // If we are trying to deliver an incomplete cache result, we avoid
+    // reporting it if the query has errored, otherwise we let the broadcast try
+    // and repair the partial result by refetching the query. This check avoids
+    // a situation where a query that errors and another succeeds with
+    // overlapping data does not report the partial data result to the errored
+    // query.
     //
     // See https://github.com/apollographql/apollo-client/issues/11400 for more
     // information on this issue.
-    if (
-      diff &&
-      !diff.complete &&
-      !this.observableQuery?.options.returnPartialData &&
-      // In the case of a cache eviction, the diff will become partial so we
-      // schedule a notification to send a network request (this.oqListener) to
-      // go and fetch the missing data.
-      !(oldDiff && oldDiff.complete)
-    ) {
+    if (diff && !diff.complete && this.observableQuery?.getLastError()) {
       return;
     }
 
     this.updateLastDiff(diff);
 
-    if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.dirty = true;
-      if (!this.notifyTimeout) {
-        this.notifyTimeout = setTimeout(() => this.notify(), 0);
-      }
+    if (!equal(oldDiff && oldDiff.result, diff && diff.result)) {
+      this.observableQuery?.["scheduleNotify"]();
     }
   }
 
   public readonly observableQuery: ObservableQuery<any, any> | null = null;
-  private oqListener?: QueryListener;
-
   setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
-
-    if (this.oqListener) {
-      this.listeners.delete(this.oqListener);
-    }
-
     (this as any).observableQuery = oq;
-
     if (oq) {
       oq["queryInfo"] = this;
-      this.listeners.add(
-        (this.oqListener = () => {
-          const diff = this.getDiff();
-          if (diff.fromOptimisticTransaction) {
-            // If this diff came from an optimistic transaction, deliver the
-            // current cache data to the ObservableQuery, but don't perform a
-            // reobservation, since oq.reobserveCacheFirst might make a network
-            // request, and we never want to trigger network requests in the
-            // middle of optimistic updates.
-            oq["observe"]();
-          } else {
-            // Otherwise, make the ObservableQuery "reobserve" the latest data
-            // using a temporary fetch policy of "cache-first", so complete cache
-            // results have a chance to be delivered without triggering additional
-            // network requests, even when options.fetchPolicy is "network-only"
-            // or "cache-and-network". All other fetch policies are preserved by
-            // this method, and are handled by calling oq.reobserve(). If this
-            // reobservation is spurious, isDifferentFromLastResult still has a
-            // chance to catch it before delivery to ObservableQuery subscribers.
-            reobserveCacheFirst(oq);
-          }
-        })
-      );
-    } else {
-      delete this.oqListener;
     }
-  }
-
-  notify() {
-    cancelNotifyTimeout(this);
-
-    if (this.shouldNotify()) {
-      this.listeners.forEach((listener) => listener(this));
-    }
-
-    this.dirty = false;
-  }
-
-  private shouldNotify() {
-    if (!this.dirty || !this.listeners.size) {
-      return false;
-    }
-
-    if (isNetworkRequestInFlight(this.networkStatus) && this.observableQuery) {
-      const { fetchPolicy } = this.observableQuery.options;
-      if (fetchPolicy !== "cache-only" && fetchPolicy !== "cache-and-network") {
-        return false;
-      }
-    }
-
-    return true;
   }
 
   public stop() {
@@ -312,21 +230,18 @@ export class QueryInfo {
       this.stopped = true;
 
       // Cancel the pending notify timeout
-      this.reset();
-
+      this.observableQuery?.["resetNotifications"]();
       this.cancel();
-      // Revert back to the no-op version of cancel inherited from
-      // QueryInfo.prototype.
-      this.cancel = QueryInfo.prototype.cancel;
 
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();
     }
   }
 
-  // This method is a no-op by default, until/unless overridden by the
-  // updateWatch method.
-  private cancel() {}
+  private cancel() {
+    this.cancelWatch?.();
+    this.cancelWatch = void 0;
+  }
 
   private lastWatch?: Cache.WatchOptions;
 
@@ -347,7 +262,7 @@ export class QueryInfo {
 
     if (!this.lastWatch || !equal(watchOptions, this.lastWatch)) {
       this.cancel();
-      this.cancel = this.cache.watch((this.lastWatch = watchOptions));
+      this.cancelWatch = this.cache.watch((this.lastWatch = watchOptions));
     }
   }
 
@@ -392,7 +307,7 @@ export class QueryInfo {
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
-    this.reset();
+    this.observableQuery?.["resetNotifications"]();
 
     if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(this.getDiff().result, result);
@@ -425,7 +340,7 @@ export class QueryInfo {
           if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
               query: document,
-              data: result.data as T,
+              data: result.data as Unmasked<T>,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
             });
@@ -518,7 +433,7 @@ export class QueryInfo {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
 
-    this.reset();
+    this.observableQuery?.["resetNotifications"]();
 
     if (error.graphQLErrors) {
       this.graphQLErrors = error.graphQLErrors;

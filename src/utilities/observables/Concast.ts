@@ -256,7 +256,7 @@ export class Concast<T> extends Observable<T> {
   public cancel = (reason: any) => {
     this.reject(reason);
     this.sources = [];
-    this.handlers.complete();
+    this.handlers.error(reason);
   };
 }
 

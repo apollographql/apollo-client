@@ -776,7 +776,7 @@ export class QueryManager {
   public getVariables<TVariables>(
     document: DocumentNode,
     variables?: TVariables
-  ): OperationVariables {
+  ): TVariables {
     const defaultVars = this.getDocumentInfo(document).defaultVars;
     const varsWithDefaults = Object.entries(variables ?? {}).map(
       ([key, value]) => [key, value === undefined ? defaultVars[key] : value]

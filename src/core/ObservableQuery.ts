@@ -514,10 +514,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (variables && !equal(this.options.variables, variables)) {
       // Update the existing options with new variables
       reobserveOptions.variables = this.options.variables =
-        this.queryManager.getVariables(this.query, {
+        this.getVariablesWithDefaults({
           ...this.options.variables,
           ...variables,
-        }) as TVariables;
+        } as TVariables);
     }
 
     this.queryInfo.resetLastWrite();
@@ -788,7 +788,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public async setVariables(
     variables: TVariables
   ): Promise<QueryResult<TData>> {
-    variables = this.queryManager.getVariables(this.query, variables);
+    variables = this.getVariablesWithDefaults(variables);
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
@@ -1063,12 +1063,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.lastQuery = query;
 
     // Allow variables to get reevaluated when passing variables: undefined,
-    // otherwise `compact` will ignore the `variables` key. Note: This may
-    // mutate this.options.variables when not using a disposable observable.
-    // This is intentional
+    // otherwise `compact` will ignore the `variables` key. We do this after we
+    // run the query transform to ensure we get default variables from the
+    // transformed query.
     options.variables =
       newOptions && "variables" in newOptions ?
-        this.queryManager.getVariables(query, newOptions.variables)
+        this.getVariablesWithDefaults(newOptions.variables)
       : options.variables;
 
     if (!useDisposableObservable) {
@@ -1361,6 +1361,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.reobserve();
+  }
+
+  private getVariablesWithDefaults(variables: TVariables | undefined) {
+    return this.queryManager.getVariables(this.query, variables);
   }
 }
 

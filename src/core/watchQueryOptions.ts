@@ -4,7 +4,11 @@ import type { DocumentNode } from "graphql";
 import type { ApolloCache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
-import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
+import type {
+  DeepPartial,
+  NoInfer,
+  VariablesOption,
+} from "@apollo/client/utilities";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 
@@ -87,10 +91,10 @@ export interface QueryOptions<
 /**
  * Watched query options.
  */
-export interface WatchQueryOptions<
+export type WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = unknown,
-> {
+> = {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: WatchQueryFetchPolicy;
 
@@ -108,9 +112,6 @@ export interface WatchQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: NoInfer<TVariables>;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
@@ -132,7 +133,7 @@ export interface WatchQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
+} & VariablesOption<NoInfer<TVariables>>;
 
 export interface NextFetchPolicyContext<
   TData,

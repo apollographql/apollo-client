@@ -2,9 +2,11 @@ import type { GraphQLFormattedError } from "graphql";
 
 import { brand, isBranded } from "./utils.js";
 
-export type CombinedGraphQLErrorsMessageFormatter = (
-  errors: ReadonlyArray<GraphQLFormattedError>
-) => string;
+export declare namespace CombinedProtocolErrors {
+  export type MessageFormatter = (
+    errors: ReadonlyArray<GraphQLFormattedError>
+  ) => string;
+}
 
 /**
  * Fatal transport-level errors returned when executing a subscription using the
@@ -17,7 +19,7 @@ export class CombinedProtocolErrors extends Error {
     return isBranded(error, "CombinedProtocolErrors");
   }
 
-  static formatMessage: CombinedGraphQLErrorsMessageFormatter = (errors) => {
+  static formatMessage: CombinedProtocolErrors.MessageFormatter = (errors) => {
     return errors
       .map((e) => e.message || "Error message not found.")
       .join("\n");

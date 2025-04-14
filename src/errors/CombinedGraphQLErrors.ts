@@ -5,10 +5,12 @@ import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
 
 import { brand, isBranded } from "./utils.js";
 
-export type CombinedGraphQLErrorsMessageFormatter = (
-  errors: ReadonlyArray<GraphQLFormattedError>,
-  result: FetchResult<unknown>
-) => string;
+export declare namespace CombinedGraphQLErrors {
+  export type MessageFormatter = (
+    errors: ReadonlyArray<GraphQLFormattedError>,
+    result: FetchResult<unknown>
+  ) => string;
+}
 
 /**
  * Represents the combined list of GraphQL errors returned from the server in a
@@ -24,7 +26,7 @@ export class CombinedGraphQLErrors extends Error {
    * Formats the error message used for the error `message` property. Override
    * to provide your own formatting.
    */
-  static formatMessage: CombinedGraphQLErrorsMessageFormatter = (errors) => {
+  static formatMessage: CombinedGraphQLErrors.MessageFormatter = (errors) => {
     return (
       errors
         // Handle non-spec-compliant servers: See #1185

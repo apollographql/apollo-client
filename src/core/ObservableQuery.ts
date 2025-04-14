@@ -1057,6 +1057,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const query = this.transformDocument(options.query);
     const { fetchPolicy } = options;
 
+    // Allow variables to get reevaluated when passing variables: undefined,
+    // otherwise `compact` will ignore the `variables` key.
+    options.variables =
+      newOptions && "variables" in newOptions ?
+        (this.queryManager.getVariables(
+          query,
+          newOptions.variables
+        ) as TVariables)
+      : options.variables;
+
     this.lastQuery = query;
 
     if (!useDisposableObservable) {

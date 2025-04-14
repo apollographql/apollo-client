@@ -773,7 +773,7 @@ export class QueryManager {
     return transformCache.get(document)!;
   }
 
-  private getVariables<TVariables>(
+  public getVariables<TVariables>(
     document: DocumentNode,
     variables?: TVariables
   ): OperationVariables {

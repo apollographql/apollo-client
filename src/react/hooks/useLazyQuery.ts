@@ -22,8 +22,11 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import type { VariablesOption } from "@apollo/client/react/internal";
-import type { NoInfer, OnlyRequiredProperties } from "@apollo/client/utilities";
+import type {
+  NoInfer,
+  OnlyRequiredProperties,
+  VariablesOption,
+} from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 

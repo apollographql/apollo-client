@@ -146,6 +146,7 @@ export type { Primitive } from "./types/Primitive.js";
 export type { UnionToIntersection } from "./types/UnionToIntersection.js";
 export type { NoInfer } from "./types/NoInfer.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
+export type { VariablesOption } from "./types/VariablesOption.js";
 
 export {
   AutoCleanedStrongCache,

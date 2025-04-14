@@ -2418,7 +2418,6 @@ describe("ObservableQuery", () => {
         // It's a common mistake to call refetch({ variables }) when you meant
         // to call refetch(variables).
         const promise = observableWithVarsVar.refetch({
-          // @ts-expect-error
           variables: { vars: ["d", "e"] },
         });
 

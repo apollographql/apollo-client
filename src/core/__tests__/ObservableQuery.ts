@@ -1465,7 +1465,11 @@ describe("ObservableQuery", () => {
           },
         ]),
       });
-      const observable = client.watchQuery({ query });
+      const observable = client.watchQuery({
+        query,
+        // Ensure we don't get another network request
+        fetchPolicy: "network-only",
+      });
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({

@@ -9,6 +9,7 @@ import { delay, from, Observable, of, Subject } from "rxjs";
 import type {
   ApolloQueryResult,
   ObservableQuery,
+  OperationVariables,
   WatchQueryFetchPolicy,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
@@ -5649,8 +5650,50 @@ describe(".variables", () => {
   });
 });
 
-test.skip("type test for `from`", () => {
-  expectTypeOf<
-    ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>
-  >().toEqualTypeOf<ApolloQueryResult<{ foo: string }>>();
+describe.skip("type tests", () => {
+  test.skip("type test for `from`", () => {
+    expectTypeOf<
+      ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>
+    >().toEqualTypeOf<ApolloQueryResult<{ foo: string }>>();
+  });
+
+  test(".variables returns OperationVariables with DocumentNode", () => {
+    const query = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const observable = client.watchQuery({ query });
+
+    expectTypeOf(observable.variables).toEqualTypeOf<OperationVariables>();
+  });
+
+  test(".variables returns Record<string, never> with never", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const observable = client.watchQuery({ query });
+
+    expectTypeOf(observable.variables).toEqualTypeOf<Record<string, never>>();
+  });
+
+  test(".variables returns Record<string, never> with Record<string, never>", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const observable = client.watchQuery({ query });
+
+    expectTypeOf(observable.variables).toEqualTypeOf<Record<string, never>>();
+  });
+
+  test(".variables returns TVariables with all other variables type", () => {
+    const query: TypedDocumentNode<{ greeting: string }, { id: string }> =
+      gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const observable = client.watchQuery({ query, variables: { id: "1" } });
+
+    expectTypeOf(observable.variables).toEqualTypeOf<{ id: string }>();
+  });
 });

@@ -5657,25 +5657,75 @@ describe.skip("type tests", () => {
     >().toEqualTypeOf<ApolloQueryResult<{ foo: string }>>();
   });
 
-  test(".variables returns OperationVariables with DocumentNode", () => {
+  test("variables with DocumentNode", () => {
     const query = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     const observable = client.watchQuery({ query });
 
     expectTypeOf(observable.variables).toEqualTypeOf<OperationVariables>();
+
+    observable.setVariables({});
+    observable.setVariables({ foo: "bar" });
+    observable.setVariables({ bar: "baz" });
+
+    observable.refetch();
+    observable.refetch({});
+    observable.refetch({ foo: "bar" });
+    observable.refetch({ foo: "baz" });
+
+    observable.reobserve();
+    observable.reobserve({ variables: {} });
+    observable.reobserve({ variables: { foo: "bar" } });
+    observable.reobserve({ variables: { foo: "baz" } });
+
+    observable.fetchMore({});
+    observable.fetchMore({ variables: {} });
+    observable.fetchMore({ variables: { foo: "bar" } });
+    observable.fetchMore({ variables: { foo: "baz" } });
   });
 
-  test(".variables returns Record<string, never> with never", () => {
+  test("variables with never", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     const observable = client.watchQuery({ query });
 
     expectTypeOf(observable.variables).toEqualTypeOf<Record<string, never>>();
+
+    observable.setVariables({});
+    observable.setVariables({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.refetch();
+    // @ts-expect-error variables not allowed
+    observable.refetch({});
+    // @ts-expect-error unknown variables
+    observable.refetch({ foo: "bar" });
+
+    observable.reobserve();
+    observable.reobserve({ variables: {} });
+    observable.reobserve({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    observable.fetchMore({});
+    observable.fetchMore({
+      // @ts-expect-error unknown variables
+      variables: {},
+    });
+    observable.fetchMore({
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
   });
 
-  test(".variables returns Record<string, never> with Record<string, never>", () => {
+  test("variables with Record<string, never>", () => {
     const query: TypedDocumentNode<
       { greeting: string },
       Record<string, never>
@@ -5685,15 +5735,298 @@ describe.skip("type tests", () => {
     const observable = client.watchQuery({ query });
 
     expectTypeOf(observable.variables).toEqualTypeOf<Record<string, never>>();
+
+    observable.setVariables({});
+    observable.setVariables({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.refetch();
+    observable.refetch({});
+    observable.refetch({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.reobserve();
+    observable.reobserve({ variables: {} });
+    observable.reobserve({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    observable.fetchMore({});
+    observable.fetchMore({
+      variables: {},
+    });
+    observable.fetchMore({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
-  test(".variables returns TVariables with all other variables type", () => {
-    const query: TypedDocumentNode<{ greeting: string }, { id: string }> =
+  test("variables with optional variales", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const observable = client.watchQuery({ query });
+
+    expectTypeOf(observable.variables).toEqualTypeOf<{ limit?: number }>();
+
+    observable.setVariables({});
+    observable.setVariables({ limit: 10 });
+    observable.setVariables({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.setVariables({
+      limit: 10,
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.refetch();
+    observable.refetch({});
+    observable.refetch({ limit: 10 });
+    observable.refetch({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.refetch({
+      limit: 10,
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.reobserve();
+    observable.reobserve({ variables: {} });
+    observable.reobserve({ variables: { limit: 10 } });
+    observable.reobserve({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.reobserve({
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    observable.fetchMore({});
+    observable.fetchMore({ variables: {} });
+    observable.fetchMore({ variables: { limit: 10 } });
+    observable.fetchMore({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.fetchMore({
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("variables with required variales", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
       gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     const observable = client.watchQuery({ query, variables: { id: "1" } });
 
     expectTypeOf(observable.variables).toEqualTypeOf<{ id: string }>();
+
+    // @ts-expect-error missing required variable
+    observable.setVariables({});
+    observable.setVariables({ id: "1" });
+    observable.setVariables({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.setVariables({
+      id: "1",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.refetch();
+    observable.refetch({});
+    observable.refetch({ id: "1" });
+    observable.refetch({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.refetch({
+      id: "1",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.reobserve();
+    observable.reobserve({
+      // @ts-expect-error missing required variable
+      variables: {},
+    });
+    observable.reobserve({ variables: { id: "1" } });
+    observable.reobserve({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.reobserve({
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    observable.fetchMore({});
+    observable.fetchMore({ variables: {} });
+    observable.fetchMore({ variables: { id: "1" } });
+    observable.fetchMore({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.fetchMore({
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("variables with mixed required and optional", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const observable = client.watchQuery({ query, variables: { id: "1" } });
+
+    expectTypeOf(observable.variables).toEqualTypeOf<{
+      id: string;
+      language?: string;
+    }>();
+
+    // @ts-expect-error missing required variable
+    observable.setVariables({});
+    observable.setVariables({ id: "1" });
+    // @ts-expect-error missing required variable
+    observable.setVariables({ language: "en" });
+    observable.setVariables({ id: "1", language: "en" });
+    observable.setVariables({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.setVariables({
+      id: "1",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.setVariables({
+      id: "1",
+      language: "en",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.refetch();
+    observable.refetch({});
+    observable.refetch({ id: "1" });
+    observable.refetch({ language: "en" });
+    observable.refetch({ id: "1", language: "en" });
+    observable.refetch({
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.refetch({
+      id: "1",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+    observable.refetch({
+      id: "1",
+      language: "en",
+      // @ts-expect-error unknown variables
+      foo: "bar",
+    });
+
+    observable.reobserve();
+    observable.reobserve({
+      // @ts-expect-error missing required variable
+      variables: {},
+    });
+    observable.reobserve({ variables: { id: "1" } });
+    observable.reobserve({
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
+    observable.reobserve({ variables: { id: "1", language: "en" } });
+    observable.reobserve({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.reobserve({
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.reobserve({
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    observable.fetchMore({});
+    observable.fetchMore({ variables: {} });
+    observable.fetchMore({ variables: { id: "1" } });
+    observable.fetchMore({ variables: { language: "en" } });
+    observable.fetchMore({ variables: { id: "1", language: "en" } });
+    observable.fetchMore({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.fetchMore({
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    observable.fetchMore({
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 });

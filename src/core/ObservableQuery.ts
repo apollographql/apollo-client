@@ -1065,10 +1065,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // This is intentional
     options.variables =
       newOptions && "variables" in newOptions ?
-        (this.queryManager.getVariables(
-          query,
-          newOptions.variables
-        ) as TVariables)
+        this.queryManager.getVariables(query, newOptions.variables)
       : options.variables;
 
     if (!useDisposableObservable) {

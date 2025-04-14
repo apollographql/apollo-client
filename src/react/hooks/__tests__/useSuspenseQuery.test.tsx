@@ -9563,7 +9563,7 @@ describe("useSuspenseQuery", () => {
         subscriptionData: {
           data: { greetingUpdated: "Subscription hello" },
         },
-        variables: undefined,
+        variables: {},
       }
     );
 

@@ -1234,7 +1234,7 @@ interface MutationStoreValue {
     // (undocumented)
     mutation: DocumentNode_2;
     // (undocumented)
-    variables: Record<string, any> | undefined;
+    variables: Record<string, any>;
 }
 
 // @public @deprecated (undocumented)
@@ -1982,7 +1982,7 @@ export interface WatchQueryOptions<TVariables extends OperationVariables = Opera
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
-    variables?: NoInfer_2<TVariables>;
+    variables?: TVariables;
 }
 
 // @public (undocumented)
@@ -2025,10 +2025,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "FieldReadFunction_2" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldMergeFunction_2" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:143:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:144:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:460:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:140:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:141:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:184:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:454:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

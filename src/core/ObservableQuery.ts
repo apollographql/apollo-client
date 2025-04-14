@@ -1057,6 +1057,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const query = this.transformDocument(options.query);
     const { fetchPolicy } = options;
 
+    this.lastQuery = query;
+
     // Allow variables to get reevaluated when passing variables: undefined,
     // otherwise `compact` will ignore the `variables` key. Note: This may
     // mutate this.options.variables when not using a disposable observable.
@@ -1068,8 +1070,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           newOptions.variables
         ) as TVariables)
       : options.variables;
-
-    this.lastQuery = query;
 
     if (!useDisposableObservable) {
       // We can skip calling updatePolling if we're not changing this.options.

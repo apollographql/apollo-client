@@ -5,6 +5,11 @@ import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
 
 import { brand, isBranded } from "./utils.js";
 
+export type CombinedGraphQLErrorsMessageFormatter = (
+  errors: ReadonlyArray<GraphQLFormattedError>,
+  result: FetchResult<unknown>
+) => string;
+
 /**
  * Represents the combined list of GraphQL errors returned from the server in a
  * GraphQL response.
@@ -14,6 +19,21 @@ export class CombinedGraphQLErrors extends Error {
   static is(error: unknown): error is CombinedGraphQLErrors {
     return isBranded(error, "CombinedGraphQLErrors");
   }
+
+  /**
+   * Formats the error message used for the error `message` property. Override
+   * to provide your own formatting.
+   */
+  static formatMessage: CombinedGraphQLErrorsMessageFormatter = (errors) => {
+    const messageList = errors
+      // Handle non-spec-compliant servers: See #1185
+      .filter((e) => e)
+      .map((e) => `- ${e.message}`)
+      .join("\n");
+
+    return `The GraphQL server returned with errors:
+${messageList}`;
+  };
 
   /**
    * The raw list of GraphQL errors returned in a GraphQL response.
@@ -28,7 +48,7 @@ export class CombinedGraphQLErrors extends Error {
   constructor(result: FetchResult<unknown>) {
     const errors = getGraphQLErrorsFromResult(result);
 
-    super(formatMessage(errors));
+    super(CombinedGraphQLErrors.formatMessage(errors, result));
     this.errors = errors;
     this.data = result.data as Record<string, unknown>;
     this.name = "CombinedGraphQLErrors";
@@ -36,17 +56,4 @@ export class CombinedGraphQLErrors extends Error {
     brand(this);
     Object.setPrototypeOf(this, CombinedGraphQLErrors.prototype);
   }
-}
-
-function formatMessage(
-  errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>
-) {
-  const messageList = errors
-    // Handle non-spec-compliant servers: See #1185
-    .filter((e) => e)
-    .map((e) => `- ${e.message}`)
-    .join("\n");
-
-  return `The GraphQL server returned with errors:
-${messageList}`;
 }

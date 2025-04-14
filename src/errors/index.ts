@@ -53,6 +53,7 @@ export function toErrorLike(error: unknown) {
 
 export type NetworkError = Error | ServerParseError | ServerError | null;
 
+export type { CombinedGraphQLErrorsMessageFormatter } from "./CombinedGraphQLErrors.js";
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 export { ServerError } from "./ServerError.js";

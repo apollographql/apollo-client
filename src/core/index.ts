@@ -52,6 +52,7 @@ export type {
   TypedDocumentNode,
 } from "./types.js";
 export type { FragmentMatcher, Resolver } from "./LocalState.js";
+export type { CombinedGraphQLErrorsMessageFormatter } from "@apollo/client/errors";
 export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,

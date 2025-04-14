@@ -794,7 +794,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return toQueryResult(this.subject.getValue());
     }
 
-    this.options.variables = variables;
+    this.options.variables = this.queryManager.getVariables(
+      this.query,
+      variables
+    );
 
     // See comment above
     if (!this.hasObservers()) {

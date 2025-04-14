@@ -149,7 +149,7 @@ export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: Partial<TVariables>;
+  variables?: Partial<NoInfer<TVariables>>;
   context?: DefaultContext;
 }
 

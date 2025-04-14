@@ -5,13 +5,14 @@ import type { Subscription } from "rxjs";
 import {
   catchError,
   concat,
+  dematerialize,
   EMPTY,
   filter,
   from,
   lastValueFrom,
   map,
+  materialize,
   mergeMap,
-  mergeWith,
   Observable,
   of,
   share,
@@ -91,6 +92,7 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  QueryNotification,
   QueryResult,
   SubscribeResult,
 } from "./types.js";
@@ -709,7 +711,13 @@ export class QueryManager {
         this.getOrCreateQuery(queryId),
         options,
         networkStatus
-      ).observable.pipe(map(toQueryResult)),
+      ).observable.pipe(
+        filter(
+          (value) => value.source === "cache" || value.source === "network"
+        ),
+        dematerialize(),
+        map(toQueryResult)
+      ),
       {
         // This default is needed when a `standby` fetch policy is used to avoid
         // an EmptyError from rejecting this promise.
@@ -1409,7 +1417,7 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
-    let observable: Observable<ApolloQueryResult<TData>>,
+    let observable: Observable<QueryNotification.Value<TData>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1442,7 +1450,8 @@ export class QueryManager {
     return {
       observable: observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(fetchCancelSubject),
+        // TODO
+        //mergeWith(fetchCancelSubject),
         share()
       ),
       fromLink: containsDataFromLink,
@@ -1679,7 +1688,7 @@ export class QueryManager {
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
       networkStatus = newNetworkStatus
-    ) => {
+    ): Observable<QueryNotification.FromCache<TData>> => {
       const data = diff.result;
 
       if (__DEV__ && !returnPartialData && data !== null) {
@@ -1707,7 +1716,13 @@ export class QueryManager {
       };
 
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        return of(toResult(data));
+        return of({
+          kind: "N",
+          value: toResult(data),
+          source: "cache",
+          query,
+          variables,
+        } satisfies QueryNotification.FromCache<TData>);
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
@@ -1727,7 +1742,16 @@ export class QueryManager {
               variables,
               onlyRunForcedResolvers: true,
             })
-            .then((resolved) => toResult(resolved.data || void 0))
+            .then(
+              (resolved) =>
+                ({
+                  kind: "N",
+                  value: toResult(resolved.data || void 0),
+                  source: "cache",
+                  query,
+                  variables,
+                }) satisfies QueryNotification.FromCache<TData>
+            )
         );
       }
 
@@ -1757,6 +1781,17 @@ export class QueryManager {
         CacheWriteBehavior.OVERWRITE
       : CacheWriteBehavior.MERGE;
 
+    const notifyNetworkStatus = () =>
+      of<QueryNotification.NewNetworkStatus>({
+        kind: "N",
+        value: {
+          networkStatus: newNetworkStatus,
+        },
+        source: "newNetworkStatus" as const,
+        query: query,
+        variables: variables,
+      });
+
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         query,
@@ -1764,7 +1799,19 @@ export class QueryManager {
         context,
         fetchPolicy,
         errorPolicy,
-      }).pipe(validateDidEmitValue());
+      }).pipe(
+        validateDidEmitValue(),
+        materialize(),
+        map(
+          (result) =>
+            ({
+              ...result,
+              source: "network",
+              query,
+              variables,
+            }) satisfies QueryNotification.FromNetwork<TData>
+        )
+      );
 
     switch (fetchPolicy) {
       default:
@@ -1778,27 +1825,33 @@ export class QueryManager {
           };
         }
 
-        if (returnPartialData || emitLoadingState) {
+        if (returnPartialData) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: concat(notifyNetworkStatus(), resultsFromLink()),
+        };
       }
 
       case "cache-and-network": {
         const diff = readCache();
 
-        if (diff.complete || returnPartialData || emitLoadingState) {
+        if (diff.complete || returnPartialData) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: concat(notifyNetworkStatus(), resultsFromLink()),
+        };
       }
 
       case "cache-only":
@@ -1810,33 +1863,16 @@ export class QueryManager {
         };
 
       case "network-only":
-        if (emitLoadingState) {
-          return {
-            fromLink: true,
-            observable: concat(
-              resultsFromCache(readCache()),
-              resultsFromLink()
-            ),
-          };
-        }
-
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: concat(notifyNetworkStatus(), resultsFromLink()),
+        };
 
       case "no-cache":
-        if (emitLoadingState) {
-          return {
-            fromLink: true,
-            // Note that queryInfo.getDiff() for no-cache queries does not call
-            // cache.diff, but instead returns a { complete: false } stub result
-            // when there is no queryInfo.diff already defined.
-            observable: concat(
-              resultsFromCache(queryInfo.getDiff()),
-              resultsFromLink()
-            ),
-          };
-        }
-
-        return { fromLink: true, observable: resultsFromLink() };
+        return {
+          fromLink: true,
+          observable: concat(notifyNetworkStatus(), resultsFromLink()),
+        };
 
       case "standby":
         return { fromLink: false, observable: EMPTY };
@@ -1880,5 +1916,5 @@ function validateDidEmitValue<T>() {
 export interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
-  observable: Observable<ApolloQueryResult<TData>>;
+  observable: Observable<QueryNotification.Value<TData>>;
 }

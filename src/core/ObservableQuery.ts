@@ -3,13 +3,12 @@ import type { DocumentNode } from "graphql";
 import { Slot } from "optimism";
 import type {
   InteropObservable,
-  ObservableNotification,
   Observer,
   OperatorFunction,
   Subscribable,
   Subscription,
 } from "rxjs";
-import { merge, Observable, partition } from "rxjs";
+import { merge, Observable } from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -21,8 +20,7 @@ import {
   tap,
 } from "rxjs";
 
-import type { FetchResult } from "@apollo/client";
-import type { Cache, MissingFieldError } from "@apollo/client/cache";
+import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import {
@@ -47,6 +45,7 @@ import type {
   ApolloQueryResult,
   ErrorLike,
   OperationVariables,
+  QueryNotification,
   QueryResult,
   TypedDocumentNode,
 } from "./types.js";
@@ -80,21 +79,6 @@ interface Last<TData, TVariables> {
   variables?: TVariables;
   error?: ErrorLike;
 }
-
-interface Meta {
-  source: "cache" | "network" | "fetchMore";
-  query: DocumentNode;
-  variables: OperationVariables | undefined;
-}
-
-type NetworkTransportValue = ObservableNotification<FetchResult> & {
-  meta: Meta & { source: "network" | "fetchMore" };
-};
-type CacheTransportValue = ObservableNotification<Cache.DiffResult<any>> & {
-  meta: Meta & { source: "cache" };
-};
-
-type TransportValue = CacheTransportValue | NetworkTransportValue;
 
 const newNetworkStatusSymbol: any = Symbol();
 const uninitialized = {} as ApolloQueryResult<any>;
@@ -138,7 +122,7 @@ export class ObservableQuery<
   }
 
   private cacheSubscription?: Subscription;
-  private input: Subject<TransportValue>;
+  private input: Subject<QueryNotification.Value<TData>>;
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
@@ -155,7 +139,9 @@ export class ObservableQuery<
   private queryInfo: QueryInfo;
 
   private linkSubscription?: Subscription;
-  private linkObservable?: Observable<ApolloQueryResult<TData>>;
+  private linkObservable?: Observable<
+    QueryNotification.FromCache<TData> | QueryNotification.FromNetwork<TData>
+  >;
 
   private pollingInfo?: {
     interval: number;
@@ -177,9 +163,7 @@ export class ObservableQuery<
 
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
 
-    this.input = new Subject();
     this.subject = new BehaviorSubject(uninitialized);
-    this.input.pipe(this.operator).subscribe(this.subject);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -275,11 +259,16 @@ export class ObservableQuery<
       // This ensures this.options.fetchPolicy always has a string value, in
       // case options.fetchPolicy was not provided.
       fetchPolicy,
-
       // `variables` might be an empty object due to QueryManager.getVariables,
       // so we reset to `undefined` if there are no values
       variables: normalizeVariables(variables),
     };
+
+    this.input = new Subject();
+    // we want to feed many streams into `this.subject`, but none of them should
+    // be able to close `this.input`
+    this.input.complete = () => {};
+    this.input.pipe(this.operator).subscribe(this.subject);
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
 
@@ -366,27 +355,33 @@ export class ObservableQuery<
     query = this.query,
   } = {}) {
     this.cacheSubscription?.unsubscribe();
-    console.log("subscribing to cache for", { query, variables });
-    const observable = new Observable<TransportValue>((observer) => {
-      return this.queryManager.cache.watch({
-        query,
-        variables,
-        optimistic: true,
-        callback: (diff) => {
-          if (diff.result) {
-            observer.next({
-              kind: "N",
-              value: diff,
-              meta: {
+    // console.log("subscribing to cache for", { query, variables });
+    const observable = new Observable<QueryNotification.Value<TData>>(
+      (observer) => {
+        return this.queryManager.cache.watch({
+          query,
+          variables,
+          optimistic: true,
+          callback: (diff) => {
+            if (diff.result) {
+              observer.next({
+                kind: "N",
+                value: {
+                  data: diff.result as TData,
+                  networkStatus: NetworkStatus.ready,
+                  loading: false,
+                  error: undefined,
+                  partial: !diff.complete,
+                },
                 source: "cache",
                 query,
                 variables,
-              },
-            });
-          }
-        },
-      });
-    });
+              } satisfies QueryNotification.FromCache<TData>);
+            }
+          },
+        });
+      }
+    );
     this.cacheSubscription = observable.subscribe(this.input);
   }
 
@@ -733,21 +728,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // adjustment to the types on `updateQuery` since that function
           // expects that the first argument always contains previous result
           // data, but not `undefined`.
-          const lastResult = this.getLast("result")!;
-          const data = updateQuery!(lastResult.data as Unmasked<TData>, {
-            fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
-            variables: combinedOptions.variables as TFetchVars,
-          });
-
-          this.reportResult(
-            {
-              ...lastResult,
-              networkStatus: originalNetworkStatus,
-              loading: isNetworkRequestInFlight(originalNetworkStatus),
-              data: data as TData,
-            },
-            this.variables
-          );
+          //const lastResult = this.getLast("result")!;
+          // const data = updateQuery!(lastResult.data as Unmasked<TData>, {
+          //   fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
+          //   variables: combinedOptions.variables as TFetchVars,
+          // });
+          // this.reportResult(
+          //   {
+          //     ...lastResult,
+          //     networkStatus: originalNetworkStatus,
+          //     loading: isNetworkRequestInFlight(originalNetworkStatus),
+          //     data: data as TData,
+          //   },
+          //   this.variables
+          // );
         }
 
         return this.maskResult(fetchMoreResult);
@@ -977,7 +971,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     emitLoadingState: boolean,
     query?: DocumentNode
   ) {
-    console.log("fetch", options);
+    // console.log("fetch", options);
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
@@ -1192,14 +1186,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.networkStatus = newNetworkStatus;
-    this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
-    const finishWaitingForOwnResult = () => {
-      if (this.linkObservable === observable) {
-        this.waitForOwnResult = false;
-      }
-    };
 
-    const variables = options.variables && { ...options.variables };
     const { notifyOnNetworkStatusChange = true } = options;
     const { observable, fromLink } = this.fetch(
       options,
@@ -1209,92 +1196,41 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         isNetworkRequestInFlight(newNetworkStatus),
       query
     );
-    const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
-      next: (result) => {
-        if (equal(this.variables, variables)) {
-          finishWaitingForOwnResult();
-          this.reportResult(result, variables);
-        }
-      },
-      error: (error) => {
-        if (equal(this.variables, variables)) {
-          finishWaitingForOwnResult();
-          this.reportError(error, variables);
-        }
-      },
-    };
 
     if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {
       if (this.linkSubscription) {
         this.linkSubscription.unsubscribe();
       }
 
-      this.linkObservable = observable;
-      this.linkSubscription = observable.subscribe(observer);
+      this.linkSubscription = observable.subscribe(this.input);
     } else {
-      observable.subscribe(observer);
+      observable.subscribe(this.input);
     }
 
     return preventUnhandledRejection(
       // Note: lastValueFrom will create a separate subscription to the
       // observable which means that terminating this ObservableQuery will not
       // cancel the request from the link chain.
-      lastValueFrom(observable, {
-        // This default value should only be used when using a `fetchPolicy` of
-        // `standby` since that fetch policy completes without emitting a
-        // result. Since we are converting this to a QueryResult type, we
-        // omit the extra fields from ApolloQueryResult in the default value.
-        defaultValue: { data: undefined } as ApolloQueryResult<TData>,
-      }).then((result) => toQueryResult(this.maskResult(result)))
+      lastValueFrom(
+        observable.pipe(
+          filter((value) => value.source !== "newNetworkStatus"),
+          dematerialize()
+        ),
+        {
+          // This default value should only be used when using a `fetchPolicy` of
+          // `standby` since that fetch policy completes without emitting a
+          // result. Since we are converting this to a QueryResult type, we
+          // omit the extra fields from ApolloQueryResult in the default value.
+          defaultValue: { data: undefined } as ApolloQueryResult<TData>,
+        }
+      ).then((result) => toQueryResult(this.maskResult(result)))
     );
   }
 
   // (Re)deliver the current result to this.observers without applying fetch
   // policies or making network requests.
   private observe() {
-    this.reportResult(
-      // Passing false is important so that this.getCurrentResult doesn't
-      // save the fetchMore result as this.lastResult, causing it to be
-      // ignored due to the this.isDifferentFromLastResult check in
-      // this.reportResult.
-      this.getCurrentFullResult(false),
-      this.variables
-    );
-  }
-
-  private reportResult(
-    result: ApolloQueryResult<TData>,
-    variables: TVariables | undefined
-  ) {
-    const lastError = this.getLastError();
-    const isDifferent = this.isDifferentFromLastResult(result, variables);
-    // Update the last result even when isDifferentFromLastResult returns false,
-    // because the query may be using the @nonreactive directive, and we want to
-    // save the the latest version of any nonreactive subtrees (in case
-    // getCurrentResult is called), even though we skip broadcasting changes.
-    this.updateLastResult(result, variables);
-    this.networkStatus = result.networkStatus;
-    if (lastError || isDifferent) {
-      // this.subject.next(this.maskResult(result));
-    }
-  }
-
-  private reportError(error: Error, variables: TVariables | undefined) {
-    // Since we don't get the current result on errors, only the error, we
-    // must mirror the updates that occur in QueryStore.markQueryError here
-    const errorResult: ApolloQueryResult<TData> = {
-      data: undefined,
-      partial: true,
-      ...this.getLastResult(),
-      error,
-      networkStatus: NetworkStatus.error,
-      loading: false,
-    };
-
-    this.updateLastResult(errorResult, variables);
-    this.networkStatus = NetworkStatus.error;
-    this.last!.error = error;
-    // this.subject.next(errorResult);
+    // TODO  - is this method even called now?
   }
 
   public hasObservers() {
@@ -1394,33 +1330,101 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.dirty = false;
+  }
 
-  private operator: OperatorFunction<TransportValue, ApolloQueryResult<any>> =
-    pipe((obs) => {
-      const [fromCache, fromNetwork] = partition(
-        obs,
-        (v): v is CacheTransportValue => v.meta.source === "cache"
+  private operator: OperatorFunction<
+    QueryNotification.Value<TData>,
+    ApolloQueryResult<any>
+  > = pipe((obs) => {
+    obs = obs.pipe(tap(console.log.bind(console, "operator")));
+
+    const fromCache = obs.pipe(
+      filter(
+        (v): v is QueryNotification.FromCache<TData> => v.source === "cache"
+      )
+    );
+    const fromNetwork = obs.pipe(
+      filter(
+        (v): v is QueryNotification.FromNetwork<TData> => v.source === "network"
+      )
+    );
+    // TODO
+    // const fromFetchMore = obs.pipe(
+    //   filter(
+    //     (v): v is FetchMoreTransportValue => v.meta.source === "fetchMore"
+    //   )
+    // );
+    const fromNetworkStatus = obs.pipe(
+      filter(
+        (v): v is QueryNotification.NewNetworkStatus =>
+          v.source === "newNetworkStatus"
+      )
+    );
+
+    const filterForCurrentQuery = <T extends QueryNotification.Meta>(
+      value: T
+    ) => {
+      return (
+        value.query === this.query && equal(value.variables, this.variables)
       );
+    };
 
-      return merge(
-        fromCache.pipe(
-          map((cacheValue): ApolloQueryResult<any> => {
-            if (cacheValue.kind !== "N")
-              throw new Error("Impossible value from cache");
-            const diff = cacheValue.value;
-            return {
-              data: diff.result,
-              networkStatus: NetworkStatus.ready,
-              loading: false,
-              error: undefined,
-              partial: !diff.complete,
-            };
-          })
+    return merge(
+      fromCache.pipe(
+        filter(() => this.options.fetchPolicy !== "no-cache"),
+        filter(filterForCurrentQuery),
+        map((value) => value.value),
+        filter((result) => !result.partial || !!this.options.returnPartialData)
+      ),
+      fromNetwork.pipe(
+        filter(
+          (value) =>
+            // handle values and error from the link in case of `no-cache` or `network-only` `fetchPolicy`
+            this.options.fetchPolicy === "no-cache" ||
+            this.options.fetchPolicy === "network-only" ||
+            // otherwise, always handle errors
+            value.kind !== "N" ||
+            // also handle "errors as values"
+            value.value.networkStatus === NetworkStatus.error
         ),
-        fromNetwork.pipe(dematerialize()).pipe(map(() => uninitialized))
-      );
-    });
-}
+        filter(filterForCurrentQuery),
+        // convert errors into "errors as values"
+        map((value) =>
+          value.kind !== "E" ?
+            value
+          : ({
+              ...value,
+              kind: "N",
+              value: {
+                data: undefined,
+                error: value.error,
+                networkStatus: NetworkStatus.error,
+                loading: false,
+                partial: true,
+              },
+            } satisfies QueryNotification.FromNetwork<TData>)
+        ),
+        dematerialize()
+      ),
+      fromNetworkStatus.pipe(
+        filter(() => !!this.options.notifyOnNetworkStatusChange),
+        dematerialize(),
+        map(({ networkStatus }) => ({
+          ...this.subject.getValue(),
+          networkStatus,
+        }))
+      )
+    )
+      .pipe(
+        // normalize result shape
+        map((value) => {
+          if (!value.error) delete value.error;
+          value.loading = isNetworkRequestInFlight(value.networkStatus);
+          return this.maskResult(value);
+        })
+      )
+      .pipe(tap<ApolloQueryResult<TData>>(console.log.bind(console, "final")));
+  });
 
   // Reobserve with fetchPolicy effectively set to "cache-first", triggering
   // delivery of any new data from the cache, possibly falling back to the network

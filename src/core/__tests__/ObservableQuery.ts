@@ -5487,17 +5487,18 @@ test.only("manual mini test", async () => {
   const client = new ApolloClient({
     link: new MockLink([
       {
-        request: { query },
-        newData(variables) {
+        request: {
+          query,
+          variables(arg) {
+            return true;
+          },
+        },
+        result(variables) {
           return {
             data: {
               hello: "world" + variables.bar,
             },
           };
-        },
-        variableMatcher(arg) {
-          console.log("variableMatcher", arg);
-          return true;
         },
       },
     ]),
@@ -5513,13 +5514,13 @@ test.only("manual mini test", async () => {
   await expect(stream).toEmitTypedValue({
     data: undefined,
     loading: true,
-    networkStatus: 1,
+    networkStatus: NetworkStatus.loading,
     partial: true,
   });
 
   await expect(stream).toEmitTypedValue({
     data: { hello: "world0" },
-    networkStatus: 7,
+    networkStatus: NetworkStatus.ready,
     loading: false,
     error: undefined,
     partial: false,
@@ -5528,8 +5529,16 @@ test.only("manual mini test", async () => {
   observable.reobserve({ variables: { bar: 1 } });
 
   await expect(stream).toEmitTypedValue({
+    data: { hello: "world0" },
+    networkStatus: NetworkStatus.setVariables,
+    loading: true,
+    error: undefined,
+    partial: false,
+  });
+
+  await expect(stream).toEmitTypedValue({
     data: { hello: "world1" },
-    networkStatus: 7,
+    networkStatus: NetworkStatus.ready,
     loading: false,
     error: undefined,
     partial: false,

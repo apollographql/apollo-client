@@ -1121,10 +1121,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     //
     // Note: updating options.variables may mutate this.options.variables
     // in the case of a non-disposable query. This is intentional.
-    options.variables =
-      newOptions && "variables" in newOptions ?
-        this.getVariablesWithDefaults(newOptions.variables)
-      : options.variables;
+    if (newOptions && "variables" in newOptions) {
+      options.variables = this.getVariablesWithDefaults(newOptions.variables);
+    }
 
     if (!useDisposableObservable) {
       // We can skip calling updatePolling if we're not changing this.options.

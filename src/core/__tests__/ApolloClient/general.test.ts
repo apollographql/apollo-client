@@ -7835,12 +7835,22 @@ describe.skip("type tests", () => {
     });
   });
 
-  test("does not allow variables when TVariables is never", () => {
+  test("is invalid when TVariables is never", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
+    // @ts-expect-error
     client.watchQuery({ query });
-    client.watchQuery({ query, variables: {} });
+    client.watchQuery({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error
+      variables: undefined,
+    });
     client.watchQuery({
       query,
       // @ts-expect-error unknown variables

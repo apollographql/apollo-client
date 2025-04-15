@@ -5925,14 +5925,18 @@ describe.skip("Type Tests", () => {
     void execute({ variables: { foo: "bar" } });
   });
 
-  test("does not allow variables when TVariables is `never`", () => {
+  test("is invalid when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     const [execute] = useLazyQuery(query);
 
     void execute();
+    // @ts-expect-error expecting variables key
     void execute({});
+    // @ts-expect-error variables is never
     void execute({ variables: {} });
+    // @ts-expect-error variables is never
+    void execute({ variables: undefined });
     // @ts-expect-error unknown variables
     void execute({ variables: { foo: "bar" } });
   });

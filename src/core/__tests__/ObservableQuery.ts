@@ -5227,7 +5227,10 @@ test("emits loading state when calling reobserve with new fetch policy after cha
 
 describe(".variables", () => {
   test("returns undefined when no variables are passed", () => {
-    const query: TypedDocumentNode<{ greeting: string }, never> = gql`
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql`
       query {
         greeting
       }
@@ -5685,33 +5688,35 @@ describe.skip("type tests", () => {
     observable.fetchMore({ variables: { foo: "baz" } });
   });
 
-  test("variables with never", () => {
+  test("is invalid with variables as never", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
+    // @ts-expect-error expecting variables key
     const observable = client.watchQuery({ query });
 
-    expectTypeOf(observable.variables).toEqualTypeOf<Record<string, never>>();
+    expectTypeOf(observable.variables).toEqualTypeOf<never>();
 
+    // @ts-expect-error
     observable.setVariables({});
-    observable.setVariables({
-      // @ts-expect-error unknown variables
-      foo: "bar",
-    });
+    // @ts-expect-error
+    observable.setVariables({ foo: "bar" });
 
     observable.refetch();
-    // @ts-expect-error variables not allowed
+    // @ts-expect-error
     observable.refetch({});
-    // @ts-expect-error unknown variables
+    // @ts-expect-error
     observable.refetch({ foo: "bar" });
 
     observable.reobserve();
-    observable.reobserve({ variables: {} });
     observable.reobserve({
-      variables: {
-        // @ts-expect-error unknown variables
-        foo: "bar",
-      },
+      // @ts-expect-error variables is never
+      variables: {},
+    });
+    observable.reobserve({ variables: undefined });
+    observable.reobserve({
+      // @ts-expect-error
+      variables: { foo: "bar" },
     });
 
     observable.fetchMore({});
@@ -5719,8 +5724,9 @@ describe.skip("type tests", () => {
       // @ts-expect-error unknown variables
       variables: {},
     });
+    observable.fetchMore({ variables: undefined });
     observable.fetchMore({
-      // @ts-expect-error unknown variables
+      // @ts-expect-error variables is never
       variables: { foo: "bar" },
     });
   });

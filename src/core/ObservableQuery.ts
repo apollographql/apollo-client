@@ -813,7 +813,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   public silentSetOptions(
-    newOptions: Partial<WatchQueryOptions<TVariables, TData>>
+    newOptions: Partial<ObservableQuery.Options<TData, TVariables>>
   ) {
     const mergedOptions = compact(this.options, newOptions || {});
     assign(this.options, mergedOptions);

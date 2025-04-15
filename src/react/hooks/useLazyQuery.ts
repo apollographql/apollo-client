@@ -304,16 +304,17 @@ export function useLazyQuery<
   }, [observable]);
 
   React.useEffect(() => {
-    const updatedOptions = {
-      query,
-      errorPolicy: stableOptions?.errorPolicy,
-      context: stableOptions?.context,
-      refetchWritePolicy: stableOptions?.refetchWritePolicy,
-      returnPartialData: stableOptions?.returnPartialData,
-      notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
-      nextFetchPolicy: options?.nextFetchPolicy,
-      skipPollAttempt: options?.skipPollAttempt,
-    } as Partial<WatchQueryOptions<TVariables, TData>>;
+    const updatedOptions: Partial<ObservableQuery.Options<TData, TVariables>> =
+      {
+        query,
+        errorPolicy: stableOptions?.errorPolicy,
+        context: stableOptions?.context,
+        refetchWritePolicy: stableOptions?.refetchWritePolicy,
+        returnPartialData: stableOptions?.returnPartialData,
+        notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
+        nextFetchPolicy: options?.nextFetchPolicy,
+        skipPollAttempt: options?.skipPollAttempt,
+      };
 
     // Wait to apply the changed fetch policy until after the execute
     // function has been called. The execute function will handle setting the
@@ -322,7 +323,7 @@ export function useLazyQuery<
       observable.options.fetchPolicy !== "standby" &&
       stableOptions?.fetchPolicy
     ) {
-      (updatedOptions as any).fetchPolicy = stableOptions?.fetchPolicy;
+      updatedOptions.fetchPolicy = stableOptions.fetchPolicy;
     }
 
     observable.silentSetOptions(updatedOptions);

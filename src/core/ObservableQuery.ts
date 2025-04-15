@@ -566,13 +566,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    if (variables && !equal(this.options.variables, variables)) {
+    if (variables && !equal(this.variables, variables)) {
       // Update the existing options with new variables
       reobserveOptions.variables = this.options.variables =
-        this.getVariablesWithDefaults({
-          ...this.options.variables,
-          ...variables,
-        });
+        this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
     this.queryInfo.resetLastWrite();

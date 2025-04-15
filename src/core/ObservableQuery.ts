@@ -1114,12 +1114,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.lastQuery = query;
 
-    // Allow variables to get reevaluated when passing variables: undefined,
-    // otherwise `compact` will ignore the `variables` key. We do this after we
-    // run the query transform to ensure we get default variables from the
-    // transformed query. Note: setting this on options.variables may mutate
-    // this.options.variables in the case of a non-disposable query. This is
-    // intentional.
+    // Reevaluate variables to allow resetting variables with variables: undefined,
+    // otherwise `compact` will ignore the `variables` key in `newOptions`. We
+    // do this after we run the query transform to ensure we get default
+    // variables from the transformed query.
+    //
+    // Note: updating options.variables may mutate this.options.variables
+    // in the case of a non-disposable query. This is intentional.
     options.variables =
       newOptions && "variables" in newOptions ?
         this.getVariablesWithDefaults(newOptions.variables)

@@ -99,8 +99,7 @@ export declare namespace useLazyQuery {
     ) => Promise<QueryResult<MaybeMasked<TData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-    variables: [TVariables] extends [never] ? Record<string, never>
-    : TVariables;
+    variables: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: <

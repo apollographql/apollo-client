@@ -103,9 +103,8 @@ export class ObservableQuery<
   /**
    * An object containing the variables that were provided for the query.
    */
-  public get variables(): [TVariables] extends [never] ? Record<string, never>
-  : TVariables {
-    return this.options.variables as any;
+  public get variables(): TVariables {
+    return this.options.variables as TVariables;
   }
 
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
@@ -787,9 +786,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * the previous values of those variables will be used.
    */
   public async setVariables(
-    variables: [TVariables] extends [never] ? Record<string, never> : TVariables
+    variables: TVariables
   ): Promise<QueryResult<TData>> {
-    variables = this.getVariablesWithDefaults(variables as any);
+    variables = this.getVariablesWithDefaults(variables);
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
@@ -1366,9 +1365,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve();
   }
 
-  private getVariablesWithDefaults(
-    variables: [TVariables] extends [never] ? Record<string, never> : TVariables
-  ) {
+  private getVariablesWithDefaults(variables: TVariables) {
     return this.queryManager.getVariables(this.query, variables);
   }
 }

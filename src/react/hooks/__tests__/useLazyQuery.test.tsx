@@ -1497,7 +1497,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -1637,7 +1636,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -1761,7 +1759,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -2255,7 +2252,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {} as Variables,
+        variables: {},
       });
     }
 
@@ -2594,7 +2591,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error Need to fix the return value of this property
         variables: {},
       });
     }
@@ -2614,7 +2610,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error Need to fix the return value of this property
         variables: {},
       });
     }
@@ -4220,7 +4215,6 @@ test("responds to cache updates after changing variables", async () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -4390,7 +4384,6 @@ test("uses cached result when switching to variables already written to the cach
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -4504,7 +4497,6 @@ test("does not render loading states when switching to variables maybe written t
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -4671,7 +4663,6 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -5047,7 +5038,6 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error needs to be undefined
       variables: {},
     });
   }
@@ -5409,7 +5399,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error should be undefined
       variables: {},
     });
   }

@@ -80,7 +80,7 @@ export declare namespace useLazyQuery {
     context?: DefaultContext;
   }
 
-  export interface Result<TData, TVariables extends OperationVariables> {
+  export type Result<TData, TVariables extends OperationVariables> = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
     startPolling: (pollInterval: number) => void;
 
@@ -97,9 +97,6 @@ export declare namespace useLazyQuery {
     refetch: (
       variables?: Partial<TVariables>
     ) => Promise<QueryResult<MaybeMasked<TData>>>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-    variables: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: <
@@ -137,14 +134,30 @@ export declare namespace useLazyQuery {
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
     networkStatus: NetworkStatus;
+  } & (
+    | {
+        /**
+         * If `true`, the associated lazy query has been executed.
+         *
+         * @docGroup 2. Network info
+         */
+        called: true;
 
-    /**
-     * If `true`, the associated lazy query has been executed.
-     *
-     * @docGroup 2. Network info
-     */
-    called: boolean;
-  }
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+        variables: TVariables;
+      }
+    | {
+        /**
+         * If `true`, the associated lazy query has been executed.
+         *
+         * @docGroup 2. Network info
+         */
+        called: false;
+
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+        variables: Partial<TVariables>;
+      }
+  );
 
   export type ExecOptions<
     TVariables extends OperationVariables = OperationVariables,

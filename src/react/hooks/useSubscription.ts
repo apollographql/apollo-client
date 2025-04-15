@@ -14,7 +14,11 @@ import type {
   SubscribeResult,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/utilities";
+import type {
+  NoInfer,
+  OnlyRequiredProperties,
+  VariablesOption,
+} from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -23,13 +27,10 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useSubscription {
-  export interface Options<
+  export type Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > {
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
-    variables?: TVariables;
-
+  > = {
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: FetchPolicy;
 
@@ -67,7 +68,7 @@ export declare namespace useSubscription {
      * @defaultValue `false`
      */
     ignoreResults?: boolean;
-  }
+  } & VariablesOption<TVariables>;
 
   export interface Result<TData = unknown> {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
@@ -181,7 +182,12 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
+  ...[options = {} as useSubscription.Options<TData, TVariables>]: Record<
+    string,
+    never
+  > extends OnlyRequiredProperties<TVariables> ?
+    [options?: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
+  : [options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useSubscription.Result<TData> {
   const client = useApolloClient(options.client);
 

@@ -1068,7 +1068,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * merged with the current options when given.
    */
   public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>
+    newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;

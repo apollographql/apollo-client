@@ -396,7 +396,10 @@ export function useWatchQueryOptions<
 > {
   return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
     if (options === skipToken) {
-      return { query, fetchPolicy: "standby" };
+      return { query, fetchPolicy: "standby" } as WatchQueryOptions<
+        TVariables,
+        TData
+      >;
     }
 
     const fetchPolicy =
@@ -422,6 +425,6 @@ export function useWatchQueryOptions<
       watchQueryOptions.fetchPolicy = "standby";
     }
 
-    return watchQueryOptions;
+    return watchQueryOptions as WatchQueryOptions<TVariables, TData>;
   }, [client, options, query]);
 }

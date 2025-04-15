@@ -164,7 +164,7 @@ const lastWatchOptions = Symbol();
 
 interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
-  [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
+  [lastWatchOptions]?: Readonly<WatchQueryOptions<TVariables, TData>>;
 }
 
 interface InternalResult<TData, TVariables extends OperationVariables> {
@@ -239,7 +239,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   const { skip, ssr, ...opts } = options;
 
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
-    client.defaultOptions.watchQuery,
+    client.defaultOptions.watchQuery as any,
     { ...opts, query }
   );
 

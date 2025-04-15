@@ -99,9 +99,9 @@ export declare namespace useLazyQuery {
     ) => Promise<QueryResult<MaybeMasked<TData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-    variables: TVariables | undefined;
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+    variables: TVariables;
 
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: <
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,

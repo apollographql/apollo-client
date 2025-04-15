@@ -304,7 +304,7 @@ export function useLazyQuery<
   }, [observable]);
 
   React.useEffect(() => {
-    const updatedOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
+    const updatedOptions = {
       query,
       errorPolicy: stableOptions?.errorPolicy,
       context: stableOptions?.context,
@@ -313,7 +313,7 @@ export function useLazyQuery<
       notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
       nextFetchPolicy: options?.nextFetchPolicy,
       skipPollAttempt: options?.skipPollAttempt,
-    };
+    } as Partial<WatchQueryOptions<TVariables, TData>>;
 
     // Wait to apply the changed fetch policy until after the execute
     // function has been called. The execute function will handle setting the
@@ -322,7 +322,7 @@ export function useLazyQuery<
       observable.options.fetchPolicy !== "standby" &&
       stableOptions?.fetchPolicy
     ) {
-      updatedOptions.fetchPolicy = stableOptions?.fetchPolicy;
+      (updatedOptions as any).fetchPolicy = stableOptions?.fetchPolicy;
     }
 
     observable.silentSetOptions(updatedOptions);
@@ -355,11 +355,11 @@ export function useLazyQuery<
 
         return observable.reobserve({
           ...executeOptions,
+          fetchPolicy,
           // If `variables` is not given, reset back to empty variables by
           // ensuring the key exists in options
           variables: executeOptions?.variables,
-          fetchPolicy,
-        } as WatchQueryOptions<TVariables, TData>);
+        } as Partial<WatchQueryOptions<TVariables, TData>>);
       },
       [observable, calledDuringRender]
     );

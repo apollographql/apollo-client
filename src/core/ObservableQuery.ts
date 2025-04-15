@@ -1463,7 +1463,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             value.value.networkStatus === NetworkStatus.error ||
             // handle values from the link in case of `no-cache` or `network-only` `fetchPolicy`
             this.options.fetchPolicy === "no-cache" ||
-            this.options.fetchPolicy === "network-only"
+            this.options.fetchPolicy === "network-only" ||
+            // an error with `errorPolicy`: `ignore` might end up with a completely
+            // empty value that will not be written to the cache, but might need
+            // an update from the link
+            value.value.data === undefined
         ),
         filter(filterForCurrentQuery),
         // convert errors into "errors as values"

@@ -536,7 +536,9 @@ export class ObservableQuery<
    * the previous values of those variables will be used.
    */
   public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
-    const reobserveOptions: Partial<WatchQueryOptions> = {
+    const reobserveOptions: Partial<
+      ObservableQuery.Options<TData, TVariables>
+    > = {
       // Always disable polling for refetches.
       pollInterval: 0,
     };
@@ -574,7 +576,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve({
       ...reobserveOptions,
       [newNetworkStatusSymbol]: NetworkStatus.refetch,
-    } as WatchQueryOptions<TVariables, TData>);
+    });
   }
 
   /**
@@ -859,7 +861,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       fetchPolicy: this.options.initialFetchPolicy,
       variables,
       [newNetworkStatusSymbol]: NetworkStatus.setVariables,
-    } as Partial<WatchQueryOptions<TVariables, TData>>);
+    });
   }
 
   /**
@@ -1018,7 +1020,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 "no-cache"
               : "network-only",
             [newNetworkStatusSymbol]: NetworkStatus.poll,
-          } as Partial<WatchQueryOptions<TVariables, TData>>).then(poll, poll);
+          }).then(poll, poll);
         } else {
           poll();
         }
@@ -1409,7 +1411,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // Otherwise go back to the original this.options.fetchPolicy.
           return fetchPolicy!;
         },
-      } as WatchQueryOptions<TVariables, TData>);
+      });
     }
 
     return this.reobserve();

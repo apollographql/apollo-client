@@ -285,7 +285,7 @@ export class QueryManager {
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
 
-    variables = this.getVariables(mutation, variables) as TVariables;
+    variables = this.getVariables(mutation, variables);
     if (hasClientExports) {
       variables = (await this.localState.addExportedVariables(
         mutation,

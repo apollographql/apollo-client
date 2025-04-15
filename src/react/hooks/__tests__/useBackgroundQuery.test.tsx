@@ -8282,4 +8282,307 @@ describe.skip("type tests", () => {
       });
     }
   });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const query = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { foo: "bar" } });
+    useBackgroundQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { foo: "bar" } });
+    useBackgroundQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
+  });
+
+  test("is invalid when TVariables is `never`", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    // @ts-expect-error
+    useBackgroundQuery(query);
+    // @ts-expect-error
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, {
+      // @ts-expect-error
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      // @ts-expect-error
+      variables: undefined,
+    });
+    useBackgroundQuery(query, {
+      // @ts-expect-error
+      variables: {
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    // @ts-expect-error
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : {}
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: {} }
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: undefined }
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
+  });
+
+  test("optional variables are optional", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { limit: 10 } });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { limit: 10 } });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            limit: 10,
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query);
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, {});
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { id: "1" } });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useBackgroundQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query);
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, {});
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { id: "1" } });
+    useBackgroundQuery(query, {
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    useBackgroundQuery(query, { variables: { id: "1", language: "en" } });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useBackgroundQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : { variables: { id: "1", language: "en" } }
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            language: "en",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
 });

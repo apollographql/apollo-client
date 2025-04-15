@@ -1181,7 +1181,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     };
 
-    const variables = options.variables && { ...options.variables };
+    const variables = { ...options.variables };
     const { notifyOnNetworkStatusChange = true } = options;
     const { observable, fromLink } = this.fetch(
       options,

@@ -30,14 +30,17 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
+  DefaultContext,
   ErrorLike,
   OperationVariables,
   QueryResult,
   TypedDocumentNode,
 } from "./types.js";
 import type {
+  ErrorPolicy,
   FetchMoreQueryOptions,
   NextFetchPolicyContext,
+  RefetchWritePolicy,
   SubscribeToMoreOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
@@ -69,6 +72,55 @@ interface Last<TData, TVariables> {
 const newNetworkStatusSymbol: any = Symbol();
 const uninitialized = {} as ApolloQueryResult<any>;
 
+export declare namespace ObservableQuery {
+  export type Options<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TVariables, TData>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+    initialFetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+    variables: TVariables;
+  };
+}
+
 export class ObservableQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -86,7 +138,7 @@ export class ObservableQuery<
    */
   private static inactiveOnCreation = new Slot<boolean>();
 
-  public readonly options: WatchQueryOptions<TVariables, TData>;
+  public readonly options: ObservableQuery.Options<TData, TVariables>;
   public readonly queryId: string;
   public readonly queryName?: string;
 
@@ -229,6 +281,8 @@ export class ObservableQuery<
       ),
     } = options;
 
+    this.lastQuery = options.query;
+
     this.options = {
       ...options,
 
@@ -240,6 +294,7 @@ export class ObservableQuery<
       // This ensures this.options.fetchPolicy always has a string value, in
       // case options.fetchPolicy was not provided.
       fetchPolicy,
+      variables: this.getVariablesWithDefaults(options.variables),
     };
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();

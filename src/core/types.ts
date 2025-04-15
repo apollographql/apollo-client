@@ -12,6 +12,7 @@ import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -266,36 +267,46 @@ export interface QueryResult<TData = unknown> {
 }
 
 export declare namespace QueryNotification {
-  interface Meta {
-    query: DocumentNode;
-    variables: OperationVariables | undefined;
+  interface Meta<TData, TVariables> {
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    variables: TVariables | undefined;
   }
 
-  type NewNetworkStatus = NextNotification<{
+  type NewNetworkStatus<TData, TVariables> = NextNotification<{
     networkStatus: NetworkStatus;
   }> &
-    Meta & {
+    Meta<TData, TVariables> & {
       source: "newNetworkStatus";
     };
 
-  type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> &
-    Meta & {
+  type FromNetwork<TData, TVariables> = ObservableNotification<
+    ApolloQueryResult<TData>
+  > &
+    Meta<TData, TVariables> & {
       source: "network";
     };
 
-  type FromFetchMore = ObservableNotification<ApolloQueryResult<any>> &
-    Meta & {
+  type FromFetchMore<TData, TVariables> = ObservableNotification<
+    ApolloQueryResult<any>
+  > &
+    Meta<TData, TVariables> & {
       source: "fetchMore";
     };
 
-  type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> &
-    Meta & {
+  type FromCache<TData, TVariables> = NextNotification<
+    ApolloQueryResult<TData>
+  > &
+    Meta<TData, TVariables> & {
       source: "cache";
     };
 
-  type Value<TData> =
-    | FromCache<TData>
-    | FromNetwork<TData>
-    | FromFetchMore
-    | NewNetworkStatus;
+  type Value<TData, TVariables> =
+    | FromCache<TData, TVariables>
+    | FromNetwork<TData, TVariables>
+    | FromFetchMore<TData, TVariables>
+    | NewNetworkStatus<TData, TVariables>;
+
+  type InternalResult<T, TData, TVariables> = {
+    result: T;
+  } & QueryNotification.Meta<TData, TVariables>;
 }

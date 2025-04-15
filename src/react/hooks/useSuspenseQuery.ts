@@ -209,16 +209,18 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options:
-    | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
-    | useSuspenseQuery.Options<TVariables> = {}
+  ...[options]: Record<string, never> extends (
+    OnlyRequiredProperties<TVariables>
+  ) ?
+    [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
-  )(query, options);
+  )(query, options ?? ({} as any));
 }
 
 function useSuspenseQuery_<
@@ -336,7 +338,9 @@ function useSuspenseQuery_<
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 
-function validateOptions(options: WatchQueryOptions) {
+function validateOptions<TData, TVariables extends OperationVariables>(
+  options: WatchQueryOptions<TVariables, TData>
+) {
   const { fetchPolicy, returnPartialData } = options;
 
   validateFetchPolicy(fetchPolicy);
@@ -404,7 +408,7 @@ export function useWatchQueryOptions<
       client.defaultOptions.watchQuery?.fetchPolicy ||
       "cache-first";
 
-    const watchQueryOptions = {
+    const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
       ...options,
       fetchPolicy,
       query,
@@ -422,6 +426,6 @@ export function useWatchQueryOptions<
       watchQueryOptions.fetchPolicy = "standby";
     }
 
-    return watchQueryOptions as WatchQueryOptions<TVariables, TData>;
+    return watchQueryOptions;
   }, [client, options, query]);
 }

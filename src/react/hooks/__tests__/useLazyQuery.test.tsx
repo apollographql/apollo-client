@@ -5630,6 +5630,84 @@ test("renders loading states at appropriate times on next fetch after updating `
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("uses default variables in query", async () => {
+  const query: TypedDocumentNode<
+    { letters: string[] },
+    { limit?: number; offset: number }
+  > = gql`
+    query DefaultsQuery($limit: Int! = 2, $offset: Int!) {
+      letters
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { limit: 2, offset: 0 } },
+        result: { data: { letters: ["a", "b"] } },
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { limit: 2 },
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(
+    execute({ variables: { offset: 0 } })
+  ).resolves.toStrictEqualTyped({ data: { letters: ["a", "b"] } });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { limit: 2, offset: 0 },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: { letters: ["a", "b"] },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { limit: 2, offset: 0 },
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 describe.skip("Type Tests", () => {
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;

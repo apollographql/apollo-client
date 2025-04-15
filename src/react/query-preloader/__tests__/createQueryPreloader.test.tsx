@@ -2023,11 +2023,13 @@ describe.skip("type tests", () => {
     });
   });
 
-  test("does not allow variables when TVariables is `never`", () => {
+  test("is invalid when TVariables is `never`", () => {
     type Data = { greeting: string };
     const query: TypedDocumentNode<Data, never> = gql``;
 
+    // @ts-expect-error
     preloadQuery(query);
+    // @ts-expect-error
     preloadQuery<Data, never>(query);
     preloadQuery(query, {
       // @ts-expect-error

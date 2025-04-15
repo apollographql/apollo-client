@@ -955,7 +955,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private fetch(
-    options: WatchQueryOptions<TVariables, TData>,
+    options: ObservableQuery.Options<TData, TVariables>,
     newNetworkStatus: NetworkStatus,
     emitLoadingState: boolean,
     query?: DocumentNode

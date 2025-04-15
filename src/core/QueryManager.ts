@@ -893,7 +893,8 @@ export class QueryManager {
       if (queryInfo.observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        queryInfo.observableQuery["networkStatus"] = NetworkStatus.loading;
+        // TODO
+        // queryInfo.observableQuery["networkStatus"] = NetworkStatus.loading;
       } else {
         queryInfo.stop();
       }
@@ -1417,7 +1418,7 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
-    let observable: Observable<QueryNotification.Value<TData>>,
+    let observable: Observable<QueryNotification.Value<TData, TVars>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1678,6 +1679,7 @@ export class QueryManager {
     newNetworkStatus: NetworkStatus,
     emitLoadingState: boolean
   ): ObservableAndInfo<TData> {
+    console.log("fetchQueryByPolicy", { fetchPolicy, newNetworkStatus });
     queryInfo.init({
       document: query,
       variables,
@@ -1688,7 +1690,7 @@ export class QueryManager {
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
       networkStatus = newNetworkStatus
-    ): Observable<QueryNotification.FromCache<TData>> => {
+    ): Observable<QueryNotification.FromCache<TData, TVars>> => {
       const data = diff.result;
 
       if (__DEV__ && !returnPartialData && data !== null) {
@@ -1715,14 +1717,17 @@ export class QueryManager {
         };
       };
 
+      console.log("resultsToCache", { networkStatus });
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
         return of({
           kind: "N",
           value: toResult(data),
           source: "cache",
+          // @ts-ignore
+          __meta: "fetchQueryByPolicy",
           query,
           variables,
-        } satisfies QueryNotification.FromCache<TData>);
+        } satisfies QueryNotification.FromCache<TData, TVars>);
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
@@ -1750,7 +1755,7 @@ export class QueryManager {
                   source: "cache",
                   query,
                   variables,
-                }) satisfies QueryNotification.FromCache<TData>
+                }) satisfies QueryNotification.FromCache<TData, TVars>
             )
         );
       }
@@ -1782,12 +1787,12 @@ export class QueryManager {
       : CacheWriteBehavior.MERGE;
 
     const notifyNetworkStatus = () =>
-      of<QueryNotification.NewNetworkStatus>({
+      of<QueryNotification.NewNetworkStatus<TData, TVars>>({
         kind: "N",
         value: {
           networkStatus: newNetworkStatus,
         },
-        source: "newNetworkStatus" as const,
+        source: "newNetworkStatus",
         query: query,
         variables: variables,
       });
@@ -1803,13 +1808,12 @@ export class QueryManager {
         validateDidEmitValue(),
         materialize(),
         map(
-          (result) =>
-            ({
-              ...result,
-              source: "network",
-              query,
-              variables,
-            }) satisfies QueryNotification.FromNetwork<TData>
+          (result): QueryNotification.FromNetwork<TData, TVars> => ({
+            ...result,
+            source: "network",
+            query,
+            variables,
+          })
         )
       );
 
@@ -1825,33 +1829,27 @@ export class QueryManager {
           };
         }
 
-        if (returnPartialData) {
+        if (returnPartialData || emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
-        return {
-          fromLink: true,
-          observable: concat(notifyNetworkStatus(), resultsFromLink()),
-        };
+        return { fromLink: true, observable: resultsFromLink() };
       }
 
       case "cache-and-network": {
         const diff = readCache();
 
-        if (diff.complete || returnPartialData) {
+        if (diff.complete || returnPartialData || emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
-        return {
-          fromLink: true,
-          observable: concat(notifyNetworkStatus(), resultsFromLink()),
-        };
+        return { fromLink: true, observable: resultsFromLink() };
       }
 
       case "cache-only":
@@ -1863,16 +1861,25 @@ export class QueryManager {
         };
 
       case "network-only":
-        return {
-          fromLink: true,
-          observable: concat(notifyNetworkStatus(), resultsFromLink()),
-        };
+        if (emitLoadingState) {
+          return {
+            fromLink: true,
+            observable: concat(notifyNetworkStatus(), resultsFromLink()),
+          };
+        }
+        return { fromLink: true, observable: resultsFromLink() };
 
       case "no-cache":
-        return {
-          fromLink: true,
-          observable: concat(notifyNetworkStatus(), resultsFromLink()),
-        };
+        if (emitLoadingState) {
+          return {
+            fromLink: true,
+            // Note that queryInfo.getDiff() for no-cache queries does not call
+            // cache.diff, but instead returns a { complete: false } stub result
+            // when there is no queryInfo.diff already defined.
+            observable: concat(notifyNetworkStatus(), resultsFromLink()),
+          };
+        }
+        return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":
         return { fromLink: false, observable: EMPTY };
@@ -1916,5 +1923,5 @@ function validateDidEmitValue<T>() {
 export interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
-  observable: Observable<QueryNotification.Value<TData>>;
+  observable: Observable<QueryNotification.Value<TData, any>>;
 }

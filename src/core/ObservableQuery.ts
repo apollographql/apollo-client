@@ -155,7 +155,9 @@ export class ObservableQuery<
     timeout: ReturnType<typeof setTimeout>;
   };
 
-  private networkStatus: NetworkStatus;
+  private get networkStatus(): NetworkStatus {
+    return this.subject.getValue().networkStatus;
+  }
 
   constructor({
     queryManager,
@@ -166,8 +168,6 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    this.networkStatus = NetworkStatus.loading;
-
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
 
     this.subject = new BehaviorSubject(uninitialized);
@@ -678,7 +678,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
     const originalNetworkStatus = this.networkStatus;
-    this.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
       this.observe();
     }
@@ -699,10 +698,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
-
-        if (this.networkStatus === NetworkStatus.fetchMore) {
-          this.networkStatus = originalNetworkStatus;
-        }
 
         if (isCached) {
           // Performing this cache update inside a cache.batch transaction ensures
@@ -1025,6 +1020,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   // Turns polling on or off based on this.options.pollInterval.
   private updatePolling() {
+    console.log("updatePolling", this.options.pollInterval);
+
     // Avoid polling in SSR mode
     if (this.queryManager.ssrMode) {
       return;
@@ -1058,6 +1055,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
+          console.log("maybeFetch");
           this.reobserve({
             // Most fetchPolicy options don't make sense to use in a polling context, as
             // users wouldn't want to be polling the cache directly. However, network-only and
@@ -1223,8 +1221,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.cancelPolling();
     }
 
-    this.networkStatus = newNetworkStatus;
-
     const { notifyOnNetworkStatusChange = true } = options;
     const { observable, fromLink } = this.fetch(
       options,
@@ -1261,7 +1257,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // omit the extra fields from ApolloQueryResult in the default value.
           defaultValue: { data: undefined } as ApolloQueryResult<TData>,
         }
-      ).then((result) => toQueryResult(this.maskResult(result)))
+      )
+        .then((result) => toQueryResult(this.maskResult(result)))
+        .then((v) => {
+          console.log("reobserve finished", v);
+          return v;
+        })
     );
   }
 
@@ -1380,12 +1381,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   > = pipe((obs) => {
     // filter out "completed" notifications since we never want to close any of
     // the streams involved here
-    obs = obs.pipe(filter((value) => value.kind !== "C"));
     obs = obs.pipe(
-      tap((value) => {
+      tap(({ query, ...incoming }) => {
         console.dir(
           {
-            incoming: value,
+            incoming,
             current: {
               variables: this.variables,
               fetchPolicy: this.options.fetchPolicy,
@@ -1425,13 +1425,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       a: { query: DocumentNode; variables?: OperationVariables },
       b: { query: DocumentNode; variables?: OperationVariables }
     ) {
-      console.log(
-        "equalQuery",
-        a,
-        b,
-        a.query === b.query && equal(a.variables, b.variables)
-      );
-      return a.query === b.query && equal(a.variables, b.variables);
+      return a.query === b.query && equal(a.variables || {}, b.variables || {});
     }
 
     const filterForCurrentQuery = <
@@ -1512,9 +1506,25 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           if ("error" in result && !result.error) delete result.error;
           result.loading = isNetworkRequestInFlight(result.networkStatus);
           return { query, variables, result: this.maskResult(result) };
+        }),
+        filter((newValue) => {
+          console.log({
+            newValue: newValue.result,
+            lastValue: this.internalSubject.getValue().result,
+            equal: equal(
+              newValue.result,
+              this.internalSubject.getValue().result
+            ),
+          });
+          return !equal(
+            newValue.result,
+            this.internalSubject.getValue().result
+          );
         })
       )
-      .pipe(tap((value) => console.dir({ outgoing: value }, { depth: 5 })));
+      .pipe(
+        tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
+      );
   });
 
   // Reobserve with fetchPolicy effectively set to "cache-first", triggering
@@ -1579,6 +1589,9 @@ function dematerializeInternalResult<T, TData, TVariables>(): OperatorFunction<
 > {
   return (source) =>
     source.pipe(
+      // don't dematerialize "completed" notifications
+      // we don't want to accidentally close these streams
+      filter((value) => value.kind !== "C"),
       map(
         (
           value: ObservableNotification<T> &

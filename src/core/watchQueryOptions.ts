@@ -59,15 +59,12 @@ export type ErrorPolicy = "none" | "ignore" | "all";
 /**
  * Query options.
  */
-export interface QueryOptions<
-  TVariables = OperationVariables,
+export type QueryOptions<
+  TVariables extends OperationVariables = OperationVariables,
   TData = unknown,
-> {
+> = {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
@@ -86,7 +83,7 @@ export interface QueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
-}
+} & VariablesOption<NoInfer<TVariables>>;
 
 /**
  * Watched query options.

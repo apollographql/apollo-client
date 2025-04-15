@@ -7817,6 +7817,28 @@ describe.skip("type tests", () => {
     client.watchQuery({ query, variables: {} });
     client.watchQuery({ query, variables: { foo: "bar" } });
     client.watchQuery({ query, variables: { bar: "baz" } });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: { foo: "bar" } });
+    client.query({ query, variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.watchQuery({ query });
+    client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: undefined });
+    client.watchQuery({ query, variables: { foo: "bar" } });
+    client.watchQuery({ query, variables: { bar: "baz" } });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: undefined });
+    client.query({ query, variables: { foo: "bar" } });
+    client.query({ query, variables: { bar: "baz" } });
   });
 
   test("variables are optional when TVariables are empty", () => {
@@ -7828,10 +7850,24 @@ describe.skip("type tests", () => {
 
     client.watchQuery({ query });
     client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: undefined });
     client.watchQuery({
       query,
-      // @ts-expect-error unknown variables
-      variables: { bar: "baz" },
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: undefined });
+    client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
     });
   });
 
@@ -7856,6 +7892,24 @@ describe.skip("type tests", () => {
       // @ts-expect-error unknown variables
       variables: { foo: "bar" },
     });
+
+    // @ts-expect-error
+    client.query({ query });
+    client.query({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.query({
+      query,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.query({
+      query,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
   });
 
   test("optional variables are optional", () => {
@@ -7865,6 +7919,7 @@ describe.skip("type tests", () => {
 
     client.watchQuery({ query });
     client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: undefined });
     client.watchQuery({ query, variables: { limit: 10 } });
     client.watchQuery({
       query,
@@ -7881,6 +7936,26 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: undefined });
+    client.query({ query, variables: { limit: 10 } });
+    client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.query({
+      query,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
   test("enforced required variables when TVariables includes required variables", () => {
@@ -7890,8 +7965,16 @@ describe.skip("type tests", () => {
 
     // @ts-expect-error empty variables
     client.watchQuery({ query });
-    // @ts-expect-error empty variables
-    client.watchQuery({ query, variables: {} });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
     client.watchQuery({ query, variables: { id: "1" } });
     client.watchQuery({
       query,
@@ -7901,6 +7984,35 @@ describe.skip("type tests", () => {
       },
     });
     client.watchQuery({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.query({ query });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.query({ query, variables: { id: "1" } });
+    client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.query({
       query,
       variables: {
         id: "1",
@@ -7919,8 +8031,16 @@ describe.skip("type tests", () => {
 
     // @ts-expect-error empty variables
     client.watchQuery({ query });
-    // @ts-expect-error empty variables
-    client.watchQuery({ query, variables: {} });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
     client.watchQuery({ query, variables: { id: "1" } });
     client.watchQuery({
       query,
@@ -7937,6 +8057,43 @@ describe.skip("type tests", () => {
       },
     });
     client.watchQuery({
+      query,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.query({ query });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.query({ query, variables: { id: "1" } });
+    client.query({
+      query,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.query({ query, variables: { id: "1", language: "en" } });
+    client.query({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.query({
       query,
       variables: {
         id: "1",

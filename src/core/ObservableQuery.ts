@@ -1246,7 +1246,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private reportResult(
     result: ApolloQueryResult<TData>,
-    variables: TVariables | undefined
+    variables: TVariables
   ) {
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
@@ -1261,7 +1261,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  private reportError(error: Error, variables: TVariables | undefined) {
+  private reportError(error: Error, variables: TVariables) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {

@@ -159,13 +159,6 @@ export declare namespace useQuery {
       }
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
   }
-
-  export type OptionsArg<
-    TData = unknown,
-    TVariables extends OperationVariables = OperationVariables,
-  > = Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-    [options?: Options<TData, TVariables>]
-  : [options: Options<TData, TVariables>];
 }
 
 const lastWatchOptions = Symbol();
@@ -228,7 +221,11 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: useQuery.OptionsArg<NoInfer<TData>, NoInfer<TVariables>>
+  ...[options]: Record<string, never> extends (
+    OnlyRequiredProperties<TVariables>
+  ) ?
+    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables> {
   "use no memo";
   return wrapHook(
@@ -241,10 +238,11 @@ export function useQuery<
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options = {} as useQuery.Options<TData, TVariables>]: useQuery.OptionsArg<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  >
+  ...[
+    options = {} as useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+  ]: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    [options?: useQuery.Options<TData, TVariables>]
+  : [options: useQuery.Options<TData, TVariables>]
 ): useQuery.Result<TData, TVariables> {
   const client = useApolloClient(options.client);
   const { skip, ssr, ...opts } = options;

@@ -48,8 +48,8 @@ export declare namespace useLoadableQuery {
     // which case we don't want to allow a variables argument. In other
     // words, we don't want to allow variables to be passed as an argument to this
     // function if the query does not expect variables in the document.
-    ...args: [TVariables] extends [never] ? []
-    : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables]
+    ...args: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+      [variables?: TVariables]
     : [variables: TVariables]
   ) => void;
 

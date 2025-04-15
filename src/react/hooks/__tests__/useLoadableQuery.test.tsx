@@ -4943,11 +4943,12 @@ describe.skip("type tests", () => {
     loadQuery({ foo: "bar" });
   });
 
-  it("does not allow variables when TVariables is `never`", () => {
+  it("is not valid when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     const [loadQuery] = useLoadableQuery(query);
 
+    // @ts-expect-error
     loadQuery();
     // @ts-expect-error no variables argument allowed
     loadQuery({});

@@ -150,8 +150,6 @@ export class ObservableQuery<
     return this.lastQuery || this.options.query;
   }
 
-  // Computed shorthand for this.options.variables, preserved for
-  // backwards compatibility.
   /**
    * An object containing the variables that were provided for the query.
    */

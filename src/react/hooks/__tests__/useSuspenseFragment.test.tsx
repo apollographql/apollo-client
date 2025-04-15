@@ -1887,10 +1887,12 @@ describe.skip("type tests", () => {
     useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
   });
 
-  it("does not allow variables when TVariables is `never`", () => {
+  it("is invalid with TVariables as `never`", () => {
     const fragment: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
+    // @ts-expect-error
     useSuspenseFragment({ fragment, from: null });
+    // @ts-expect-error
     useSuspenseFragment({ fragment, from: null, variables: {} });
     // @ts-expect-error no variables argument allowed
     useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });

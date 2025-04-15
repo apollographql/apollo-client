@@ -1070,7 +1070,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // intentional.
     options.variables =
       newOptions && "variables" in newOptions ?
-        this.getVariablesWithDefaults(newOptions.variables as any)
+        this.getVariablesWithDefaults(newOptions.variables)
       : options.variables;
 
     if (!useDisposableObservable) {
@@ -1365,7 +1365,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve();
   }
 
-  private getVariablesWithDefaults(variables: TVariables) {
+  private getVariablesWithDefaults(variables: TVariables | undefined) {
     return this.queryManager.getVariables(this.query, variables);
   }
 }

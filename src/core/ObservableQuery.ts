@@ -601,7 +601,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           query: this.options.query,
           ...fetchMoreOptions,
           variables: {
-            ...this.options.variables,
+            ...this.variables,
             ...fetchMoreOptions.variables,
           },
         }
@@ -1092,7 +1092,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       newNetworkStatus === NetworkStatus.poll;
 
     // Save the old variables, since Object.assign may modify them below.
-    const oldVariables = this.options.variables;
+    const oldVariables = this.variables;
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});

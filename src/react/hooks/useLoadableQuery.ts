@@ -34,11 +34,11 @@ import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { __use, useRenderGuard } from "./internal/index.js";
+import { __use, useDeepMemo, useRenderGuard } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 type ResetFunction = () => void;
 
@@ -323,4 +323,72 @@ export function useLoadableQuery<
   }, []);
 
   return [loadQuery, queryRef, { fetchMore, refetch, reset, subscribeToMore }];
+}
+
+function validateOptions<TData, TVariables extends OperationVariables>(
+  options: WatchQueryOptions<TVariables, TData>
+) {
+  const { fetchPolicy, returnPartialData } = options;
+
+  validateFetchPolicy(fetchPolicy);
+  validatePartialDataReturn(fetchPolicy, returnPartialData);
+}
+
+function validateFetchPolicy(
+  fetchPolicy: WatchQueryFetchPolicy = "cache-first"
+) {
+  const supportedFetchPolicies: WatchQueryFetchPolicy[] = [
+    "cache-first",
+    "network-only",
+    "no-cache",
+    "cache-and-network",
+  ];
+
+  invariant(
+    supportedFetchPolicies.includes(fetchPolicy),
+    `The fetch policy \`%s\` is not supported with suspense.`,
+    fetchPolicy
+  );
+}
+
+function validatePartialDataReturn(
+  fetchPolicy: WatchQueryFetchPolicy | undefined,
+  returnPartialData: boolean | undefined
+) {
+  if (fetchPolicy === "no-cache" && returnPartialData) {
+    invariant.warn(
+      "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
+    );
+  }
+}
+
+function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+  client,
+  query,
+  options,
+}: {
+  client: ApolloClient;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  options: useLoadableQuery.Options;
+}): WatchQueryOptions<TVariables, TData> {
+  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+    const fetchPolicy =
+      options.fetchPolicy ||
+      client.defaultOptions.watchQuery?.fetchPolicy ||
+      "cache-first";
+
+    const watchQueryOptions = {
+      ...options,
+      fetchPolicy,
+      query,
+      notifyOnNetworkStatusChange: false,
+      nextFetchPolicy: void 0,
+    };
+
+    if (__DEV__) {
+      validateOptions(watchQueryOptions as any);
+    }
+
+    return watchQueryOptions as WatchQueryOptions<TVariables, TData>;
+  }, [client, options, query]);
 }

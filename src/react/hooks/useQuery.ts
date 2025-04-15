@@ -175,7 +175,7 @@ interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   [lastWatchOptions]?: Readonly<WatchQueryOptions<TVariables, TData>>;
 }
 
-interface InternalResult<TData, TVariables extends OperationVariables> {
+interface InternalResult<TData> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   current: ApolloQueryResult<TData>;
@@ -186,7 +186,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
-  resultData: InternalResult<TData, TVariables>;
+  resultData: InternalResult<TData>;
 }
 
 /**
@@ -379,7 +379,7 @@ function useInitialFetchPolicyIfNecessary<
 
 function useResultSubscription<TData, TVariables extends OperationVariables>(
   observable: ObsQueryWithMeta<TData, TVariables>,
-  resultData: InternalResult<TData, TVariables>,
+  resultData: InternalResult<TData>,
   resultOverride: ApolloQueryResult<any> | undefined
 ) {
   "use no memo";
@@ -441,7 +441,7 @@ function useResubscribeIfNecessary<
   TVariables extends OperationVariables,
 >(
   /** this hook will mutate properties on `resultData` */
-  resultData: InternalResult<TData, TVariables>,
+  resultData: InternalResult<TData>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>

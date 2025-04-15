@@ -5988,8 +5988,12 @@ describe.skip("Type Tests", () => {
     void execute();
     void execute({});
     void execute({ variables: {} });
-    // @ts-expect-error unknown variables
-    void execute({ variables: { foo: "bar" } });
+    void execute({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
   test("is invalid when TVariables is `never`", () => {

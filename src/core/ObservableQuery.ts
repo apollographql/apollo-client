@@ -156,7 +156,7 @@ export class ObservableQuery<
    * An object containing the variables that were provided for the query.
    */
   public get variables(): TVariables {
-    return this.options.variables as TVariables;
+    return this.options.variables;
   }
 
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
@@ -572,7 +572,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({
           ...this.options.variables,
           ...variables,
-        } as any);
+        });
     }
 
     this.queryInfo.resetLastWrite();

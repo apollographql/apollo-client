@@ -1196,7 +1196,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private reportResult(
     result: ApolloQueryResult<TData>,
-    variables: typeof this.variables
+    variables: TVariables
   ) {
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);

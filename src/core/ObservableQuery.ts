@@ -1378,7 +1378,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       TVariables
     >
   > = pipe((obs) => {
-    obs = obs.pipe(tap(console.log.bind(console, "operator")));
+    // filter out "completed" notifications since we never want to close any of
+    // the streams involved here
+    obs = obs.pipe(filter((value) => value.kind !== "C"));
+    obs = obs.pipe(
+      tap((value) => {
+        console.dir(
+          {
+            incoming: value,
+            current: {
+              variables: this.variables,
+              fetchPolicy: this.options.fetchPolicy,
+            },
+          },
+          { depth: 5 }
+        );
+      })
+    );
 
     const fromCache = obs.pipe(
       filter(
@@ -1409,6 +1425,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       a: { query: DocumentNode; variables?: OperationVariables },
       b: { query: DocumentNode; variables?: OperationVariables }
     ) {
+      console.log(
+        "equalQuery",
+        a,
+        b,
+        a.query === b.query && equal(a.variables, b.variables)
+      );
       return a.query === b.query && equal(a.variables, b.variables);
     }
 
@@ -1483,15 +1505,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           };
         })
       )
-    ).pipe(
-      // normalize result shape
-      map(({ query, variables, result }) => {
-        if ("error" in result && !result.error) delete result.error;
-        result.loading = isNetworkRequestInFlight(result.networkStatus);
-        return { query, variables, result: this.maskResult(result) };
-      })
-    );
-    //.pipe(tap<ApolloQueryResult<TData>>(console.log.bind(console, "final")));
+    )
+      .pipe(
+        // normalize result shape
+        map(({ query, variables, result }) => {
+          if ("error" in result && !result.error) delete result.error;
+          result.loading = isNetworkRequestInFlight(result.networkStatus);
+          return { query, variables, result: this.maskResult(result) };
+        })
+      )
+      .pipe(tap((value) => console.dir({ outgoing: value }, { depth: 5 })));
   });
 
   // Reobserve with fetchPolicy effectively set to "cache-first", triggering

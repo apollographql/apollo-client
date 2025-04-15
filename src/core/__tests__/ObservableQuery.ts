@@ -65,12 +65,12 @@ describe("ObservableQuery", () => {
     people_one: {
       name: "Luke Skywalker",
     },
-  };
+  } as const;
   const dataTwo = {
     people_one: {
       name: "Leia Skywalker",
     },
-  };
+  } as const;
 
   const error = new GraphQLError("is offline.", undefined, null, null, [
     "people_one",

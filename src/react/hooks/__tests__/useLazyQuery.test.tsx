@@ -5997,6 +5997,7 @@ describe.skip("Type Tests", () => {
 
     const [execute] = useLazyQuery(query);
 
+    // @ts-expect-error
     void execute();
     // @ts-expect-error expecting variables key
     void execute({});

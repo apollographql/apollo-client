@@ -172,9 +172,7 @@ export declare namespace useLazyQuery {
   ];
 
   export type ExecFunction<TData, TVariables extends OperationVariables> = (
-    ...args: [TVariables] extends [never] ?
-      [options?: useLazyQuery.ExecOptions<TVariables>]
-    : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    ...args: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
   ) => Promise<QueryResult<TData>>;

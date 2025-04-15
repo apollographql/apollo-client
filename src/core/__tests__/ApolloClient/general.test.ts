@@ -1428,7 +1428,7 @@ describe("ApolloClient", () => {
       notifyOnNetworkStatusChange: false,
     });
     const stream = new ObservableStream(observable);
-    const originalOptions = { ...observable.options };
+    const originalOptions = { ...observable.options } as Record<string, any>;
 
     await expect(stream).toEmitTypedValue({
       data: data1,
@@ -1446,7 +1446,7 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    const updatedOptions = { ...observable.options };
+    const updatedOptions = { ...observable.options } as Record<string, any>;
     delete originalOptions.variables;
     delete updatedOptions.variables;
     expect(updatedOptions).toEqual(originalOptions);

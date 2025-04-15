@@ -1463,22 +1463,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         ),
         filter(filterForCurrentQuery),
         // convert errors into "errors as values"
-        map(
-          (value): QueryNotification.FromNetwork<TData, TVariables> =>
-            value.kind !== "E" ?
-              value
-            : {
-                ...value,
-                kind: "N",
-                value: {
-                  data: undefined,
-                  error: value.error,
-                  networkStatus: NetworkStatus.error,
-                  loading: false,
-                  partial: true,
-                },
-              }
-        ),
+        map((value): QueryNotification.FromNetwork<TData, TVariables> => {
+          if (value.kind !== "E") return value;
+          const lastValue = this.internalSubject.getValue();
+          return {
+            ...value,
+            kind: "N",
+            value: {
+              data: undefined,
+              partial: true,
+              ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
+              error: value.error,
+              networkStatus: NetworkStatus.error,
+              loading: false,
+            },
+          };
+        }),
         dematerializeInternalResult()
       ),
       fromNetworkStatus.pipe(
@@ -1497,6 +1497,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               ...(isEqualQuery(previousResult, value) ?
                 previousResult.result
               : this.getInitialResult()),
+              error: undefined,
               networkStatus: value.result.networkStatus,
             },
           };

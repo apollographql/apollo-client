@@ -1637,7 +1637,7 @@ test("passes context to the link", async () => {
     context: Record<string, any>;
   }
 
-  const query: TypedDocumentNode<QueryData, never> = gql`
+  const query: TypedDocumentNode<QueryData, Record<string, never>> = gql`
     query ContextQuery {
       context
     }
@@ -2029,28 +2029,43 @@ describe.skip("type tests", () => {
 
     preloadQuery(query);
     preloadQuery<Data, never>(query);
-    preloadQuery(query, { variables: {} });
-    preloadQuery<Data, never>(query, { variables: {} });
-    preloadQuery(query, { returnPartialData: true, variables: {} });
-    preloadQuery<Data, never>(query, {
-      returnPartialData: true,
+    preloadQuery(query, {
+      // @ts-expect-error
       variables: {},
     });
-    // @ts-expect-error no variables allowed
-    preloadQuery(query, { variables: { foo: "bar" } });
-    // @ts-expect-error no variables allowed
-    preloadQuery<Data, never>(query, { variables: { foo: "bar" } });
+    preloadQuery<Data, never>(query, {
+      // @ts-expect-error
+      variables: {},
+    });
     preloadQuery(query, {
       returnPartialData: true,
+      // @ts-expect-error
+      variables: {},
+    });
+    preloadQuery<Data, never>(query, {
+      returnPartialData: true,
+      // @ts-expect-error
+      variables: {},
+    });
+    preloadQuery(query, {
+      // @ts-expect-error no variables allowed
+      variables: { foo: "bar" },
+    });
+    preloadQuery<Data, never>(query, {
+      // @ts-expect-error no variables allowed
+      variables: { foo: "bar" },
+    });
+    preloadQuery(query, {
+      returnPartialData: true,
+      // @ts-expect-error no variables allowed
       variables: {
-        // @ts-expect-error no variables allowed
         foo: "bar",
       },
     });
     preloadQuery<Data, never>(query, {
       returnPartialData: true,
+      // @ts-expect-error no variables allowed
       variables: {
-        // @ts-expect-error no variables allowed
         foo: "bar",
       },
     });

@@ -46,7 +46,9 @@ export type PreloadQueryOptions<
 type PreloadQueryOptionsArg<
   TVariables extends OperationVariables,
   TOptions = unknown,
-> = Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+> = [TVariables] extends [never] ?
+  [options?: PreloadQueryOptions<never> & TOptions]
+: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
   [
     options?: PreloadQueryOptions<NoInfer<TVariables>> &
       Omit<TOptions, "variables">,

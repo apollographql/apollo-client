@@ -163,7 +163,7 @@ export declare namespace useQuery {
   export type OptionsArg<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > = [Record<string, never>] extends [OnlyRequiredProperties<TVariables>] ?
+  > = Record<string, never> extends OnlyRequiredProperties<TVariables> ?
     [options?: Options<TData, TVariables>]
   : [options: Options<TData, TVariables>];
 }

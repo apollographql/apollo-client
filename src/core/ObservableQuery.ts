@@ -9,7 +9,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { merge, Observable } from "rxjs";
+import { merge, Observable, share } from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -1382,18 +1382,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // filter out "completed" notifications since we never want to close any of
     // the streams involved here
     obs = obs.pipe(
-      tap(({ query, ...incoming }) => {
-        console.dir(
-          {
-            incoming,
-            current: {
-              variables: this.variables,
-              fetchPolicy: this.options.fetchPolicy,
+      tap({
+        next: ({ query, ...incoming }) => {
+          console.dir(
+            {
+              incoming,
+              current: {
+                variables: this.variables,
+                fetchPolicy: this.options.fetchPolicy,
+              },
             },
-          },
-          { depth: 5 }
-        );
-      })
+            { depth: 5 }
+          );
+        },
+      }),
+      share()
     );
 
     const fromCache = obs.pipe(

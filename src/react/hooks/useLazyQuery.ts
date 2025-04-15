@@ -359,7 +359,7 @@ export function useLazyQuery<
           // If `variables` is not given, reset back to empty variables by
           // ensuring the key exists in options
           variables: executeOptions?.variables,
-        } as Partial<WatchQueryOptions<TVariables, TData>>);
+        });
       },
       [observable, calledDuringRender]
     );

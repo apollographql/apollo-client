@@ -1444,7 +1444,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           TVariables
         >(),
         filter(
-          ({ result }) => !result.partial || !!this.options.returnPartialData
+          ({ result }) =>
+            result.networkStatus !== NetworkStatus.ready ||
+            !result.partial ||
+            !!this.options.returnPartialData
         )
       ),
       fromNetwork.pipe(

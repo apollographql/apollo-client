@@ -78,7 +78,7 @@ export declare namespace ObservableQuery {
     TVariables extends OperationVariables = OperationVariables,
   > = {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-    fetchPolicy?: WatchQueryFetchPolicy;
+    fetchPolicy: WatchQueryFetchPolicy;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
     nextFetchPolicy?:
@@ -90,7 +90,7 @@ export declare namespace ObservableQuery {
         ) => WatchQueryFetchPolicy);
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
-    initialFetchPolicy?: WatchQueryFetchPolicy;
+    initialFetchPolicy: WatchQueryFetchPolicy;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
     refetchWritePolicy?: RefetchWritePolicy;

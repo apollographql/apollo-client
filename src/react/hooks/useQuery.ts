@@ -34,7 +34,11 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/utilities";
+import type {
+  NoInfer,
+  OnlyRequiredProperties,
+  VariablesOption,
+} from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
@@ -44,10 +48,10 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useQuery {
-  export interface Options<
+  export type Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > {
+  > = {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: WatchQueryFetchPolicy;
 
@@ -65,9 +69,6 @@ export declare namespace useQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
     refetchWritePolicy?: RefetchWritePolicy;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-    variables?: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
     errorPolicy?: ErrorPolicy;
@@ -95,7 +96,7 @@ export declare namespace useQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
     skip?: boolean;
-  }
+  } & VariablesOption<TVariables>;
 
   export interface Result<
     TData = unknown,
@@ -158,6 +159,13 @@ export declare namespace useQuery {
       }
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
   }
+
+  export type OptionsArg<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = [Record<string, never>] extends [OnlyRequiredProperties<TVariables>] ?
+    [options?: Options<TData, TVariables>]
+  : [options: Options<TData, TVariables>];
 }
 
 const lastWatchOptions = Symbol();
@@ -220,7 +228,7 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
+  ...[options]: useQuery.OptionsArg<NoInfer<TData>, NoInfer<TVariables>>
 ): useQuery.Result<TData, TVariables> {
   "use no memo";
   return wrapHook(
@@ -228,13 +236,16 @@ export function useQuery<
     // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(options && options.client)
-  )(query, options);
+  )(query, options!);
 }
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-) {
+  ...[options = {} as useQuery.Options<TData, TVariables>]: useQuery.OptionsArg<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  >
+): useQuery.Result<TData, TVariables> {
   const client = useApolloClient(options.client);
   const { skip, ssr, ...opts } = options;
 

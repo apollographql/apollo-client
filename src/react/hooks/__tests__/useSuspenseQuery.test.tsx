@@ -12251,7 +12251,7 @@ describe("useSuspenseQuery", () => {
       {
         const { data } = useSuspenseQuery(
           query,
-          options.skip ? skipToken : undefined
+          options.skip ? skipToken : { variables: { id: "1" } }
         );
 
         expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
@@ -12261,7 +12261,7 @@ describe("useSuspenseQuery", () => {
         const { data } = useSuspenseQuery<
           VariablesCaseData,
           VariablesCaseVariables
-        >(query, options.skip ? skipToken : undefined);
+        >(query, options.skip ? skipToken : { variables: { id: "1" } });
 
         expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
       }
@@ -12271,7 +12271,7 @@ describe("useSuspenseQuery", () => {
       {
         const { data } = useSuspenseQuery(
           maskedQuery,
-          options.skip ? skipToken : undefined
+          options.skip ? skipToken : { variables: { id: "1" } }
         );
 
         expectTypeOf(data).toEqualTypeOf<
@@ -12283,7 +12283,7 @@ describe("useSuspenseQuery", () => {
         const { data } = useSuspenseQuery<
           MaskedVariablesCaseData,
           VariablesCaseVariables
-        >(maskedQuery, options.skip ? skipToken : undefined);
+        >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
 
         expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
       }
@@ -12292,7 +12292,7 @@ describe("useSuspenseQuery", () => {
         const { data } = useSuspenseQuery<
           Masked<MaskedVariablesCaseData>,
           VariablesCaseVariables
-        >(maskedQuery, options.skip ? skipToken : undefined);
+        >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
 
         expectTypeOf(data).toEqualTypeOf<
           Masked<MaskedVariablesCaseData> | undefined
@@ -12901,6 +12901,13 @@ describe("useSuspenseQuery", () => {
       useSuspenseQuery(query, { variables: {} });
       useSuspenseQuery(query, { variables: { foo: "bar" } });
       useSuspenseQuery(query, { variables: { bar: "baz" } });
+
+      let skip!: boolean;
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(query, skip ? skipToken : {});
+      useSuspenseQuery(query, skip ? skipToken : { variables: {} });
+      useSuspenseQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+      useSuspenseQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
     });
 
     test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
@@ -12911,6 +12918,13 @@ describe("useSuspenseQuery", () => {
       useSuspenseQuery(query, { variables: {} });
       useSuspenseQuery(query, { variables: { foo: "bar" } });
       useSuspenseQuery(query, { variables: { bar: "baz" } });
+
+      let skip!: boolean;
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(query, skip ? skipToken : {});
+      useSuspenseQuery(query, skip ? skipToken : { variables: {} });
+      useSuspenseQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+      useSuspenseQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
     });
 
     test("variables are optional when TVariables are empty", () => {
@@ -12928,6 +12942,16 @@ describe("useSuspenseQuery", () => {
           foo: "bar",
         },
       });
+
+      let skip!: boolean;
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(query, skip ? skipToken : {});
+      useSuspenseQuery(query, skip ? skipToken : { variables: {} });
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error unknown variables
+        skip ? skipToken : { variables: { foo: "bar" } }
+      );
     });
 
     test("is invalid when TVariables is `never`", () => {
@@ -12951,6 +12975,30 @@ describe("useSuspenseQuery", () => {
           foo: "bar",
         },
       });
+
+      let skip!: boolean;
+      // @ts-expect-error
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error
+        skip ? skipToken : {}
+      );
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error
+        skip ? skipToken : { variables: {} }
+      );
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error
+        skip ? skipToken : { variables: undefined }
+      );
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error unknown variables
+        skip ? skipToken : { variables: { foo: "bar" } }
+      );
     });
 
     test("optional variables are optional", () => {
@@ -12974,6 +13022,35 @@ describe("useSuspenseQuery", () => {
           foo: "bar",
         },
       });
+
+      let skip!: boolean;
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(query, skip ? skipToken : {});
+      useSuspenseQuery(query, skip ? skipToken : { variables: {} });
+      useSuspenseQuery(query, skip ? skipToken : { variables: { limit: 10 } });
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : (
+          {
+            variables: {
+              // @ts-expect-error unknown variables
+              foo: "bar",
+            },
+          }
+        )
+      );
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : (
+          {
+            variables: {
+              limit: 10,
+              // @ts-expect-error unknown variables
+              foo: "bar",
+            },
+          }
+        )
+      );
     });
 
     test("enforces required variables when TVariables includes required variables", () => {
@@ -13000,6 +13077,44 @@ describe("useSuspenseQuery", () => {
           foo: "bar",
         },
       });
+
+      let skip!: boolean;
+      // @ts-expect-error missing variables option
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error missing variables option
+        skip ? skipToken : {}
+      );
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error missing required variables
+        skip ? skipToken : { variables: {} }
+      );
+      useSuspenseQuery(query, skip ? skipToken : { variables: { id: "1" } });
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : (
+          {
+            variables: {
+              // @ts-expect-error unknown variables
+              foo: "bar",
+            },
+          }
+        )
+      );
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : (
+          {
+            variables: {
+              id: "1",
+              // @ts-expect-error unknown variables
+              foo: "bar",
+            },
+          }
+        )
+      );
     });
 
     test("requires variables with mixed TVariables", () => {
@@ -13035,6 +13150,50 @@ describe("useSuspenseQuery", () => {
           foo: "bar",
         },
       });
+
+      let skip!: boolean;
+      // @ts-expect-error missing variables option
+      useSuspenseQuery(query, skip ? skipToken : undefined);
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error missing variables option
+        skip ? skipToken : {}
+      );
+      useSuspenseQuery(
+        query,
+        // @ts-expect-error missing required variables
+        skip ? skipToken : { variables: {} }
+      );
+      useSuspenseQuery(query, skip ? skipToken : { variables: { id: "1" } });
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : { variables: { id: "1", language: "en" } }
+      );
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : (
+          {
+            variables: {
+              id: "1",
+              // @ts-expect-error unknown variables
+              foo: "bar",
+            },
+          }
+        )
+      );
+      useSuspenseQuery(
+        query,
+        skip ? skipToken : (
+          {
+            variables: {
+              id: "1",
+              language: "en",
+              // @ts-expect-error unknown variables
+              foo: "bar",
+            },
+          }
+        )
+      );
     });
   });
 });

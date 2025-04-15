@@ -108,31 +108,6 @@ export declare namespace useSuspenseQuery {
   }
 }
 
-// export function useSuspenseQuery<
-//   TData,
-//   TVariables extends OperationVariables,
-//   TOptions extends Omit<useSuspenseQuery.Options, "variables">,
-// >(
-//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-//   ...[options]: Record<string, never> extends (
-//     OnlyRequiredProperties<TVariables>
-//   ) ?
-//     [options?: useSuspenseQuery.Options<NoInfer<TVariables>> & TOptions]
-//   : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
-// ): useSuspenseQuery.Result<
-//   TOptions["errorPolicy"] extends "ignore" | "all" ?
-//     TOptions["returnPartialData"] extends true ?
-//       DeepPartial<TData> | undefined
-//     : TData | undefined
-//   : TOptions["returnPartialData"] extends true ?
-//     TOptions["skip"] extends boolean ?
-//       DeepPartial<TData> | undefined
-//     : DeepPartial<TData>
-//   : TOptions["skip"] extends boolean ? TData | undefined
-//   : TData,
-//   TVariables
-// >;
-
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -185,14 +160,6 @@ export function useSuspenseQuery<
   }
 ): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
-// export function useSuspenseQuery<
-//   TData = unknown,
-//   TVariables extends OperationVariables = OperationVariables,
-// >(
-//   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-//   options?: useSuspenseQuery.Options<NoInfer<TVariables>>
-// ): useSuspenseQuery.Result<TData, TVariables>;
-
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -210,16 +177,12 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SkipToken | undefined
-): useSuspenseQuery.Result<TData | undefined, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
-): useSuspenseQuery.Result<TData | undefined, TVariables>;
+  ...[options]: Record<string, never> extends (
+    OnlyRequiredProperties<TVariables>
+  ) ?
+    [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
+): useSuspenseQuery.Result<TData, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -229,9 +192,17 @@ export function useSuspenseQuery<
   ...[options]: Record<string, never> extends (
     OnlyRequiredProperties<TVariables>
   ) ?
-    [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
-  : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
-): useSuspenseQuery.Result<TData, TVariables>;
+    [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+): useSuspenseQuery.Result<TData | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,

@@ -511,7 +511,7 @@ export class ObservableQuery<
   public getCurrentResult(
     saveAsLastResult = true
   ): ApolloQueryResult<MaybeMasked<TData>> {
-    return this.maskResult(this.getCurrentFullResult(saveAsLastResult));
+    return this.subject.getValue();
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was
@@ -1447,7 +1447,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           ({ result }) =>
             result.networkStatus !== NetworkStatus.ready ||
             !result.partial ||
-            !!this.options.returnPartialData
+            !!this.options.returnPartialData ||
+            this.options.fetchPolicy === "cache-only"
         )
       ),
       fromNetwork.pipe(

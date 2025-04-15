@@ -421,7 +421,7 @@ export class ObservableQuery<
   // first received.
   public isDifferentFromLastResult(
     newResult: ApolloQueryResult<TData>,
-    variables?: typeof this.variables
+    variables?: TVariables
   ) {
     if (!this.last) {
       return true;
@@ -621,7 +621,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.updateQuery(
                   {
                     query: this.query,
-                    variables: this.variables as TVariables,
+                    variables: this.variables,
                     returnPartialData: true,
                     optimistic: false,
                   },
@@ -639,7 +639,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 // original field value, keyed by the original variables).
                 cache.writeQuery({
                   query: combinedOptions.query,
-                  variables: combinedOptions.variables as TFetchVars,
+                  variables: combinedOptions.variables,
                   data: fetchMoreResult.data as Unmasked<TFetchData>,
                 });
               }
@@ -839,7 +839,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       queryManager.cache.writeQuery({
         query: this.options.query,
         data: newResult,
-        variables: this.variables as TVariables,
+        variables: this.variables,
       });
 
       queryManager.broadcastQueries();
@@ -996,7 +996,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private updateLastResult(
     newResult: ApolloQueryResult<TData>,
-    variables: typeof this.variables = this.variables
+    variables = this.variables
   ) {
     let error = this.getLastError();
     // Preserve this.last.error unless the variables have changed.
@@ -1008,7 +1008,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.queryManager.assumeImmutableResults ?
           newResult
         : cloneDeep(newResult),
-      variables: variables as TVariables,
+      variables,
       ...(error ? { error } : null),
     });
   }
@@ -1145,13 +1145,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       next: (result) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
-          this.reportResult(result, variables as any);
+          this.reportResult(result, variables);
         }
       },
       error: (error) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
-          this.reportError(error, variables as any);
+          this.reportError(error, variables);
         }
       },
     };
@@ -1196,7 +1196,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private reportResult(
     result: ApolloQueryResult<TData>,
-    variables: TVariables
+    variables: TVariables | undefined
   ) {
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
@@ -1211,7 +1211,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  private reportError(error: Error, variables: typeof this.variables) {
+  private reportError(error: Error, variables: TVariables | undefined) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {

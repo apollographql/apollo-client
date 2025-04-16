@@ -166,9 +166,6 @@ export type InternalRefetchQueriesMap<TResult> = Map<
   InternalRefetchQueriesResult<TResult>
 >;
 
-// TODO Remove this unnecessary type in Apollo Client 4.
-export type { QueryOptions as PureQueryOptions };
-
 export type OperationVariables = Record<string, any>;
 
 export interface ApolloQueryResult<T> {

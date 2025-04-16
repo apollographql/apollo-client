@@ -39,7 +39,6 @@ export type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
-  PureQueryOptions,
   QueryListener,
   QueryResult,
   RefetchQueriesInclude,

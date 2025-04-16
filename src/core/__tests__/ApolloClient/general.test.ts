@@ -7811,6 +7811,7 @@ describe("ApolloClient", () => {
 describe.skip("type tests", () => {
   test("variables are optional and can be anything with an DocumentNode", () => {
     const query = gql``;
+    const mutation = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     client.watchQuery({ query });
@@ -7822,10 +7823,16 @@ describe.skip("type tests", () => {
     client.query({ query, variables: {} });
     client.query({ query, variables: { foo: "bar" } });
     client.query({ query, variables: { bar: "baz" } });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: { foo: "bar" } });
+    client.mutate({ mutation, variables: { bar: "baz" } });
   });
 
   test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
     const query: TypedDocumentNode<{ greeting: string }> = gql``;
+    const mutation: TypedDocumentNode<{ greeting: string }> = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     client.watchQuery({ query });
@@ -7839,10 +7846,20 @@ describe.skip("type tests", () => {
     client.query({ query, variables: undefined });
     client.query({ query, variables: { foo: "bar" } });
     client.query({ query, variables: { bar: "baz" } });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: undefined });
+    client.mutate({ mutation, variables: { foo: "bar" } });
+    client.mutate({ mutation, variables: { bar: "baz" } });
   });
 
   test("variables are optional when TVariables are empty", () => {
     const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+    const mutation: TypedDocumentNode<
       { greeting: string },
       Record<string, never>
     > = gql``;
@@ -7869,10 +7886,22 @@ describe.skip("type tests", () => {
         bar: "baz",
       },
     });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: undefined });
+    client.mutate({
+      mutation,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
   });
 
   test("is invalid when TVariables is never", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+    const mutation: TypedDocumentNode<{ greeting: string }, never> = gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
     // @ts-expect-error
@@ -7910,10 +7939,30 @@ describe.skip("type tests", () => {
       // @ts-expect-error unknown variables
       variables: { foo: "bar" },
     });
+
+    // @ts-expect-error
+    client.mutate({ mutation });
+    client.mutate({
+      mutation,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
   });
 
   test("optional variables are optional", () => {
     const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+    const mutation: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
       gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
@@ -7956,10 +8005,32 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: undefined });
+    client.mutate({ mutation, variables: { limit: 10 } });
+    client.mutate({
+      mutation,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.mutate({
+      mutation,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
   test("enforced required variables when TVariables includes required variables", () => {
     const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+    const mutation: TypedDocumentNode<{ character: string }, { id: string }> =
       gql``;
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
@@ -8020,10 +8091,43 @@ describe.skip("type tests", () => {
         foo: "bar",
       },
     });
+
+    // @ts-expect-error empty variables
+    client.mutate({ mutation });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.mutate({ mutation, variables: { id: "1" } });
+    client.mutate({
+      mutation,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.mutate({
+      mutation,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
   test("requires variables with mixed TVariables", () => {
     const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+    const mutation: TypedDocumentNode<
       { character: string },
       { id: string; language?: string }
     > = gql``;
@@ -8095,6 +8199,43 @@ describe.skip("type tests", () => {
     });
     client.query({
       query,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.mutate({ mutation });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.mutate({ mutation, variables: { id: "1" } });
+    client.mutate({
+      mutation,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.mutate({ mutation, variables: { id: "1", language: "en" } });
+    client.mutate({
+      mutation,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.mutate({
+      mutation,
       variables: {
         id: "1",
         language: "en",

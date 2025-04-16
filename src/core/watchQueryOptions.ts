@@ -262,12 +262,12 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-export interface MutationOptions<
+export type MutationOptions<
   TData = unknown,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
-> {
+> = {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
     | Unmasked<NoInfer<TData>>
@@ -296,9 +296,6 @@ export interface MutationOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
 
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
   context?: TContext;
 
@@ -310,4 +307,4 @@ export interface MutationOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
+} & VariablesOption<NoInfer<TVariables>>;

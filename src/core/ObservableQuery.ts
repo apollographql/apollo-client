@@ -1259,17 +1259,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       fetchPolicy = "cache-first";
     }
 
-    const normalized = Object.assign({}, options, {
-      query,
-      variables,
-      fetchPolicy,
-      errorPolicy,
-      returnPartialData,
-      notifyOnNetworkStatusChange,
-      context,
-    });
-
     const fromVariables = (variables: TVariables) => {
+      const normalized = Object.assign({}, options, {
+        query,
+        variables,
+        fetchPolicy,
+        errorPolicy,
+        returnPartialData,
+        notifyOnNetworkStatusChange,
+        context,
+      });
+
       const observableWithInfo = this.queryManager.fetchQueryByPolicy<
         TData,
         TVariables

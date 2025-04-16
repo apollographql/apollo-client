@@ -841,7 +841,7 @@ export class QueryManager {
           id: queryId,
         }),
       }))
-      .finally(() => this.stopQuery(queryId));
+      .finally(() => this.removeQuery(queryId));
   }
 
   private queryIdCounter = 1;

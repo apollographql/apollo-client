@@ -1260,22 +1260,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const fromVariables = (variables: TVariables) => {
-      const normalized = Object.assign({}, options, {
-        query,
-        variables,
-        fetchPolicy,
-        errorPolicy,
-        returnPartialData,
-        notifyOnNetworkStatusChange,
-        context,
-      });
-
       const observableWithInfo = this.queryManager.fetchQueryByPolicy<
         TData,
         TVariables
       >(
         queryInfo,
-        { ...normalized, variables },
+        {
+          ...options,
+          query,
+          variables,
+          fetchPolicy,
+          errorPolicy,
+          returnPartialData,
+          notifyOnNetworkStatusChange,
+          context,
+        },
         networkStatus,
         emitLoadingState
       );

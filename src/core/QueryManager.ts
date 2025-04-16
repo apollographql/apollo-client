@@ -833,22 +833,21 @@ export class QueryManager {
       fetchPolicy = "cache-first";
     }
 
-    const normalized = Object.assign({}, options, {
-      query,
-      variables,
-      fetchPolicy,
-      errorPolicy,
-      returnPartialData,
-      notifyOnNetworkStatusChange,
-      context,
-    });
-
     const queryInfo = this.getOrCreateQuery(queryId);
 
     const fromVariables = (variables: TVars) => {
       return this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
-        { ...normalized, variables },
+        {
+          ...options,
+          query,
+          variables,
+          fetchPolicy,
+          errorPolicy,
+          returnPartialData,
+          notifyOnNetworkStatusChange,
+          context,
+        },
         NetworkStatus.loading,
         false
       );

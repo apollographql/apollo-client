@@ -815,18 +815,110 @@ export class QueryManager {
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
+    const variables = this.getVariables(query, options.variables);
+    const defaults = this.defaultOptions.watchQuery;
 
-    return lastValueFrom(
-      this.fetchObservableWithInfo<TData, TVars>(
-        this.getOrCreateQuery(queryId),
-        { ...options, query }
-      ).observable.pipe(map(toQueryResult)),
-      {
-        // This default is needed when a `standby` fetch policy is used to avoid
-        // an EmptyError from rejecting this promise.
-        defaultValue: { data: undefined },
+    let {
+      fetchPolicy = defaults?.fetchPolicy || "cache-first",
+      errorPolicy = defaults?.errorPolicy || "none",
+      returnPartialData = false,
+      notifyOnNetworkStatusChange = true,
+      context = {},
+    } = options;
+
+    if (
+      this.prioritizeCacheValues &&
+      (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network")
+    ) {
+      fetchPolicy = "cache-first";
+    }
+
+    const normalized = Object.assign({}, options, {
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      notifyOnNetworkStatusChange,
+      context,
+    });
+
+    const queryInfo = this.getOrCreateQuery(queryId);
+
+    const fromVariables = (variables: TVars) => {
+      // Since normalized is always a fresh copy of options, it's safe to
+      // modify its properties here, rather than creating yet another new
+      // WatchQueryOptions object.
+      normalized.variables = variables;
+
+      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
+        queryInfo,
+        normalized,
+        NetworkStatus.loading,
+        false
+      );
+
+      if (
+        // If we're in standby, postpone advancing options.fetchPolicy using
+        // applyNextFetchPolicy.
+        normalized.fetchPolicy !== "standby" &&
+        queryInfo.observableQuery
+      ) {
+        queryInfo.observableQuery["applyNextFetchPolicy"](
+          "after-fetch",
+          options
+        );
       }
-    )
+
+      return observableWithInfo;
+    };
+
+    // This cancel function needs to be set before the concast is created,
+    // in case concast creation synchronously cancels the request.
+    const cleanupCancelFn = () => {
+      this.fetchCancelFns.delete(queryInfo.queryId);
+      // We need to call `complete` on the subject here otherwise the merged
+      // observable will never complete since it waits for all source
+      // observables to complete before itself completes.
+      fetchCancelSubject.complete();
+    };
+    this.fetchCancelFns.set(queryInfo.queryId, (reason) => {
+      fetchCancelSubject.error(reason);
+      cleanupCancelFn();
+    });
+
+    const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
+    let observable: Observable<ApolloQueryResult<TData>>;
+    // If the query has @export(as: ...) directives, then we need to
+    // process those directives asynchronously. When there are no
+    // @export directives (the common case), we deliberately avoid
+    // wrapping the result of this.fetchQueryByPolicy in a Promise,
+    // since the timing of result delivery is (unfortunately) important
+    // for backwards compatibility. TODO This code could be simpler if
+    // we deprecated and removed LocalState.
+    if (this.getDocumentInfo(normalized.query).hasClientExports) {
+      observable = from(
+        this.localState.addExportedVariables(
+          normalized.query,
+          normalized.variables,
+          normalized.context
+        )
+      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
+    } else {
+      observable = fromVariables(normalized.variables).observable;
+    }
+
+    observable = observable.pipe(
+      tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
+      mergeWith(fetchCancelSubject),
+      share()
+    );
+
+    return lastValueFrom(observable.pipe(map(toQueryResult)), {
+      // This default is needed when a `standby` fetch policy is used to avoid
+      // an EmptyError from rejecting this promise.
+      defaultValue: { data: undefined },
+    })
       .then((value) => ({
         ...value,
         data: this.maskOperation({

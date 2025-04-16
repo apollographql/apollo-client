@@ -74,15 +74,6 @@ export type QueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  pollInterval?: number;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  notifyOnNetworkStatusChange?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
 } & VariablesOption<NoInfer<TVariables>>;
 
 /**

@@ -824,10 +824,7 @@ export class QueryManager {
       context = {},
     } = options;
 
-    if (
-      this.prioritizeCacheValues &&
-      (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network")
-    ) {
+    if (this.prioritizeCacheValues && fetchPolicy === "network-only") {
       fetchPolicy = "cache-first";
     }
 

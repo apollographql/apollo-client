@@ -20,6 +20,7 @@ import * as linkContext from "@apollo/client/link/context";
 import * as linkCore from "@apollo/client/link/core";
 import * as linkError from "@apollo/client/link/error";
 import * as linkHTTP from "@apollo/client/link/http";
+import * as linkNetworkError from "@apollo/client/link/network-error";
 import * as linkPersistedQueries from "@apollo/client/link/persisted-queries";
 import * as linkRemoveTypename from "@apollo/client/link/remove-typename";
 import * as linkRetry from "@apollo/client/link/retry";
@@ -80,6 +81,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/link/core", linkCore);
   check("@apollo/client/link/error", linkError);
   check("@apollo/client/link/http", linkHTTP);
+  check("@apollo/client/link/network-error", linkNetworkError);
   check("@apollo/client/link/persisted-queries", linkPersistedQueries);
   check("@apollo/client/link/remove-typename", linkRemoveTypename);
   check("@apollo/client/link/retry", linkRetry);

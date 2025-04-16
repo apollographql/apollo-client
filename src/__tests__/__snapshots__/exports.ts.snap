@@ -129,11 +129,13 @@ exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
+  "NetworkError",
   "PROTOCOL_ERRORS_SYMBOL",
   "ServerError",
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "isErrorLike",
   "toErrorLike",
 ]
 `;
@@ -189,6 +191,12 @@ Array [
   "selectHttpOptionsAndBodyInternal",
   "selectURI",
   "serializeFetchParameter",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/network-error 1`] = `
+Array [
+  "wrapErrorsWithNetworkError",
 ]
 `;
 

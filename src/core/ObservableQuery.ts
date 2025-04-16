@@ -1280,8 +1280,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       if (
         // If we're in standby, postpone advancing options.fetchPolicy using
         // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby" &&
-        queryInfo.observableQuery
+        normalized.fetchPolicy !== "standby"
       ) {
         this.applyNextFetchPolicy("after-fetch", options);
       }

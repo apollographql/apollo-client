@@ -173,10 +173,6 @@ export class QueryInfo {
     }
 
     this.updateLastDiff(diff);
-
-    if (!equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.observableQuery?.["scheduleNotify"]();
-    }
   }
 
   public readonly observableQuery: ObservableQuery<any, any> | null = null;

@@ -318,6 +318,20 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
+  private getCacheDiff({
+    query = this.query,
+    variables = this.variables,
+    returnPartialData = true,
+    optimistic = true,
+  } = {}) {
+    return this.queryManager.cache.diff<TData>({
+      query,
+      variables,
+      returnPartialData,
+      optimistic,
+    });
+  }
+
   private getInitialResult({
     query = this.query,
     variables = this.variables,
@@ -334,11 +348,9 @@ export class ObservableQuery<
     };
 
     const cacheResult = () => {
-      const diff = this.queryManager.cache.diff<TData>({
+      const diff = this.getCacheDiff({
         query,
         variables,
-        returnPartialData: true,
-        optimistic: true,
       });
 
       return this.maskResult({
@@ -821,12 +833,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
     const { queryManager } = this;
-    const { result, complete } = queryManager.cache.diff<TData>({
-      query: this.options.query,
-      variables: this.variables,
-      returnPartialData: true,
-      optimistic: false,
-    });
+    const { result, complete } = this.getCacheDiff({ optimistic: false });
 
     const newResult = mapFn(
       result! as Unmasked<TData>,
@@ -1217,7 +1224,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  protected scheduleNotify() {
+  public scheduleNotify() {
     if (this.dirty) return;
     this.dirty = true;
     if (!this.notifyTimeout) {
@@ -1235,15 +1242,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.options.fetchPolicy == "cache-and-network" ||
         !isNetworkRequestInFlight(this.networkStatus)
       ) {
-        const diff = this.queryInfo.getDiff();
-        if (diff.fromOptimisticTransaction) {
-          // If this diff came from an optimistic transaction, deliver the
-          // current cache data to the ObservableQuery, but don't perform a
-          // reobservation, since oq.reobserveCacheFirst might make a network
-          // request, and we never want to trigger network requests in the
-          // middle of optimistic updates.
-          this.observe();
-        } else {
+        const diff = this.getCacheDiff();
+        if (!diff.fromOptimisticTransaction && !diff.complete) {
           // Otherwise, make the ObservableQuery "reobserve" the latest data
           // using a temporary fetch policy of "cache-first", so complete cache
           // results have a chance to be delivered without triggering additional
@@ -1335,6 +1335,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           TData,
           TVariables
         >(),
+        tap((result) => {
+          if (result.result.partial) {
+            this.scheduleNotify();
+          }
+        }),
         filter(
           ({ result }) =>
             result.networkStatus !== NetworkStatus.ready ||

@@ -139,6 +139,11 @@ export class ObservableQuery<
 
   //private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
+  private lastError?: {
+    query: DocumentNode;
+    variables?: TVariables;
+    error: ErrorLike;
+  };
   private lastQuery?: DocumentNode;
 
   private queryInfo: QueryInfo;
@@ -499,7 +504,14 @@ export class ObservableQuery<
 
   // TODO: Consider deprecating this function
   public getLastError(variablesMustMatch?: boolean): ErrorLike | undefined {
-    return this.getLast("error", variablesMustMatch);
+    if (
+      this.lastError &&
+      (!variablesMustMatch ||
+        (this.lastError.query == this.query &&
+          equal(this.lastError.variables, this.variables)))
+    ) {
+      return this.lastError.error;
+    }
   }
 
   // TODO: Consider deprecating this function
@@ -1431,6 +1443,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           if ("error" in result && !result.error) delete result.error;
           result.loading = isNetworkRequestInFlight(result.networkStatus);
           return { query, variables, result: this.maskResult(result) };
+        }),
+        tap({
+          next: (value) => {
+            if (value.result.error) {
+              this.lastError = {
+                error: value.result.error,
+                query: value.query,
+                variables: value.variables,
+              };
+            }
+          },
         }),
         distinctUntilKeyChanged("result", equal)
       )

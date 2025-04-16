@@ -431,7 +431,8 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
-    return this.subject.getValue();
+    const value = this.subject.getValue();
+    return value !== uninitialized ? value : this.getInitialResult();
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was

@@ -192,7 +192,7 @@ export class ObservableQuery<
               // updated between when the `ObservableQuery` was instantiated and
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
-              this.subject.next(this.getInitialResult());
+              this.subject.next(this.getInitialResult({ observed: true }));
             }
 
             this.reobserve();
@@ -335,6 +335,7 @@ export class ObservableQuery<
   private getInitialResult({
     query = this.query,
     variables = this.variables,
+    observed = this.subject.observed,
   } = {}): ApolloQueryResult<MaybeMasked<TData>> {
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
@@ -378,11 +379,13 @@ export class ObservableQuery<
           networkStatus: NetworkStatus.loading,
         };
       case "standby":
-        return {
-          ...defaultResult,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        };
+        return observed ?
+            {
+              ...defaultResult,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+            }
+          : defaultResult;
 
       default:
         return defaultResult;
@@ -392,15 +395,12 @@ export class ObservableQuery<
   private resubscribeCache({
     variables = this.variables,
     query = this.query,
+    fetchPolicy = this.options.fetchPolicy,
   } = {}) {
     this.cacheSubscription?.unsubscribe();
-    if (
-      this.options.fetchPolicy === "standby" ||
-      this.options.fetchPolicy === "no-cache"
-    ) {
+    if (fetchPolicy === "standby" || fetchPolicy === "no-cache") {
       return;
     }
-    // console.log("subscribing to cache for", { query, variables });
     const observable = new Observable<
       QueryNotification.Value<TData, TVariables>
     >((observer) => {
@@ -426,7 +426,24 @@ export class ObservableQuery<
           }
         },
       });
-    });
+    }).pipe(
+      tap({
+        subscribe() {
+          console.log("subscribing to cache for", {
+            query,
+            variables,
+            fetchPolicy,
+          });
+        },
+        unsubscribe() {
+          console.log("unsubscribing from cache for", {
+            query,
+            variables,
+            fetchPolicy,
+          });
+        },
+      })
+    );
     this.cacheSubscription = observable.subscribe(this.input);
   }
 
@@ -939,8 +956,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   // Turns polling on or off based on this.options.pollInterval.
   private updatePolling() {
-    console.log("updatePolling", this.options.pollInterval);
-
     // Avoid polling in SSR mode
     if (this.queryManager.ssrMode) {
       return;
@@ -1272,8 +1287,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       TVariables
     >
   > = pipe((obs) => {
-    // filter out "completed" notifications since we never want to close any of
-    // the streams involved here
     obs = obs.pipe(
       tap({
         next: ({ query, ...incoming }) => {
@@ -1332,7 +1345,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     return merge(
       fromCache.pipe(
-        filter(() => this.options.fetchPolicy !== "no-cache"),
+        filter(
+          (value) =>
+            (this.options.fetchPolicy !== "no-cache" &&
+              this.options.fetchPolicy !== "standby") ||
+            value.reason === NetworkStatus.refetch
+        ),
         filter(filterForCurrentQuery),
         dematerializeInternalResult<
           ApolloQueryResult<TData>,
@@ -1362,6 +1380,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             // handle values from the link in case of `no-cache` or `network-only` `fetchPolicy`
             this.options.fetchPolicy === "no-cache" ||
             this.options.fetchPolicy === "network-only" ||
+            (this.options.fetchPolicy === "standby" &&
+              value.reason === NetworkStatus.refetch) ||
             // an error with `errorPolicy`: `ignore` might end up with a completely
             // empty value that will not be written to the cache, but might need
             // an update from the link
@@ -1388,11 +1408,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         dematerializeInternalResult()
       ),
       fromNetworkStatus.pipe(
-        filter(
-          (value) =>
-            !!this.options.notifyOnNetworkStatusChange &&
-            this.subject.getValue().networkStatus !== value.value.networkStatus
-        ),
         dematerializeInternalResult(),
         map((value) => {
           const previousResult = this.internalSubject.getValue();

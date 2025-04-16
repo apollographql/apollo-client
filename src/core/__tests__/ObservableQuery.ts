@@ -3416,7 +3416,7 @@ describe("ObservableQuery", () => {
           partial: false,
         },
         resultAfterCacheUpdate1: {
-          ...loadingStates.loading,
+          ...loadingStates.done,
           data: cacheValues.update1,
           partial: false,
         },
@@ -3431,7 +3431,7 @@ describe("ObservableQuery", () => {
           partial: false,
         },
         resultAfterCacheUpdate3: {
-          ...loadingStates.refetching,
+          ...loadingStates.done,
           data: cacheValues.update3,
           partial: false,
         },
@@ -3474,7 +3474,7 @@ describe("ObservableQuery", () => {
           partial: false,
         },
         resultAfterCacheUpdate3: {
-          ...loadingStates.refetching,
+          ...loadingStates.done,
           data: cacheValues.link,
           partial: false,
         },
@@ -3518,7 +3518,7 @@ describe("ObservableQuery", () => {
           partial: true,
         },
         resultAfterCacheUpdate3: {
-          ...loadingStates.refetching,
+          ...loadingStates.done,
           data: undefined,
           partial: true,
         },
@@ -3543,6 +3543,23 @@ describe("ObservableQuery", () => {
           ...loadingStates.loading,
           data: undefined,
           partial: true,
+        },
+        resultAfterCacheUpdate2: {
+          ...loadingStates.loading,
+          data: undefined,
+          partial: true,
+        },
+        resultAfterLinkNext: {
+          ...loadingStates.loading,
+          data: undefined,
+          partial: true,
+        },
+        resultAfterCacheUpdate3: {
+          ...loadingStates.done,
+          data: {
+            hello: "world (from cache again, 3)",
+          },
+          partial: false,
         },
         // like cacheAndLink:
         // resultAfterLinkNext
@@ -3574,10 +3591,14 @@ describe("ObservableQuery", () => {
           data: cacheValues.update1,
           partial: false,
         },
+
+        resultAfterCacheUpdate3: {
+          ...cacheAndLink.resultAfterCacheUpdate3,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        },
         // like cacheAndLink:
         // resultAfterCacheUpdate2
-        // resultAfterCacheUpdate3
-        // resultAfterRefetchNext
         // resultAfterCacheUpdate4
       };
 

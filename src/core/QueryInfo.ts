@@ -157,8 +157,6 @@ export class QueryInfo {
   }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
-    const oldDiff = this.lastDiff && this.lastDiff.diff;
-
     // If we are trying to deliver an incomplete cache result, we avoid
     // reporting it if the query has errored, otherwise we let the broadcast try
     // and repair the partial result by refetching the query. This check avoids

@@ -816,7 +816,7 @@ export class QueryManager {
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
     const variables = this.getVariables(query, options.variables) as TVars;
-    const defaults = this.defaultOptions.watchQuery;
+    const defaults = this.defaultOptions.query;
 
     let {
       fetchPolicy = defaults?.fetchPolicy || "cache-first",

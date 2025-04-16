@@ -599,7 +599,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.queryManager
-      .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
+      .query({ ...combinedOptions, fetchPolicy: "no-cache" }, qid)
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 

@@ -1,4 +1,4 @@
-import type { ErrorLike } from "@apollo/client";
+import { isErrorLike } from "@apollo/client/errors";
 
 import { brand, isBranded } from "./utils.js";
 
@@ -13,11 +13,23 @@ export class NetworkError extends Error {
     return isBranded(error, "NetworkError");
   }
 
-  constructor(sourceError: ErrorLike) {
-    super(sourceError.message, { cause: sourceError });
+  constructor(sourceError: unknown) {
+    super(getErrorMessage(sourceError), { cause: sourceError });
     this.name = "NetworkError";
 
     brand(this);
     Object.setPrototypeOf(this, NetworkError.prototype);
   }
+}
+
+function getErrorMessage(sourceError: unknown): string {
+  if (isErrorLike(sourceError)) {
+    return sourceError.message;
+  }
+
+  if (typeof sourceError === "string") {
+    return sourceError;
+  }
+
+  return "An error of unexpected shape occurred.";
 }

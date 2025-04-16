@@ -216,6 +216,7 @@ export function useSuspenseQuery<
     | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
     | useSuspenseQuery.Options<TVariables> = {}
 ): useSuspenseQuery.Result<TData | undefined, TVariables> {
+  "use no memo";
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler

@@ -13,6 +13,7 @@ import {
   map,
   materialize,
   mergeMap,
+  mergeWith,
   Observable,
   of,
   share,
@@ -1417,7 +1418,7 @@ export class QueryManager {
       cleanupCancelFn();
     });
 
-    const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
+    const fetchCancelSubject = new Subject<never>();
     let observable: Observable<QueryNotification.Value<TData, TVars>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
@@ -1451,8 +1452,7 @@ export class QueryManager {
     return {
       observable: observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        // TODO
-        //mergeWith(fetchCancelSubject),
+        mergeWith(fetchCancelSubject),
         share()
       ),
       fromLink: containsDataFromLink,

@@ -25,6 +25,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
+  NetworkError,
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
@@ -1308,6 +1309,7 @@ export class QueryManager {
       }),
       catchError((error) => {
         error = toErrorLike(error);
+        NetworkError.register(error);
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {

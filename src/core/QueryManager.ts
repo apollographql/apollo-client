@@ -829,11 +829,13 @@ export class QueryManager {
     const queryInfo = this.getOrCreateQuery(queryId);
 
     const fromVariables = (variables: TVars) => {
-      return this.fetchQueryByPolicy<TData, TVars>(
-        queryInfo,
-        { query, variables, fetchPolicy, errorPolicy, context },
-        NetworkStatus.loading
-      );
+      return this.fetchQueryByPolicy<TData, TVars>(queryInfo, {
+        query,
+        variables,
+        fetchPolicy,
+        errorPolicy,
+        context,
+      });
     };
 
     // This cancel function needs to be set before the concast is created,
@@ -1597,10 +1599,7 @@ export class QueryManager {
       returnPartialData?: boolean;
       context: DefaultContext;
     },
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    newNetworkStatus: NetworkStatus,
+    newNetworkStatus = NetworkStatus.loading,
     emitLoadingState = false
   ): ObservableAndInfo<TData> {
     queryInfo.init({

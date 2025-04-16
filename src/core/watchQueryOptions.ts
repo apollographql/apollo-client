@@ -35,10 +35,12 @@ export type FetchPolicy =
   | "cache-first"
   | "network-only"
   | "cache-only"
-  | "no-cache"
-  | "standby";
+  | "no-cache";
 
-export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
+export type WatchQueryFetchPolicy =
+  | FetchPolicy
+  | "cache-and-network"
+  | "standby";
 
 export type MutationFetchPolicy = Extract<
   FetchPolicy,

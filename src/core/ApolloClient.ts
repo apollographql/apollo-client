@@ -483,6 +483,13 @@ export class ApolloClient implements DataProxy {
     );
 
     invariant(
+      (options.fetchPolicy as WatchQueryFetchPolicy) !== "standby",
+      "The standby fetchPolicy does not work with client.query, because " +
+        "standby does not fetch. Consider using a different fetchPolicy, such " +
+        "as cache-first or network-only."
+    );
+
+    invariant(
       options.query,
       "query option is required. You must specify your GraphQL document " +
         "in the query option."

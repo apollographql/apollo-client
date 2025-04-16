@@ -756,6 +756,20 @@ describe("cache-and-network", function () {
   });
 });
 
+describe("standby", () => {
+  test("is not supported with client.query", async () => {
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    expect(() =>
+      client.query({
+        query,
+        // @ts-expect-error
+        fetchPolicy: "standby",
+      })
+    ).toThrow();
+  });
+});
+
 describe("nextFetchPolicy", () => {
   type TData = {
     echo: {

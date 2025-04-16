@@ -5440,7 +5440,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5502,7 +5502,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5565,7 +5565,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5627,7 +5627,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5699,7 +5699,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5752,7 +5752,7 @@ describe("client.mutate", () => {
         | null;
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5811,7 +5811,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5891,7 +5891,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5960,7 +5960,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -6026,7 +6026,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -6097,7 +6097,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id

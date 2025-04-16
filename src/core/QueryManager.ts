@@ -1124,7 +1124,6 @@ export class QueryManager {
 
   public stopQuery(queryId: string) {
     this.removeQuery(queryId);
-    this.broadcastQueries();
   }
 
   public removeQuery(queryId: string) {

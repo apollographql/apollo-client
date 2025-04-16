@@ -1122,10 +1122,6 @@ export class QueryManager {
     return makeObservable(variables);
   }
 
-  public stopQuery(queryId: string) {
-    this.removeQuery(queryId);
-  }
-
   public removeQuery(queryId: string) {
     // teardown all links
     // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises

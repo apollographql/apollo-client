@@ -8,7 +8,7 @@ import type {
   Subscription,
 } from "rxjs";
 import type { Observable } from "rxjs";
-import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
+import { BehaviorSubject, filter, lastValueFrom, map, tap } from "rxjs";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -651,8 +651,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       );
     }
 
-    return this.queryManager
-      .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
+    return lastValueFrom(
+      this.queryManager
+        .fetchObservableWithInfo(
+          this.queryManager.getOrCreateQuery(qid),
+          combinedOptions,
+          NetworkStatus.fetchMore
+        )
+        .observable.pipe(map(toQueryResult)),
+      {
+        // This default is needed when a `standby` fetch policy is used to avoid
+        // an EmptyError from rejecting this promise.
+        defaultValue: { data: undefined },
+      }
+    )
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 

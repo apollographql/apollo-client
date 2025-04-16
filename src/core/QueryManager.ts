@@ -835,10 +835,17 @@ export class QueryManager {
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>(queryId, {
-      ...(options as any),
-      query,
-    })
+    return lastValueFrom(
+      this.fetchObservableWithInfo<TData, TVars>(
+        this.getOrCreateQuery(queryId),
+        { ...options, query }
+      ).observable.pipe(map(toQueryResult)),
+      {
+        // This default is needed when a `standby` fetch policy is used to avoid
+        // an EmptyError from rejecting this promise.
+        defaultValue: { data: undefined },
+      }
+    )
       .then((value) => ({
         ...value,
         data: this.maskOperation({

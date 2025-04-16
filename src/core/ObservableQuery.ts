@@ -608,12 +608,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           },
         }
       )),
-      // The fetchMore request goes immediately to the network and does
-      // not automatically write its result to the cache (hence no-cache
-      // instead of network-only), because we allow the caller of
-      // fetchMore to provide an updateQuery callback that determines how
-      // the data gets written to the cache.
-      fetchPolicy: "no-cache",
       notifyOnNetworkStatusChange: this.options.notifyOnNetworkStatusChange,
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
@@ -652,7 +646,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.queryManager
-      .query({ ...combinedOptions, fetchPolicy: "no-cache" }, qid)
+      .query(
+        {
+          ...combinedOptions,
+          // The fetchMore request goes immediately to the network and does
+          // not automatically write its result to the cache (hence no-cache
+          // instead of network-only), because we allow the caller of
+          // fetchMore to provide an updateQuery callback that determines how
+          // the data gets written to the cache.
+          fetchPolicy: "no-cache",
+        },
+        qid
+      )
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 

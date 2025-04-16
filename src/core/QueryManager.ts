@@ -821,7 +821,6 @@ export class QueryManager {
     let {
       fetchPolicy = defaults?.fetchPolicy || "cache-first",
       errorPolicy = defaults?.errorPolicy || "none",
-      returnPartialData = false,
       context = {},
     } = options;
 
@@ -843,7 +842,6 @@ export class QueryManager {
           variables,
           fetchPolicy,
           errorPolicy,
-          returnPartialData,
           context,
         },
         NetworkStatus.loading,

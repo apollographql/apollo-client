@@ -1231,7 +1231,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     networkStatus: NetworkStatus,
     query: DocumentNode
   ) {
-    const variables = this.queryManager.getVariables(query, options.variables);
+    const variables = this.queryManager.getVariables(
+      query,
+      options.variables
+    ) as TVariables;
     const defaults = this.queryManager.defaultOptions.watchQuery;
     let {
       fetchPolicy = (defaults && defaults.fetchPolicy) || "cache-first",
@@ -1277,11 +1280,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         emitLoadingState
       );
 
-      if (
-        // If we're in standby, postpone advancing options.fetchPolicy using
-        // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby"
-      ) {
+      // If we're in standby, postpone advancing options.fetchPolicy using
+      // applyNextFetchPolicy.
+      if (fetchPolicy !== "standby") {
         this.applyNextFetchPolicy("after-fetch", options);
       }
 
@@ -1312,12 +1313,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.queryManager.getDocumentInfo(normalized.query).hasClientExports) {
+    if (this.queryManager.getDocumentInfo(query).hasClientExports) {
       observable = from(
         this.queryManager["localState"].addExportedVariables(
-          normalized.query,
-          normalized.variables,
-          normalized.context
+          query,
+          variables,
+          context
         )
       ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
@@ -1328,7 +1329,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // directives.
       containsDataFromLink = true;
     } else {
-      const sourcesWithInfo = fromVariables(normalized.variables);
+      const sourcesWithInfo = fromVariables(variables);
       containsDataFromLink = sourcesWithInfo.fromLink;
       observable = sourcesWithInfo.observable;
     }

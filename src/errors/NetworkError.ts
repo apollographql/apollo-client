@@ -3,8 +3,10 @@ import { brand, isBranded } from "./utils.js";
 
 /**
  * A wrapper error type that wraps errors emitted from the link chain. Useful if
- * you have custom error types in your application and you want to differentiate
- * errors that come from the link chain.
+ * you have custom error types in your application want to differentiate
+ * errors that come specifically from the link chain.
+ *
+ * Inspect the `cause` to get the original source of the error.
  */
 export class NetworkError extends Error {
   /** Determine if an error is a `NetworkError` instance */

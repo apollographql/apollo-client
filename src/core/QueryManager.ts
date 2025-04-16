@@ -1590,13 +1590,13 @@ export class QueryManager {
       returnPartialData,
       context,
     }: {
-      query: DocumentNode | TypedDocumentNode<TData, TVars>;
+      query: TypedDocumentNode<TData, TVars>;
       variables: TVars;
-      fetchPolicy?: WatchQueryFetchPolicy;
+      fetchPolicy: WatchQueryFetchPolicy;
       refetchWritePolicy?: RefetchWritePolicy;
-      errorPolicy?: ErrorPolicy;
+      errorPolicy: ErrorPolicy;
       returnPartialData?: boolean;
-      context?: DefaultContext;
+      context: DefaultContext;
     },
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,

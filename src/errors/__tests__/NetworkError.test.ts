@@ -113,6 +113,45 @@ describe("client.query", () => {
   });
 });
 
+describe("client.watchQuery", () => {
+  test("errors emitted from the link chain are network errors", async () => {
+    const error = new Error("Oops");
+    const client = new ApolloClient({
+      link: createErrorLink(error),
+      cache: new InMemoryCache(),
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, notifyOnNetworkStatusChange: false })
+    );
+
+    const result = await stream.takeNext();
+
+    expect(result.error).toBe(error);
+    expect(NetworkError.is(result.error)).toBe(true);
+  });
+
+  test("does not register GraphQL errors as network errors", async () => {
+    const client = new ApolloClient({
+      link: new MockLink([
+        { request: { query }, result: { errors: [{ message: "Oops" }] } },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, notifyOnNetworkStatusChange: false })
+    );
+
+    const result = await stream.takeNext();
+
+    expect(result.error).toEqual(
+      new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
+    );
+    expect(NetworkError.is(result.error)).toBe(false);
+  });
+});
+
 describe("client.mutate", () => {
   test("errors emitted from the link chain are network errors", async () => {
     const error = new Error("Oops");

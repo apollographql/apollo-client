@@ -2,4 +2,14 @@
 "@apollo/client": patch
 ---
 
-`client.watchQuery` now enforces a `variables` option if `TVariables` contains required variables. `ObservableQuery.variables` has been updated to return `TVariables` rather than `TVariables | undefined`. If there are no variables or a query contains all optional variables, `{}` will be returned when no `variables` have been defined.
+The `variables` option used with various APIs are now enforced more consistently across the client when `TVariables` contains required variables. If required `variables` are not provided, TypeScript will now complain that it requires a `variables` option.
+
+This change affects the following APIs:
+- `client.query`
+- `client.mutate`
+- `client.subscribe`
+- `client.watchQuery`
+- `useBackgroundQuery`
+- `useQuery`
+- `useSubscription`
+- `useSuspenseQuery`

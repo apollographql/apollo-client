@@ -815,7 +815,7 @@ export class QueryManager {
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
-    const variables = this.getVariables(query, options.variables);
+    const variables = this.getVariables(query, options.variables) as TVars;
     const defaults = this.defaultOptions.watchQuery;
 
     let {
@@ -877,16 +877,12 @@ export class QueryManager {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.getDocumentInfo(normalized.query).hasClientExports) {
+    if (this.getDocumentInfo(query).hasClientExports) {
       observable = from(
-        this.localState.addExportedVariables(
-          normalized.query,
-          normalized.variables,
-          normalized.context
-        )
+        this.localState.addExportedVariables(query, variables, context)
       ).pipe(mergeMap((variables) => fromVariables(variables).observable));
     } else {
-      observable = fromVariables(normalized.variables).observable;
+      observable = fromVariables(variables).observable;
     }
 
     observable = observable.pipe(

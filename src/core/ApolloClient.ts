@@ -1,4 +1,5 @@
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
 
@@ -13,7 +14,7 @@ import type { UriFunction } from "@apollo/client/link/http";
 import { HttpLink } from "@apollo/client/link/http";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
-import { mergeOptions } from "@apollo/client/utilities";
+import { checkDocument, mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
 import {
@@ -506,6 +507,8 @@ export class ApolloClient implements DataProxy {
       !(options as any).notifyOnNetworkStatusChange,
       "notifyOnNetworkStatusChange option only supported on watchQuery."
     );
+
+    checkDocument(options.query, OperationTypeNode.QUERY);
 
     return this.queryManager.query<TData, TVariables>(options);
   }

@@ -51,6 +51,7 @@ export function toErrorLike(error: unknown) {
 
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
+export { NetworkError } from "./NetworkError.js";
 export { ServerError } from "./ServerError.js";
 export { ServerParseError } from "./ServerParseError.js";
 export { UnconventionalError } from "./UnconventionalError.js";

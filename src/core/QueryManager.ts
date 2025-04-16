@@ -832,8 +832,7 @@ export class QueryManager {
       return this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         { query, variables, fetchPolicy, errorPolicy, context },
-        NetworkStatus.loading,
-        false
+        NetworkStatus.loading
       );
     };
 
@@ -1602,7 +1601,7 @@ export class QueryManager {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     newNetworkStatus: NetworkStatus,
-    emitLoadingState: boolean
+    emitLoadingState = false
   ): ObservableAndInfo<TData> {
     queryInfo.init({
       document: query,

@@ -3,7 +3,6 @@ import { expectTypeOf } from "expect-type";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
-  NetworkError,
   ServerError,
   ServerParseError,
   UnconventionalError,
@@ -11,7 +10,6 @@ import {
 
 const graphQLErrors = new CombinedGraphQLErrors({ errors: [] });
 const protocolErrors = new CombinedProtocolErrors([]);
-const networkError = new NetworkError(new Error("Oops"));
 const serverError = new ServerError("Oops", {
   response: new Response("", { status: 400 }),
   result: "",
@@ -27,7 +25,6 @@ test("CombinedGraphQLErrors.is", () => {
   expect(CombinedGraphQLErrors.is(graphQLErrors)).toBe(true);
 
   expect(CombinedGraphQLErrors.is(protocolErrors)).toBe(false);
-  expect(CombinedGraphQLErrors.is(networkError)).toBe(false);
   expect(CombinedGraphQLErrors.is(serverError)).toBe(false);
   expect(CombinedGraphQLErrors.is(serverParseError)).toBe(false);
   expect(CombinedGraphQLErrors.is(unconventionalError)).toBe(false);
@@ -46,7 +43,6 @@ test("CombinedProtocolErrors.is", () => {
   expect(CombinedProtocolErrors.is(protocolErrors)).toBe(true);
 
   expect(CombinedProtocolErrors.is(graphQLErrors)).toBe(false);
-  expect(CombinedProtocolErrors.is(networkError)).toBe(false);
   expect(CombinedProtocolErrors.is(serverError)).toBe(false);
   expect(CombinedProtocolErrors.is(serverParseError)).toBe(false);
   expect(CombinedProtocolErrors.is(unconventionalError)).toBe(false);
@@ -61,30 +57,10 @@ test("CombinedProtocolErrors.is", () => {
   expect(CombinedProtocolErrors.is(true)).toBe(false);
 });
 
-test("NetworkError.is", () => {
-  expect(NetworkError.is(networkError)).toBe(true);
-
-  expect(NetworkError.is(graphQLErrors)).toBe(false);
-  expect(NetworkError.is(protocolErrors)).toBe(false);
-  expect(NetworkError.is(serverError)).toBe(false);
-  expect(NetworkError.is(serverParseError)).toBe(false);
-  expect(NetworkError.is(unconventionalError)).toBe(false);
-  expect(NetworkError.is(new Error("Oops"))).toBe(false);
-
-  expect(NetworkError.is(undefined)).toBe(false);
-  expect(NetworkError.is(null)).toBe(false);
-  expect(NetworkError.is({})).toBe(false);
-  expect(NetworkError.is(Symbol())).toBe(false);
-  expect(NetworkError.is(10)).toBe(false);
-  expect(NetworkError.is("true")).toBe(false);
-  expect(NetworkError.is(true)).toBe(false);
-});
-
 test("ServerError.is", () => {
   expect(ServerError.is(serverError)).toBe(true);
 
   expect(ServerError.is(graphQLErrors)).toBe(false);
-  expect(ServerError.is(networkError)).toBe(false);
   expect(ServerError.is(protocolErrors)).toBe(false);
   expect(ServerError.is(serverParseError)).toBe(false);
   expect(ServerError.is(unconventionalError)).toBe(false);
@@ -103,7 +79,6 @@ test("ServerParseError.is", () => {
   expect(ServerParseError.is(serverParseError)).toBe(true);
 
   expect(ServerParseError.is(graphQLErrors)).toBe(false);
-  expect(ServerParseError.is(networkError)).toBe(false);
   expect(ServerParseError.is(protocolErrors)).toBe(false);
   expect(ServerParseError.is(serverError)).toBe(false);
   expect(ServerParseError.is(unconventionalError)).toBe(false);
@@ -122,7 +97,6 @@ test("UnconventionalError.is", () => {
   expect(UnconventionalError.is(unconventionalError)).toBe(true);
 
   expect(UnconventionalError.is(graphQLErrors)).toBe(false);
-  expect(UnconventionalError.is(networkError)).toBe(false);
   expect(UnconventionalError.is(protocolErrors)).toBe(false);
   expect(UnconventionalError.is(serverError)).toBe(false);
   expect(UnconventionalError.is(serverParseError)).toBe(false);
@@ -149,12 +123,6 @@ describe.skip("type tests", () => {
   test("type narrows CombinedProtocolErrors", () => {
     if (CombinedProtocolErrors.is(error)) {
       expectTypeOf(error).toEqualTypeOf<CombinedProtocolErrors>();
-    }
-  });
-
-  test("type narrows NetworkError", () => {
-    if (NetworkError.is(error)) {
-      expectTypeOf(error).toEqualTypeOf<NetworkError>();
     }
   });
 

@@ -829,11 +829,11 @@ export class QueryManager {
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
-    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+    return this.fetchQuery<TData, TVars>(queryId, options)
       .then((value) => ({
         ...value,
         data: this.maskOperation({
-          document: query,
+          document: options.query,
           data: value?.data,
           fetchPolicy: options.fetchPolicy,
           id: queryId,

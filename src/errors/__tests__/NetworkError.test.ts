@@ -14,6 +14,12 @@ const query = gql`
   }
 `;
 
+const mutation = gql`
+  mutation {
+    foo
+  }
+`;
+
 function createErrorLink(error: unknown) {
   return new ApolloLink(() => {
     return new Observable((observer) => {
@@ -89,6 +95,65 @@ describe("client.query", () => {
     });
 
     const error = await client.query({ query }).catch((error) => error);
+    expect(error).toEqual(new UnconventionalError(symbol));
+
+    expect(NetworkError.is(error)).toBe(true);
+  });
+});
+
+describe("client.mutate", () => {
+  test("errors emitted from the link chain are network errors", async () => {
+    const error = new Error("Oops");
+    const client = new ApolloClient({
+      link: createErrorLink(error),
+      cache: new InMemoryCache(),
+    });
+
+    const actual = await client.mutate({ mutation }).catch((error) => error);
+    expect(actual).toBe(error);
+
+    expect(NetworkError.is(actual)).toBe(true);
+  });
+
+  test("does not register GraphQL errors as network errors", async () => {
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { errors: [{ message: "Oops" }] },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const error = await client.mutate({ mutation }).catch((error) => error);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
+    );
+
+    expect(NetworkError.is(error)).toBe(false);
+  });
+
+  test("handles errors emitted as strings", async () => {
+    const client = new ApolloClient({
+      link: createErrorLink("Oops"),
+      cache: new InMemoryCache(),
+    });
+
+    const error = await client.mutate({ mutation }).catch((error) => error);
+    expect(error).toEqual(new Error("Oops"));
+
+    expect(NetworkError.is(error)).toBe(true);
+  });
+
+  test("handles errors emitted from unconventional types", async () => {
+    const symbol = Symbol();
+    const client = new ApolloClient({
+      link: createErrorLink(symbol),
+      cache: new InMemoryCache(),
+    });
+
+    const error = await client.mutate({ mutation }).catch((error) => error);
     expect(error).toEqual(new UnconventionalError(symbol));
 
     expect(NetworkError.is(error)).toBe(true);

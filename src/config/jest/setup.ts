@@ -21,7 +21,6 @@ import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.j
 import { areCombinedProtocolErrorsEqual } from "./areCombinedProtocolErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
-import { areNetworkErrorsEqual } from "./areNetworkErrorsEqual.js";
 import { areServerErrorsEqual } from "./areServerErrorsEqual.js";
 
 setLogVerbosity("log");
@@ -66,7 +65,6 @@ expect.addEqualityTesters([
   areCombinedProtocolErrorsEqual,
   areGraphQLErrorsEqual,
   areMissingFieldErrorsEqual,
-  areNetworkErrorsEqual,
 ]);
 
 // not available in JSDOM 🙄

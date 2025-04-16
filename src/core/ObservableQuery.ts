@@ -147,7 +147,7 @@ export class ObservableQuery<
   // untransformed query to ensure document transforms with runtime conditionals
   // are run on the original document.
   public get query(): TypedDocumentNode<TData, TVariables> {
-    return this.lastQuery || this.options.query;
+    return this.lastQuery;
   }
 
   /**
@@ -168,7 +168,7 @@ export class ObservableQuery<
 
   private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
-  private lastQuery?: DocumentNode;
+  private lastQuery: DocumentNode;
 
   private queryInfo: QueryInfo;
 

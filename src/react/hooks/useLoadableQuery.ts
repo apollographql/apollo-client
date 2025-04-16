@@ -104,23 +104,6 @@ export declare namespace useLoadableQuery {
 }
 
 export function useLoadableQuery<
-  TData,
-  TVariables extends OperationVariables,
-  TOptions extends useLoadableQuery.Options,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useLoadableQuery.Options & TOptions
-): useLoadableQuery.Result<
-  TOptions["errorPolicy"] extends "ignore" | "all" ?
-    TOptions["returnPartialData"] extends true ?
-      DeepPartial<TData> | undefined
-    : TData | undefined
-  : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
-  : TData,
-  TVariables
->;
-
-export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(

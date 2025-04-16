@@ -841,13 +841,13 @@ export class QueryManager {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
-      this.fetchCancelFns.delete(queryInfo.queryId);
+      this.fetchCancelFns.delete(queryId);
       // We need to call `complete` on the subject here otherwise the merged
       // observable will never complete since it waits for all source
       // observables to complete before itself completes.
       fetchCancelSubject.complete();
     };
-    this.fetchCancelFns.set(queryInfo.queryId, (reason) => {
+    this.fetchCancelFns.set(queryId, (reason) => {
       fetchCancelSubject.error(reason);
       cleanupCancelFn();
     });

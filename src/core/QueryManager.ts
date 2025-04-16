@@ -193,9 +193,7 @@ export class QueryManager {
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
-  // Use protected instead of private field so
-  // @apollo/experimental-nextjs-app-support can access type info.
-  protected fetchCancelFns = new Map<string, (error: any) => any>();
+  public fetchCancelFns = new Map<string, (error: any) => any>();
 
   constructor(options: QueryManagerOptions) {
     const defaultDocumentTransform = new DocumentTransform(
@@ -1702,7 +1700,7 @@ export class QueryManager {
       : data;
   }
 
-  private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
+  public fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     {
       query,

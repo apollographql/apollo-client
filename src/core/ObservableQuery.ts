@@ -8,7 +8,17 @@ import type {
   Subscription,
 } from "rxjs";
 import type { Observable } from "rxjs";
-import { BehaviorSubject, filter, lastValueFrom, map, tap } from "rxjs";
+import {
+  BehaviorSubject,
+  filter,
+  from,
+  lastValueFrom,
+  mergeMap,
+  mergeWith,
+  share,
+  Subject,
+  tap,
+} from "rxjs";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -1175,7 +1185,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // before actually committing to the fetch.
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
-    const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
+    const { observable, fromLink } = this.fetchObservableWithInfo(
       queryInfo,
       options,
       newNetworkStatus,
@@ -1222,6 +1232,125 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         defaultValue: { data: undefined } as ApolloQueryResult<TData>,
       }).then((result) => toQueryResult(this.maskResult(result)))
     );
+  }
+
+  private fetchObservableWithInfo(
+    queryInfo: QueryInfo,
+    options: WatchQueryOptions<TVariables, TData>,
+    // The initial networkStatus for this fetch, most often
+    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+    // or setVariables.
+    networkStatus = NetworkStatus.loading,
+    query = options.query,
+    emitLoadingState = false
+  ) {
+    const variables = this.queryManager.getVariables(query, options.variables);
+    const defaults = this.queryManager.defaultOptions.watchQuery;
+
+    let {
+      fetchPolicy = (defaults && defaults.fetchPolicy) || "cache-first",
+      errorPolicy = (defaults && defaults.errorPolicy) || "none",
+      returnPartialData = false,
+      notifyOnNetworkStatusChange = true,
+      context = {},
+    } = options;
+
+    if (
+      this.queryManager.prioritizeCacheValues &&
+      (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network")
+    ) {
+      fetchPolicy = "cache-first";
+    }
+
+    const normalized = Object.assign({}, options, {
+      query,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      returnPartialData,
+      notifyOnNetworkStatusChange,
+      context,
+    });
+
+    const fromVariables = (variables: TVariables) => {
+      // Since normalized is always a fresh copy of options, it's safe to
+      // modify its properties here, rather than creating yet another new
+      // WatchQueryOptions object.
+      normalized.variables = variables;
+
+      const observableWithInfo = this.queryManager.fetchQueryByPolicy<
+        TData,
+        TVariables
+      >(queryInfo, normalized, networkStatus, emitLoadingState);
+
+      if (
+        // If we're in standby, postpone advancing options.fetchPolicy using
+        // applyNextFetchPolicy.
+        normalized.fetchPolicy !== "standby" &&
+        queryInfo.observableQuery
+      ) {
+        queryInfo.observableQuery["applyNextFetchPolicy"](
+          "after-fetch",
+          options
+        );
+      }
+
+      return observableWithInfo;
+    };
+
+    // This cancel function needs to be set before the concast is created,
+    // in case concast creation synchronously cancels the request.
+    const cleanupCancelFn = () => {
+      this.queryManager.fetchCancelFns.delete(queryInfo.queryId);
+      // We need to call `complete` on the subject here otherwise the merged
+      // observable will never complete since it waits for all source
+      // observables to complete before itself completes.
+      fetchCancelSubject.complete();
+    };
+    this.queryManager.fetchCancelFns.set(queryInfo.queryId, (reason) => {
+      fetchCancelSubject.error(reason);
+      cleanupCancelFn();
+    });
+
+    const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
+    let observable: Observable<ApolloQueryResult<TData>>,
+      containsDataFromLink: boolean;
+    // If the query has @export(as: ...) directives, then we need to
+    // process those directives asynchronously. When there are no
+    // @export directives (the common case), we deliberately avoid
+    // wrapping the result of this.fetchQueryByPolicy in a Promise,
+    // since the timing of result delivery is (unfortunately) important
+    // for backwards compatibility. TODO This code could be simpler if
+    // we deprecated and removed LocalState.
+    if (this.queryManager.getDocumentInfo(normalized.query).hasClientExports) {
+      observable = from(
+        this.queryManager["localState"].addExportedVariables(
+          normalized.query,
+          normalized.variables,
+          normalized.context
+        )
+      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
+
+      // there is just no way we can synchronously get the *right* value here,
+      // so we will assume `true`, which is the behaviour before the bug fix in
+      // #10597. This means that bug is not fixed in that case, and is probably
+      // un-fixable with reasonable effort for the edge case of @export as
+      // directives.
+      containsDataFromLink = true;
+    } else {
+      const sourcesWithInfo = fromVariables(normalized.variables);
+      containsDataFromLink = sourcesWithInfo.fromLink;
+      observable = sourcesWithInfo.observable;
+    }
+
+    return {
+      observable: observable.pipe(
+        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
+        mergeWith(fetchCancelSubject),
+        share()
+      ),
+      fromLink: containsDataFromLink,
+    };
   }
 
   // (Re)deliver the current result to this.observers without applying fetch

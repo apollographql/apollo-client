@@ -239,15 +239,12 @@ export interface SubscribeToMoreFunction<
   ): () => void;
 }
 
-export interface SubscriptionOptions<
-  TVariables = OperationVariables,
+export type SubscriptionOptions<
+  TVariables extends OperationVariables = OperationVariables,
   TData = unknown,
-> {
+> = {
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-
-  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
-  variables?: TVariables;
 
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
@@ -260,7 +257,7 @@ export interface SubscriptionOptions<
 
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
   extensions?: Record<string, any>;
-}
+} & VariablesOption<NoInfer<TVariables>>;
 
 export type MutationOptions<
   TData = unknown,

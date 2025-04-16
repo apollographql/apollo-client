@@ -7824,6 +7824,11 @@ describe.skip("type tests", () => {
     client.query({ query, variables: { foo: "bar" } });
     client.query({ query, variables: { bar: "baz" } });
 
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: { foo: "bar" } });
+    client.subscribe({ query, variables: { bar: "baz" } });
+
     client.mutate({ mutation });
     client.mutate({ mutation, variables: {} });
     client.mutate({ mutation, variables: { foo: "bar" } });
@@ -7846,6 +7851,12 @@ describe.skip("type tests", () => {
     client.query({ query, variables: undefined });
     client.query({ query, variables: { foo: "bar" } });
     client.query({ query, variables: { bar: "baz" } });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: undefined });
+    client.subscribe({ query, variables: { foo: "bar" } });
+    client.subscribe({ query, variables: { bar: "baz" } });
 
     client.mutate({ mutation });
     client.mutate({ mutation, variables: {} });
@@ -7880,6 +7891,17 @@ describe.skip("type tests", () => {
     client.query({ query, variables: {} });
     client.query({ query, variables: undefined });
     client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: undefined });
+    client.subscribe({
       query,
       variables: {
         // @ts-expect-error unknown variables
@@ -7935,6 +7957,24 @@ describe.skip("type tests", () => {
       variables: undefined,
     });
     client.query({
+      query,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
+
+    // @ts-expect-error
+    client.subscribe({ query });
+    client.subscribe({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.subscribe({
       query,
       // @ts-expect-error unknown variables
       variables: { foo: "bar" },
@@ -7998,6 +8038,26 @@ describe.skip("type tests", () => {
       },
     });
     client.query({
+      query,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: undefined });
+    client.subscribe({ query, variables: { limit: 10 } });
+    client.subscribe({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.subscribe({
       query,
       variables: {
         limit: 10,
@@ -8084,6 +8144,35 @@ describe.skip("type tests", () => {
       },
     });
     client.query({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.subscribe({ query });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.subscribe({ query, variables: { id: "1" } });
+    client.subscribe({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.subscribe({
       query,
       variables: {
         id: "1",
@@ -8198,6 +8287,43 @@ describe.skip("type tests", () => {
       },
     });
     client.query({
+      query,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.subscribe({ query });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.subscribe({ query, variables: { id: "1" } });
+    client.subscribe({
+      query,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.subscribe({ query, variables: { id: "1", language: "en" } });
+    client.subscribe({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.subscribe({
       query,
       variables: {
         id: "1",

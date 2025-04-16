@@ -2,8 +2,6 @@ import type { ErrorLike } from "@apollo/client";
 import type { FetchResult } from "@apollo/client/link/core";
 
 import { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
-import type { ServerError } from "./ServerError.js";
-import type { ServerParseError } from "./ServerParseError.js";
 import { UnconventionalError } from "./UnconventionalError.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain
@@ -50,8 +48,6 @@ export function toErrorLike(error: unknown) {
 
   return new UnconventionalError(error);
 }
-
-export type NetworkError = Error | ServerParseError | ServerError | null;
 
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";

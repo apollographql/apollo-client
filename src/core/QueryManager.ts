@@ -858,18 +858,6 @@ export class QueryManager {
         false
       );
 
-      if (
-        // If we're in standby, postpone advancing options.fetchPolicy using
-        // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby" &&
-        queryInfo.observableQuery
-      ) {
-        queryInfo.observableQuery["applyNextFetchPolicy"](
-          "after-fetch",
-          options
-        );
-      }
-
       return observableWithInfo;
     };
 

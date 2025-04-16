@@ -1181,12 +1181,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const variables = { ...options.variables };
     const { notifyOnNetworkStatusChange = true } = options;
 
-    // TODO Make sure we update the networkStatus (and infer fetchVariables)
-    // before actually committing to the fetch.
-    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
-    queryInfo.setObservableQuery(this);
     const { observable, fromLink } = this.fetchObservableWithInfo(
-      queryInfo,
       options,
       newNetworkStatus,
       query,
@@ -1235,7 +1230,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private fetchObservableWithInfo(
-    queryInfo: QueryInfo,
     options: WatchQueryOptions<TVariables, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
@@ -1244,6 +1238,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     query = options.query,
     emitLoadingState = false
   ) {
+    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
+    queryInfo.setObservableQuery(this);
+
     const variables = this.queryManager.getVariables(query, options.variables);
     const defaults = this.queryManager.defaultOptions.watchQuery;
 

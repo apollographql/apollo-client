@@ -846,14 +846,9 @@ export class QueryManager {
     const queryInfo = this.getOrCreateQuery(queryId);
 
     const fromVariables = (variables: TVars) => {
-      // Since normalized is always a fresh copy of options, it's safe to
-      // modify its properties here, rather than creating yet another new
-      // WatchQueryOptions object.
-      normalized.variables = variables;
-
       return this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
-        normalized,
+        { ...normalized, variables },
         NetworkStatus.loading,
         false
       );

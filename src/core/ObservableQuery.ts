@@ -1249,6 +1249,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       oldNetworkStatus !== networkStatus &&
       isNetworkRequestInFlight(networkStatus);
 
+    // TODO: This should be this.queryInfo but this fails a test when doing so.
+    // Investigate
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
 

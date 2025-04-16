@@ -9,7 +9,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { merge, Observable, share } from "rxjs";
+import { distinctUntilKeyChanged, merge, Observable, share } from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -1519,20 +1519,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           result.loading = isNetworkRequestInFlight(result.networkStatus);
           return { query, variables, result: this.maskResult(result) };
         }),
-        filter((newValue) => {
-          console.log({
-            newValue: newValue.result,
-            lastValue: this.internalSubject.getValue().result,
-            equal: equal(
-              newValue.result,
-              this.internalSubject.getValue().result
-            ),
-          });
-          return !equal(
-            newValue.result,
-            this.internalSubject.getValue().result
-          );
-        })
+        distinctUntilKeyChanged("result", equal)
       )
       .pipe(
         tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))

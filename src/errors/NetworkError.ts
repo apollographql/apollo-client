@@ -1,5 +1,4 @@
-import { isErrorLike } from "@apollo/client/errors";
-
+import { isErrorLike } from "./isErrorLike.js";
 import { brand, isBranded } from "./utils.js";
 
 /**

@@ -414,6 +414,7 @@ export class QueryManager {
 
           error: (err) => {
             const error = toErrorLike(err);
+            NetworkError.register(error);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;

@@ -1854,8 +1854,6 @@ class QueryManager {
     // (undocumented)
     fetchObservableWithInfo<TData, TVars extends OperationVariables>(queryInfo: QueryInfo, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus, query?: DocumentNode | TypedDocumentNode<TData, TVars>, emitLoadingState?: boolean): ObservableAndInfo<TData>;
     // (undocumented)
-    fetchQuery<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus): Promise<QueryResult<TData>>;
-    // (undocumented)
     generateMutationId(): string;
     // (undocumented)
     generateQueryId(): string;

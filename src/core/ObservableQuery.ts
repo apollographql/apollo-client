@@ -1229,7 +1229,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options: WatchQueryOptions<TVariables, TData>,
     oldNetworkStatus: NetworkStatus,
     networkStatus: NetworkStatus,
-    query = options.query
+    query: DocumentNode
   ) {
     const variables = this.queryManager.getVariables(query, options.variables);
     const defaults = this.queryManager.defaultOptions.watchQuery;

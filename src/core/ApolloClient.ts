@@ -499,7 +499,10 @@ export class ApolloClient implements DataProxy {
       "pollInterval option only supported on watchQuery."
     );
 
-    return this.queryManager.query<TData, TVariables>(options);
+    return this.queryManager.query<TData, TVariables>({
+      ...options,
+      query: this.queryManager.transform(options.query),
+    });
   }
 
   /**

@@ -829,8 +829,6 @@ export class QueryManager {
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     checkDocument(options.query, OperationTypeNode.QUERY);
 
-    const query = this.transform(options.query);
-
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
       .then((value) => ({
         ...value,

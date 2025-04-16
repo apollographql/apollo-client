@@ -831,8 +831,6 @@ class QueryManager {
     startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
-    stopQuery(queryId: string): void;
-    // (undocumented)
     transform(document: DocumentNode): DocumentNode;
     // (undocumented)
     watchQuery<T, TVariables extends OperationVariables_2 = OperationVariables_2>(options: WatchQueryOptions_2<TVariables, T>): ObservableQuery<T, TVariables>;

@@ -833,14 +833,7 @@ export class QueryManager {
     const fromVariables = (variables: TVars) => {
       return this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
-        {
-          ...options,
-          query,
-          variables,
-          fetchPolicy,
-          errorPolicy,
-          context,
-        },
+        { query, variables, fetchPolicy, errorPolicy, context },
         NetworkStatus.loading,
         false
       );

@@ -31,11 +31,11 @@ import type {
   VariablesOption,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 export declare namespace useSuspenseQuery {
@@ -338,43 +338,6 @@ function useSuspenseQuery_<
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 
-function validateOptions<TData, TVariables extends OperationVariables>(
-  options: WatchQueryOptions<TVariables, TData>
-) {
-  const { fetchPolicy, returnPartialData } = options;
-
-  validateFetchPolicy(fetchPolicy);
-  validatePartialDataReturn(fetchPolicy, returnPartialData);
-}
-
-function validateFetchPolicy(
-  fetchPolicy: WatchQueryFetchPolicy = "cache-first"
-) {
-  const supportedFetchPolicies: WatchQueryFetchPolicy[] = [
-    "cache-first",
-    "network-only",
-    "no-cache",
-    "cache-and-network",
-  ];
-
-  invariant(
-    supportedFetchPolicies.includes(fetchPolicy),
-    `The fetch policy \`%s\` is not supported with suspense.`,
-    fetchPolicy
-  );
-}
-
-function validatePartialDataReturn(
-  fetchPolicy: WatchQueryFetchPolicy | undefined,
-  returnPartialData: boolean | undefined
-) {
-  if (fetchPolicy === "no-cache" && returnPartialData) {
-    invariant.warn(
-      "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
-    );
-  }
-}
-
 interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables,
@@ -417,7 +380,7 @@ export function useWatchQueryOptions<
     };
 
     if (__DEV__) {
-      validateOptions(watchQueryOptions);
+      validateSuspenseHookOptions(watchQueryOptions);
     }
 
     // Assign the updated fetch policy after our validation since `standby` is

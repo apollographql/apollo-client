@@ -4198,7 +4198,7 @@ describe("ApolloClient", () => {
       const queryId = "1";
       // TODO: Determine if there is a better way to test this without digging
       // into implementation details
-      const promise = client["queryManager"].fetchQuery(queryId, { query });
+      const promise = client["queryManager"].query({ query }, queryId);
 
       client["queryManager"].removeQuery(queryId);
 
@@ -4232,10 +4232,7 @@ describe("ApolloClient", () => {
           },
         ]),
       });
-      // TODO: Determine if there is a better way to test this.
-      const promise = client["queryManager"].fetchQuery("made up id", {
-        query,
-      });
+      const promise = client.query({ query });
 
       // Need to delay the reset at least until the fetchRequest method
       // has had a chance to enter this request into fetchQueryRejectFns.
@@ -4747,10 +4744,7 @@ describe("ApolloClient", () => {
           },
         ]),
       });
-      // TODO: Determine if there is a better way to test this
-      const promise = client["queryManager"].fetchQuery("made up id", {
-        query,
-      });
+      const promise = client.query({ query });
       void client.reFetchObservableQueries();
 
       await expect(promise).resolves.toBeTruthy();

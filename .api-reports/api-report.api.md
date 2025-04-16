@@ -847,7 +847,7 @@ export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
 }
 
 // @public
-export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache" | "standby";
+export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
 
 // @public (undocumented)
 export type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
@@ -2023,17 +2023,12 @@ interface QueryManagerOptions {
 }
 
 // @public
-type QueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
+export type QueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     errorPolicy?: ErrorPolicy;
     context?: DefaultContext;
     fetchPolicy?: FetchPolicy;
-    pollInterval?: number;
-    notifyOnNetworkStatusChange?: boolean;
-    returnPartialData?: boolean;
 } & VariablesOption<NoInfer_2<TVariables>>;
-export { QueryOptions as PureQueryOptions }
-export { QueryOptions }
 
 // @public (undocumented)
 export interface QueryResult<TData = unknown> {
@@ -2479,7 +2474,7 @@ export type WatchFragmentResult<TData> = {
 };
 
 // @public (undocumented)
-export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
+export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network" | "standby";
 
 // @public
 export type WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
@@ -2540,7 +2535,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:186:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:456:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:262:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

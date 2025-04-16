@@ -6,7 +6,7 @@ import type {
 import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { NetworkError, ServerError } from "@apollo/client/errors";
+import type { ServerError, ServerParseError } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
@@ -21,7 +21,7 @@ export const VERSION = 1;
 
 export interface ErrorResponse {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  networkError?: NetworkError;
+  networkError?: Error | ServerParseError | ServerError | null;
   response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;

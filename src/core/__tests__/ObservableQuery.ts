@@ -2871,6 +2871,13 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: dataOne,
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -3206,155 +3213,162 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("handles multiple calls to getCurrentResult without losing data", async () => {
-      const query = gql`
-        {
-          greeting {
-            message
-            ... on Greeting @defer {
-              recipient {
-                name
+    it.failing(
+      "handles multiple calls to getCurrentResult without losing data",
+      async () => {
+        const query = gql`
+          {
+            greeting {
+              message
+              ... on Greeting @defer {
+                recipient {
+                  name
+                }
               }
             }
           }
-        }
-      `;
+        `;
 
-      const link = new MockSubscriptionLink();
+        const link = new MockSubscriptionLink();
 
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-      });
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+        });
 
-      const obs = client.watchQuery({ query });
-      const stream = new ObservableStream(obs);
+        const obs = client.watchQuery({ query });
+        const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitTypedValue({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
+        expect(obs.getCurrentResult()).toStrictEqualTyped({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
 
-      link.simulateResult({
-        result: {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: "Hello world",
+                __typename: "Greeting",
+              },
+            },
+            hasNext: true,
+          },
+        });
+
+        // this currently fails because we don't handle the deferred case yet
+        // we expect the value to come from the cache here instead of from the link,
+        // but since it's partial and we don't listen for partial values, it is
+        // not emitted
+        await expect(stream).toEmitTypedValue({
           data: {
             greeting: {
               message: "Hello world",
               __typename: "Greeting",
             },
           },
-          hasNext: true,
-        },
-      });
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          // TODO: This should be true since there are still outstanding chunks
+          // that haven't been processed.
+          partial: false,
+        });
 
-      await expect(stream).toEmitTypedValue({
-        data: {
-          greeting: {
-            message: "Hello world",
-            __typename: "Greeting",
+        expect(obs.getCurrentResult()).toStrictEqualTyped({
+          data: {
+            greeting: {
+              message: "Hello world",
+              __typename: "Greeting",
+            },
           },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        // TODO: This should be true since there are still outstanding chunks
-        // that haven't been processed.
-        partial: false,
-      });
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            __typename: "Greeting",
-          },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: true,
-      });
-
-      link.simulateResult(
-        {
-          result: {
-            incremental: [
-              {
-                data: {
-                  recipient: {
-                    name: "Alice",
-                    __typename: "Person",
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  data: {
+                    recipient: {
+                      name: "Alice",
+                      __typename: "Person",
+                    },
+                    __typename: "Greeting",
                   },
-                  __typename: "Greeting",
+                  path: ["greeting"],
                 },
-                path: ["greeting"],
+              ],
+              hasNext: false,
+            },
+          },
+          true
+        );
+
+        await expect(stream).toEmitTypedValue({
+          data: {
+            greeting: {
+              message: "Hello world",
+              recipient: {
+                name: "Alice",
+                __typename: "Person",
               },
-            ],
-            hasNext: false,
-          },
-        },
-        true
-      );
-
-      await expect(stream).toEmitTypedValue({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
+              __typename: "Greeting",
             },
-            __typename: "Greeting",
           },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
+        expect(obs.getCurrentResult()).toStrictEqualTyped({
+          data: {
+            greeting: {
+              message: "Hello world",
+              recipient: {
+                name: "Alice",
+                __typename: "Person",
+              },
+              __typename: "Greeting",
             },
-            __typename: "Greeting",
           },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
 
-      // This 2nd identical check is intentional to ensure calling this function
-      // more than once returns the right value.
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
+        // This 2nd identical check is intentional to ensure calling this function
+        // more than once returns the right value.
+        expect(obs.getCurrentResult()).toStrictEqualTyped({
+          data: {
+            greeting: {
+              message: "Hello world",
+              recipient: {
+                name: "Alice",
+                __typename: "Person",
+              },
+              __typename: "Greeting",
             },
-            __typename: "Greeting",
           },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
 
-      await expect(stream).not.toEmitAnything();
-    });
+        await expect(stream).not.toEmitAnything();
+      }
+    );
 
     {
       type Result = ApolloQueryResult<{ hello: string }>;

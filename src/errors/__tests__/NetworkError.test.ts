@@ -3,10 +3,16 @@ import { Observable } from "rxjs";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import {
   CombinedGraphQLErrors,
+  CombinedProtocolErrors,
   NetworkError,
   UnconventionalError,
 } from "@apollo/client/errors";
-import { MockLink } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import {
+  mockMultipartSubscriptionStream,
+  ObservableStream,
+  spyOnConsole,
+} from "@apollo/client/testing/internal";
 
 const query = gql`
   query {
@@ -16,6 +22,12 @@ const query = gql`
 
 const mutation = gql`
   mutation {
+    foo
+  }
+`;
+
+const subscription = gql`
+  subscription {
     foo
   }
 `;
@@ -43,6 +55,31 @@ test("error is not registered until emitted from the link chain", async () => {
 
   // We've run the operation and the error has been emitted from the link chain,
   expect(NetworkError.is(actual)).toBe(true);
+});
+
+test("handles errors emitted as strings", async () => {
+  const client = new ApolloClient({
+    link: createErrorLink("Oops"),
+    cache: new InMemoryCache(),
+  });
+
+  const error = await client.query({ query }).catch((error) => error);
+  expect(error).toEqual(new Error("Oops"));
+
+  expect(NetworkError.is(error)).toBe(true);
+});
+
+test("handles errors emitted from unconventional types", async () => {
+  const symbol = Symbol();
+  const client = new ApolloClient({
+    link: createErrorLink(symbol),
+    cache: new InMemoryCache(),
+  });
+
+  const error = await client.query({ query }).catch((error) => error);
+  expect(error).toEqual(new UnconventionalError(symbol));
+
+  expect(NetworkError.is(error)).toBe(true);
 });
 
 describe("client.query", () => {
@@ -73,31 +110,6 @@ describe("client.query", () => {
     );
 
     expect(NetworkError.is(error)).toBe(false);
-  });
-
-  test("handles errors emitted as strings", async () => {
-    const client = new ApolloClient({
-      link: createErrorLink("Oops"),
-      cache: new InMemoryCache(),
-    });
-
-    const error = await client.query({ query }).catch((error) => error);
-    expect(error).toEqual(new Error("Oops"));
-
-    expect(NetworkError.is(error)).toBe(true);
-  });
-
-  test("handles errors emitted from unconventional types", async () => {
-    const symbol = Symbol();
-    const client = new ApolloClient({
-      link: createErrorLink(symbol),
-      cache: new InMemoryCache(),
-    });
-
-    const error = await client.query({ query }).catch((error) => error);
-    expect(error).toEqual(new UnconventionalError(symbol));
-
-    expect(NetworkError.is(error)).toBe(true);
   });
 });
 
@@ -133,29 +145,70 @@ describe("client.mutate", () => {
 
     expect(NetworkError.is(error)).toBe(false);
   });
+});
 
-  test("handles errors emitted as strings", async () => {
+describe("client.subscribe", () => {
+  test("errors emitted from the link chain are network errors", async () => {
+    const error = new Error("Oops");
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      link: createErrorLink("Oops"),
+      link,
       cache: new InMemoryCache(),
     });
 
-    const error = await client.mutate({ mutation }).catch((error) => error);
-    expect(error).toEqual(new Error("Oops"));
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+    link.simulateResult({ error });
 
-    expect(NetworkError.is(error)).toBe(true);
+    const result = await stream.takeNext();
+    expect(result.error).toBe(error);
+
+    expect(NetworkError.is(result.error)).toBe(true);
   });
 
-  test("handles errors emitted from unconventional types", async () => {
-    const symbol = Symbol();
+  test("does not register GraphQL errors as network errors", async () => {
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      link: createErrorLink(symbol),
+      link,
       cache: new InMemoryCache(),
     });
 
-    const error = await client.mutate({ mutation }).catch((error) => error);
-    expect(error).toEqual(new UnconventionalError(symbol));
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+    link.simulateResult({ result: { errors: [{ message: "Oops" }] } });
 
-    expect(NetworkError.is(error)).toBe(true);
+    const result = await stream.takeNext();
+    expect(result.error).toEqual(
+      new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
+    );
+
+    expect(NetworkError.is(result.error)).toBe(false);
+  });
+
+  test("does not register protocol errors as network errors", async () => {
+    // silence warning for cache write
+    using _ = spyOnConsole("error");
+    const { httpLink, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+
+    const client = new ApolloClient({
+      link: httpLink,
+      cache: new InMemoryCache(),
+    });
+
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+
+    enqueueProtocolErrors([{ message: "Oops" }]);
+
+    const result = await stream.takeNext();
+    expect(result.error).toEqual(
+      new CombinedProtocolErrors([{ message: "Oops" }])
+    );
+
+    expect(NetworkError.is(result.error)).toBe(false);
   });
 });

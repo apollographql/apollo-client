@@ -1102,7 +1102,10 @@ export class QueryManager {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          return of({ data: undefined, error: toErrorLike(error) });
+          error = toErrorLike(error);
+          NetworkError.register(error);
+
+          return of({ data: undefined, error });
         }),
         filter((result) => !!(result.data || result.error))
       );

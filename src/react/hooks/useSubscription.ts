@@ -379,7 +379,7 @@ function createSubscription<
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {
-        observable = client.subscribe(options);
+        observable = client.subscribe(options as any);
       }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();

@@ -967,25 +967,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return options.fetchPolicy;
   }
 
-  private fetch(
-    options: ObservableQuery.Options<TData, TVariables>,
-    newNetworkStatus: NetworkStatus,
-    emitLoadingState: boolean,
-    query?: DocumentNode
-  ) {
-    // TODO Make sure we update the networkStatus (and infer fetchVariables)
-    // before actually committing to the fetch.
-    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
-    queryInfo.setObservableQuery(this);
-    return this.queryManager.fetchObservableWithInfo(
-      queryInfo,
-      options,
-      newNetworkStatus,
-      query,
-      emitLoadingState
-    );
-  }
-
   // Turns polling on or off based on this.options.pollInterval.
   private updatePolling() {
     // Avoid polling in SSR mode
@@ -1196,13 +1177,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const variables = { ...options.variables };
     const { notifyOnNetworkStatusChange = true } = options;
-    const { observable, fromLink } = this.fetch(
+
+    // TODO Make sure we update the networkStatus (and infer fetchVariables)
+    // before actually committing to the fetch.
+    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
+    queryInfo.setObservableQuery(this);
+    const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
+      queryInfo,
       options,
       newNetworkStatus,
+      query,
       notifyOnNetworkStatusChange &&
         oldNetworkStatus !== newNetworkStatus &&
-        isNetworkRequestInFlight(newNetworkStatus),
-      query
+        isNetworkRequestInFlight(newNetworkStatus)
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
       next: (result) => {

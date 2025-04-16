@@ -1244,11 +1244,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       context = {},
     } = options;
 
-    const emitLoadingState =
-      notifyOnNetworkStatusChange &&
-      oldNetworkStatus !== networkStatus &&
-      isNetworkRequestInFlight(networkStatus);
-
     // TODO: This should be this.queryInfo but this fails a test when doing so.
     // Investigate
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
@@ -1277,7 +1272,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           refetchWritePolicy: options.refetchWritePolicy,
         },
         networkStatus,
-        emitLoadingState
+        notifyOnNetworkStatusChange &&
+          oldNetworkStatus !== networkStatus &&
+          isNetworkRequestInFlight(networkStatus)
       );
 
       // If we're in standby, postpone advancing options.fetchPolicy using

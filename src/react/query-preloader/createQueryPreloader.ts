@@ -43,19 +43,6 @@ export type PreloadQueryOptions<
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 
-type PreloadQueryOptionsArg<
-  TVariables extends OperationVariables,
-  TOptions = unknown,
-> = Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-  [
-    options?: PreloadQueryOptions<NoInfer<TVariables>> &
-      Omit<TOptions, "variables">,
-  ]
-: [
-    options: PreloadQueryOptions<NoInfer<TVariables>> &
-      Omit<TOptions, "variables">,
-  ];
-
 /**
  * A function that will begin loading a query when called. It's result can be
  * read by `useReadQuery` which will suspend until the query is loaded.
@@ -111,7 +98,11 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
+    ...[options]: Record<string, never> extends (
+      OnlyRequiredProperties<TVariables>
+    ) ?
+      [options?: PreloadQueryOptions<NoInfer<TVariables>>]
+    : [options: PreloadQueryOptions<NoInfer<TVariables>>]
   ): PreloadedQueryRef<TData, TVariables>;
 }
 

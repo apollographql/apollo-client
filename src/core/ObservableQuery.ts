@@ -1283,10 +1283,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         normalized.fetchPolicy !== "standby" &&
         queryInfo.observableQuery
       ) {
-        queryInfo.observableQuery["applyNextFetchPolicy"](
-          "after-fetch",
-          options
-        );
+        this.applyNextFetchPolicy("after-fetch", options);
       }
 
       return observableWithInfo;

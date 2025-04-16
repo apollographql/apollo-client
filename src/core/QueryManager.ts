@@ -822,7 +822,6 @@ export class QueryManager {
       fetchPolicy = defaults?.fetchPolicy || "cache-first",
       errorPolicy = defaults?.errorPolicy || "none",
       returnPartialData = false,
-      notifyOnNetworkStatusChange = true,
       context = {},
     } = options;
 
@@ -845,7 +844,6 @@ export class QueryManager {
           fetchPolicy,
           errorPolicy,
           returnPartialData,
-          notifyOnNetworkStatusChange,
           context,
         },
         NetworkStatus.loading,

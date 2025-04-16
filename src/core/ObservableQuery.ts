@@ -1228,10 +1228,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private fetchObservableWithInfo(
     options: WatchQueryOptions<TVariables, TData>,
     oldNetworkStatus: NetworkStatus,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus = NetworkStatus.loading,
+    networkStatus: NetworkStatus,
     query = options.query
   ) {
     const variables = this.queryManager.getVariables(query, options.variables);

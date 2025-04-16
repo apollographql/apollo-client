@@ -1179,15 +1179,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     const variables = { ...options.variables };
-    const { notifyOnNetworkStatusChange = true } = options;
-
     const { observable, fromLink } = this.fetchObservableWithInfo(
       options,
+      oldNetworkStatus,
       newNetworkStatus,
-      query,
-      notifyOnNetworkStatusChange &&
-        oldNetworkStatus !== newNetworkStatus &&
-        isNetworkRequestInFlight(newNetworkStatus)
+      query
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
       next: (result) => {
@@ -1231,19 +1227,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private fetchObservableWithInfo(
     options: WatchQueryOptions<TVariables, TData>,
+    oldNetworkStatus: NetworkStatus,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    query = options.query,
-    emitLoadingState = false
+    query = options.query
   ) {
-    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
-    queryInfo.setObservableQuery(this);
-
     const variables = this.queryManager.getVariables(query, options.variables);
     const defaults = this.queryManager.defaultOptions.watchQuery;
-
     let {
       fetchPolicy = (defaults && defaults.fetchPolicy) || "cache-first",
       errorPolicy = (defaults && defaults.errorPolicy) || "none",
@@ -1251,6 +1243,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       notifyOnNetworkStatusChange = true,
       context = {},
     } = options;
+
+    const emitLoadingState =
+      notifyOnNetworkStatusChange &&
+      oldNetworkStatus !== networkStatus &&
+      isNetworkRequestInFlight(networkStatus);
+
+    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
+    queryInfo.setObservableQuery(this);
 
     if (
       this.queryManager.prioritizeCacheValues &&

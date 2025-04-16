@@ -706,7 +706,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
         if (isCached && !updatedQuerySet.has(this.query)) {
-          this.reobserveCacheFirst();
+          // TODO deliver current cache result
+          // this.reobserveCacheFirst();
         }
       });
   }
@@ -1252,7 +1253,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // this method, and are handled by calling oq.reobserve(). If this
           // reobservation is spurious, isDifferentFromLastResult still has a
           // chance to catch it before delivery to ObservableQuery subscribers.
-          this.reobserveCacheFirst();
+          this.reobserveFromNetwork();
         }
       }
     }
@@ -1420,19 +1421,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       );
   });
 
-  // Reobserve with fetchPolicy effectively set to "cache-first", triggering
-  // delivery of any new data from the cache, possibly falling back to the network
-  // if any cache data are missing. This allows _complete_ cache results to be
-  // delivered without also kicking off unnecessary network requests when
-  // this.options.fetchPolicy is "cache-and-network" or "network-only". When
-  // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
-  // "standby", or "no-cache"), we call this.reobserve() as usual.
-  private reobserveCacheFirst() {
+  // Reobserve with fetchPolicy effectively set to "network-only" (or keeping "no-cache")
+  // to get new data from the network, becaus the cache is currently missing data.
+  private reobserveFromNetwork() {
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
-    if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
+    if (fetchPolicy !== "no-cache" && fetchPolicy !== "network-only") {
       return this.reobserve({
-        fetchPolicy: "cache-first",
+        fetchPolicy: "network-only",
         // Use a temporary nextFetchPolicy function that replaces itself with the
         // previous nextFetchPolicy value and returns the original fetchPolicy.
         nextFetchPolicy(

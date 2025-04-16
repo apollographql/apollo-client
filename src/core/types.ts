@@ -1,3 +1,4 @@
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import type { NextNotification, ObservableNotification } from "rxjs";
 
@@ -12,7 +13,6 @@ import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 

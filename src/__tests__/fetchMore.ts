@@ -2063,7 +2063,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   });
 
   // Ensure we store the merged result as the last result
-  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -2119,7 +2119,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },

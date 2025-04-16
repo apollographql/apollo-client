@@ -25,7 +25,6 @@ import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import {
-  cloneDeep,
   compact,
   getOperationDefinition,
   getQueryDefinition,
@@ -138,7 +137,7 @@ export class ObservableQuery<
   private queryManager: QueryManager;
   private subscriptions = new Set<Subscription>();
 
-  private waitForOwnResult: boolean;
+  //private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
   private lastQuery?: DocumentNode;
 
@@ -236,7 +235,7 @@ export class ObservableQuery<
     this.queryManager = queryManager;
 
     // active state
-    this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
+    //this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
     this.subscribeToMore = this.subscribeToMore.bind(this);
@@ -411,7 +410,7 @@ export class ObservableQuery<
               source: "cache",
               query,
               variables,
-            } satisfies QueryNotification.FromCache<TData, TVariables>);
+            });
           }
         },
       });
@@ -419,98 +418,7 @@ export class ObservableQuery<
     this.cacheSubscription = observable.subscribe(this.input);
   }
 
-  private getCurrentFullResult(
-    saveAsLastResult = true
-  ): ApolloQueryResult<TData> {
-    // Use the last result as long as the variables match this.variables.
-    const lastResult = this.getLastResult(true);
-    const networkStatus = this.networkStatus;
-
-    const result: ApolloQueryResult<TData> = {
-      data: undefined,
-      partial: true,
-      ...lastResult,
-      loading: isNetworkRequestInFlight(networkStatus),
-      networkStatus,
-    };
-
-    let { fetchPolicy = "cache-first" } = this.options;
-    const { prioritizeCacheValues } = this.queryManager;
-    if (prioritizeCacheValues) {
-      fetchPolicy = "cache-first";
-    }
-    if (
-      // These fetch policies should never deliver data from the cache, unless
-      // redelivering a previously delivered result.
-      skipCacheDataFor(fetchPolicy) ||
-      // If this.options.query has @client(always: true) fields, we cannot
-      // trust diff.result, since it was read from the cache without running
-      // local resolvers (and it's too late to run resolvers now, since we must
-      // return a result synchronously).
-      this.queryManager.getDocumentInfo(this.query).hasForcedResolvers
-    ) {
-      // Fall through.
-    } else if (this.waitForOwnResult && !prioritizeCacheValues) {
-      // This would usually be a part of `QueryInfo.getDiff()`.
-      // which we skip in the waitForOwnResult case since we are not
-      // interested in the diff.
-      this.queryInfo["updateWatch"]();
-    } else {
-      const diff = this.queryInfo.getDiff();
-
-      result.partial = !diff.complete;
-
-      if (diff.complete || this.options.returnPartialData) {
-        result.data = diff.result;
-      }
-
-      if (result.data === null) {
-        result.data = void 0 as any;
-      }
-
-      if (diff.complete) {
-        // If the diff is complete, and we're using a FetchPolicy that
-        // terminates after a complete cache read, we can assume the next result
-        // we receive will have NetworkStatus.ready and !loading.
-        if (
-          diff.complete &&
-          result.networkStatus === NetworkStatus.loading &&
-          (fetchPolicy === "cache-first" || fetchPolicy === "cache-only")
-        ) {
-          result.networkStatus = NetworkStatus.ready;
-          result.loading = false;
-        }
-      }
-
-      // We need to check for both both `error` and `errors` field because there
-      // are cases where sometimes `error` is set, but not `errors` and
-      // vice-versa. This will be updated in the next major version when
-      // `errors` is deprecated in favor of `error`.
-      if (result.networkStatus === NetworkStatus.ready && result.error) {
-        result.networkStatus = NetworkStatus.error;
-      }
-
-      if (
-        __DEV__ &&
-        !diff.complete &&
-        !result.loading &&
-        !result.data &&
-        !result.error
-      ) {
-        logMissingFieldErrors(diff.missing);
-      }
-    }
-
-    if (saveAsLastResult) {
-      this.updateLastResult(result);
-    }
-
-    return result;
-  }
-
-  public getCurrentResult(
-    saveAsLastResult = true
-  ): ApolloQueryResult<MaybeMasked<TData>> {
+  public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
     return this.subject.getValue();
   }
 
@@ -1092,25 +1000,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  private updateLastResult(
-    newResult: ApolloQueryResult<TData>,
-    variables = this.variables
-  ) {
-    let error = this.getLastError();
-    // Preserve this.last.error unless the variables have changed.
-    if (error && this.last && !equal(variables, this.last.variables)) {
-      error = void 0;
-    }
-    return (this.last = {
-      result:
-        this.queryManager.assumeImmutableResults ?
-          newResult
-        : cloneDeep(newResult),
-      variables,
-      ...(error ? { error } : null),
-    });
-  }
-
   /**
    * Reevaluate the query, optionally against new options. New options will be
    * merged with the current options when given.
@@ -1572,6 +1461,7 @@ export function logMissingFieldErrors(
   }
 }
 
+// @ts-ignore not used right now, might come in handy again
 function skipCacheDataFor(
   fetchPolicy?: WatchQueryFetchPolicy /* `undefined` would mean `"cache-first"` */
 ) {

@@ -1138,7 +1138,7 @@ describe("client.watchQuery", () => {
       }
 
       {
-        const { data } = observable.getCurrentResult(false);
+        const { data } = observable.getCurrentResult();
 
         expect(data).toEqual({
           currentUser: {

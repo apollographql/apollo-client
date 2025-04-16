@@ -65,12 +65,12 @@ describe("ObservableQuery", () => {
     people_one: {
       name: "Luke Skywalker",
     },
-  } as const;
+  };
   const dataTwo = {
     people_one: {
       name: "Leia Skywalker",
     },
-  } as const;
+  };
 
   const error = new GraphQLError("is offline.", undefined, null, null, [
     "people_one",
@@ -3054,7 +3054,7 @@ describe("ObservableQuery", () => {
 
       // TODO: Determine why this worked without the `false` argument before
       // since this updates the last value to be equal to the partial result.
-      expect(observable.getCurrentResult(false)).toStrictEqualTyped({
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -4051,7 +4051,7 @@ describe("ObservableQuery", () => {
       observable.subscribe(jest.fn());
 
       await waitFor(() => {
-        expect(observable.getCurrentResult(false)).toEqual({
+        expect(observable.getCurrentResult()).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4354,7 +4354,7 @@ test("handles changing variables in rapid succession before other request is com
   observable.subscribe(jest.fn());
 
   await waitFor(() => {
-    expect(observable.getCurrentResult(false)).toStrictEqualTyped({
+    expect(observable.getCurrentResult()).toStrictEqualTyped({
       data: { userCount: 10 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4370,7 +4370,7 @@ test("handles changing variables in rapid succession before other request is com
   await wait(50);
 
   expect(observable.options.variables).toEqual({ department: null });
-  expect(observable.getCurrentResult(false)).toStrictEqualTyped({
+  expect(observable.getCurrentResult()).toStrictEqualTyped({
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,

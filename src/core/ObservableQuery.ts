@@ -1268,14 +1268,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       >(
         queryInfo,
         {
-          ...options,
           query,
           variables,
           fetchPolicy,
           errorPolicy,
           returnPartialData,
-          notifyOnNetworkStatusChange,
           context,
+          refetchWritePolicy: options.refetchWritePolicy,
         },
         networkStatus,
         emitLoadingState

@@ -1,36 +1,22 @@
-import { isErrorLike } from "./isErrorLike.js";
-import { brand, isBranded } from "./utils.js";
+import type { ErrorLike } from "@apollo/client";
+import { CombinedGraphQLErrors } from "@apollo/client";
+
+const registry = new WeakSet();
 
 /**
- * A wrapper error type that wraps errors emitted from the link chain. Useful if
- * you have custom error types in your application want to differentiate
- * errors that come specifically from the link chain.
- *
- * Inspect the `cause` to get the original source of the error.
+ * A facade error type that keeps a registry of errors emitted from the link
+ * chain. Determine if an error is from the link chain using `NetworkError.is`.
  */
-export class NetworkError extends Error {
-  /** Determine if an error is a `NetworkError` instance */
-  static is(error: unknown): error is NetworkError {
-    return isBranded(error, "NetworkError");
-  }
+export const NetworkError = {
+  /**
+   * Determine if the error is an error emitted from the link chain.
+   */
+  is: (error: unknown) => registry.has(error as ErrorLike),
 
-  constructor(sourceError: unknown) {
-    super(getErrorMessage(sourceError), { cause: sourceError });
-    this.name = "NetworkError";
-
-    brand(this);
-    Object.setPrototypeOf(this, NetworkError.prototype);
-  }
-}
-
-function getErrorMessage(sourceError: unknown): string {
-  if (isErrorLike(sourceError)) {
-    return sourceError.message;
-  }
-
-  if (typeof sourceError === "string") {
-    return sourceError;
-  }
-
-  return "An error of unexpected shape occurred.";
-}
+  /** @internal */
+  register: (error: ErrorLike) => {
+    if (!CombinedGraphQLErrors.is(error)) {
+      registry.add(error);
+    }
+  },
+};

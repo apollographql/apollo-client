@@ -26,7 +26,7 @@ export function graphQLResultHasProtocolErrors<T>(
   return false;
 }
 
-function isErrorLike(error: unknown): error is ErrorLike {
+export function isErrorLike(error: unknown): error is ErrorLike {
   return (
     error !== null &&
     typeof error === "object" &&

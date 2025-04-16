@@ -1267,15 +1267,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     });
 
     const fromVariables = (variables: TVariables) => {
-      // Since normalized is always a fresh copy of options, it's safe to
-      // modify its properties here, rather than creating yet another new
-      // WatchQueryOptions object.
-      normalized.variables = variables;
-
       const observableWithInfo = this.queryManager.fetchQueryByPolicy<
         TData,
         TVariables
-      >(queryInfo, normalized, networkStatus, emitLoadingState);
+      >(
+        queryInfo,
+        { ...normalized, variables },
+        networkStatus,
+        emitLoadingState
+      );
 
       if (
         // If we're in standby, postpone advancing options.fetchPolicy using

@@ -826,16 +826,11 @@ export class QueryManager {
       fetchPolicy = "cache-first";
     }
 
-    const queryInfo = this.getOrCreateQuery(queryId);
-
     const fromVariables = (variables: TVars) => {
-      return this.fetchQueryByPolicy<TData, TVars>(queryInfo, {
-        query,
-        variables,
-        fetchPolicy,
-        errorPolicy,
-        context,
-      });
+      return this.fetchQueryByPolicy<TData, TVars>(
+        this.getOrCreateQuery(queryId),
+        { query, variables, fetchPolicy, errorPolicy, context }
+      );
     };
 
     // This cancel function needs to be set before the concast is created,

@@ -63,7 +63,13 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
 
 // @public (undocumented)
-export type NetworkError = Error | ServerParseError | ServerError | null;
+export function isErrorLike(error: unknown): error is ErrorLike;
+
+// @public
+export class NetworkError extends Error {
+    constructor(sourceError: unknown);
+    static is(error: unknown): error is NetworkError;
+}
 
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;

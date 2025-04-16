@@ -695,6 +695,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             source: "network",
             query: this.query,
             variables: this.variables,
+            fetchPolicy: combinedOptions.fetchPolicy || "cache-first",
+            reason: NetworkStatus.fetchMore,
           } satisfies QueryNotification.FromNetwork<TData, TVariables>);
         }
 

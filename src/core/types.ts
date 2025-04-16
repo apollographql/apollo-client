@@ -12,7 +12,10 @@ import type { Resolver } from "./LocalState.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryInfo } from "./QueryInfo.js";
-import type { QueryOptions } from "./watchQueryOptions.js";
+import type {
+  QueryOptions,
+  WatchQueryFetchPolicy,
+} from "./watchQueryOptions.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -284,6 +287,8 @@ export declare namespace QueryNotification {
   > &
     Meta<TData, TVariables> & {
       source: "network";
+      fetchPolicy: WatchQueryFetchPolicy;
+      reason: NetworkStatus;
     };
 
   type FromFetchMore<TData, TVariables> = ObservableNotification<
@@ -298,6 +303,10 @@ export declare namespace QueryNotification {
   > &
     Meta<TData, TVariables> & {
       source: "cache";
+      /** only present if triggered from link */
+      fetchPolicy?: WatchQueryFetchPolicy;
+      /** only present if triggered from link */
+      reason?: NetworkStatus;
     };
 
   type Value<TData, TVariables> =

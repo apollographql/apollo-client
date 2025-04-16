@@ -1727,6 +1727,8 @@ export class QueryManager {
           __meta: "fetchQueryByPolicy",
           query,
           variables,
+          fetchPolicy: fetchPolicy || "cache-first",
+          reason: newNetworkStatus,
         } satisfies QueryNotification.FromCache<TData, TVars>);
       };
 
@@ -1755,6 +1757,8 @@ export class QueryManager {
                   source: "cache",
                   query,
                   variables,
+                  fetchPolicy: fetchPolicy || "cache-first",
+                  reason: newNetworkStatus,
                 }) satisfies QueryNotification.FromCache<TData, TVars>
             )
         );
@@ -1813,6 +1817,8 @@ export class QueryManager {
             source: "network",
             query,
             variables,
+            fetchPolicy: fetchPolicy || "cache-first",
+            reason: newNetworkStatus,
           })
         )
       );

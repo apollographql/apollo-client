@@ -651,20 +651,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       );
     }
 
-    return lastValueFrom(
-      this.queryManager
-        .fetchObservableWithInfo(
-          this.queryManager.getOrCreateQuery(qid),
-          combinedOptions,
-          NetworkStatus.fetchMore
-        )
-        .observable.pipe(map(toQueryResult)),
-      {
-        // This default is needed when a `standby` fetch policy is used to avoid
-        // an EmptyError from rejecting this promise.
-        defaultValue: { data: undefined },
-      }
-    )
+    return this.queryManager
+      .query({ ...combinedOptions, fetchPolicy: "no-cache" }, qid)
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 

@@ -694,25 +694,6 @@ export class QueryManager {
     return true;
   }
 
-  public fetchQuery<TData, TVars extends OperationVariables>(
-    queryId: string,
-    options: WatchQueryOptions<TVars, TData>,
-    networkStatus?: NetworkStatus
-  ): Promise<QueryResult<TData>> {
-    return lastValueFrom(
-      this.fetchObservableWithInfo(
-        this.getOrCreateQuery(queryId),
-        options,
-        networkStatus
-      ).observable.pipe(map(toQueryResult)),
-      {
-        // This default is needed when a `standby` fetch policy is used to avoid
-        // an EmptyError from rejecting this promise.
-        defaultValue: { data: undefined },
-      }
-    );
-  }
-
   public transform(document: DocumentNode) {
     return this.documentTransform.transformDocument(document);
   }

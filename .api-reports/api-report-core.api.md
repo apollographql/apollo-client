@@ -108,6 +108,7 @@ import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
 import { Unmasked } from '@apollo/client/masking';
 import { UriFunction } from '@apollo/client/link/http';
+import type { VariablesOption } from '@apollo/client/utilities';
 import { WatchFragmentOptions } from '@apollo/client/cache';
 import { WatchFragmentResult } from '@apollo/client/cache';
 
@@ -709,7 +710,7 @@ export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
     // (undocumented)
     context?: DefaultContext;
     query?: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
-    variables?: Partial<TVariables>;
+    variables?: Partial<NoInfer_2<TVariables>>;
 }
 
 // @public
@@ -1193,23 +1194,21 @@ export interface MutateResult<TData = unknown> {
 export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // @public (undocumented)
-export interface MutationOptions<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> {
-    awaitRefetchQueries?: boolean;
-    context?: TContext;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: MutationFetchPolicy;
-    keepRootFields?: boolean;
-    mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
-    onQueryUpdated?: OnQueryUpdated<any>;
-    // Warning: (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = {
     optimisticResponse?: Unmasked<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
-    refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
-    update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
     updateQueries?: MutationQueryReducersMap<TData>;
-    variables?: TVariables;
-}
+    refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    awaitRefetchQueries?: boolean;
+    update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+    onQueryUpdated?: OnQueryUpdated<any>;
+    errorPolicy?: ErrorPolicy;
+    context?: TContext;
+    fetchPolicy?: MutationFetchPolicy;
+    keepRootFields?: boolean;
+    mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+} & VariablesOption<NoInfer_2<TVariables>>;
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
@@ -1327,6 +1326,25 @@ interface ObservableAndInfo<TData> {
 }
 
 // @public (undocumented)
+export namespace ObservableQuery {
+    // (undocumented)
+    export type Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
+        fetchPolicy: WatchQueryFetchPolicy;
+        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+        initialFetchPolicy: WatchQueryFetchPolicy;
+        refetchWritePolicy?: RefetchWritePolicy;
+        errorPolicy?: ErrorPolicy;
+        context?: DefaultContext;
+        pollInterval?: number;
+        notifyOnNetworkStatusChange?: boolean;
+        returnPartialData?: boolean;
+        skipPollAttempt?: () => boolean;
+        query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+        variables: TVariables;
+    };
+}
+
+// @public (undocumented)
 export class ObservableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>>, InteropObservable<ApolloQueryResult<MaybeMasked<TData>>> {
     // (undocumented)
     ["@@observable"]: () => Subscribable<ApolloQueryResult<MaybeMasked<TData>>>;
@@ -1356,7 +1374,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     // @internal (undocumented)
     protected notify(): void;
     // (undocumented)
-    readonly options: WatchQueryOptions<TVariables, TData>;
+    readonly options: ObservableQuery.Options<TData, TVariables>;
     // (undocumented)
     pipe: Observable_2<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
     // (undocumented)
@@ -1366,7 +1384,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     // (undocumented)
     readonly queryName?: string;
     refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>>;
-    reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>): Promise<QueryResult<MaybeMasked<TData>>>;
+    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): Promise<QueryResult<MaybeMasked<TData>>>;
     // @internal (undocumented)
     resetDiff(): void;
     // (undocumented)
@@ -1377,14 +1395,14 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     protected scheduleNotify(): void;
     setVariables(variables: TVariables): Promise<QueryResult<TData>>;
     // @internal (undocumented)
-    silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
+    silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
     stopPolling(): void;
     // (undocumented)
     subscribe: (observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)) => Subscription;
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
     updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
-    get variables(): TVariables | undefined;
+    get variables(): TVariables;
 }
 
 // @public (undocumented)
@@ -1543,6 +1561,8 @@ class QueryManager {
     // (undocumented)
     getOrCreateQuery(queryId: string): QueryInfo;
     // (undocumented)
+    getVariables<TVariables>(document: DocumentNode_2, variables?: TVariables): TVariables;
+    // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable_2<FetchResult<any>>;
     }>;
@@ -1642,16 +1662,15 @@ interface QueryManagerOptions {
 }
 
 // @public
-interface QueryOptions<TVariables = OperationVariables, TData = unknown> {
-    context?: DefaultContext;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: FetchPolicy;
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
+type QueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
     query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+    errorPolicy?: ErrorPolicy;
+    context?: DefaultContext;
+    fetchPolicy?: FetchPolicy;
+    pollInterval?: number;
+    notifyOnNetworkStatusChange?: boolean;
     returnPartialData?: boolean;
-    variables?: TVariables;
-}
+} & VariablesOption<NoInfer_2<TVariables>>;
 export { QueryOptions as PureQueryOptions }
 export { QueryOptions }
 
@@ -1851,14 +1870,13 @@ export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends Ope
 };
 
 // @public (undocumented)
-export interface SubscriptionOptions<TVariables = OperationVariables, TData = unknown> {
-    context?: DefaultContext;
-    errorPolicy?: ErrorPolicy;
-    extensions?: Record<string, any>;
-    fetchPolicy?: FetchPolicy;
+export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
     query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
-    variables?: TVariables;
-}
+    fetchPolicy?: FetchPolicy;
+    errorPolicy?: ErrorPolicy;
+    context?: DefaultContext;
+    extensions?: Record<string, any>;
+} & VariablesOption<NoInfer_2<TVariables>>;
 
 // @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
@@ -1969,21 +1987,19 @@ type WatchFragmentResult_2<TData> = {
 export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
-export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> {
-    context?: DefaultContext;
-    errorPolicy?: ErrorPolicy;
+export type WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
     fetchPolicy?: WatchQueryFetchPolicy;
-    initialFetchPolicy?: WatchQueryFetchPolicy;
-    // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
-    query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+    initialFetchPolicy?: WatchQueryFetchPolicy;
     refetchWritePolicy?: RefetchWritePolicy;
+    errorPolicy?: ErrorPolicy;
+    context?: DefaultContext;
+    pollInterval?: number;
+    notifyOnNetworkStatusChange?: boolean;
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
-    variables?: TVariables;
-}
+    query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
+} & VariablesOption<NoInfer_2<TVariables>>;
 
 // @public (undocumented)
 interface WriteContext extends ReadMergeModifyContext {
@@ -2025,10 +2041,12 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "FieldReadFunction_2" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldMergeFunction_2" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:140:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:141:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:184:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:454:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

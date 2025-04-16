@@ -608,6 +608,13 @@ type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends
 export function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object): void;
 
 // @public (undocumented)
+export type VariablesOption<TVariables extends OperationVariables> = Record<string, never> extends OnlyRequiredProperties<TVariables> ? {
+    variables?: TVariables;
+} : {
+    variables: TVariables;
+};
+
+// @public (undocumented)
 export type VariableValue = (node: VariableNode) => any;
 
 // @public (undocumented)

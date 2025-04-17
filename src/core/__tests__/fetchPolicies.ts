@@ -358,6 +358,8 @@ describe("no-cache", () => {
       await client.query({
         query,
         fetchPolicy: "no-cache",
+        // TODO: This value makes no sense since its a promise-based API. We
+        // should remove support for this option in client.query
         notifyOnNetworkStatusChange: true,
       });
       const actualResult = await client.query({ query });
@@ -432,7 +434,6 @@ describe("no-cache", () => {
         `,
         fetchPolicy: "no-cache",
         variables: { id: "1" },
-        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -693,6 +694,13 @@ describe("cache-only", () => {
     await observable.refetch();
 
     await expect(stream).toEmitTypedValue({
+      data: { count: 1 },
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -736,7 +744,6 @@ describe("cache-and-network", function () {
       `,
       fetchPolicy: "cache-and-network",
       variables: { id: "1" },
-      notifyOnNetworkStatusChange: true,
     });
 
     const stream = new ObservableStream(observable);
@@ -750,6 +757,13 @@ describe("cache-and-network", function () {
         },
       };
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: dataWithId(1),
@@ -913,6 +927,13 @@ describe("nextFetchPolicy", () => {
     stream,
   }) => {
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         echo: {
           __typename: "Echo",
@@ -944,6 +965,20 @@ describe("nextFetchPolicy", () => {
         },
       });
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        echo: {
+          __typename: "Echo",
+          linkCounter: 1,
+          opName: "EchoQuery",
+          opVars: {},
+        },
+      },
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -986,6 +1021,22 @@ describe("nextFetchPolicy", () => {
       // Changing variables resets the fetchPolicy to its initial value.
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        echo: {
+          __typename: "Echo",
+          linkCounter: 2,
+          opName: "EchoQuery",
+          opVars: {
+            refetching: true,
+          },
+        },
+      },
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: false,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -1059,6 +1110,13 @@ describe("nextFetchPolicy", () => {
     stream,
   }) => {
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         echo: {
           __typename: "Echo",
@@ -1089,6 +1147,20 @@ describe("nextFetchPolicy", () => {
         },
       });
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        echo: {
+          __typename: "Echo",
+          linkCounter: 1,
+          opName: "EchoQuery",
+          opVars: {},
+        },
+      },
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -1227,6 +1299,13 @@ describe("nextFetchPolicy", () => {
     stream,
   }) => {
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         echo: {
           __typename: "Echo",
@@ -1257,6 +1336,20 @@ describe("nextFetchPolicy", () => {
         },
       });
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        echo: {
+          __typename: "Echo",
+          linkCounter: 1,
+          opName: "EchoQuery",
+          opVars: {},
+        },
+      },
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {

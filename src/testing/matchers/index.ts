@@ -1,5 +1,6 @@
 import { expect } from "@jest/globals";
 
+import { arrayWithLength } from "./arrayWithLength.js";
 import { toBeDisposed } from "./toBeDisposed.js";
 import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
 import { toComplete } from "./toComplete.js";
@@ -12,6 +13,7 @@ import { toMatchDocument } from "./toMatchDocument.js";
 import { toStrictEqualTyped } from "./toStrictEqualTyped.js";
 
 expect.extend({
+  arrayWithLength,
   toComplete,
   toEmitAnything,
   toEmitError,

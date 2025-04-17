@@ -6,7 +6,7 @@ import type { Subscription } from "rxjs";
 import { firstValueFrom, from, Observable } from "rxjs";
 
 import type { FetchResult } from "@apollo/client";
-import { ApolloClient } from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
@@ -650,10 +650,12 @@ describe("mutation results", () => {
       {
         request: { query: queryTodos },
         result: queryTodosResult,
+        delay: 0,
       },
       {
         request: { query: mutationTodo },
         result: mutationTodoResult,
+        delay: 0,
       }
     );
 
@@ -1287,13 +1289,28 @@ describe("mutation results", () => {
 
     const stream = new ObservableStream(watchedQuery);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     await watchedQuery.refetch(variables2);
 
-    {
-      const result = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: true,
+    });
 
-      expect(result.data).toEqual({ echo: "b" });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { echo: "b" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     await expect(
       client.mutate({
@@ -1306,11 +1323,12 @@ describe("mutation results", () => {
       })
     ).resolves.toStrictEqualTyped({ data: resetMutationResult.data });
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data).toEqual({ echo: "0" });
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { echo: "0" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("allows mutations with optional arguments", async () => {

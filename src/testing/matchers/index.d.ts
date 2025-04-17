@@ -80,9 +80,13 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     ) => Promise<R>
   : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
 
-  toStrictEqualTyped: T extends Promise<infer TResult> ?
+  toStrictEqualTyped: [T] extends [Promise<infer TResult>] ?
     (expected: FilterUnserializableProperties<TResult>) => R
   : (expected: FilterUnserializableProperties<T>) => R;
+}
+
+interface ApolloCustomAsymmetricMatchers {
+  arrayWithLength: (length: number) => any;
 }
 
 declare global {
@@ -90,5 +94,7 @@ declare global {
     interface Matchers<R = void, T = {}>
       extends ApolloCustomMatchers<R, T>,
         RenderStreamMatchers<R, T> {}
+
+    interface Expect extends ApolloCustomAsymmetricMatchers {}
   }
 }

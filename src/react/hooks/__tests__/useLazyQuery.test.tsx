@@ -81,8 +81,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -100,11 +98,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -144,8 +153,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -163,11 +170,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -177,7 +195,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  test("sets initial loading state when notifyOnNetworkStatusChange is true", async () => {
+  test("does not emit loading state when notifyOnNetworkStatusChange is false", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -189,7 +207,7 @@ describe("useLazyQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
-        () => useLazyQuery(helloQuery, { notifyOnNetworkStatusChange: true }),
+        () => useLazyQuery(helloQuery, { notifyOnNetworkStatusChange: false }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -204,8 +222,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -223,26 +239,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -295,8 +294,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -313,11 +310,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -333,8 +341,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -349,11 +355,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { hello: "world" },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { name: "changed" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world" },
         variables: {},
@@ -406,8 +423,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -424,11 +439,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -444,8 +470,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -462,11 +486,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: { hello: "world" },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { name: "changed" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world" },
         variables: {},
@@ -476,7 +511,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  test("renders loading states when changing queries with notifyOnNetworkStatusChange", async () => {
+  test("does not render loading states when changing queries with notifyOnNetworkStatusChange: false", async () => {
     const query1 = gql`
       query {
         hello
@@ -505,7 +540,7 @@ describe("useLazyQuery Hook", () => {
     const { takeSnapshot, getCurrentSnapshot, rerender } =
       await renderHookToSnapshotStream(
         ({ query }) =>
-          useLazyQuery(query, { notifyOnNetworkStatusChange: true }),
+          useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
         {
           initialProps: { query: query1 },
           wrapper: ({ children }) => (
@@ -523,8 +558,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -541,25 +574,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -575,8 +592,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -591,26 +606,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: { hello: "world" },
-        variables: {},
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { name: "changed" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world" },
         variables: {},
@@ -655,8 +653,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -673,11 +669,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -692,11 +699,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
         variables: {},
@@ -706,7 +724,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it('renders loading states each time the execution function is called when using a "network-only" fetch policy with notifyOnNetworkStatusChange', async () => {
+  it('does not render loading states when the execution function is called when using a "network-only" fetch policy with notifyOnNetworkStatusChange: false', async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -725,7 +743,7 @@ describe("useLazyQuery Hook", () => {
       await renderHookToSnapshotStream(
         () =>
           useLazyQuery(helloQuery, {
-            notifyOnNetworkStatusChange: true,
+            notifyOnNetworkStatusChange: false,
             fetchPolicy: "network-only",
           }),
         {
@@ -742,8 +760,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -760,26 +776,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -794,26 +793,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: { hello: "world 1" },
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: false,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
         variables: {},
@@ -839,17 +821,11 @@ describe("useLazyQuery Hook", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(
-        () =>
-          useLazyQuery(helloQuery, {
-            notifyOnNetworkStatusChange: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
 
     {
       const [, result] = await takeSnapshot();
@@ -858,8 +834,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -879,8 +853,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -894,8 +866,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world 1" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -915,8 +885,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world 1" },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.refetch,
         previousData: undefined,
         variables: {},
@@ -929,8 +897,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world 2" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
         variables: {},
@@ -977,8 +943,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -995,11 +959,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1012,12 +987,36 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.poll,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: { hello: "world 2" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.poll,
         previousData: { hello: "world 1" },
         variables: {},
       });
@@ -1030,8 +1029,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "world 3" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 2" },
         variables: {},
@@ -1097,8 +1094,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1115,11 +1110,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: data1,
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -1134,11 +1140,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: data1,
+        variables: { id: 2 },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: data2,
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: data1,
         variables: { id: 2 },
@@ -1148,7 +1165,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  test("renders loading states when a query is re-run and variables changes with notifyOnNetworkStatusChange", async () => {
+  test("does not render loading states when a query is re-run and variables changes with notifyOnNetworkStatusChange: false", async () => {
     const CAR_QUERY_BY_ID = gql`
       query ($id: Int) {
         car(id: $id) {
@@ -1191,7 +1208,7 @@ describe("useLazyQuery Hook", () => {
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
         () =>
-          useLazyQuery(CAR_QUERY_BY_ID, { notifyOnNetworkStatusChange: true }),
+          useLazyQuery(CAR_QUERY_BY_ID, { notifyOnNetworkStatusChange: false }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -1206,8 +1223,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1224,26 +1239,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: { id: 1 },
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: data1,
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: 1 },
@@ -1258,25 +1256,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: undefined,
-        called: true,
-        loading: true,
-        // @ts-expect-error
-        partial: true,
-        networkStatus: NetworkStatus.setVariables,
-        previousData: data1,
-        variables: { id: 2 },
-      });
-    }
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
         data: data2,
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: data1,
         variables: { id: 2 },
@@ -1319,8 +1301,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1340,8 +1320,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "from cache" },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -1355,8 +1333,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "from link" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "from cache" },
         variables: {},
@@ -1406,8 +1382,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1427,8 +1401,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "from cache" },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         variables: {},
@@ -1442,8 +1414,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "from link" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "from cache" },
         variables: {},
@@ -1461,8 +1431,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "from link" },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.loading,
         previousData: { hello: "from cache" },
         variables: {},
@@ -1476,8 +1444,6 @@ describe("useLazyQuery Hook", () => {
         data: { hello: "from link 2" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "from link" },
         variables: {},
@@ -1529,7 +1495,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -1556,9 +1521,7 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: "1" },
       });
@@ -1573,8 +1536,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
           character: { __typename: "Character", id: "1", name: "Cache 1" },
@@ -1600,8 +1561,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.setVariables,
         previousData: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -1619,8 +1578,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
           character: { __typename: "Character", id: "2", name: "Cache 2" },
@@ -1632,7 +1589,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  test("renders loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange", async () => {
+  test("renders loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange: false when there is cached data", async () => {
     const { query, mocks } = setupVariablesCase();
 
     const client = new ApolloClient({
@@ -1662,7 +1619,7 @@ describe("useLazyQuery Hook", () => {
         () =>
           useLazyQuery(query, {
             fetchPolicy: "cache-and-network",
-            notifyOnNetworkStatusChange: true,
+            notifyOnNetworkStatusChange: false,
           }),
         {
           wrapper: ({ children }) => (
@@ -1678,7 +1635,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error should be undefined
@@ -1705,9 +1661,7 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
-        networkStatus: NetworkStatus.loading,
+        networkStatus: NetworkStatus.setVariables,
         previousData: undefined,
         variables: { id: "1" },
       });
@@ -1722,8 +1676,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
           character: { __typename: "Character", id: "1", name: "Cache 1" },
@@ -1749,8 +1701,6 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: true,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.setVariables,
         previousData: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -1768,11 +1718,99 @@ describe("useLazyQuery Hook", () => {
         },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
           character: { __typename: "Character", id: "2", name: "Cache 2" },
+        },
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("does not render loading states with a cache-and-network fetch policy when changing variables with notifyOnNetworkStatusChange: false with no cached data", async () => {
+    const { query, mocks } = setupVariablesCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(query, {
+            fetchPolicy: "cache-and-network",
+            notifyOnNetworkStatusChange: false,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        // @ts-expect-error should be undefined
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(
+      execute({ variables: { id: "1" } })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    await expect(
+      execute({ variables: { id: "2" } })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: {
+          character: { __typename: "Character", id: "2", name: "Black Widow" },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
         },
         variables: { id: "2" },
       });
@@ -1818,8 +1856,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1836,9 +1872,20 @@ describe("useLazyQuery Hook", () => {
       expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new CombinedGraphQLErrors({ errors: [{ message: "error 1" }] }),
@@ -1856,9 +1903,20 @@ describe("useLazyQuery Hook", () => {
       expect(result).toStrictEqualTyped({
         data: undefined,
         called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new CombinedGraphQLErrors({ errors: [{ message: "error 2" }] }),
@@ -1916,8 +1974,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -1936,11 +1992,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { currentUser: null },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new CombinedGraphQLErrors({
@@ -1963,13 +2030,25 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        // TODO: Is this correct or should it be the previous partial result?
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { currentUser: null },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { currentUser: null },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.error,
-        previousData: undefined,
+        previousData: { currentUser: null },
         error: new CombinedGraphQLErrors({
           data: { currentUser: null },
           errors: [{ message: "Not logged in 2" }],
@@ -2011,7 +2090,11 @@ describe("useLazyQuery Hook", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
-      () => useLazyQuery(query, { errorPolicy: "ignore" }),
+      () =>
+        useLazyQuery(query, {
+          errorPolicy: "ignore",
+          notifyOnNetworkStatusChange: false,
+        }),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -2028,8 +2111,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -2047,8 +2128,6 @@ describe("useLazyQuery Hook", () => {
         data: { currentUser: null },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -2155,7 +2234,9 @@ describe("useLazyQuery Hook", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
-      () => useLazyQuery(query),
+      // This test is too complicated between the react versions when testing
+      // the loading state
+      () => useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
       {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -2172,8 +2253,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {} as Variables,
@@ -2198,8 +2277,6 @@ describe("useLazyQuery Hook", () => {
         data: mocks[1].result.data,
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: "2" },
@@ -2241,8 +2318,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -2258,8 +2333,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -2276,11 +2349,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { hello: "Greetings" },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -2408,8 +2492,6 @@ describe("useLazyQuery Hook", () => {
           data: { user: { id: "2", name: "John Doe" } },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: { id: "2" },
@@ -2425,8 +2507,6 @@ describe("useLazyQuery Hook", () => {
           data: { user: { id: null, name: "John Default" } },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: { user: { id: "2", name: "John Doe" } },
           variables: {},
@@ -2512,7 +2592,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error Need to fix the return value of this property
@@ -2533,7 +2612,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         // @ts-expect-error Need to fix the return value of this property
@@ -2550,11 +2628,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: "1" },
@@ -2577,8 +2666,6 @@ describe("useLazyQuery Hook", () => {
         data: { user: { id: "1", name: "John Doe" } },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: { id: "1" },
@@ -2596,14 +2683,25 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: { user: { id: "1", name: "John Doe" } },
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
         error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.error,
-        previousData: undefined,
+        previousData: { user: { id: "1", name: "John Doe" } },
         variables: { id: "2" },
       });
     }
@@ -2625,14 +2723,12 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        data: { user: { id: "1", name: "John Doe" } },
+        data: undefined,
         error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.error,
-        previousData: undefined,
+        previousData: { user: { id: "1", name: "John Doe" } },
         variables: { id: "2" },
       });
     }
@@ -2643,11 +2739,22 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "3" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
         data: { user: { id: "3", name: "Johnny Three" } },
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: false,
         networkStatus: NetworkStatus.ready,
         previousData: { user: { id: "1", name: "John Doe" } },
         variables: { id: "3" },
@@ -2756,8 +2863,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: false,
           loading: false,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -2773,11 +2878,22 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
           error: networkError,
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
@@ -2823,8 +2939,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: false,
           loading: false,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -2843,11 +2957,22 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
           error: networkError,
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
@@ -2893,8 +3018,6 @@ describe("useLazyQuery Hook", () => {
           data: undefined,
           called: false,
           loading: false,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -2911,9 +3034,20 @@ describe("useLazyQuery Hook", () => {
         expect(result).toStrictEqualTyped({
           data: undefined,
           called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
+          data: undefined,
+          called: true,
           loading: false,
-          // @ts-expect-error
-          partial: true,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -2948,8 +3082,6 @@ describe("useLazyQuery Hook", () => {
         data: undefined,
         called: false,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
@@ -2961,6 +3093,7 @@ describe("useLazyQuery Hook", () => {
     const promise = execute();
     expect(requests).toBe(1);
 
+    await wait(10);
     await client.clearStore();
 
     await expect(promise).rejects.toEqual(
@@ -2974,13 +3107,24 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
         error: new InvariantError(
           "Store reset while query was in flight (not completed in link chain)"
         ),
         called: true,
         loading: false,
-        // @ts-expect-error
-        partial: true,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         variables: {},
@@ -3072,6 +3216,19 @@ describe("useLazyQuery Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3081,8 +3238,6 @@ describe("useLazyQuery Hook", () => {
           },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -3175,6 +3330,19 @@ describe("useLazyQuery Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3185,8 +3353,6 @@ describe("useLazyQuery Hook", () => {
           },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -3278,6 +3444,19 @@ describe("useLazyQuery Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3288,8 +3467,6 @@ describe("useLazyQuery Hook", () => {
           },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -3368,6 +3545,19 @@ describe("useLazyQuery Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3377,8 +3567,6 @@ describe("useLazyQuery Hook", () => {
           },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -3410,8 +3598,6 @@ describe("useLazyQuery Hook", () => {
           },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
             currentUser: { __typename: "User", id: 1, name: "Test User" },
@@ -3492,6 +3678,19 @@ describe("useLazyQuery Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toStrictEqualTyped({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toStrictEqualTyped({
           data: {
             currentUser: {
               __typename: "User",
@@ -3501,8 +3700,6 @@ describe("useLazyQuery Hook", () => {
           },
           called: true,
           loading: false,
-          // @ts-expect-error
-          partial: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
@@ -3816,8 +4013,6 @@ test("uses the updated client when executing the function after changing clients
       data: undefined,
       called: false,
       loading: false,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -3834,11 +4029,22 @@ test("uses the updated client when executing the function after changing clients
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 1" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -3854,8 +4060,6 @@ test("uses the updated client when executing the function after changing clients
       data: { greeting: "Hello client 1" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -3870,11 +4074,22 @@ test("uses the updated client when executing the function after changing clients
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: { greeting: "Hello client 1" },
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 2" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello client 1" },
       variables: {},
@@ -3915,8 +4130,6 @@ test("responds to cache updates after executing query", async () => {
       data: undefined,
       called: false,
       loading: false,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -3933,11 +4146,22 @@ test("responds to cache updates after executing query", async () => {
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -3958,8 +4182,6 @@ test("responds to cache updates after executing query", async () => {
       data: { greeting: "Hello (updated)" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         greeting: "Hello",
@@ -3996,7 +4218,6 @@ test("responds to cache updates after changing variables", async () => {
       data: undefined,
       called: false,
       loading: false,
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       // @ts-expect-error this should be undefined
@@ -4018,13 +4239,24 @@ test("responds to cache updates after changing variables", async () => {
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -4043,13 +4275,26 @@ test("responds to cache updates after changing variables", async () => {
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      variables: { id: "2" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4083,8 +4328,6 @@ test("responds to cache updates after changing variables", async () => {
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
@@ -4145,113 +4388,6 @@ test("uses cached result when switching to variables already written to the cach
       data: undefined,
       called: false,
       loading: false,
-      partial: true,
-      networkStatus: NetworkStatus.ready,
-      previousData: undefined,
-      // @ts-expect-error this should be undefined
-      variables: {},
-    });
-  }
-
-  const [execute] = getCurrentSnapshot();
-
-  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
-    {
-      data: {
-        character: { __typename: "Character", id: "1", name: "Spider-Man" },
-      },
-    }
-  );
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toStrictEqualTyped({
-      data: {
-        character: { __typename: "Character", id: "1", name: "Spider-Man" },
-      },
-      called: true,
-      loading: false,
-      // @ts-expect-error
-      partial: false,
-      networkStatus: NetworkStatus.ready,
-      previousData: undefined,
-      variables: { id: "1" },
-    });
-  }
-
-  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
-    {
-      data: {
-        character: {
-          __typename: "Character",
-          id: "2",
-          name: "Cached Character",
-        },
-      },
-    }
-  );
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toStrictEqualTyped({
-      data: {
-        character: {
-          __typename: "Character",
-          id: "2",
-          name: "Cached Character",
-        },
-      },
-      called: true,
-      loading: false,
-      // @ts-expect-error
-      partial: false,
-      networkStatus: NetworkStatus.ready,
-      previousData: {
-        character: { __typename: "Character", id: "1", name: "Spider-Man" },
-      },
-      variables: { id: "2" },
-    });
-  }
-
-  await expect(takeSnapshot).not.toRerender();
-});
-
-test("renders loading states where necessary when switching to variables maybe written to the cache with notifyOnNetworkStatusChange", async () => {
-  const { query, mocks } = setupVariablesCase();
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: new MockLink(mocks),
-  });
-
-  client.writeQuery({
-    query,
-    variables: { id: "2" },
-    data: {
-      character: { __typename: "Character", id: "2", name: "Cached Character" },
-    },
-  });
-
-  using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
-    () => useLazyQuery(query, { notifyOnNetworkStatusChange: true }),
-    {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    }
-  );
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toStrictEqualTyped({
-      data: undefined,
-      called: false,
-      loading: false,
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       // @ts-expect-error this should be undefined
@@ -4276,9 +4412,7 @@ test("renders loading states where necessary when switching to variables maybe w
       data: undefined,
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.setVariables,
       previousData: undefined,
       variables: { id: "1" },
     });
@@ -4293,8 +4427,6 @@ test("renders loading states where necessary when switching to variables maybe w
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -4326,8 +4458,107 @@ test("renders loading states where necessary when switching to variables maybe w
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      variables: { id: "2" },
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("does not render loading states when switching to variables maybe written to the cache with notifyOnNetworkStatusChange: false", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { id: "2" },
+    data: {
+      character: { __typename: "Character", id: "2", name: "Cached Character" },
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      // @ts-expect-error this should be undefined
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  await expect(execute({ variables: { id: "2" } })).resolves.toStrictEqualTyped(
+    {
+      data: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
+      },
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
+      },
+      called: true,
+      loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4352,27 +4583,6 @@ test("renders loading states where necessary when switching to variables maybe w
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
-      data: undefined,
-      called: true,
-      loading: true,
-      // @ts-expect-error
-      partial: true,
-      networkStatus: NetworkStatus.setVariables,
-      previousData: {
-        character: {
-          __typename: "Character",
-          id: "2",
-          name: "Cached Character",
-        },
-      },
-      variables: { id: "3" },
-    });
-  }
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -4382,8 +4592,6 @@ test("renders loading states where necessary when switching to variables maybe w
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         character: {
@@ -4461,7 +4669,6 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: undefined,
       called: false,
       loading: false,
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       // @ts-expect-error this should be undefined
@@ -4483,13 +4690,24 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -4507,8 +4725,6 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -4523,6 +4739,21 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
 
     expect(result).toStrictEqualTyped({
       data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
         character: null,
       },
       error: new CombinedGraphQLErrors({
@@ -4531,8 +4762,6 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       }),
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.error,
       previousData: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
@@ -4585,8 +4814,6 @@ test("applies `context` on next fetch when it changes between renders", async ()
       data: undefined,
       called: false,
       loading: false,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -4603,11 +4830,22 @@ test("applies `context` on next fetch when it changes between renders", async ()
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "initialHookValue" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -4623,8 +4861,6 @@ test("applies `context` on next fetch when it changes between renders", async ()
       data: { context: { source: "initialHookValue" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -4639,11 +4875,22 @@ test("applies `context` on next fetch when it changes between renders", async ()
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: { context: { source: "initialHookValue" } },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "rerender" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { context: { source: "initialHookValue" } },
       variables: {},
@@ -4659,8 +4906,6 @@ test("applies `context` on next fetch when it changes between renders", async ()
       data: { context: { source: "rerender" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { context: { source: "initialHookValue" } },
       variables: {},
@@ -4674,11 +4919,22 @@ test("applies `context` on next fetch when it changes between renders", async ()
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: { context: { source: "rerender" } },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: { context: { source: "initialHookValue" } },
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "rerenderForRefetch" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { context: { source: "rerender" } },
       variables: {},
@@ -4695,11 +4951,22 @@ test("applies `context` on next fetch when it changes between renders", async ()
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: { context: { source: "rerenderForRefetch" } },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: { context: { source: "rerender" } },
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { context: { source: "execute" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { context: { source: "rerenderForRefetch" } },
       variables: {},
@@ -4778,7 +5045,6 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       data: undefined,
       called: false,
       loading: false,
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       // @ts-expect-error needs to be undefined
@@ -4796,11 +5062,22 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { min: 0, max: 12 },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: mocks[0].result.data,
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { min: 0, max: 12 },
@@ -4817,11 +5094,22 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: mocks[0].result.data,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: { min: 12, max: 30 },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: mocks[0].result.data,
       variables: { min: 12, max: 30 },
@@ -4845,8 +5133,6 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: mocks[0].result.data,
       variables: { min: 12, max: 30 },
@@ -4859,11 +5145,22 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: mocks[0].result.data,
+      variables: { min: 30, max: 50 },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: mocks[2].result.data,
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       variables: { min: 30, max: 50 },
@@ -4965,8 +5262,6 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: undefined,
       called: false,
       loading: false,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -4987,13 +5282,24 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
     const [, result] = await takeSnapshot();
 
     expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -5011,8 +5317,6 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -5034,8 +5338,6 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: { character: { __typename: "Character", id: "2" } },
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.setVariables,
       previousData: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
@@ -5051,8 +5353,6 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: { character: { __typename: "Character", id: "2", name: "Hulk" } },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         character: { __typename: "Character", id: "2" },
@@ -5107,7 +5407,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       data: undefined,
       called: false,
       loading: false,
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       // @ts-expect-error should be undefined
@@ -5134,8 +5433,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -5153,8 +5450,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: { id: "1" },
@@ -5178,8 +5473,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       },
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.setVariables,
       previousData: {
         character: { __typename: "Character", id: "1", name: "Spider-Cache" },
@@ -5197,8 +5490,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
         character: { __typename: "Character", id: "2", name: "Cached Widow" },
@@ -5245,8 +5536,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: undefined,
       called: false,
       loading: false,
-      // @ts-expect-error
-      partial: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -5266,8 +5555,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: { greeting: "Hello 1" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -5283,8 +5570,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: { greeting: "Hello 1" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
@@ -5302,8 +5587,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: { greeting: "Hello 1" },
       called: true,
       loading: true,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
       variables: {},
@@ -5317,8 +5600,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: { greeting: "Hello 2" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello 1" },
       variables: {},
@@ -5334,8 +5615,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: { greeting: "Hello 2" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello 1" },
       variables: {},
@@ -5353,8 +5632,6 @@ test("renders loading states at appropriate times on next fetch after updating `
       data: { greeting: "Hello 3" },
       called: true,
       loading: false,
-      // @ts-expect-error
-      partial: false,
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello 2" },
       variables: {},

@@ -67,6 +67,7 @@ interface Last<TData, TVariables> {
 }
 
 const newNetworkStatusSymbol: any = Symbol();
+const uninitialized = {} as ApolloQueryResult<any>;
 
 export class ObservableQuery<
     TData = unknown,
@@ -110,7 +111,6 @@ export class ObservableQuery<
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
 
   private isTornDown: boolean;
   private queryManager: QueryManager;
@@ -142,15 +142,9 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     this.networkStatus = NetworkStatus.loading;
-    this.initialResult = {
-      data: undefined,
-      loading: true,
-      networkStatus: this.networkStatus,
-      partial: true,
-    };
 
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
-    this.subject = new BehaviorSubject(this.initialResult);
+    this.subject = new BehaviorSubject(uninitialized);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -159,6 +153,23 @@ export class ObservableQuery<
             startedInactive = false;
           }
           if (!this.subject.observed) {
+            if (this.subject.value === uninitialized) {
+              // Emitting a value in the `subscribe` callback of `tap` gives
+              // the subject a chance to save this initial result without
+              // emitting the placeholder value since this callback is executed
+              // before `tap` subscribes to the source observable (the subject).
+              // `reobserve` also has the chance to update this value if it
+              // synchronously emits one (usually due to reporting a cache
+              // value).
+              //
+              // We don't initialize the `BehaviorSubject` with
+              // `getInitialResult` because its possible the cache might have
+              // updated between when the `ObservableQuery` was instantiated and
+              // when it is subscribed to. Updating the value here ensures we
+              // report the most up-to-date result from the cache.
+              this.subject.next(this.getInitialResult());
+            }
+
             this.reobserve();
 
             // TODO: See if we can rework updatePolling to better handle this.
@@ -175,20 +186,16 @@ export class ObservableQuery<
           }
         },
       }),
-      // TODO: Conditionally filter when notifyOnNetworkStatusChange is true or
-      // not. We want to emit the loading result if notifyOnNetworkStatusChange
-      // is true.
-      filter(
-        (result) =>
-          // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
-          (this.options.fetchPolicy === "no-cache" &&
-            this.options.notifyOnNetworkStatusChange) ||
-          // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
-          (this.options.fetchPolicy === "network-only" &&
-            !this.queryManager.prioritizeCacheValues &&
-            this.queryInfo.getDiff().complete) ||
-          result !== this.initialResult
-      )
+      filter((result) => {
+        return (
+          this.options.fetchPolicy !== "standby" &&
+          (this.options.notifyOnNetworkStatusChange ||
+            !result.loading ||
+            // data could be defined for cache-and-network fetch policies
+            // when emitting the cache result while loading the network result
+            !!result.data)
+        );
+      })
     );
 
     this["@@observable"] = () => this;
@@ -262,6 +269,57 @@ export class ObservableQuery<
   /** @internal */
   public resetDiff() {
     this.queryInfo.resetDiff();
+  }
+
+  private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
+    const fetchPolicy =
+      this.queryManager.prioritizeCacheValues ?
+        "cache-first"
+      : this.options.fetchPolicy;
+    const defaultResult = {
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    };
+
+    const cacheResult = () => {
+      const diff = this.queryInfo.getDiff();
+
+      return this.maskResult({
+        data:
+          // TODO: queryInfo.getDiff should handle this since cache.diff returns a
+          // null when returnPartialData is false
+          this.options.returnPartialData || diff.complete ?
+            (diff.result as TData) ?? undefined
+          : undefined,
+        loading: !diff.complete,
+        networkStatus:
+          diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
+        partial: !diff.complete,
+      });
+    };
+
+    switch (fetchPolicy) {
+      case "cache-only":
+      case "cache-first":
+        return cacheResult();
+      case "cache-and-network":
+        return {
+          ...cacheResult(),
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+        };
+      case "standby":
+        return {
+          ...defaultResult,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
+
+      default:
+        return defaultResult;
+    }
   }
 
   private getCurrentFullResult(
@@ -503,6 +561,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // fetchMore to provide an updateQuery callback that determines how
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
+      notifyOnNetworkStatusChange: this.options.notifyOnNetworkStatusChange,
     } as WatchQueryOptions<TFetchVars, TFetchData>;
 
     combinedOptions.query = this.transformDocument(combinedOptions.query);
@@ -874,10 +933,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     } = this;
 
     if (!pollInterval || !this.hasObservers()) {
-      if (pollingInfo) {
-        clearTimeout(pollingInfo.timeout);
-        delete this.pollingInfo;
-      }
+      this.cancelPolling();
       return;
     }
 
@@ -925,6 +981,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     poll();
+  }
+
+  // This differs from stopPolling in that it does not set pollInterval to 0
+  private cancelPolling() {
+    if (this.pollingInfo) {
+      clearTimeout(this.pollingInfo.timeout);
+      delete this.pollingInfo;
+    }
   }
 
   private updateLastResult(
@@ -991,6 +1055,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // We want to ensure we can re-run the custom document transforms the next
     // time a request is made against the original query.
     const query = this.transformDocument(options.query);
+    const { fetchPolicy } = options;
 
     this.lastQuery = query;
 
@@ -1005,10 +1070,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         newOptions.variables &&
         !equal(newOptions.variables, oldVariables) &&
         // Don't mess with the fetchPolicy if it's currently "standby".
-        options.fetchPolicy !== "standby" &&
+        fetchPolicy !== "standby" &&
         // If we're changing the fetchPolicy anyway, don't try to change it here
         // using applyNextFetchPolicy. The explicit options.fetchPolicy wins.
-        (options.fetchPolicy === oldFetchPolicy ||
+        (fetchPolicy === oldFetchPolicy ||
           // A `nextFetchPolicy` function has even higher priority, though,
           // so in that case `applyNextFetchPolicy` must be called.
           typeof options.nextFetchPolicy === "function")
@@ -1032,6 +1097,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) {
         newNetworkStatus = NetworkStatus.setVariables;
       }
+
+      // QueryManager does not emit any values for standby fetch policies so we
+      // want ensure that the networkStatus remains ready.
+      if (fetchPolicy === "standby") {
+        newNetworkStatus = NetworkStatus.ready;
+      }
+    }
+
+    if (fetchPolicy === "standby") {
+      this.cancelPolling();
     }
 
     this.networkStatus = newNetworkStatus;
@@ -1043,7 +1118,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     const variables = options.variables && { ...options.variables };
-    const { notifyOnNetworkStatusChange = false } = options;
+    const { notifyOnNetworkStatusChange = true } = options;
     const { observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,

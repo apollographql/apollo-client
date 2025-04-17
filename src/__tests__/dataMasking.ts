@@ -88,6 +88,13 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -154,6 +161,13 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -219,6 +233,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -287,6 +308,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -373,6 +401,13 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -441,6 +476,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -515,6 +557,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -605,6 +654,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -972,6 +1028,13 @@ describe("client.watchQuery", () => {
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentUser: {
           __typename: "User",
@@ -1054,6 +1117,13 @@ describe("client.watchQuery", () => {
 
       const observable = client.watchQuery({ query, fetchPolicy });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       {
         const { data } = await stream.takeNext();
@@ -1139,6 +1209,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
       data!.currentUser.__typename;
@@ -1221,6 +1298,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     const { data } = await stream.takeNext();
 
     const id = client.cache.identify(data!.currentUser);
@@ -1283,6 +1367,13 @@ describe("client.watchQuery", () => {
     });
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     const { data } = await queryStream.takeNext();
     const fragmentObservable = client.watchFragment({
@@ -1356,6 +1447,13 @@ describe("client.watchQuery", () => {
     });
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     const { data } = await queryStream.takeNext();
     const fragmentObservable = client.watchFragment({
@@ -1433,6 +1531,13 @@ describe("client.watchQuery", () => {
     });
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     const { data } = await queryStream.takeNext();
     const fragmentObservable = client.watchFragment({
@@ -1584,7 +1689,10 @@ describe("client.watchQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const observable = client.watchQuery({ query });
+    const observable = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
     const stream = new ObservableStream(observable);
 
     {
@@ -1620,9 +1728,7 @@ describe("client.watchQuery", () => {
 
     // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
     // see another result since the masked data did not change
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("masks result of setVariables", async () => {
@@ -1694,6 +1800,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -1708,7 +1821,7 @@ describe("client.watchQuery", () => {
 
     const result = await observable.setVariables({ id: 2 });
 
-    expect(result?.data).toEqual({
+    expect(result.data).toEqual({
       user: {
         __typename: "User",
         id: 2,
@@ -1716,21 +1829,27 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         user: {
           __typename: "User",
           id: 2,
           name: "User 2",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("masks result of reobserve", async () => {
@@ -1802,6 +1921,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -1816,7 +1942,7 @@ describe("client.watchQuery", () => {
 
     const result = await observable.reobserve({ variables: { id: 2 } });
 
-    expect(result?.data).toEqual({
+    expect(result.data).toEqual({
       user: {
         __typename: "User",
         id: 2,
@@ -1824,21 +1950,27 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         user: {
           __typename: "User",
           id: 2,
           name: "User 2",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("does not mask data passed to updateQuery", async () => {
@@ -1992,6 +2124,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     link.simulateResult({
       result: {
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
@@ -2081,6 +2220,13 @@ describe("client.watchQuery", () => {
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -2181,6 +2327,13 @@ describe("client.watchQuery", () => {
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -2295,6 +2448,13 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     link.simulateResult({
       result: {
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
@@ -2404,17 +2564,25 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
@@ -2473,34 +2641,41 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
+          // @ts-expect-error using a no-cache query
           age: 30,
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).not.toHaveBeenCalled();
   });
 
   test("does not warn on no-cache queries when all fragments use `@unmask`", async () => {
     using _ = spyOnConsole("warn");
-    type UserFieldsFragment = {
-      age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+        age: number;
+      };
     }
 
     const query: MaskedDocumentNode<Query, never> = gql`
@@ -2542,18 +2717,26 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).not.toHaveBeenCalled();
   });
@@ -2569,6 +2752,7 @@ describe("client.watchQuery", () => {
         __typename: "User";
         id: number;
         name: string;
+        age: number;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
@@ -2617,18 +2801,26 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
@@ -4849,6 +5041,13 @@ describe("observableQuery.subscribeToMore", () => {
     const observable = client.watchQuery({ query });
     const queryStream = new ObservableStream(observable);
 
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await queryStream.takeNext();
 
@@ -4977,6 +5176,13 @@ describe("observableQuery.subscribeToMore", () => {
 
     const observable = client.watchQuery({ query });
     const queryStream = new ObservableStream(observable);
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await queryStream.takeNext();
@@ -5115,6 +5321,13 @@ describe("observableQuery.subscribeToMore", () => {
     const client = new ApolloClient({ cache: new InMemoryCache(), link });
     const observable = client.watchQuery({ query });
     const queryStream = new ObservableStream(observable);
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await queryStream.takeNext();

@@ -262,7 +262,7 @@ export function useLazyQuery<
     React.useCallback(
       (forceUpdate) => {
         const subscription = observable.subscribe((result) => {
-          if (!equal(resultRef.current, result)) {
+          if (!equal(resultRef.current || initialResult, result)) {
             updateResult(result, forceUpdate);
           }
         });
@@ -277,7 +277,6 @@ export function useLazyQuery<
     () => initialResult
   );
 
-  const [, forceUpdateState] = React.useReducer((tick) => tick + 1, 0);
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
@@ -355,16 +354,9 @@ export function useLazyQuery<
           options.fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        const promise = observable.reobserve(options);
-
-        // TODO: This should be fixed in core
-        if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
-          updateResult(observable.getCurrentResult(), forceUpdateState);
-        }
-
-        return promise;
+        return observable.reobserve(options);
       },
-      [observable, stableOptions, updateResult, calledDuringRender]
+      [observable, calledDuringRender]
     );
 
   const executeRef = React.useRef(execute);
@@ -377,10 +369,12 @@ export function useLazyQuery<
     []
   );
 
-  const result = React.useMemo(
-    () => ({
+  const result = React.useMemo(() => {
+    const { partial, ...result } = observableResult;
+
+    return {
       ...eagerMethods,
-      ...observableResult,
+      ...result,
       client,
       // eslint-disable-next-line react-compiler/react-compiler
       previousData: previousDataRef.current,
@@ -388,9 +382,8 @@ export function useLazyQuery<
       observable,
       // eslint-disable-next-line react-compiler/react-compiler
       called: !!resultRef.current,
-    }),
-    [client, observableResult, eagerMethods, observable]
-  );
+    };
+  }, [client, observableResult, eagerMethods, observable]);
 
   return [stableExecute, result];
 }

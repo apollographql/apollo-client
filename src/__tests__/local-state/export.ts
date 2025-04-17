@@ -733,6 +733,13 @@ describe("@client @export tests", () => {
     const stream = new ObservableStream(obs);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
@@ -746,6 +753,13 @@ describe("@client @export tests", () => {
     client.writeQuery({
       query,
       data: { currentAuthorId },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -797,6 +811,13 @@ describe("@client @export tests", () => {
 
     const obs = client.watchQuery({ query });
     const stream = new ObservableStream(obs);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -861,6 +882,13 @@ describe("@client @export tests", () => {
 
     const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
     const stream = new ObservableStream(obs);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
@@ -939,6 +967,13 @@ describe("@client @export tests", () => {
     const stream = new ObservableStream(obs);
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: {
         widgetCount: 100,
         doubleWidgets: 200,
@@ -953,6 +988,13 @@ describe("@client @export tests", () => {
       data: {
         widgetCount: 500,
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({

@@ -178,6 +178,7 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
       client.watchQuery({
         ...options,
         query,
+        notifyOnNetworkStatusChange: false,
       } as WatchQueryOptions<any, any>),
       {
         autoDisposeTimeoutMs:

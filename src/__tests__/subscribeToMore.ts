@@ -1,7 +1,7 @@
 import type { DocumentNode, OperationDefinitionNode } from "graphql";
 import { gql } from "graphql-tag";
 
-import { ApolloClient } from "@apollo/client";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
@@ -93,6 +93,13 @@ describe("subscribeToMore", () => {
     });
 
     await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
@@ -146,6 +153,13 @@ describe("subscribeToMore", () => {
         return { entry: { value: subscriptionData.data.name } };
       },
       onError,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({
@@ -203,6 +217,13 @@ describe("subscribeToMore", () => {
     for (const result of results3) {
       wSLink.simulateResult(result);
     }
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
@@ -368,6 +389,13 @@ describe("subscribeToMore", () => {
       updateQuery: (_, { subscriptionData }) => {
         return { entry: { value: subscriptionData.data.name } };
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({

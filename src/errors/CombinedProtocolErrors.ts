@@ -2,6 +2,23 @@ import type { GraphQLFormattedError } from "graphql";
 
 import { brand, isBranded } from "./utils.js";
 
+export declare namespace CombinedProtocolErrors {
+  export interface MessageFormatterOptions {
+    defaultFormatMessage: (
+      errors: ReadonlyArray<GraphQLFormattedError>
+    ) => string;
+  }
+
+  export type MessageFormatter = (
+    errors: ReadonlyArray<GraphQLFormattedError>,
+    options: MessageFormatterOptions
+  ) => string;
+}
+
+function defaultFormatMessage(errors: ReadonlyArray<GraphQLFormattedError>) {
+  return errors.map((e) => e.message || "Error message not found.").join("\n");
+}
+
 /**
  * Fatal transport-level errors returned when executing a subscription using the
  * multipart HTTP subscription protocol. See the documentation on the
@@ -13,6 +30,9 @@ export class CombinedProtocolErrors extends Error {
     return isBranded(error, "CombinedProtocolErrors");
   }
 
+  static formatMessage: CombinedProtocolErrors.MessageFormatter =
+    defaultFormatMessage;
+
   errors: ReadonlyArray<GraphQLFormattedError>;
 
   constructor(
@@ -20,20 +40,15 @@ export class CombinedProtocolErrors extends Error {
       | Array<GraphQLFormattedError>
       | ReadonlyArray<GraphQLFormattedError>
   ) {
-    super(formatMessage(protocolErrors));
+    super(
+      CombinedProtocolErrors.formatMessage(protocolErrors, {
+        defaultFormatMessage,
+      })
+    );
     this.name = "CombinedProtocolErrors";
     this.errors = protocolErrors;
 
     brand(this);
     Object.setPrototypeOf(this, CombinedProtocolErrors.prototype);
   }
-}
-
-function formatMessage(
-  errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>
-) {
-  const messageList = errors.map((e) => `- ${e.message}`).join("\n");
-
-  return `The GraphQL server returned with errors:
-${messageList}`;
 }

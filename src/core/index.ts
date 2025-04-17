@@ -62,15 +62,27 @@ export {
 /* Cache */
 
 export type {
+  ApolloReducerConfig,
   Cache,
   DataProxy,
+  DiffQueryAgainstStoreOptions,
   FieldFunctionOptions,
   FieldMergeFunction,
   FieldPolicy,
   FieldReadFunction,
+  IdGetter,
+  IdGetterObj,
   InMemoryCacheConfig,
+  MergeInfo,
+  MergeTree,
+  NormalizedCache,
+  NormalizedCacheObject,
+  OptimisticStoreItem,
   PossibleTypesMap,
   ReactiveVar,
+  ReadMergeModifyContext,
+  ReadQueryOptions,
+  StoreValue,
   // All the exports (types) from ../cache, minus cacheSlot,
   // which we want to keep semi-private.
   Transaction,
@@ -87,21 +99,6 @@ export {
   makeVar,
   MissingFieldError,
 } from "@apollo/client/cache";
-
-export type {
-  ApolloReducerConfig,
-  DiffQueryAgainstStoreOptions,
-  IdGetter,
-  IdGetterObj,
-  MergeInfo,
-  MergeTree,
-  NormalizedCache,
-  NormalizedCacheObject,
-  OptimisticStoreItem,
-  ReadMergeModifyContext,
-  ReadQueryOptions,
-  StoreValue,
-} from "../cache/inmemory/types.js";
 
 /* Link */
 

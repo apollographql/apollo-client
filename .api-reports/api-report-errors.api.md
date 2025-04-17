@@ -16,7 +16,7 @@ export namespace CombinedGraphQLErrors {
     // (undocumented)
     export interface MessageFormatterOptions {
         // (undocumented)
-        defaultFormatMessage: () => string;
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
         // (undocumented)
         result: FetchResult_2<unknown>;
     }
@@ -38,7 +38,7 @@ export namespace CombinedProtocolErrors {
     // (undocumented)
     export interface MessageFormatterOptions {
         // (undocumented)
-        defaultFormatMessage: () => string;
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
     }
 }
 

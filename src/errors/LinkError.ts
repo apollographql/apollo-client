@@ -1,6 +1,6 @@
 import type { ErrorLike } from "@apollo/client";
 
-const registry = new WeakSet();
+const registry = new WeakSet<ErrorLike>();
 
 /** @internal Please do not use directly. */
 export function registerLinkError(error: ErrorLike) {

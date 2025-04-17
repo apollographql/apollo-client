@@ -184,6 +184,31 @@ describe("client.mutate", () => {
 
     expect(NetworkError.is(error)).toBe(false);
   });
+
+  test("does not report as a network error if error is thrown when updating the cache", async () => {
+    const error = new Error("Error updating cache");
+    const client = new ApolloClient({
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data: { foo: "bar" } },
+        },
+      ]),
+      cache: new InMemoryCache(),
+    });
+
+    const actual = await client
+      .mutate({
+        mutation,
+        update: () => {
+          throw error;
+        },
+      })
+      .catch((error) => error);
+    expect(actual).toBe(error);
+
+    expect(NetworkError.is(actual)).toBe(false);
+  });
 });
 
 describe("client.subscribe", () => {

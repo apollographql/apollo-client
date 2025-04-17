@@ -35,10 +35,12 @@ export type FetchPolicy =
   | "cache-first"
   | "network-only"
   | "cache-only"
-  | "no-cache"
-  | "standby";
+  | "no-cache";
 
-export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
+export type WatchQueryFetchPolicy =
+  | FetchPolicy
+  | "cache-and-network"
+  | "standby";
 
 export type MutationFetchPolicy = Extract<
   FetchPolicy,
@@ -74,15 +76,6 @@ export type QueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  pollInterval?: number;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  notifyOnNetworkStatusChange?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
 } & VariablesOption<NoInfer<TVariables>>;
 
 /**

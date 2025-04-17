@@ -1,4 +1,5 @@
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
 
@@ -13,7 +14,7 @@ import type { UriFunction } from "@apollo/client/link/http";
 import { HttpLink } from "@apollo/client/link/http";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
-import { mergeOptions } from "@apollo/client/utilities";
+import { checkDocument, mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
 import {
@@ -473,36 +474,50 @@ export class ApolloClient implements DataProxy {
       options = mergeOptions(this.defaultOptions.query, options);
     }
 
-    invariant(
-      (options.fetchPolicy as WatchQueryFetchPolicy) !== "cache-and-network",
-      "The cache-and-network fetchPolicy does not work with client.query, because " +
-        "client.query can only return a single result. Please use client.watchQuery " +
-        "to receive multiple results from the cache and the network, or consider " +
-        "using a different fetchPolicy, such as cache-first or network-only."
-    );
+    if (__DEV__) {
+      invariant(
+        (options.fetchPolicy as WatchQueryFetchPolicy) !== "cache-and-network",
+        "The cache-and-network fetchPolicy does not work with client.query, because " +
+          "client.query can only return a single result. Please use client.watchQuery " +
+          "to receive multiple results from the cache and the network, or consider " +
+          "using a different fetchPolicy, such as cache-first or network-only."
+      );
 
-    invariant(
-      options.query,
-      "query option is required. You must specify your GraphQL document " +
-        "in the query option."
-    );
+      invariant(
+        (options.fetchPolicy as WatchQueryFetchPolicy) !== "standby",
+        "The standby fetchPolicy does not work with client.query, because " +
+          "standby does not fetch. Consider using a different fetchPolicy, such " +
+          "as cache-first or network-only."
+      );
 
-    invariant(
-      options.query.kind === "Document",
-      'You must wrap the query string in a "gql" tag.'
-    );
+      invariant(
+        options.query,
+        "query option is required. You must specify your GraphQL document " +
+          "in the query option."
+      );
 
-    // TODO: Remove returnPartialData as valid option from QueryOptions type
-    invariant(
-      !options.returnPartialData,
-      "returnPartialData option only supported on watchQuery."
-    );
+      invariant(
+        options.query.kind === "Document",
+        'You must wrap the query string in a "gql" tag.'
+      );
 
-    // TODO: Remove pollInterval as valid option from QueryOptions type
-    invariant(
-      !options.pollInterval,
-      "pollInterval option only supported on watchQuery."
-    );
+      invariant(
+        !(options as any).returnPartialData,
+        "returnPartialData option only supported on watchQuery."
+      );
+
+      invariant(
+        !(options as any).pollInterval,
+        "pollInterval option only supported on watchQuery."
+      );
+
+      invariant(
+        !(options as any).notifyOnNetworkStatusChange,
+        "notifyOnNetworkStatusChange option only supported on watchQuery."
+      );
+
+      checkDocument(options.query, OperationTypeNode.QUERY);
+    }
 
     return this.queryManager.query<TData, TVariables>(options);
   }

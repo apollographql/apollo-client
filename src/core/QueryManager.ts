@@ -412,10 +412,7 @@ export class QueryManager {
             }
           },
 
-          error: (err) => {
-            const error = toErrorLike(err);
-            registerNetworkError(error);
-
+          error: (error) => {
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
               mutationStoreValue.error = error;
@@ -1102,9 +1099,6 @@ export class QueryManager {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          error = toErrorLike(error);
-          registerNetworkError(error);
-
           return of({ data: undefined, error });
         }),
         filter((result) => !!(result.data || result.error))
@@ -1238,7 +1232,13 @@ export class QueryManager {
       );
     }
 
-    return observable;
+    return observable.pipe(
+      catchError((error) => {
+        error = toErrorLike(error);
+        registerNetworkError(error);
+        throw error;
+      })
+    );
   }
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
@@ -1312,9 +1312,6 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        error = toErrorLike(error);
-        registerNetworkError(error);
-
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
           queryInfo.resetLastWrite();

@@ -5226,7 +5226,7 @@ test("emits loading state when calling reobserve with new fetch policy after cha
 });
 
 describe(".variables", () => {
-  test("returns undefined when no variables are passed", () => {
+  test("returns empty object when no variables are passed", () => {
     const query: TypedDocumentNode<
       { greeting: string },
       Record<string, never>

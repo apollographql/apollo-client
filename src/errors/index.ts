@@ -19,10 +19,10 @@ export function graphQLResultHasProtocolErrors<T>(
   result: FetchResult<T>
 ): result is FetchResultWithSymbolExtensions<T> {
   if (result.extensions) {
-    return (
+    return CombinedProtocolErrors.is(
       (result as FetchResultWithSymbolExtensions<T>).extensions[
         PROTOCOL_ERRORS_SYMBOL
-      ] instanceof CombinedProtocolErrors
+      ]
     );
   }
   return false;

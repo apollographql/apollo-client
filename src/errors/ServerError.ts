@@ -1,3 +1,5 @@
+import { brand, isBranded } from "./utils.js";
+
 interface ServerErrorOptions {
   response: Response;
   result: Record<string, any> | string;
@@ -7,6 +9,11 @@ interface ServerErrorOptions {
  * Thrown when a non-200 response is returned from the server.
  */
 export class ServerError extends Error {
+  /** Determine if an error is a `ServerError` instance */
+  static is(error: unknown): error is ServerError {
+    return isBranded(error, "ServerError");
+  }
+
   /**
    * The server response.
    */
@@ -29,6 +36,7 @@ export class ServerError extends Error {
     this.statusCode = options.response.status;
     this.result = options.result;
 
+    brand(this);
     Object.setPrototypeOf(this, ServerError.prototype);
   }
 }

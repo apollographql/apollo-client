@@ -1,12 +1,14 @@
 import type { Tester } from "@jest/expect-utils";
 
+import { CombinedGraphQLErrors } from "@apollo/client";
+
 export const areCombinedGraphQLErrorsEqual: Tester = function (
   a,
   b,
   customTesters
 ) {
-  const isACombinedGraphQLErrors = a && a.name === "CombinedGraphQLErrors";
-  const isBCombinedGraphQLErrors = b && b.name === "CombinedGraphQLErrors";
+  const isACombinedGraphQLErrors = CombinedGraphQLErrors.is(a);
+  const isBCombinedGraphQLErrors = CombinedGraphQLErrors.is(b);
 
   if (isACombinedGraphQLErrors && isBCombinedGraphQLErrors) {
     return (

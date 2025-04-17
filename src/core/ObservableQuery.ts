@@ -940,12 +940,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // that end, the options.nextFetchPolicy option provides an easy way to
         // update options.fetchPolicy after the initial network request, without
         // having to call observableQuery.reobserve.
-        options.fetchPolicy = (options as any).nextFetchPolicy(fetchPolicy, {
-          reason,
-          options,
-          observable: this,
-          initialFetchPolicy,
-        });
+        options.fetchPolicy = options.nextFetchPolicy.call(
+          options as any,
+          fetchPolicy,
+          { reason, options, observable: this, initialFetchPolicy }
+        );
       } else if (reason === "variables-changed") {
         options.fetchPolicy = initialFetchPolicy;
       } else {

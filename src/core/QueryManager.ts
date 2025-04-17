@@ -89,12 +89,14 @@ import type {
   OperationVariables,
   QueryResult,
   SubscribeResult,
+  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
+  RefetchWritePolicy,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -1236,12 +1238,12 @@ export class QueryManager {
     return observable;
   }
 
-  private getResultsFromLink<TData>(
+  private getResultsFromLink<TData, TVariables extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
     options: {
       query: DocumentNode;
-      variables: OperationVariables;
+      variables: TVariables;
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy | undefined;
       errorPolicy: ErrorPolicy | undefined;
@@ -1667,7 +1669,15 @@ export class QueryManager {
       errorPolicy,
       returnPartialData,
       context,
-    }: WatchQueryOptions<TVars, TData>,
+    }: {
+      query: DocumentNode | TypedDocumentNode<TData, TVars>;
+      variables: TVars;
+      fetchPolicy?: WatchQueryFetchPolicy;
+      refetchWritePolicy?: RefetchWritePolicy;
+      errorPolicy?: ErrorPolicy;
+      returnPartialData?: boolean;
+      context?: DefaultContext;
+    },
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
@@ -1763,9 +1773,9 @@ export class QueryManager {
       : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData>(queryInfo, cacheWriteBehavior, {
+      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         query,
-        variables: variables as TVars,
+        variables,
         context,
         fetchPolicy,
         errorPolicy,

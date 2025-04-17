@@ -140,7 +140,6 @@ export { stripTypename } from "./common/stripTypename.js";
 export type { IsStrictlyAny } from "./types/IsStrictlyAny.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { DeepPartial } from "./types/DeepPartial.js";
-export type { OnlyRequiredProperties } from "./types/OnlyRequiredProperties.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { Primitive } from "./types/Primitive.js";
 export type { UnionToIntersection } from "./types/UnionToIntersection.js";

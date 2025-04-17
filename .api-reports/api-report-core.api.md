@@ -59,6 +59,7 @@ import { InMemoryCacheConfig } from '@apollo/client/cache';
 import type { InteropObservable } from 'rxjs';
 import { isReference } from '@apollo/client/utilities';
 import type { IsStrictlyAny } from '@apollo/client/utilities';
+import { LinkError } from '@apollo/client/errors';
 import { makeReference } from '@apollo/client/utilities';
 import { makeVar } from '@apollo/client/cache';
 import { Masked } from '@apollo/client/masking';
@@ -405,6 +406,8 @@ export type InternalRefetchQueryDescriptor = RefetchQueryDescriptor | QueryOptio
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
 export { isReference }
+
+export { LinkError }
 
 // @public (undocumented)
 class LocalState {
@@ -1114,7 +1117,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:458:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:262:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

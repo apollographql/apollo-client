@@ -63,7 +63,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
 
 // @public
-export const NetworkError: {
+export const LinkError: {
     is: (error: unknown) => boolean;
 };
 
@@ -71,7 +71,7 @@ export const NetworkError: {
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
 
 // @internal
-export function registerNetworkError(error: ErrorLike): void;
+export function registerLinkError(error: ErrorLike): void;
 
 // @public
 export class ServerError extends Error {

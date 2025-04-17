@@ -1,3 +1,5 @@
+import { brand, isBranded } from "./utils.js";
+
 interface ServerParseErrorOptions {
   response: Response;
   bodyText: string;
@@ -7,6 +9,10 @@ interface ServerParseErrorOptions {
  * Thrown when failing to parse the response as JSON from the server.
  */
 export class ServerParseError extends Error {
+  /** Determine if an error is an `ServerParseError` instance */
+  static is(error: unknown): error is ServerParseError {
+    return isBranded(error, "ServerParseError");
+  }
   /**
    * The server response.
    */
@@ -32,6 +38,7 @@ export class ServerParseError extends Error {
     this.statusCode = options.response.status;
     this.bodyText = options.bodyText;
 
+    brand(this);
     Object.setPrototypeOf(this, ServerParseError.prototype);
   }
 }

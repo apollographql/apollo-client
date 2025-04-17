@@ -3,11 +3,18 @@ import type { GraphQLFormattedError } from "graphql";
 import type { FetchResult } from "@apollo/client";
 import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
 
+import { brand, isBranded } from "./utils.js";
+
 /**
  * Represents the combined list of GraphQL errors returned from the server in a
  * GraphQL response.
  */
 export class CombinedGraphQLErrors extends Error {
+  /** Determine if an error is a `CombinedGraphQLErrors` instance */
+  static is(error: unknown): error is CombinedGraphQLErrors {
+    return isBranded(error, "CombinedGraphQLErrors");
+  }
+
   /**
    * The raw list of GraphQL errors returned in a GraphQL response.
    */
@@ -26,6 +33,7 @@ export class CombinedGraphQLErrors extends Error {
     this.data = result.data as Record<string, unknown>;
     this.name = "CombinedGraphQLErrors";
 
+    brand(this);
     Object.setPrototypeOf(this, CombinedGraphQLErrors.prototype);
   }
 }

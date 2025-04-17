@@ -204,9 +204,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
-  : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+  options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
 ): useSuspenseQuery.Result<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",

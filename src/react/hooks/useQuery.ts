@@ -227,15 +227,15 @@ export function useQuery<
     // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(options && options.client)
-  )(query, options!);
+  )(query, options);
 }
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[
-    options = {} as useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  ]: {} extends TVariables ? [options?: useQuery.Options<TData, TVariables>]
-  : [options: useQuery.Options<TData, TVariables>]
+  options: useQuery.Options<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = {} as useQuery.Options<TData, TVariables>
 ): useQuery.Result<TData, TVariables> {
   const client = useApolloClient(options.client);
   const { skip, ssr, ...opts } = options;

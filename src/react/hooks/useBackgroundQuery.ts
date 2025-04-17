@@ -224,9 +224,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: {} extends TVariables ?
-    [options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
-  : [options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
+  options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
 ): [
   QueryRef<TData, TVariables> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,

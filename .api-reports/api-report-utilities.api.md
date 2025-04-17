@@ -426,11 +426,6 @@ export function offsetLimitPagination<T = Reference_2>(keyArgs?: KeyArgs): Field
 // @public (undocumented)
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
 
-// @public
-export type OnlyRequiredProperties<T> = {
-    [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
-};
-
 // @public (undocumented)
 type OptionsUnion<TData, TVariables extends OperationVariables, TContext> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, TContext, any>;
 
@@ -608,7 +603,7 @@ type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends
 export function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object): void;
 
 // @public (undocumented)
-export type VariablesOption<TVariables extends OperationVariables> = Record<string, never> extends OnlyRequiredProperties<TVariables> ? {
+export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {
     variables?: TVariables;
 } : {
     variables: TVariables;

@@ -46,7 +46,6 @@ import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
 import { Observable } from 'rxjs';
 import { ObservableQuery as ObservableQuery_2 } from '@apollo/client';
 import type { Observer } from 'rxjs';
-import type { OnlyRequiredProperties } from '@apollo/client/utilities';
 import type { OnQueryUpdated as OnQueryUpdated_2 } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
 import { PreloadedQueryRef } from '@apollo/client/react/internal';
@@ -660,7 +659,7 @@ export interface PreloadQueryFunction {
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
         returnPartialData: true;
     }): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
-    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: Record<string, never> extends (OnlyRequiredProperties<TVariables>) ? [
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
     options?: PreloadQueryOptions<NoInfer_2<TVariables>>
     ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef<TData, TVariables>;
 }
@@ -1103,12 +1102,12 @@ useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: Record<string, never> extends (OnlyRequiredProperties<TVariables>) ? [
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: useBackgroundQuery.Options<NoInfer_2<TVariables>>
 ] : [options: useBackgroundQuery.Options<NoInfer_2<TVariables>>]): [QueryRef<TData, TVariables>, useBackgroundQuery.Result<TData, TVariables>];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: Record<string, never> extends (OnlyRequiredProperties<TVariables>) ? [
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>
 ] : [options: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>]): [
 QueryRef<TData, TVariables> | undefined,
@@ -1186,7 +1185,7 @@ export function useLazyQuery<TData = unknown, TVariables extends OperationVariab
 // @public (undocumented)
 export namespace useLazyQuery {
     // (undocumented)
-    export type ExecFunction<TData, TVariables extends OperationVariables> = (...args: Record<string, never> extends OnlyRequiredProperties<TVariables> ? [
+    export type ExecFunction<TData, TVariables extends OperationVariables> = (...args: {} extends TVariables ? [
     options?: useLazyQuery.ExecOptions<TVariables>
     ] : [options: useLazyQuery.ExecOptions<TVariables>]) => Promise<QueryResult_3<TData>>;
     // (undocumented)
@@ -1264,9 +1263,7 @@ export namespace useLoadableQuery {
     // (undocumented)
     export type FetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
     // (undocumented)
-    export type LoadQueryFunction<TVariables extends OperationVariables> = (...args: Record<string, never> extends OnlyRequiredProperties<TVariables> ? [
-    variables?: TVariables
-    ] : [variables: TVariables]) => void;
+    export type LoadQueryFunction<TVariables extends OperationVariables> = (...args: {} extends TVariables ? [variables?: TVariables] : [variables: TVariables]) => void;
     // (undocumented)
     export interface Options {
         client?: ApolloClient;
@@ -1339,7 +1336,7 @@ export namespace useMutation {
 }
 
 // @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: Record<string, never> extends (OnlyRequiredProperties<TVariables>) ? [
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
 ] : [options: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useQuery.Result<TData, TVariables>;
 
@@ -1429,7 +1426,7 @@ export namespace useReadQuery {
 export type UseReadQueryResult<TData = unknown> = useReadQuery.Result<TData>;
 
 // @public
-export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: Record<string, never> extends OnlyRequiredProperties<TVariables> ? [
+export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: {} extends (TVariables) ? [
 options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>
 ] : [options: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>]): useSubscription.Result<TData>;
 
@@ -1548,12 +1545,12 @@ export function useSuspenseQuery<TData = unknown, TVariables extends OperationVa
 })): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
 
 // @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: Record<string, never> extends (OnlyRequiredProperties<TVariables>) ? [
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: useSuspenseQuery.Options<NoInfer_2<TVariables>>
 ] : [options: useSuspenseQuery.Options<NoInfer_2<TVariables>>]): useSuspenseQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: Record<string, never> extends (OnlyRequiredProperties<TVariables>) ? [
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
 options?: SkipToken | useSuspenseQuery.Options<NoInfer_2<TVariables>>
 ] : [options: SkipToken | useSuspenseQuery.Options<NoInfer_2<TVariables>>]): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
@@ -1615,8 +1612,8 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:96:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:184:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:454:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:186:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:456:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:233:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:193:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
@@ -1626,7 +1623,7 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/watchQueryOptions.ts:291:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:294:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:300:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:73:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:69:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:72:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

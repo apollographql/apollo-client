@@ -25,7 +25,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
-  NetworkError,
+  registerNetworkError,
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
@@ -414,7 +414,7 @@ export class QueryManager {
 
           error: (err) => {
             const error = toErrorLike(err);
-            NetworkError.register(error);
+            registerNetworkError(error);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
@@ -1103,7 +1103,7 @@ export class QueryManager {
           }
 
           error = toErrorLike(error);
-          NetworkError.register(error);
+          registerNetworkError(error);
 
           return of({ data: undefined, error });
         }),
@@ -1313,7 +1313,7 @@ export class QueryManager {
       }),
       catchError((error) => {
         error = toErrorLike(error);
-        NetworkError.register(error);
+        registerNetworkError(error);
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {

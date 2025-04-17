@@ -12,6 +12,7 @@ import type {
   FetchPolicy,
   OperationVariables,
   SubscribeResult,
+  SubscriptionOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
@@ -354,7 +355,7 @@ function createSubscription<
     errorPolicy,
     context,
     extensions,
-  };
+  } as SubscriptionOptions<TVariables, TData>;
   const __ = {
     ...options,
     client,
@@ -374,7 +375,7 @@ function createSubscription<
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {
-        observable = client.subscribe(options as any);
+        observable = client.subscribe(options);
       }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();

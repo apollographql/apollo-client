@@ -76,8 +76,8 @@ test("allows message formatter to be overwritten", () => {
 });
 
 test("can use default formatter from options", () => {
-  CombinedGraphQLErrors.formatMessage = (_, { defaultFormatMessage }) =>
-    `Overwritten error message:\n ${defaultFormatMessage()}`;
+  CombinedGraphQLErrors.formatMessage = (errors, { defaultFormatMessage }) =>
+    `Overwritten error message:\n ${defaultFormatMessage(errors)}`;
 
   const error = new CombinedGraphQLErrors({
     errors: [{ message: "Email already taken" }],

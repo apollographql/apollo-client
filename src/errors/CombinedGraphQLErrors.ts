@@ -8,7 +8,9 @@ import { brand, isBranded } from "./utils.js";
 export declare namespace CombinedGraphQLErrors {
   export interface MessageFormatterOptions {
     result: FetchResult<unknown>;
-    defaultFormatMessage: () => string;
+    defaultFormatMessage: (
+      errors: ReadonlyArray<GraphQLFormattedError>
+    ) => string;
   }
 
   export type MessageFormatter = (
@@ -60,7 +62,7 @@ export class CombinedGraphQLErrors extends Error {
     super(
       CombinedGraphQLErrors.formatMessage(errors, {
         result,
-        defaultFormatMessage: () => defaultFormatMessage(errors),
+        defaultFormatMessage,
       })
     );
     this.errors = errors;

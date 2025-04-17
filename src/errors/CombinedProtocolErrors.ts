@@ -4,7 +4,9 @@ import { brand, isBranded } from "./utils.js";
 
 export declare namespace CombinedProtocolErrors {
   export interface MessageFormatterOptions {
-    defaultFormatMessage: () => string;
+    defaultFormatMessage: (
+      errors: ReadonlyArray<GraphQLFormattedError>
+    ) => string;
   }
 
   export type MessageFormatter = (
@@ -40,7 +42,7 @@ export class CombinedProtocolErrors extends Error {
   ) {
     super(
       CombinedProtocolErrors.formatMessage(protocolErrors, {
-        defaultFormatMessage: () => defaultFormatMessage(protocolErrors),
+        defaultFormatMessage,
       })
     );
     this.name = "CombinedProtocolErrors";

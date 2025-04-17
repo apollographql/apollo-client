@@ -67,8 +67,8 @@ test("allows message formatter to be overwritten", () => {
 });
 
 test("can use default formatter from options", () => {
-  CombinedProtocolErrors.formatMessage = (_, { defaultFormatMessage }) =>
-    `Overwritten error message:\n ${defaultFormatMessage()}`;
+  CombinedProtocolErrors.formatMessage = (errors, { defaultFormatMessage }) =>
+    `Overwritten error message:\n ${defaultFormatMessage(errors)}`;
 
   const error = new CombinedProtocolErrors([
     { message: "Email already taken" },

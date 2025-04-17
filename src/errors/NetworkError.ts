@@ -1,13 +1,10 @@
 import type { ErrorLike } from "@apollo/client";
-import { CombinedGraphQLErrors } from "@apollo/client";
 
 const registry = new WeakSet();
 
 /** @internal Please do not use directly. */
 export function registerNetworkError(error: ErrorLike) {
-  if (!CombinedGraphQLErrors.is(error)) {
-    registry.add(error);
-  }
+  registry.add(error);
 }
 
 /**

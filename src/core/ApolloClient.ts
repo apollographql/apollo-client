@@ -474,48 +474,50 @@ export class ApolloClient implements DataProxy {
       options = mergeOptions(this.defaultOptions.query, options);
     }
 
-    invariant(
-      (options.fetchPolicy as WatchQueryFetchPolicy) !== "cache-and-network",
-      "The cache-and-network fetchPolicy does not work with client.query, because " +
-        "client.query can only return a single result. Please use client.watchQuery " +
-        "to receive multiple results from the cache and the network, or consider " +
-        "using a different fetchPolicy, such as cache-first or network-only."
-    );
+    if (__DEV__) {
+      invariant(
+        (options.fetchPolicy as WatchQueryFetchPolicy) !== "cache-and-network",
+        "The cache-and-network fetchPolicy does not work with client.query, because " +
+          "client.query can only return a single result. Please use client.watchQuery " +
+          "to receive multiple results from the cache and the network, or consider " +
+          "using a different fetchPolicy, such as cache-first or network-only."
+      );
 
-    invariant(
-      (options.fetchPolicy as WatchQueryFetchPolicy) !== "standby",
-      "The standby fetchPolicy does not work with client.query, because " +
-        "standby does not fetch. Consider using a different fetchPolicy, such " +
-        "as cache-first or network-only."
-    );
+      invariant(
+        (options.fetchPolicy as WatchQueryFetchPolicy) !== "standby",
+        "The standby fetchPolicy does not work with client.query, because " +
+          "standby does not fetch. Consider using a different fetchPolicy, such " +
+          "as cache-first or network-only."
+      );
 
-    invariant(
-      options.query,
-      "query option is required. You must specify your GraphQL document " +
-        "in the query option."
-    );
+      invariant(
+        options.query,
+        "query option is required. You must specify your GraphQL document " +
+          "in the query option."
+      );
 
-    invariant(
-      options.query.kind === "Document",
-      'You must wrap the query string in a "gql" tag.'
-    );
+      invariant(
+        options.query.kind === "Document",
+        'You must wrap the query string in a "gql" tag.'
+      );
 
-    invariant(
-      !(options as any).returnPartialData,
-      "returnPartialData option only supported on watchQuery."
-    );
+      invariant(
+        !(options as any).returnPartialData,
+        "returnPartialData option only supported on watchQuery."
+      );
 
-    invariant(
-      !(options as any).pollInterval,
-      "pollInterval option only supported on watchQuery."
-    );
+      invariant(
+        !(options as any).pollInterval,
+        "pollInterval option only supported on watchQuery."
+      );
 
-    invariant(
-      !(options as any).notifyOnNetworkStatusChange,
-      "notifyOnNetworkStatusChange option only supported on watchQuery."
-    );
+      invariant(
+        !(options as any).notifyOnNetworkStatusChange,
+        "notifyOnNetworkStatusChange option only supported on watchQuery."
+      );
 
-    checkDocument(options.query, OperationTypeNode.QUERY);
+      checkDocument(options.query, OperationTypeNode.QUERY);
+    }
 
     return this.queryManager.query<TData, TVariables>(options);
   }

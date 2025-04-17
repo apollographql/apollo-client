@@ -390,11 +390,37 @@ type CombineByTypeName<T extends {
     [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
 }[NonNullable<T["__typename"]>];
 
+// @public (undocumented)
+export namespace CombinedGraphQLErrors {
+    // (undocumented)
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+        // (undocumented)
+        result: FetchResult<unknown>;
+    }
+}
+
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FetchResult<unknown>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    static formatMessage: CombinedGraphQLErrors.MessageFormatter;
+    static is(error: unknown): error is CombinedGraphQLErrors;
+}
+
+// @public (undocumented)
+export namespace CombinedProtocolErrors {
+    // (undocumented)
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+    }
 }
 
 // @public
@@ -402,6 +428,9 @@ export class CombinedProtocolErrors extends Error {
     constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
     // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    static formatMessage: CombinedProtocolErrors.MessageFormatter;
+    static is(error: unknown): error is CombinedProtocolErrors;
 }
 
 // Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
@@ -2179,6 +2208,7 @@ export const serializeFetchParameter: (p: any, label: string) => string;
 export class ServerError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(message: string, options: ServerErrorOptions);
+    static is(error: unknown): error is ServerError;
     response: Response;
     result: Record<string, any> | string;
     statusCode: number;
@@ -2197,6 +2227,7 @@ export class ServerParseError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(originalParseError: unknown, options: ServerParseErrorOptions);
     bodyText: string;
+    static is(error: unknown): error is ServerParseError;
     response: Response;
     statusCode: number;
 }
@@ -2361,6 +2392,7 @@ export type TypePolicy = {
 // @public
 export class UnconventionalError extends Error {
     constructor(errorType: unknown);
+    static is(error: unknown): error is UnconventionalError;
 }
 
 // @public (undocumented)

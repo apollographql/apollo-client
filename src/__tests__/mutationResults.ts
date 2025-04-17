@@ -650,10 +650,12 @@ describe("mutation results", () => {
       {
         request: { query: queryTodos },
         result: queryTodosResult,
+        delay: 0,
       },
       {
         request: { query: mutationTodo },
         result: mutationTodoResult,
+        delay: 0,
       }
     );
 

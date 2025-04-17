@@ -9,11 +9,37 @@ import type { FetchResult } from '@apollo/client/link/core';
 import type { FetchResult as FetchResult_2 } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql';
 
+// @public (undocumented)
+export namespace CombinedGraphQLErrors {
+    // (undocumented)
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+        // (undocumented)
+        result: FetchResult_2<unknown>;
+    }
+}
+
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FetchResult_2<unknown>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    static formatMessage: CombinedGraphQLErrors.MessageFormatter;
+    static is(error: unknown): error is CombinedGraphQLErrors;
+}
+
+// @public (undocumented)
+export namespace CombinedProtocolErrors {
+    // (undocumented)
+    export type MessageFormatter = (errors: ReadonlyArray<GraphQLFormattedError>, options: MessageFormatterOptions) => string;
+    // (undocumented)
+    export interface MessageFormatterOptions {
+        // (undocumented)
+        defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
+    }
 }
 
 // @public
@@ -21,6 +47,9 @@ export class CombinedProtocolErrors extends Error {
     constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
     // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    static formatMessage: CombinedProtocolErrors.MessageFormatter;
+    static is(error: unknown): error is CombinedProtocolErrors;
 }
 
 // @public (undocumented)
@@ -43,6 +72,7 @@ export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
 export class ServerError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(message: string, options: ServerErrorOptions);
+    static is(error: unknown): error is ServerError;
     response: Response;
     result: Record<string, any> | string;
     statusCode: number;
@@ -61,6 +91,7 @@ export class ServerParseError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(originalParseError: unknown, options: ServerParseErrorOptions);
     bodyText: string;
+    static is(error: unknown): error is ServerParseError;
     response: Response;
     statusCode: number;
 }
@@ -79,6 +110,7 @@ export function toErrorLike(error: unknown): ErrorLike;
 // @public
 export class UnconventionalError extends Error {
     constructor(errorType: unknown);
+    static is(error: unknown): error is UnconventionalError;
 }
 
 // (No @packageDocumentation comment for this package)

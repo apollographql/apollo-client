@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.13.8
+
+### Patch Changes
+
+- [#12567](https://github.com/apollographql/apollo-client/pull/12567) [`c19d415`](https://github.com/apollographql/apollo-client/commit/c19d41513cac0cc143aa7358f26c89c9408da102) Thanks [@thearchitector](https://github.com/thearchitector)! - Fix in-flight multipart urql subscription cancellation
+
 ## 3.13.7
 
 ### Patch Changes

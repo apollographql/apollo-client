@@ -4246,7 +4246,7 @@ describe("data masking", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -4355,7 +4355,7 @@ describe("data masking", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -4465,7 +4465,7 @@ describe("data masking", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id

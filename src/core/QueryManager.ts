@@ -1765,7 +1765,7 @@ export class QueryManager {
     const resultsFromLink = () =>
       this.getResultsFromLink<TData>(queryInfo, cacheWriteBehavior, {
         query,
-        variables: variables as any,
+        variables: variables as TVars,
         context,
         fetchPolicy,
         errorPolicy,

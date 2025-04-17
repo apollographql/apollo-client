@@ -40,7 +40,7 @@ export function toErrorLike(error: unknown) {
 
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
-export { NetworkError, registerNetworkError } from "./NetworkError.js";
+export { LinkError, registerLinkError } from "./LinkError.js";
 export { ServerError } from "./ServerError.js";
 export { ServerParseError } from "./ServerParseError.js";
 export { UnconventionalError } from "./UnconventionalError.js";

@@ -3,7 +3,7 @@ import type { ErrorLike } from "@apollo/client";
 const registry = new WeakSet();
 
 /** @internal Please do not use directly. */
-export function registerNetworkError(error: ErrorLike) {
+export function registerLinkError(error: ErrorLike) {
   registry.add(error);
 }
 
@@ -11,7 +11,7 @@ export function registerNetworkError(error: ErrorLike) {
  * A facade error type that keeps a registry of errors emitted from the link
  * chain. Determine if an error is from the link chain using `NetworkError.is`.
  */
-export const NetworkError = {
+export const LinkError = {
   /**
    * Determine if the error is an error emitted from the link chain.
    */

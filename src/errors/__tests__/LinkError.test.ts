@@ -4,7 +4,7 @@ import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
-  NetworkError,
+  LinkError,
   UnconventionalError,
 } from "@apollo/client/errors";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
@@ -48,13 +48,13 @@ test("error is not registered until emitted from the link chain", async () => {
   });
 
   // Error has not yet been emitted from the link chain
-  expect(NetworkError.is(error)).toBe(false);
+  expect(LinkError.is(error)).toBe(false);
 
   const actual = await client.query({ query }).catch((error) => error);
   expect(actual).toBe(error);
 
   // We've run the operation and the error has been emitted from the link chain,
-  expect(NetworkError.is(actual)).toBe(true);
+  expect(LinkError.is(actual)).toBe(true);
 });
 
 test("handles errors emitted as strings", async () => {
@@ -66,7 +66,7 @@ test("handles errors emitted as strings", async () => {
   const error = await client.query({ query }).catch((error) => error);
   expect(error).toEqual(new Error("Oops"));
 
-  expect(NetworkError.is(error)).toBe(true);
+  expect(LinkError.is(error)).toBe(true);
 });
 
 test("handles errors emitted from unconventional types", async () => {
@@ -79,7 +79,7 @@ test("handles errors emitted from unconventional types", async () => {
   const error = await client.query({ query }).catch((error) => error);
   expect(error).toEqual(new UnconventionalError(symbol));
 
-  expect(NetworkError.is(error)).toBe(true);
+  expect(LinkError.is(error)).toBe(true);
 });
 
 describe("client.query", () => {
@@ -93,7 +93,7 @@ describe("client.query", () => {
     const actual = await client.query({ query }).catch((error) => error);
     expect(actual).toBe(error);
 
-    expect(NetworkError.is(actual)).toBe(true);
+    expect(LinkError.is(actual)).toBe(true);
   });
 
   test("does not register GraphQL errors as network errors", async () => {
@@ -109,7 +109,7 @@ describe("client.query", () => {
       new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
     );
 
-    expect(NetworkError.is(error)).toBe(false);
+    expect(LinkError.is(error)).toBe(false);
   });
 });
 
@@ -128,7 +128,7 @@ describe("client.watchQuery", () => {
     const result = await stream.takeNext();
 
     expect(result.error).toBe(error);
-    expect(NetworkError.is(result.error)).toBe(true);
+    expect(LinkError.is(result.error)).toBe(true);
   });
 
   test("does not register GraphQL errors as network errors", async () => {
@@ -148,7 +148,7 @@ describe("client.watchQuery", () => {
     expect(result.error).toEqual(
       new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
     );
-    expect(NetworkError.is(result.error)).toBe(false);
+    expect(LinkError.is(result.error)).toBe(false);
   });
 });
 
@@ -163,7 +163,7 @@ describe("client.mutate", () => {
     const actual = await client.mutate({ mutation }).catch((error) => error);
     expect(actual).toBe(error);
 
-    expect(NetworkError.is(actual)).toBe(true);
+    expect(LinkError.is(actual)).toBe(true);
   });
 
   test("does not register GraphQL errors as network errors", async () => {
@@ -182,7 +182,7 @@ describe("client.mutate", () => {
       new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
     );
 
-    expect(NetworkError.is(error)).toBe(false);
+    expect(LinkError.is(error)).toBe(false);
   });
 
   test("does not report as a network error if error is thrown when updating the cache", async () => {
@@ -207,7 +207,7 @@ describe("client.mutate", () => {
       .catch((error) => error);
     expect(actual).toBe(error);
 
-    expect(NetworkError.is(actual)).toBe(false);
+    expect(LinkError.is(actual)).toBe(false);
   });
 });
 
@@ -228,7 +228,7 @@ describe("client.subscribe", () => {
     const result = await stream.takeNext();
     expect(result.error).toBe(error);
 
-    expect(NetworkError.is(result.error)).toBe(true);
+    expect(LinkError.is(result.error)).toBe(true);
   });
 
   test("does not register GraphQL errors as network errors", async () => {
@@ -248,7 +248,7 @@ describe("client.subscribe", () => {
       new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] })
     );
 
-    expect(NetworkError.is(result.error)).toBe(false);
+    expect(LinkError.is(result.error)).toBe(false);
   });
 
   test("does not register protocol errors as network errors", async () => {
@@ -273,6 +273,6 @@ describe("client.subscribe", () => {
       new CombinedProtocolErrors([{ message: "Oops" }])
     );
 
-    expect(NetworkError.is(result.error)).toBe(false);
+    expect(LinkError.is(result.error)).toBe(false);
   });
 });

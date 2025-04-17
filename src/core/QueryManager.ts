@@ -25,7 +25,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
-  registerNetworkError,
+  registerLinkError,
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
@@ -1235,7 +1235,7 @@ export class QueryManager {
     return observable.pipe(
       catchError((error) => {
         error = toErrorLike(error);
-        registerNetworkError(error);
+        registerLinkError(error);
         throw error;
       })
     );

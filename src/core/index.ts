@@ -54,7 +54,7 @@ export type { FragmentMatcher, Resolver } from "./LocalState.js";
 export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
-  NetworkError,
+  LinkError,
   ServerError,
   ServerParseError,
   UnconventionalError,

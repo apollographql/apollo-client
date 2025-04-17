@@ -41,7 +41,6 @@
     "./link/core": "./src/link/core/index.ts",
     "./link/error": "./src/link/error/index.ts",
     "./link/http": "./src/link/http/index.ts",
-    "./link/network-error": "./src/link/network-error/index.ts",
     "./link/persisted-queries": "./src/link/persisted-queries/index.ts",
     "./link/retry": "./src/link/retry/index.ts",
     "./link/remove-typename": "./src/link/remove-typename/index.ts",

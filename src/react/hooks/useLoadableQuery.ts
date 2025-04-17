@@ -30,10 +30,7 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type {
-  DeepPartial,
-  OnlyRequiredProperties,
-} from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -49,8 +46,7 @@ export declare namespace useLoadableQuery {
     // which case we don't want to allow a variables argument. In other
     // words, we don't want to allow variables to be passed as an argument to this
     // function if the query does not expect variables in the document.
-    ...args: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-      [variables?: TVariables]
+    ...args: {} extends TVariables ? [variables?: TVariables]
     : [variables: TVariables]
   ) => void;
 

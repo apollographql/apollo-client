@@ -34,11 +34,7 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type {
-  NoInfer,
-  OnlyRequiredProperties,
-  VariablesOption,
-} from "@apollo/client/utilities";
+import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
@@ -221,9 +217,7 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables> {
@@ -240,8 +234,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   ...[
     options = {} as useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  ]: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-    [options?: useQuery.Options<TData, TVariables>]
+  ]: {} extends TVariables ? [options?: useQuery.Options<TData, TVariables>]
   : [options: useQuery.Options<TData, TVariables>]
 ): useQuery.Result<TData, TVariables> {
   const client = useApolloClient(options.client);

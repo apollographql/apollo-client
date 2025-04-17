@@ -29,7 +29,6 @@ import {
 import type {
   DeepPartial,
   NoInfer,
-  OnlyRequiredProperties,
   VariablesOption,
 } from "@apollo/client/utilities";
 
@@ -191,9 +190,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: useBackgroundQuery.Options<NoInfer<TVariables>>]
   : [options: useBackgroundQuery.Options<NoInfer<TVariables>>]
 ): [QueryRef<TData, TVariables>, useBackgroundQuery.Result<TData, TVariables>];
@@ -203,9 +200,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
 ): [
@@ -229,9 +224,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>]
 ): [

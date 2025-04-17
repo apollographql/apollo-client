@@ -14,11 +14,7 @@ import type {
   SubscribeResult,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type {
-  NoInfer,
-  OnlyRequiredProperties,
-  VariablesOption,
-} from "@apollo/client/utilities";
+import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -182,10 +178,9 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options = {} as useSubscription.Options<TData, TVariables>]: Record<
-    string,
-    never
-  > extends OnlyRequiredProperties<TVariables> ?
+  ...[options = {} as useSubscription.Options<TData, TVariables>]: {} extends (
+    TVariables
+  ) ?
     [options?: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
   : [options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useSubscription.Result<TData> {

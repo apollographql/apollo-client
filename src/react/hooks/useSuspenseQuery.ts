@@ -27,7 +27,6 @@ import { getSuspenseCache } from "@apollo/client/react/internal";
 import type {
   DeepPartial,
   NoInfer,
-  OnlyRequiredProperties,
   VariablesOption,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -177,9 +176,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData, TVariables>;
@@ -189,9 +186,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData | undefined, TVariables>;
@@ -209,9 +204,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  ...[options]: Record<string, never> extends (
-    OnlyRequiredProperties<TVariables>
-  ) ?
+  ...[options]: {} extends TVariables ?
     [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData | undefined, TVariables> {

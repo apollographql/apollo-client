@@ -22,11 +22,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import type {
-  NoInfer,
-  OnlyRequiredProperties,
-  VariablesOption,
-} from "@apollo/client/utilities";
+import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -172,7 +168,7 @@ export declare namespace useLazyQuery {
   ];
 
   export type ExecFunction<TData, TVariables extends OperationVariables> = (
-    ...args: Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
   ) => Promise<QueryResult<TData>>;

@@ -1497,7 +1497,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -1637,7 +1636,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -1761,7 +1759,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -2255,7 +2252,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {} as Variables,
+        variables: {},
       });
     }
 
@@ -2594,7 +2591,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error Need to fix the return value of this property
         variables: {},
       });
     }
@@ -2614,7 +2610,6 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error Need to fix the return value of this property
         variables: {},
       });
     }
@@ -4220,7 +4215,6 @@ test("responds to cache updates after changing variables", async () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -4390,7 +4384,6 @@ test("uses cached result when switching to variables already written to the cach
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -4504,7 +4497,6 @@ test("does not render loading states when switching to variables maybe written t
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -4671,7 +4663,6 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error this should be undefined
       variables: {},
     });
   }
@@ -5047,7 +5038,6 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error needs to be undefined
       variables: {},
     });
   }
@@ -5409,7 +5399,6 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      // @ts-expect-error should be undefined
       variables: {},
     });
   }
@@ -5635,6 +5624,84 @@ test("renders loading states at appropriate times on next fetch after updating `
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello 2" },
       variables: {},
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("uses default variables in query", async () => {
+  const query: TypedDocumentNode<
+    { letters: string[] },
+    { limit?: number; offset: number }
+  > = gql`
+    query DefaultsQuery($limit: Int! = 2, $offset: Int!) {
+      letters
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { limit: 2, offset: 0 } },
+        result: { data: { letters: ["a", "b"] } },
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { limit: 2 },
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(
+    execute({ variables: { offset: 0 } })
+  ).resolves.toStrictEqualTyped({ data: { letters: ["a", "b"] } });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: undefined,
+      variables: { limit: 2, offset: 0 },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: { letters: ["a", "b"] },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { limit: 2, offset: 0 },
     });
   }
 
@@ -5921,18 +5988,27 @@ describe.skip("Type Tests", () => {
     void execute();
     void execute({});
     void execute({ variables: {} });
-    // @ts-expect-error unknown variables
-    void execute({ variables: { foo: "bar" } });
+    void execute({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 
-  test("does not allow variables when TVariables is `never`", () => {
+  test("is invalid when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     const [execute] = useLazyQuery(query);
 
+    // @ts-expect-error
     void execute();
+    // @ts-expect-error expecting variables key
     void execute({});
+    // @ts-expect-error variables is never
     void execute({ variables: {} });
+    // @ts-expect-error variables is never
+    void execute({ variables: undefined });
     // @ts-expect-error unknown variables
     void execute({ variables: { foo: "bar" } });
   });

@@ -13,7 +13,6 @@ import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
-import type { OnlyRequiredProperties } from '@apollo/client/utilities';
 import type { OperationVariables } from '@apollo/client';
 import type { PromiseWithState } from '@apollo/client/utilities';
 import type { QueryResult } from '@apollo/client';
@@ -163,7 +162,7 @@ export class InternalQueryReference<TData = unknown> {
     // (undocumented)
     softRetain(): () => void;
     // (undocumented)
-    get watchQueryOptions(): WatchQueryOptions<OperationVariables, TData>;
+    get watchQueryOptions(): ObservableQuery.Options<TData, OperationVariables>;
 }
 
 // @public (undocumented)
@@ -258,17 +257,6 @@ export function unwrapQueryRef<TData>(queryRef: Partial<WrappedQueryRef<TData>>)
 
 // @public (undocumented)
 export function updateWrappedQueryRef<TData>(queryRef: WrappedQueryRef<TData>, promise: QueryRefPromise<TData>): void;
-
-// @public (undocumented)
-export type VariablesOption<TVariables extends OperationVariables> = [
-TVariables
-] extends [never] ? {
-    variables?: Record<string, never>;
-} : Record<string, never> extends OnlyRequiredProperties<TVariables> ? {
-    variables?: TVariables;
-} : {
-    variables: TVariables;
-};
 
 // @public (undocumented)
 interface WrappableHooks {

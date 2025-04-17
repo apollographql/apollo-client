@@ -24,13 +24,17 @@ import type {
   RefetchFunction,
 } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
-import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
+import type {
+  DeepPartial,
+  NoInfer,
+  VariablesOption,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 
 export declare namespace useSuspenseQuery {
@@ -39,17 +43,14 @@ export declare namespace useSuspenseQuery {
     "cache-first" | "network-only" | "no-cache" | "cache-and-network"
   >;
 
-  export interface Options<
+  export type Options<
     TVariables extends OperationVariables = OperationVariables,
-  > {
+  > = {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client?: ApolloClient;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
     context?: DefaultContext;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-    variables?: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
     errorPolicy?: ErrorPolicy;
@@ -77,7 +78,7 @@ export declare namespace useSuspenseQuery {
      * ```
      */
     skip?: boolean;
-  }
+  } & VariablesOption<TVariables>;
 
   export interface Result<
     TData = unknown,
@@ -105,27 +106,6 @@ export declare namespace useSuspenseQuery {
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   }
 }
-
-export function useSuspenseQuery<
-  TData,
-  TVariables extends OperationVariables,
-  TOptions extends Omit<useSuspenseQuery.Options, "variables">,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useSuspenseQuery.Options<NoInfer<TVariables>> & TOptions
-): useSuspenseQuery.Result<
-  TOptions["errorPolicy"] extends "ignore" | "all" ?
-    TOptions["returnPartialData"] extends true ?
-      DeepPartial<TData> | undefined
-    : TData | undefined
-  : TOptions["returnPartialData"] extends true ?
-    TOptions["skip"] extends boolean ?
-      DeepPartial<TData> | undefined
-    : DeepPartial<TData>
-  : TOptions["skip"] extends boolean ? TData | undefined
-  : TData,
-  TVariables
->;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -184,14 +164,6 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useSuspenseQuery.Options<NoInfer<TVariables>>
-): useSuspenseQuery.Result<TData, TVariables>;
-
-export function useSuspenseQuery<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
     | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
@@ -204,7 +176,19 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+  ...[options]: {} extends TVariables ?
+    [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
+): useSuspenseQuery.Result<TData, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
+  : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
 ): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
@@ -212,16 +196,22 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options:
-    | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
-    | useSuspenseQuery.Options<TVariables> = {}
+  options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+): useSuspenseQuery.Result<TData | undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
 ): useSuspenseQuery.Result<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
-  )(query, options);
+  )(query, options ?? ({} as any));
 }
 
 function useSuspenseQuery_<
@@ -339,41 +329,6 @@ function useSuspenseQuery_<
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 
-function validateOptions(options: WatchQueryOptions) {
-  const { fetchPolicy, returnPartialData } = options;
-
-  validateFetchPolicy(fetchPolicy);
-  validatePartialDataReturn(fetchPolicy, returnPartialData);
-}
-
-function validateFetchPolicy(
-  fetchPolicy: WatchQueryFetchPolicy = "cache-first"
-) {
-  const supportedFetchPolicies: WatchQueryFetchPolicy[] = [
-    "cache-first",
-    "network-only",
-    "no-cache",
-    "cache-and-network",
-  ];
-
-  invariant(
-    supportedFetchPolicies.includes(fetchPolicy),
-    `The fetch policy \`%s\` is not supported with suspense.`,
-    fetchPolicy
-  );
-}
-
-function validatePartialDataReturn(
-  fetchPolicy: WatchQueryFetchPolicy | undefined,
-  returnPartialData: boolean | undefined
-) {
-  if (fetchPolicy === "no-cache" && returnPartialData) {
-    invariant.warn(
-      "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
-    );
-  }
-}
-
 interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables,
@@ -396,7 +351,10 @@ export function useWatchQueryOptions<
 > {
   return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
     if (options === skipToken) {
-      return { query, fetchPolicy: "standby" };
+      return { query, fetchPolicy: "standby" } as WatchQueryOptions<
+        TVariables,
+        TData
+      >;
     }
 
     const fetchPolicy =
@@ -404,7 +362,7 @@ export function useWatchQueryOptions<
       client.defaultOptions.watchQuery?.fetchPolicy ||
       "cache-first";
 
-    const watchQueryOptions = {
+    const watchQueryOptions: WatchQueryOptions<TVariables, TData> = {
       ...options,
       fetchPolicy,
       query,
@@ -413,7 +371,7 @@ export function useWatchQueryOptions<
     };
 
     if (__DEV__) {
-      validateOptions(watchQueryOptions);
+      validateSuspenseHookOptions(watchQueryOptions);
     }
 
     // Assign the updated fetch policy after our validation since `standby` is

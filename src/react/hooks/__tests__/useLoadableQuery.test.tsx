@@ -73,7 +73,7 @@ interface SimpleQueryData {
 }
 
 function useSimpleQueryCase() {
-  const query: TypedDocumentNode<SimpleQueryData, never> = gql`
+  const query: TypedDocumentNode<SimpleQueryData, Record<string, never>> = gql`
     query GreetingQuery {
       greeting
     }
@@ -933,7 +933,7 @@ it("passes context to the link", async () => {
     context: Record<string, any>;
   }
 
-  const query: TypedDocumentNode<QueryData, never> = gql`
+  const query: TypedDocumentNode<QueryData, Record<string, never>> = gql`
     query ContextQuery {
       context
     }
@@ -999,7 +999,7 @@ it("passes context to the link", async () => {
 
 it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
   type QueryData = { hello: string };
-  const query: TypedDocumentNode<QueryData, never> = gql`
+  const query: TypedDocumentNode<QueryData, Record<string, never>> = gql`
     query {
       hello
     }
@@ -1507,7 +1507,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     };
   }
 
-  const query: TypedDocumentNode<Data, never> = gql`
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql`
     query {
       greeting {
         message
@@ -1819,7 +1819,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     phase: string;
   }
 
-  const query: TypedDocumentNode<Data, never> = gql`
+  const query: TypedDocumentNode<Data, Record<string, never>> = gql`
     query {
       phase
     }
@@ -4439,7 +4439,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     };
   }
 
-  const query: TypedDocumentNode<QueryData, never> = gql`
+  const query: TypedDocumentNode<QueryData, Record<string, never>> = gql`
     query {
       greeting {
         message
@@ -4943,11 +4943,12 @@ describe.skip("type tests", () => {
     loadQuery({ foo: "bar" });
   });
 
-  it("does not allow variables when TVariables is `never`", () => {
+  it("is not valid when TVariables is `never`", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     const [loadQuery] = useLoadableQuery(query);
 
+    // @ts-expect-error
     loadQuery();
     // @ts-expect-error no variables argument allowed
     loadQuery({});

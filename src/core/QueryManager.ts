@@ -89,12 +89,14 @@ import type {
   OperationVariables,
   QueryResult,
   SubscribeResult,
+  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
+  RefetchWritePolicy,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -285,7 +287,7 @@ export class QueryManager {
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
 
-    variables = this.getVariables(mutation, variables) as TVariables;
+    variables = this.getVariables(mutation, variables);
     if (hasClientExports) {
       variables = (await this.localState.addExportedVariables(
         mutation,
@@ -773,13 +775,18 @@ export class QueryManager {
     return transformCache.get(document)!;
   }
 
-  private getVariables<TVariables>(
+  public getVariables<TVariables>(
     document: DocumentNode,
     variables?: TVariables
-  ): OperationVariables {
+  ): TVariables {
+    const defaultVars = this.getDocumentInfo(document).defaultVars;
+    const varsWithDefaults = Object.entries(variables ?? {}).map(
+      ([key, value]) => [key, value === undefined ? defaultVars[key] : value]
+    );
+
     return {
-      ...this.getDocumentInfo(document).defaultVars,
-      ...variables,
+      ...defaultVars,
+      ...Object.fromEntries(varsWithDefaults),
     };
   }
 
@@ -831,7 +838,10 @@ export class QueryManager {
 
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+    return this.fetchQuery<TData, TVars>(queryId, {
+      ...(options as any),
+      query,
+    })
       .then((value) => ({
         ...value,
         data: this.maskOperation({
@@ -1228,13 +1238,16 @@ export class QueryManager {
     return observable;
   }
 
-  private getResultsFromLink<TData, TVars extends OperationVariables>(
+  private getResultsFromLink<TData, TVariables extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
-    options: Pick<
-      WatchQueryOptions<TVars, TData>,
-      "query" | "variables" | "context" | "fetchPolicy" | "errorPolicy"
-    >
+    options: {
+      query: DocumentNode;
+      variables: TVariables;
+      context: DefaultContext | undefined;
+      fetchPolicy: WatchQueryFetchPolicy | undefined;
+      errorPolicy: ErrorPolicy | undefined;
+    }
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
@@ -1381,7 +1394,7 @@ export class QueryManager {
       ) {
         queryInfo.observableQuery["applyNextFetchPolicy"](
           "after-fetch",
-          options
+          options as any
         );
       }
 
@@ -1656,7 +1669,15 @@ export class QueryManager {
       errorPolicy,
       returnPartialData,
       context,
-    }: WatchQueryOptions<TVars, TData>,
+    }: {
+      query: DocumentNode | TypedDocumentNode<TData, TVars>;
+      variables: TVars;
+      fetchPolicy?: WatchQueryFetchPolicy;
+      refetchWritePolicy?: RefetchWritePolicy;
+      errorPolicy?: ErrorPolicy;
+      returnPartialData?: boolean;
+      context?: DefaultContext;
+    },
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.

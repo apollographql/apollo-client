@@ -5,7 +5,7 @@ import { gql } from "graphql-tag";
 import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ApolloQueryResult } from "@apollo/client";
+import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -1428,7 +1428,7 @@ describe("ApolloClient", () => {
       notifyOnNetworkStatusChange: false,
     });
     const stream = new ObservableStream(observable);
-    const originalOptions = { ...observable.options };
+    const originalOptions = { ...observable.options } as Record<string, any>;
 
     await expect(stream).toEmitTypedValue({
       data: data1,
@@ -1446,7 +1446,7 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    const updatedOptions = { ...observable.options };
+    const updatedOptions = { ...observable.options } as Record<string, any>;
     delete originalOptions.variables;
     delete updatedOptions.variables;
     expect(updatedOptions).toEqual(originalOptions);
@@ -7805,5 +7805,569 @@ describe("ApolloClient", () => {
         expect(context.foo).toBeUndefined();
       }
     );
+  });
+});
+
+describe.skip("type tests", () => {
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const query = gql``;
+    const mutation = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.watchQuery({ query });
+    client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: { foo: "bar" } });
+    client.watchQuery({ query, variables: { bar: "baz" } });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: { foo: "bar" } });
+    client.query({ query, variables: { bar: "baz" } });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: { foo: "bar" } });
+    client.subscribe({ query, variables: { bar: "baz" } });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: { foo: "bar" } });
+    client.mutate({ mutation, variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+    const mutation: TypedDocumentNode<{ greeting: string }> = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.watchQuery({ query });
+    client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: undefined });
+    client.watchQuery({ query, variables: { foo: "bar" } });
+    client.watchQuery({ query, variables: { bar: "baz" } });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: undefined });
+    client.query({ query, variables: { foo: "bar" } });
+    client.query({ query, variables: { bar: "baz" } });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: undefined });
+    client.subscribe({ query, variables: { foo: "bar" } });
+    client.subscribe({ query, variables: { bar: "baz" } });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: undefined });
+    client.mutate({ mutation, variables: { foo: "bar" } });
+    client.mutate({ mutation, variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+    const mutation: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.watchQuery({ query });
+    client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: undefined });
+    client.watchQuery({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: undefined });
+    client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: undefined });
+    client.subscribe({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: undefined });
+    client.mutate({
+      mutation,
+      variables: {
+        // @ts-expect-error unknown variables
+        bar: "baz",
+      },
+    });
+  });
+
+  test("is invalid when TVariables is never", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+    const mutation: TypedDocumentNode<{ greeting: string }, never> = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    // @ts-expect-error
+    client.watchQuery({ query });
+    client.watchQuery({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
+
+    // @ts-expect-error
+    client.query({ query });
+    client.query({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.query({
+      query,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.query({
+      query,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
+
+    // @ts-expect-error
+    client.subscribe({ query });
+    client.subscribe({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
+
+    // @ts-expect-error
+    client.mutate({ mutation });
+    client.mutate({
+      mutation,
+      // @ts-expect-error
+      variables: {},
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error
+      variables: undefined,
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error unknown variables
+      variables: { foo: "bar" },
+    });
+  });
+
+  test("optional variables are optional", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+    const mutation: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.watchQuery({ query });
+    client.watchQuery({ query, variables: {} });
+    client.watchQuery({ query, variables: undefined });
+    client.watchQuery({ query, variables: { limit: 10 } });
+    client.watchQuery({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.watchQuery({
+      query,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    client.query({ query });
+    client.query({ query, variables: {} });
+    client.query({ query, variables: undefined });
+    client.query({ query, variables: { limit: 10 } });
+    client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.query({
+      query,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    client.subscribe({ query });
+    client.subscribe({ query, variables: {} });
+    client.subscribe({ query, variables: undefined });
+    client.subscribe({ query, variables: { limit: 10 } });
+    client.subscribe({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.subscribe({
+      query,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    client.mutate({ mutation });
+    client.mutate({ mutation, variables: {} });
+    client.mutate({ mutation, variables: undefined });
+    client.mutate({ mutation, variables: { limit: 10 } });
+    client.mutate({
+      mutation,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.mutate({
+      mutation,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("enforced required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+    const mutation: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    // @ts-expect-error empty variables
+    client.watchQuery({ query });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.watchQuery({ query, variables: { id: "1" } });
+    client.watchQuery({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.watchQuery({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.query({ query });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.query({ query, variables: { id: "1" } });
+    client.query({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.query({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.subscribe({ query });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.subscribe({ query, variables: { id: "1" } });
+    client.subscribe({
+      query,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.subscribe({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.mutate({ mutation });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.mutate({ mutation, variables: { id: "1" } });
+    client.mutate({
+      mutation,
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.mutate({
+      mutation,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+    const mutation: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    // @ts-expect-error empty variables
+    client.watchQuery({ query });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.watchQuery({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.watchQuery({ query, variables: { id: "1" } });
+    client.watchQuery({
+      query,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.watchQuery({ query, variables: { id: "1", language: "en" } });
+    client.watchQuery({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.watchQuery({
+      query,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.query({ query });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.query({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.query({ query, variables: { id: "1" } });
+    client.query({
+      query,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.query({ query, variables: { id: "1", language: "en" } });
+    client.query({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.query({
+      query,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.subscribe({ query });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.subscribe({
+      query,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.subscribe({ query, variables: { id: "1" } });
+    client.subscribe({
+      query,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.subscribe({ query, variables: { id: "1", language: "en" } });
+    client.subscribe({
+      query,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.subscribe({
+      query,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    // @ts-expect-error empty variables
+    client.mutate({ mutation });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    client.mutate({
+      mutation,
+      // @ts-expect-error empty variables
+      variables: undefined,
+    });
+    client.mutate({ mutation, variables: { id: "1" } });
+    client.mutate({
+      mutation,
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    client.mutate({ mutation, variables: { id: "1", language: "en" } });
+    client.mutate({
+      mutation,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    client.mutate({
+      mutation,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 });

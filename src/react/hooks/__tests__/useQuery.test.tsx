@@ -5042,7 +5042,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -5068,7 +5067,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -5331,7 +5329,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -5357,7 +5354,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -5586,7 +5582,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -5612,7 +5607,6 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        // @ts-expect-error should be undefined
         variables: {},
       });
     }
@@ -11185,5 +11179,149 @@ describe.skip("Type Tests", () => {
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;
+  });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const query = gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { foo: "bar" } });
+    useQuery(query, { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { foo: "bar" } });
+    useQuery(query, { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("is invalid when TVariables is `never`", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    // @ts-expect-error
+    useQuery(query);
+    // @ts-expect-error
+    useQuery(query, {});
+    useQuery(query, {
+      // @ts-expect-error
+      variables: {},
+    });
+    useQuery(query, {
+      // @ts-expect-error
+      variables: undefined,
+    });
+    useQuery(query, {
+      // @ts-expect-error
+      variables: {
+        foo: "bar",
+      },
+    });
+  });
+
+  test("optional variables are optional", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { limit: 10 } });
+    useQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useQuery(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    // @ts-expect-error empty variables
+    useQuery(query);
+    // @ts-expect-error empty variables
+    useQuery(query, {});
+    // @ts-expect-error empty variables
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { id: "1" } });
+    useQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error empty variables
+    useQuery(query);
+    // @ts-expect-error empty variables
+    useQuery(query, {});
+    // @ts-expect-error empty variables
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { id: "1" } });
+    useQuery(query, {
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    useQuery(query, { variables: { id: "1", language: "en" } });
+    useQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useQuery(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 });

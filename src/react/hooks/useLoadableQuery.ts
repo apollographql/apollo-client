@@ -30,15 +30,13 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type {
-  DeepPartial,
-  OnlyRequiredProperties,
-} from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { __use, useRenderGuard } from "./internal/index.js";
+import { __use, useDeepMemo, useRenderGuard } from "./internal/index.js";
+import { validateSuspenseHookOptions } from "./internal/validateSuspenseHookOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 type ResetFunction = () => void;
 
@@ -48,8 +46,7 @@ export declare namespace useLoadableQuery {
     // which case we don't want to allow a variables argument. In other
     // words, we don't want to allow variables to be passed as an argument to this
     // function if the query does not expect variables in the document.
-    ...args: [TVariables] extends [never] ? []
-    : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables]
+    ...args: {} extends TVariables ? [variables?: TVariables]
     : [variables: TVariables]
   ) => void;
 
@@ -101,23 +98,6 @@ export declare namespace useLoadableQuery {
     returnPartialData?: boolean;
   }
 }
-
-export function useLoadableQuery<
-  TData,
-  TVariables extends OperationVariables,
-  TOptions extends useLoadableQuery.Options,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: useLoadableQuery.Options & TOptions
-): useLoadableQuery.Result<
-  TOptions["errorPolicy"] extends "ignore" | "all" ?
-    TOptions["returnPartialData"] extends true ?
-      DeepPartial<TData> | undefined
-    : TData | undefined
-  : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
-  : TData,
-  TVariables
->;
 
 export function useLoadableQuery<
   TData = unknown,
@@ -323,4 +303,35 @@ export function useLoadableQuery<
   }, []);
 
   return [loadQuery, queryRef, { fetchMore, refetch, reset, subscribeToMore }];
+}
+
+function useWatchQueryOptions<TData, TVariables extends OperationVariables>({
+  client,
+  query,
+  options,
+}: {
+  client: ApolloClient;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  options: useLoadableQuery.Options;
+}): WatchQueryOptions<TVariables, TData> {
+  return useDeepMemo<WatchQueryOptions<TVariables, TData>>(() => {
+    const fetchPolicy =
+      options.fetchPolicy ||
+      client.defaultOptions.watchQuery?.fetchPolicy ||
+      "cache-first";
+
+    const watchQueryOptions = {
+      ...options,
+      fetchPolicy,
+      query,
+      notifyOnNetworkStatusChange: false,
+      nextFetchPolicy: void 0,
+    };
+
+    if (__DEV__) {
+      validateSuspenseHookOptions(watchQueryOptions as any);
+    }
+
+    return watchQueryOptions as WatchQueryOptions<TVariables, TData>;
+  }, [client, options, query]);
 }

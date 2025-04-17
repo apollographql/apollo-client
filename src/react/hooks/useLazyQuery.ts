@@ -22,8 +22,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import type { VariablesOption } from "@apollo/client/react/internal";
-import type { NoInfer, OnlyRequiredProperties } from "@apollo/client/utilities";
+import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -77,7 +76,7 @@ export declare namespace useLazyQuery {
     context?: DefaultContext;
   }
 
-  export interface Result<TData, TVariables extends OperationVariables> {
+  export type Result<TData, TVariables extends OperationVariables> = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
     startPolling: (pollInterval: number) => void;
 
@@ -95,10 +94,7 @@ export declare namespace useLazyQuery {
       variables?: Partial<TVariables>
     ) => Promise<QueryResult<MaybeMasked<TData>>>;
 
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-    variables: TVariables | undefined;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-
     fetchMore: <
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,
@@ -134,14 +130,30 @@ export declare namespace useLazyQuery {
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
     networkStatus: NetworkStatus;
+  } & (
+    | {
+        /**
+         * If `true`, the associated lazy query has been executed.
+         *
+         * @docGroup 2. Network info
+         */
+        called: true;
 
-    /**
-     * If `true`, the associated lazy query has been executed.
-     *
-     * @docGroup 2. Network info
-     */
-    called: boolean;
-  }
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+        variables: TVariables;
+      }
+    | {
+        /**
+         * If `true`, the associated lazy query has been executed.
+         *
+         * @docGroup 2. Network info
+         */
+        called: false;
+
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+        variables: Partial<TVariables>;
+      }
+  );
 
   export type ExecOptions<
     TVariables extends OperationVariables = OperationVariables,
@@ -156,9 +168,7 @@ export declare namespace useLazyQuery {
   ];
 
   export type ExecFunction<TData, TVariables extends OperationVariables> = (
-    ...args: [TVariables] extends [never] ?
-      [options?: useLazyQuery.ExecOptions<TVariables>]
-    : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
   ) => Promise<QueryResult<TData>>;
@@ -229,7 +239,7 @@ export function useLazyQuery<
       query,
       initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
-    });
+    } as WatchQueryOptions<TVariables, TData>);
   }
 
   const [currentClient, setCurrentClient] = React.useState(client);
@@ -301,16 +311,17 @@ export function useLazyQuery<
   }, [observable]);
 
   React.useEffect(() => {
-    const updatedOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
-      query,
-      errorPolicy: stableOptions?.errorPolicy,
-      context: stableOptions?.context,
-      refetchWritePolicy: stableOptions?.refetchWritePolicy,
-      returnPartialData: stableOptions?.returnPartialData,
-      notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
-      nextFetchPolicy: options?.nextFetchPolicy,
-      skipPollAttempt: options?.skipPollAttempt,
-    };
+    const updatedOptions: Partial<ObservableQuery.Options<TData, TVariables>> =
+      {
+        query,
+        errorPolicy: stableOptions?.errorPolicy,
+        context: stableOptions?.context,
+        refetchWritePolicy: stableOptions?.refetchWritePolicy,
+        returnPartialData: stableOptions?.returnPartialData,
+        notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
+        nextFetchPolicy: options?.nextFetchPolicy,
+        skipPollAttempt: options?.skipPollAttempt,
+      };
 
     // Wait to apply the changed fetch policy until after the execute
     // function has been called. The execute function will handle setting the
@@ -319,7 +330,7 @@ export function useLazyQuery<
       observable.options.fetchPolicy !== "standby" &&
       stableOptions?.fetchPolicy
     ) {
-      updatedOptions.fetchPolicy = stableOptions?.fetchPolicy;
+      updatedOptions.fetchPolicy = stableOptions.fetchPolicy;
     }
 
     observable.silentSetOptions(updatedOptions);
@@ -344,17 +355,19 @@ export function useLazyQuery<
 
         const [executeOptions] = args;
 
-        const options: Partial<WatchQueryOptions<TVariables, TData>> = {
-          ...executeOptions,
-          // TODO: Figure out a better way to reset variables back to empty
-          variables: (executeOptions?.variables ?? {}) as TVariables,
-        };
+        let fetchPolicy = observable.options.fetchPolicy;
 
-        if (observable.options.fetchPolicy === "standby") {
-          options.fetchPolicy = observable.options.initialFetchPolicy;
+        if (fetchPolicy === "standby") {
+          fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        return observable.reobserve(options);
+        return observable.reobserve({
+          ...executeOptions,
+          fetchPolicy,
+          // If `variables` is not given, reset back to empty variables by
+          // ensuring the key exists in options
+          variables: executeOptions?.variables,
+        });
       },
       [observable, calledDuringRender]
     );

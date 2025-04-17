@@ -2352,7 +2352,10 @@ describe("ObservableQuery", () => {
       it("should warn if passed { variables } and query does not declare $variables", async () => {
         using _ = spyOnConsole("warn");
 
-        const queryWithVarsVar = gql`
+        const queryWithVarsVar: TypedDocumentNode<
+          { getVars: Array<{ __typename: "Var"; name: string }> },
+          { vars: string[] }
+        > = gql`
           query QueryWithVarsVar($vars: [String!]) {
             getVars(variables: $vars) {
               __typename
@@ -2419,6 +2422,7 @@ describe("ObservableQuery", () => {
         // It's a common mistake to call refetch({ variables }) when you meant
         // to call refetch(variables).
         const promise = observableWithVarsVar.refetch({
+          // @ts-expect-error
           variables: { vars: ["d", "e"] },
         });
 
@@ -2476,7 +2480,10 @@ describe("ObservableQuery", () => {
       it("should not warn if passed { variables } and query declares $variables", async () => {
         using _ = spyOnConsole("warn");
 
-        const queryWithVariablesVar = gql`
+        const queryWithVariablesVar: TypedDocumentNode<
+          { getVars: Array<{ __typename: "Var"; name: string }> },
+          { variables: string[] }
+        > = gql`
           query QueryWithVariablesVar($variables: [String!]) {
             getVars(variables: $variables) {
               __typename

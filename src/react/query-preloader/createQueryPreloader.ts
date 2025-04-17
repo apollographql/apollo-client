@@ -17,7 +17,6 @@ import {
 import type {
   DeepPartial,
   NoInfer,
-  OnlyRequiredProperties,
   VariablesOption,
 } from "@apollo/client/utilities";
 
@@ -98,9 +97,7 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: Record<string, never> extends (
-      OnlyRequiredProperties<TVariables>
-    ) ?
+    ...[options]: {} extends TVariables ?
       [options?: PreloadQueryOptions<NoInfer<TVariables>>]
     : [options: PreloadQueryOptions<NoInfer<TVariables>>]
   ): PreloadedQueryRef<TData, TVariables>;

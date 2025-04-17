@@ -1,5 +1,8 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
 import { isNonNullObject } from "./objects.js";
 
+/** @internal only to be imported in tests */
 export function deepFreeze(value: any) {
   const workSet = new Set([value]);
   workSet.forEach((obj) => {

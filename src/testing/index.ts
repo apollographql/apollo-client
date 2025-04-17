@@ -1,4 +1,18 @@
-import "../utilities/globals/index.js";
-export type { MockedProviderProps } from "./react/MockedProvider.js";
-export { MockedProvider } from "./react/MockedProvider.js";
-export * from "./core/index.js";
+export type {
+  MockedResponse,
+  MockLinkOptions,
+  ResultFunction,
+} from "@apollo/client/testing/core";
+export {
+  createMockClient,
+  MockLink,
+  mockObservableLink,
+  mockSingleLink,
+  MockSubscriptionLink,
+  realisticDelay,
+  tick,
+  wait,
+  withErrorSpy,
+  withLogSpy,
+  withWarningSpy,
+} from "@apollo/client/testing/core";

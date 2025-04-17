@@ -1,26 +1,21 @@
-import { invariant } from "../../utilities/globals/index.js";
-
-import { print } from "../../utilities/index.js";
 import type {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
+import type { Observer, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
-import type { Operation } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
-import type {
-  Observer,
-  ObservableSubscription,
-} from "../../utilities/index.js";
-import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import type { ServerError } from "../utils/index.js";
-import {
-  cacheSizes,
-  AutoCleanedWeakCache,
-  defaultCacheSizes,
-} from "../../utilities/index.js";
+import type { NetworkError, ServerError } from "@apollo/client/errors";
+import type { Operation } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { print } from "@apollo/client/utilities";
+import { compact, isNonEmptyArray } from "@apollo/client/utilities";
+import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
@@ -68,8 +63,8 @@ function processErrors(
     | ReadonlyArray<GraphQLFormattedError>
     | undefined
 ): ErrorMeta {
-  const byMessage = Object.create(null),
-    byCode = Object.create(null);
+  const byMessage: Record<string, GraphQLFormattedError> = {},
+    byCode: Record<string, GraphQLFormattedError> = {};
 
   if (isNonEmptyArray(graphQLErrors)) {
     graphQLErrors.forEach((error) => {
@@ -173,7 +168,7 @@ export const createPersistedQueryLink = (
       const { query } = operation;
 
       return new Observable((observer: Observer<FormattedExecutionResult>) => {
-        let subscription: ObservableSubscription;
+        let subscription: Subscription;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;

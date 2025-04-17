@@ -1,30 +1,32 @@
-import { invariant } from "../../utilities/globals/index.js";
-
 import type { DefinitionNode } from "graphql";
+import { Observable, throwError } from "rxjs";
 
-import { ApolloLink } from "../core/index.js";
-import { Observable, hasDirectives } from "../../utilities/index.js";
-import { serializeFetchParameter } from "./serializeFetchParameter.js";
-import { selectURI } from "./selectURI.js";
+import { ApolloLink } from "@apollo/client/link/core";
+import { filterOperationVariables } from "@apollo/client/link/utils";
+import { hasDirectives } from "@apollo/client/utilities";
+import {
+  getMainDefinition,
+  maybe,
+  removeClientSetsFromDocument,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { checkFetcher } from "./checkFetcher.js";
 import {
   handleError,
-  readMultipartBody,
   parseAndCheckHttpResponse,
+  readMultipartBody,
 } from "./parseAndCheckHttpResponse.js";
-import { checkFetcher } from "./checkFetcher.js";
+import { rewriteURIForGET } from "./rewriteURIForGET.js";
 import type { HttpOptions } from "./selectHttpOptionsAndBody.js";
 import {
-  selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
+  selectHttpOptionsAndBodyInternal,
 } from "./selectHttpOptionsAndBody.js";
-import { rewriteURIForGET } from "./rewriteURIForGET.js";
-import { fromError, filterOperationVariables } from "../utils/index.js";
-import {
-  maybe,
-  getMainDefinition,
-  removeClientSetsFromDocument,
-} from "../../utilities/index.js";
+import { selectURI } from "./selectURI.js";
+import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
 const backupFetch = maybe(() => fetch);
 
@@ -93,10 +95,11 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       const transformedQuery = removeClientSetsFromDocument(operation.query);
 
       if (!transformedQuery) {
-        return fromError(
-          new Error(
-            "HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`."
-          )
+        return throwError(
+          () =>
+            new Error(
+              "HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`."
+            )
         );
       }
 
@@ -162,21 +165,16 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.headers.accept = acceptHeader;
     }
 
-    if (options.method === "GET") {
-      const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
-      if (parseError) {
-        return fromError(parseError);
-      }
-      chosenURI = newURI;
-    } else {
-      try {
-        (options as any).body = serializeFetchParameter(body, "Payload");
-      } catch (parseError) {
-        return fromError(parseError);
-      }
-    }
-
     return new Observable((observer) => {
+      if (options.method === "GET") {
+        const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
+        if (parseError) {
+          throw parseError;
+        }
+        chosenURI = newURI;
+      } else {
+        options.body = serializeFetchParameter(body, "Payload");
+      }
       // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
       // fall back to the *current* global window.fetch function (see issue
       // #7832), or (if all else fails) the backupFetch function we saved when

@@ -1,22 +1,21 @@
 import type { DocumentNode } from "graphql";
 
-import { ApolloClient } from "../../../core/index.js";
-import type { NormalizedCacheObject } from "../../../cache/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
+import { ApolloClient } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+
 import { mockSingleLink } from "./mockLink.js";
 
+// TODO: Deprecate this function
 export function createMockClient<TData>(
   data: TData,
   query: DocumentNode,
   variables = {}
-): ApolloClient<NormalizedCacheObject> {
+): ApolloClient {
   return new ApolloClient({
     link: mockSingleLink({
       request: { query, variables },
       result: { data },
-    }).setOnError((error) => {
-      throw error;
     }),
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
   });
 }

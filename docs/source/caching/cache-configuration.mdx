@@ -43,25 +43,6 @@ To customize cache behavior, you provide a configuration object to the `InMemory
 <tr>
 <td>
 
-###### `addTypename`
-
-`Boolean`
-
-</td>
-<td>
-
-If `true`, the cache automatically requests the `__typename` field for every object in your outgoing operations, which means you can omit `__typename` from your operation definitions.
-
-By default, the cache uses the `__typename` field as part of the cache ID for every cached object, so it's helpful to guarantee that the field is always fetched.
-
-The default value is `true`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `resultCaching`
 
 `Boolean`

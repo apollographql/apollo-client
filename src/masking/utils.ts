@@ -1,9 +1,6 @@
 import { Slot } from "optimism";
-import { invariant } from "../utilities/globals/index.js";
-import { canUseWeakMap, canUseWeakSet } from "../utilities/index.js";
 
-export const MapImpl = canUseWeakMap ? WeakMap : Map;
-export const SetImpl = canUseWeakSet ? WeakSet : Set;
+import { invariant } from "@apollo/client/utilities/invariant";
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
 // migrate mode.

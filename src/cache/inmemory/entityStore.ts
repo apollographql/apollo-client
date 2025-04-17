@@ -1,45 +1,47 @@
-import { invariant } from "../../utilities/globals/index.js";
-import type { OptimisticDependencyFunction } from "optimism";
-import { dep } from "optimism";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
+import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
+import type { OptimisticDependencyFunction } from "optimism";
+import { dep } from "optimism";
 
 import type {
-  StoreValue,
-  StoreObject,
   Reference,
-} from "../../utilities/index.js";
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
 import {
+  DeepMerger,
+  isNonNullObject,
   isReference,
   makeReference,
-  DeepMerger,
   maybeDeepFreeze,
-  canUseWeakMap,
-  isNonNullObject,
-} from "../../utilities/index.js";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
-import { hasOwn, fieldNameFromStoreName } from "./helpers.js";
-import type { Policies, StorageType } from "./policies.js";
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { Cache } from "../core/types/Cache.js";
 import type {
-  SafeReadonly,
+  CanReadFunction,
+  DeleteModifier,
+  InvalidateModifier,
   Modifier,
+  ModifierDetails,
   Modifiers,
   ReadFieldOptions,
+  SafeReadonly,
   ToReferenceFunction,
-  CanReadFunction,
-  InvalidateModifier,
-  DeleteModifier,
-  ModifierDetails,
 } from "../core/types/common.js";
-import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
-const DELETE: DeleteModifier = Object.create(null);
+import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
+import type { Policies, StorageType } from "./policies.js";
+import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+
+const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
-const INVALIDATE: InvalidateModifier = Object.create(null);
+const INVALIDATE = {} as InvalidateModifier;
 
 export abstract class EntityStore implements NormalizedCache {
-  protected data: NormalizedCacheObject = Object.create(null);
+  protected data: NormalizedCacheObject = {};
 
   constructor(
     public readonly policies: Policies,
@@ -104,7 +106,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
 
     if (this.policies.rootTypenamesById[dataId]) {
-      return Object.create(null);
+      return {};
     }
   }
 
@@ -139,7 +141,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (merged !== existing) {
       delete this.refs[dataId];
       if (this.group.caching) {
-        const fieldsToDirty: Record<string, 1> = Object.create(null);
+        const fieldsToDirty: Record<string, 1> = {};
 
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
@@ -207,7 +209,7 @@ export abstract class EntityStore implements NormalizedCache {
     const storeObject = this.lookup(dataId);
 
     if (storeObject) {
-      const changedFields: Record<string, any> = Object.create(null);
+      const changedFields: Record<string, any> = {};
       let needToMerge = false;
       let allDeleted = true;
 
@@ -425,7 +427,7 @@ export abstract class EntityStore implements NormalizedCache {
   // entities they reference (even indirectly) from being garbage collected.
   private rootIds: {
     [rootId: string]: number;
-  } = Object.create(null);
+  } = {};
 
   public retain(rootId: string): number {
     return (this.rootIds[rootId] = (this.rootIds[rootId] || 0) + 1);
@@ -485,11 +487,11 @@ export abstract class EntityStore implements NormalizedCache {
   // Lazily tracks { __ref: <dataId> } strings contained by this.data[dataId].
   private refs: {
     [dataId: string]: Record<string, true>;
-  } = Object.create(null);
+  } = {};
 
   public findChildRefIds(dataId: string): Record<string, true> {
     if (!hasOwn.call(this.refs, dataId)) {
-      const found = (this.refs[dataId] = Object.create(null));
+      const found = (this.refs[dataId] = {} as Record<string, true>);
       const root = this.data[dataId];
       if (!root) return found;
 
@@ -533,8 +535,7 @@ export abstract class EntityStore implements NormalizedCache {
   public makeCacheKey(
     selectionSet: SelectionSetNode,
     parent: string /* = ( Reference.__ref ) */ | StoreObject,
-    varString: string | undefined,
-    canonizeResults: boolean
+    varString: string | undefined
   ): object;
   /** overload for `StoreReader.executeSubSelectedArray` */
   public makeCacheKey(
@@ -593,6 +594,10 @@ export abstract class EntityStore implements NormalizedCache {
       return ref;
     }
   };
+
+  public get supportsResultCaching(): boolean {
+    return this.group.caching;
+  }
 }
 
 export type FieldValueGetter = EntityStore["getFieldValue"];
@@ -626,7 +631,7 @@ class CacheGroup {
 
   public resetCaching() {
     this.d = this.caching ? dep<string>() : null;
-    this.keyMaker = new Trie(canUseWeakMap);
+    this.keyMaker = new Trie();
   }
 
   public depend(dataId: string, storeFieldName: string) {
@@ -721,7 +726,7 @@ export namespace EntityStore {
       return this;
     }
 
-    public readonly storageTrie = new Trie<StorageType>(canUseWeakMap);
+    public readonly storageTrie = new Trie<StorageType>();
     public getStorage(): StorageType {
       return this.storageTrie.lookupArray(arguments);
     }
@@ -819,14 +824,12 @@ class Layer extends EntityStore {
       : fromParent;
   }
 
-  public getStorage(): StorageType {
+  public getStorage(
+    ...args: Parameters<EntityStore["getStorage"]>
+  ): StorageType {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(
-      p,
-      // @ts-expect-error
-      arguments
-    );
+    return p.getStorage(...args);
   }
 }
 
@@ -876,5 +879,5 @@ function storeObjectReconciler(
 
 export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
-  return !!(store instanceof EntityStore && store.group.caching);
+  return !!(store && store.supportsResultCaching);
 }

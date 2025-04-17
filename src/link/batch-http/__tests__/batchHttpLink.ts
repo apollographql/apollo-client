@@ -1,17 +1,14 @@
 import fetchMock from "fetch-mock";
-import gql from "graphql-tag";
-import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import type { ASTNode } from "graphql";
+import { print, stripIgnoredCharacters } from "graphql";
+import { gql } from "graphql-tag";
+import type { Observer, Subscription } from "rxjs";
+import { map, Observable } from "rxjs";
 
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
-import {
-  Observable,
-  ObservableSubscription,
-  Observer,
-} from "../../../utilities/observables/Observable";
-import { BatchHttpLink } from "../batchHttpLink";
-import { FetchResult } from "../../core";
-import { ObservableStream } from "../../../testing/internal";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
+import type { FetchResult } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { ObservableStream } from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -238,7 +235,7 @@ const createHttpLink = (httpArgs?: any) => {
   return new BatchHttpLink(args);
 };
 
-const subscriptions = new Set<ObservableSubscription>();
+const subscriptions = new Set<Subscription>();
 
 describe("SharedHttpTest", () => {
   const data = { data: { hello: "world" } };
@@ -494,7 +491,7 @@ describe("SharedHttpTest", () => {
       })
     );
 
-    await expect(stream).toEmitValue(data2);
+    await expect(stream).toEmitTypedValue(data2);
   });
 
   it("adds headers to the request from the context", async () => {
@@ -503,11 +500,13 @@ describe("SharedHttpTest", () => {
       operation.setContext({
         headers: { authorization: "1234" },
       });
-      return forward(operation).map((result) => {
-        const { headers } = operation.getContext();
-        expect(headers).toBeDefined();
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          const { headers } = operation.getContext();
+          expect(headers).toBeDefined();
+          return result;
+        })
+      );
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
     const stream = new ObservableStream(
@@ -520,7 +519,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers to the request from the setup", async () => {
@@ -540,7 +539,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("uses the latest window.fetch function if options.fetch not configured", (done) => {
@@ -620,7 +619,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers to the request from the context on an operation", async () => {
@@ -644,7 +643,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers w/ preserved case to the request from the setup", async () => {
@@ -668,7 +667,7 @@ describe("SharedHttpTest", () => {
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
     expect(headers["CONTENT-TYPE"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("prioritizes context headers w/ preserved case over setup headers", async () => {
@@ -697,7 +696,7 @@ describe("SharedHttpTest", () => {
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers w/ preserved case to the request from the context on an operation", async () => {
@@ -721,7 +720,7 @@ describe("SharedHttpTest", () => {
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds creds to the request from the context", async () => {

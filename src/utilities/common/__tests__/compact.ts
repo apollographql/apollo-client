@@ -1,4 +1,4 @@
-import { compact } from "../compact";
+import { compact } from "@apollo/client/utilities";
 
 const hasOwn = Object.prototype.hasOwnProperty;
 

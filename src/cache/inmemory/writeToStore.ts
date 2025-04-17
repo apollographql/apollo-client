@@ -1,52 +1,57 @@
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
-import type { SelectionSetNode, FieldNode } from "graphql";
+import type { FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 
+import type { Cache, OperationVariables } from "@apollo/client";
 import type {
   FragmentMap,
   FragmentMapFunction,
-  StoreValue,
-  StoreObject,
   Reference,
-} from "../../utilities/index.js";
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
 import {
-  getFragmentFromSelection,
-  getDefaultValues,
-  getOperationDefinition,
-  getTypenameFromResult,
-  makeReference,
-  isField,
-  resultKeyNameFromField,
-  isReference,
-  shouldInclude,
-  cloneDeep,
   addTypenameToDocument,
-  isNonEmptyArray,
   argumentsObjectFromField,
   canonicalStringify,
-} from "../../utilities/index.js";
-
-import type {
-  NormalizedCache,
-  ReadMergeModifyContext,
-  MergeTree,
-  InMemoryCacheConfig,
-} from "./types.js";
+  cloneDeep,
+  getDefaultValues,
+  getFragmentFromSelection,
+  getOperationDefinition,
+  getTypenameFromResult,
+  isField,
+  isNonEmptyArray,
+  isReference,
+  makeReference,
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
+import type { ReadFieldFunction } from "../core/types/common.js";
+
+import type { EntityStore } from "./entityStore.js";
+import {
+  extractFragmentContext,
+  fieldNameFromStoreName,
   isArray,
   makeProcessedFieldsMerger,
-  fieldNameFromStoreName,
   storeValueIsStoreObject,
-  extractFragmentContext,
 } from "./helpers.js";
-import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import type { EntityStore } from "./entityStore.js";
-import type { Cache } from "../../core/index.js";
 import { normalizeReadFieldOptions } from "./policies.js";
-import type { ReadFieldFunction } from "../core/types/common.js";
+import type { StoreReader } from "./readFromStore.js";
+import type {
+  InMemoryCacheConfig,
+  MergeTree,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types.js";
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -122,9 +127,15 @@ export class StoreWriter {
     private fragments?: InMemoryCacheConfig["fragments"]
   ) {}
 
-  public writeToStore(
+  public writeToStore<TData = unknown, TVariables = OperationVariables>(
     store: NormalizedCache,
-    { query, result, dataId, variables, overwrite }: Cache.WriteOptions
+    {
+      query,
+      result,
+      dataId,
+      variables,
+      overwrite,
+    }: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
@@ -136,11 +147,11 @@ export class StoreWriter {
 
     const context: WriteContext = {
       store,
-      written: Object.create(null),
+      written: {},
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
-      variables,
+      variables: variables as OperationVariables,
       varString: canonicalStringify(variables),
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,
@@ -151,7 +162,7 @@ export class StoreWriter {
     };
 
     const ref = this.processSelectionSet({
-      result: result || Object.create(null),
+      result: result || {},
       dataId,
       selectionSet: operationDefinition.selectionSet,
       mergeTree: { map: new Map() },
@@ -187,8 +198,7 @@ export class StoreWriter {
         }
 
         if (__DEV__ && !context.overwrite) {
-          const fieldsWithSelectionSets: Record<string, true> =
-            Object.create(null);
+          const fieldsWithSelectionSets: Record<string, true> = {};
           fieldNodeSet.forEach((field) => {
             if (field.selectionSet) {
               fieldsWithSelectionSets[field.name.value] = true;
@@ -250,7 +260,7 @@ export class StoreWriter {
 
     // This variable will be repeatedly updated using context.merge to
     // accumulate all fields that need to be written into the store.
-    let incoming: StoreObject = Object.create(null);
+    let incoming: StoreObject = {};
 
     // If typename was not passed in, infer it. Note that typename is
     // always passed in for tricky-to-infer cases such as "Query" for
@@ -272,9 +282,9 @@ export class StoreWriter {
     // pending in context.incomingById, which is important whenever keyFields
     // need to be extracted from a child object that processSelectionSet has
     // turned into a Reference.
-    const readField: ReadFieldFunction = function (this: void) {
+    const readField: ReadFieldFunction = (...args) => {
       const options = normalizeReadFieldOptions(
-        arguments,
+        args,
         incoming,
         context.variables
       );

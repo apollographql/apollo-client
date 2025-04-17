@@ -72,7 +72,7 @@ export interface QueryOptionsDocumentation {
   /**
    * If `true`, the in-progress query's associated component re-renders whenever the network status changes or a network error occurs.
    *
-   * The default value is `false`.
+   * The default value is `true`.
    *
    * @docGroup 2. Networking options
    */
@@ -107,29 +107,6 @@ export interface QueryOptionsDocumentation {
   refetchWritePolicy_suspense: unknown;
 
   /**
-   * If `true`, causes a query refetch if the query result is detected as partial.
-   *
-   * The default value is `false`.
-   *
-   * @deprecated
-   * Setting this option is unnecessary in Apollo Client 3, thanks to a more consistent application of fetch policies. It might be removed in a future release.
-   */
-  partialRefetch: unknown;
-
-  /**
-   * Whether to canonize cache results before returning them. Canonization
-   * takes some extra time, but it speeds up future deep equality comparisons.
-   * Defaults to false.
-   *
-   * @deprecated
-   * Using `canonizeResults` can result in memory leaks so we generally do not
-   * recommend using this option anymore.
-   * A future version of Apollo Client will contain a similar feature without
-   * the risk of memory leaks.
-   */
-  canonizeResults: unknown;
-
-  /**
    * If true, the query is not executed.
    *
    * The default value is `false`.
@@ -149,23 +126,6 @@ export interface QueryOptionsDocumentation {
    * @docGroup 1. Operation options
    */
   skip_deprecated: unknown;
-
-  /**
-   * A callback function that's called when your query successfully completes with zero errors (or if `errorPolicy` is `ignore` and partial data is returned).
-   *
-   * This function is passed the query's result `data`.
-   *
-   * @docGroup 1. Operation options
-   */
-  onCompleted: unknown;
-  /**
-   * A callback function that's called when the query encounters one or more errors (unless `errorPolicy` is `ignore`).
-   *
-   * This function is passed an `ApolloError` object that contains either a `networkError` object or a `graphQLErrors` array, depending on the error(s) that occurred.
-   *
-   * @docGroup 1. Operation options
-   */
-  onError: unknown;
 
   /**
    * The instance of `ApolloClient` to use to execute the query.
@@ -256,14 +216,6 @@ export interface QueryResultDocumentation {
    * @docGroup 2. Network info
    */
   networkStatus: unknown;
-  /**
-   * If `true`, the associated lazy query has been executed.
-   *
-   * This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
-   *
-   * @docGroup 2. Network info
-   */
-  called: unknown;
   /**
    * An object containing the variables that were provided for the query.
    *
@@ -443,7 +395,7 @@ export interface MutationOptionsDocumentation {
   /**
    * If `true`, the in-progress mutation's associated component re-renders whenever the network status changes or a network error occurs.
    *
-   * The default value is `false`.
+   * The default value is `true`.
    *
    * @docGroup 2. Networking options
    */
@@ -509,6 +461,10 @@ export interface MutationResultDocumentation {
    * A function that you can call to reset the mutation's result to its initial, uncalled state.
    */
   reset: unknown;
+  /**
+   * Custom extensions returned from the GraphQL server
+   */
+  extensions: unknown;
 }
 
 export interface SubscriptionOptionsDocumentation {
@@ -578,25 +534,11 @@ export interface SubscriptionOptionsDocumentation {
   onData: unknown;
 
   /**
-   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.
-   *
-   * @deprecated Use `onData` instead
-   */
-  onSubscriptionData: unknown;
-
-  /**
    * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives an error.
    *
    * @since 3.7.0
    */
   onError: unknown;
-
-  /**
-   * Allows the registration of a callback function that will be triggered when the `useSubscription` Hook / `Subscription` component completes the subscription.
-   *
-   * @deprecated Use `onComplete` instead
-   */
-  onSubscriptionComplete: unknown;
 }
 
 export interface SubscriptionResultDocumentation {

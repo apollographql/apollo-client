@@ -1,8 +1,8 @@
-import gql from "graphql-tag";
 import fetchMock from "fetch-mock";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
-import { parseAndCheckHttpResponse } from "../parseAndCheckHttpResponse";
+import { parseAndCheckHttpResponse } from "@apollo/client/link/http";
+import { createOperation } from "@apollo/client/link/utils";
 
 const query = gql`
   query SampleQuery {

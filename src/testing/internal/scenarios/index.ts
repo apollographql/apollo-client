@@ -1,7 +1,9 @@
-import { ApolloLink, Observable, gql } from "../../../core/index.js";
-import type { TypedDocumentNode } from "../../../core/index.js";
-import type { MaskedDocumentNode } from "../../../masking/index.js";
-import type { MockedResponse } from "../../core/index.js";
+import { Observable } from "rxjs";
+
+import type { TypedDocumentNode } from "@apollo/client";
+import { ApolloLink, gql } from "@apollo/client";
+import type { MaskedDocumentNode } from "@apollo/client/masking";
+import type { MockedResponse } from "@apollo/client/testing/core";
 
 export interface SimpleCaseData {
   greeting: string;
@@ -49,22 +51,22 @@ export function setupVariablesCase() {
     `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
-    (name, index) => ({
-      request: { query, variables: { id: String(index + 1) } },
-      result: {
-        data: {
-          character: { __typename: "Character", id: String(index + 1), name },
-        },
+  const mocks: MockedResponse<VariablesCaseData, VariablesCaseVariables>[] = [
+    ...CHARACTERS,
+  ].map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: {
+      data: {
+        character: { __typename: "Character", id: String(index + 1), name },
       },
-      delay: 20,
-    })
-  );
+    },
+    delay: 20,
+  }));
 
   return { mocks, query };
 }
 
-export type MaskedVariablesCaseFragment = {
+type MaskedVariablesCaseFragment = {
   __typename: "Character";
   name: string;
 } & { " $fragmentName"?: "MaskedVariablesCaseFragment" };

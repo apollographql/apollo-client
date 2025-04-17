@@ -1,13 +1,13 @@
-import gql from "graphql-tag";
 import { print } from "graphql";
-import {
-  Observable,
-  ObservableSubscription,
-} from "../../../utilities/observables/Observable";
-import { ApolloLink } from "../../../link/core";
-import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
-import { MockSubscriptionLink } from "../../../testing/core";
-import { ApolloClient, NextLink, Operation, Reference } from "../../../core";
+import { gql } from "graphql-tag";
+import type { Subscription } from "rxjs";
+import { map, of } from "rxjs";
+
+import type { NextLink, Operation, Reference } from "@apollo/client";
+import { ApolloClient } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {
@@ -33,23 +33,25 @@ describe("Link interactions", () => {
     const evictionLink = (operation: Operation, forward: NextLink) => {
       const { cache } = operation.getContext();
       expect(cache).toBeDefined();
-      return forward(operation).map((result) => {
-        setTimeout(() => {
-          const cacheResult = cache.read({ query });
-          expect(cacheResult).toEqual(initialData);
-          expect(cacheResult).toEqual(result.data);
-          if (count === 1) {
-            done();
-          }
-        }, 10);
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          setTimeout(() => {
+            const cacheResult = cache.read({ query });
+            expect(cacheResult).toEqual(initialData);
+            expect(cacheResult).toEqual(result.data);
+            if (count === 2) {
+              done();
+            }
+          }, 10);
+          return result;
+        })
+      );
     };
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -93,17 +95,18 @@ describe("Link interactions", () => {
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
     const observable = client.watchQuery({
       query,
       variables: {},
+      notifyOnNetworkStatusChange: false,
     });
 
     let count = 0;
-    let four: ObservableSubscription;
+    let four: Subscription;
     // first watch
     const one = observable.subscribe((result) => count++);
     // second watch
@@ -121,16 +124,19 @@ describe("Link interactions", () => {
     setTimeout(() => {
       one.unsubscribe();
 
-      link.simulateResult({
-        result: {
-          data: {
-            people_one: {
-              name: "Luke Skywalker",
-              friends: [{ name: "R2D2" }],
+      link.simulateResult(
+        {
+          result: {
+            data: {
+              people_one: {
+                name: "Luke Skywalker",
+                friends: [{ name: "R2D2" }],
+              },
             },
           },
         },
-      });
+        true
+      );
       setTimeout(() => {
         four.unsubscribe();
         // final unsubscribe should be called now
@@ -165,24 +171,25 @@ describe("Link interactions", () => {
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
     const observable = client.watchQuery({
       query,
       variables: {},
+      notifyOnNetworkStatusChange: false,
     });
 
     let count = 0;
-    let four: ObservableSubscription;
+    let four: Subscription;
     // first watch
     const one = observable.subscribe((result) => count++);
     // second watch
     observable.subscribe({
       next: () => count++,
       error: () => {
-        count = 0;
+        throw new Error("Error should not be called");
       },
     });
     // third watch (to be unsubscribed)
@@ -202,15 +209,11 @@ describe("Link interactions", () => {
       // final unsubscribe should be called now
       // since errors clean up subscriptions
       link.simulateResult({ error: new Error("dang") });
-
-      setTimeout(() => {
-        expect(count).toEqual(0);
-        done();
-      }, 10);
     }, 10);
 
     link.onUnsubscribe(() => {
-      expect(count).toEqual(4);
+      expect(count).toEqual(5);
+      done();
     });
   });
 
@@ -236,7 +239,7 @@ describe("Link interactions", () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -265,7 +268,7 @@ describe("Link interactions", () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -301,7 +304,7 @@ describe("Link interactions", () => {
       const { getCacheKey } = operation.getContext();
       expect(getCacheKey).toBeDefined();
       expect(getCacheKey({ id: 1, __typename: "Book" })).toEqual("Book:1");
-      return Observable.of({ data: bookData });
+      return of({ data: bookData });
     });
 
     const client = new ApolloClient({
@@ -361,6 +364,7 @@ describe("Link interactions", () => {
         books {
           id
           title
+          __typename
         }
       }
     `;
@@ -368,7 +372,7 @@ describe("Link interactions", () => {
     const link = new ApolloLink((operation) => {
       result.current = operation;
 
-      return Observable.of({
+      return of({
         data: {
           books: [
             { id: 1, title: "Woo", __typename: "Book" },
@@ -380,7 +384,7 @@ describe("Link interactions", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });

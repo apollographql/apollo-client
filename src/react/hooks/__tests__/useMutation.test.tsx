@@ -4730,4 +4730,900 @@ describe.skip("Type Tests", () => {
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
     expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
   });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const mutation = gql``;
+
+    {
+      const [execute] = useMutation(mutation);
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: {} });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: { foo: "bar" } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: { bar: "baz" } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    {
+      const [execute] = useMutation(query);
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(query, {});
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(query, { variables: {} });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(query, { variables: { foo: "bar" } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+    {
+      const [execute] = useMutation(query, { variables: { bar: "baz" } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { foo: "bar" } });
+      execute({ variables: { bar: "baz" } });
+    }
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const mutation: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    {
+      const [execute] = useMutation(mutation);
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation);
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: {} });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+  });
+
+  test("is invalid when TVariables is `never`", () => {
+    const mutation: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    {
+      const [execute] = useMutation(mutation);
+      // @ts-expect-error
+      execute();
+      // @ts-expect-error
+      execute({});
+      execute({
+        // @ts-expect-error
+        variables: {},
+      });
+      execute({
+        // @ts-expect-error
+        variables: {
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      // @ts-expect-error
+      execute();
+      // @ts-expect-error
+      execute({});
+      execute({
+        // @ts-expect-error
+        variables: {},
+      });
+      execute({
+        // @ts-expect-error
+        variables: {
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        // @ts-expect-error
+        variables: {},
+      });
+      // @ts-expect-error
+      execute();
+      // @ts-expect-error
+      execute({});
+      execute({
+        // @ts-expect-error
+        variables: {},
+      });
+      execute({
+        // @ts-expect-error
+        variables: {
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: undefined });
+      // @ts-expect-error
+      execute();
+      // @ts-expect-error
+      execute({});
+      execute({
+        // @ts-expect-error
+        variables: {},
+      });
+      execute({
+        // @ts-expect-error
+        variables: undefined,
+      });
+      execute({
+        // @ts-expect-error
+        variables: {
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        // @ts-expect-error
+        variables: {
+          foo: "bar",
+        },
+      });
+      // @ts-expect-error
+      execute();
+      // @ts-expect-error
+      execute({});
+      execute({
+        // @ts-expect-error
+        variables: {},
+      });
+      execute({
+        // @ts-expect-error
+        variables: undefined,
+      });
+      execute({
+        // @ts-expect-error
+        variables: {
+          foo: "bar",
+        },
+      });
+    }
+  });
+
+  test("optional variables are optional", () => {
+    const mutation: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    {
+      const [execute] = useMutation(mutation);
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { limit: 10 } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { limit: 10 } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: {} });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { limit: 10 } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: { limit: 10 } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { limit: 10 } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { limit: 10 } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          limit: 10,
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { limit: 10 } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const mutation: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    {
+      const [execute] = useMutation(mutation);
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: {} });
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: { id: "1" } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { id: "1" } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const mutation: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    {
+      const [execute] = useMutation(mutation);
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {});
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: {} });
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: { language: "en" },
+      });
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, { variables: { id: "1" } });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: { id: "1", language: "en" },
+      });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      // @ts-expect-error missing variables
+      execute();
+      // @ts-expect-error missing variables
+      execute({});
+      execute({
+        // @ts-expect-error missing variables
+        variables: {},
+      });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [execute] = useMutation(mutation, {
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      execute();
+      execute({});
+      execute({ variables: {} });
+      execute({ variables: { id: "1" } });
+      execute({ variables: { id: "1", language: "en" } });
+      execute({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      execute({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+  });
 });

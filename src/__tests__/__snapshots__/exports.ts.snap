@@ -194,12 +194,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/link/network-error 1`] = `
-Array [
-  "wrapErrorsWithNetworkError",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
   "VERSION",

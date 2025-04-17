@@ -43,8 +43,6 @@ type SetOptionalVariables<
   } & Omit<TVariables, keyof TConfiguredVariables>
 >;
 
-type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-
 export declare namespace useMutation {
   export interface Options<
     TData = unknown,

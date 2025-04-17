@@ -25,6 +25,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
+  registerLinkError,
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
@@ -411,9 +412,7 @@ export class QueryManager {
             }
           },
 
-          error: (err) => {
-            const error = toErrorLike(err);
-
+          error: (error) => {
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
               mutationStoreValue.error = error;
@@ -1100,7 +1099,7 @@ export class QueryManager {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          return of({ data: undefined, error: toErrorLike(error) });
+          return of({ data: undefined, error });
         }),
         filter((result) => !!(result.data || result.error))
       );
@@ -1233,7 +1232,13 @@ export class QueryManager {
       );
     }
 
-    return observable;
+    return observable.pipe(
+      catchError((error) => {
+        error = toErrorLike(error);
+        registerLinkError(error);
+        throw error;
+      })
+    );
   }
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
@@ -1307,8 +1312,6 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        error = toErrorLike(error);
-
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
           queryInfo.resetLastWrite();

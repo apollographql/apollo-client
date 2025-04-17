@@ -10,6 +10,7 @@ Array [
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
+  "LinkError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
@@ -77,6 +78,7 @@ Array [
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
+  "LinkError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
@@ -129,11 +131,13 @@ exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
+  "LinkError",
   "PROTOCOL_ERRORS_SYMBOL",
   "ServerError",
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "registerLinkError",
   "toErrorLike",
 ]
 `;

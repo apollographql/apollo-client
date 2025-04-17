@@ -8,8 +8,9 @@ import { ApolloLink } from '@apollo/client/link/core';
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import type { NetworkError } from '@apollo/client/errors';
 import type { Operation } from '@apollo/client/link/core';
+import type { ServerError } from '@apollo/client/errors';
+import type { ServerParseError } from '@apollo/client/errors';
 
 // @public (undocumented)
 interface BaseOptions {
@@ -49,7 +50,7 @@ export interface ErrorResponse {
     // (undocumented)
     meta: ErrorMeta;
     // (undocumented)
-    networkError?: NetworkError;
+    networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
     operation: Operation;
     // (undocumented)

@@ -4,7 +4,7 @@
 
 ```ts
 
-import type { ErrorLike } from '@apollo/client';
+import { ErrorLike } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link/core';
 import type { FetchResult as FetchResult_2 } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql';
@@ -62,11 +62,16 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 // @public (undocumented)
 export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
 
-// @public (undocumented)
-export type NetworkError = Error | ServerParseError | ServerError | null;
+// @public
+export const LinkError: {
+    is: (error: unknown) => boolean;
+};
 
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
+
+// @internal
+export function registerLinkError(error: ErrorLike): void;
 
 // @public
 export class ServerError extends Error {

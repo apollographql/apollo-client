@@ -46,7 +46,7 @@ type SetOptionalVariables<
 export declare namespace useMutation {
   export interface Options<
     TData = unknown,
-    TVariables = OperationVariables,
+    TVariables extends OperationVariables = OperationVariables,
     TContext = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
     TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,

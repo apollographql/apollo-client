@@ -1612,10 +1612,6 @@ export class QueryManager {
     ) => {
       const data = diff.result;
 
-      if (__DEV__ && data !== null) {
-        logMissingFieldErrors(diff.missing);
-      }
-
       const toResult = (
         data: TData | DeepPartial<TData> | undefined
       ): ApolloQueryResult<TData> => {

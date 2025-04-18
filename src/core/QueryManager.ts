@@ -902,12 +902,10 @@ export class QueryManager {
               return { data: result.data };
             }
 
-            const aqr: QueryResult<TData> = {
-              data: errorPolicy === "none" ? undefined : (result.data as TData),
+            return {
+              data: errorPolicy === "none" ? undefined : result.data,
               error: new CombinedGraphQLErrors(result),
             };
-
-            return aqr;
           }),
           catchError((error) => {
             if (errorPolicy === "none") {

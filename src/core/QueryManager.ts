@@ -945,7 +945,7 @@ export class QueryManager {
             // Use linkDocument rather than queryInfo.document so the
             // operation/fragments used to write the result are the same as the
             // ones used to obtain it from the link.
-            queryInfo.markResult(
+            markResult(
               result,
               linkDocument,
               { variables, fetchPolicy, errorPolicy },

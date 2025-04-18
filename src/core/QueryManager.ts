@@ -4,7 +4,6 @@ import { OperationTypeNode } from "graphql";
 import type { Subscription } from "rxjs";
 import {
   catchError,
-  defer,
   filter,
   finalize,
   from,
@@ -878,73 +877,72 @@ export class QueryManager {
       return result.data as TData;
     }
 
-    const resultsFromLink = () => {
+    const resultsFromLink = (variables: TVars) => {
       // Performing transformForLink here gives this.cache a chance to fill in
       // missing fragment definitions (for example) before sending this document
       // through the link chain.
       const linkDocument = this.cache.transformForLink(query);
 
-      return this.getVariablesForLink(linkDocument, variables, context)
-        .pipe(
-          mergeMap((variables) =>
-            this.getObservableFromLink<TData>(linkDocument, context, variables)
-          )
-        )
-        .pipe(
-          validateDidEmitValue(),
-          map((result) => {
-            const graphQLErrors = getGraphQLErrorsFromResult(result);
-            const hasErrors = graphQLErrors.length > 0;
+      return this.getObservableFromLink<TData>(
+        linkDocument,
+        context,
+        variables
+      ).pipe(
+        validateDidEmitValue(),
+        map((result) => {
+          const graphQLErrors = getGraphQLErrorsFromResult(result);
+          const hasErrors = graphQLErrors.length > 0;
 
-            if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(result);
+          if (hasErrors && errorPolicy === "none") {
+            throw new CombinedGraphQLErrors(result);
+          }
+
+          let data = getMergedData(result);
+
+          if (fetchPolicy !== "no-cache" && data) {
+            this.cache.writeQuery({
+              query: linkDocument,
+              data: data as Unmasked<TData>,
+              variables,
+              overwrite: false,
+            });
+
+            const diff = this.cache.diff<TData>({
+              query: linkDocument,
+              variables,
+              returnPartialData: false,
+              optimistic: true,
+            });
+
+            if (diff.complete) {
+              data = diff.result;
             }
+          }
 
-            let data = getMergedData(result);
+          if (!hasErrors || errorPolicy === "ignore") {
+            return { data };
+          }
 
-            if (fetchPolicy !== "no-cache" && data) {
-              this.cache.writeQuery({
-                query: linkDocument,
-                data: data as Unmasked<TData>,
-                variables,
-                overwrite: false,
-              });
-
-              const diff = this.cache.diff<TData>({
-                query: linkDocument,
-                variables,
-                returnPartialData: false,
-                optimistic: true,
-              });
-
-              if (diff.complete) {
-                data = diff.result;
-              }
-            }
-
-            if (!hasErrors || errorPolicy === "ignore") {
-              return { data };
-            }
-
-            return { data, error: new CombinedGraphQLErrors(result) };
-          })
-        );
+          return { data, error: new CombinedGraphQLErrors(result) };
+        })
+      );
     };
 
     return lastValueFrom(
-      defer(() => {
-        if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
-          return resultsFromLink();
-        }
+      this.getVariablesForLink(query, variables, context).pipe(
+        mergeMap((variables) => {
+          if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
+            return resultsFromLink(variables);
+          }
 
-        const diff = readCache();
+          const diff = readCache();
 
-        if (diff.complete || fetchPolicy === "cache-only") {
-          return resultsFromCache(diff).pipe(map((data) => ({ data })));
-        }
+          if (diff.complete || fetchPolicy === "cache-only") {
+            return resultsFromCache(diff).pipe(map((data) => ({ data })));
+          }
 
-        return resultsFromLink();
-      }).pipe(
+          return resultsFromLink(variables);
+        }),
         catchError((error) => {
           if (errorPolicy === "none") {
             throw error;

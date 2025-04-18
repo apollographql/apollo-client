@@ -827,7 +827,7 @@ export class QueryManager {
     }
 
     const fromVariables = (variables: TVars) => {
-      return this.fetchQueryByPolicy<TData, TVars>(
+      return this.fetchQueryByPolicyForQuery<TData, TVars>(
         this.getOrCreateQuery(queryId),
         { query, variables, fetchPolicy, errorPolicy, context }
       );
@@ -1573,6 +1573,202 @@ export class QueryManager {
     return this.dataMasking ?
         maskFragment(data, fragment, this.cache, fragmentName)
       : data;
+  }
+
+  public fetchQueryByPolicyForQuery<TData, TVars extends OperationVariables>(
+    queryInfo: QueryInfo,
+    {
+      query,
+      variables,
+      fetchPolicy,
+      refetchWritePolicy,
+      errorPolicy,
+      returnPartialData,
+      context,
+    }: {
+      query: TypedDocumentNode<TData, TVars>;
+      variables: TVars;
+      fetchPolicy: WatchQueryFetchPolicy;
+      refetchWritePolicy?: RefetchWritePolicy;
+      errorPolicy: ErrorPolicy;
+      returnPartialData?: boolean;
+      context: DefaultContext;
+    },
+    newNetworkStatus = NetworkStatus.loading,
+    emitLoadingState = false
+  ): ObservableAndInfo<TData> {
+    queryInfo.init({
+      document: query,
+      variables,
+    });
+
+    const readCache = () => queryInfo.getDiff();
+
+    const resultsFromCache = (
+      diff: Cache.DiffResult<TData>,
+      networkStatus = newNetworkStatus
+    ) => {
+      const data = diff.result;
+
+      if (__DEV__ && !returnPartialData && data !== null) {
+        logMissingFieldErrors(diff.missing);
+      }
+
+      const toResult = (
+        data: TData | DeepPartial<TData> | undefined
+      ): ApolloQueryResult<TData> => {
+        // TODO: Eventually we should move this handling into
+        // queryInfo.getDiff() directly. Since getDiff is updated to return null
+        // on returnPartialData: false, we should take advantage of that instead
+        // of having to patch it elsewhere.
+        if (!diff.complete && !returnPartialData) {
+          data = undefined;
+        }
+
+        return {
+          // TODO: Handle partial data
+          data: data as TData | undefined,
+          loading: isNetworkRequestInFlight(networkStatus),
+          networkStatus,
+          partial: !diff.complete,
+        };
+      };
+
+      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
+        return of(toResult(data));
+      };
+
+      if (this.getDocumentInfo(query).hasForcedResolvers) {
+        return from(
+          this.localState
+            .runResolvers({
+              document: query,
+              // TODO: Update remoteResult to handle `null`. In v3 the `if`
+              // statement contained a check against `data`, but this value was
+              // always `{}` if nothing was in the cache, which meant the check
+              // above always succeeded when there were forced resolvers. Now that
+              // `data` is nullable, this `remoteResult` needs to be an empty
+              // object. Ideally we can pass in `null` here and the resolvers
+              // would be able to handle this the same way.
+              remoteResult: { data: data || ({} as any) },
+              context,
+              variables,
+              onlyRunForcedResolvers: true,
+            })
+            .then((resolved) => toResult(resolved.data || void 0))
+        );
+      }
+
+      // Resolves https://github.com/apollographql/apollo-client/issues/10317.
+      // If errorPolicy is 'none' and notifyOnNetworkStatusChange is true,
+      // data was incorrectly returned from the cache on refetch:
+      // if diff.missing exists, we should not return cache data.
+      if (
+        errorPolicy === "none" &&
+        networkStatus === NetworkStatus.refetch &&
+        diff.missing
+      ) {
+        return fromData(void 0);
+      }
+
+      return fromData(data || undefined);
+    };
+
+    const cacheWriteBehavior =
+      fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
+        // Watched queries must opt into overwriting existing data on refetch,
+        // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
+      : (
+        newNetworkStatus === NetworkStatus.refetch &&
+        refetchWritePolicy !== "merge"
+      ) ?
+        CacheWriteBehavior.OVERWRITE
+      : CacheWriteBehavior.MERGE;
+
+    const resultsFromLink = () =>
+      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
+        query,
+        variables,
+        context,
+        fetchPolicy,
+        errorPolicy,
+      }).pipe(validateDidEmitValue());
+
+    switch (fetchPolicy) {
+      default:
+      case "cache-first": {
+        const diff = readCache();
+
+        if (diff.complete) {
+          return {
+            fromLink: false,
+            observable: resultsFromCache(diff, NetworkStatus.ready),
+          };
+        }
+
+        if (returnPartialData || emitLoadingState) {
+          return {
+            fromLink: true,
+            observable: concat(resultsFromCache(diff), resultsFromLink()),
+          };
+        }
+
+        return { fromLink: true, observable: resultsFromLink() };
+      }
+
+      case "cache-and-network": {
+        const diff = readCache();
+
+        if (diff.complete || returnPartialData || emitLoadingState) {
+          return {
+            fromLink: true,
+            observable: concat(resultsFromCache(diff), resultsFromLink()),
+          };
+        }
+
+        return { fromLink: true, observable: resultsFromLink() };
+      }
+
+      case "cache-only":
+        return {
+          fromLink: false,
+          observable: concat(
+            resultsFromCache(readCache(), NetworkStatus.ready)
+          ),
+        };
+
+      case "network-only":
+        if (emitLoadingState) {
+          return {
+            fromLink: true,
+            observable: concat(
+              resultsFromCache(readCache()),
+              resultsFromLink()
+            ),
+          };
+        }
+
+        return { fromLink: true, observable: resultsFromLink() };
+
+      case "no-cache":
+        if (emitLoadingState) {
+          return {
+            fromLink: true,
+            // Note that queryInfo.getDiff() for no-cache queries does not call
+            // cache.diff, but instead returns a { complete: false } stub result
+            // when there is no queryInfo.diff already defined.
+            observable: concat(
+              resultsFromCache(queryInfo.getDiff()),
+              resultsFromLink()
+            ),
+          };
+        }
+
+        return { fromLink: true, observable: resultsFromLink() };
+
+      case "standby":
+        return { fromLink: false, observable: EMPTY };
+    }
   }
 
   public fetchQueryByPolicy<TData, TVars extends OperationVariables>(

@@ -212,7 +212,7 @@ describe("BatchHttpLink", () => {
 
       const context = createDefaultApolloContext();
 
-      [(1, 2)].forEach((x) => {
+      [1, 2].forEach((x) => {
         execute(
           link,
           { query, variables: { endpoint: "/rofl" } },

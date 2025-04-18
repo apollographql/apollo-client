@@ -867,11 +867,12 @@ export class QueryManager {
         variables,
       });
 
-      const getResultsFromLink = (
-        queryInfo: QueryInfo,
-        cacheWriteBehavior: CacheWriteBehavior
-      ) => {
+      const getResultsFromLink = () => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
+        const cacheWriteBehavior =
+          fetchPolicy === "no-cache" ?
+            CacheWriteBehavior.FORBID
+          : CacheWriteBehavior.MERGE;
 
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document
@@ -958,12 +959,7 @@ export class QueryManager {
       };
 
       const resultsFromLink = () =>
-        getResultsFromLink(
-          queryInfo,
-          fetchPolicy === "no-cache" ?
-            CacheWriteBehavior.FORBID
-          : CacheWriteBehavior.MERGE
-        ).pipe(
+        getResultsFromLink().pipe(
           validateDidEmitValue(),
           map(({ data, error }) => {
             if (error) {

@@ -903,11 +903,8 @@ export class QueryManager {
               cacheWriteBehavior
             );
 
-            const aqr: ApolloQueryResult<TData> = {
+            const aqr: QueryResult<TData> = {
               data: result.data as TData,
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              partial: !result.data,
             };
 
             // In the case we start multiple network requests simulatenously, we
@@ -920,7 +917,6 @@ export class QueryManager {
 
             if (hasErrors && errorPolicy !== "ignore") {
               aqr.error = new CombinedGraphQLErrors(result);
-              aqr.networkStatus = NetworkStatus.error;
             }
 
             return aqr;
@@ -932,16 +928,12 @@ export class QueryManager {
               throw error;
             }
 
-            const aqr: ApolloQueryResult<TData> = {
+            const aqr: QueryResult<TData> = {
               data: undefined,
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              partial: true,
             };
 
             if (errorPolicy !== "ignore") {
               aqr.error = error;
-              aqr.networkStatus = NetworkStatus.error;
             }
 
             return of(aqr);

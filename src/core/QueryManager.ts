@@ -888,8 +888,7 @@ export class QueryManager {
     const fromVariables = (variables: TVars) => {
       const writeToCache = <TData>(
         result: FetchResult<TData>,
-        document: DocumentNode,
-        variables: TVars
+        document: DocumentNode
       ) => {
         const cacheWriteBehavior =
           fetchPolicy === "no-cache" ?
@@ -950,7 +949,7 @@ export class QueryManager {
 
             result.data = getMergedData(result);
 
-            writeToCache(result, linkDocument, variables);
+            writeToCache(result, linkDocument);
 
             if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };

@@ -1799,7 +1799,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 }
 
-export function logMissingFieldErrors(
+function logMissingFieldErrors(
   missing: MissingFieldError | MissingTree | undefined
 ) {
   if (__DEV__ && missing) {

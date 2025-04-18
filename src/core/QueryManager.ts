@@ -831,6 +831,11 @@ export class QueryManager {
       fetchPolicy = "cache-first";
     }
 
+    const cacheWriteBehavior =
+      fetchPolicy === "no-cache" ?
+        CacheWriteBehavior.FORBID
+      : CacheWriteBehavior.MERGE;
+
     const readCache = () =>
       this.cache.diff<TData, TVars>({
         query,
@@ -893,11 +898,6 @@ export class QueryManager {
         const linkDocument = this.cache.transformForLink(query);
 
         const writeToCache = <TData>(result: FetchResult<TData>) => {
-          const cacheWriteBehavior =
-            fetchPolicy === "no-cache" ?
-              CacheWriteBehavior.FORBID
-            : CacheWriteBehavior.MERGE;
-
           if (
             cacheWriteBehavior === CacheWriteBehavior.FORBID ||
             !shouldWriteResult(result, errorPolicy)

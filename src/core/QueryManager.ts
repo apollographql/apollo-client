@@ -863,7 +863,7 @@ export class QueryManager {
     const markResult = (
       result: FetchResult,
       document: DocumentNode,
-      options: Pick<WatchQueryOptions, "variables" | "fetchPolicy">,
+      options: Pick<WatchQueryOptions, "variables">,
       cacheWriteBehavior: CacheWriteBehavior
     ) => {
       const merger = new DeepMerger();

@@ -1183,7 +1183,7 @@ export class QueryManager {
     };
 
     const apolloContext: ApolloContext = {
-      cache: this.cache,
+      client: this.client,
     };
 
     if (serverQuery) {

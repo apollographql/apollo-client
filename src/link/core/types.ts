@@ -2,7 +2,11 @@ import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { DefaultContext, LinkContext } from "@apollo/client";
+import type {
+  DefaultContext,
+  LinkContext,
+  OperationVariables,
+} from "@apollo/client";
 
 export type { DocumentNode };
 
@@ -72,6 +76,14 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
   variables?: TVariables;
   operationName?: string;
   context?: DefaultContext;
+  extensions?: Record<string, any>;
+}
+
+export interface LinkRequest {
+  query: DocumentNode;
+  variables?: OperationVariables;
+  operationName?: string;
+  context: LinkContext;
   extensions?: Record<string, any>;
 }
 

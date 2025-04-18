@@ -934,7 +934,7 @@ export class QueryManager {
                 const diff = cache.diff<TData>({
                   query: linkDocument,
                   variables,
-                  returnPartialData: true,
+                  returnPartialData: false,
                   optimistic: true,
                 });
 

@@ -1602,10 +1602,7 @@ export class QueryManager {
         optimistic: true,
       });
 
-    const resultsFromCache = (
-      diff: Cache.DiffResult<TData>,
-      networkStatus = newNetworkStatus
-    ) => {
+    const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
       const data = diff.result;
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
@@ -1653,14 +1650,14 @@ export class QueryManager {
         const diff = readCache();
 
         if (diff.complete) {
-          return resultsFromCache(diff, NetworkStatus.ready);
+          return resultsFromCache(diff);
         }
 
         return resultsFromLink();
       }
 
       case "cache-only":
-        return resultsFromCache(readCache(), NetworkStatus.ready);
+        return resultsFromCache(readCache());
 
       case "network-only":
       case "no-cache":

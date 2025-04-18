@@ -883,6 +883,7 @@ export class QueryManager {
           context,
           variables
         ).pipe(
+          validateDidEmitValue(),
           map((result) => {
             const graphQLErrors = getGraphQLErrorsFromResult(result);
             const hasErrors = graphQLErrors.length > 0;
@@ -937,8 +938,7 @@ export class QueryManager {
             }
 
             return of(aqr);
-          }),
-          validateDidEmitValue()
+          })
         );
       };
 

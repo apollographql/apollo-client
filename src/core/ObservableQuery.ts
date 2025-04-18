@@ -1319,7 +1319,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     return {
       observable: observable.pipe(
-        this.queryManager.addCancelFunction(queryInfo.queryId),
+        this.queryManager.addCancelFunction(this.queryId),
         share()
       ),
       fromLink: containsDataFromLink,

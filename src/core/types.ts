@@ -18,7 +18,13 @@ export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
 
-export interface DefaultContext extends Record<string, any> {}
+export interface ApolloContext {
+  cache: ApolloCache;
+}
+
+export interface DefaultContext extends Record<string, any> {
+  readonly apollo: ApolloContext;
+}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 

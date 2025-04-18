@@ -5249,20 +5249,19 @@ describe.skip("Type Tests", () => {
       });
     }
     {
+      // The `mutate` function does not give us TS errors for missing required
+      // variables due to the mismatch in variables passed to `useMutation`, but
+      // we are ok with this tradeoff since fixing the invalid variable to
+      // `useMutation` will update the `mutate` function correctly.
       const [execute] = useMutation(mutation, {
         variables: {
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
-      // @ts-expect-error missing variables
       execute();
-      // @ts-expect-error missing variables
       execute({});
-      execute({
-        // @ts-expect-error missing variables
-        variables: {},
-      });
+      execute({ variables: {} });
       execute({ variables: { id: "1" } });
       execute({
         variables: {
@@ -5286,14 +5285,9 @@ describe.skip("Type Tests", () => {
           foo: "bar",
         },
       });
-      // @ts-expect-error missing variables
       execute();
-      // @ts-expect-error missing variables
       execute({});
-      execute({
-        // @ts-expect-error missing variables
-        variables: {},
-      });
+      execute({ variables: {} });
       execute({ variables: { id: "1" } });
       execute({
         variables: {

@@ -5,6 +5,7 @@ import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { FetchResult } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
@@ -25,6 +26,10 @@ const sampleMutation = gql`
     }
   }
 `;
+
+function createDefaultApolloContext() {
+  return { client: new ApolloClient({ cache: new InMemoryCache() }) };
+}
 
 describe("BatchHttpLink", () => {
   beforeAll(() => {
@@ -105,18 +110,18 @@ describe("BatchHttpLink", () => {
       throw error;
     };
 
-    execute(link, {
-      query: sampleQuery,
-      context: {
-        credentials: "two",
-        clientAwareness,
-      },
-    }).subscribe(next(data), error, complete);
+    const context = createDefaultApolloContext();
+    execute(
+      link,
+      { query: sampleQuery, context: { credentials: "two", clientAwareness } },
+      context
+    ).subscribe(next(data), error, complete);
 
-    execute(link, {
-      query: sampleQuery,
-      context: { credentials: "two" },
-    }).subscribe(next(data2), error, complete);
+    execute(
+      link,
+      { query: sampleQuery, context: { credentials: "two" } },
+      context
+    ).subscribe(next(data2), error, complete);
   });
 
   it("errors on an incorrect number of results for a batch", (done) => {
@@ -143,9 +148,22 @@ describe("BatchHttpLink", () => {
       }
     };
 
-    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
+    const context = createDefaultApolloContext();
+    execute(link, { query: sampleQuery }, context).subscribe(
+      next,
+      error,
+      complete
+    );
+    execute(link, { query: sampleQuery }, context).subscribe(
+      next,
+      error,
+      complete
+    );
+    execute(link, { query: sampleQuery }, context).subscribe(
+      next,
+      error,
+      complete
+    );
   });
 
   describe("batchKey", () => {
@@ -192,11 +210,14 @@ describe("BatchHttpLink", () => {
         }
       };
 
-      [1, 2].forEach((x) => {
-        execute(link, {
-          query,
-          variables: { endpoint: "/rofl" },
-        }).subscribe({
+      const context = createDefaultApolloContext();
+
+      [(1, 2)].forEach((x) => {
+        execute(
+          link,
+          { query, variables: { endpoint: "/rofl" } },
+          context
+        ).subscribe({
           next: next(roflData),
           error: (error) => {
             throw error;
@@ -204,10 +225,11 @@ describe("BatchHttpLink", () => {
           complete,
         });
 
-        execute(link, {
-          query,
-          variables: { endpoint: "/lawl" },
-        }).subscribe({
+        execute(
+          link,
+          { query, variables: { endpoint: "/lawl" } },
+          context
+        ).subscribe({
           next: next(lawlData),
           error: (error) => {
             throw error;
@@ -298,9 +320,11 @@ describe("SharedHttpTest", () => {
 
   it("calls next and then complete", async () => {
     const link = createHttpLink({ uri: "/data" });
-    const observable = execute(link, {
-      query: sampleQuery,
-    });
+    const observable = execute(
+      link,
+      { query: sampleQuery },
+      createDefaultApolloContext()
+    );
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitNext();
@@ -309,9 +333,11 @@ describe("SharedHttpTest", () => {
 
   it("calls error when fetch fails", async () => {
     const link = createHttpLink({ uri: "/error" });
-    const observable = execute(link, {
-      query: sampleQuery,
-    });
+    const observable = execute(
+      link,
+      { query: sampleQuery },
+      createDefaultApolloContext()
+    );
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitError(mockError.throws);
@@ -319,9 +345,11 @@ describe("SharedHttpTest", () => {
 
   it("calls error when fetch fails", async () => {
     const link = createHttpLink({ uri: "/error" });
-    const observable = execute(link, {
-      query: sampleMutation,
-    });
+    const observable = execute(
+      link,
+      { query: sampleMutation },
+      createDefaultApolloContext()
+    );
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitError(mockError.throws);
@@ -353,7 +381,9 @@ describe("SharedHttpTest", () => {
       usedByNamedFragment: "keep",
     };
 
-    const stream = new ObservableStream(execute(link, { query, variables }));
+    const stream = new ObservableStream(
+      execute(link, { query, variables }, createDefaultApolloContext())
+    );
 
     await expect(stream).toEmitNext();
 
@@ -377,9 +407,11 @@ describe("SharedHttpTest", () => {
 
   it("unsubscribes without calling subscriber", async () => {
     const link = createHttpLink({ uri: "/data" });
-    const observable = execute(link, {
-      query: sampleQuery,
-    });
+    const observable = execute(
+      link,
+      { query: sampleQuery },
+      createDefaultApolloContext()
+    );
     const stream = new ObservableStream(observable);
     stream.unsubscribe();
 
@@ -394,11 +426,15 @@ describe("SharedHttpTest", () => {
     const context = { info: "stub" };
     const variables = { params: "stub" };
 
-    const observable = execute(link, {
-      query: sampleMutation,
-      context,
-      variables,
-    });
+    const observable = execute(
+      link,
+      {
+        query: sampleMutation,
+        context,
+        variables,
+      },
+      createDefaultApolloContext()
+    );
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitNext();
@@ -434,11 +470,15 @@ describe("SharedHttpTest", () => {
     const context = { info: "stub" };
     const variables = { params: "stub" };
 
-    const observable = execute(link, {
-      query: sampleMutation,
-      context,
-      variables,
-    });
+    const observable = execute(
+      link,
+      {
+        query: sampleMutation,
+        context,
+        variables,
+      },
+      createDefaultApolloContext()
+    );
     observable.subscribe(subscriber);
     observable.subscribe(subscriber);
 
@@ -458,11 +498,15 @@ describe("SharedHttpTest", () => {
     const context = { info: "stub" };
     const variables = { params: "stub" };
 
-    const observable = execute(link, {
-      query: sampleMutation,
-      context,
-      variables,
-    });
+    const observable = execute(
+      link,
+      {
+        query: sampleMutation,
+        context,
+        variables,
+      },
+      createDefaultApolloContext()
+    );
 
     observable.subscribe(subscriber);
 
@@ -484,11 +528,15 @@ describe("SharedHttpTest", () => {
     const link = createHttpLink({ uri: "/data" });
 
     const stream = new ObservableStream(
-      execute(link, {
-        query: sampleQuery,
-        variables,
-        context: { uri: "/data2" },
-      })
+      execute(
+        link,
+        {
+          query: sampleQuery,
+          variables,
+          context: { uri: "/data2" },
+        },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitTypedValue(data2);
@@ -510,7 +558,11 @@ describe("SharedHttpTest", () => {
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -530,7 +582,11 @@ describe("SharedHttpTest", () => {
     });
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -565,9 +621,11 @@ describe("SharedHttpTest", () => {
     expect(spyFn).not.toBe(fetch);
 
     subscriptions.add(
-      execute(httpLink, {
-        query: sampleQuery,
-      }).subscribe({
+      execute(
+        httpLink,
+        { query: sampleQuery },
+        createDefaultApolloContext()
+      ).subscribe({
         error: done.fail,
 
         next(result) {
@@ -580,9 +638,11 @@ describe("SharedHttpTest", () => {
           expect(window.fetch).toBe(fetch);
 
           subscriptions.add(
-            execute(httpLink, {
-              query: sampleQuery,
-            }).subscribe({
+            execute(
+              httpLink,
+              { query: sampleQuery },
+              createDefaultApolloContext()
+            ).subscribe({
               error: done.fail,
               next(result) {
                 expect(result).toEqual({
@@ -610,7 +670,11 @@ describe("SharedHttpTest", () => {
     );
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -630,11 +694,15 @@ describe("SharedHttpTest", () => {
       headers: { authorization: "1234" },
     };
     const stream = new ObservableStream(
-      execute(link, {
-        query: sampleQuery,
-        variables,
-        context,
-      })
+      execute(
+        link,
+        {
+          query: sampleQuery,
+          variables,
+          context,
+        },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -659,7 +727,11 @@ describe("SharedHttpTest", () => {
     });
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -688,7 +760,11 @@ describe("SharedHttpTest", () => {
     );
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -708,11 +784,11 @@ describe("SharedHttpTest", () => {
       http: { preserveHeaderCase: true },
     };
     const stream = new ObservableStream(
-      execute(link, {
-        query: sampleQuery,
-        variables,
-        context,
-      })
+      execute(
+        link,
+        { query: sampleQuery, variables, context },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -734,7 +810,11 @@ describe("SharedHttpTest", () => {
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -748,7 +828,11 @@ describe("SharedHttpTest", () => {
     const link = createHttpLink({ uri: "/data", credentials: "same-team-yo" });
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -770,7 +854,11 @@ describe("SharedHttpTest", () => {
     );
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -790,7 +878,11 @@ describe("SharedHttpTest", () => {
     const link = middleware.concat(createHttpLink());
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -804,7 +896,11 @@ describe("SharedHttpTest", () => {
     const link = createHttpLink({ uri: "/data" });
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -826,7 +922,11 @@ describe("SharedHttpTest", () => {
     );
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -846,7 +946,11 @@ describe("SharedHttpTest", () => {
     const link = createHttpLink({ fetch: customFetch });
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -862,7 +966,11 @@ describe("SharedHttpTest", () => {
     });
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -886,7 +994,11 @@ describe("SharedHttpTest", () => {
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -905,7 +1017,7 @@ describe("SharedHttpTest", () => {
     const httpLink = createHttpLink({ uri: "data", print: customPrinter });
 
     const stream = new ObservableStream(
-      execute(httpLink, { query: sampleQuery })
+      execute(httpLink, { query: sampleQuery }, createDefaultApolloContext())
     );
 
     await expect(stream).toEmitNext();
@@ -928,7 +1040,11 @@ describe("SharedHttpTest", () => {
     );
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -952,7 +1068,11 @@ describe("SharedHttpTest", () => {
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
 
     const stream = new ObservableStream(
-      execute(link, { query: sampleQuery, variables })
+      execute(
+        link,
+        { query: sampleQuery, variables },
+        createDefaultApolloContext()
+      )
     );
 
     await expect(stream).toEmitNext();
@@ -984,7 +1104,9 @@ describe("SharedHttpTest", () => {
 
     const link = middleware.concat(createHttpLink({ uri: "/data", fetch }));
 
-    const stream = new ObservableStream(execute(link, { query: sampleQuery }));
+    const stream = new ObservableStream(
+      execute(link, { query: sampleQuery }, createDefaultApolloContext())
+    );
 
     await expect(stream).toEmitNext();
     await expect(stream).toComplete();
@@ -1021,7 +1143,7 @@ describe("SharedHttpTest", () => {
     const link = createHttpLink({ uri: "https://example.com/graphql" });
 
     await new Promise((resolve, reject) => {
-      execute(link, { query }).subscribe({
+      execute(link, { query }, createDefaultApolloContext()).subscribe({
         next: resolve,
         error: reject,
       });
@@ -1051,7 +1173,7 @@ describe("SharedHttpTest", () => {
     const link = createHttpLink({ uri: "https://example.com/graphql" });
 
     await new Promise<void>((resolve, reject) => {
-      execute(link, { query }).subscribe({
+      execute(link, { query }, createDefaultApolloContext()).subscribe({
         next: reject,
         error: errorHandler.mockImplementation(resolve),
       });
@@ -1110,9 +1232,11 @@ describe("SharedHttpTest", () => {
 
       const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
-      const sub = execute(link, { query: sampleQuery }).subscribe(
-        failingObserver
-      );
+      const sub = execute(
+        link,
+        { query: sampleQuery },
+        createDefaultApolloContext()
+      ).subscribe(failingObserver);
       sub.unsubscribe();
 
       expect(abortControllers.length).toBe(1);
@@ -1129,9 +1253,11 @@ describe("SharedHttpTest", () => {
         fetchOptions: { signal: externalAbortController.signal },
       });
 
-      const sub = execute(link, { query: sampleQuery }).subscribe(
-        failingObserver
-      );
+      const sub = execute(
+        link,
+        { query: sampleQuery },
+        createDefaultApolloContext()
+      ).subscribe(failingObserver);
       sub.unsubscribe();
 
       expect(fetch.mock.calls.length).toBe(1);
@@ -1150,7 +1276,11 @@ describe("SharedHttpTest", () => {
         const abortControllers = trackGlobalAbortControllers();
 
         const link = createHttpLink({ uri: "/data" });
-        execute(link, { query: sampleQuery }).subscribe(failingObserver);
+        execute(
+          link,
+          { query: sampleQuery },
+          createDefaultApolloContext()
+        ).subscribe(failingObserver);
         abortControllers[0].abort();
       } finally {
         fetchMock.restore();
@@ -1166,7 +1296,11 @@ describe("SharedHttpTest", () => {
       const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
       await new Promise<void>((resolve) =>
-        execute(link, { query: sampleQuery }).subscribe({
+        execute(
+          link,
+          { query: sampleQuery },
+          createDefaultApolloContext()
+        ).subscribe({
           complete: resolve,
         })
       );
@@ -1183,7 +1317,11 @@ describe("SharedHttpTest", () => {
       const link = createHttpLink({ uri: "data", fetch: fetch as any });
 
       await new Promise<void>((resolve) =>
-        execute(link, { query: sampleQuery }).subscribe({
+        execute(
+          link,
+          { query: sampleQuery },
+          createDefaultApolloContext()
+        ).subscribe({
           error: resolve,
         })
       );

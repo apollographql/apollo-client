@@ -871,7 +871,6 @@ export class QueryManager {
         query: DocumentNode;
         variables: TVars;
         context: DefaultContext | undefined;
-        fetchPolicy: WatchQueryFetchPolicy | undefined;
       }) => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
         const cacheWriteBehavior =
@@ -976,7 +975,6 @@ export class QueryManager {
           query,
           variables,
           context,
-          fetchPolicy,
         });
 
       switch (fetchPolicy) {

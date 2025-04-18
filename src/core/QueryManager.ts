@@ -1590,9 +1590,9 @@ export class QueryManager {
       fetchPolicy: FetchPolicy;
       errorPolicy: ErrorPolicy;
       context: DefaultContext;
-    },
-    newNetworkStatus = NetworkStatus.loading
+    }
   ): Observable<ApolloQueryResult<TData>> {
+    const newNetworkStatus = NetworkStatus.loading;
     queryInfo.init({
       document: query,
       variables,

@@ -869,27 +869,19 @@ export class QueryManager {
 
       const getResultsFromLink = (
         queryInfo: QueryInfo,
-        cacheWriteBehavior: CacheWriteBehavior,
-        options: {
-          query: DocumentNode;
-          variables: TVars;
-          context: DefaultContext | undefined;
-          fetchPolicy: WatchQueryFetchPolicy | undefined;
-          errorPolicy: ErrorPolicy | undefined;
-        }
+        cacheWriteBehavior: CacheWriteBehavior
       ) => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
-        const { errorPolicy } = options;
 
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document
         // through the link chain.
-        const linkDocument = this.cache.transformForLink(options.query);
+        const linkDocument = this.cache.transformForLink(query);
 
         return this.getObservableFromLink<TData>(
           linkDocument,
-          options.context,
-          options.variables
+          context,
+          variables
         ).pipe(
           map((result) => {
             const graphQLErrors = getGraphQLErrorsFromResult(result);
@@ -970,14 +962,7 @@ export class QueryManager {
           queryInfo,
           fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID
-          : CacheWriteBehavior.MERGE,
-          {
-            query,
-            variables,
-            context,
-            fetchPolicy,
-            errorPolicy,
-          }
+          : CacheWriteBehavior.MERGE
         ).pipe(
           validateDidEmitValue(),
           map(({ data, error }) => {

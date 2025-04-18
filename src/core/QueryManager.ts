@@ -889,9 +889,6 @@ export class QueryManager {
             const hasErrors = graphQLErrors.length > 0;
 
             if (hasErrors && errorPolicy === "none") {
-              queryInfo.resetLastWrite();
-              queryInfo.observableQuery?.["resetNotifications"]();
-              // Throwing here effectively calls observer.error.
               throw new CombinedGraphQLErrors(result);
             }
             // Use linkDocument rather than queryInfo.document so the

@@ -3,7 +3,7 @@ import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
 import type {
-  ApolloCache,
+  ApolloClient,
   ClientAwareness,
   DefaultContext,
 } from "@apollo/client";
@@ -97,7 +97,7 @@ export interface Operation {
 }
 
 export interface ApolloContext {
-  readonly cache: ApolloCache;
+  readonly client: ApolloClient;
 }
 
 export interface OperationContext extends DefaultContext {

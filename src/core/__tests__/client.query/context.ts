@@ -13,17 +13,15 @@ test("can get apollo context from getApolloContext", async () => {
     return of({ data: { greeting: "Hello" } });
   });
 
-  const cache = new InMemoryCache();
-
   const client = new ApolloClient({
-    cache,
+    cache: new InMemoryCache(),
     link: new ApolloLink(request),
   });
 
   await client.query({ query });
   const [operation] = request.mock.calls[0];
 
-  expect(operation.getApolloContext()).toStrictEqualTyped({ cache });
+  expect(operation.getApolloContext()).toStrictEqualTyped({ client });
 });
 
 test("allows custom context", async () => {
@@ -36,9 +34,8 @@ test("allows custom context", async () => {
     return of({ data: { greeting: "Hello" } });
   });
 
-  const cache = new InMemoryCache();
   const client = new ApolloClient({
-    cache,
+    cache: new InMemoryCache(),
     link: new ApolloLink(request),
   });
 
@@ -49,7 +46,7 @@ test("allows custom context", async () => {
     foo: true,
     clientAwareness: { name: undefined, version: undefined },
   });
-  expect(operation.getApolloContext()).toStrictEqualTyped({ cache });
+  expect(operation.getApolloContext()).toStrictEqualTyped({ client });
 });
 
 test("uses context from defaultOptions", async () => {
@@ -62,10 +59,8 @@ test("uses context from defaultOptions", async () => {
     return of({ data: { greeting: "Hello" } });
   });
 
-  const cache = new InMemoryCache();
-
   const client = new ApolloClient({
-    cache,
+    cache: new InMemoryCache(),
     link: new ApolloLink(request),
     defaultContext: {
       foo: true,
@@ -79,7 +74,7 @@ test("uses context from defaultOptions", async () => {
     foo: true,
     clientAwareness: { name: undefined, version: undefined },
   });
-  expect(operation.getApolloContext()).toStrictEqualTyped({ cache });
+  expect(operation.getApolloContext()).toStrictEqualTyped({ client });
 });
 
 test("can override global default", async () => {
@@ -92,10 +87,8 @@ test("can override global default", async () => {
     return of({ data: { greeting: "Hello" } });
   });
 
-  const cache = new InMemoryCache();
-
   const client = new ApolloClient({
-    cache,
+    cache: new InMemoryCache(),
     link: new ApolloLink(request),
     defaultContext: {
       foo: true,
@@ -109,5 +102,5 @@ test("can override global default", async () => {
     foo: false,
     clientAwareness: { name: undefined, version: undefined },
   });
-  expect(operation.getApolloContext()).toStrictEqualTyped({ cache });
+  expect(operation.getApolloContext()).toStrictEqualTyped({ client });
 });

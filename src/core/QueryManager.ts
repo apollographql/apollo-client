@@ -1608,15 +1608,6 @@ export class QueryManager {
     ) => {
       const data = diff.result;
 
-      const toResult = (
-        data: TData | DeepPartial<TData> | undefined
-      ): QueryResult<TData> => {
-        return {
-          // TODO: Handle partial data
-          data: data as TData | undefined,
-        };
-      };
-
       if (this.getDocumentInfo(query).hasForcedResolvers) {
         return from(
           this.localState
@@ -1634,11 +1625,11 @@ export class QueryManager {
               variables,
               onlyRunForcedResolvers: true,
             })
-            .then((resolved) => toResult(resolved.data || void 0))
+            .then((resolved) => ({ data: resolved.data || void 0 }))
         );
       }
 
-      return of(toResult(data || undefined));
+      return of({ data: data || undefined });
     };
 
     const resultsFromLink = () =>

@@ -5516,14 +5516,9 @@ describe.skip("Type Tests", () => {
           foo: "bar",
         },
       });
-      // @ts-expect-error missing variables
       mutate();
-      // @ts-expect-error missing variables
       mutate({});
-      mutate({
-        // @ts-expect-error missing variables
-        variables: {},
-      });
+      mutate({ variables: {} });
       mutate({ variables: { id: "1" } });
       mutate({ variables: { id: "1", language: "en" } });
       mutate({

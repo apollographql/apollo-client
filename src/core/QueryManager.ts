@@ -1591,8 +1591,7 @@ export class QueryManager {
       errorPolicy: ErrorPolicy;
       context: DefaultContext;
     },
-    newNetworkStatus = NetworkStatus.loading,
-    emitLoadingState = false
+    newNetworkStatus = NetworkStatus.loading
   ): Observable<ApolloQueryResult<TData>> {
     queryInfo.init({
       document: query,
@@ -1697,10 +1696,6 @@ export class QueryManager {
           return resultsFromCache(diff, NetworkStatus.ready);
         }
 
-        if (emitLoadingState) {
-          return resultsFromLink();
-        }
-
         return resultsFromLink();
       }
 
@@ -1708,23 +1703,9 @@ export class QueryManager {
         return concat(resultsFromCache(readCache(), NetworkStatus.ready));
 
       case "network-only":
-        if (emitLoadingState) {
-          return concat(resultsFromCache(readCache()), resultsFromLink());
-        }
-
         return resultsFromLink();
 
       case "no-cache":
-        if (emitLoadingState) {
-          // Note that queryInfo.getDiff() for no-cache queries does not call
-          // cache.diff, but instead returns a { complete: false } stub result
-          // when there is no queryInfo.diff already defined.
-          return concat(
-            resultsFromCache(queryInfo.getDiff()),
-            resultsFromLink()
-          );
-        }
-
         return resultsFromLink();
     }
   }

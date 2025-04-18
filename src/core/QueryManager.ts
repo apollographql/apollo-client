@@ -896,16 +896,7 @@ export class QueryManager {
             throw new CombinedGraphQLErrors(result);
           }
 
-          const data = getMergedData(result);
-
-          if (!hasErrors || errorPolicy === "ignore") {
-            return { data };
-          }
-
-          return { data, error: new CombinedGraphQLErrors(result) };
-        }),
-        map((result) => {
-          let data = result.data;
+          let data = getMergedData(result);
 
           if (fetchPolicy !== "no-cache" && data) {
             this.cache.writeQuery({
@@ -927,7 +918,11 @@ export class QueryManager {
             }
           }
 
-          return { ...result, data };
+          if (!hasErrors || errorPolicy === "ignore") {
+            return { data };
+          }
+
+          return { data, error: new CombinedGraphQLErrors(result) };
         }),
         catchError((error) => {
           if (errorPolicy === "none") {

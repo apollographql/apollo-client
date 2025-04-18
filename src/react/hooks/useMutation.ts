@@ -21,11 +21,7 @@ import type {
   OperationVariables,
   Unmasked,
 } from "@apollo/client";
-import type {
-  NoInfer,
-  Prettify,
-  VariablesOption,
-} from "@apollo/client/utilities";
+import type { NoInfer, Prettify } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";
@@ -140,8 +136,28 @@ export declare namespace useMutation {
   > = [
     mutate: (
       ...[options]: {} extends TVariables ?
-        [options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>]
-      : [options: MutationFunctionOptions<TData, TVariables, TContext, TCache>]
+        [
+          options?: MutationFunctionOptions<
+            TData,
+            TVariables,
+            TContext,
+            TCache
+          > & {
+            /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+            variables?: TVariables;
+          },
+        ]
+      : [
+          options: MutationFunctionOptions<
+            TData,
+            TVariables,
+            TContext,
+            TCache
+          > & {
+            /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+            variables: TVariables;
+          },
+        ]
     ) => Promise<MutateResult<MaybeMasked<TData>>>,
     result: Result<TData>,
   ];
@@ -156,7 +172,7 @@ export declare namespace useMutation {
     // TODO: Remove this option. We shouldn't allow the mutation to be overridden
     // in the mutation function
     mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  } & VariablesOption<TVariables>;
+  };
 }
 
 /**

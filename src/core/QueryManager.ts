@@ -904,6 +904,7 @@ export class QueryManager {
 
             const aqr: QueryResult<TData> = {
               data: result.data as TData,
+              error: new CombinedGraphQLErrors(result),
             };
 
             // In the case we start multiple network requests simulatenously, we
@@ -913,8 +914,6 @@ export class QueryManager {
             if (errorPolicy === "none") {
               aqr.data = void 0 as TData;
             }
-
-            aqr.error = new CombinedGraphQLErrors(result);
 
             return aqr;
           }),

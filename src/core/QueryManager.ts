@@ -889,31 +889,33 @@ export class QueryManager {
         return;
       }
 
-      if (shouldWriteResult(result, options.errorPolicy)) {
-        // Using a transaction here so we have a chance to read the result
-        // back from the cache before the watch callback fires as a result
-        // of writeQuery, so we can store the new diff quietly and ignore
-        // it when we receive it redundantly from the watch callback.
-        this.cache.performTransaction((cache) => {
-          cache.writeQuery({
-            query: document,
-            data: result.data,
-            variables: options.variables,
-            overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-          });
-
-          const diff = cache.diff<TData>({
-            query: document,
-            variables: options.variables,
-            returnPartialData: true,
-            optimistic: true,
-          });
-
-          if (diff.complete) {
-            (result as any).data = diff.result;
-          }
-        });
+      if (!shouldWriteResult(result, options.errorPolicy)) {
+        return;
       }
+
+      // Using a transaction here so we have a chance to read the result
+      // back from the cache before the watch callback fires as a result
+      // of writeQuery, so we can store the new diff quietly and ignore
+      // it when we receive it redundantly from the watch callback.
+      this.cache.performTransaction((cache) => {
+        cache.writeQuery({
+          query: document,
+          data: result.data,
+          variables: options.variables,
+          overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+        });
+
+        const diff = cache.diff<TData>({
+          query: document,
+          variables: options.variables,
+          returnPartialData: true,
+          optimistic: true,
+        });
+
+        if (diff.complete) {
+          (result as any).data = diff.result;
+        }
+      });
     };
 
     const fromVariables = (variables: TVars) => {

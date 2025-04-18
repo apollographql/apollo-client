@@ -860,8 +860,8 @@ export class QueryManager {
       return of({ data: data || undefined });
     };
 
-    const markResult = (
-      result: FetchResult,
+    const markResult = <TData>(
+      result: FetchResult<TData>,
       document: DocumentNode,
       variables: TVars
     ) => {
@@ -899,7 +899,7 @@ export class QueryManager {
       this.cache.performTransaction((cache) => {
         cache.writeQuery({
           query: document,
-          data: result.data,
+          data: result.data as Unmasked<TData>,
           variables,
           overwrite: false,
         });

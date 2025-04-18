@@ -943,10 +943,6 @@ export class QueryManager {
 
             result.data = getMergedData(result);
 
-            if (shouldWriteResult(result, errorPolicy)) {
-              writeToCache(result);
-            }
-
             if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };
             }
@@ -955,6 +951,11 @@ export class QueryManager {
               data: errorPolicy === "none" ? undefined : result.data,
               error: new CombinedGraphQLErrors(result),
             };
+          }),
+          tap((result) => {
+            if (shouldWriteResult(result, errorPolicy)) {
+              writeToCache(result);
+            }
           }),
           catchError((error) => {
             if (errorPolicy === "none") {

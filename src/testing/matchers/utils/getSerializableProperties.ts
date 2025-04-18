@@ -5,7 +5,12 @@ function isKnownClassInstance(value: unknown) {
   return [ApolloClient, ObservableQuery].some((c) => value instanceof c);
 }
 
-export function getSerializableProperties(obj: unknown): any {
+export function getSerializableProperties(
+  obj: unknown,
+  {
+    includeKnownClassInstances = false,
+  }: { includeKnownClassInstances?: boolean } = {}
+): any {
   if (Array.isArray(obj)) {
     return obj.map((item) => getSerializableProperties(item));
   }
@@ -13,7 +18,10 @@ export function getSerializableProperties(obj: unknown): any {
   if (isPlainObject(obj)) {
     return Object.entries(obj).reduce(
       (memo, [key, value]) => {
-        if (typeof value === "function" || isKnownClassInstance(value)) {
+        if (
+          typeof value === "function" ||
+          (!includeKnownClassInstances && isKnownClassInstance(value))
+        ) {
           return memo;
         }
 

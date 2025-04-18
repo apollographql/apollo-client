@@ -1641,7 +1641,16 @@ export class QueryManager {
           fetchPolicy,
           errorPolicy,
         }
-      ).pipe(validateDidEmitValue());
+      ).pipe(
+        validateDidEmitValue(),
+        map(({ data, error }) => {
+          if (error) {
+            return { data, error };
+          }
+
+          return { data };
+        })
+      );
 
     switch (fetchPolicy) {
       default:

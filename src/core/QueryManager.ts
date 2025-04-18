@@ -923,17 +923,6 @@ export class QueryManager {
           }
 
           return { data, error: new CombinedGraphQLErrors(result) };
-        }),
-        catchError((error) => {
-          if (errorPolicy === "none") {
-            throw error;
-          }
-
-          if (errorPolicy === "ignore") {
-            return of({ data: undefined });
-          }
-
-          return of({ data: undefined, error });
         })
       );
     };
@@ -952,6 +941,17 @@ export class QueryManager {
           }
 
           return resultsFromLink(variables);
+        }),
+        catchError((error) => {
+          if (errorPolicy === "none") {
+            throw error;
+          }
+
+          if (errorPolicy === "ignore") {
+            return of({ data: undefined });
+          }
+
+          return of({ data: undefined, error });
         }),
         this.addCancelFunction(queryId),
         map((value) => ({

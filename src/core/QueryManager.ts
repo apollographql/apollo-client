@@ -862,11 +862,10 @@ export class QueryManager {
     };
 
     function getMergedData<TData>(
-      variables: TVars,
+      diff: Cache.DiffResult<TData>,
       result: FetchResult<TData>
     ): TData {
       const merger = new DeepMerger();
-      const diff = readCache(variables);
 
       if ("incremental" in result && isNonEmptyArray(result.incremental)) {
         return mergeIncrementalData(diff.result as any, result);
@@ -903,7 +902,7 @@ export class QueryManager {
             throw new CombinedGraphQLErrors(result);
           }
 
-          let data = getMergedData(variables, result);
+          let data = getMergedData(readCache(variables), result);
 
           if (fetchPolicy !== "no-cache" && data) {
             this.cache.writeQuery({

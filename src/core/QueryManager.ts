@@ -7,6 +7,7 @@ import {
   concat,
   EMPTY,
   filter,
+  finalize,
   from,
   lastValueFrom,
   map,
@@ -1015,9 +1016,10 @@ export class QueryManager {
             fetchPolicy,
             id: queryId,
           }),
-        }))
+        })),
+        finalize(() => this.removeQuery(queryId))
       )
-    ).finally(() => this.removeQuery(queryId));
+    );
   }
 
   public addCancelFunction<T>(queryId: string) {

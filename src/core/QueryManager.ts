@@ -867,9 +867,7 @@ export class QueryManager {
         variables,
       });
 
-      const getResultsFromLink = (options: {
-        context: DefaultContext | undefined;
-      }) => {
+      const getResultsFromLink = () => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
         const cacheWriteBehavior =
           fetchPolicy === "no-cache" ?
@@ -883,7 +881,7 @@ export class QueryManager {
 
         return this.getObservableFromLink<TData>(
           linkDocument,
-          options.context,
+          context,
           variables
         ).pipe(
           map((result) => {
@@ -968,10 +966,7 @@ export class QueryManager {
         );
       };
 
-      const resultsFromLink = () =>
-        getResultsFromLink({
-          context,
-        });
+      const resultsFromLink = () => getResultsFromLink();
 
       switch (fetchPolicy) {
         default:

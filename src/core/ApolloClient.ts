@@ -681,7 +681,10 @@ export class ApolloClient implements DataProxy {
   public __requestRaw(
     payload: GraphQLRequest
   ): Observable<FormattedExecutionResult> {
-    return execute(this.link, payload);
+    return execute(this.link, {
+      ...payload,
+      context: { ...payload.context, apollo: { cache: this.cache } },
+    });
   }
 
   /**

@@ -901,7 +901,7 @@ export class QueryManager {
           query: document,
           data: result.data,
           variables,
-          overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+          overwrite: false,
         });
 
         const diff = cache.diff<TData>({

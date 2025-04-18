@@ -4166,9 +4166,7 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(2);
     });
 
-    // TODO: fetchQuery has been removed. Figure out a different way to test
-    // this
-    it.skip("should not error on a stopped query()", async () => {
+    it("should not error on a stopped query()", async () => {
       const query = gql`
         query {
           author {
@@ -4198,9 +4196,7 @@ describe("ApolloClient", () => {
       });
 
       const queryId = "1";
-      // TODO: Determine if there is a better way to test this without digging
-      // into implementation details
-      const promise = client["queryManager"].fetchQuery(queryId, { query });
+      const promise = client["queryManager"].query({ query }, queryId);
 
       client["queryManager"].removeQuery(queryId);
 
@@ -4209,9 +4205,7 @@ describe("ApolloClient", () => {
       await Promise.race([wait(50), promise]);
     });
 
-    // TODO: fetchQuery has been removed. Figure out a different way to test
-    // this
-    it.skip("should throw an error on an inflight fetch query if the store is reset", async () => {
+    it("should throw an error on an inflight fetch query if the store is reset", async () => {
       const query = gql`
         query {
           author {
@@ -4236,14 +4230,8 @@ describe("ApolloClient", () => {
           },
         ]),
       });
-      // TODO: Determine if there is a better way to test this.
-      const promise = client["queryManager"].fetchQuery("made up id", {
-        query,
-      });
+      const promise = client.query({ query });
 
-      // Need to delay the reset at least until the fetchRequest method
-      // has had a chance to enter this request into fetchQueryRejectFns.
-      await wait(100);
       void client.resetStore();
 
       await expect(promise).rejects.toThrow(
@@ -4726,9 +4714,7 @@ describe("ApolloClient", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    // TODO: fetchQuery has been removed. Figure out a different way to test
-    // this
-    it.skip("should NOT throw an error on an inflight fetch query if the observable queries are refetched", async () => {
+    it("should NOT throw an error on an inflight fetch query if the observable queries are refetched", async () => {
       const query = gql`
         query {
           author {
@@ -4753,13 +4739,10 @@ describe("ApolloClient", () => {
           },
         ]),
       });
-      // TODO: Determine if there is a better way to test this
-      const promise = client["queryManager"].fetchQuery("made up id", {
-        query,
-      });
+      const promise = client.query({ query });
       void client.reFetchObservableQueries();
 
-      await expect(promise).resolves.toBeTruthy();
+      await expect(promise).resolves.toStrictEqualTyped({ data });
     });
 
     it("should call refetch on a mocked Observable if the observed queries are refetched", async () => {

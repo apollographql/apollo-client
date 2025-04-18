@@ -925,7 +925,6 @@ export class QueryManager {
           catchError((error) => {
             if (errorPolicy === "none") {
               queryInfo.resetLastWrite();
-              queryInfo.observableQuery?.["resetNotifications"]();
               throw error;
             }
 

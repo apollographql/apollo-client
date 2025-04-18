@@ -917,7 +917,9 @@ export class QueryManager {
               error: new CombinedGraphQLErrors(result),
             };
           }),
-          tap((result) => {
+          map((result) => {
+            let data = result.data;
+
             if (fetchPolicy !== "no-cache" && result.data) {
               // Using a transaction here so we have a chance to read the result
               // back from the cache before the watch callback fires as a result
@@ -939,10 +941,12 @@ export class QueryManager {
                 });
 
                 if (diff.complete) {
-                  (result as any).data = diff.result;
+                  data = diff.result;
                 }
               });
             }
+
+            return { ...result, data };
           }),
           catchError((error) => {
             if (errorPolicy === "none") {

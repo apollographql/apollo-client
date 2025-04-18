@@ -1261,6 +1261,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const fromVariables = (variables: TVariables) => {
+      queryInfo.init({
+        document: query,
+        variables,
+      });
       const observableWithInfo = this.fetchQueryByPolicy(
         queryInfo,
         {
@@ -1348,11 +1352,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newNetworkStatus = NetworkStatus.loading,
     emitLoadingState = false
   ): ObservableAndInfo<TData> {
-    queryInfo.init({
-      document: query,
-      variables,
-    });
-
     const readCache = () => queryInfo.getDiff();
 
     const resultsFromCache = (

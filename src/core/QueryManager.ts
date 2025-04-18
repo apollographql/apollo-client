@@ -994,8 +994,6 @@ export class QueryManager {
   public addCancelFunction<T>(queryId: string) {
     const fetchCancelSubject = new Subject<never>();
 
-    // This cancel function needs to be set before the concast is created,
-    // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
       this.fetchCancelFns.delete(queryId);
       // We need to call `complete` on the subject here otherwise the merged

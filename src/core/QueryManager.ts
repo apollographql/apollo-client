@@ -94,6 +94,7 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
+  FetchPolicy,
   MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
@@ -1588,7 +1589,7 @@ export class QueryManager {
     }: {
       query: TypedDocumentNode<TData, TVars>;
       variables: TVars;
-      fetchPolicy: WatchQueryFetchPolicy;
+      fetchPolicy: FetchPolicy;
       refetchWritePolicy?: RefetchWritePolicy;
       errorPolicy: ErrorPolicy;
       returnPartialData?: boolean;

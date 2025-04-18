@@ -71,7 +71,6 @@ import { NetworkStatus } from "./networkStatus.js";
 import { ObservableQuery, validateDidEmitValue } from "./ObservableQuery.js";
 import { QueryInfo, shouldWriteResult } from "./QueryInfo.js";
 import type {
-  ApolloQueryResult,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -1625,11 +1624,4 @@ export class QueryManager {
       clientAwareness: this.clientAwareness,
     };
   }
-}
-
-// Return types used by fetchQueryByPolicy and other private methods above.
-interface ObservableAndInfo<TData> {
-  // Metadata properties that can be returned in addition to the Observable.
-  fromLink: boolean;
-  observable: Observable<ApolloQueryResult<TData>>;
 }

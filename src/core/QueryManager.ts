@@ -929,15 +929,11 @@ export class QueryManager {
               throw error;
             }
 
-            const aqr: QueryResult<TData> = {
-              data: undefined,
-            };
-
-            if (errorPolicy !== "ignore") {
-              aqr.error = error;
+            if (errorPolicy === "ignore") {
+              return of({ data: undefined });
             }
 
-            return of(aqr);
+            return of({ data: undefined, error });
           })
         );
       };

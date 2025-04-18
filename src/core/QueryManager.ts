@@ -1671,11 +1671,8 @@ export class QueryManager {
     };
 
     const cacheWriteBehavior =
-      fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
-        // Watched queries must opt into overwriting existing data on refetch,
-        // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
-      : newNetworkStatus === NetworkStatus.refetch ?
-        CacheWriteBehavior.OVERWRITE
+      fetchPolicy === "no-cache" ?
+        CacheWriteBehavior.FORBID
       : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>

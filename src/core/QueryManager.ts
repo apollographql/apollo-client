@@ -949,25 +949,17 @@ export class QueryManager {
     return lastValueFrom(
       this.getVariablesForLink(query, variables, context).pipe(
         mergeMap((variables) => {
-          switch (fetchPolicy) {
-            default:
-            case "cache-first": {
-              const diff = readCache();
-
-              if (diff.complete) {
-                return resultsFromCache(diff);
-              }
-
-              return resultsFromLink(variables);
-            }
-
-            case "cache-only":
-              return resultsFromCache(readCache());
-
-            case "network-only":
-            case "no-cache":
-              return resultsFromLink(variables);
+          if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
+            return resultsFromLink(variables);
           }
+
+          const diff = readCache();
+
+          if (diff.complete || fetchPolicy === "cache-only") {
+            return resultsFromCache(diff);
+          }
+
+          return resultsFromLink(variables);
         }),
         this.addCancelFunction(queryId),
         map((value) => ({

@@ -930,21 +930,22 @@ export class QueryManager {
         );
     };
 
+    let observable: Observable<QueryResult<TData>>;
+
+    if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
+      observable = resultsFromLink();
+    } else {
+      const diff = readCache();
+
+      if (diff.complete || fetchPolicy === "cache-only") {
+        observable = resultsFromCache(diff).pipe(map((data) => ({ data })));
+      } else {
+        observable = resultsFromLink();
+      }
+    }
+
     return lastValueFrom(
-      this.getVariablesForLink(query, variables, context).pipe(
-        mergeMap((variables) => {
-          if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
-            return resultsFromLink();
-          }
-
-          const diff = readCache();
-
-          if (diff.complete || fetchPolicy === "cache-only") {
-            return resultsFromCache(diff).pipe(map((data) => ({ data })));
-          }
-
-          return resultsFromLink();
-        }),
+      observable.pipe(
         catchError((error) => {
           if (errorPolicy === "none") {
             throw error;

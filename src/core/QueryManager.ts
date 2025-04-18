@@ -1012,7 +1012,7 @@ export class QueryManager {
           data: this.maskOperation({
             document: query,
             data: value?.data,
-            fetchPolicy: options.fetchPolicy,
+            fetchPolicy,
             id: queryId,
           }),
         }))

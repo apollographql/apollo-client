@@ -1700,7 +1700,7 @@ export class QueryManager {
       }
 
       case "cache-only":
-        return concat(resultsFromCache(readCache(), NetworkStatus.ready));
+        return resultsFromCache(readCache(), NetworkStatus.ready);
 
       case "network-only":
       case "no-cache":

@@ -833,39 +833,39 @@ export class QueryManager {
         optimistic: true,
       });
 
+    const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
+      const data = diff.result;
+
+      if (this.getDocumentInfo(query).hasForcedResolvers) {
+        return from(
+          this.localState
+            .runResolvers({
+              document: query,
+              // TODO: Update remoteResult to handle `null`. In v3 the `if`
+              // statement contained a check against `data`, but this value was
+              // always `{}` if nothing was in the cache, which meant the check
+              // above always succeeded when there were forced resolvers. Now that
+              // `data` is nullable, this `remoteResult` needs to be an empty
+              // object. Ideally we can pass in `null` here and the resolvers
+              // would be able to handle this the same way.
+              remoteResult: { data: data || ({} as any) },
+              context,
+              variables,
+              onlyRunForcedResolvers: true,
+            })
+            .then((resolved) => ({ data: resolved.data || void 0 }))
+        );
+      }
+
+      return of({ data: data || undefined });
+    };
+
     const fromVariables = (variables: TVars) => {
       const queryInfo = this.getOrCreateQuery(queryId);
       queryInfo.init({
         document: query,
         variables,
       });
-
-      const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
-        const data = diff.result;
-
-        if (this.getDocumentInfo(query).hasForcedResolvers) {
-          return from(
-            this.localState
-              .runResolvers({
-                document: query,
-                // TODO: Update remoteResult to handle `null`. In v3 the `if`
-                // statement contained a check against `data`, but this value was
-                // always `{}` if nothing was in the cache, which meant the check
-                // above always succeeded when there were forced resolvers. Now that
-                // `data` is nullable, this `remoteResult` needs to be an empty
-                // object. Ideally we can pass in `null` here and the resolvers
-                // would be able to handle this the same way.
-                remoteResult: { data: data || ({} as any) },
-                context,
-                variables,
-                onlyRunForcedResolvers: true,
-              })
-              .then((resolved) => ({ data: resolved.data || void 0 }))
-          );
-        }
-
-        return of({ data: data || undefined });
-      };
 
       const getResultsFromLink = (
         queryInfo: QueryInfo,

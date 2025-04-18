@@ -1428,13 +1428,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.getResultsFromLink<TData, TVariables>(
         queryInfo,
         cacheWriteBehavior,
-        {
-          query,
-          variables,
-          context,
-          fetchPolicy,
-          errorPolicy,
-        }
+        { query, variables, context, fetchPolicy, errorPolicy }
       ).pipe(validateDidEmitValue());
 
     switch (fetchPolicy) {

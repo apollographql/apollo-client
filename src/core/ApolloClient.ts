@@ -519,8 +519,6 @@ export class ApolloClient implements DataProxy {
       checkDocument(options.query, OperationTypeNode.QUERY);
     }
 
-    checkDocument(options.query, OperationTypeNode.QUERY);
-
     return this.queryManager.query<TData, TVariables>(options);
   }
 

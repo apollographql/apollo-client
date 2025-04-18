@@ -867,8 +867,106 @@ export class QueryManager {
         return of({ data: data || undefined });
       };
 
+      const getResultsFromLink = (
+        queryInfo: QueryInfo,
+        cacheWriteBehavior: CacheWriteBehavior,
+        options: {
+          query: DocumentNode;
+          variables: TVars;
+          context: DefaultContext | undefined;
+          fetchPolicy: WatchQueryFetchPolicy | undefined;
+          errorPolicy: ErrorPolicy | undefined;
+        }
+      ) => {
+        const requestId = (queryInfo.lastRequestId = this.generateRequestId());
+        const { errorPolicy } = options;
+
+        // Performing transformForLink here gives this.cache a chance to fill in
+        // missing fragment definitions (for example) before sending this document
+        // through the link chain.
+        const linkDocument = this.cache.transformForLink(options.query);
+
+        return this.getObservableFromLink<TData>(
+          linkDocument,
+          options.context,
+          options.variables
+        ).pipe(
+          map((result) => {
+            const graphQLErrors = getGraphQLErrorsFromResult(result);
+            const hasErrors = graphQLErrors.length > 0;
+
+            // If we interrupted this request by calling getResultsFromLink again
+            // with the same QueryInfo object, we ignore the old results.
+            if (requestId >= queryInfo.lastRequestId) {
+              if (hasErrors && errorPolicy === "none") {
+                queryInfo.resetLastWrite();
+                queryInfo.observableQuery?.["resetNotifications"]();
+                // Throwing here effectively calls observer.error.
+                throw new CombinedGraphQLErrors(result);
+              }
+              // Use linkDocument rather than queryInfo.document so the
+              // operation/fragments used to write the result are the same as the
+              // ones used to obtain it from the link.
+              queryInfo.markResult(
+                result,
+                linkDocument,
+                options,
+                cacheWriteBehavior
+              );
+            }
+
+            const aqr: ApolloQueryResult<TData> = {
+              data: result.data as TData,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              partial: !result.data,
+            };
+
+            // In the case we start multiple network requests simulatenously, we
+            // want to ensure we properly set `data` if we're reporting on an old
+            // result which will not be caught by the conditional above that ends up
+            // throwing the markError result.
+            if (hasErrors && errorPolicy === "none") {
+              aqr.data = void 0 as TData;
+            }
+
+            if (hasErrors && errorPolicy !== "ignore") {
+              aqr.error = new CombinedGraphQLErrors(result);
+              aqr.networkStatus = NetworkStatus.error;
+            }
+
+            return aqr;
+          }),
+          catchError((error) => {
+            // Avoid storing errors from older interrupted queries.
+            if (
+              requestId >= queryInfo.lastRequestId &&
+              errorPolicy === "none"
+            ) {
+              queryInfo.resetLastWrite();
+              queryInfo.observableQuery?.["resetNotifications"]();
+              throw error;
+            }
+
+            const aqr: ApolloQueryResult<TData> = {
+              data: undefined,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              partial: true,
+            };
+
+            if (errorPolicy !== "ignore") {
+              aqr.error = error;
+              aqr.networkStatus = NetworkStatus.error;
+            }
+
+            return of(aqr);
+          })
+        );
+      };
+
       const resultsFromLink = () =>
-        this.getResultsFromLink<TData, TVars>(
+        getResultsFromLink(
           queryInfo,
           fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID

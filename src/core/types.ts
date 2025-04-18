@@ -22,9 +22,11 @@ export interface ApolloContext {
   cache: ApolloCache;
 }
 
-export interface DefaultContext extends Record<string, any> {
+export interface LinkContext extends DefaultContext {
   readonly apollo: ApolloContext;
 }
+
+export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 

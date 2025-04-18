@@ -31,6 +31,7 @@ export type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   InternalRefetchQueryDescriptor,
+  LinkContext,
   MethodKeys,
   MutateResult,
   MutationQueryReducer,

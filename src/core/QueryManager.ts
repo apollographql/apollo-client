@@ -1020,7 +1020,7 @@ export class QueryManager {
     ).finally(() => this.stopQuery(queryId));
   }
 
-  private addCancelFunction<T>(queryId: string) {
+  public addCancelFunction<T>(queryId: string) {
     const fetchCancelSubject = new Subject<never>();
 
     // This cancel function needs to be set before the concast is created,

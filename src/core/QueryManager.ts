@@ -876,77 +876,77 @@ export class QueryManager {
       return result.data as TData;
     }
 
+    const resultsFromLink = (variables: TVars) => {
+      // Performing transformForLink here gives this.cache a chance to fill in
+      // missing fragment definitions (for example) before sending this document
+      // through the link chain.
+      const linkDocument = this.cache.transformForLink(query);
+
+      return this.getObservableFromLink<TData>(
+        linkDocument,
+        context,
+        variables
+      ).pipe(
+        validateDidEmitValue(),
+        map((result) => {
+          const graphQLErrors = getGraphQLErrorsFromResult(result);
+          const hasErrors = graphQLErrors.length > 0;
+
+          if (hasErrors && errorPolicy === "none") {
+            throw new CombinedGraphQLErrors(result);
+          }
+
+          const data = getMergedData(result);
+
+          if (!hasErrors || errorPolicy === "ignore") {
+            return { data };
+          }
+
+          return {
+            data: errorPolicy === "none" ? undefined : data,
+            error: new CombinedGraphQLErrors(result),
+          };
+        }),
+        map((result) => {
+          let data = result.data;
+
+          if (fetchPolicy !== "no-cache" && data) {
+            this.cache.writeQuery({
+              query: linkDocument,
+              data: data as Unmasked<TData>,
+              variables,
+              overwrite: false,
+            });
+
+            const diff = this.cache.diff<TData>({
+              query: linkDocument,
+              variables,
+              returnPartialData: false,
+              optimistic: true,
+            });
+
+            if (diff.complete) {
+              data = diff.result;
+            }
+          }
+
+          return { ...result, data };
+        }),
+        catchError((error) => {
+          if (errorPolicy === "none") {
+            throw error;
+          }
+
+          if (errorPolicy === "ignore") {
+            return of({ data: undefined });
+          }
+
+          return of({ data: undefined, error });
+        })
+      );
+    };
+
     const fromVariables = (variables: TVars) => {
-      const resultsFromLink = () => {
-        // Performing transformForLink here gives this.cache a chance to fill in
-        // missing fragment definitions (for example) before sending this document
-        // through the link chain.
-        const linkDocument = this.cache.transformForLink(query);
-
-        return this.getObservableFromLink<TData>(
-          linkDocument,
-          context,
-          variables
-        ).pipe(
-          validateDidEmitValue(),
-          map((result) => {
-            const graphQLErrors = getGraphQLErrorsFromResult(result);
-            const hasErrors = graphQLErrors.length > 0;
-
-            if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(result);
-            }
-
-            const data = getMergedData(result);
-
-            if (!hasErrors || errorPolicy === "ignore") {
-              return { data };
-            }
-
-            return {
-              data: errorPolicy === "none" ? undefined : data,
-              error: new CombinedGraphQLErrors(result),
-            };
-          }),
-          map((result) => {
-            let data = result.data;
-
-            if (fetchPolicy !== "no-cache" && data) {
-              this.cache.writeQuery({
-                query: linkDocument,
-                data: data as Unmasked<TData>,
-                variables,
-                overwrite: false,
-              });
-
-              const diff = this.cache.diff<TData>({
-                query: linkDocument,
-                variables,
-                returnPartialData: false,
-                optimistic: true,
-              });
-
-              if (diff.complete) {
-                data = diff.result;
-              }
-            }
-
-            return { ...result, data };
-          }),
-          catchError((error) => {
-            if (errorPolicy === "none") {
-              throw error;
-            }
-
-            if (errorPolicy === "ignore") {
-              return of({ data: undefined });
-            }
-
-            return of({ data: undefined, error });
-          })
-        );
-      };
-
       switch (fetchPolicy) {
         default:
         case "cache-first": {
@@ -956,7 +956,7 @@ export class QueryManager {
             return resultsFromCache(diff);
           }
 
-          return resultsFromLink();
+          return resultsFromLink(variables);
         }
 
         case "cache-only":
@@ -964,7 +964,7 @@ export class QueryManager {
 
         case "network-only":
         case "no-cache":
-          return resultsFromLink();
+          return resultsFromLink(variables);
       }
     };
 

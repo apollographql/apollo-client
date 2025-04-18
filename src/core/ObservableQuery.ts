@@ -1343,9 +1343,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       query: TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       fetchPolicy: WatchQueryFetchPolicy;
-      refetchWritePolicy?: RefetchWritePolicy;
+      refetchWritePolicy: RefetchWritePolicy | undefined;
       errorPolicy: ErrorPolicy;
-      returnPartialData?: boolean;
+      returnPartialData: boolean;
       context: DefaultContext;
     },
     newNetworkStatus = NetworkStatus.loading,

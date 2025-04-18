@@ -1,8 +1,4 @@
-import type {
-  ApolloContext,
-  DefaultContext,
-  OperationContext,
-} from "@apollo/client";
+import type { ApolloContext } from "@apollo/client";
 import type { GraphQLRequest, Operation } from "@apollo/client/link/core";
 
 export function createOperation(

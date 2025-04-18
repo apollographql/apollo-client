@@ -868,7 +868,6 @@ export class QueryManager {
       });
 
       const getResultsFromLink = (options: {
-        query: DocumentNode;
         variables: TVars;
         context: DefaultContext | undefined;
       }) => {
@@ -881,7 +880,7 @@ export class QueryManager {
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document
         // through the link chain.
-        const linkDocument = this.cache.transformForLink(options.query);
+        const linkDocument = this.cache.transformForLink(query);
 
         return this.getObservableFromLink<TData>(
           linkDocument,
@@ -972,7 +971,6 @@ export class QueryManager {
 
       const resultsFromLink = () =>
         getResultsFromLink({
-          query,
           variables,
           context,
         });

@@ -4735,44 +4735,44 @@ describe.skip("Type Tests", () => {
     const mutation = gql``;
 
     {
-      const [execute] = useMutation(mutation);
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(mutation);
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(mutation, {});
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(mutation, {});
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(mutation, { variables: {} });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(mutation, { variables: {} });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(mutation, { variables: { foo: "bar" } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(mutation, { variables: { foo: "bar" } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(mutation, { variables: { bar: "baz" } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(mutation, { variables: { bar: "baz" } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
   });
 
@@ -4780,44 +4780,44 @@ describe.skip("Type Tests", () => {
     const query: TypedDocumentNode<{ greeting: string }> = gql``;
 
     {
-      const [execute] = useMutation(query);
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(query);
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(query, {});
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(query, {});
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(query, { variables: {} });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(query, { variables: {} });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(query, { variables: { foo: "bar" } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(query, { variables: { foo: "bar" } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
     {
-      const [execute] = useMutation(query, { variables: { bar: "baz" } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { foo: "bar" } });
-      execute({ variables: { bar: "baz" } });
+      const [mutate] = useMutation(query, { variables: { bar: "baz" } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { foo: "bar" } });
+      mutate({ variables: { bar: "baz" } });
     }
   });
 
@@ -4828,11 +4828,11 @@ describe.skip("Type Tests", () => {
     > = gql``;
 
     {
-      const [execute] = useMutation(mutation);
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({
+      const [mutate] = useMutation(mutation);
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
@@ -4840,11 +4840,11 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {});
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({
+      const [mutate] = useMutation(mutation, {});
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
@@ -4852,11 +4852,11 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation);
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({
+      const [mutate] = useMutation(mutation);
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
@@ -4864,11 +4864,11 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {});
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({
+      const [mutate] = useMutation(mutation, {});
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
@@ -4876,11 +4876,11 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, { variables: {} });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({
+      const [mutate] = useMutation(mutation, { variables: {} });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
@@ -4888,16 +4888,16 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         variables: {
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
@@ -4910,16 +4910,16 @@ describe.skip("Type Tests", () => {
     const mutation: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     {
-      const [execute] = useMutation(mutation);
+      const [mutate] = useMutation(mutation);
       // @ts-expect-error
-      execute();
+      mutate();
       // @ts-expect-error
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error
         variables: {},
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: {
           foo: "bar",
@@ -4927,16 +4927,16 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {});
+      const [mutate] = useMutation(mutation, {});
       // @ts-expect-error
-      execute();
+      mutate();
       // @ts-expect-error
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error
         variables: {},
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: {
           foo: "bar",
@@ -4944,19 +4944,19 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         // @ts-expect-error
         variables: {},
       });
       // @ts-expect-error
-      execute();
+      mutate();
       // @ts-expect-error
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error
         variables: {},
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: {
           foo: "bar",
@@ -4964,20 +4964,20 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, { variables: undefined });
+      const [mutate] = useMutation(mutation, { variables: undefined });
       // @ts-expect-error
-      execute();
+      mutate();
       // @ts-expect-error
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error
         variables: {},
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: undefined,
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: {
           foo: "bar",
@@ -4985,25 +4985,25 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         // @ts-expect-error
         variables: {
           foo: "bar",
         },
       });
       // @ts-expect-error
-      execute();
+      mutate();
       // @ts-expect-error
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error
         variables: {},
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: undefined,
       });
-      execute({
+      mutate({
         // @ts-expect-error
         variables: {
           foo: "bar",
@@ -5017,38 +5017,18 @@ describe.skip("Type Tests", () => {
       gql``;
 
     {
-      const [execute] = useMutation(mutation);
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { limit: 10 } });
-      execute({
+      const [mutate] = useMutation(mutation);
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { limit: 10 } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
-        variables: {
-          limit: 10,
-          // @ts-expect-error
-          foo: "bar",
-        },
-      });
-    }
-    {
-      const [execute] = useMutation(mutation, {});
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { limit: 10 } });
-      execute({
-        variables: {
-          // @ts-expect-error
-          foo: "bar",
-        },
-      });
-      execute({
+      mutate({
         variables: {
           limit: 10,
           // @ts-expect-error
@@ -5057,38 +5037,18 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, { variables: {} });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { limit: 10 } });
-      execute({
+      const [mutate] = useMutation(mutation, {});
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { limit: 10 } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
-        variables: {
-          limit: 10,
-          // @ts-expect-error
-          foo: "bar",
-        },
-      });
-    }
-    {
-      const [execute] = useMutation(mutation, { variables: { limit: 10 } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { limit: 10 } });
-      execute({
-        variables: {
-          // @ts-expect-error
-          foo: "bar",
-        },
-      });
-      execute({
+      mutate({
         variables: {
           limit: 10,
           // @ts-expect-error
@@ -5097,23 +5057,63 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, { variables: {} });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { limit: 10 } });
+      mutate({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      mutate({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [mutate] = useMutation(mutation, { variables: { limit: 10 } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { limit: 10 } });
+      mutate({
+        variables: {
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+      mutate({
+        variables: {
+          limit: 10,
+          // @ts-expect-error
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [mutate] = useMutation(mutation, {
         variables: {
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { limit: 10 } });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { limit: 10 } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           limit: 10,
           // @ts-expect-error
@@ -5122,24 +5122,24 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         variables: {
           limit: 10,
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { limit: 10 } });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { limit: 10 } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           limit: 10,
           // @ts-expect-error
@@ -5154,23 +5154,23 @@ describe.skip("Type Tests", () => {
       gql``;
 
     {
-      const [execute] = useMutation(mutation);
+      const [mutate] = useMutation(mutation);
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error
@@ -5179,23 +5179,23 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {});
+      const [mutate] = useMutation(mutation, {});
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error
@@ -5204,23 +5204,23 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, { variables: {} });
+      const [mutate] = useMutation(mutation, { variables: {} });
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error
@@ -5229,18 +5229,18 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, { variables: { id: "1" } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({
+      const [mutate] = useMutation(mutation, { variables: { id: "1" } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error
@@ -5253,23 +5253,23 @@ describe.skip("Type Tests", () => {
       // variables due to the mismatch in variables passed to `useMutation`, but
       // we are ok with this tradeoff since fixing the invalid variable to
       // `useMutation` will update the `mutate` function correctly.
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         variables: {
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error
@@ -5278,24 +5278,24 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         variables: {
           id: "1",
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({
         variables: {
           // @ts-expect-error
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error
@@ -5312,31 +5312,31 @@ describe.skip("Type Tests", () => {
     > = gql``;
 
     {
-      const [execute] = useMutation(mutation);
+      const [mutate] = useMutation(mutation);
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",
@@ -5346,31 +5346,31 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {});
+      const [mutate] = useMutation(mutation, {});
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",
@@ -5380,31 +5380,31 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, { variables: {} });
+      const [mutate] = useMutation(mutation, { variables: {} });
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",
@@ -5414,62 +5414,33 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         variables: { language: "en" },
       });
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
-        variables: {
-          id: "1",
-          // @ts-expect-error unknown variable
-          foo: "bar",
-        },
-      });
-      execute({
-        variables: {
-          id: "1",
-          language: "en",
-          // @ts-expect-error unknown variable
-          foo: "bar",
-        },
-      });
-    }
-    {
-      const [execute] = useMutation(mutation, { variables: { id: "1" } });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
-        variables: {
-          // @ts-expect-error unknown variable
-          foo: "bar",
-        },
-      });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",
@@ -5479,28 +5450,57 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, { variables: { id: "1" } });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      mutate({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      mutate({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [mutate] = useMutation(mutation, {
         variables: { id: "1", language: "en" },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",
@@ -5510,71 +5510,36 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
         variables: {
           // @ts-expect-error unknown variables
           foo: "bar",
         },
       });
       // @ts-expect-error missing variables
-      execute();
+      mutate();
       // @ts-expect-error missing variables
-      execute({});
-      execute({
+      mutate({});
+      mutate({
         // @ts-expect-error missing variables
         variables: {},
       });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
-        variables: {
-          id: "1",
-          language: "en",
-          // @ts-expect-error unknown variable
-          foo: "bar",
-        },
-      });
-    }
-    {
-      const [execute] = useMutation(mutation, {
-        variables: {
-          id: "1",
-          // @ts-expect-error unknown variables
-          foo: "bar",
-        },
-      });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
-        variables: {
-          // @ts-expect-error unknown variable
-          foo: "bar",
-        },
-      });
-      execute({
-        variables: {
-          id: "1",
-          // @ts-expect-error unknown variable
-          foo: "bar",
-        },
-      });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",
@@ -5584,7 +5549,42 @@ describe.skip("Type Tests", () => {
       });
     }
     {
-      const [execute] = useMutation(mutation, {
+      const [mutate] = useMutation(mutation, {
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variables
+          foo: "bar",
+        },
+      });
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
+        variables: {
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      mutate({
+        variables: {
+          id: "1",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+      mutate({
+        variables: {
+          id: "1",
+          language: "en",
+          // @ts-expect-error unknown variable
+          foo: "bar",
+        },
+      });
+    }
+    {
+      const [mutate] = useMutation(mutation, {
         variables: {
           id: "1",
           language: "en",
@@ -5592,25 +5592,25 @@ describe.skip("Type Tests", () => {
           foo: "bar",
         },
       });
-      execute();
-      execute({});
-      execute({ variables: {} });
-      execute({ variables: { id: "1" } });
-      execute({ variables: { id: "1", language: "en" } });
-      execute({
+      mutate();
+      mutate({});
+      mutate({ variables: {} });
+      mutate({ variables: { id: "1" } });
+      mutate({ variables: { id: "1", language: "en" } });
+      mutate({
         variables: {
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           // @ts-expect-error unknown variable
           foo: "bar",
         },
       });
-      execute({
+      mutate({
         variables: {
           id: "1",
           language: "en",

@@ -863,9 +863,12 @@ export class QueryManager {
     const markResult = (
       result: FetchResult,
       document: DocumentNode,
-      variables: TVars,
-      cacheWriteBehavior: CacheWriteBehavior
+      variables: TVars
     ) => {
+      const cacheWriteBehavior =
+        fetchPolicy === "no-cache" ?
+          CacheWriteBehavior.FORBID
+        : CacheWriteBehavior.MERGE;
       const merger = new DeepMerger();
       const diff = readCache();
 
@@ -943,14 +946,7 @@ export class QueryManager {
             // Use linkDocument rather than queryInfo.document so the
             // operation/fragments used to write the result are the same as the
             // ones used to obtain it from the link.
-            markResult(
-              result,
-              linkDocument,
-              variables,
-              fetchPolicy === "no-cache" ?
-                CacheWriteBehavior.FORBID
-              : CacheWriteBehavior.MERGE
-            );
+            markResult(result, linkDocument, variables);
 
             if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };

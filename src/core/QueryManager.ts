@@ -807,10 +807,11 @@ export class QueryManager {
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
+    this.unwatchedQueries.add(queryId);
+
     const query = this.transform(options.query);
     const variables = this.getVariables(query, options.variables) as TVars;
     const defaults = this.defaultOptions.query;
-    this.unwatchedQueries.add(queryId);
 
     let {
       fetchPolicy = defaults?.fetchPolicy || "cache-first",

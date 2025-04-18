@@ -60,7 +60,7 @@ export type LazyQueryExecFunction<
 /** @deprecated Use `useMutation.Options` instead */
 export type MutationHookOptions<
   TData = unknown,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
 > = useMutation.Options<TData, TVariables, TContext, TCache>;
@@ -71,7 +71,7 @@ export type MutationResult<TData = unknown> = useMutation.Result<TData>;
 /** @deprecated Use `useMutation.MutationFunctionOptions` instead */
 export type MutationFunctionOptions<
   TData = unknown,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
 > = useMutation.MutationFunctionOptions<TData, TVariables, TContext, TCache>;
@@ -79,7 +79,7 @@ export type MutationFunctionOptions<
 /** @deprecated Use `useMutation.ResultTuple` instead */
 export type MutationTuple<
   TData,
-  TVariables,
+  TVariables extends OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
 > = useMutation.ResultTuple<TData, TVariables, TContext, TCache>;

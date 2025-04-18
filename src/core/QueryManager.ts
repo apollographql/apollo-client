@@ -892,32 +892,6 @@ export class QueryManager {
         // through the link chain.
         const linkDocument = this.cache.transformForLink(query);
 
-        const writeToCache = <TData>(result: FetchResult<TData>) => {
-          // Using a transaction here so we have a chance to read the result
-          // back from the cache before the watch callback fires as a result
-          // of writeQuery, so we can store the new diff quietly and ignore
-          // it when we receive it redundantly from the watch callback.
-          this.cache.performTransaction((cache) => {
-            cache.writeQuery({
-              query: linkDocument,
-              data: result.data as Unmasked<TData>,
-              variables,
-              overwrite: false,
-            });
-
-            const diff = cache.diff<TData>({
-              query: linkDocument,
-              variables,
-              returnPartialData: true,
-              optimistic: true,
-            });
-
-            if (diff.complete) {
-              (result as any).data = diff.result;
-            }
-          });
-        };
-
         return this.getObservableFromLink<TData>(
           linkDocument,
           context,
@@ -945,7 +919,29 @@ export class QueryManager {
           }),
           tap((result) => {
             if (fetchPolicy !== "no-cache" && result.data) {
-              writeToCache(result);
+              // Using a transaction here so we have a chance to read the result
+              // back from the cache before the watch callback fires as a result
+              // of writeQuery, so we can store the new diff quietly and ignore
+              // it when we receive it redundantly from the watch callback.
+              this.cache.performTransaction((cache) => {
+                cache.writeQuery({
+                  query: linkDocument,
+                  data: result.data as Unmasked<TData>,
+                  variables,
+                  overwrite: false,
+                });
+
+                const diff = cache.diff<TData>({
+                  query: linkDocument,
+                  variables,
+                  returnPartialData: true,
+                  optimistic: true,
+                });
+
+                if (diff.complete) {
+                  (result as any).data = diff.result;
+                }
+              });
             }
           }),
           catchError((error) => {

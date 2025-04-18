@@ -14,6 +14,7 @@ import {
 import type {
   FetchResult,
   GraphQLRequest,
+  LinkRequest,
   NextLink,
   Operation,
   RequestHandler,
@@ -68,7 +69,7 @@ export class ApolloLink {
 
   public static execute(
     link: ApolloLink,
-    operation: GraphQLRequest
+    operation: LinkRequest
   ): Observable<FetchResult> {
     return (
       link.request(

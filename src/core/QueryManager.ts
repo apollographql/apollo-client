@@ -902,10 +902,7 @@ export class QueryManager {
             return { data };
           }
 
-          return {
-            data: errorPolicy === "none" ? undefined : data,
-            error: new CombinedGraphQLErrors(result),
-          };
+          return { data, error: new CombinedGraphQLErrors(result) };
         }),
         map((result) => {
           let data = result.data;

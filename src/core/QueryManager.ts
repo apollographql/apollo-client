@@ -898,10 +898,7 @@ export class QueryManager {
         const linkDocument = this.cache.transformForLink(query);
 
         const writeToCache = <TData>(result: FetchResult<TData>) => {
-          if (
-            cacheWriteBehavior === CacheWriteBehavior.FORBID ||
-            !shouldWriteResult(result, errorPolicy)
-          ) {
+          if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
             return;
           }
 
@@ -946,7 +943,9 @@ export class QueryManager {
 
             result.data = getMergedData(result);
 
-            writeToCache(result);
+            if (shouldWriteResult(result, errorPolicy)) {
+              writeToCache(result);
+            }
 
             if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };

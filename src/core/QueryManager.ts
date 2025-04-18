@@ -962,7 +962,14 @@ export class QueryManager {
 
             return of(aqr);
           }),
-          validateDidEmitValue()
+          validateDidEmitValue(),
+          map(({ data, error }) => {
+            if (error) {
+              return { data, error };
+            }
+
+            return { data };
+          })
         );
       };
 
@@ -979,14 +986,6 @@ export class QueryManager {
             fetchPolicy,
             errorPolicy,
           }
-        ).pipe(
-          map(({ data, error }) => {
-            if (error) {
-              return { data, error };
-            }
-
-            return { data };
-          })
         );
 
       switch (fetchPolicy) {

@@ -867,7 +867,7 @@ export class QueryManager {
         variables,
       });
 
-      const getResultsFromLink = () => {
+      const resultsFromLink = () => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
         const cacheWriteBehavior =
           fetchPolicy === "no-cache" ?
@@ -965,8 +965,6 @@ export class QueryManager {
           })
         );
       };
-
-      const resultsFromLink = () => getResultsFromLink();
 
       switch (fetchPolicy) {
         default:

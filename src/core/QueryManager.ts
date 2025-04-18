@@ -160,7 +160,6 @@ interface QueryManagerOptions {
 }
 
 export class QueryManager {
-  public cache: ApolloCache;
   public defaultOptions: DefaultOptions;
 
   public readonly client: ApolloClient;
@@ -209,7 +208,6 @@ export class QueryManager {
     );
 
     this.client = options.client;
-    this.cache = this.client.cache;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;
@@ -237,6 +235,10 @@ export class QueryManager {
 
   get link() {
     return this.client.link;
+  }
+
+  get cache() {
+    return this.client.cache;
   }
 
   /**

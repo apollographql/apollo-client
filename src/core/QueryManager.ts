@@ -898,6 +898,10 @@ export class QueryManager {
               : CacheWriteBehavior.MERGE
             );
 
+            if (!hasErrors) {
+              return { data: result.data };
+            }
+
             const aqr: QueryResult<TData> = {
               data: result.data as TData,
             };
@@ -906,11 +910,11 @@ export class QueryManager {
             // want to ensure we properly set `data` if we're reporting on an old
             // result which will not be caught by the conditional above that ends up
             // throwing the markError result.
-            if (hasErrors && errorPolicy === "none") {
+            if (errorPolicy === "none") {
               aqr.data = void 0 as TData;
             }
 
-            if (hasErrors && errorPolicy !== "ignore") {
+            if (errorPolicy !== "ignore") {
               aqr.error = new CombinedGraphQLErrors(result);
             }
 

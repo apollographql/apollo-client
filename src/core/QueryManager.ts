@@ -903,17 +903,9 @@ export class QueryManager {
             }
 
             const aqr: QueryResult<TData> = {
-              data: result.data as TData,
+              data: errorPolicy === "none" ? undefined : (result.data as TData),
               error: new CombinedGraphQLErrors(result),
             };
-
-            // In the case we start multiple network requests simulatenously, we
-            // want to ensure we properly set `data` if we're reporting on an old
-            // result which will not be caught by the conditional above that ends up
-            // throwing the markError result.
-            if (errorPolicy === "none") {
-              aqr.data = void 0 as TData;
-            }
 
             return aqr;
           }),

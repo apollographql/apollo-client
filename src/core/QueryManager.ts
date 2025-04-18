@@ -809,7 +809,7 @@ export class QueryManager {
     this.unwatchedQueries.add(queryId);
 
     const query = this.transform(options.query);
-    const variables = this.getVariables(query, options.variables) as TVars;
+    const variables = this.getVariables(query, options.variables);
     const defaults = this.defaultOptions.query;
 
     let {

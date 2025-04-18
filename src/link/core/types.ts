@@ -4,10 +4,8 @@ import type { Observable } from "rxjs";
 
 import type {
   ApolloCache,
-  ApolloContext,
   ClientAwareness,
   DefaultContext,
-  OperationContext,
 } from "@apollo/client";
 
 export type { DocumentNode };

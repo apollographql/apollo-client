@@ -1174,6 +1174,9 @@ export class QueryManager {
         ...this.defaultContext,
         ...newContext,
         clientAwareness: this.clientAwareness,
+        apollo: {
+          cache: this.cache,
+        },
       };
     };
 

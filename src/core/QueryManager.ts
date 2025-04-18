@@ -921,29 +921,23 @@ export class QueryManager {
             let data = result.data;
 
             if (fetchPolicy !== "no-cache" && data) {
-              // Using a transaction here so we have a chance to read the result
-              // back from the cache before the watch callback fires as a result
-              // of writeQuery, so we can store the new diff quietly and ignore
-              // it when we receive it redundantly from the watch callback.
-              this.cache.performTransaction((cache) => {
-                cache.writeQuery({
-                  query: linkDocument,
-                  data: data as Unmasked<TData>,
-                  variables,
-                  overwrite: false,
-                });
-
-                const diff = cache.diff<TData>({
-                  query: linkDocument,
-                  variables,
-                  returnPartialData: false,
-                  optimistic: true,
-                });
-
-                if (diff.complete) {
-                  data = diff.result;
-                }
+              this.cache.writeQuery({
+                query: linkDocument,
+                data: data as Unmasked<TData>,
+                variables,
+                overwrite: false,
               });
+
+              const diff = this.cache.diff<TData>({
+                query: linkDocument,
+                variables,
+                returnPartialData: false,
+                optimistic: true,
+              });
+
+              if (diff.complete) {
+                data = diff.result;
+              }
             }
 
             return { ...result, data };

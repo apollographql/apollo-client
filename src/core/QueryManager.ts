@@ -861,7 +861,7 @@ export class QueryManager {
     };
 
     const markResult = (
-      result: FetchResult<T>,
+      result: FetchResult,
       document: DocumentNode,
       options: Pick<
         WatchQueryOptions,
@@ -873,7 +873,7 @@ export class QueryManager {
       const diff = readCache();
 
       if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-        const mergedData = mergeIncrementalData(diff.result, result);
+        const mergedData = mergeIncrementalData(diff.result as any, result);
         result.data = mergedData;
 
         // Detect the first chunk of a deferred query and merge it with existing
@@ -910,7 +910,7 @@ export class QueryManager {
           });
 
           if (diff.complete) {
-            result.data = diff.result;
+            (result as any).data = diff.result;
           }
         });
       }

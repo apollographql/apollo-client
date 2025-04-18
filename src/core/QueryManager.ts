@@ -863,7 +863,7 @@ export class QueryManager {
     const markResult = (
       result: FetchResult,
       document: DocumentNode,
-      options: Pick<WatchQueryOptions, "variables">,
+      variables: TVars,
       cacheWriteBehavior: CacheWriteBehavior
     ) => {
       const merger = new DeepMerger();
@@ -897,13 +897,13 @@ export class QueryManager {
         cache.writeQuery({
           query: document,
           data: result.data,
-          variables: options.variables,
+          variables,
           overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
         });
 
         const diff = cache.diff<TData>({
           query: document,
-          variables: options.variables,
+          variables,
           returnPartialData: true,
           optimistic: true,
         });
@@ -946,7 +946,7 @@ export class QueryManager {
             markResult(
               result,
               linkDocument,
-              { variables, fetchPolicy, errorPolicy },
+              variables,
               fetchPolicy === "no-cache" ?
                 CacheWriteBehavior.FORBID
               : CacheWriteBehavior.MERGE

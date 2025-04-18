@@ -663,9 +663,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.queryManager
-      .query(
+      .query<TFetchData, TFetchVars>(
         {
-          ...combinedOptions,
+          ...(combinedOptions as any),
           // The fetchMore request goes immediately to the network and does
           // not automatically write its result to the cache (hence no-cache
           // instead of network-only), because we allow the caller of

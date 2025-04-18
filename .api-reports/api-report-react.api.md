@@ -29,6 +29,7 @@ import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
+import { gql } from '@apollo/client';
 import type { GraphQLRequest } from '@apollo/client/link/core';
 import type { HookWrappers } from '@apollo/client/react/internal';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
@@ -309,6 +310,8 @@ type From<TData> = StoreObject_3 | Reference_2 | FragmentType<NoInfer_2<TData>> 
 
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
+
+export { gql }
 
 // @public (undocumented)
 interface IgnoreModifier {

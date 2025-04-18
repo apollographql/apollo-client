@@ -895,8 +895,6 @@ export class QueryManager {
           CacheWriteBehavior.FORBID
         : CacheWriteBehavior.MERGE;
 
-      result.data = getMergedData(result);
-
       if (
         cacheWriteBehavior === CacheWriteBehavior.FORBID ||
         !shouldWriteResult(result, errorPolicy)
@@ -949,6 +947,9 @@ export class QueryManager {
             if (hasErrors && errorPolicy === "none") {
               throw new CombinedGraphQLErrors(result);
             }
+
+            result.data = getMergedData(result);
+
             markResult(result, linkDocument, variables);
 
             if (!hasErrors || errorPolicy === "ignore") {

@@ -79,14 +79,6 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
   extensions?: Record<string, any>;
 }
 
-export interface LinkRequest {
-  query: DocumentNode;
-  variables?: OperationVariables;
-  operationName?: string;
-  context: OperationContext;
-  extensions?: Record<string, any>;
-}
-
 export interface Operation {
   query: DocumentNode;
   variables: Record<string, any>;

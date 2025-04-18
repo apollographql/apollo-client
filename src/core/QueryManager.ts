@@ -923,12 +923,6 @@ export class QueryManager {
     };
 
     const fromVariables = (variables: TVars) => {
-      const queryInfo = this.getOrCreateQuery(queryId);
-      queryInfo.init({
-        document: query,
-        variables,
-      });
-
       const resultsFromLink = () => {
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document

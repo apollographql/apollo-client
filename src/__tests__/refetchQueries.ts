@@ -606,7 +606,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("should not include unwatched single queries", async () => {
-    expect.assertions(18);
+    expect.assertions(17);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -631,16 +631,15 @@ describe("client.refetchQueries", () => {
     });
 
     const queries = client["queryManager"]["queries"];
-    expect(queries.size).toBe(4);
+    const unwatchedQueries = client["queryManager"]["unwatchedQueries"];
+    expect(queries.size).toBe(3);
+    expect(unwatchedQueries.size).toBe(1);
 
     queries.forEach((queryInfo, queryId) => {
       if (queryId === "1" || queryId === "2" || queryId === "3") {
         expect(queryInfo.observableQuery).toBeInstanceOf(ObservableQuery);
       } else if (queryId === "4") {
-        // One-off client.query-style queries never get an ObservableQuery, so
-        // they should not be included by include: "active".
-        expect(queryInfo.observableQuery).toBe(null);
-        expect(queryInfo.document).toBe(delayedQuery);
+        throw new Error("client.query should not be tracked in queries");
       }
     });
 

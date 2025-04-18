@@ -885,7 +885,7 @@ export class QueryManager {
       return result.data as TData;
     }
 
-    const markResult = <TData>(
+    const writeToCache = <TData>(
       result: FetchResult<TData>,
       document: DocumentNode,
       variables: TVars
@@ -950,7 +950,7 @@ export class QueryManager {
 
             result.data = getMergedData(result);
 
-            markResult(result, linkDocument, variables);
+            writeToCache(result, linkDocument, variables);
 
             if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };

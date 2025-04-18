@@ -19,7 +19,7 @@ export type MethodKeys<T> = {
 }[keyof T];
 
 export interface ApolloContext {
-  cache: ApolloCache;
+  readonly cache: ApolloCache;
 }
 
 export interface LinkContext extends DefaultContext {

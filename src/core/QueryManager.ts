@@ -88,10 +88,10 @@ import type {
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
-  LinkContext,
   MutateResult,
   MutationUpdaterFunction,
   OnQueryUpdated,
+  OperationContext,
   OperationVariables,
   QueryResult,
   SubscribeResult,
@@ -1168,7 +1168,7 @@ export class QueryManager {
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
 
-    const prepareContext = (context = {}): LinkContext => {
+    const prepareContext = (context = {}): OperationContext => {
       const newContext = this.localState.prepareContext(context);
       return {
         ...this.defaultContext,

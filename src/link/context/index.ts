@@ -1,13 +1,13 @@
 import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { DefaultContext, LinkContext } from "@apollo/client";
+import type { DefaultContext, OperationContext } from "@apollo/client";
 import type { GraphQLRequest } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 
 export type ContextSetter = (
   operation: GraphQLRequest,
-  prevContext: LinkContext
+  prevContext: OperationContext
 ) => Promise<DefaultContext> | DefaultContext;
 
 export function setContext(setter: ContextSetter): ApolloLink {

@@ -4,7 +4,7 @@ import type { Observable } from "rxjs";
 
 import type {
   DefaultContext,
-  LinkContext,
+  OperationContext,
   OperationVariables,
 } from "@apollo/client";
 
@@ -83,7 +83,7 @@ export interface LinkRequest {
   query: DocumentNode;
   variables?: OperationVariables;
   operationName?: string;
-  context: LinkContext;
+  context: OperationContext;
   extensions?: Record<string, any>;
 }
 
@@ -100,7 +100,7 @@ export interface Operation {
       ) => Partial<DefaultContext>
     ): void;
   };
-  getContext: () => LinkContext;
+  getContext: () => OperationContext;
 }
 
 export interface SingleExecutionResult<

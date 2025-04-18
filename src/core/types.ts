@@ -22,7 +22,7 @@ export interface ApolloContext {
   readonly cache: ApolloCache;
 }
 
-export interface LinkContext extends DefaultContext {
+export interface OperationContext extends DefaultContext {
   readonly apollo: ApolloContext;
 }
 

@@ -311,8 +311,6 @@ export class ApolloClient implements DataProxy {
 
     this.queryManager = new QueryManager({
       client: this,
-      cache: this.cache,
-      link: this.link,
       defaultOptions: this.defaultOptions,
       defaultContext,
       documentTransform,

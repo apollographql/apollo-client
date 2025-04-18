@@ -885,11 +885,10 @@ export class QueryManager {
         result.data = merger.merge(diff.result, result.data);
       }
 
-      if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-        return;
-      }
-
-      if (!shouldWriteResult(result, options.errorPolicy)) {
+      if (
+        cacheWriteBehavior === CacheWriteBehavior.FORBID ||
+        !shouldWriteResult(result, options.errorPolicy)
+      ) {
         return;
       }
 

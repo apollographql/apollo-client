@@ -1703,8 +1703,6 @@ export class QueryManager {
         return concat(resultsFromCache(readCache(), NetworkStatus.ready));
 
       case "network-only":
-        return resultsFromLink();
-
       case "no-cache":
         return resultsFromLink();
     }

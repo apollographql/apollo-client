@@ -877,62 +877,64 @@ export class QueryManager {
       return result.data as TData;
     }
 
-    const resultsFromLink = (variables: TVars) => {
+    const resultsFromLink = () => {
       // Performing transformForLink here gives this.cache a chance to fill in
       // missing fragment definitions (for example) before sending this document
       // through the link chain.
       const linkDocument = this.cache.transformForLink(query);
 
-      return this.getObservableFromLink<TData>(
-        linkDocument,
-        context,
-        variables
-      ).pipe(
-        validateDidEmitValue(),
-        map((result) => {
-          const graphQLErrors = getGraphQLErrorsFromResult(result);
-          const hasErrors = graphQLErrors.length > 0;
+      return this.getVariablesForLink(query, variables, context)
+        .pipe(
+          mergeMap((variables) =>
+            this.getObservableFromLink<TData>(linkDocument, context, variables)
+          )
+        )
+        .pipe(
+          validateDidEmitValue(),
+          map((result) => {
+            const graphQLErrors = getGraphQLErrorsFromResult(result);
+            const hasErrors = graphQLErrors.length > 0;
 
-          if (hasErrors && errorPolicy === "none") {
-            throw new CombinedGraphQLErrors(result);
-          }
-
-          let data = getMergedData(result);
-
-          if (fetchPolicy !== "no-cache" && data) {
-            this.cache.writeQuery({
-              query: linkDocument,
-              data: data as Unmasked<TData>,
-              variables,
-              overwrite: false,
-            });
-
-            const diff = this.cache.diff<TData>({
-              query: linkDocument,
-              variables,
-              returnPartialData: false,
-              optimistic: true,
-            });
-
-            if (diff.complete) {
-              data = diff.result;
+            if (hasErrors && errorPolicy === "none") {
+              throw new CombinedGraphQLErrors(result);
             }
-          }
 
-          if (!hasErrors || errorPolicy === "ignore") {
-            return { data };
-          }
+            let data = getMergedData(result);
 
-          return { data, error: new CombinedGraphQLErrors(result) };
-        })
-      );
+            if (fetchPolicy !== "no-cache" && data) {
+              this.cache.writeQuery({
+                query: linkDocument,
+                data: data as Unmasked<TData>,
+                variables,
+                overwrite: false,
+              });
+
+              const diff = this.cache.diff<TData>({
+                query: linkDocument,
+                variables,
+                returnPartialData: false,
+                optimistic: true,
+              });
+
+              if (diff.complete) {
+                data = diff.result;
+              }
+            }
+
+            if (!hasErrors || errorPolicy === "ignore") {
+              return { data };
+            }
+
+            return { data, error: new CombinedGraphQLErrors(result) };
+          })
+        );
     };
 
     return lastValueFrom(
       this.getVariablesForLink(query, variables, context).pipe(
         mergeMap((variables) => {
           if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
-            return resultsFromLink(variables);
+            return resultsFromLink();
           }
 
           const diff = readCache();
@@ -941,7 +943,7 @@ export class QueryManager {
             return resultsFromCache(diff).pipe(map((data) => ({ data })));
           }
 
-          return resultsFromLink(variables);
+          return resultsFromLink();
         }),
         catchError((error) => {
           if (errorPolicy === "none") {

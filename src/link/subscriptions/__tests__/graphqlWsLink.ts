@@ -5,8 +5,8 @@ import type { Client } from "graphql-ws";
 import type { Observable } from "rxjs";
 
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { execute } from "@apollo/client/link/core";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { executeWithDefaultContext as execute } from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {

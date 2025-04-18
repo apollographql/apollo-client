@@ -1,9 +1,11 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { gql } from "graphql-tag";
 
-import { execute } from "@apollo/client/link/core";
 import { SchemaLink } from "@apollo/client/link/schema";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {

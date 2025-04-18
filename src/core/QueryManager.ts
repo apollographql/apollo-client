@@ -868,7 +868,6 @@ export class QueryManager {
       });
 
       const getResultsFromLink = (
-        queryInfo: QueryInfo,
         cacheWriteBehavior: CacheWriteBehavior,
         options: {
           query: DocumentNode;
@@ -975,7 +974,6 @@ export class QueryManager {
 
       const resultsFromLink = () =>
         getResultsFromLink(
-          queryInfo,
           fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID
           : CacheWriteBehavior.MERGE,

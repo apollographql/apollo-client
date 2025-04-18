@@ -211,7 +211,7 @@ export function useMutation<
   TVariables extends OperationVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
-  TConfiguredVariables extends Partial<TVariables> = never,
+  TConfiguredVariables extends Partial<TVariables> = {},
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: useMutation.Options<
@@ -219,12 +219,15 @@ export function useMutation<
     NoInfer<TVariables>,
     TContext,
     TCache,
-    TConfiguredVariables
+    {
+      [K in keyof TConfiguredVariables]: K extends keyof TVariables ?
+        TConfiguredVariables[K]
+      : never;
+    }
   >
 ): useMutation.ResultTuple<
   TData,
-  [TConfiguredVariables] extends [never] ? TVariables
-  : SetOptionalVariables<TVariables, TConfiguredVariables>,
+  SetOptionalVariables<TVariables, TConfiguredVariables>,
   TContext,
   TCache
 > {

@@ -1,5 +1,122 @@
 # @apollo/client
 
+## 4.0.0-alpha.10
+
+### Major Changes
+
+- [#12559](https://github.com/apollographql/apollo-client/pull/12559) [`49ace0e`](https://github.com/apollographql/apollo-client/commit/49ace0e2119b7fd5997dcf051002ebd4ba2e0bc4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery.variables` can now be reset back to empty when calling `reobserve` with `variables: undefined`. Previously the `variables` key would be ignored so `variables` would remain unchanged.
+
+- [#12559](https://github.com/apollographql/apollo-client/pull/12559) [`49ace0e`](https://github.com/apollographql/apollo-client/commit/49ace0e2119b7fd5997dcf051002ebd4ba2e0bc4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `never` is no longer supported as a valid `TVariables` generic argument for APIs that require `variables` as part of its type. Use `Record<string, never>` instead.
+
+- [#12559](https://github.com/apollographql/apollo-client/pull/12559) [`49ace0e`](https://github.com/apollographql/apollo-client/commit/49ace0e2119b7fd5997dcf051002ebd4ba2e0bc4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - When passing a `variables` key with the value `undefined`, the value will be replaced by the default value in the query, if it is provided, rather than leave it as `undefined`.
+
+  ```ts
+  // given this query
+  const query = gql`
+    query PaginatedQuery($limit: Int! = 10, $offset: Int) {
+      list(limit: $limit, offset: $offset) {
+        id
+      }
+    }
+  `;
+
+  const observable = client.query({
+    query,
+    variables: { limit: 5, offset: 0 },
+  });
+  console.log(observable.variables); // => { limit: 5, offset: 0 }
+
+  observable.reobserve({ variables: { limit: undefined, offset: 10 } });
+  // limit is now `10`. This would previously be `undefined`
+  console.log(observable.variables); // => { limit: 10, offset: 10 }
+  ```
+
+- [#12562](https://github.com/apollographql/apollo-client/pull/12562) [`90bf0e6`](https://github.com/apollographql/apollo-client/commit/90bf0e61516a382182f212ac8ab891099e2eb009) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `client.query` no longer supports a `fetchPolicy` of `standby`. `standby` does not fetch and did not return `data`. `standby` is meant for watched queries where fetching should be on hold.
+
+### Minor Changes
+
+- [#12557](https://github.com/apollographql/apollo-client/pull/12557) [`51d26ae`](https://github.com/apollographql/apollo-client/commit/51d26ae631c6631a189c98ea9357b18e77a9a876) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add ability to specify message formatter for `CombinedGraphQLErrors` and `CombinedProtocolErrors`. To provide your own message formatter, override the static `formatMessage` property on these classes.
+
+  ```ts
+  CombinedGraphQLErrors.formatMessage = (
+    errors,
+    { result, defaultFormatMessage }
+  ) => {
+    return "Some formatted message";
+  };
+
+  CombinedProtocolErrors.formatMessage = (errors, { defaultFormatMessage }) => {
+    return "Some formatted message";
+  };
+  ```
+
+- [#12546](https://github.com/apollographql/apollo-client/pull/12546) [`5dffbbe`](https://github.com/apollographql/apollo-client/commit/5dffbbe407eb1d9adbcb0fff89f2d3a75dc1ad2b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a static `is` method to error types defined by Apollo Client. `is` makes it simpler to determine whether an error is a specific type, which can be helpful in cases where you'd like to narrow the error type in order to use specific properties from that error.
+
+  This change applies to the following error types:
+
+  - `CombinedGraphQLErrors`
+  - `CombinedProtocolErrors`
+  - `ServerError`
+  - `ServerParseError`
+  - `UnconventionalError`
+
+  **Example**
+
+  ```ts
+  import { CombinedGraphQLErrors } from "@apollo/client";
+
+  if (CombinedGraphQLErrors.is(error)) {
+    console.log(error.message);
+    error.errors.forEach((graphQLError) => console.log(graphQLError.message));
+  }
+  ```
+
+- [#12561](https://github.com/apollographql/apollo-client/pull/12561) [`99d72bf`](https://github.com/apollographql/apollo-client/commit/99d72bfdb38e3d9679f60b9acb065a84e3b42fd6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to detect if an error was an error was emitted from the link chain. This is useful if your application throws custom errors in other areas of the application and you'd like to differentiate them from errors emitted by the link chain itself.
+
+  To detect if an error was emitted from the link chain, use `LinkError.is`.
+
+  ```ts
+  import { LinkError } from "@apollo/client";
+
+  client.query({ query }).catch((error) => {
+    if (LinkError.is(error)) {
+      // This error originated from the link chain
+    }
+  });
+  ```
+
+### Patch Changes
+
+- [#12559](https://github.com/apollographql/apollo-client/pull/12559) [`49ace0e`](https://github.com/apollographql/apollo-client/commit/49ace0e2119b7fd5997dcf051002ebd4ba2e0bc4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `variables` option used with various APIs are now enforced more consistently across the client when `TVariables` contains required variables. If required `variables` are not provided, TypeScript will now complain that it requires a `variables` option.
+
+  This change affects the following APIs:
+
+  - `client.query`
+  - `client.mutate`
+  - `client.subscribe`
+  - `client.watchQuery`
+  - `useBackgroundQuery`
+  - `useQuery`
+  - `useSubscription`
+  - `useSuspenseQuery`
+
+- [#12559](https://github.com/apollographql/apollo-client/pull/12559) [`49ace0e`](https://github.com/apollographql/apollo-client/commit/49ace0e2119b7fd5997dcf051002ebd4ba2e0bc4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `variables` returned from `useLazyQuery`. When `called` is `false`, `variables` is now `Partial<TVariables>` instead of `TVariables`.
+
+- [#12562](https://github.com/apollographql/apollo-client/pull/12562) [`90bf0e6`](https://github.com/apollographql/apollo-client/commit/90bf0e61516a382182f212ac8ab891099e2eb009) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `client.query` no longer supports `notifyOnNetworkStatusChange` in options. An error will be thrown if this option is set. The effects of this option were not observable by `client.query` since `client.query` emits a single result.
+
+- [#12557](https://github.com/apollographql/apollo-client/pull/12557) [`51d26ae`](https://github.com/apollographql/apollo-client/commit/51d26ae631c6631a189c98ea9357b18e77a9a876) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update format of the error message for `CombinedGraphQLErrors` and `CombinedProtocolErrors` to be more like v3.x.
+
+  ```diff
+  console.log(error.message);
+  - `The GraphQL server returned with errors:
+  - - Email not found
+  - - Username already in use`
+  + `Email not found
+  + Username already in use`
+  ```
+
+- [#12559](https://github.com/apollographql/apollo-client/pull/12559) [`49ace0e`](https://github.com/apollographql/apollo-client/commit/49ace0e2119b7fd5997dcf051002ebd4ba2e0bc4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery.variables` has been updated to return `TVariables` rather than `TVariables | undefined`. This is more consistent with the runtime value where an empty object (`{}`) will be returned when the `variables` option is not provided.
+
 ## 4.0.0-alpha.9
 
 ### Major Changes

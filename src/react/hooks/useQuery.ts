@@ -34,7 +34,7 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/utilities";
+import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
 import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
@@ -44,10 +44,10 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useQuery {
-  export interface Options<
+  export type Options<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > {
+  > = {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: WatchQueryFetchPolicy;
 
@@ -65,9 +65,6 @@ export declare namespace useQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
     refetchWritePolicy?: RefetchWritePolicy;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-    variables?: TVariables;
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
     errorPolicy?: ErrorPolicy;
@@ -95,7 +92,7 @@ export declare namespace useQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
     skip?: boolean;
-  }
+  } & VariablesOption<TVariables>;
 
   export interface Result<
     TData = unknown,
@@ -140,9 +137,9 @@ export declare namespace useQuery {
     ) => Promise<QueryResult<MaybeMasked<TData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-    variables: TVariables | undefined;
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+    variables: TVariables;
 
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: <
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,
@@ -164,10 +161,10 @@ const lastWatchOptions = Symbol();
 
 interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
-  [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
+  [lastWatchOptions]?: Readonly<WatchQueryOptions<TVariables, TData>>;
 }
 
-interface InternalResult<TData, TVariables extends OperationVariables> {
+interface InternalResult<TData> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   current: ApolloQueryResult<TData>;
@@ -178,7 +175,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
-  resultData: InternalResult<TData, TVariables>;
+  resultData: InternalResult<TData>;
 }
 
 /**
@@ -220,7 +217,9 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
+  ...[options]: {} extends TVariables ?
+    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
 ): useQuery.Result<TData, TVariables> {
   "use no memo";
   return wrapHook(
@@ -233,13 +232,16 @@ export function useQuery<
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
-) {
+  options: useQuery.Options<
+    NoInfer<TData>,
+    NoInfer<TVariables>
+  > = {} as useQuery.Options<TData, TVariables>
+): useQuery.Result<TData, TVariables> {
   const client = useApolloClient(options.client);
   const { skip, ssr, ...opts } = options;
 
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> = mergeOptions(
-    client.defaultOptions.watchQuery,
+    client.defaultOptions.watchQuery as any,
     { ...opts, query }
   );
 
@@ -368,7 +370,7 @@ function useInitialFetchPolicyIfNecessary<
 
 function useResultSubscription<TData, TVariables extends OperationVariables>(
   observable: ObsQueryWithMeta<TData, TVariables>,
-  resultData: InternalResult<TData, TVariables>,
+  resultData: InternalResult<TData>,
   resultOverride: ApolloQueryResult<any> | undefined
 ) {
   "use no memo";
@@ -430,7 +432,7 @@ function useResubscribeIfNecessary<
   TVariables extends OperationVariables,
 >(
   /** this hook will mutate properties on `resultData` */
-  resultData: InternalResult<TData, TVariables>,
+  resultData: InternalResult<TData>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>

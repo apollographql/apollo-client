@@ -27,6 +27,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
+  registerLinkError,
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
@@ -60,11 +61,7 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  normalizeVariables,
-  onAnyEvent,
-  toQueryResult,
-} from "@apollo/client/utilities/internal";
+import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -96,12 +93,14 @@ import type {
   QueryNotification,
   QueryResult,
   SubscribeResult,
+  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
   MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
+  RefetchWritePolicy,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -113,7 +112,7 @@ const IGNORE = {} as IgnoreModifier;
 
 interface MutationStoreValue {
   mutation: DocumentNode;
-  variables: Record<string, any> | undefined;
+  variables: Record<string, any>;
   loading: boolean;
   error: Error | null;
 }
@@ -292,7 +291,7 @@ export class QueryManager {
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
 
-    variables = this.getVariables(mutation, variables) as TVariables;
+    variables = this.getVariables(mutation, variables);
     if (hasClientExports) {
       variables = (await this.localState.addExportedVariables(
         mutation,
@@ -300,8 +299,6 @@ export class QueryManager {
         context
       )) as TVariables;
     }
-
-    variables = normalizeVariables(variables);
 
     const mutationStoreValue =
       this.mutationStore &&
@@ -418,9 +415,7 @@ export class QueryManager {
             }
           },
 
-          error: (err) => {
-            const error = toErrorLike(err);
-
+          error: (error) => {
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
               mutationStoreValue.error = error;
@@ -788,13 +783,18 @@ export class QueryManager {
     return transformCache.get(document)!;
   }
 
-  private getVariables<TVariables>(
+  public getVariables<TVariables>(
     document: DocumentNode,
     variables?: TVariables
-  ): OperationVariables {
+  ): TVariables {
+    const defaultVars = this.getDocumentInfo(document).defaultVars;
+    const varsWithDefaults = Object.entries(variables ?? {}).map(
+      ([key, value]) => [key, value === undefined ? defaultVars[key] : value]
+    );
+
     return {
-      ...this.getDocumentInfo(document).defaultVars,
-      ...variables,
+      ...defaultVars,
+      ...Object.fromEntries(varsWithDefaults),
     };
   }
 
@@ -842,11 +842,12 @@ export class QueryManager {
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
-    checkDocument(options.query, OperationTypeNode.QUERY);
-
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+    return this.fetchQuery<TData, TVars>(queryId, {
+      ...(options as any),
+      query,
+    })
       .then((value) => ({
         ...value,
         data: this.maskOperation({
@@ -1108,7 +1109,7 @@ export class QueryManager {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          return of({ data: undefined, error: toErrorLike(error) });
+          return of({ data: undefined, error });
         }),
         filter((result) => !!(result.data || result.error))
       );
@@ -1241,16 +1242,25 @@ export class QueryManager {
       );
     }
 
-    return observable;
+    return observable.pipe(
+      catchError((error) => {
+        error = toErrorLike(error);
+        registerLinkError(error);
+        throw error;
+      })
+    );
   }
 
-  private getResultsFromLink<TData, TVars extends OperationVariables>(
+  private getResultsFromLink<TData, TVariables extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
-    options: Pick<
-      WatchQueryOptions<TVars, TData>,
-      "query" | "variables" | "context" | "fetchPolicy" | "errorPolicy"
-    >
+    options: {
+      query: DocumentNode;
+      variables: TVariables;
+      context: DefaultContext | undefined;
+      fetchPolicy: WatchQueryFetchPolicy | undefined;
+      errorPolicy: ErrorPolicy | undefined;
+    }
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
@@ -1312,8 +1322,6 @@ export class QueryManager {
         return aqr;
       }),
       catchError((error) => {
-        error = toErrorLike(error);
-
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
           queryInfo.resetLastWrite();
@@ -1397,7 +1405,7 @@ export class QueryManager {
       ) {
         queryInfo.observableQuery["applyNextFetchPolicy"](
           "after-fetch",
-          options
+          options as any
         );
       }
 
@@ -1672,7 +1680,15 @@ export class QueryManager {
       errorPolicy,
       returnPartialData,
       context,
-    }: WatchQueryOptions<TVars, TData>,
+    }: {
+      query: DocumentNode | TypedDocumentNode<TData, TVars>;
+      variables: TVars;
+      fetchPolicy?: WatchQueryFetchPolicy;
+      refetchWritePolicy?: RefetchWritePolicy;
+      errorPolicy?: ErrorPolicy;
+      returnPartialData?: boolean;
+      context?: DefaultContext;
+    },
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.

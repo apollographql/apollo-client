@@ -9,10 +9,7 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client";
-import type {
-  PreloadedQueryRef,
-  VariablesOption,
-} from "@apollo/client/react/internal";
+import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
   InternalQueryReference,
   wrapQueryRef,
@@ -20,7 +17,7 @@ import {
 import type {
   DeepPartial,
   NoInfer,
-  OnlyRequiredProperties,
+  VariablesOption,
 } from "@apollo/client/utilities";
 
 import { wrapHook } from "../hooks/internal/index.js";
@@ -44,21 +41,6 @@ export type PreloadQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
-
-type PreloadQueryOptionsArg<
-  TVariables extends OperationVariables,
-  TOptions = unknown,
-> = [TVariables] extends [never] ?
-  [options?: PreloadQueryOptions<never> & TOptions]
-: {} extends OnlyRequiredProperties<TVariables> ?
-  [
-    options?: PreloadQueryOptions<NoInfer<TVariables>> &
-      Omit<TOptions, "variables">,
-  ]
-: [
-    options: PreloadQueryOptions<NoInfer<TVariables>> &
-      Omit<TOptions, "variables">,
-  ];
 
 /**
  * A function that will begin loading a query when called. It's result can be
@@ -88,24 +70,6 @@ type PreloadQueryOptionsArg<
  */
 export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
-  <
-    TData,
-    TVariables extends OperationVariables,
-    TOptions extends Omit<PreloadQueryOptions, "variables">,
-  >(
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>, TOptions>
-  ): PreloadedQueryRef<
-    TOptions["errorPolicy"] extends "ignore" | "all" ?
-      TOptions["returnPartialData"] extends true ?
-        DeepPartial<TData> | undefined
-      : TData | undefined
-    : TOptions["returnPartialData"] extends true ? DeepPartial<TData>
-    : TData,
-    TVariables
-  >;
-
-  /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
@@ -133,7 +97,9 @@ export interface PreloadQueryFunction {
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-    ...[options]: PreloadQueryOptionsArg<NoInfer<TVariables>>
+    ...[options]: {} extends TVariables ?
+      [options?: PreloadQueryOptions<NoInfer<TVariables>>]
+    : [options: PreloadQueryOptions<NoInfer<TVariables>>]
   ): PreloadedQueryRef<TData, TVariables>;
 }
 

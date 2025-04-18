@@ -48,7 +48,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -121,7 +121,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -195,7 +195,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -269,7 +269,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -360,7 +360,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -437,7 +437,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -518,7 +518,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -615,7 +615,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -715,7 +715,7 @@ describe("client.watchQuery", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -792,7 +792,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -887,7 +887,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -985,7 +985,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1078,7 +1078,7 @@ describe("client.watchQuery", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -1168,7 +1168,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -1257,7 +1257,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -1326,13 +1326,16 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         age
       }
     `;
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1406,14 +1409,17 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         id
         age
       }
     `;
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           name
@@ -1492,13 +1498,16 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const fragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: TypedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         age
       }
     `;
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           name
@@ -1578,7 +1587,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1640,7 +1649,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -2525,7 +2534,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2602,7 +2611,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2678,7 +2687,7 @@ describe("client.watchQuery", () => {
       };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2756,7 +2765,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -3836,7 +3845,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -3896,7 +3905,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -3957,7 +3966,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4157,7 +4166,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4221,7 +4230,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4285,7 +4294,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4349,7 +4358,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -5086,7 +5095,7 @@ describe("observableQuery.subscribeToMore", () => {
       },
       {
         complete: true,
-        variables: undefined,
+        variables: {},
         previousData: {
           recentComment: {
             __typename: "Comment",
@@ -5229,7 +5238,7 @@ describe("observableQuery.subscribeToMore", () => {
       },
       {
         complete: true,
-        variables: undefined,
+        variables: {},
         previousData: {
           recentComment: {
             __typename: "Comment",
@@ -5378,7 +5387,7 @@ describe("observableQuery.subscribeToMore", () => {
       },
       {
         complete: true,
-        variables: undefined,
+        variables: {},
         previousData: {
           recentComment: {
             __typename: "Comment",
@@ -5431,7 +5440,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5493,7 +5502,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5556,7 +5565,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5618,7 +5627,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5671,7 +5680,7 @@ describe("client.mutate", () => {
           },
         },
       },
-      { context: undefined, variables: undefined }
+      { context: undefined, variables: {} }
     );
   });
 
@@ -5690,7 +5699,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5743,7 +5752,7 @@ describe("client.mutate", () => {
         | null;
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5802,7 +5811,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5882,7 +5891,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5951,7 +5960,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -6017,7 +6026,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -6088,7 +6097,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id

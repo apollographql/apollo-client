@@ -2790,7 +2790,17 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 });
 
 it("applies `returnPartialData` on next fetch when it changes between renders", async () => {
-  const { query } = setupVariablesCase();
+  const query: TypedDocumentNode<
+    VariablesCaseData,
+    Record<string, never>
+  > = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
 
   interface PartialData {
     character: {
@@ -3930,7 +3940,7 @@ it("masks queries when dataMasking is `true`", async () => {
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4019,7 +4029,7 @@ it("does not mask query when dataMasking is `false`", async () => {
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: TypedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4105,7 +4115,7 @@ it("does not mask query by default", async () => {
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: TypedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4190,7 +4200,7 @@ it("masks queries updated by the cache", async () => {
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4307,7 +4317,7 @@ it("does not rerender when updating field in named fragment", async () => {
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4421,7 +4431,7 @@ it("masks result from cache when using with cache-first fetch policy", async () 
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4517,7 +4527,7 @@ it("masks cache and network result when using cache-and-network fetch policy", a
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4633,7 +4643,7 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4748,7 +4758,7 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: MaskedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -6976,7 +6986,7 @@ describe("fetchMore", () => {
         subscriptionData: {
           data: { greetingUpdated: "Subscription hello" },
         },
-        variables: undefined,
+        variables: {},
       }
     );
   });
@@ -7011,143 +7021,145 @@ describe.skip("type tests", () => {
   it("returns TData in default case", () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query);
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, { variables: { id: "1" } });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query);
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { variables: { id: "1" } });
+      const { data } = useReadQuery(queryRef);
 
-    const { data: explicit } = useReadQuery(explicitQueryRef);
-
-    expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
-      const [queryRef] = useBackgroundQuery(maskedQuery);
+      const [queryRef] = useBackgroundQuery(maskedQuery, {
+        variables: { id: "1" },
+      });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery);
+      >(maskedQuery, { variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery);
+      >(maskedQuery, { variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
 
   it('returns TData | undefined with errorPolicy: "ignore"', () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      errorPolicy: "ignore",
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        errorPolicy: "ignore",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-    expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      errorPolicy: "ignore",
-    });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { errorPolicy: "ignore", variables: { id: "1" } });
 
-    const { data: explicit } = useReadQuery(explicitQueryRef);
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-    expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
-      const [queryRef] = useBackgroundQuery(maskedQuery);
+      const [queryRef] = useBackgroundQuery(maskedQuery, {
+        variables: { id: "1" },
+      });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery);
+      >(maskedQuery, { variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery);
-      const { data } = useReadQuery(queryRef);
+      >(maskedQuery, { variables: { id: "1" } });
+      const { data: data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
 
   it('returns TData | undefined with errorPolicy: "all"', () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      errorPolicy: "all",
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        errorPolicy: "all",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData | undefined>();
-    expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery(query, {
-      errorPolicy: "all",
-    });
-    const { data: explicit } = useReadQuery(explicitQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        errorPolicy: "all",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
-    expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         errorPolicy: "all",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         Masked<MaskedVariablesCaseData> | undefined
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        UnmaskedVariablesCaseData | undefined
       >();
     }
 
@@ -7155,27 +7167,21 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { errorPolicy: "all" });
+      >(maskedQuery, { errorPolicy: "all", variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
-      expectTypeOf(data).not.toEqualTypeOf<
-        UnmaskedVariablesCaseData | undefined
-      >();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { errorPolicy: "all" });
+      >(maskedQuery, { errorPolicy: "all", variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         Masked<MaskedVariablesCaseData> | undefined
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        UnmaskedVariablesCaseData | undefined
       >();
     }
   });
@@ -7183,93 +7189,93 @@ describe.skip("type tests", () => {
   it('returns TData with errorPolicy: "none"', () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      errorPolicy: "none",
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery(query, {
-      errorPolicy: "none",
-    });
-    const { data: explicit } = useReadQuery(explicitQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         errorPolicy: "none",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { errorPolicy: "none" });
+      >(maskedQuery, { errorPolicy: "none", variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { errorPolicy: "none" });
+      >(maskedQuery, { errorPolicy: "none", variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
 
   it("returns DeepPartial<TData> with returnPartialData: true", () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      returnPartialData: true,
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        returnPartialData: true,
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      returnPartialData: true,
-    });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { returnPartialData: true, variables: { id: "1" } });
+      const { data } = useReadQuery(queryRef);
 
-    const { data: explicit } = useReadQuery(explicitQueryRef);
-
-    expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         returnPartialData: true,
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>>
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
       >();
     }
 
@@ -7277,27 +7283,21 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: true });
+      >(maskedQuery, { returnPartialData: true, variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<DeepPartial<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
-      >();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: true });
+      >(maskedQuery, { returnPartialData: true, variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>>
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
       >();
     }
   });
@@ -7305,116 +7305,114 @@ describe.skip("type tests", () => {
   it("returns TData with returnPartialData: false", () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      returnPartialData: false,
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        returnPartialData: false,
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(inferred).not.toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      returnPartialData: false,
-    });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { returnPartialData: false, variables: { id: "1" } });
 
-    const { data: explicit } = useReadQuery(explicitQueryRef);
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(explicit).not.toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         returnPartialData: false,
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: false });
+      >(maskedQuery, { returnPartialData: false, variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: false });
+      >(maskedQuery, { returnPartialData: false, variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
 
   it("returns TData when passing an option that does not affect TData", () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      fetchPolicy: "no-cache",
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        fetchPolicy: "no-cache",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(inferred).not.toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      fetchPolicy: "no-cache",
-    });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { fetchPolicy: "no-cache", variables: { id: "1" } });
 
-    const { data: explicit } = useReadQuery(explicitQueryRef);
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
-    expectTypeOf(explicit).not.toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         fetchPolicy: "no-cache",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { fetchPolicy: "no-cache" });
+      >(maskedQuery, { fetchPolicy: "no-cache", variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { fetchPolicy: "no-cache" });
+      >(maskedQuery, { fetchPolicy: "no-cache", variables: { id: "1" } });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<Masked<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
 
@@ -7422,52 +7420,45 @@ describe.skip("type tests", () => {
     const { query } = setupVariablesCase();
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
-    const [inferredPartialDataIgnoreQueryRef] = useBackgroundQuery(query, {
-      returnPartialData: true,
-      errorPolicy: "ignore",
-    });
-    const { data: inferredPartialDataIgnore } = useReadQuery(
-      inferredPartialDataIgnoreQueryRef
-    );
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        returnPartialData: true,
+        errorPolicy: "ignore",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferredPartialDataIgnore).toEqualTypeOf<
-      DeepPartial<VariablesCaseData> | undefined
-    >();
-    expectTypeOf(
-      inferredPartialDataIgnore
-    ).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+    }
 
-    const [explicitPartialDataIgnoreQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      returnPartialData: true,
-      errorPolicy: "ignore",
-    });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: "ignore",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    const { data: explicitPartialDataIgnore } = useReadQuery(
-      explicitPartialDataIgnoreQueryRef
-    );
-
-    expectTypeOf(explicitPartialDataIgnore).toEqualTypeOf<
-      DeepPartial<VariablesCaseData> | undefined
-    >();
-    expectTypeOf(
-      explicitPartialDataIgnore
-    ).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<
+        DeepPartial<VariablesCaseData> | undefined
+      >();
+    }
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         returnPartialData: true,
         errorPolicy: "ignore",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>> | undefined
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData> | undefined
       >();
     }
 
@@ -7475,79 +7466,69 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: true, errorPolicy: "ignore" });
+      >(maskedQuery, {
+        returnPartialData: true,
+        errorPolicy: "ignore",
+        variables: { id: "1" },
+      });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<MaskedVariablesCaseData> | undefined
       >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData> | undefined
-      >();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: true, errorPolicy: "ignore" });
+      >(maskedQuery, {
+        returnPartialData: true,
+        errorPolicy: "ignore",
+        variables: { id: "1" },
+      });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>> | undefined
       >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData> | undefined
-      >();
     }
 
-    const [inferredPartialDataNoneQueryRef] = useBackgroundQuery(query, {
-      returnPartialData: true,
-      errorPolicy: "none",
-    });
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        returnPartialData: true,
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    const { data: inferredPartialDataNone } = useReadQuery(
-      inferredPartialDataNoneQueryRef
-    );
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+    }
 
-    expectTypeOf(inferredPartialDataNone).toEqualTypeOf<
-      DeepPartial<VariablesCaseData>
-    >();
-    expectTypeOf(
-      inferredPartialDataNone
-    ).not.toEqualTypeOf<VariablesCaseData>();
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        returnPartialData: true,
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    const [explicitPartialDataNoneQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      returnPartialData: true,
-      errorPolicy: "none",
-    });
-
-    const { data: explicitPartialDataNone } = useReadQuery(
-      explicitPartialDataNoneQueryRef
-    );
-
-    expectTypeOf(explicitPartialDataNone).toEqualTypeOf<
-      DeepPartial<VariablesCaseData>
-    >();
-    expectTypeOf(
-      explicitPartialDataNone
-    ).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+    }
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         returnPartialData: true,
         errorPolicy: "none",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>>
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
       >();
     }
 
@@ -7555,27 +7536,29 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: true, errorPolicy: "none" });
+      >(maskedQuery, {
+        returnPartialData: true,
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<DeepPartial<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
-      >();
     }
 
     {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { returnPartialData: true, errorPolicy: "none" });
+      >(maskedQuery, {
+        returnPartialData: true,
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>>
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
       >();
     }
   });
@@ -7583,29 +7566,33 @@ describe.skip("type tests", () => {
   it("returns correct TData type when combined options that do not affect TData", () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      fetchPolicy: "no-cache",
-      returnPartialData: true,
-      errorPolicy: "none",
-    });
-    const { data: inferred } = useReadQuery(inferredQueryRef);
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        fetchPolicy: "no-cache",
+        returnPartialData: true,
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(inferred).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    expectTypeOf(inferred).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, {
-      fetchPolicy: "no-cache",
-      returnPartialData: true,
-      errorPolicy: "none",
-    });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, {
+        fetchPolicy: "no-cache",
+        returnPartialData: true,
+        errorPolicy: "none",
+        variables: { id: "1" },
+      });
 
-    const { data: explicit } = useReadQuery(explicitQueryRef);
+      const { data } = useReadQuery(queryRef);
 
-    expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
-    expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
@@ -7614,14 +7601,12 @@ describe.skip("type tests", () => {
         fetchPolicy: "no-cache",
         returnPartialData: true,
         errorPolicy: "none",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>>
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
       >();
     }
 
@@ -7633,13 +7618,11 @@ describe.skip("type tests", () => {
         fetchPolicy: "no-cache",
         returnPartialData: true,
         errorPolicy: "none",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<DeepPartial<MaskedVariablesCaseData>>();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
-      >();
     }
 
     {
@@ -7650,14 +7633,12 @@ describe.skip("type tests", () => {
         fetchPolicy: "no-cache",
         returnPartialData: true,
         errorPolicy: "none",
+        variables: { id: "1" },
       });
       const { data } = useReadQuery(queryRef);
 
       expectTypeOf(data).toEqualTypeOf<
         DeepPartial<Masked<MaskedVariablesCaseData>>
-      >();
-      expectTypeOf(data).not.toEqualTypeOf<
-        DeepPartial<UnmaskedVariablesCaseData>
       >();
     }
   });
@@ -7666,44 +7647,50 @@ describe.skip("type tests", () => {
     const { query } = setupVariablesCase();
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, {
-      skip: true,
-    });
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        skip: true,
+        variables: { id: "1" },
+      });
 
-    expectTypeOf(inferredQueryRef).toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(inferredQueryRef).toMatchTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData>
-    >();
-
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, { skip: true });
-
-    expectTypeOf(explicitQueryRef).toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(explicitQueryRef).toMatchTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables>
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+    }
 
     {
-      const [queryRef] = useBackgroundQuery(maskedQuery, { skip: true });
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, { skip: true, variables: { id: "1" } });
+
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+    }
+
+    {
+      const [queryRef] = useBackgroundQuery(maskedQuery, {
+        skip: true,
+        variables: { id: "1" },
+      });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            Masked<MaskedVariablesCaseData>,
+            VariablesCaseVariables
+          >
+        | undefined
       >();
     }
 
@@ -7711,13 +7698,13 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { skip: true });
+      >(maskedQuery, { skip: true, variables: { id: "1" } });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<MaskedVariablesCaseData, VariablesCaseVariables>
         | undefined
       >();
     }
@@ -7726,14 +7713,18 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { skip: true });
+      >(maskedQuery, { skip: true, variables: { id: "1" } });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            Masked<MaskedVariablesCaseData>,
+            VariablesCaseVariables
+          >
+        | undefined
       >();
     }
 
@@ -7744,31 +7735,36 @@ describe.skip("type tests", () => {
       skip: true,
     };
 
-    const [dynamicQueryRef] = useBackgroundQuery(query, {
-      skip: options.skip,
-    });
+    {
+      const [queryRef] = useBackgroundQuery(query, {
+        skip: options.skip,
+        variables: { id: "1" },
+      });
 
-    expectTypeOf(dynamicQueryRef).toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(dynamicQueryRef).toMatchTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables>
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+    }
 
     {
       const [queryRef] = useBackgroundQuery(maskedQuery, {
         skip: options.skip,
+        variables: { id: "1" },
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<UnmaskedVariablesCaseData, VariablesCaseVariables> | undefined
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            Masked<MaskedVariablesCaseData>,
+            VariablesCaseVariables
+          >
+        | undefined
       >();
     }
 
@@ -7776,13 +7772,13 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, { skip: options.skip });
+      >(maskedQuery, { skip: options.skip, variables: { id: "1" } });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<MaskedVariablesCaseData, VariablesCaseVariables>
         | undefined
       >();
     }
@@ -7791,14 +7787,18 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, { skip: options.skip });
+      >(maskedQuery, { skip: options.skip, variables: { id: "1" } });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            Masked<MaskedVariablesCaseData>,
+            VariablesCaseVariables
+          >
+        | undefined
       >();
     }
   });
@@ -7806,22 +7806,20 @@ describe.skip("type tests", () => {
   it("returns `undefined` when using `skipToken` unconditionally", () => {
     const { query } = setupVariablesCase();
 
-    const [inferredQueryRef] = useBackgroundQuery(query, skipToken);
+    {
+      const [queryRef] = useBackgroundQuery(query, skipToken);
 
-    expectTypeOf(inferredQueryRef).toEqualTypeOf<undefined>();
-    expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<undefined>();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, skipToken);
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, skipToken);
 
-    expectTypeOf(explicitQueryRef).toEqualTypeOf<undefined>();
-    expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<undefined>();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
@@ -7829,10 +7827,6 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery(maskedQuery, skipToken);
 
       expectTypeOf(queryRef).toEqualTypeOf<undefined>();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
-        | undefined
-      >();
     }
 
     {
@@ -7842,9 +7836,6 @@ describe.skip("type tests", () => {
       >(maskedQuery, skipToken);
 
       expectTypeOf(queryRef).toEqualTypeOf<undefined>();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
-      >();
     }
 
     {
@@ -7854,10 +7845,6 @@ describe.skip("type tests", () => {
       >(maskedQuery, skipToken);
 
       expectTypeOf(queryRef).toEqualTypeOf<undefined>();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
-        | undefined
-      >();
     }
   });
 
@@ -7867,50 +7854,52 @@ describe.skip("type tests", () => {
       skip: true,
     };
 
-    const [inferredQueryRef] = useBackgroundQuery(
-      query,
-      options.skip ? skipToken : undefined
-    );
+    {
+      const [queryRef] = useBackgroundQuery(
+        query,
+        options.skip ? skipToken : { variables: { id: "1" } }
+      );
 
-    expectTypeOf(inferredQueryRef).toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(inferredQueryRef).toMatchTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables>
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, options.skip ? skipToken : undefined);
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options.skip ? skipToken : { variables: { id: "1" } });
 
-    expectTypeOf(explicitQueryRef).toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(explicitQueryRef).toMatchTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-    >();
-    expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables>
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      >();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(
         maskedQuery,
-        options.skip ? skipToken : undefined
+        options.skip ? skipToken : { variables: { id: "1" } }
       );
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            Masked<MaskedVariablesCaseData>,
+            VariablesCaseVariables
+          >
+        | undefined
       >();
     }
 
@@ -7918,13 +7907,13 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, options.skip ? skipToken : undefined);
+      >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<MaskedVariablesCaseData, VariablesCaseVariables>
         | undefined
       >();
     }
@@ -7933,14 +7922,18 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, options.skip ? skipToken : undefined);
+      >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<Masked<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        QueryRef<MaskedVariablesCaseData, VariablesCaseVariables> | undefined
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            Masked<MaskedVariablesCaseData>,
+            VariablesCaseVariables
+          >
+        | undefined
       >();
     }
   });
@@ -7951,46 +7944,53 @@ describe.skip("type tests", () => {
       skip: true,
     };
 
-    const [inferredQueryRef] = useBackgroundQuery(
-      query,
-      options.skip ? skipToken : { returnPartialData: true }
-    );
+    {
+      const [queryRef] = useBackgroundQuery(
+        query,
+        options.skip ? skipToken : (
+          { returnPartialData: true, variables: { id: "1" } }
+        )
+      );
 
-    expectTypeOf(inferredQueryRef).toEqualTypeOf<
-      | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
-      | undefined
-    >();
-    expectTypeOf(inferredQueryRef).toMatchTypeOf<
-      | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
-      | undefined
-    >();
-    expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables>
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+        | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+        | undefined
+      >();
+    }
 
-    const [explicitQueryRef] = useBackgroundQuery<
-      VariablesCaseData,
-      VariablesCaseVariables
-    >(query, options.skip ? skipToken : { returnPartialData: true });
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(
+        query,
+        options.skip ? skipToken : (
+          { returnPartialData: true, variables: { id: "1" } }
+        )
+      );
 
-    expectTypeOf(explicitQueryRef).toEqualTypeOf<
-      | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
-      | undefined
-    >();
-    expectTypeOf(explicitQueryRef).toMatchTypeOf<
-      | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
-      | undefined
-    >();
-    expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryRef<VariablesCaseData, VariablesCaseVariables>
-    >();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+        | undefined
+      >();
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+        | undefined
+      >();
+    }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
 
     {
       const [queryRef] = useBackgroundQuery(
         maskedQuery,
-        options.skip ? skipToken : { returnPartialData: true }
+        options.skip ? skipToken : (
+          { returnPartialData: true, variables: { id: "1" } }
+        )
       );
 
       expectTypeOf(queryRef).toEqualTypeOf<
@@ -8000,8 +8000,11 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<DeepPartial<MaskedVariablesCaseData>, VariablesCaseVariables>
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            DeepPartial<Masked<MaskedVariablesCaseData>>,
+            VariablesCaseVariables
+          >
         | undefined
       >();
     }
@@ -8010,15 +8013,20 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         MaskedVariablesCaseData,
         VariablesCaseVariables
-      >(maskedQuery, options.skip ? skipToken : { returnPartialData: true });
+      >(
+        maskedQuery,
+        options.skip ? skipToken : (
+          { returnPartialData: true, variables: { id: "1" } }
+        )
+      );
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<DeepPartial<MaskedVariablesCaseData>, VariablesCaseVariables>
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<
-            DeepPartial<Masked<MaskedVariablesCaseData>>,
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            DeepPartial<MaskedVariablesCaseData>,
             VariablesCaseVariables
           >
         | undefined
@@ -8029,7 +8037,12 @@ describe.skip("type tests", () => {
       const [queryRef] = useBackgroundQuery<
         Masked<MaskedVariablesCaseData>,
         VariablesCaseVariables
-      >(maskedQuery, options.skip ? skipToken : { returnPartialData: true });
+      >(
+        maskedQuery,
+        options.skip ? skipToken : (
+          { returnPartialData: true, variables: { id: "1" } }
+        )
+      );
 
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<
@@ -8038,8 +8051,11 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).not.toEqualTypeOf<
-        | QueryRef<DeepPartial<MaskedVariablesCaseData>, VariablesCaseVariables>
+      expectTypeOf(queryRef).toMatchTypeOf<
+        | QueryReference<
+            DeepPartial<Masked<MaskedVariablesCaseData>>,
+            VariablesCaseVariables
+          >
         | undefined
       >();
     }
@@ -8049,25 +8065,23 @@ describe.skip("type tests", () => {
     const { query, unmaskedQuery } = setupMaskedVariablesCase();
 
     {
-      const [, { refetch }] = useBackgroundQuery(query);
+      const [, { refetch }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+      });
+      const { data } = await refetch();
 
-      const result = await refetch();
-
-      expectTypeOf(result.data).toEqualTypeOf<
+      expectTypeOf(data).toEqualTypeOf<
         Masked<MaskedVariablesCaseData> | undefined
       >();
-      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
-      const [, { refetch }] = useBackgroundQuery(unmaskedQuery);
+      const [, { refetch }] = useBackgroundQuery(unmaskedQuery, {
+        variables: { id: "1" },
+      });
+      const { data } = await refetch();
 
-      const result = await refetch();
-
-      expectTypeOf(result.data).toEqualTypeOf<
-        MaskedVariablesCaseData | undefined
-      >();
-      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
     }
   });
 
@@ -8075,34 +8089,33 @@ describe.skip("type tests", () => {
     const { query, unmaskedQuery } = setupMaskedVariablesCase();
 
     {
-      const [, { fetchMore }] = useBackgroundQuery(query);
+      const [, { fetchMore }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+      });
 
-      const result = await fetchMore({
+      const { data } = await fetchMore({
         updateQuery: (queryData, { fetchMoreResult }) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
-          expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           expectTypeOf(
             fetchMoreResult
           ).toEqualTypeOf<UnmaskedVariablesCaseData>();
-          expectTypeOf(
-            fetchMoreResult
-          ).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           return {} as UnmaskedVariablesCaseData;
         },
       });
 
-      expectTypeOf(result.data).toEqualTypeOf<
+      expectTypeOf(data).toEqualTypeOf<
         Masked<MaskedVariablesCaseData> | undefined
       >();
-      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
 
     {
-      const [, { fetchMore }] = useBackgroundQuery(unmaskedQuery);
+      const [, { fetchMore }] = useBackgroundQuery(unmaskedQuery, {
+        variables: { id: "1" },
+      });
 
-      const result = await fetchMore({
+      const { data } = await fetchMore({
         updateQuery: (queryData, { fetchMoreResult }) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
@@ -8118,10 +8131,7 @@ describe.skip("type tests", () => {
         },
       });
 
-      expectTypeOf(result.data).toEqualTypeOf<
-        MaskedVariablesCaseData | undefined
-      >();
-      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
     }
   });
 
@@ -8149,7 +8159,9 @@ describe.skip("type tests", () => {
     const { query, unmaskedQuery } = setupMaskedVariablesCase();
 
     {
-      const [, { subscribeToMore }] = useBackgroundQuery(query);
+      const [, { subscribeToMore }] = useBackgroundQuery(query, {
+        variables: { id: "1" },
+      });
 
       const subscription: MaskedDocumentNode<
         Subscription,
@@ -8210,7 +8222,9 @@ describe.skip("type tests", () => {
     }
 
     {
-      const [, { subscribeToMore }] = useBackgroundQuery(unmaskedQuery);
+      const [, { subscribeToMore }] = useBackgroundQuery(unmaskedQuery, {
+        variables: { id: "1" },
+      });
 
       const subscription: TypedDocumentNode<Subscription, never> = gql`
         subscription {
@@ -8267,5 +8281,308 @@ describe.skip("type tests", () => {
         },
       });
     }
+  });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const query = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { foo: "bar" } });
+    useBackgroundQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { foo: "bar" } });
+    useBackgroundQuery(query, { variables: { bar: "baz" } });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { foo: "bar" } });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
+  });
+
+  test("is invalid when TVariables is `never`", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    // @ts-expect-error
+    useBackgroundQuery(query);
+    // @ts-expect-error
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, {
+      // @ts-expect-error
+      variables: {},
+    });
+    useBackgroundQuery(query, {
+      // @ts-expect-error
+      variables: undefined,
+    });
+    useBackgroundQuery(query, {
+      // @ts-expect-error
+      variables: {
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    // @ts-expect-error
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : {}
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: {} }
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error
+      skip ? skipToken : { variables: undefined }
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error unknown variables
+      skip ? skipToken : { variables: { foo: "bar" } }
+    );
+  });
+
+  test("optional variables are optional", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    useBackgroundQuery(query);
+    useBackgroundQuery(query, {});
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { limit: 10 } });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(query, skip ? skipToken : {});
+    useBackgroundQuery(query, skip ? skipToken : { variables: {} });
+    useBackgroundQuery(query, skip ? skipToken : { variables: { limit: 10 } });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            limit: 10,
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query);
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, {});
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { id: "1" } });
+    useBackgroundQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useBackgroundQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query);
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, {});
+    // @ts-expect-error empty variables
+    useBackgroundQuery(query, { variables: {} });
+    useBackgroundQuery(query, { variables: { id: "1" } });
+    useBackgroundQuery(query, {
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    useBackgroundQuery(query, { variables: { id: "1", language: "en" } });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useBackgroundQuery(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+
+    let skip!: boolean;
+    // @ts-expect-error missing variables option
+    useBackgroundQuery(query, skip ? skipToken : undefined);
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing variables option
+      skip ? skipToken : {}
+    );
+    useBackgroundQuery(
+      query,
+      // @ts-expect-error missing required variables
+      skip ? skipToken : { variables: {} }
+    );
+    useBackgroundQuery(query, skip ? skipToken : { variables: { id: "1" } });
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : { variables: { id: "1", language: "en" } }
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
+    useBackgroundQuery(
+      query,
+      skip ? skipToken : (
+        {
+          variables: {
+            id: "1",
+            language: "en",
+            // @ts-expect-error unknown variables
+            foo: "bar",
+          },
+        }
+      )
+    );
   });
 });

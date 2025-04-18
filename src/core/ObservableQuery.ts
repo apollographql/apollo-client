@@ -31,10 +31,7 @@ import {
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  normalizeVariables,
-  toQueryResult,
-} from "@apollo/client/utilities/internal";
+import { toQueryResult } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
@@ -43,6 +40,7 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
+  DefaultContext,
   ErrorLike,
   OperationVariables,
   QueryNotification,
@@ -50,8 +48,10 @@ import type {
   TypedDocumentNode,
 } from "./types.js";
 import type {
+  ErrorPolicy,
   FetchMoreQueryOptions,
   NextFetchPolicyContext,
+  RefetchWritePolicy,
   SubscribeToMoreOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
@@ -83,6 +83,55 @@ interface Last<TData, TVariables> {
 const newNetworkStatusSymbol: any = Symbol();
 const uninitialized = {} as ApolloQueryResult<any>;
 
+export declare namespace ObservableQuery {
+  export type Options<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TVariables, TData>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+    initialFetchPolicy: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+    variables: TVariables;
+  };
+}
+
 export class ObservableQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -100,7 +149,7 @@ export class ObservableQuery<
    */
   private static inactiveOnCreation = new Slot<boolean>();
 
-  public readonly options: WatchQueryOptions<TVariables, TData>;
+  public readonly options: ObservableQuery.Options<TData, TVariables>;
   public readonly queryId: string;
   public readonly queryName?: string;
 
@@ -109,15 +158,13 @@ export class ObservableQuery<
   // untransformed query to ensure document transforms with runtime conditionals
   // are run on the original document.
   public get query(): TypedDocumentNode<TData, TVariables> {
-    return this.lastQuery || this.options.query;
+    return this.lastQuery;
   }
 
-  // Computed shorthand for this.options.variables, preserved for
-  // backwards compatibility.
   /**
    * An object containing the variables that were provided for the query.
    */
-  public get variables(): TVariables | undefined {
+  public get variables(): TVariables {
     return this.options.variables;
   }
 
@@ -144,7 +191,7 @@ export class ObservableQuery<
     variables?: TVariables;
     error: ErrorLike;
   };
-  private lastQuery?: DocumentNode;
+  private lastQuery: DocumentNode;
 
   private queryInfo: QueryInfo;
 
@@ -256,8 +303,9 @@ export class ObservableQuery<
       initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
         fetchPolicy
       ),
-      variables,
     } = options;
+
+    this.lastQuery = options.query;
 
     this.options = {
       ...options,
@@ -270,10 +318,7 @@ export class ObservableQuery<
       // This ensures this.options.fetchPolicy always has a string value, in
       // case options.fetchPolicy was not provided.
       fetchPolicy,
-
-      // `variables` might be an empty object due to QueryManager.getVariables,
-      // so we reset to `undefined` if there are no values
-      variables: normalizeVariables(variables),
+      variables: this.getVariablesWithDefaults(options.variables),
     };
 
     this.input = new Subject();
@@ -530,7 +575,9 @@ export class ObservableQuery<
    * the previous values of those variables will be used.
    */
   public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
-    const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
+    const reobserveOptions: Partial<
+      ObservableQuery.Options<TData, TVariables>
+    > = {
       // Always disable polling for refetches.
       pollInterval: 0,
     };
@@ -558,12 +605,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    if (variables && !equal(this.options.variables, variables)) {
+    if (variables && !equal(this.variables, variables)) {
       // Update the existing options with new variables
-      reobserveOptions.variables = this.options.variables = {
-        ...this.options.variables,
-        ...variables,
-      } as TVariables;
+      reobserveOptions.variables = this.options.variables =
+        this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
     this.queryInfo.resetLastWrite();
@@ -597,7 +642,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           query: this.options.query,
           ...fetchMoreOptions,
           variables: {
-            ...this.options.variables,
+            ...this.variables,
             ...fetchMoreOptions.variables,
           },
         }
@@ -808,7 +853,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   public silentSetOptions(
-    newOptions: Partial<WatchQueryOptions<TVariables, TData>>
+    newOptions: Partial<ObservableQuery.Options<TData, TVariables>>
   ) {
     const mergedOptions = compact(this.options, newOptions || {});
     assign(this.options, mergedOptions);
@@ -835,7 +880,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public async setVariables(
     variables: TVariables
   ): Promise<QueryResult<TData>> {
-    variables = normalizeVariables(variables) as TVariables;
+    variables = this.getVariablesWithDefaults(variables);
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
@@ -930,12 +975,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // that end, the options.nextFetchPolicy option provides an easy way to
         // update options.fetchPolicy after the initial network request, without
         // having to call observableQuery.reobserve.
-        options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
-          reason,
-          options,
-          observable: this,
-          initialFetchPolicy,
-        });
+        options.fetchPolicy = options.nextFetchPolicy.call(
+          options as any,
+          fetchPolicy,
+          { reason, options, observable: this, initialFetchPolicy }
+        );
       } else if (reason === "variables-changed") {
         options.fetchPolicy = initialFetchPolicy;
       } else {
@@ -947,7 +991,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private fetch(
-    options: WatchQueryOptions<TVariables, TData>,
+    options: ObservableQuery.Options<TData, TVariables>,
     newNetworkStatus: NetworkStatus,
     emitLoadingState: boolean,
     query?: DocumentNode
@@ -1043,7 +1087,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * merged with the current options when given.
    */
   public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>
+    newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     this.resubscribeCache(newOptions);
     this.isTornDown = false;
@@ -1068,19 +1112,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       newNetworkStatus === NetworkStatus.poll;
 
     // Save the old variables, since Object.assign may modify them below.
-    const oldVariables = this.options.variables;
+    const oldVariables = this.variables;
     const oldFetchPolicy = this.options.fetchPolicy;
 
     const mergedOptions = compact(this.options, newOptions || {});
-
-    // Allow variables to be reset back to `undefined` if explicitly passed as
-    // variables: undefined to reobserve, otherwise `compact` will ignore the
-    // `variables` key from from `newOptions`.
-    mergedOptions.variables =
-      newOptions && "variables" in newOptions ?
-        newOptions.variables
-      : this.options.variables;
-
     const options =
       useDisposableObservable ?
         // Disposable Observable fetches receive a shallow copy of this.options
@@ -1095,11 +1130,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const query = this.transformDocument(options.query);
     const { fetchPolicy } = options;
 
-    // note: This may mutate this.options.variables when not using a disposable
-    // observable. This is intentional
-    options.variables = normalizeVariables(options.variables);
-
     this.lastQuery = query;
+
+    // Reevaluate variables to allow resetting variables with variables: undefined,
+    // otherwise `compact` will ignore the `variables` key in `newOptions`. We
+    // do this after we run the query transform to ensure we get default
+    // variables from the transformed query.
+    //
+    // Note: updating options.variables may mutate this.options.variables
+    // in the case of a non-disposable query. This is intentional.
+    if (newOptions && "variables" in newOptions) {
+      options.variables = this.getVariablesWithDefaults(newOptions.variables);
+    }
 
     if (!useDisposableObservable) {
       // We can skip calling updatePolling if we're not changing this.options.
@@ -1108,7 +1150,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Reset options.fetchPolicy to its original value when variables change,
       // unless a new fetchPolicy was provided by newOptions.
       if (
-        !equal(options.variables, oldVariables) &&
+        newOptions &&
+        newOptions.variables &&
+        !equal(newOptions.variables, oldVariables) &&
         // Don't mess with the fetchPolicy if it's currently "standby".
         fetchPolicy !== "standby" &&
         // If we're changing the fetchPolicy anyway, don't try to change it here
@@ -1132,7 +1176,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
       if (
         oldNetworkStatus !== NetworkStatus.loading &&
-        !equal(options.variables, oldVariables)
+        newOptions?.variables &&
+        !equal(newOptions.variables, oldVariables)
       ) {
         newNetworkStatus = NetworkStatus.setVariables;
       }
@@ -1492,6 +1537,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.reobserve();
+  }
+
+  private getVariablesWithDefaults(variables: TVariables | undefined) {
+    return this.queryManager.getVariables(this.query, variables);
   }
 }
 

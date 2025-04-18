@@ -95,7 +95,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -107,7 +107,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -146,7 +146,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -160,7 +160,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -174,7 +174,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         expect(result).toBe(oldResult);
@@ -215,7 +215,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -227,7 +227,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -241,7 +241,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -364,7 +364,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -376,7 +376,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -390,7 +390,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -439,7 +439,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         expect(refetch).toBe(result.refetch);
@@ -1057,7 +1057,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1069,7 +1069,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -1140,7 +1140,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         expect(result1).toStrictEqualTyped({
@@ -1148,7 +1148,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1160,7 +1160,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         expect(result1).toStrictEqualTyped({
@@ -1168,7 +1168,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1180,7 +1180,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         expect(result1).toStrictEqualTyped({
@@ -1188,7 +1188,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1202,7 +1202,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         expect(result1).toStrictEqualTyped({
@@ -1210,7 +1210,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1271,7 +1271,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1285,7 +1285,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1297,7 +1297,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1345,7 +1345,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1357,7 +1357,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "from cache" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1403,7 +1403,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1415,7 +1415,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1460,7 +1460,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1503,7 +1503,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1515,7 +1515,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1652,7 +1652,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -1664,7 +1664,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
   });
@@ -1724,7 +1724,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1736,7 +1736,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1782,7 +1782,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: { linkCount: 1 },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1794,7 +1794,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { linkCount: 1 },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1848,7 +1848,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1860,7 +1860,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1872,7 +1872,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1884,7 +1884,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1896,7 +1896,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1908,7 +1908,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1959,7 +1959,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1971,7 +1971,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -1988,7 +1988,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2004,7 +2004,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2016,7 +2016,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2028,7 +2028,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2040,7 +2040,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2052,7 +2052,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -2102,7 +2102,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2114,7 +2114,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2169,7 +2169,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2181,7 +2181,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
         expect(requestSpy).toHaveBeenCalled();
       }
@@ -2263,7 +2263,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -2271,7 +2271,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
       expect(requestSpy).toHaveBeenCalledTimes(1);
 
@@ -2280,14 +2280,14 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.poll,
         previousData: { hello: "world 1" },
-        variables: undefined,
+        variables: {},
       });
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
-        variables: undefined,
+        variables: {},
       });
       expect(requestSpy).toHaveBeenCalledTimes(2);
 
@@ -2345,7 +2345,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2357,7 +2357,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2438,7 +2438,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2450,7 +2450,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
@@ -2463,7 +2463,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
         expect(requestSpy).toHaveBeenCalledTimes(2);
       }
@@ -2476,7 +2476,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
         expect(requestSpy).toHaveBeenCalledTimes(2);
       }
@@ -2539,7 +2539,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2551,7 +2551,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2563,7 +2563,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2575,7 +2575,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2595,7 +2595,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2607,7 +2607,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2619,7 +2619,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.poll,
           previousData: { hello: "world 3" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2631,7 +2631,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 3" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2679,7 +2679,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2691,7 +2691,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2751,7 +2751,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         await waitFor(
@@ -2761,7 +2761,7 @@ describe("useQuery Hook", () => {
               loading: false,
               networkStatus: NetworkStatus.ready,
               previousData: undefined,
-              variables: undefined,
+              variables: {},
             });
           },
           { interval: 1 }
@@ -2773,7 +2773,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         skipPollAttempt.mockImplementation(() => true);
@@ -2784,7 +2784,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         await jest.advanceTimersByTimeAsync(12);
@@ -2793,7 +2793,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         await jest.advanceTimersByTimeAsync(12);
@@ -2802,7 +2802,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         skipPollAttempt.mockImplementation(() => false);
@@ -2813,7 +2813,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       });
 
@@ -2867,7 +2867,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
 
         await waitFor(
@@ -2877,7 +2877,7 @@ describe("useQuery Hook", () => {
               loading: false,
               networkStatus: NetworkStatus.ready,
               previousData: undefined,
-              variables: undefined,
+              variables: {},
             });
           },
           { interval: 1 }
@@ -2889,7 +2889,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         skipPollAttempt.mockImplementation(() => true);
@@ -2900,7 +2900,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         await jest.advanceTimersByTimeAsync(12);
@@ -2909,7 +2909,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         await jest.advanceTimersByTimeAsync(12);
@@ -2918,7 +2918,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
 
         skipPollAttempt.mockImplementation(() => false);
@@ -2929,7 +2929,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
-          variables: undefined,
+          variables: {},
         });
       });
     });
@@ -2975,7 +2975,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -2988,7 +2988,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -3030,7 +3030,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3046,7 +3046,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3090,7 +3090,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3102,7 +3102,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3144,7 +3144,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3156,7 +3156,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3200,7 +3200,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3216,7 +3216,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3258,7 +3258,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3271,7 +3271,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3315,7 +3315,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3328,7 +3328,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3343,7 +3343,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3741,7 +3741,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3756,7 +3756,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3772,7 +3772,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3787,7 +3787,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3838,7 +3838,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3853,7 +3853,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3872,7 +3872,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3920,7 +3920,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3935,7 +3935,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3951,7 +3951,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -3966,7 +3966,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -4021,7 +4021,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
       {
@@ -4035,7 +4035,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -4049,7 +4049,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
       {
@@ -4060,7 +4060,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -4075,7 +4075,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world" },
-          variables: undefined,
+          variables: {},
         });
       }
       {
@@ -4090,7 +4090,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: { hello: "world" },
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -4894,7 +4894,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -4906,7 +4906,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -5042,7 +5042,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5067,7 +5067,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5329,7 +5329,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5354,7 +5354,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5582,7 +5582,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5607,7 +5607,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5740,7 +5740,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5763,7 +5763,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5905,7 +5905,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5928,7 +5928,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5955,7 +5955,7 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -5996,7 +5996,7 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -6130,7 +6130,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
       {
@@ -6141,7 +6141,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6157,7 +6157,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6170,7 +6170,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6186,7 +6186,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
       {
@@ -6197,7 +6197,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6846,7 +6846,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6858,7 +6858,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6883,7 +6883,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: carsData,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6898,7 +6898,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: allCarsData,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -6912,7 +6912,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: allCarsData,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -7105,7 +7105,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await rerender({ skip: false });
@@ -7115,7 +7115,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -7123,7 +7123,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -7155,7 +7155,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -7163,7 +7163,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await rerender({ skip: true, variables: { someVar: true } });
@@ -7230,7 +7230,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await rerender({ fetchPolicy: "cache-first" });
@@ -7240,7 +7240,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -7248,7 +7248,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -7290,7 +7290,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       const refetchResult = await getCurrentSnapshot().refetch();
@@ -7352,7 +7352,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       function check(
@@ -7375,7 +7375,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -7383,7 +7383,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       check(correctInitialFetchPolicy, correctInitialFetchPolicy);
@@ -7742,7 +7742,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     });
 
@@ -7813,7 +7813,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     });
 
@@ -7974,7 +7974,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -7982,7 +7982,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await getCurrentSnapshot().refetch();
@@ -7992,7 +7992,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.refetch,
         previousData: data1,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8000,7 +8000,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: data1,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -8079,7 +8079,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8087,7 +8087,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => getCurrentSnapshot().refetch());
@@ -8097,7 +8097,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.refetch,
         previousData: data1,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8105,7 +8105,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: data1,
-        variables: undefined,
+        variables: {},
       });
 
       void getCurrentSnapshot().refetch({ vin: "ABCDEFG0123456789" });
@@ -8216,7 +8216,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8224,7 +8224,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await rerender({ query: abQuery });
@@ -8234,7 +8234,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { a: "a" },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8242,7 +8242,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { a: "a" },
-        variables: undefined,
+        variables: {},
       });
 
       const result = await getCurrentSnapshot().observable.reobserve();
@@ -8256,7 +8256,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { a: "aa", b: 1 },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8264,7 +8264,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { a: "aa", b: 1 },
-        variables: undefined,
+        variables: {},
       });
 
       await rerender({ query: bQuery });
@@ -8274,7 +8274,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { a: "aaa", b: 2 },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8282,7 +8282,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { b: 2 },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -8453,7 +8453,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8461,7 +8461,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8469,7 +8469,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.poll,
         previousData: { hello: "world 1" },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8477,7 +8477,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8485,7 +8485,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.poll,
         previousData: { hello: "world 2" },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -8493,7 +8493,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 2" },
-        variables: undefined,
+        variables: {},
       });
     });
   });
@@ -8589,14 +8589,14 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
       expect(result.current.b).toStrictEqualTyped({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await waitFor(() => {
@@ -8609,14 +8609,14 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
       expect(result.current.b).toStrictEqualTyped({
         data: bData,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     }
 
@@ -8766,7 +8766,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await waitFor(() => {
@@ -8778,7 +8778,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       expect(cache.readQuery({ query })).toEqual({ hello: "hello 1" });
@@ -8796,7 +8796,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await waitFor(() => {
@@ -8808,7 +8808,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       expect(cache.readQuery({ query })).toEqual({ hello: "hello 2" });
@@ -8852,7 +8852,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -8879,7 +8879,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -8921,7 +8921,7 @@ describe("useQuery Hook", () => {
             __typename: "Greeting",
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -8963,7 +8963,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -8990,7 +8990,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9032,7 +9032,7 @@ describe("useQuery Hook", () => {
             { message: "Hello again", __typename: "Greeting" },
           ],
         },
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9082,7 +9082,7 @@ describe("useQuery Hook", () => {
             { message: "Hello again", __typename: "Greeting" },
           ],
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -9127,7 +9127,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9182,7 +9182,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9258,7 +9258,7 @@ describe("useQuery Hook", () => {
             },
           ],
         },
-        variables: undefined,
+        variables: {},
       });
     });
 
@@ -9298,7 +9298,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9325,7 +9325,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9367,7 +9367,7 @@ describe("useQuery Hook", () => {
             __typename: "Greeting",
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -9411,7 +9411,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9456,7 +9456,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9529,7 +9529,7 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -9573,7 +9573,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9618,7 +9618,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       setTimeout(() => {
@@ -9714,7 +9714,7 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -9770,7 +9770,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       link.simulateResult({
@@ -9799,7 +9799,7 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       link.simulateResult({
@@ -9834,7 +9834,7 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -9897,7 +9897,7 @@ describe("useQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       link.simulateResult({
@@ -9925,7 +9925,7 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       link.simulateResult({
@@ -9960,7 +9960,7 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        variables: undefined,
+        variables: {},
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -10083,7 +10083,7 @@ describe("useQuery Hook", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
-      variables: undefined,
+      variables: {},
     });
 
     await client.clearStore();
@@ -10096,7 +10096,7 @@ describe("useQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
-      variables: undefined,
+      variables: {},
     });
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
@@ -10142,7 +10142,7 @@ describe("useQuery Hook", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
-      variables: undefined,
+      variables: {},
     });
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -10154,7 +10154,7 @@ describe("useQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
-      variables: undefined,
+      variables: {},
     });
 
     const { refetch } = getCurrentSnapshot();
@@ -10167,7 +10167,7 @@ describe("useQuery Hook", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       previousData: undefined,
-      variables: undefined,
+      variables: {},
     });
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -10179,7 +10179,7 @@ describe("useQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
-      variables: undefined,
+      variables: {},
     });
 
     await expect(takeSnapshot).not.toRerender({ timeout: 200 });
@@ -10262,7 +10262,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -10280,7 +10280,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -10378,7 +10378,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
 
       await expect(renderStream).not.toRerender();
@@ -10473,7 +10473,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: undefined,
+        variables: {},
       });
     });
 
@@ -10562,7 +10562,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -10598,7 +10598,7 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -10688,7 +10688,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -10811,7 +10811,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
     );
@@ -10911,7 +10911,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -10935,7 +10935,7 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -11038,7 +11038,7 @@ describe("useQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
 
@@ -11061,7 +11061,7 @@ describe("useQuery Hook", () => {
               id: 1,
             },
           } as Query,
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -11159,7 +11159,7 @@ describe("useQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: undefined,
+          variables: {},
         });
       }
     });
@@ -11179,5 +11179,149 @@ describe.skip("Type Tests", () => {
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;
+  });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const query = gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { foo: "bar" } });
+    useQuery(query, { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { foo: "bar" } });
+    useQuery(query, { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("is invalid when TVariables is `never`", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    // @ts-expect-error
+    useQuery(query);
+    // @ts-expect-error
+    useQuery(query, {});
+    useQuery(query, {
+      // @ts-expect-error
+      variables: {},
+    });
+    useQuery(query, {
+      // @ts-expect-error
+      variables: undefined,
+    });
+    useQuery(query, {
+      // @ts-expect-error
+      variables: {
+        foo: "bar",
+      },
+    });
+  });
+
+  test("optional variables are optional", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    useQuery(query);
+    useQuery(query, {});
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { limit: 10 } });
+    useQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useQuery(query, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    // @ts-expect-error empty variables
+    useQuery(query);
+    // @ts-expect-error empty variables
+    useQuery(query, {});
+    // @ts-expect-error empty variables
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { id: "1" } });
+    useQuery(query, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error empty variables
+    useQuery(query);
+    // @ts-expect-error empty variables
+    useQuery(query, {});
+    // @ts-expect-error empty variables
+    useQuery(query, { variables: {} });
+    useQuery(query, { variables: { id: "1" } });
+    useQuery(query, {
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    useQuery(query, { variables: { id: "1", language: "en" } });
+    useQuery(query, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useQuery(query, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
   });
 });

@@ -2466,4 +2466,154 @@ describe.skip("Type Tests", () => {
 
     expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
   });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const subscription = gql``;
+
+    useSubscription(subscription);
+    useSubscription(subscription, {});
+    useSubscription(subscription, { variables: {} });
+    useSubscription(subscription, { variables: { foo: "bar" } });
+    useSubscription(subscription, { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const subscription: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useSubscription(subscription);
+    useSubscription(subscription, {});
+    useSubscription(subscription, { variables: {} });
+    useSubscription(subscription, { variables: { foo: "bar" } });
+    useSubscription(subscription, { variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const subscription: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useSubscription(subscription);
+    useSubscription(subscription, {});
+    useSubscription(subscription, { variables: {} });
+    useSubscription(subscription, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("is invalid when TVariables is `never`", () => {
+    const subscription: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    // @ts-expect-error
+    useSubscription(subscription);
+    // @ts-expect-error
+    useSubscription(subscription, {});
+    useSubscription(subscription, {
+      // @ts-expect-error
+      variables: {},
+    });
+    useSubscription(subscription, {
+      // @ts-expect-error
+      variables: undefined,
+    });
+    useSubscription(subscription, {
+      // @ts-expect-error
+      variables: {
+        foo: "bar",
+      },
+    });
+  });
+
+  test("optional variables are optional", () => {
+    const subscription: TypedDocumentNode<
+      { posts: string[] },
+      { limit?: number }
+    > = gql``;
+
+    useSubscription(subscription);
+    useSubscription(subscription, {});
+    useSubscription(subscription, { variables: {} });
+    useSubscription(subscription, { variables: { limit: 10 } });
+    useSubscription(subscription, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useSubscription(subscription, {
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const subscription: TypedDocumentNode<
+      { character: string },
+      { id: string }
+    > = gql``;
+
+    // @ts-expect-error empty variables
+    useSubscription(subscription);
+    // @ts-expect-error empty variables
+    useSubscription(subscription, {});
+    useSubscription(subscription, {
+      // @ts-expect-error empty variables
+      variables: {},
+    });
+    useSubscription(subscription, { variables: { id: "1" } });
+    useSubscription(subscription, {
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useSubscription(subscription, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const subscription: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error empty variables
+    useSubscription(subscription);
+    // @ts-expect-error empty variables
+    useSubscription(subscription, {});
+    // @ts-expect-error empty variables
+    useSubscription(subscription, { variables: {} });
+    useSubscription(subscription, { variables: { id: "1" } });
+    useSubscription(subscription, {
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    useSubscription(subscription, { variables: { id: "1", language: "en" } });
+    useSubscription(subscription, {
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    useSubscription(subscription, {
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
 });

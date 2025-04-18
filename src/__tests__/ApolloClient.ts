@@ -2885,9 +2885,6 @@ describe("ApolloClient", () => {
             errorPolicy: "none",
             context: undefined,
             fetchPolicy: "cache-first",
-            pollInterval: 100,
-            notifyOnNetworkStatusChange: true,
-            returnPartialData: true,
           },
         },
       });

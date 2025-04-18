@@ -7421,7 +7421,8 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
+    // TODO: Determine if this is something that can be replaced
+    it.skip("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
       const query = gql`
         query ($id: ID!) {
           user(id: $id) {

@@ -1189,8 +1189,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { observable, fromLink } = this.fetchObservableWithInfo(
       options,
       oldNetworkStatus,
-      newNetworkStatus,
-      query
+      newNetworkStatus
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
       next: (result) => {
@@ -1235,9 +1234,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private fetchObservableWithInfo(
     options: ObservableQuery.Options<TData, TVariables>,
     oldNetworkStatus: NetworkStatus,
-    networkStatus: NetworkStatus,
-    query: DocumentNode
+    networkStatus: NetworkStatus
   ) {
+    const query = this.query;
     const variables = this.variables;
     const defaults = this.queryManager.defaultOptions.watchQuery;
     let {

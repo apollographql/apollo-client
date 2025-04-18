@@ -23,7 +23,6 @@ export type {
 } from "./watchQueryOptions.js";
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
-  ApolloContext,
   ApolloQueryResult,
   ClientAwareness,
   DefaultContext,
@@ -40,7 +39,6 @@ export type {
   MutationUpdaterFn,
   MutationUpdaterFunction,
   OnQueryUpdated,
-  OperationContext,
   OperationVariables,
   QueryListener,
   QueryResult,
@@ -114,6 +112,7 @@ export {
   split,
 } from "@apollo/client/link/core";
 export type {
+  ApolloContext,
   ApolloPayloadResult,
   DocumentNode,
   ExecutionPatchIncrementalResult,
@@ -124,6 +123,7 @@ export type {
   IncrementalPayload,
   NextLink,
   Operation,
+  OperationContext,
   Path,
   RequestHandler,
   SingleExecutionResult,

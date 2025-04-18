@@ -30,3 +30,4 @@ export {
   mockMultipartSubscriptionStream,
 } from "./incremental.js";
 export { resetApolloContext } from "./resetApolloContext.js";
+export { executeWithDefaultContext } from "./link.js";

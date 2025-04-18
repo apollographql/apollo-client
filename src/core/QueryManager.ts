@@ -73,7 +73,7 @@ import {
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type { DefaultOptions } from "./ApolloClient.js";
+import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
@@ -147,6 +147,7 @@ interface MaskOperationOptions<TData> {
 }
 
 interface QueryManagerOptions {
+  client: ApolloClient;
   cache: ApolloCache;
   link: ApolloLink;
   defaultOptions: DefaultOptions;
@@ -166,6 +167,7 @@ export class QueryManager {
   public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
+  public readonly client: ApolloClient;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -210,6 +212,7 @@ export class QueryManager {
       { cache: false }
     );
 
+    this.client = options.client;
     this.cache = options.cache;
     this.link = options.link;
     this.defaultOptions = options.defaultOptions;

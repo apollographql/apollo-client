@@ -866,6 +866,25 @@ export class QueryManager {
       return of({ data: data || undefined });
     };
 
+    function getMergedData<TData>(result: FetchResult<TData>): TData {
+      const merger = new DeepMerger();
+      const diff = readCache();
+
+      if ("incremental" in result && isNonEmptyArray(result.incremental)) {
+        return mergeIncrementalData(diff.result as any, result);
+
+        // Detect the first chunk of a deferred query and merge it with existing
+        // cache data. This ensures a `cache-first` fetch policy that returns
+        // partial cache data or a `cache-and-network` fetch policy that already
+        // has full data in the cache does not complain when trying to merge the
+        // initial deferred server data with existing cache data.
+      } else if ("hasNext" in result && result.hasNext) {
+        return merger.merge(diff.result, result.data);
+      }
+
+      return result.data as TData;
+    }
+
     const markResult = <TData>(
       result: FetchResult<TData>,
       document: DocumentNode,
@@ -875,21 +894,8 @@ export class QueryManager {
         fetchPolicy === "no-cache" ?
           CacheWriteBehavior.FORBID
         : CacheWriteBehavior.MERGE;
-      const merger = new DeepMerger();
-      const diff = readCache();
 
-      if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-        const mergedData = mergeIncrementalData(diff.result as any, result);
-        result.data = mergedData;
-
-        // Detect the first chunk of a deferred query and merge it with existing
-        // cache data. This ensures a `cache-first` fetch policy that returns
-        // partial cache data or a `cache-and-network` fetch policy that already
-        // has full data in the cache does not complain when trying to merge the
-        // initial deferred server data with existing cache data.
-      } else if ("hasNext" in result && result.hasNext) {
-        result.data = merger.merge(diff.result, result.data);
-      }
+      result.data = getMergedData(result);
 
       if (
         cacheWriteBehavior === CacheWriteBehavior.FORBID ||

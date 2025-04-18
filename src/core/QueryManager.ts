@@ -148,8 +148,6 @@ interface MaskOperationOptions<TData> {
 
 interface QueryManagerOptions {
   client: ApolloClient;
-  cache: ApolloCache;
-  link: ApolloLink;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
@@ -213,8 +211,8 @@ export class QueryManager {
     );
 
     this.client = options.client;
-    this.cache = options.cache;
-    this.link = options.link;
+    this.cache = this.client.cache;
+    this.link = this.client.link;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;

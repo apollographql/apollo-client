@@ -1237,7 +1237,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     networkStatus: NetworkStatus
   ) {
     const query = this.query;
-    const variables = this.variables;
+    const variables = options.variables;
     const defaults = this.queryManager.defaultOptions.watchQuery;
     let {
       fetchPolicy = (defaults && defaults.fetchPolicy) || "cache-first",

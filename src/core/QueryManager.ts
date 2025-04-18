@@ -828,6 +828,12 @@ export class QueryManager {
     }
 
     const fromVariables = (variables: TVars) => {
+      const queryInfo = this.getOrCreateQuery(queryId);
+      queryInfo.init({
+        document: query,
+        variables,
+      });
+
       return this.fetchQueryByPolicyForQuery<TData, TVars>(
         this.getOrCreateQuery(queryId),
         { query, variables, fetchPolicy, errorPolicy, context }
@@ -1588,11 +1594,6 @@ export class QueryManager {
       context: DefaultContext;
     }
   ): Observable<QueryResult<TData>> {
-    queryInfo.init({
-      document: query,
-      variables,
-    });
-
     const readCache = () =>
       this.cache.diff({
         query,

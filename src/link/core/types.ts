@@ -2,7 +2,7 @@ import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { DefaultContext } from "@apollo/client";
+import type { DefaultContext, LinkContext } from "@apollo/client";
 
 export type { DocumentNode };
 
@@ -88,7 +88,7 @@ export interface Operation {
       ) => Partial<DefaultContext>
     ): void;
   };
-  getContext: () => DefaultContext;
+  getContext: () => LinkContext;
 }
 
 export interface SingleExecutionResult<

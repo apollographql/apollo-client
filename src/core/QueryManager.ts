@@ -1162,6 +1162,16 @@ export class QueryManager {
     let observable: Observable<FetchResult<TData>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+
+    const prepareContext = (context = {}) => {
+      const newContext = this.localState.prepareContext(context);
+      return {
+        ...this.defaultContext,
+        ...newContext,
+        clientAwareness: this.clientAwareness,
+      };
+    };
+
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
@@ -1169,7 +1179,7 @@ export class QueryManager {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: this.prepareContext({
+        context: prepareContext({
           ...context,
           forceFetch: !deduplication,
         }),
@@ -1209,7 +1219,7 @@ export class QueryManager {
       }
     } else {
       observable = of({ data: {} } as FetchResult<TData>);
-      context = this.prepareContext(context);
+      context = prepareContext(context);
     }
 
     if (clientQuery) {
@@ -1859,15 +1869,6 @@ export class QueryManager {
       this.queries.set(queryId, new QueryInfo(this, queryId));
     }
     return this.queries.get(queryId)!;
-  }
-
-  private prepareContext(context = {}) {
-    const newContext = this.localState.prepareContext(context);
-    return {
-      ...this.defaultContext,
-      ...newContext,
-      clientAwareness: this.clientAwareness,
-    };
   }
 }
 

@@ -892,10 +892,7 @@ export class QueryManager {
         // through the link chain.
         const linkDocument = this.cache.transformForLink(query);
 
-        const writeToCache = <TData>(
-          result: FetchResult<TData>,
-          document: DocumentNode
-        ) => {
+        const writeToCache = <TData>(result: FetchResult<TData>) => {
           const cacheWriteBehavior =
             fetchPolicy === "no-cache" ?
               CacheWriteBehavior.FORBID
@@ -914,14 +911,14 @@ export class QueryManager {
           // it when we receive it redundantly from the watch callback.
           this.cache.performTransaction((cache) => {
             cache.writeQuery({
-              query: document,
+              query: linkDocument,
               data: result.data as Unmasked<TData>,
               variables,
               overwrite: false,
             });
 
             const diff = cache.diff<TData>({
-              query: document,
+              query: linkDocument,
               variables,
               returnPartialData: true,
               optimistic: true,
@@ -949,7 +946,7 @@ export class QueryManager {
 
             result.data = getMergedData(result);
 
-            writeToCache(result, linkDocument);
+            writeToCache(result);
 
             if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };

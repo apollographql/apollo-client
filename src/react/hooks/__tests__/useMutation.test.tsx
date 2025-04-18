@@ -4728,7 +4728,9 @@ describe.skip("Type Tests", () => {
     });
 
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
-    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    expectTypeOf(mutate({ variables: { id: "1" } })).toMatchTypeOf<
+      Promise<FetchResult<Mutation>>
+    >();
   });
 
   test("variables are optional and can be anything with an DocumentNode", () => {

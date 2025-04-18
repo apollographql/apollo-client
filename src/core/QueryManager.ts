@@ -859,9 +859,9 @@ export class QueryManager {
     if (this.getDocumentInfo(query).hasClientExports) {
       observable = from(
         this.localState.addExportedVariables(query, variables, context)
-      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
+      ).pipe(mergeMap((variables) => fromVariables(variables)));
     } else {
-      observable = fromVariables(variables).observable;
+      observable = fromVariables(variables);
     }
 
     observable = observable.pipe(
@@ -1596,7 +1596,7 @@ export class QueryManager {
     },
     newNetworkStatus = NetworkStatus.loading,
     emitLoadingState = false
-  ): ObservableAndInfo<TData> {
+  ): Observable<ApolloQueryResult<TData>> {
     queryInfo.init({
       document: query,
       variables,
@@ -1700,74 +1700,51 @@ export class QueryManager {
         const diff = readCache();
 
         if (diff.complete) {
-          return {
-            fromLink: false,
-            observable: resultsFromCache(diff, NetworkStatus.ready),
-          };
+          return resultsFromCache(diff, NetworkStatus.ready);
         }
 
         if (returnPartialData || emitLoadingState) {
-          return {
-            fromLink: true,
-            observable: concat(resultsFromCache(diff), resultsFromLink()),
-          };
+          return concat(resultsFromCache(diff), resultsFromLink());
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
       }
 
       case "cache-and-network": {
         const diff = readCache();
 
         if (diff.complete || returnPartialData || emitLoadingState) {
-          return {
-            fromLink: true,
-            observable: concat(resultsFromCache(diff), resultsFromLink()),
-          };
+          return concat(resultsFromCache(diff), resultsFromLink());
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
       }
 
       case "cache-only":
-        return {
-          fromLink: false,
-          observable: concat(
-            resultsFromCache(readCache(), NetworkStatus.ready)
-          ),
-        };
+        return concat(resultsFromCache(readCache(), NetworkStatus.ready));
 
       case "network-only":
         if (emitLoadingState) {
-          return {
-            fromLink: true,
-            observable: concat(
-              resultsFromCache(readCache()),
-              resultsFromLink()
-            ),
-          };
+          return concat(resultsFromCache(readCache()), resultsFromLink());
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
 
       case "no-cache":
         if (emitLoadingState) {
-          return {
-            fromLink: true,
-            // Note that queryInfo.getDiff() for no-cache queries does not call
-            // cache.diff, but instead returns a { complete: false } stub result
-            // when there is no queryInfo.diff already defined.
-            observable: concat(
-              resultsFromCache(queryInfo.getDiff()),
-              resultsFromLink()
-            ),
-          };
+          // Note that queryInfo.getDiff() for no-cache queries does not call
+          // cache.diff, but instead returns a { complete: false } stub result
+          // when there is no queryInfo.diff already defined.
+          return concat(
+            resultsFromCache(queryInfo.getDiff()),
+            resultsFromLink()
+          );
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
 
       case "standby":
-        return { fromLink: false, observable: EMPTY };
+        return EMPTY;
     }
   }
 

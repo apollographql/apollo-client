@@ -1615,14 +1615,6 @@ export class QueryManager {
       const toResult = (
         data: TData | DeepPartial<TData> | undefined
       ): ApolloQueryResult<TData> => {
-        // TODO: Eventually we should move this handling into
-        // queryInfo.getDiff() directly. Since getDiff is updated to return null
-        // on returnPartialData: false, we should take advantage of that instead
-        // of having to patch it elsewhere.
-        if (!diff.complete) {
-          data = undefined;
-        }
-
         return {
           // TODO: Handle partial data
           data: data as TData | undefined,

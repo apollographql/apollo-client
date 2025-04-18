@@ -257,6 +257,7 @@ Array [
   "ApolloProvider",
   "createQueryPreloader",
   "getApolloContext",
+  "gql",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",

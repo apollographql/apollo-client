@@ -872,14 +872,12 @@ export class QueryManager {
         variables: TVars;
         context: DefaultContext | undefined;
         fetchPolicy: WatchQueryFetchPolicy | undefined;
-        errorPolicy: ErrorPolicy | undefined;
       }) => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
         const cacheWriteBehavior =
           fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID
           : CacheWriteBehavior.MERGE;
-        const { errorPolicy } = options;
 
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document
@@ -979,7 +977,6 @@ export class QueryManager {
           variables,
           context,
           fetchPolicy,
-          errorPolicy,
         });
 
       switch (fetchPolicy) {

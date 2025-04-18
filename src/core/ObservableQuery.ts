@@ -1260,10 +1260,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const fromVariables = (variables: TVariables) => {
-      const observableWithInfo = this.queryManager.fetchQueryByPolicy<
-        TData,
-        TVariables
-      >(
+      const observableWithInfo = this.fetchQueryByPolicy(
         queryInfo,
         {
           query,

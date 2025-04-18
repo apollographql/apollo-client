@@ -968,24 +968,9 @@ export class QueryManager {
       }
     };
 
-    let observable: Observable<QueryResult<TData>>;
-    // If the query has @export(as: ...) directives, then we need to
-    // process those directives asynchronously. When there are no
-    // @export directives (the common case), we deliberately avoid
-    // wrapping the result of this.fetchQueryByPolicy in a Promise,
-    // since the timing of result delivery is (unfortunately) important
-    // for backwards compatibility. TODO This code could be simpler if
-    // we deprecated and removed LocalState.
-    if (this.getDocumentInfo(query).hasClientExports) {
-      observable = from(
-        this.localState.addExportedVariables(query, variables, context)
-      ).pipe(mergeMap((variables) => fromVariables(variables)));
-    } else {
-      observable = fromVariables(variables);
-    }
-
     return lastValueFrom(
-      observable.pipe(
+      this.getVariablesForLink(query, variables, context).pipe(
+        mergeMap(fromVariables),
         this.addCancelFunction(queryId),
         map((value) => ({
           ...value,
@@ -999,6 +984,22 @@ export class QueryManager {
         finalize(() => this.removeQuery(queryId))
       )
     );
+  }
+
+  public getVariablesForLink<TVariables extends OperationVariables>(
+    query: DocumentNode,
+    inputVariables: TVariables,
+    context: DefaultContext
+  ) {
+    // If the query has @export(as: ...) directives, then we need to
+    // process those directives asynchronously.
+    if (this.getDocumentInfo(query).hasClientExports) {
+      return from(
+        this.localState.addExportedVariables(query, inputVariables, context)
+      );
+    }
+
+    return of(inputVariables);
   }
 
   public addCancelFunction<T>(queryId: string) {

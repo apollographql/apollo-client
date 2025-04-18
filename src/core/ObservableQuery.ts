@@ -14,7 +14,6 @@ import {
   from,
   lastValueFrom,
   mergeMap,
-  mergeWith,
   share,
   Subject,
   tap,
@@ -1286,21 +1285,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return observableWithInfo;
     };
 
-    // This cancel function needs to be set before the concast is created,
-    // in case concast creation synchronously cancels the request.
-    const cleanupCancelFn = () => {
-      this.queryManager.fetchCancelFns.delete(queryInfo.queryId);
-      // We need to call `complete` on the subject here otherwise the merged
-      // observable will never complete since it waits for all source
-      // observables to complete before itself completes.
-      fetchCancelSubject.complete();
-    };
-    this.queryManager.fetchCancelFns.set(queryInfo.queryId, (reason) => {
-      fetchCancelSubject.error(reason);
-      cleanupCancelFn();
-    });
-
-    const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
     let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
@@ -1333,8 +1317,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     return {
       observable: observable.pipe(
-        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(fetchCancelSubject),
+        this.queryManager.addCancelFunction(queryInfo.queryId),
         share()
       ),
       fromLink: containsDataFromLink,

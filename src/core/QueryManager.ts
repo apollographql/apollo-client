@@ -988,21 +988,6 @@ export class QueryManager {
       }
     };
 
-    // This cancel function needs to be set before the concast is created,
-    // in case concast creation synchronously cancels the request.
-    const cleanupCancelFn = () => {
-      this.fetchCancelFns.delete(queryId);
-      // We need to call `complete` on the subject here otherwise the merged
-      // observable will never complete since it waits for all source
-      // observables to complete before itself completes.
-      fetchCancelSubject.complete();
-    };
-    this.fetchCancelFns.set(queryId, (reason) => {
-      fetchCancelSubject.error(reason);
-      cleanupCancelFn();
-    });
-
-    const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
     let observable: Observable<QueryResult<TData>>;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1021,8 +1006,7 @@ export class QueryManager {
 
     return lastValueFrom(
       observable.pipe(
-        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(fetchCancelSubject),
+        this.addCancelFunction(queryId),
         map((value) => ({
           ...value,
           data: this.maskOperation({
@@ -1034,6 +1018,31 @@ export class QueryManager {
         }))
       )
     ).finally(() => this.stopQuery(queryId));
+  }
+
+  private addCancelFunction<T>(queryId: string) {
+    const fetchCancelSubject = new Subject<never>();
+
+    // This cancel function needs to be set before the concast is created,
+    // in case concast creation synchronously cancels the request.
+    const cleanupCancelFn = () => {
+      this.fetchCancelFns.delete(queryId);
+      // We need to call `complete` on the subject here otherwise the merged
+      // observable will never complete since it waits for all source
+      // observables to complete before itself completes.
+      fetchCancelSubject.complete();
+    };
+    this.fetchCancelFns.set(queryId, (reason) => {
+      fetchCancelSubject.error(reason);
+      cleanupCancelFn();
+    });
+
+    return (observable: Observable<T>) => {
+      return observable.pipe(
+        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
+        mergeWith(fetchCancelSubject)
+      );
+    };
   }
 
   private queryIdCounter = 1;

@@ -945,12 +945,12 @@ export class QueryManager {
       observable = fromVariables(variables);
     }
 
-    observable = observable.pipe(
-      tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-      mergeWith(fetchCancelSubject)
-    );
-
-    return lastValueFrom(observable)
+    return lastValueFrom(
+      observable.pipe(
+        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
+        mergeWith(fetchCancelSubject)
+      )
+    )
       .then((value) => ({
         ...value,
         data: this.maskOperation({

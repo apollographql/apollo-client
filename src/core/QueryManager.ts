@@ -943,9 +943,6 @@ export class QueryManager {
             if (hasErrors && errorPolicy === "none") {
               throw new CombinedGraphQLErrors(result);
             }
-            // Use linkDocument rather than queryInfo.document so the
-            // operation/fragments used to write the result are the same as the
-            // ones used to obtain it from the link.
             markResult(result, linkDocument, variables);
 
             if (!hasErrors || errorPolicy === "ignore") {

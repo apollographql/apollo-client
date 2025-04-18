@@ -924,7 +924,6 @@ export class QueryManager {
           }),
           catchError((error) => {
             if (errorPolicy === "none") {
-              queryInfo.resetLastWrite();
               throw error;
             }
 

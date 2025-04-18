@@ -823,7 +823,7 @@ export class QueryManager {
       fetchPolicy = "cache-first";
     }
 
-    const readCache = () =>
+    const readCache = (variables: TVars) =>
       this.cache.diff<TData, TVars>({
         query,
         variables,
@@ -831,7 +831,10 @@ export class QueryManager {
         optimistic: true,
       });
 
-    const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
+    const resultsFromCache = (
+      variables: TVars,
+      diff: Cache.DiffResult<TData>
+    ) => {
       const data = diff.result;
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
@@ -858,9 +861,12 @@ export class QueryManager {
       return of(data || undefined);
     };
 
-    function getMergedData<TData>(result: FetchResult<TData>): TData {
+    function getMergedData<TData>(
+      variables: TVars,
+      result: FetchResult<TData>
+    ): TData {
       const merger = new DeepMerger();
-      const diff = readCache();
+      const diff = readCache(variables);
 
       if ("incremental" in result && isNonEmptyArray(result.incremental)) {
         return mergeIncrementalData(diff.result as any, result);
@@ -897,7 +903,7 @@ export class QueryManager {
             throw new CombinedGraphQLErrors(result);
           }
 
-          let data = getMergedData(result);
+          let data = getMergedData(variables, result);
 
           if (fetchPolicy !== "no-cache" && data) {
             this.cache.writeQuery({
@@ -935,10 +941,12 @@ export class QueryManager {
             return resultsFromLink(variables);
           }
 
-          const diff = readCache();
+          const diff = readCache(variables);
 
           if (diff.complete || fetchPolicy === "cache-only") {
-            return resultsFromCache(diff).pipe(map((data) => ({ data })));
+            return resultsFromCache(variables, diff).pipe(
+              map((data) => ({ data }))
+            );
           }
 
           return resultsFromLink(variables);

@@ -4,6 +4,7 @@ import { OperationTypeNode } from "graphql";
 import type { Subscription } from "rxjs";
 import {
   catchError,
+  defer,
   filter,
   finalize,
   from,
@@ -930,22 +931,20 @@ export class QueryManager {
         );
     };
 
-    let observable: Observable<QueryResult<TData>>;
-
-    if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
-      observable = resultsFromLink();
-    } else {
-      const diff = readCache();
-
-      if (diff.complete || fetchPolicy === "cache-only") {
-        observable = resultsFromCache(diff).pipe(map((data) => ({ data })));
-      } else {
-        observable = resultsFromLink();
-      }
-    }
-
     return lastValueFrom(
-      observable.pipe(
+      defer(() => {
+        if (fetchPolicy === "network-only" || fetchPolicy === "no-cache") {
+          return resultsFromLink();
+        }
+
+        const diff = readCache();
+
+        if (diff.complete || fetchPolicy === "cache-only") {
+          return resultsFromCache(diff).pipe(map((data) => ({ data })));
+        }
+
+        return resultsFromLink();
+      }).pipe(
         catchError((error) => {
           if (errorPolicy === "none") {
             throw error;

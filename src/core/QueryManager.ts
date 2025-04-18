@@ -947,8 +947,7 @@ export class QueryManager {
 
     observable = observable.pipe(
       tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-      mergeWith(fetchCancelSubject),
-      share()
+      mergeWith(fetchCancelSubject)
     );
 
     return lastValueFrom(observable)

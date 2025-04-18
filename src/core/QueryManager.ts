@@ -834,10 +834,84 @@ export class QueryManager {
         variables,
       });
 
-      return this.fetchQueryByPolicyForQuery<TData, TVars>(
-        this.getOrCreateQuery(queryId),
-        { query, variables, fetchPolicy, errorPolicy, context }
-      );
+      const readCache = () =>
+        this.cache.diff<TData, TVars>({
+          query,
+          variables,
+          returnPartialData: false,
+          optimistic: true,
+        });
+
+      const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
+        const data = diff.result;
+
+        if (this.getDocumentInfo(query).hasForcedResolvers) {
+          return from(
+            this.localState
+              .runResolvers({
+                document: query,
+                // TODO: Update remoteResult to handle `null`. In v3 the `if`
+                // statement contained a check against `data`, but this value was
+                // always `{}` if nothing was in the cache, which meant the check
+                // above always succeeded when there were forced resolvers. Now that
+                // `data` is nullable, this `remoteResult` needs to be an empty
+                // object. Ideally we can pass in `null` here and the resolvers
+                // would be able to handle this the same way.
+                remoteResult: { data: data || ({} as any) },
+                context,
+                variables,
+                onlyRunForcedResolvers: true,
+              })
+              .then((resolved) => ({ data: resolved.data || void 0 }))
+          );
+        }
+
+        return of({ data: data || undefined });
+      };
+
+      const resultsFromLink = () =>
+        this.getResultsFromLink<TData, TVars>(
+          queryInfo,
+          fetchPolicy === "no-cache" ?
+            CacheWriteBehavior.FORBID
+          : CacheWriteBehavior.MERGE,
+          {
+            query,
+            variables,
+            context,
+            fetchPolicy,
+            errorPolicy,
+          }
+        ).pipe(
+          validateDidEmitValue(),
+          map(({ data, error }) => {
+            if (error) {
+              return { data, error };
+            }
+
+            return { data };
+          })
+        );
+
+      switch (fetchPolicy) {
+        default:
+        case "cache-first": {
+          const diff = readCache();
+
+          if (diff.complete) {
+            return resultsFromCache(diff);
+          }
+
+          return resultsFromLink();
+        }
+
+        case "cache-only":
+          return resultsFromCache(readCache());
+
+        case "network-only":
+        case "no-cache":
+          return resultsFromLink();
+      }
     };
 
     // This cancel function needs to be set before the concast is created,
@@ -1576,102 +1650,6 @@ export class QueryManager {
     return this.dataMasking ?
         maskFragment(data, fragment, this.cache, fragmentName)
       : data;
-  }
-
-  public fetchQueryByPolicyForQuery<TData, TVars extends OperationVariables>(
-    queryInfo: QueryInfo,
-    {
-      query,
-      variables,
-      fetchPolicy,
-      errorPolicy,
-      context,
-    }: {
-      query: TypedDocumentNode<TData, TVars>;
-      variables: TVars;
-      fetchPolicy: FetchPolicy;
-      errorPolicy: ErrorPolicy;
-      context: DefaultContext;
-    }
-  ): Observable<QueryResult<TData>> {
-    const readCache = () =>
-      this.cache.diff({
-        query,
-        variables,
-        returnPartialData: false,
-        optimistic: true,
-      });
-
-    const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
-      const data = diff.result;
-
-      if (this.getDocumentInfo(query).hasForcedResolvers) {
-        return from(
-          this.localState
-            .runResolvers({
-              document: query,
-              // TODO: Update remoteResult to handle `null`. In v3 the `if`
-              // statement contained a check against `data`, but this value was
-              // always `{}` if nothing was in the cache, which meant the check
-              // above always succeeded when there were forced resolvers. Now that
-              // `data` is nullable, this `remoteResult` needs to be an empty
-              // object. Ideally we can pass in `null` here and the resolvers
-              // would be able to handle this the same way.
-              remoteResult: { data: data || ({} as any) },
-              context,
-              variables,
-              onlyRunForcedResolvers: true,
-            })
-            .then((resolved) => ({ data: resolved.data || void 0 }))
-        );
-      }
-
-      return of({ data: data || undefined });
-    };
-
-    const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(
-        queryInfo,
-        fetchPolicy === "no-cache" ?
-          CacheWriteBehavior.FORBID
-        : CacheWriteBehavior.MERGE,
-        {
-          query,
-          variables,
-          context,
-          fetchPolicy,
-          errorPolicy,
-        }
-      ).pipe(
-        validateDidEmitValue(),
-        map(({ data, error }) => {
-          if (error) {
-            return { data, error };
-          }
-
-          return { data };
-        })
-      );
-
-    switch (fetchPolicy) {
-      default:
-      case "cache-first": {
-        const diff = readCache();
-
-        if (diff.complete) {
-          return resultsFromCache(diff);
-        }
-
-        return resultsFromLink();
-      }
-
-      case "cache-only":
-        return resultsFromCache(readCache());
-
-      case "network-only":
-      case "no-cache":
-        return resultsFromLink();
-    }
   }
 
   public fetchQueryByPolicy<TData, TVars extends OperationVariables>(

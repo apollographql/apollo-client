@@ -1588,7 +1588,6 @@ export class QueryManager {
       context: DefaultContext;
     }
   ): Observable<QueryResult<TData>> {
-    const newNetworkStatus = NetworkStatus.loading;
     queryInfo.init({
       document: query,
       variables,

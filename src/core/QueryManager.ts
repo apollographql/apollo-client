@@ -71,7 +71,11 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 import type { DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
+import {
+  logMissingFieldErrors,
+  ObservableQuery,
+  validateDidEmitValue,
+} from "./ObservableQuery.js";
 import {
   CacheWriteBehavior,
   QueryInfo,
@@ -1425,7 +1429,7 @@ export class QueryManager {
     );
   }
 
-  private getResultsFromLink<TData, TVariables extends OperationVariables>(
+  public getResultsFromLink<TData, TVariables extends OperationVariables>(
     queryInfo: QueryInfo,
     cacheWriteBehavior: CacheWriteBehavior,
     options: {
@@ -1934,22 +1938,6 @@ export class QueryManager {
       clientAwareness: this.clientAwareness,
     };
   }
-}
-
-function validateDidEmitValue<T>() {
-  let didEmitValue = false;
-
-  return tap<T>({
-    next() {
-      didEmitValue = true;
-    },
-    complete() {
-      invariant(
-        didEmitValue,
-        "The link chain completed without emitting a value. This is likely unintentional and should be updated to emit a value before completing."
-      );
-    },
-  });
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

@@ -1331,7 +1331,7 @@ export class QueryManager {
     observable?: Observable<FetchResult<any>>;
   }>(false);
 
-  private getObservableFromLink<TData = unknown>(
+  public getObservableFromLink<TData = unknown>(
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,

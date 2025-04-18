@@ -10,11 +10,13 @@ import type {
 import type { Observable } from "rxjs";
 import {
   BehaviorSubject,
+  catchError,
   concat,
   EMPTY,
   filter,
   from,
   lastValueFrom,
+  map,
   mergeMap,
   of,
   share,
@@ -23,11 +25,13 @@ import {
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   cloneDeep,
   compact,
+  getGraphQLErrorsFromResult,
   getOperationDefinition,
   getQueryDefinition,
   preventUnhandledRejection,
@@ -1436,15 +1440,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       : CacheWriteBehavior.MERGE;
 
     const resultsFromLink = () =>
-      this.queryManager
-        .getResultsFromLink<TData, TVariables>(queryInfo, cacheWriteBehavior, {
+      this.getResultsFromLink<TData, TVariables>(
+        queryInfo,
+        cacheWriteBehavior,
+        {
           query,
           variables,
           context,
           fetchPolicy,
           errorPolicy,
-        })
-        .pipe(validateDidEmitValue());
+        }
+      ).pipe(validateDidEmitValue());
 
     switch (fetchPolicy) {
       default:
@@ -1521,6 +1527,108 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       case "standby":
         return { fromLink: false, observable: EMPTY };
     }
+  }
+
+  private get cache() {
+    return this.queryManager.cache;
+  }
+
+  private getResultsFromLink<TData, TVariables extends OperationVariables>(
+    queryInfo: QueryInfo,
+    cacheWriteBehavior: CacheWriteBehavior,
+    options: {
+      query: DocumentNode;
+      variables: TVariables;
+      context: DefaultContext | undefined;
+      fetchPolicy: WatchQueryFetchPolicy | undefined;
+      errorPolicy: ErrorPolicy | undefined;
+    }
+  ): Observable<ApolloQueryResult<TData>> {
+    const requestId = (queryInfo.lastRequestId =
+      this.queryManager.generateRequestId());
+    const { errorPolicy } = options;
+
+    // Performing transformForLink here gives this.cache a chance to fill in
+    // missing fragment definitions (for example) before sending this document
+    // through the link chain.
+    const linkDocument = this.cache.transformForLink(options.query);
+
+    return this.queryManager
+      .getObservableFromLink<TData>(
+        linkDocument,
+        options.context,
+        options.variables
+      )
+      .pipe(
+        map((result) => {
+          const graphQLErrors = getGraphQLErrorsFromResult(result);
+          const hasErrors = graphQLErrors.length > 0;
+
+          // If we interrupted this request by calling getResultsFromLink again
+          // with the same QueryInfo object, we ignore the old results.
+          if (requestId >= queryInfo.lastRequestId) {
+            if (hasErrors && errorPolicy === "none") {
+              queryInfo.resetLastWrite();
+              queryInfo.observableQuery?.["resetNotifications"]();
+              // Throwing here effectively calls observer.error.
+              throw new CombinedGraphQLErrors(result);
+            }
+            // Use linkDocument rather than queryInfo.document so the
+            // operation/fragments used to write the result are the same as the
+            // ones used to obtain it from the link.
+            queryInfo.markResult(
+              result,
+              linkDocument,
+              options,
+              cacheWriteBehavior
+            );
+          }
+
+          const aqr: ApolloQueryResult<TData> = {
+            data: result.data as TData,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: !result.data,
+          };
+
+          // In the case we start multiple network requests simulatenously, we
+          // want to ensure we properly set `data` if we're reporting on an old
+          // result which will not be caught by the conditional above that ends up
+          // throwing the markError result.
+          if (hasErrors && errorPolicy === "none") {
+            aqr.data = void 0 as TData;
+          }
+
+          if (hasErrors && errorPolicy !== "ignore") {
+            aqr.error = new CombinedGraphQLErrors(result);
+            aqr.networkStatus = NetworkStatus.error;
+          }
+
+          return aqr;
+        }),
+        catchError((error) => {
+          // Avoid storing errors from older interrupted queries.
+          if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
+            queryInfo.resetLastWrite();
+            queryInfo.observableQuery?.["resetNotifications"]();
+            throw error;
+          }
+
+          const aqr: ApolloQueryResult<TData> = {
+            data: undefined,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: true,
+          };
+
+          if (errorPolicy !== "ignore") {
+            aqr.error = error;
+            aqr.networkStatus = NetworkStatus.error;
+          }
+
+          return of(aqr);
+        })
+      );
   }
 
   // (Re)deliver the current result to this.observers without applying fetch

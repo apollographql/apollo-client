@@ -31,7 +31,6 @@ import {
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type {
   ApolloContext,
-  ApolloLink,
   FetchResult,
   GraphQLRequest,
 } from "@apollo/client/link/core";
@@ -162,7 +161,6 @@ interface QueryManagerOptions {
 
 export class QueryManager {
   public cache: ApolloCache;
-  public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
   public readonly client: ApolloClient;
@@ -212,7 +210,6 @@ export class QueryManager {
 
     this.client = options.client;
     this.cache = this.client.cache;
-    this.link = this.client.link;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;
@@ -236,6 +233,10 @@ export class QueryManager {
     if ((this.onBroadcast = options.onBroadcast)) {
       this.mutationStore = {};
     }
+  }
+
+  get link() {
+    return this.client.link;
   }
 
   /**

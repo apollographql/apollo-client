@@ -887,7 +887,7 @@ export class ApolloClient implements DataProxy {
    * Define a new ApolloLink (or link chain) that Apollo Client will use.
    */
   public setLink(newLink: ApolloLink) {
-    this.link = this.queryManager.link = newLink;
+    this.link = newLink;
   }
 
   public get defaultContext() {

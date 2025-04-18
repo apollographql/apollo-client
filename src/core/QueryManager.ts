@@ -941,14 +941,14 @@ export class QueryManager {
               throw new CombinedGraphQLErrors(result);
             }
 
-            result.data = getMergedData(result);
+            const data = getMergedData(result);
 
             if (!hasErrors || errorPolicy === "ignore") {
-              return { data: result.data };
+              return { data };
             }
 
             return {
-              data: errorPolicy === "none" ? undefined : result.data,
+              data: errorPolicy === "none" ? undefined : data,
               error: new CombinedGraphQLErrors(result),
             };
           }),

@@ -1017,7 +1017,7 @@ export class QueryManager {
           }),
         }))
       )
-    ).finally(() => this.stopQuery(queryId));
+    ).finally(() => this.removeQuery(queryId));
   }
 
   public addCancelFunction<T>(queryId: string) {

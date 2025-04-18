@@ -825,20 +825,20 @@ export class QueryManager {
       fetchPolicy = "cache-first";
     }
 
+    const readCache = () =>
+      this.cache.diff<TData, TVars>({
+        query,
+        variables,
+        returnPartialData: false,
+        optimistic: true,
+      });
+
     const fromVariables = (variables: TVars) => {
       const queryInfo = this.getOrCreateQuery(queryId);
       queryInfo.init({
         document: query,
         variables,
       });
-
-      const readCache = () =>
-        this.cache.diff<TData, TVars>({
-          query,
-          variables,
-          returnPartialData: false,
-          optimistic: true,
-        });
 
       const resultsFromCache = (diff: Cache.DiffResult<TData>) => {
         const data = diff.result;

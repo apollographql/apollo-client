@@ -1632,10 +1632,6 @@ export class QueryManager {
         };
       };
 
-      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        return of(toResult(data));
-      };
-
       if (this.getDocumentInfo(query).hasForcedResolvers) {
         return from(
           this.localState
@@ -1657,7 +1653,7 @@ export class QueryManager {
         );
       }
 
-      return fromData(data || undefined);
+      return of(toResult(data || undefined));
     };
 
     const resultsFromLink = () =>

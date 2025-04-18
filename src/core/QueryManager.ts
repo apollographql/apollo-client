@@ -29,7 +29,11 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import type {
+  ApolloLink,
+  FetchResult,
+  LinkRequest,
+} from "@apollo/client/link/core";
 import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
@@ -84,6 +88,7 @@ import type {
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
+  LinkContext,
   MutateResult,
   MutationUpdaterFunction,
   OnQueryUpdated,
@@ -1163,7 +1168,7 @@ export class QueryManager {
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
 
-    const prepareContext = (context = {}) => {
+    const prepareContext = (context = {}): LinkContext => {
       const newContext = this.localState.prepareContext(context);
       return {
         ...this.defaultContext,
@@ -1175,7 +1180,7 @@ export class QueryManager {
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation = {
+      const operation: LinkRequest = {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,

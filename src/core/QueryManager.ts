@@ -898,10 +898,6 @@ export class QueryManager {
         const linkDocument = this.cache.transformForLink(query);
 
         const writeToCache = <TData>(result: FetchResult<TData>) => {
-          if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-            return;
-          }
-
           // Using a transaction here so we have a chance to read the result
           // back from the cache before the watch callback fires as a result
           // of writeQuery, so we can store the new diff quietly and ignore
@@ -953,7 +949,10 @@ export class QueryManager {
             };
           }),
           tap((result) => {
-            if (shouldWriteResult(result, errorPolicy)) {
+            if (
+              cacheWriteBehavior !== CacheWriteBehavior.FORBID &&
+              result.data
+            ) {
               writeToCache(result);
             }
           }),

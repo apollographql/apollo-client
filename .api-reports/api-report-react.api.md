@@ -1306,7 +1306,7 @@ export namespace useMutation {
     // (undocumented)
     export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = Options<TData, TVariables, TContext, TCache> & {
         mutation?: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
-    } & VariablesOption<TVariables>;
+    };
     // (undocumented)
     export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2, TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>> {
         awaitRefetchQueries?: boolean;
@@ -1339,8 +1339,14 @@ export namespace useMutation {
     // (undocumented)
     export type ResultTuple<TData, TVariables extends OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = [
     mutate: (...[options]: {} extends TVariables ? [
-    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-    ] : [options: MutationFunctionOptions<TData, TVariables, TContext, TCache>]) => Promise<MutateResult_2<MaybeMasked_2<TData>>>,
+    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache> & {
+        variables?: TVariables;
+    }
+    ] : [
+    options: MutationFunctionOptions<TData, TVariables, TContext, TCache> & {
+        variables: TVariables;
+    }
+    ]) => Promise<MutateResult_2<MaybeMasked_2<TData>>>,
     result: Result<TData>
     ];
 }

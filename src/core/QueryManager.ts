@@ -83,6 +83,7 @@ import {
 } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
+  ClientAwareness,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -153,7 +154,7 @@ interface QueryManagerOptions {
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
-  clientAwareness: Record<string, string>;
+  clientAwareness: ClientAwareness;
   localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
@@ -172,7 +173,7 @@ export class QueryManager {
   public readonly dataMasking: boolean;
 
   private queryDeduplication: boolean;
-  private clientAwareness: Record<string, string> = {};
+  private clientAwareness: ClientAwareness = {};
   private localState: LocalState;
 
   /**

@@ -1670,19 +1670,20 @@ export class QueryManager {
       return fromData(data || undefined);
     };
 
-    const cacheWriteBehavior =
-      fetchPolicy === "no-cache" ?
-        CacheWriteBehavior.FORBID
-      : CacheWriteBehavior.MERGE;
-
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
-        query,
-        variables,
-        context,
-        fetchPolicy,
-        errorPolicy,
-      }).pipe(validateDidEmitValue());
+      this.getResultsFromLink<TData, TVars>(
+        queryInfo,
+        fetchPolicy === "no-cache" ?
+          CacheWriteBehavior.FORBID
+        : CacheWriteBehavior.MERGE,
+        {
+          query,
+          variables,
+          context,
+          fetchPolicy,
+          errorPolicy,
+        }
+      ).pipe(validateDidEmitValue());
 
     switch (fetchPolicy) {
       default:

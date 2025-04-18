@@ -871,11 +871,7 @@ export class QueryManager {
       share()
     );
 
-    return lastValueFrom(observable.pipe(map(toQueryResult)), {
-      // This default is needed when a `standby` fetch policy is used to avoid
-      // an EmptyError from rejecting this promise.
-      defaultValue: { data: undefined },
-    })
+    return lastValueFrom(observable.pipe(map(toQueryResult)))
       .then((value) => ({
         ...value,
         data: this.maskOperation({

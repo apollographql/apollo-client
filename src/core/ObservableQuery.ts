@@ -1348,8 +1348,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       returnPartialData: boolean;
       context: DefaultContext;
     },
-    newNetworkStatus = NetworkStatus.loading,
-    emitLoadingState = false
+    newNetworkStatus: NetworkStatus,
+    emitLoadingState: boolean
   ): ObservableAndInfo<TData> {
     const readCache = () => queryInfo.getDiff();
 

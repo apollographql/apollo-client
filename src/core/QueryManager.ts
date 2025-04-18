@@ -1610,13 +1610,10 @@ export class QueryManager {
 
       const toResult = (
         data: TData | DeepPartial<TData> | undefined
-      ): ApolloQueryResult<TData> => {
+      ): QueryResult<TData> => {
         return {
           // TODO: Handle partial data
           data: data as TData | undefined,
-          loading: isNetworkRequestInFlight(networkStatus),
-          networkStatus,
-          partial: !diff.complete,
         };
       };
 

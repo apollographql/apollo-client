@@ -14,7 +14,6 @@ import {
   mergeWith,
   Observable,
   of,
-  share,
   shareReplay,
   Subject,
   tap,
@@ -94,7 +93,6 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
-  FetchPolicy,
   MutationFetchPolicy,
   MutationOptions,
   QueryOptions,

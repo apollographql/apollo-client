@@ -44,7 +44,6 @@ import {
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
-  tick,
   wait,
 } from "@apollo/client/testing";
 import {
@@ -56,8 +55,6 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import type { Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import type { QueryManager } from "../../../core/QueryManager.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

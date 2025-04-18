@@ -33,7 +33,7 @@ import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { checkDocument, print } from "@apollo/client/utilities";
+import { checkDocument, DeepMerger, print } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
   addNonReactiveToNamedFragments,
@@ -858,6 +858,62 @@ export class QueryManager {
       }
 
       return of({ data: data || undefined });
+    };
+
+    const markResult = (
+      result: FetchResult<T>,
+      document: DocumentNode,
+      options: Pick<
+        WatchQueryOptions,
+        "variables" | "fetchPolicy" | "errorPolicy"
+      >,
+      cacheWriteBehavior: CacheWriteBehavior
+    ) => {
+      const merger = new DeepMerger();
+      const diff = readCache();
+
+      if ("incremental" in result && isNonEmptyArray(result.incremental)) {
+        const mergedData = mergeIncrementalData(diff.result, result);
+        result.data = mergedData;
+
+        // Detect the first chunk of a deferred query and merge it with existing
+        // cache data. This ensures a `cache-first` fetch policy that returns
+        // partial cache data or a `cache-and-network` fetch policy that already
+        // has full data in the cache does not complain when trying to merge the
+        // initial deferred server data with existing cache data.
+      } else if ("hasNext" in result && result.hasNext) {
+        result.data = merger.merge(diff.result, result.data);
+      }
+
+      if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
+        return;
+      }
+
+      if (shouldWriteResult(result, options.errorPolicy)) {
+        // Using a transaction here so we have a chance to read the result
+        // back from the cache before the watch callback fires as a result
+        // of writeQuery, so we can store the new diff quietly and ignore
+        // it when we receive it redundantly from the watch callback.
+        this.cache.performTransaction((cache) => {
+          cache.writeQuery({
+            query: document,
+            data: result.data,
+            variables: options.variables,
+            overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+          });
+
+          const diff = cache.diff<TData>({
+            query: document,
+            variables: options.variables,
+            returnPartialData: true,
+            optimistic: true,
+          });
+
+          if (diff.complete) {
+            result.data = diff.result;
+          }
+        });
+      }
     };
 
     const fromVariables = (variables: TVars) => {

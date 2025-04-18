@@ -906,7 +906,7 @@ export class QueryManager {
               queryInfo.markResult(
                 result,
                 linkDocument,
-                options,
+                { variables, fetchPolicy, errorPolicy },
                 cacheWriteBehavior
               );
             }

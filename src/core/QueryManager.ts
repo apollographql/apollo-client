@@ -1187,10 +1187,7 @@ export class QueryManager {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: prepareContext({
-          ...context,
-          forceFetch: !deduplication,
-        }),
+        context: prepareContext(context),
         extensions,
       };
 

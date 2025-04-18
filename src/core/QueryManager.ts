@@ -948,19 +948,18 @@ export class QueryManager {
     return lastValueFrom(
       observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(fetchCancelSubject)
+        mergeWith(fetchCancelSubject),
+        map((value) => ({
+          ...value,
+          data: this.maskOperation({
+            document: query,
+            data: value?.data,
+            fetchPolicy: options.fetchPolicy,
+            id: queryId,
+          }),
+        }))
       )
-    )
-      .then((value) => ({
-        ...value,
-        data: this.maskOperation({
-          document: query,
-          data: value?.data,
-          fetchPolicy: options.fetchPolicy,
-          id: queryId,
-        }),
-      }))
-      .finally(() => this.stopQuery(queryId));
+    ).finally(() => this.stopQuery(queryId));
   }
 
   private queryIdCounter = 1;

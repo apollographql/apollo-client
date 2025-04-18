@@ -867,17 +867,18 @@ export class QueryManager {
         variables,
       });
 
-      const getResultsFromLink = (
-        cacheWriteBehavior: CacheWriteBehavior,
-        options: {
-          query: DocumentNode;
-          variables: TVars;
-          context: DefaultContext | undefined;
-          fetchPolicy: WatchQueryFetchPolicy | undefined;
-          errorPolicy: ErrorPolicy | undefined;
-        }
-      ) => {
+      const getResultsFromLink = (options: {
+        query: DocumentNode;
+        variables: TVars;
+        context: DefaultContext | undefined;
+        fetchPolicy: WatchQueryFetchPolicy | undefined;
+        errorPolicy: ErrorPolicy | undefined;
+      }) => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
+        const cacheWriteBehavior =
+          fetchPolicy === "no-cache" ?
+            CacheWriteBehavior.FORBID
+          : CacheWriteBehavior.MERGE;
         const { errorPolicy } = options;
 
         // Performing transformForLink here gives this.cache a chance to fill in
@@ -973,18 +974,13 @@ export class QueryManager {
       };
 
       const resultsFromLink = () =>
-        getResultsFromLink(
-          fetchPolicy === "no-cache" ?
-            CacheWriteBehavior.FORBID
-          : CacheWriteBehavior.MERGE,
-          {
-            query,
-            variables,
-            context,
-            fetchPolicy,
-            errorPolicy,
-          }
-        );
+        getResultsFromLink({
+          query,
+          variables,
+          context,
+          fetchPolicy,
+          errorPolicy,
+        });
 
       switch (fetchPolicy) {
         default:

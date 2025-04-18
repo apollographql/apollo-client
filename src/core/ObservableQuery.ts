@@ -1274,11 +1274,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           returnPartialData,
           context,
           refetchWritePolicy: options.refetchWritePolicy,
+          notifyOnNetworkStatusChange,
         },
         networkStatus,
-        notifyOnNetworkStatusChange &&
-          oldNetworkStatus !== networkStatus &&
-          isNetworkRequestInFlight(networkStatus)
+        oldNetworkStatus
       );
 
       // If we're in standby, postpone advancing options.fetchPolicy using
@@ -1339,6 +1338,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       errorPolicy,
       returnPartialData,
       context,
+      notifyOnNetworkStatusChange,
     }: {
       query: TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
@@ -1347,10 +1347,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       errorPolicy: ErrorPolicy;
       returnPartialData: boolean;
       context: DefaultContext;
+      notifyOnNetworkStatusChange: boolean;
     },
     newNetworkStatus: NetworkStatus,
-    emitLoadingState: boolean
+    oldNetworkStatus: NetworkStatus
   ): ObservableAndInfo<TData> {
+    const emitLoadingState =
+      notifyOnNetworkStatusChange &&
+      oldNetworkStatus !== newNetworkStatus &&
+      isNetworkRequestInFlight(newNetworkStatus);
+
     const readCache = () => queryInfo.getDiff();
 
     const resultsFromCache = (

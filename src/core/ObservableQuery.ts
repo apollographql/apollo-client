@@ -1389,10 +1389,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         };
       };
 
-      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        return of(toResult(data));
-      };
-
       if (this.queryManager.getDocumentInfo(query).hasForcedResolvers) {
         return from(
           this.queryManager["localState"]
@@ -1414,7 +1410,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         );
       }
 
-      return fromData(data || undefined);
+      return of(toResult(data || undefined));
     };
 
     const cacheWriteBehavior =

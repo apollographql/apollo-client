@@ -6,7 +6,7 @@ import {
   KEEP,
   removeTypenameFromVariables,
 } from "@apollo/client/link/remove-typename";
-import { createOperation } from "@apollo/client/link/utils";
+import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &
   Pick<Operation, "query">;

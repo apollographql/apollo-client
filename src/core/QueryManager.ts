@@ -59,7 +59,7 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
+import { onAnyEvent } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -849,7 +849,7 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
-    let observable: Observable<ApolloQueryResult<TData>>;
+    let observable: Observable<QueryResult<TData>>;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
     // @export directives (the common case), we deliberately avoid
@@ -871,7 +871,7 @@ export class QueryManager {
       share()
     );
 
-    return lastValueFrom(observable.pipe(map(toQueryResult)))
+    return lastValueFrom(observable)
       .then((value) => ({
         ...value,
         data: this.maskOperation({
@@ -1587,7 +1587,7 @@ export class QueryManager {
       errorPolicy: ErrorPolicy;
       context: DefaultContext;
     }
-  ): Observable<ApolloQueryResult<TData>> {
+  ): Observable<QueryResult<TData>> {
     const newNetworkStatus = NetworkStatus.loading;
     queryInfo.init({
       document: query,

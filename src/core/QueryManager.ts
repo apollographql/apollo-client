@@ -189,6 +189,7 @@ export class QueryManager {
   // All the queries that the QueryManager is currently managing (not
   // including mutations and subscriptions).
   private queries = new Map<string, QueryInfo>();
+  private unwatchedQueries = new Set<string>();
 
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
@@ -234,6 +235,9 @@ export class QueryManager {
    */
   public stop() {
     this.queries.forEach((_info, queryId) => {
+      this.removeQuery(queryId);
+    });
+    this.unwatchedQueries.forEach((queryId) => {
       this.removeQuery(queryId);
     });
 
@@ -814,6 +818,7 @@ export class QueryManager {
     const query = this.transform(options.query);
     const variables = this.getVariables(query, options.variables) as TVars;
     const defaults = this.defaultOptions.query;
+    this.unwatchedQueries.add(queryId);
 
     let {
       fetchPolicy = defaults?.fetchPolicy || "cache-first",

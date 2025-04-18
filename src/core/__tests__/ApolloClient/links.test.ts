@@ -31,12 +31,12 @@ describe("Link interactions", () => {
     };
 
     const evictionLink = (operation: Operation, forward: NextLink) => {
-      const { cache } = operation.getContext();
-      expect(cache).toBeDefined();
+      const { apollo } = operation.getContext();
+      expect(apollo.cache).toBeDefined();
       return forward(operation).pipe(
         map((result) => {
           setTimeout(() => {
-            const cacheResult = cache.read({ query });
+            const cacheResult = apollo.cache.read({ query, optimistic: true });
             expect(cacheResult).toEqual(initialData);
             expect(cacheResult).toEqual(result.data);
             if (count === 2) {
@@ -230,8 +230,8 @@ describe("Link interactions", () => {
     `;
 
     const evictionLink = (operation: Operation, forward: NextLink) => {
-      const { cache } = operation.getContext();
-      expect(cache).toBeDefined();
+      const { apollo } = operation.getContext();
+      expect(apollo.cache).toBeDefined();
       done();
       return forward(operation);
     };

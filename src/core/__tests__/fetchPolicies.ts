@@ -6,7 +6,7 @@ import type { ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link/core";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink, mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -579,6 +579,49 @@ describe("cache-first", () => {
     expect(results).toHaveLength(1);
 
     await expect(stream).not.toEmitAnything();
+  });
+
+  test("does not return partial data from cache with client.query", async () => {
+    const query = gql`
+      query {
+        user {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query },
+          result: {
+            data: { user: { __typename: "User", id: 1, name: "Test" } },
+          },
+        },
+      ]),
+    });
+
+    client.writeQuery({
+      query: gql`
+        query {
+          user {
+            id
+          }
+        }
+      `,
+      data: {
+        user: {
+          __typename: "User",
+          id: 1,
+        },
+      },
+    });
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { user: { __typename: "User", id: 1, name: "Test" } },
+    });
   });
 });
 

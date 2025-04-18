@@ -23,6 +23,7 @@ export type {
 } from "./watchQueryOptions.js";
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
+  ApolloContext,
   ApolloQueryResult,
   DefaultContext,
   ErrorLike,

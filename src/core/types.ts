@@ -23,16 +23,6 @@ export interface ClientAwareness {
   version?: string;
 }
 
-export interface ApolloContext {
-  readonly cache: ApolloCache;
-}
-
-export interface OperationContext extends DefaultContext {
-  clientAwareness?: ClientAwareness;
-
-  getApolloContext: () => Readonly<ApolloContext>;
-}
-
 export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;

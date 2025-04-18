@@ -30,9 +30,10 @@ import {
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type {
+  ApolloContext,
   ApolloLink,
   FetchResult,
-  LinkRequest,
+  GraphQLRequest,
 } from "@apollo/client/link/core";
 import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
@@ -92,7 +93,6 @@ import type {
   MutateResult,
   MutationUpdaterFunction,
   OnQueryUpdated,
-  OperationContext,
   OperationVariables,
   QueryResult,
   SubscribeResult,
@@ -1174,22 +1174,23 @@ export class QueryManager {
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
 
-    const prepareContext = (context = {}): OperationContext => {
+    const prepareContext = (context = {}): DefaultContext => {
       const newContext = this.localState.prepareContext(context);
       return {
         ...this.defaultContext,
         ...newContext,
         clientAwareness: this.clientAwareness,
-        apollo: {
-          cache: this.cache,
-        },
       };
+    };
+
+    const apolloContext: ApolloContext = {
+      cache: this.cache,
     };
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation: LinkRequest = {
+      const operation: GraphQLRequest = {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
@@ -1210,7 +1211,11 @@ export class QueryManager {
 
         observable = entry.observable;
         if (!observable) {
-          observable = entry.observable = execute(link, operation).pipe(
+          observable = entry.observable = execute(
+            link,
+            operation,
+            apolloContext
+          ).pipe(
             onAnyEvent((event) => {
               if (
                 (event.type !== "next" ||
@@ -1226,7 +1231,9 @@ export class QueryManager {
           );
         }
       } else {
-        observable = execute(link, operation) as Observable<FetchResult<TData>>;
+        observable = execute(link, operation, apolloContext) as Observable<
+          FetchResult<TData>
+        >;
       }
     } else {
       observable = of({ data: {} } as FetchResult<TData>);

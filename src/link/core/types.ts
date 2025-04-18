@@ -3,9 +3,11 @@ import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
 import type {
+  ApolloCache,
+  ApolloContext,
+  ClientAwareness,
   DefaultContext,
   OperationContext,
-  OperationVariables,
 } from "@apollo/client";
 
 export type { DocumentNode };
@@ -88,11 +90,20 @@ export interface Operation {
     (context: Partial<DefaultContext>): void;
     (
       updateContext: (
-        previousContext: DefaultContext
+        previousContext: OperationContext
       ) => Partial<DefaultContext>
     ): void;
   };
   getContext: () => OperationContext;
+  getApolloContext: () => ApolloContext;
+}
+
+export interface ApolloContext {
+  readonly cache: ApolloCache;
+}
+
+export interface OperationContext extends DefaultContext {
+  clientAwareness?: ClientAwareness;
 }
 
 export interface SingleExecutionResult<

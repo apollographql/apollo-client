@@ -28,25 +28,6 @@ import {
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 
-import type { ObservableAndInfo, QueryManager } from "../QueryManager.js";
-
-export const mockFetchQuery = (queryManager: QueryManager) => {
-  const mocks = {
-    fetchObservableWithInfo: jest.fn<
-      ObservableAndInfo<unknown>,
-      Parameters<QueryManager["fetchObservableWithInfo"]>
-    >(queryManager["fetchObservableWithInfo"].bind(queryManager)),
-    fetchQueryByPolicy: jest.fn<
-      ObservableAndInfo<unknown>,
-      Parameters<QueryManager["fetchQueryByPolicy"]>
-    >(queryManager["fetchQueryByPolicy"].bind(queryManager)),
-  };
-
-  Object.assign(queryManager, mocks);
-
-  return mocks;
-};
-
 describe("ObservableQuery", () => {
   // Standard data for all these tests
   const query: TypedDocumentNode<{

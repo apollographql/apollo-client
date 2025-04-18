@@ -44,7 +44,6 @@ import {
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
-  tick,
   wait,
 } from "@apollo/client/testing";
 import {
@@ -56,8 +55,6 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import type { Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-
-import type { QueryManager } from "../../../core/QueryManager.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -7426,20 +7423,20 @@ describe("useQuery Hook", () => {
 
     it("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
       const query = gql`
-        {
-          hello
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            name
+          }
         }
       `;
       const link = new MockLink([
         {
-          request: { query, variables: { id: 1 } },
-          result: { data: { hello: "from link" } },
-          delay: 10,
-        },
-        {
-          request: { query, variables: { id: 2 } },
-          result: { data: { hello: "from link2" } },
-          delay: 10,
+          request: { query, variables: () => true },
+          result: ({ id }) => ({
+            data: { user: { __typename: "User", id, name: `User ${id}` } },
+          }),
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
       ]);
 
@@ -7448,26 +7445,17 @@ describe("useQuery Hook", () => {
         link,
       });
 
-      const fetchQueryByPolicy = jest.spyOn(
-        client["queryManager"] as any as {
-          fetchQueryByPolicy: QueryManager["fetchQueryByPolicy"];
-        },
-        "fetchQueryByPolicy"
-      );
+      client.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: { user: { __typename: "User", id: 1, name: "Cached User 1" } },
+      });
+      client.writeQuery({
+        query,
+        variables: { id: 2 },
+        data: { user: { __typename: "User", id: 2, name: "Cached User 2" } },
+      });
 
-      const expectQueryTriggered = (
-        nth: number,
-        fetchPolicy: WatchQueryFetchPolicy
-      ) => {
-        expect(fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
-        expect(fetchQueryByPolicy).toHaveBeenNthCalledWith(
-          nth,
-          expect.anything(),
-          expect.objectContaining({ fetchPolicy }),
-          expect.any(Number),
-          expect.any(Boolean)
-        );
-      };
       const nextFetchPolicy: WatchQueryOptions<
         OperationVariables,
         any
@@ -7499,11 +7487,7 @@ describe("useQuery Hook", () => {
           }
         );
 
-      await tick();
-
-      // first network request triggers with initial fetchPolicy
-      expectQueryTriggered(1, "network-only");
-
+      // We skip the cache and go to the network
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
         loading: true,
@@ -7513,7 +7497,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: { hello: "from link" },
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7545,23 +7529,23 @@ describe("useQuery Hook", () => {
           reason: "variables-changed",
         })
       );
-      // the return value of `nextFetchPolicy(..., {reason: "variables-changed"})`
-      expectQueryTriggered(2, "cache-and-network");
 
+      // We now see the effects of cache-and-network applied
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        // TODO: Shouldn't this be undefined?
-        data: { hello: "from link" },
+        data: { user: { __typename: "User", id: 2, name: "Cached User 2" } },
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        previousData: { hello: "from link" },
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
         variables: { id: 2 },
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: { hello: "from link2" },
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        previousData: { hello: "from link" },
+        previousData: {
+          user: { __typename: "User", id: 2, name: "Cached User 2" },
+        },
         variables: { id: 2 },
       });
 

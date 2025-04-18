@@ -938,14 +938,7 @@ export class QueryManager {
 
             return of(aqr);
           }),
-          validateDidEmitValue(),
-          map(({ data, error }) => {
-            if (error) {
-              return { data, error };
-            }
-
-            return { data };
-          })
+          validateDidEmitValue()
         );
       };
 

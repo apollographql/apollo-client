@@ -898,7 +898,7 @@ export class QueryManager {
               : CacheWriteBehavior.MERGE
             );
 
-            if (!hasErrors) {
+            if (!hasErrors || errorPolicy === "ignore") {
               return { data: result.data };
             }
 
@@ -914,9 +914,7 @@ export class QueryManager {
               aqr.data = void 0 as TData;
             }
 
-            if (errorPolicy !== "ignore") {
-              aqr.error = new CombinedGraphQLErrors(result);
-            }
+            aqr.error = new CombinedGraphQLErrors(result);
 
             return aqr;
           }),

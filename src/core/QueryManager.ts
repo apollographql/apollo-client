@@ -884,7 +884,7 @@ export class QueryManager {
       // through the link chain.
       const linkDocument = this.cache.transformForLink(query);
 
-      return this.getVariablesForLink(query, variables, context)
+      return this.getVariablesForLink(linkDocument, variables, context)
         .pipe(
           mergeMap((variables) =>
             this.getObservableFromLink<TData>(linkDocument, context, variables)

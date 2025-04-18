@@ -868,11 +868,6 @@ export class QueryManager {
       });
 
       const resultsFromLink = () => {
-        const cacheWriteBehavior =
-          fetchPolicy === "no-cache" ?
-            CacheWriteBehavior.FORBID
-          : CacheWriteBehavior.MERGE;
-
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document
         // through the link chain.
@@ -898,7 +893,9 @@ export class QueryManager {
               result,
               linkDocument,
               { variables, fetchPolicy, errorPolicy },
-              cacheWriteBehavior
+              fetchPolicy === "no-cache" ?
+                CacheWriteBehavior.FORBID
+              : CacheWriteBehavior.MERGE
             );
 
             const aqr: QueryResult<TData> = {

@@ -868,7 +868,6 @@ export class QueryManager {
       });
 
       const resultsFromLink = () => {
-        const requestId = (queryInfo.lastRequestId = this.generateRequestId());
         const cacheWriteBehavior =
           fetchPolicy === "no-cache" ?
             CacheWriteBehavior.FORBID
@@ -888,25 +887,21 @@ export class QueryManager {
             const graphQLErrors = getGraphQLErrorsFromResult(result);
             const hasErrors = graphQLErrors.length > 0;
 
-            // If we interrupted this request by calling getResultsFromLink again
-            // with the same QueryInfo object, we ignore the old results.
-            if (requestId >= queryInfo.lastRequestId) {
-              if (hasErrors && errorPolicy === "none") {
-                queryInfo.resetLastWrite();
-                queryInfo.observableQuery?.["resetNotifications"]();
-                // Throwing here effectively calls observer.error.
-                throw new CombinedGraphQLErrors(result);
-              }
-              // Use linkDocument rather than queryInfo.document so the
-              // operation/fragments used to write the result are the same as the
-              // ones used to obtain it from the link.
-              queryInfo.markResult(
-                result,
-                linkDocument,
-                { variables, fetchPolicy, errorPolicy },
-                cacheWriteBehavior
-              );
+            if (hasErrors && errorPolicy === "none") {
+              queryInfo.resetLastWrite();
+              queryInfo.observableQuery?.["resetNotifications"]();
+              // Throwing here effectively calls observer.error.
+              throw new CombinedGraphQLErrors(result);
             }
+            // Use linkDocument rather than queryInfo.document so the
+            // operation/fragments used to write the result are the same as the
+            // ones used to obtain it from the link.
+            queryInfo.markResult(
+              result,
+              linkDocument,
+              { variables, fetchPolicy, errorPolicy },
+              cacheWriteBehavior
+            );
 
             const aqr: ApolloQueryResult<TData> = {
               data: result.data as TData,
@@ -931,11 +926,7 @@ export class QueryManager {
             return aqr;
           }),
           catchError((error) => {
-            // Avoid storing errors from older interrupted queries.
-            if (
-              requestId >= queryInfo.lastRequestId &&
-              errorPolicy === "none"
-            ) {
+            if (errorPolicy === "none") {
               queryInfo.resetLastWrite();
               queryInfo.observableQuery?.["resetNotifications"]();
               throw error;

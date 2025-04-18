@@ -1711,16 +1711,6 @@ export class QueryManager {
         return resultsFromLink();
       }
 
-      case "cache-and-network": {
-        const diff = readCache();
-
-        if (diff.complete || returnPartialData || emitLoadingState) {
-          return concat(resultsFromCache(diff), resultsFromLink());
-        }
-
-        return resultsFromLink();
-      }
-
       case "cache-only":
         return concat(resultsFromCache(readCache(), NetworkStatus.ready));
 
@@ -1743,9 +1733,6 @@ export class QueryManager {
         }
 
         return resultsFromLink();
-
-      case "standby":
-        return EMPTY;
     }
   }
 

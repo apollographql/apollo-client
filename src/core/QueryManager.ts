@@ -868,7 +868,6 @@ export class QueryManager {
       });
 
       const getResultsFromLink = (options: {
-        variables: TVars;
         context: DefaultContext | undefined;
       }) => {
         const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -885,7 +884,7 @@ export class QueryManager {
         return this.getObservableFromLink<TData>(
           linkDocument,
           options.context,
-          options.variables
+          variables
         ).pipe(
           map((result) => {
             const graphQLErrors = getGraphQLErrorsFromResult(result);
@@ -971,7 +970,6 @@ export class QueryManager {
 
       const resultsFromLink = () =>
         getResultsFromLink({
-          variables,
           context,
         });
 

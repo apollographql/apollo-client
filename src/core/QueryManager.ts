@@ -1582,17 +1582,13 @@ export class QueryManager {
       query,
       variables,
       fetchPolicy,
-      refetchWritePolicy,
       errorPolicy,
-      returnPartialData,
       context,
     }: {
       query: TypedDocumentNode<TData, TVars>;
       variables: TVars;
       fetchPolicy: FetchPolicy;
-      refetchWritePolicy?: RefetchWritePolicy;
       errorPolicy: ErrorPolicy;
-      returnPartialData?: boolean;
       context: DefaultContext;
     },
     newNetworkStatus = NetworkStatus.loading,
@@ -1611,7 +1607,7 @@ export class QueryManager {
     ) => {
       const data = diff.result;
 
-      if (__DEV__ && !returnPartialData && data !== null) {
+      if (__DEV__ && data !== null) {
         logMissingFieldErrors(diff.missing);
       }
 
@@ -1622,7 +1618,7 @@ export class QueryManager {
         // queryInfo.getDiff() directly. Since getDiff is updated to return null
         // on returnPartialData: false, we should take advantage of that instead
         // of having to patch it elsewhere.
-        if (!diff.complete && !returnPartialData) {
+        if (!diff.complete) {
           data = undefined;
         }
 
@@ -1679,10 +1675,7 @@ export class QueryManager {
       fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
         // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
-      : (
-        newNetworkStatus === NetworkStatus.refetch &&
-        refetchWritePolicy !== "merge"
-      ) ?
+      : newNetworkStatus === NetworkStatus.refetch ?
         CacheWriteBehavior.OVERWRITE
       : CacheWriteBehavior.MERGE;
 
@@ -1704,8 +1697,8 @@ export class QueryManager {
           return resultsFromCache(diff, NetworkStatus.ready);
         }
 
-        if (returnPartialData || emitLoadingState) {
-          return concat(resultsFromCache(diff), resultsFromLink());
+        if (emitLoadingState) {
+          return resultsFromLink();
         }
 
         return resultsFromLink();

@@ -14,7 +14,6 @@ export type {
   FetchResult,
   GraphQLRequest,
   IncrementalPayload,
-  LinkRequest,
   NextLink,
   Operation,
   Path,

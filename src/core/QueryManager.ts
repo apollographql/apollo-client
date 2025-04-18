@@ -885,49 +885,49 @@ export class QueryManager {
       return result.data as TData;
     }
 
-    const writeToCache = <TData>(
-      result: FetchResult<TData>,
-      document: DocumentNode,
-      variables: TVars
-    ) => {
-      const cacheWriteBehavior =
-        fetchPolicy === "no-cache" ?
-          CacheWriteBehavior.FORBID
-        : CacheWriteBehavior.MERGE;
-
-      if (
-        cacheWriteBehavior === CacheWriteBehavior.FORBID ||
-        !shouldWriteResult(result, errorPolicy)
-      ) {
-        return;
-      }
-
-      // Using a transaction here so we have a chance to read the result
-      // back from the cache before the watch callback fires as a result
-      // of writeQuery, so we can store the new diff quietly and ignore
-      // it when we receive it redundantly from the watch callback.
-      this.cache.performTransaction((cache) => {
-        cache.writeQuery({
-          query: document,
-          data: result.data as Unmasked<TData>,
-          variables,
-          overwrite: false,
-        });
-
-        const diff = cache.diff<TData>({
-          query: document,
-          variables,
-          returnPartialData: true,
-          optimistic: true,
-        });
-
-        if (diff.complete) {
-          (result as any).data = diff.result;
-        }
-      });
-    };
-
     const fromVariables = (variables: TVars) => {
+      const writeToCache = <TData>(
+        result: FetchResult<TData>,
+        document: DocumentNode,
+        variables: TVars
+      ) => {
+        const cacheWriteBehavior =
+          fetchPolicy === "no-cache" ?
+            CacheWriteBehavior.FORBID
+          : CacheWriteBehavior.MERGE;
+
+        if (
+          cacheWriteBehavior === CacheWriteBehavior.FORBID ||
+          !shouldWriteResult(result, errorPolicy)
+        ) {
+          return;
+        }
+
+        // Using a transaction here so we have a chance to read the result
+        // back from the cache before the watch callback fires as a result
+        // of writeQuery, so we can store the new diff quietly and ignore
+        // it when we receive it redundantly from the watch callback.
+        this.cache.performTransaction((cache) => {
+          cache.writeQuery({
+            query: document,
+            data: result.data as Unmasked<TData>,
+            variables,
+            overwrite: false,
+          });
+
+          const diff = cache.diff<TData>({
+            query: document,
+            variables,
+            returnPartialData: true,
+            optimistic: true,
+          });
+
+          if (diff.complete) {
+            (result as any).data = diff.result;
+          }
+        });
+      };
+
       const resultsFromLink = () => {
         // Performing transformForLink here gives this.cache a chance to fill in
         // missing fragment definitions (for example) before sending this document

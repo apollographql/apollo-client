@@ -850,11 +850,11 @@ export class QueryManager {
               variables,
               onlyRunForcedResolvers: true,
             })
-            .then((resolved) => ({ data: resolved.data || void 0 }))
+            .then((resolved) => resolved.data || void 0)
         );
       }
 
-      return of({ data: data || undefined });
+      return of(data || undefined);
     };
 
     function getMergedData<TData>(result: FetchResult<TData>): TData {
@@ -948,7 +948,7 @@ export class QueryManager {
           const diff = readCache();
 
           if (diff.complete || fetchPolicy === "cache-only") {
-            return resultsFromCache(diff);
+            return resultsFromCache(diff).pipe(map((data) => ({ data })));
           }
 
           return resultsFromLink(variables);

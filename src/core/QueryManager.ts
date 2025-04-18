@@ -1602,7 +1602,7 @@ export class QueryManager {
       this.cache.diff({
         query,
         variables,
-        returnPartialData: true,
+        returnPartialData: false,
         optimistic: true,
       });
 

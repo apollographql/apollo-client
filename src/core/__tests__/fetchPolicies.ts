@@ -688,6 +688,39 @@ describe("cache-only", () => {
 
     await expect(stream).not.toEmitAnything();
   });
+
+  test("does not return partial data from cache with client.query", async () => {
+    const query = gql`
+      query {
+        user {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.writeQuery({
+      query: gql`
+        query {
+          user {
+            id
+          }
+        }
+      `,
+      data: {
+        user: {
+          __typename: "User",
+          id: 1,
+        },
+      },
+    });
+
+    await expect(
+      client.query({ query, fetchPolicy: "cache-only" })
+    ).resolves.toStrictEqualTyped({ data: undefined });
+  });
 });
 
 describe("cache-and-network", function () {

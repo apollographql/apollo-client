@@ -28,8 +28,9 @@ export interface ApolloContext {
 }
 
 export interface OperationContext extends DefaultContext {
-  readonly apollo: ApolloContext;
   clientAwareness?: ClientAwareness;
+
+  getApolloContext: () => Readonly<ApolloContext>;
 }
 
 export interface DefaultContext extends Record<string, any> {}

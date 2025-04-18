@@ -1598,7 +1598,13 @@ export class QueryManager {
       variables,
     });
 
-    const readCache = () => queryInfo.getDiff();
+    const readCache = () =>
+      this.cache.diff({
+        query,
+        variables,
+        returnPartialData: true,
+        optimistic: true,
+      });
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,

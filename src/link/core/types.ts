@@ -99,11 +99,11 @@ export interface Operation {
   operationName: string;
   extensions: Record<string, any>;
   setContext: {
-    (context: Partial<DefaultContext>): void;
+    (context: Partial<OperationContext>): void;
     (
       updateContext: (
         previousContext: OperationContext
-      ) => Partial<DefaultContext>
+      ) => Partial<OperationContext>
     ): void;
   };
   getContext: () => OperationContext;

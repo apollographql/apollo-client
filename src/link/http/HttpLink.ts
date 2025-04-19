@@ -1,10 +1,12 @@
+import type { ASTNode } from "graphql";
+
+import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 
 import { createHttpLink } from "./createHttpLink.js";
-import type { HttpOptions, UriFunction } from "./selectHttpOptionsAndBody.js";
 
 export declare namespace HttpLink {
-  export interface ContextOptions {
+  interface ContextOptions {
     /**
      * The URL of the GraphQL endpoint to send requests to. Can also be a
      * function that accepts an `Operation` object and returns the string URL to
@@ -67,10 +69,79 @@ export declare namespace HttpLink {
      */
     preserveHeaderCase?: boolean;
   }
+
+  interface Options {
+    /**
+     * The URI to use when fetching operations.
+     *
+     * Defaults to '/graphql'.
+     */
+    uri?: string | UriFunction;
+
+    /**
+     * Passes the extensions field to your graphql server.
+     *
+     * Defaults to false.
+     */
+    includeExtensions?: boolean;
+
+    /**
+     * A `fetch`-compatible API to use when making requests.
+     */
+    fetch?: typeof fetch;
+
+    /**
+     * An object representing values to be sent as headers on the request.
+     */
+    headers?: Record<string, string>;
+
+    /**
+     * If set to true, header names won't be automatically normalized to
+     * lowercase. This allows for non-http-spec-compliant servers that might
+     * expect capitalized header names.
+     */
+    preserveHeaderCase?: boolean;
+
+    /**
+     * The credentials policy you want to use for the fetch call.
+     */
+    credentials?: string;
+
+    /**
+     * Any overrides of the fetch options argument to pass to the fetch call.
+     */
+    fetchOptions?: any;
+
+    /**
+     * If set to true, use the HTTP GET method for query operations. Mutations
+     * will still use the method specified in fetchOptions.method (which defaults
+     * to POST).
+     */
+    useGETForQueries?: boolean;
+
+    /**
+     * If set to true, the default behavior of stripping unused variables
+     * from the request will be disabled.
+     *
+     * Unused variables are likely to trigger server-side validation errors,
+     * per https://spec.graphql.org/draft/#sec-All-Variables-Used, but this
+     * includeUnusedVariables option can be useful if your server deviates
+     * from the GraphQL specification by not strictly enforcing that rule.
+     */
+    includeUnusedVariables?: boolean;
+    /**
+     * A function to substitute for the default query print function. Can be
+     * used to apply changes to the results of the print function.
+     */
+    print?: Printer;
+  }
+
+  type Printer = (node: ASTNode, originalPrint: typeof print) => string;
+  type UriFunction = (operation: Operation) => string;
 }
 
 export class HttpLink extends ApolloLink {
-  constructor(public options: HttpOptions = {}) {
+  constructor(public options: HttpLink.Options = {}) {
     super(createHttpLink(options).request);
   }
 }

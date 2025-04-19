@@ -9,10 +9,6 @@ interface Printer {
   (node: ASTNode, originalPrint: typeof print): string;
 }
 
-export interface UriFunction {
-  (operation: Operation): string;
-}
-
 export interface Body {
   query?: string;
   operationName?: string;

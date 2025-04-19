@@ -10,7 +10,6 @@ import type {
 } from "@apollo/client/cache";
 import type { GraphQLRequest } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
-import type { UriFunction } from "@apollo/client/link/http";
 import { HttpLink } from "@apollo/client/link/http";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
@@ -78,7 +77,7 @@ export interface ApolloClientOptions {
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
-  uri?: string | UriFunction;
+  uri?: string | HttpLink.UriFunction;
   credentials?: string;
   /**
    * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`

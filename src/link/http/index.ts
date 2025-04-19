@@ -1,7 +1,6 @@
 export { parseAndCheckHttpResponse } from "./parseAndCheckHttpResponse.js";
 export type { ClientParseError } from "./serializeFetchParameter.js";
 export { serializeFetchParameter } from "./serializeFetchParameter.js";
-export type { UriFunction } from "./selectHttpOptionsAndBody.js";
 export {
   defaultPrinter,
   fallbackHttpConfig,

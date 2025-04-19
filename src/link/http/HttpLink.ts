@@ -137,6 +137,13 @@ export declare namespace HttpLink {
     print?: Printer;
   }
 
+  interface Body {
+    query?: string;
+    operationName?: string;
+    variables?: Record<string, any>;
+    extensions?: Record<string, any>;
+  }
+
   type Printer = (node: ASTNode, originalPrint: typeof print) => string;
   type UriFunction = (operation: Operation) => string;
 }

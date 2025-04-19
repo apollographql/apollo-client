@@ -401,6 +401,11 @@ export { maybe }
 export function maybeDeepFreeze<T>(obj: T): T;
 
 // @public (undocumented)
+export type Merge<Target, Source> = {
+    [K in keyof Target as K extends keyof Source ? never : K]: Target[K];
+} & Source;
+
+// @public (undocumented)
 export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;
 
 // @public (undocumented)

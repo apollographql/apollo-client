@@ -5,6 +5,7 @@
 ```ts
 
 import { ApolloCache } from '@apollo/client/cache';
+import { ApolloContext } from '@apollo/client/link/core';
 import { ApolloLink } from '@apollo/client/link/core';
 import { ApolloPayloadResult } from '@apollo/client/link/core';
 import { ApolloReducerConfig } from '@apollo/client/cache';
@@ -14,6 +15,7 @@ import { checkFetcher } from '@apollo/client/link/http';
 import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
+import { CombineLinkContextOptions } from '@apollo/client/link/core';
 import { concat } from '@apollo/client/link/core';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
@@ -50,7 +52,6 @@ import { getApolloClientMemoryInternals } from '@apollo/client/utilities/interna
 import { gql } from 'graphql-tag';
 import { GraphQLRequest } from '@apollo/client/link/core';
 import { HttpLink } from '@apollo/client/link/http';
-import { HttpOptions } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
 import { IncrementalPayload } from '@apollo/client/link/core';
@@ -77,6 +78,7 @@ import { Observable } from '@apollo/client/utilities';
 import { Observable as Observable_2 } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link/core';
+import { OperationContext } from '@apollo/client/link/core';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { Path } from '@apollo/client/link/core';
@@ -109,7 +111,6 @@ import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
 import { Unmasked } from '@apollo/client/masking';
-import { UriFunction } from '@apollo/client/link/http';
 import type { VariablesOption } from '@apollo/client/utilities';
 import { WatchFragmentOptions } from '@apollo/client/cache';
 import { WatchFragmentResult } from '@apollo/client/cache';
@@ -200,9 +201,11 @@ export interface ApolloClientOptions {
     ssrMode?: boolean;
     // (undocumented)
     typeDefs?: string | string[] | DocumentNode_2 | DocumentNode_2[];
-    uri?: string | UriFunction;
+    uri?: string | HttpLink.UriFunction;
     version?: string;
 }
+
+export { ApolloContext }
 
 export { ApolloLink }
 
@@ -237,11 +240,21 @@ const enum CacheWriteBehavior {
 
 export { checkFetcher }
 
+// @public (undocumented)
+export interface ClientAwareness {
+    // (undocumented)
+    name?: string;
+    // (undocumented)
+    version?: string;
+}
+
 export { ClientParseError }
 
 export { CombinedGraphQLErrors }
 
 export { CombinedProtocolErrors }
+
+export { CombineLinkContextOptions }
 
 export { concat }
 
@@ -359,8 +372,6 @@ export { GraphQLRequest }
 
 export { HttpLink }
 
-export { HttpOptions }
-
 export { IdGetter }
 
 export { IdGetterObj }
@@ -425,7 +436,6 @@ class LocalState {
     getResolvers(): Resolvers;
     // (undocumented)
     prepareContext(context?: Record<string, any>): {
-        cache: ApolloCache;
         getCacheKey(obj: StoreObject): string | undefined;
     };
     // (undocumented)
@@ -687,6 +697,8 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 
 export { Operation }
 
+export { OperationContext }
+
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
 
@@ -748,9 +760,11 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    cache: ApolloCache;
+    get cache(): ApolloCache;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    readonly client: ApolloClient;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -792,7 +806,7 @@ class QueryManager {
         observable?: Observable_2<FetchResult<any>>;
     }>;
     // (undocumented)
-    link: ApolloLink;
+    get link(): ApolloLink;
     // (undocumented)
     markMutationOptimistic<TData, TVariables extends OperationVariables, TContext, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
         mutationId: string;
@@ -861,9 +875,9 @@ interface QueryManagerOptions {
     // (undocumented)
     assumeImmutableResults: boolean;
     // (undocumented)
-    cache: ApolloCache;
+    client: ApolloClient;
     // (undocumented)
-    clientAwareness: Record<string, string>;
+    clientAwareness: ClientAwareness;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -872,8 +886,6 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
-    // (undocumented)
-    link: ApolloLink;
     // (undocumented)
     localState: LocalState;
     // (undocumented)
@@ -1082,8 +1094,6 @@ export type UpdateQueryOptions<TData, TVariables> = {
     previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
-export { UriFunction }
-
 // @public (undocumented)
 export const version: string;
 
@@ -1114,8 +1124,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:465:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:262:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

@@ -4,10 +4,21 @@
 
 ```ts
 
+import type { ApolloClient } from '@apollo/client';
+import type { ApolloContext as ApolloContext_2 } from '@apollo/client';
+import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
+import type { Merge } from '@apollo/client/utilities';
 import type { Observable } from 'rxjs';
+import type { Prettify } from '@apollo/client/utilities';
+
+// @public (undocumented)
+export interface ApolloContext {
+    // (undocumented)
+    readonly client: ApolloClient;
+}
 
 // @public (undocumented)
 export class ApolloLink {
@@ -19,7 +30,7 @@ export class ApolloLink {
     // (undocumented)
     static empty(): ApolloLink;
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloContext_2): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal
@@ -43,6 +54,12 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
+
+// @public (undocumented)
+export type CombineLinkContextOptions<TLinkContextOptions extends Array<Record<string, any>>, TCombined extends Record<string, any> = {}> = TLinkContextOptions extends [] ? Prettify<TCombined> : TLinkContextOptions extends ([
+infer First extends Record<string, any>,
+...infer Rest extends Array<Record<string, any>>
+]) ? CombineLinkContextOptions<Rest, Merge<TCombined, First>> : never;
 
 // @public (undocumented)
 export const concat: typeof ApolloLink.concat;
@@ -132,18 +149,26 @@ export interface Operation {
     // (undocumented)
     extensions: Record<string, any>;
     // (undocumented)
-    getContext: () => DefaultContext;
+    getApolloContext: () => ApolloContext;
+    // (undocumented)
+    getContext: () => OperationContext;
     // (undocumented)
     operationName: string;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+        (context: Partial<OperationContext>): void;
+        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
     // (undocumented)
     variables: Record<string, any>;
+}
+
+// @public (undocumented)
+export interface OperationContext extends DefaultContext {
+    // (undocumented)
+    clientAwareness?: ClientAwareness;
 }
 
 // @public (undocumented)

@@ -7,6 +7,7 @@ import type {
   ClientAwareness,
   DefaultContext,
 } from "@apollo/client";
+import type { Merge, Prettify } from "@apollo/client/utilities";
 
 export type { DocumentNode };
 
@@ -15,6 +16,19 @@ export type Path = ReadonlyArray<string | number>;
 interface ExecutionPatchResultBase {
   hasNext?: boolean;
 }
+
+export type CombineLinkContextOptions<
+  TLinkContextOptions extends Array<Record<string, any>>,
+  TCombined extends Record<string, any> = {},
+> = TLinkContextOptions extends [] ? Prettify<TCombined>
+: TLinkContextOptions extends (
+  [
+    infer First extends Record<string, any>,
+    ...infer Rest extends Array<Record<string, any>>,
+  ]
+) ?
+  CombineLinkContextOptions<Rest, Merge<TCombined, First>>
+: never;
 
 export interface ExecutionPatchInitialResult<
   TData = Record<string, any>,

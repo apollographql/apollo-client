@@ -3,6 +3,8 @@ import type { ASTNode } from "graphql";
 import type { Operation } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
 
+import type { HttpLink } from "./HttpLink.js";
+
 interface Printer {
   (node: ASTNode, originalPrint: typeof print): string;
 }
@@ -18,20 +20,14 @@ export interface Body {
   extensions?: Record<string, any>;
 }
 
-interface HttpQueryOptions {
-  includeQuery?: boolean;
-  includeExtensions?: boolean;
-  preserveHeaderCase?: boolean;
-}
-
 interface HttpConfig {
-  http?: HttpQueryOptions;
+  http?: HttpLink.HttpOptions;
   options?: any;
   headers?: Record<string, string>;
   credentials?: any;
 }
 
-const defaultHttpOptions: HttpQueryOptions = {
+const defaultHttpOptions: HttpLink.HttpOptions = {
   includeQuery: true,
   includeExtensions: false,
   preserveHeaderCase: false,
@@ -86,7 +82,7 @@ export function selectHttpOptionsAndBodyInternal(
   ...configs: HttpConfig[]
 ) {
   let options = {} as HttpConfig & Record<string, any>;
-  let http = {} as HttpQueryOptions;
+  let http = {} as HttpLink.HttpOptions;
 
   configs.forEach((config) => {
     options = {

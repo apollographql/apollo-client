@@ -8,6 +8,14 @@ export declare namespace HttpLink {
     uri?: string | UriFunction;
     headers?: Record<string, string>;
     credentials?: RequestCredentials;
+    fetchOptions?: RequestInit;
+    http?: HttpOptions;
+  }
+
+  export interface HttpOptions {
+    includeExtensions?: boolean;
+    includeQuery?: boolean;
+    preserveHeaderCase?: boolean;
   }
 }
 

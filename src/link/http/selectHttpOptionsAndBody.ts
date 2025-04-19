@@ -1,13 +1,7 @@
-import type { ASTNode } from "graphql";
-
 import type { Operation } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
 
 import type { HttpLink } from "./HttpLink.js";
-
-interface Printer {
-  (node: ASTNode, originalPrint: typeof print): string;
-}
 
 export interface Body {
   query?: string;
@@ -57,7 +51,7 @@ export const fallbackHttpConfig = {
   options: defaultOptions,
 };
 
-export const defaultPrinter: Printer = (ast, printer) => printer(ast);
+export const defaultPrinter: HttpLink.Printer = (ast, printer) => printer(ast);
 
 export function selectHttpOptionsAndBody(
   operation: Operation,
@@ -74,7 +68,7 @@ export function selectHttpOptionsAndBody(
 
 export function selectHttpOptionsAndBodyInternal(
   operation: Operation,
-  printer: Printer,
+  printer: HttpLink.Printer,
   ...configs: HttpConfig[]
 ) {
   let options = {} as HttpConfig & Record<string, any>;

@@ -29,6 +29,8 @@ export namespace BatchHttpLink {
     "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
   > &
     Omit<HttpLink.Options, "useGETForQueries">;
+
+  export type ContextOptions = HttpLink.ContextOptions;
 }
 
 const backupFetch = maybe(() => fetch);

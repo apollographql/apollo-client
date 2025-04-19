@@ -4,7 +4,7 @@ import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type { HttpOptions } from "@apollo/client/link/http";
+import type { HttpLink } from "@apollo/client/link/http";
 import {
   checkFetcher,
   defaultPrinter,
@@ -28,7 +28,7 @@ export namespace BatchHttpLink {
     BatchLink.Options,
     "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"
   > &
-    Omit<HttpOptions, "useGETForQueries">;
+    Omit<HttpLink.Options, "useGETForQueries">;
 }
 
 const backupFetch = maybe(() => fetch);

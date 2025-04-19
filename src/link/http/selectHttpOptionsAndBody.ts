@@ -3,13 +3,6 @@ import { print } from "@apollo/client/utilities";
 
 import type { HttpLink } from "./HttpLink.js";
 
-export interface Body {
-  query?: string;
-  operationName?: string;
-  variables?: Record<string, any>;
-  extensions?: Record<string, any>;
-}
-
 interface HttpConfig {
   http?: HttpLink.HttpOptions;
   options?: any;
@@ -103,7 +96,7 @@ export function selectHttpOptionsAndBodyInternal(
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;
-  const body: Body = { operationName, variables };
+  const body: HttpLink.Body = { operationName, variables };
 
   if (http.includeExtensions) (body as any).extensions = extensions;
 

@@ -114,6 +114,7 @@ export {
 export type {
   ApolloContext,
   ApolloPayloadResult,
+  CombineLinkContextOptions,
   DocumentNode,
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,

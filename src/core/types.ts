@@ -18,6 +18,11 @@ export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
 
+export interface ClientAwareness {
+  name?: string;
+  version?: string;
+}
+
 export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;

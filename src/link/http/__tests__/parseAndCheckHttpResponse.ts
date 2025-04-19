@@ -2,7 +2,7 @@ import fetchMock from "fetch-mock";
 import { gql } from "graphql-tag";
 
 import { parseAndCheckHttpResponse } from "@apollo/client/link/http";
-import { createOperation } from "@apollo/client/link/utils";
+import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {

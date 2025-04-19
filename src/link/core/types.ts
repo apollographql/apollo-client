@@ -2,7 +2,12 @@ import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { DefaultContext } from "@apollo/client";
+import type {
+  ApolloClient,
+  ClientAwareness,
+  DefaultContext,
+} from "@apollo/client";
+import type { Merge, Prettify } from "@apollo/client/utilities";
 
 export type { DocumentNode };
 
@@ -11,6 +16,19 @@ export type Path = ReadonlyArray<string | number>;
 interface ExecutionPatchResultBase {
   hasNext?: boolean;
 }
+
+export type CombineLinkContextOptions<
+  TLinkContextOptions extends Array<Record<string, any>>,
+  TCombined extends Record<string, any> = {},
+> = TLinkContextOptions extends [] ? Prettify<TCombined>
+: TLinkContextOptions extends (
+  [
+    infer First extends Record<string, any>,
+    ...infer Rest extends Array<Record<string, any>>,
+  ]
+) ?
+  CombineLinkContextOptions<Rest, Merge<TCombined, First>>
+: never;
 
 export interface ExecutionPatchInitialResult<
   TData = Record<string, any>,
@@ -81,14 +99,23 @@ export interface Operation {
   operationName: string;
   extensions: Record<string, any>;
   setContext: {
-    (context: Partial<DefaultContext>): void;
+    (context: Partial<OperationContext>): void;
     (
       updateContext: (
-        previousContext: DefaultContext
-      ) => Partial<DefaultContext>
+        previousContext: OperationContext
+      ) => Partial<OperationContext>
     ): void;
   };
-  getContext: () => DefaultContext;
+  getContext: () => OperationContext;
+  getApolloContext: () => ApolloContext;
+}
+
+export interface ApolloContext {
+  readonly client: ApolloClient;
+}
+
+export interface OperationContext extends DefaultContext {
+  clientAwareness?: ClientAwareness;
 }
 
 export interface SingleExecutionResult<

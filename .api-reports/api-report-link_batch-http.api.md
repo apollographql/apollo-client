@@ -7,14 +7,16 @@
 import { ApolloLink } from '@apollo/client/link/core';
 import { BatchLink } from '@apollo/client/link/batch';
 import type { FetchResult } from '@apollo/client/link/core';
-import type { HttpOptions } from '@apollo/client/link/http';
+import type { HttpLink } from '@apollo/client/link/http';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link/core';
 
 // @public (undocumented)
 export namespace BatchHttpLink {
     // (undocumented)
-    export type Options = Pick<BatchLink.Options, "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"> & Omit<HttpOptions, "useGETForQueries">;
+    export type ContextOptions = HttpLink.ContextOptions;
+    // (undocumented)
+    export type Options = Pick<BatchLink.Options, "batchMax" | "batchDebounce" | "batchInterval" | "batchKey"> & Omit<HttpLink.Options, "useGETForQueries">;
 }
 
 // @public

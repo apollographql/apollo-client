@@ -1,9 +1,9 @@
-import type { Body } from "./selectHttpOptionsAndBody.js";
+import type { HttpLink } from "./HttpLink.js";
 import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
 // For GET operations, returns the given URI rewritten with parameters, or a
 // parse error.
-export function rewriteURIForGET(chosenURI: string, body: Body) {
+export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body) {
   // Implement the standard HTTP GET serialization, plus 'extensions'. Note
   // the extra level of JSON serialization!
   const queryParams: string[] = [];

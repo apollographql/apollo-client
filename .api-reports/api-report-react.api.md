@@ -31,6 +31,7 @@ import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GraphQLRequest } from '@apollo/client/link/core';
 import type { HookWrappers } from '@apollo/client/react/internal';
+import { HttpLink } from '@apollo/client/link/http';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsStrictlyAny } from '@apollo/client/utilities';
@@ -70,7 +71,6 @@ import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 import type { Unmasked as Unmasked_2 } from '@apollo/client';
 import type { UpdateQueryMapFn as UpdateQueryMapFn_2 } from '@apollo/client';
-import type { UriFunction } from '@apollo/client/link/http';
 import type { VariablesOption } from '@apollo/client/utilities';
 import type { WatchFragmentOptions } from '@apollo/client/cache';
 import type { WatchFragmentResult } from '@apollo/client/cache';
@@ -179,7 +179,7 @@ interface ApolloClientOptions {
     ssrMode?: boolean;
     // (undocumented)
     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-    uri?: string | UriFunction;
+    uri?: string | HttpLink.UriFunction;
     version?: string;
 }
 
@@ -252,6 +252,14 @@ const enum CacheWriteBehavior {
     MERGE = 2,
     // (undocumented)
     OVERWRITE = 1
+}
+
+// @public (undocumented)
+interface ClientAwareness {
+    // (undocumented)
+    name?: string;
+    // (undocumented)
+    version?: string;
 }
 
 // @public
@@ -388,7 +396,6 @@ class LocalState {
     getResolvers(): Resolvers;
     // (undocumented)
     prepareContext(context?: Record<string, any>): {
-        cache: ApolloCache;
         getCacheKey(obj: StoreObject): string | undefined;
     };
     // (undocumented)
@@ -723,9 +730,11 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    cache: ApolloCache;
+    get cache(): ApolloCache;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    readonly client: ApolloClient_2;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -769,7 +778,7 @@ class QueryManager {
         observable?: Observable<FetchResult<any>>;
     }>;
     // (undocumented)
-    link: ApolloLink;
+    get link(): ApolloLink;
     // (undocumented)
     markMutationOptimistic<TData, TVariables extends OperationVariables_2, TContext, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
         mutationId: string;
@@ -843,9 +852,11 @@ interface QueryManagerOptions {
     // (undocumented)
     assumeImmutableResults: boolean;
     // (undocumented)
-    cache: ApolloCache;
+    client: ApolloClient_2;
+    // Warning: (ae-forgotten-export) The symbol "ClientAwareness" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    clientAwareness: Record<string, string>;
+    clientAwareness: ClientAwareness;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -854,8 +865,6 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
-    // (undocumented)
-    link: ApolloLink;
     // (undocumented)
     localState: LocalState;
     // (undocumented)
@@ -1609,10 +1618,10 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:96:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:201:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:230:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:465:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:206:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:235:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:262:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:270:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts

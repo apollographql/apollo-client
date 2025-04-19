@@ -1,10 +1,10 @@
 import { gql } from "graphql-tag";
 
-import { execute } from "@apollo/client/link/core";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, realisticDelay } from "@apollo/client/testing";
 import {
   enableFakeTimers,
+  executeWithDefaultContext as execute,
   ObservableStream,
   spyOnConsole,
   withCleanup,

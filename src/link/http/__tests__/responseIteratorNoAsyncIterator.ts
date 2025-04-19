@@ -3,9 +3,11 @@ import { TextDecoder, TextEncoder } from "util";
 import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
 
-import { execute } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {

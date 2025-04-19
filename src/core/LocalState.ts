@@ -186,7 +186,6 @@ export class LocalState {
     const { cache } = this;
     return {
       ...context,
-      cache,
       // Getting an entry's cache key is useful for local state resolvers.
       getCacheKey(obj: StoreObject) {
         return cache.identify(obj);

@@ -145,7 +145,7 @@ export {
   selectURI,
   serializeFetchParameter,
 } from "@apollo/client/link/http";
-export type { ClientParseError, UriFunction } from "@apollo/client/link/http";
+export type { ClientParseError } from "@apollo/client/link/http";
 
 /* Masking */
 export type {

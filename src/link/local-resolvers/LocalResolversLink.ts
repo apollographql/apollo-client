@@ -149,21 +149,6 @@ export class LocalResolversLink extends ApolloLink {
       return remoteResult;
     }
 
-    const localResult = await this.resolveDocument(
-      operation,
-      clientQuery,
-      remoteResult.data
-    );
-
-    return { ...remoteResult, data: localResult };
-  }
-
-  private async resolveDocument(
-    operation: Operation,
-    clientQuery: DocumentNode,
-    rootValue: Record<string, any> | null | undefined,
-    fragmentMatcher: FragmentMatcher = () => true
-  ) {
     const { variables } = operation;
     const context = operation.getContext();
     const mainDefinition = getMainDefinition(
@@ -187,17 +172,19 @@ export class LocalResolversLink extends ApolloLink {
       fragmentMap,
       context,
       variables,
-      fragmentMatcher,
+      fragmentMatcher: () => true,
       defaultOperationType,
       selectionsToResolve,
     };
 
-    return this.resolveSelectionSet(
+    const localResult = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
-      rootValue,
+      remoteResult.data,
       execContext
     );
+
+    return { ...remoteResult, data: localResult };
   }
 
   private async resolveSelectionSet<TData>(

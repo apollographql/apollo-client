@@ -153,13 +153,11 @@ export class LocalResolversLink extends ApolloLink {
     remoteResult,
     context,
     variables,
-    onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | null;
     remoteResult: FetchResult<TData>;
     context?: Record<string, any>;
     variables?: Record<string, any>;
-    onlyRunForcedResolvers?: boolean;
   }): Promise<FetchResult<TData>> {
     if (document) {
       return this.resolveDocument(
@@ -168,8 +166,7 @@ export class LocalResolversLink extends ApolloLink {
         context,
         variables,
         // TODO: REpalce with cache.fragmentMatches call
-        () => true,
-        onlyRunForcedResolvers
+        () => true
       ).then((localResult) => ({
         ...remoteResult,
         data: localResult.result,

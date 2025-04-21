@@ -1,7 +1,9 @@
 import type { FieldNode } from "graphql";
 
+import type { DefaultContext } from "@apollo/client";
+import type { ApolloContext } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type { FragmentMap } from "@apollo/client/utilities";
+import type { FragmentMap, Merge } from "@apollo/client/utilities";
 
 export declare namespace LocalResolversLink {
   export interface Options {
@@ -15,10 +17,10 @@ export declare namespace LocalResolversLink {
   }
 
   export type Resolver = (
-    rootValue?: any,
-    args?: any,
-    context?: any,
-    info?: {
+    rootValue: any,
+    args: any,
+    context: Merge<DefaultContext, ApolloContext>,
+    info: {
       field: FieldNode;
       fragmentMap: FragmentMap;
     }

@@ -257,6 +257,20 @@ export interface CacheSizes {
    * recommended to set this to a high value.
    */
   "inMemoryCache.executeSubSelectedArray": number;
+
+  /**
+   * A cache inside of [`LocalResolversLink`](https://github.com/apollographql/apollo-client/blob/main/src/link/local-resolvers/LocalResolversLink.ts)
+   * that gets splits the query between its client and server definitions.
+   *
+   * It is called with `DocumentNode`s.
+   *
+   * @defaultValue
+   * Defaults to `2000`.
+   *
+   * @privateRemarks
+   * Cache size for the `getTransformedQuery` function.
+   */
+  "LocalResolversLink.getTransformedQuery": number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -298,4 +312,5 @@ export const enum defaultCacheSizes {
   "inMemoryCache.maybeBroadcastWatch" = 5000,
   "inMemoryCache.executeSelectionSet" = 50000,
   "inMemoryCache.executeSubSelectedArray" = 10000,
+  "LocalResolversLink.getTransformedQuery" = 2000,
 }

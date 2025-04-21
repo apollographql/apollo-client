@@ -1,4 +1,5 @@
 import type { DocumentNode, FieldNode } from "graphql";
+import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, map, mergeMap } from "rxjs";
 
@@ -13,10 +14,14 @@ import { ApolloLink } from "@apollo/client/link/core";
 import type { FragmentMap, Merge } from "@apollo/client/utilities";
 import {
   AutoCleanedWeakCache,
+  cacheSizes,
+  hasDirectives,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 import { LocalState } from "./LocalState.js";
 
@@ -47,7 +52,7 @@ interface TransformCacheEntry {
   clientQuery: DocumentNode | null;
 }
 
-export class LocalResolversLink extends ApolloLink {
+class LocalResolversLink extends ApolloLink {
   private localState: LocalState;
   private transformCache = new AutoCleanedWeakCache<
     DocumentNode,
@@ -127,3 +132,42 @@ export class LocalResolversLink extends ApolloLink {
     return transformed;
   }
 }
+
+const getTransformedQuery = wrap(
+  (query: DocumentNode) => {
+    return {
+      clientQuery: getClientQuery(query),
+      serverQuery: removeDirectivesFromDocument(
+        [{ name: "client", remove: true }],
+        query
+      ),
+    };
+  },
+  {
+    max:
+      cacheSizes["LocalResolversLink.getTransformedQuery"] ||
+      defaultCacheSizes["LocalResolversLink.getTransformedQuery"],
+  }
+);
+
+function getClientQuery(query: DocumentNode) {
+  if (hasDirectives(["client"], query)) {
+    return query;
+  }
+
+  return null;
+}
+
+if (__DEV__) {
+  Object.assign(LocalResolversLink, {
+    getMemoryInternals() {
+      return {
+        LocalResolversLink: {
+          getTransformedQuery: getTransformedQuery.size,
+        },
+      };
+    },
+  });
+}
+
+export { LocalResolversLink };

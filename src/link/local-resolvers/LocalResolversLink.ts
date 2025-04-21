@@ -1,7 +1,7 @@
 import type { DocumentNode, FieldNode } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
-import { from, map, mergeMap } from "rxjs";
+import { from, mergeMap } from "rxjs";
 
 import type { DefaultContext } from "@apollo/client";
 import type {
@@ -78,6 +78,11 @@ class LocalResolversLink extends ApolloLink {
       operation.query
     );
 
+    invariant(
+      clientQuery || serverQuery,
+      "`LocalResolversLink` was issued a query that could neither be run by local resolvers or the server. Please file an issue as this should be an impossible state."
+    );
+
     if (serverQuery) {
       invariant(
         !!forward,
@@ -98,14 +103,9 @@ class LocalResolversLink extends ApolloLink {
       );
     }
 
-    invariant(
-      clientQuery,
-      "`LocalResolversLink` did not contain any `@client` or server fields. This is a bug in Apollo Client."
-    );
-
     return from(
       this.localState.runResolvers({
-        document: operation.query,
+        document: clientQuery,
         remoteResult: { data: {} },
         context: operation.getContext(),
         variables: operation.variables,

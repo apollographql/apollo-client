@@ -11,13 +11,12 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { BREAK, isSelectionNode, visit } from "graphql";
+import { isSelectionNode, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
 
 import type {
-  ApolloCache,
   DefaultContext,
   FragmentMatcher,
   OperationVariables,
@@ -306,10 +305,7 @@ export class LocalResolversLink extends ApolloLink {
     // if we've specifically identified that we only want to run forced
     // resolvers (that is, resolvers for fields marked with
     // `@client(always: true)`), then we'll skip running non-forced resolvers.
-    if (
-      !execContext.onlyRunForcedResolvers ||
-      this.shouldForceResolvers(field)
-    ) {
+    if (!execContext.onlyRunForcedResolvers) {
       const resolverType =
         rootValue.__typename || execContext.defaultOperationType;
       const resolverMap = this.resolvers && this.resolvers[resolverType];
@@ -414,28 +410,6 @@ export class LocalResolversLink extends ApolloLink {
         }
       })
     );
-  }
-
-  public shouldForceResolvers(document: ASTNode) {
-    let forceResolvers = false;
-    visit(document, {
-      Directive: {
-        enter(node) {
-          if (node.name.value === "client" && node.arguments) {
-            forceResolvers = node.arguments.some(
-              (arg) =>
-                arg.name.value === "always" &&
-                arg.value.kind === "BooleanValue" &&
-                arg.value.value === true
-            );
-            if (forceResolvers) {
-              return BREAK;
-            }
-          }
-        },
-      },
-    });
-    return forceResolvers;
   }
 
   // Collect selection nodes on paths from document root down to all @client directives.

@@ -193,11 +193,10 @@ export class LocalResolversLink extends ApolloLink {
       exportedVariables: {},
       selectionsToResolve,
     };
-    const isClientFieldDescendant = false;
 
     return this.resolveSelectionSet(
       mainDefinition.selectionSet,
-      isClientFieldDescendant,
+      false,
       rootValue,
       execContext
     ).then((result) => ({

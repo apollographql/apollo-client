@@ -135,13 +135,9 @@ export class LocalResolversLink extends ApolloLink {
       mergeMap((result) => {
         return from(
           this.runResolvers({
-            document: clientQuery,
+            operation,
+            clientQuery: clientQuery,
             remoteResult: result,
-            context: {
-              ...operation.getContext(),
-              ...operation.getApolloContext(),
-            },
-            variables: operation.variables,
           })
         );
       })
@@ -149,22 +145,20 @@ export class LocalResolversLink extends ApolloLink {
   }
 
   private async runResolvers<TData>({
-    document,
+    operation,
+    clientQuery,
     remoteResult,
-    context,
-    variables,
   }: {
-    document: DocumentNode | null;
+    operation: Operation;
+    clientQuery: DocumentNode | null;
     remoteResult: FetchResult<TData>;
-    context?: Record<string, any>;
-    variables?: Record<string, any>;
   }): Promise<FetchResult<TData>> {
-    if (document) {
+    if (clientQuery) {
       return this.resolveDocument(
-        document,
+        clientQuery,
         remoteResult.data,
-        context,
-        variables,
+        { ...operation.getContext(), ...operation.getApolloContext() },
+        operation.variables,
         // TODO: REpalce with cache.fragmentMatches call
         () => true
       ).then((localResult) => ({

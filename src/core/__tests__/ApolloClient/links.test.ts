@@ -31,12 +31,12 @@ describe("Link interactions", () => {
     };
 
     const evictionLink = (operation: Operation, forward: NextLink) => {
-      const { client } = operation.getApolloContext();
-      expect(client.cache).toBeDefined();
+      const { cache } = operation.getApolloContext();
+      expect(cache).toBeDefined();
       return forward(operation).pipe(
         map((result) => {
           setTimeout(() => {
-            const cacheResult = client.cache.read({ query, optimistic: true });
+            const cacheResult = cache.read({ query, optimistic: true });
             expect(cacheResult).toEqual(initialData);
             expect(cacheResult).toEqual(result.data);
             if (count === 2) {
@@ -230,8 +230,8 @@ describe("Link interactions", () => {
     `;
 
     const evictionLink = (operation: Operation, forward: NextLink) => {
-      const { client } = operation.getApolloContext();
-      expect(client.cache).toBeDefined();
+      const { cache } = operation.getApolloContext();
+      expect(cache).toBeDefined();
       done();
       return forward(operation);
     };

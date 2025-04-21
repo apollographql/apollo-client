@@ -114,11 +114,6 @@ export class LocalResolversLink extends ApolloLink {
   ): Observable<FetchResult> {
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
-    invariant(
-      clientQuery || serverQuery,
-      "`LocalResolversLink` was issued a query that could neither be run by local resolvers or the server. Please file an issue as this should be an impossible state."
-    );
-
     let remoteObservable: Observable<FetchResult> = of({ data: {} });
 
     if (serverQuery) {
@@ -136,7 +131,7 @@ export class LocalResolversLink extends ApolloLink {
         return from(
           this.runResolvers({
             operation,
-            clientQuery: clientQuery,
+            clientQuery,
             remoteResult: result,
           })
         );

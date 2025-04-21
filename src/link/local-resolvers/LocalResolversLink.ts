@@ -114,7 +114,7 @@ export class LocalResolversLink extends ApolloLink {
 const getTransformedQuery = wrap(
   (query: DocumentNode) => {
     return {
-      clientQuery: getClientQuery(query),
+      clientQuery: hasDirectives(["client"], query) ? query : null,
       serverQuery: removeDirectivesFromDocument(
         [{ name: "client", remove: true }],
         query
@@ -127,14 +127,6 @@ const getTransformedQuery = wrap(
       defaultCacheSizes["LocalResolversLink.getTransformedQuery"],
   }
 );
-
-function getClientQuery(query: DocumentNode) {
-  if (hasDirectives(["client"], query)) {
-    return query;
-  }
-
-  return null;
-}
 
 if (__DEV__) {
   Object.assign(LocalResolversLink, {

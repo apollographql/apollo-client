@@ -1,9 +1,24 @@
-import type { FieldNode } from "graphql";
+import type { DocumentNode, FieldNode } from "graphql";
+import type { Observable } from "rxjs";
+import { from, map, mergeMap } from "rxjs";
 
 import type { DefaultContext } from "@apollo/client";
-import type { ApolloContext } from "@apollo/client/link/core";
+import type {
+  ApolloContext,
+  FetchResult,
+  NextLink,
+  Operation,
+} from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { FragmentMap, Merge } from "@apollo/client/utilities";
+import {
+  AutoCleanedWeakCache,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { LocalState } from "./LocalState.js";
 
 export declare namespace LocalResolversLink {
   export interface Options {
@@ -27,8 +42,88 @@ export declare namespace LocalResolversLink {
   ) => any;
 }
 
+interface TransformCacheEntry {
+  serverQuery: DocumentNode | null;
+  clientQuery: DocumentNode | null;
+}
+
 export class LocalResolversLink extends ApolloLink {
+  private localState: LocalState;
+  private transformCache = new AutoCleanedWeakCache<
+    DocumentNode,
+    TransformCacheEntry
+  >(
+    1000 // TODO: Update to use internal memory mechanism
+  );
+
   constructor(options: LocalResolversLink.Options) {
     super();
+    this.localState = new LocalState({ resolvers: options.resolvers });
+  }
+
+  addResolvers(resolvers: LocalResolversLink.Resolvers) {
+    this.localState.addResolvers(resolvers);
+  }
+
+  override request(
+    operation: Operation,
+    forward?: NextLink
+  ): Observable<FetchResult> {
+    const { clientQuery, serverQuery } = this.getTransformedQuery(
+      operation.query
+    );
+
+    if (serverQuery) {
+      invariant(
+        !!forward,
+        "`LocalResolversLink` must not be a terminating link when there are non-`@client` fields in the query"
+      );
+
+      return forward(operation).pipe(
+        mergeMap((result) => {
+          return from(
+            this.localState.runResolvers({
+              document: clientQuery,
+              remoteResult: result,
+              context: operation.getContext(),
+              variables: operation.variables,
+            })
+          );
+        })
+      );
+    }
+
+    invariant(
+      clientQuery,
+      "`LocalResolversLink` did not contain any `@client` or server fields. This is a bug in Apollo Client."
+    );
+
+    return from(
+      this.localState.runResolvers({
+        document: operation.query,
+        remoteResult: { data: {} },
+        context: operation.getContext(),
+        variables: operation.variables,
+      })
+    );
+  }
+
+  private getTransformedQuery(query: DocumentNode) {
+    const { transformCache } = this;
+
+    let transformed: TransformCacheEntry | undefined =
+      transformCache.get(query);
+
+    if (!transformed) {
+      transformed = {
+        clientQuery: this.localState.clientQuery(query),
+        serverQuery: removeDirectivesFromDocument(
+          [{ name: "client", remove: true }],
+          query
+        ),
+      };
+    }
+
+    return transformed;
   }
 }

@@ -181,6 +181,14 @@ export interface ApolloClientOptions {
 // @public (undocumented)
 export interface ApolloContext {
     // (undocumented)
+    readonly cache: ApolloCache;
+    // (undocumented)
+    readonly client: ApolloClient;
+}
+
+// @internal (undocumented)
+interface ApolloExecuteContext {
+    // (undocumented)
     readonly client: ApolloClient;
 }
 
@@ -193,8 +201,10 @@ export class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
     static empty(): ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "ApolloExecuteContext" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloContext): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal

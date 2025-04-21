@@ -4,8 +4,8 @@
 
 ```ts
 
+import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
-import type { ApolloContext as ApolloContext_2 } from '@apollo/client';
 import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
@@ -16,6 +16,14 @@ import type { Prettify } from '@apollo/client/utilities';
 
 // @public (undocumented)
 export interface ApolloContext {
+    // (undocumented)
+    readonly cache: ApolloCache;
+    // (undocumented)
+    readonly client: ApolloClient;
+}
+
+// @internal (undocumented)
+export interface ApolloExecuteContext {
     // (undocumented)
     readonly client: ApolloClient;
 }
@@ -29,8 +37,10 @@ export class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
     static empty(): ApolloLink;
+    // Warning: (ae-incompatible-release-tags) The symbol "execute" is marked as @public, but its signature references "ApolloExecuteContext" which is marked as @internal
+    //
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloContext_2): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal

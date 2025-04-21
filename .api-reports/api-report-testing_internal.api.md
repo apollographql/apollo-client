@@ -5,7 +5,7 @@
 ```ts
 
 import type { ApolloClient } from '@apollo/client';
-import type { ApolloContext } from '@apollo/client';
+import type { ApolloExecuteContext } from '@apollo/client/link/core';
 import { ApolloLink } from '@apollo/client';
 import type { ApolloPayloadResult } from '@apollo/client';
 import { FetchResult } from '@apollo/client';
@@ -64,13 +64,13 @@ export function createMockWrapper(renderOptions: MockedProviderProps, Wrapper?: 
 }>;
 
 // @public (undocumented)
-export function createOperationWithDefaultContext(context: any, operation: GraphQLRequest, apolloContext?: ApolloContext): Operation;
+export function createOperationWithDefaultContext(context: any, operation: GraphQLRequest, apolloContext?: ApolloExecuteContext): Operation;
 
 // @public (undocumented)
 export function enableFakeTimers(config?: FakeTimersConfig | LegacyFakeTimersConfig): Disposable;
 
 // @public (undocumented)
-export function executeWithDefaultContext(link: ApolloLink, operation: GraphQLRequest, apolloContext?: ApolloContext): Observable_2<FetchResult>;
+export function executeWithDefaultContext(link: ApolloLink, operation: GraphQLRequest, apolloContext?: ApolloExecuteContext): Observable_2<FetchResult>;
 
 // @public (undocumented)
 type HydrateableContainer = Parameters<(typeof ReactDOMClient)["hydrateRoot"]>[0];

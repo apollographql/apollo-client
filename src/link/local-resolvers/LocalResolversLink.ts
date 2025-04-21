@@ -190,7 +190,7 @@ export class LocalResolversLink extends ApolloLink {
     const execContext: ExecContext = {
       operation,
       fragmentMap,
-      context: { ...context, ...operation.getApolloContext() },
+      context,
       variables,
       fragmentMatcher,
       defaultOperationType,
@@ -317,7 +317,7 @@ export class LocalResolversLink extends ApolloLink {
             cacheSlot.withValue(cache, resolve, [
               rootValue,
               argumentsObjectFromField(field, variables),
-              execContext.context,
+              { ...execContext.context, ...operation.getApolloContext() },
               { field, fragmentMap: execContext.fragmentMap },
             ])
           );

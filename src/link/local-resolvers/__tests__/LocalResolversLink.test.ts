@@ -560,7 +560,7 @@ test("can write to the cache with a mutation", async () => {
       Mutation: {
         start(_data, _args, { cache }) {
           cache.writeQuery({ query, data: { field: 1 } });
-          return { start: true };
+          return true;
         },
       },
     },
@@ -613,7 +613,7 @@ test("can write to the cache with a mutation using an ID", async () => {
             },
           });
 
-          return { start: true };
+          return true;
         },
       },
     },
@@ -677,7 +677,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
               },
             },
           });
-          return { start: true };
+          return true;
         },
       },
     },

@@ -13,6 +13,7 @@ import type {
 } from "graphql";
 import { BREAK, isSelectionNode, visit } from "graphql";
 
+import type { OperationVariables } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link/core";
@@ -34,21 +35,6 @@ import {
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { ApolloClient } from "./ApolloClient.js";
-import type { OperationVariables, Resolvers } from "./types.js";
-
-export type Resolver = (
-  rootValue?: any,
-  args?: any,
-  context?: any,
-  info?: {
-    field: FieldNode;
-    fragmentMap: FragmentMap;
-  }
-) => any;
-
-type VariableMap = { [name: string]: any };
-
 export type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
@@ -58,7 +44,7 @@ export type FragmentMatcher = (
 type ExecContext = {
   fragmentMap: FragmentMap;
   context: any;
-  variables: VariableMap;
+  variables: OperationVariables;
   fragmentMatcher: FragmentMatcher;
   defaultOperationType: string;
   exportedVariables: Record<string, any>;
@@ -67,17 +53,13 @@ type ExecContext = {
 };
 
 type LocalStateOptions = {
-  cache: ApolloCache;
-  client?: ApolloClient;
   resolvers?: Resolvers | Resolvers[];
-  fragmentMatcher?: FragmentMatcher;
 };
 
 export class LocalState {
   private cache: ApolloCache;
   private client?: ApolloClient;
   private resolvers?: Resolvers;
-  private fragmentMatcher?: FragmentMatcher;
   private selectionsToResolveCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
@@ -97,10 +79,6 @@ export class LocalState {
 
     if (resolvers) {
       this.addResolvers(resolvers);
-    }
-
-    if (fragmentMatcher) {
-      this.setFragmentMatcher(fragmentMatcher);
     }
   }
 
@@ -156,14 +134,6 @@ export class LocalState {
     }
 
     return remoteResult;
-  }
-
-  public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.fragmentMatcher = fragmentMatcher;
-  }
-
-  public getFragmentMatcher(): FragmentMatcher | undefined {
-    return this.fragmentMatcher;
   }
 
   // Client queries contain everything in the incoming document (if a @client
@@ -257,7 +227,7 @@ export class LocalState {
     document: DocumentNode,
     rootValue: TData,
     context: any = {},
-    variables: VariableMap = {},
+    variables: OperationVariables = {},
     fragmentMatcher: FragmentMatcher = () => true,
     onlyRunForcedResolvers: boolean = false
   ) {

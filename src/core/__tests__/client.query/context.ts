@@ -22,7 +22,7 @@ test("can get apollo context from getApolloContext", async () => {
   const [operation] = request.mock.calls[0];
 
   expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client },
+    { client, cache: client.cache },
     { includeKnownClassInstances: true }
   );
 });
@@ -50,7 +50,7 @@ test("allows custom context", async () => {
     clientAwareness: { name: undefined, version: undefined },
   });
   expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client },
+    { client, cache: client.cache },
     { includeKnownClassInstances: true }
   );
 });
@@ -81,7 +81,7 @@ test("uses context from defaultOptions", async () => {
     clientAwareness: { name: undefined, version: undefined },
   });
   expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client },
+    { client, cache: client.cache },
     { includeKnownClassInstances: true }
   );
 });
@@ -112,7 +112,7 @@ test("can override global default", async () => {
     clientAwareness: { name: undefined, version: undefined },
   });
   expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client },
+    { client, cache: client.cache },
     { includeKnownClassInstances: true }
   );
 });

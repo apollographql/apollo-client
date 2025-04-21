@@ -89,6 +89,8 @@ export class LocalResolversLink extends ApolloLink {
         "`LocalResolversLink` must not be a terminating link when there are non-`@client` fields in the query"
       );
 
+      operation.query = serverQuery;
+
       return forward(operation).pipe(
         mergeMap((result) => {
           return from(

@@ -1,4 +1,4 @@
-import { gql } from "graphql-tag";
+import { gql as origGql } from "graphql-tag";
 import { of } from "rxjs";
 
 import { ApolloClient } from "@apollo/client";
@@ -10,6 +10,10 @@ import {
   executeWithDefaultContext as execute,
   ObservableStream,
 } from "@apollo/client/testing/internal";
+import { addTypenameToDocument } from "@apollo/client/utilities";
+
+const gql = (...args: Parameters<typeof origGql>) =>
+  addTypenameToDocument(origGql(...args));
 
 test("runs resolvers for @client queries", async () => {
   const query = gql`

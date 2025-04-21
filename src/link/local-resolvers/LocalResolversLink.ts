@@ -80,7 +80,6 @@ type ExecContext = {
   fragmentMatcher: FragmentMatcher;
   defaultOperationType: string;
   exportedVariables: Record<string, any>;
-  onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
 };
 
@@ -164,8 +163,7 @@ export class LocalResolversLink extends ApolloLink {
     operation: Operation,
     document: DocumentNode,
     rootValue: Record<string, any> | null | undefined,
-    fragmentMatcher: FragmentMatcher = () => true,
-    onlyRunForcedResolvers: boolean = false
+    fragmentMatcher: FragmentMatcher = () => true
   ) {
     const { variables } = operation;
     const context = operation.getContext();
@@ -196,7 +194,6 @@ export class LocalResolversLink extends ApolloLink {
       defaultOperationType,
       exportedVariables: {},
       selectionsToResolve,
-      onlyRunForcedResolvers,
     };
     const isClientFieldDescendant = false;
 
@@ -301,28 +298,22 @@ export class LocalResolversLink extends ApolloLink {
     const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
     let resultPromise = Promise.resolve(defaultResult);
 
-    // Usually all local resolvers are run when passing through here, but
-    // if we've specifically identified that we only want to run forced
-    // resolvers (that is, resolvers for fields marked with
-    // `@client(always: true)`), then we'll skip running non-forced resolvers.
-    if (!execContext.onlyRunForcedResolvers) {
-      const resolverType =
-        rootValue.__typename || execContext.defaultOperationType;
-      const resolverMap = this.resolvers && this.resolvers[resolverType];
-      if (resolverMap) {
-        const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
-        if (resolve) {
-          resultPromise = Promise.resolve(
-            // In case the resolve function accesses reactive variables,
-            // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(cache, resolve, [
-              rootValue,
-              argumentsObjectFromField(field, variables),
-              { ...execContext.context, ...operation.getApolloContext() },
-              { field, fragmentMap: execContext.fragmentMap },
-            ])
-          );
-        }
+    const resolverType =
+      rootValue.__typename || execContext.defaultOperationType;
+    const resolverMap = this.resolvers && this.resolvers[resolverType];
+    if (resolverMap) {
+      const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
+      if (resolve) {
+        resultPromise = Promise.resolve(
+          // In case the resolve function accesses reactive variables,
+          // set cacheSlot to the current cache instance.
+          cacheSlot.withValue(cache, resolve, [
+            rootValue,
+            argumentsObjectFromField(field, variables),
+            { ...execContext.context, ...operation.getApolloContext() },
+            { field, fragmentMap: execContext.fragmentMap },
+          ])
+        );
       }
     }
 

@@ -326,55 +326,59 @@ export class LocalResolversLink extends ApolloLink {
       }
     }
 
-    return resultPromise.then((result = defaultResult) => {
-      // If an @export directive is associated with the current field, store
-      // the `as` export variable name and current result for later use.
-      if (field.directives) {
-        field.directives.forEach((directive) => {
-          if (directive.name.value === "export" && directive.arguments) {
-            directive.arguments.forEach((arg) => {
-              if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-                execContext.exportedVariables[arg.value.value] = result;
-              }
-            });
-          }
-        });
-      }
+    let result = await resultPromise;
 
-      // Handle all scalar types here.
-      if (!field.selectionSet) {
-        return result;
-      }
+    if (result === undefined) {
+      result = defaultResult;
+    }
 
-      // From here down, the field has a selection set, which means it's trying
-      // to query a GraphQLObjectType.
-      if (result == null) {
-        // Basically any field in a GraphQL response can be null, or missing
-        return result;
-      }
+    // If an @export directive is associated with the current field, store
+    // the `as` export variable name and current result for later use.
+    if (field.directives) {
+      field.directives.forEach((directive) => {
+        if (directive.name.value === "export" && directive.arguments) {
+          directive.arguments.forEach((arg) => {
+            if (arg.name.value === "as" && arg.value.kind === "StringValue") {
+              execContext.exportedVariables[arg.value.value] = result;
+            }
+          });
+        }
+      });
+    }
 
-      const isClientField =
-        field.directives?.some((d) => d.name.value === "client") ?? false;
+    // Handle all scalar types here.
+    if (!field.selectionSet) {
+      return result;
+    }
 
-      if (Array.isArray(result)) {
-        return this.resolveSubSelectedArray(
-          field,
-          isClientFieldDescendant || isClientField,
-          result,
-          execContext
-        );
-      }
+    // From here down, the field has a selection set, which means it's trying
+    // to query a GraphQLObjectType.
+    if (result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return result;
+    }
 
-      // Returned value is an object, and the query has a sub-selection. Recurse.
-      if (field.selectionSet) {
-        return this.resolveSelectionSet(
-          field.selectionSet,
-          isClientFieldDescendant || isClientField,
-          result,
-          execContext
-        );
-      }
-    });
+    const isClientField =
+      field.directives?.some((d) => d.name.value === "client") ?? false;
+
+    if (Array.isArray(result)) {
+      return this.resolveSubSelectedArray(
+        field,
+        isClientFieldDescendant || isClientField,
+        result,
+        execContext
+      );
+    }
+
+    // Returned value is an object, and the query has a sub-selection. Recurse.
+    if (field.selectionSet) {
+      return this.resolveSelectionSet(
+        field.selectionSet,
+        isClientFieldDescendant || isClientField,
+        result,
+        execContext
+      );
+    }
   }
 
   private resolveSubSelectedArray(

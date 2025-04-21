@@ -410,12 +410,12 @@ test("handles nested asynchronous @client resolvers", async () => {
 
   const developerId = uuid();
 
-  function times<T>(n: number, thunk: () => T): Promise<T[]> {
+  function times<T>(n: number, thunk: () => T): T[] {
     const result: T[] = [];
     for (let i = 0; i < n; ++i) {
       result.push(thunk());
     }
-    return Promise.all(result);
+    return result;
   }
 
   const ticketsPerDev = 5;
@@ -438,20 +438,26 @@ test("handles nested asynchronous @client resolvers", async () => {
         async tickets(developer) {
           await randomDelay(50);
           expect(developer.__typename).toBe("Developer");
-          return times(ticketsPerDev, () => ({
-            __typename: "Ticket",
-            id: uuid(),
-          }));
+
+          return Promise.all(
+            times(ticketsPerDev, () => ({
+              __typename: "Ticket",
+              id: uuid(),
+            }))
+          );
         },
       },
       Ticket: {
         async comments(ticket) {
           await randomDelay(50);
           expect(ticket.__typename).toBe("Ticket");
-          return times(commentsPerTicket, () => ({
-            __typename: "Comment",
-            id: uuid(),
-          }));
+
+          return Promise.all(
+            times(commentsPerTicket, () => ({
+              __typename: "Comment",
+              id: uuid(),
+            }))
+          );
         },
       },
     },
@@ -461,23 +467,26 @@ test("handles nested asynchronous @client resolvers", async () => {
     execute(link, { query, variables: { id: developerId } })
   );
 
-  await expect(stream).toEmitTypedValue({
-    data: {
-      developer: {
-        __typename: "Developer",
-        id: developerId,
-        handle: "@benjamn",
-        tickets: times(ticketsPerDev, () => ({
-          __typename: "Ticket",
-          id: expect.any(String),
-          comments: times(commentsPerTicket, () => ({
-            __typename: "Comment",
+  await expect(stream).toEmitTypedValue(
+    {
+      data: {
+        developer: {
+          __typename: "Developer",
+          id: developerId,
+          handle: "@benjamn",
+          tickets: times(ticketsPerDev, () => ({
+            __typename: "Ticket",
             id: expect.any(String),
+            comments: times(commentsPerTicket, () => ({
+              __typename: "Comment",
+              id: expect.any(String),
+            })),
           })),
-        })),
+        },
       },
     },
-  });
+    { timeout: 1000 }
+  );
 
   await expect(stream).toComplete();
 });

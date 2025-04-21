@@ -691,12 +691,10 @@ test("does not overwrite __typename when writing to the cache with an id", async
   await expect(stream).toComplete();
 
   expect(client.readQuery({ query })).toStrictEqualTyped({
-    data: {
-      obj: {
-        __typename: "Object",
-        field: { __typename: "Field", field2: 2 },
-        id: "uniqueId",
-      },
+    obj: {
+      __typename: "Object",
+      field: { __typename: "Field", field2: 2 },
+      id: "uniqueId",
     },
   });
 });

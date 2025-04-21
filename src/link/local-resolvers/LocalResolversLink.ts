@@ -155,7 +155,7 @@ export class LocalResolversLink extends ApolloLink {
       remoteResult.data
     );
 
-    return { ...remoteResult, data: localResult.result };
+    return { ...remoteResult, data: localResult };
   }
 
   private async resolveDocument(
@@ -197,7 +197,7 @@ export class LocalResolversLink extends ApolloLink {
       false,
       rootValue,
       execContext
-    ).then((result) => ({ result }));
+    );
   }
 
   private async resolveSelectionSet<TData>(

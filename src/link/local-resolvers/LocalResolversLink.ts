@@ -153,9 +153,7 @@ export class LocalResolversLink extends ApolloLink {
         clientQuery,
         remoteResult.data,
         { ...operation.getContext(), ...operation.getApolloContext() },
-        operation.variables,
-        // TODO: REpalce with cache.fragmentMatches call
-        () => true
+        operation.variables
       ).then((localResult) => ({
         ...remoteResult,
         data: localResult.result,

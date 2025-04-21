@@ -52,7 +52,7 @@ interface TransformCacheEntry {
   clientQuery: DocumentNode | null;
 }
 
-class LocalResolversLink extends ApolloLink {
+export class LocalResolversLink extends ApolloLink {
   private localState: LocalState;
   private transformCache = new AutoCleanedWeakCache<
     DocumentNode,
@@ -169,5 +169,3 @@ if (__DEV__) {
     },
   });
 }
-
-export { LocalResolversLink };

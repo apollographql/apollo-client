@@ -13,7 +13,6 @@ import type {
 import { ApolloLink } from "@apollo/client/link/core";
 import type { FragmentMap, Merge } from "@apollo/client/utilities";
 import {
-  AutoCleanedWeakCache,
   cacheSizes,
   hasDirectives,
   removeDirectivesFromDocument,
@@ -47,19 +46,8 @@ export declare namespace LocalResolversLink {
   ) => any;
 }
 
-interface TransformCacheEntry {
-  serverQuery: DocumentNode | null;
-  clientQuery: DocumentNode | null;
-}
-
 export class LocalResolversLink extends ApolloLink {
   private localState: LocalState;
-  private transformCache = new AutoCleanedWeakCache<
-    DocumentNode,
-    TransformCacheEntry
-  >(
-    1000 // TODO: Update to use internal memory mechanism
-  );
 
   constructor(options: LocalResolversLink.Options) {
     super();

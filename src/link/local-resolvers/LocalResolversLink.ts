@@ -152,12 +152,13 @@ export class LocalResolversLink extends ApolloLink {
       return remoteResult;
     }
 
-    return this.resolveDocument(operation, clientQuery, remoteResult.data).then(
-      (localResult) => ({
-        ...remoteResult,
-        data: localResult.result,
-      })
+    const localResult = await this.resolveDocument(
+      operation,
+      clientQuery,
+      remoteResult.data
     );
+
+    return { ...remoteResult, data: localResult.result };
   }
 
   private async resolveDocument(
@@ -235,18 +236,20 @@ export class LocalResolversLink extends ApolloLink {
       }
 
       if (isField(selection)) {
-        return this.resolveField(
+        const fieldResult = await this.resolveField(
           selection,
           isClientFieldDescendant,
           rootValue,
           execContext
-        ).then((fieldResult) => {
-          if (typeof fieldResult !== "undefined") {
-            resultsToMerge.push({
-              [resultKeyNameFromField(selection)]: fieldResult,
-            } as TData);
-          }
-        });
+        );
+
+        if (typeof fieldResult !== "undefined") {
+          resultsToMerge.push({
+            [resultKeyNameFromField(selection)]: fieldResult,
+          } as TData);
+        }
+
+        return;
       }
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
@@ -262,21 +265,23 @@ export class LocalResolversLink extends ApolloLink {
       if (fragment && fragment.typeCondition) {
         const typeCondition = fragment.typeCondition.name.value;
         if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
-          return this.resolveSelectionSet(
+          const fragmentResult = await this.resolveSelectionSet(
             fragment.selectionSet,
             isClientFieldDescendant,
             rootValue,
             execContext
-          ).then((fragmentResult) => {
-            resultsToMerge.push(fragmentResult);
-          });
+          );
+
+          resultsToMerge.push(fragmentResult);
+
+          return;
         }
       }
     };
 
-    return Promise.all(selectionSet.selections.map(execute)).then(function () {
-      return mergeDeepArray(resultsToMerge);
-    });
+    await Promise.all(selectionSet.selections.map(execute));
+
+    return mergeDeepArray(resultsToMerge);
   }
 
   private async resolveField(

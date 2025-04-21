@@ -150,10 +150,9 @@ export class LocalResolversLink extends ApolloLink {
   }): Promise<FetchResult<TData>> {
     if (clientQuery) {
       return this.resolveDocument(
+        operation,
         clientQuery,
-        remoteResult.data,
-        { ...operation.getContext(), ...operation.getApolloContext() },
-        operation.variables
+        remoteResult.data
       ).then((localResult) => ({
         ...remoteResult,
         data: localResult.result,
@@ -164,13 +163,15 @@ export class LocalResolversLink extends ApolloLink {
   }
 
   private async resolveDocument<TData>(
+    operation: Operation,
     document: DocumentNode,
     rootValue: TData,
-    context: any = {},
-    variables: OperationVariables = {},
     fragmentMatcher: FragmentMatcher = () => true,
     onlyRunForcedResolvers: boolean = false
   ) {
+    const { variables } = operation;
+    const { cache } = operation.getApolloContext();
+    const context = operation.getContext();
     const mainDefinition = getMainDefinition(
       document
     ) as OperationDefinitionNode;
@@ -190,9 +191,9 @@ export class LocalResolversLink extends ApolloLink {
       : "Query";
 
     const execContext: ExecContext = {
-      cache: context.cache,
+      cache,
       fragmentMap,
-      context,
+      context: { ...context, ...operation.getApolloContext() },
       variables,
       fragmentMatcher,
       defaultOperationType,

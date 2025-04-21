@@ -79,7 +79,6 @@ type ExecContext = {
   variables: OperationVariables;
   fragmentMatcher: FragmentMatcher;
   defaultOperationType: string;
-  exportedVariables: Record<string, any>;
   selectionsToResolve: Set<SelectionNode>;
 };
 
@@ -190,7 +189,6 @@ export class LocalResolversLink extends ApolloLink {
       variables,
       fragmentMatcher,
       defaultOperationType,
-      exportedVariables: {},
       selectionsToResolve,
     };
 
@@ -199,10 +197,7 @@ export class LocalResolversLink extends ApolloLink {
       false,
       rootValue,
       execContext
-    ).then((result) => ({
-      result,
-      exportedVariables: execContext.exportedVariables,
-    }));
+    ).then((result) => ({ result }));
   }
 
   private async resolveSelectionSet<TData>(
@@ -318,20 +313,6 @@ export class LocalResolversLink extends ApolloLink {
 
     if (result === undefined) {
       result = defaultResult;
-    }
-
-    // If an @export directive is associated with the current field, store
-    // the `as` export variable name and current result for later use.
-    if (field.directives) {
-      field.directives.forEach((directive) => {
-        if (directive.name.value === "export" && directive.arguments) {
-          directive.arguments.forEach((arg) => {
-            if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-              execContext.exportedVariables[arg.value.value] = result;
-            }
-          });
-        }
-      });
     }
 
     // Handle all scalar types here.

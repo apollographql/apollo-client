@@ -272,7 +272,10 @@ export class LocalResolversLink extends ApolloLink {
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;
-    const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
+    let defaultResult = rootValue[fieldName];
+    if (defaultResult === undefined) {
+      defaultResult = rootValue[aliasedFieldName];
+    }
     let resultPromise = Promise.resolve(defaultResult);
 
     const resolverType =

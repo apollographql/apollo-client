@@ -182,7 +182,7 @@ export class LocalResolversLink extends ApolloLink {
       }
     );
 
-    return { ...remoteResult, data: localResult };
+    return { ...remoteResult, data: mergeDeep(remoteResult.data, localResult) };
   }
 
   private async resolveSelectionSet(

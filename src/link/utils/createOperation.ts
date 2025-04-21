@@ -4,9 +4,11 @@ import type { GraphQLRequest, Operation } from "@apollo/client/link/core";
 export function createOperation(
   starting: any,
   operation: GraphQLRequest,
-  apolloContext: ApolloContext
+  { client }: Pick<ApolloContext, "client">
 ): Operation {
+  const apolloContext = { client, cache: client.cache };
   let context = { ...starting };
+
   const setContext: Operation["setContext"] = (next) => {
     if (typeof next === "function") {
       context = { ...context, ...next(context) };

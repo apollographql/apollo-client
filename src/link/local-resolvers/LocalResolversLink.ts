@@ -161,16 +161,16 @@ export class LocalResolversLink extends ApolloLink {
 
   private async resolveDocument(
     operation: Operation,
-    document: DocumentNode,
+    clientQuery: DocumentNode,
     rootValue: Record<string, any> | null | undefined,
     fragmentMatcher: FragmentMatcher = () => true
   ) {
     const { variables } = operation;
     const context = operation.getContext();
     const mainDefinition = getMainDefinition(
-      document
+      clientQuery
     ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(document);
+    const fragments = getFragmentDefinitions(clientQuery);
     const fragmentMap = createFragmentMap(fragments);
     const selectionsToResolve = this.collectSelectionsToResolve(
       mainDefinition,

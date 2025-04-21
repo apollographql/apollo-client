@@ -213,7 +213,8 @@ export class LocalResolversLink extends ApolloLink {
           selection,
           isClientFieldDescendant,
           rootValue,
-          execContext
+          execContext,
+          selectionSet
         );
 
         if (fieldResult !== undefined) {
@@ -261,7 +262,8 @@ export class LocalResolversLink extends ApolloLink {
     field: FieldNode,
     isClientFieldDescendant: boolean,
     rootValue: any,
-    execContext: ExecContext
+    execContext: ExecContext,
+    parentSelectionSet: SelectionSetNode
   ): Promise<any> {
     if (!rootValue) {
       return null;
@@ -288,7 +290,11 @@ export class LocalResolversLink extends ApolloLink {
           // In case the resolve function accesses reactive variables,
           // set cacheSlot to the current cache instance.
           cacheSlot.withValue(cache, resolve, [
-            rootValue,
+            // Ensure the parent value passed to the resolver does not contain
+            // aliased fields, otherwise it is nearly impossible to determine
+            // what property in the parent type contains the field you want to
+            // read from. `dealias` contains a shallow copy of `rootValue`
+            dealias(parentSelectionSet, rootValue),
             argumentsObjectFromField(field, variables),
             { ...execContext.context, ...operation.getApolloContext() },
             { field, fragmentMap: execContext.fragmentMap },
@@ -427,6 +433,22 @@ export class LocalResolversLink extends ApolloLink {
     }
     return collectByDefinition(mainDefinition);
   }
+}
+
+function dealias(
+  fieldSelections: SelectionSetNode,
+  fieldValue: Record<string, any>
+) {
+  const data = { ...fieldValue };
+
+  for (const selection of fieldSelections.selections) {
+    if (isField(selection) && selection.alias) {
+      data[selection.name.value] = data[selection.alias.value];
+      delete data[selection.alias.value];
+    }
+  }
+
+  return data;
 }
 
 const getTransformedQuery = wrap(

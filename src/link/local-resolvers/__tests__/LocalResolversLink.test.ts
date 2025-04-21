@@ -37,6 +37,32 @@ test("runs resolvers for @client queries", async () => {
   await expect(stream).toComplete();
 });
 
+test("can add resolvers after the link is instantiated", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({ resolvers: {} });
+
+  link.addResolvers({
+    Query: {
+      foo: () => ({ bar: true }),
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: { bar: true } },
+  });
+
+  await expect(stream).toComplete();
+});
+
 test("handles queries with a mix of @client and server fields", async () => {
   const query = gql`
     query Mixed {

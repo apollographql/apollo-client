@@ -74,9 +74,7 @@ export class LocalResolversLink extends ApolloLink {
     operation: Operation,
     forward?: NextLink
   ): Observable<FetchResult> {
-    const { clientQuery, serverQuery } = this.getTransformedQuery(
-      operation.query
-    );
+    const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
     invariant(
       clientQuery || serverQuery,
@@ -110,25 +108,6 @@ export class LocalResolversLink extends ApolloLink {
         );
       })
     );
-  }
-
-  private getTransformedQuery(query: DocumentNode) {
-    const { transformCache } = this;
-
-    let transformed: TransformCacheEntry | undefined =
-      transformCache.get(query);
-
-    if (!transformed) {
-      transformed = {
-        clientQuery: this.localState.clientQuery(query),
-        serverQuery: removeDirectivesFromDocument(
-          [{ name: "client", remove: true }],
-          query
-        ),
-      };
-    }
-
-    return transformed;
   }
 }
 

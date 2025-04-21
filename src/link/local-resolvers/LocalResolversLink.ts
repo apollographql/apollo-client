@@ -185,14 +185,14 @@ export class LocalResolversLink extends ApolloLink {
     return { ...remoteResult, data: localResult };
   }
 
-  private async resolveSelectionSet<TData>(
+  private async resolveSelectionSet(
     selectionSet: SelectionSetNode,
     isClientFieldDescendant: boolean,
-    rootValue: TData,
+    rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext
   ) {
     const { fragmentMap, context, variables } = execContext;
-    const resultsToMerge: TData[] = [rootValue];
+    const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
       if (
@@ -219,7 +219,7 @@ export class LocalResolversLink extends ApolloLink {
         if (fieldResult !== undefined) {
           resultsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
-          } as TData);
+          });
         }
 
         return;

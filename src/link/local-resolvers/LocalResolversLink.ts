@@ -1,7 +1,7 @@
 import type { DocumentNode, FieldNode } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
-import { from, mergeMap } from "rxjs";
+import { from, mergeMap, of } from "rxjs";
 
 import type { DefaultContext } from "@apollo/client";
 import type {
@@ -83,6 +83,8 @@ export class LocalResolversLink extends ApolloLink {
       "`LocalResolversLink` was issued a query that could neither be run by local resolvers or the server. Please file an issue as this should be an impossible state."
     );
 
+    let remoteObservable: Observable<FetchResult> = of({ data: {} });
+
     if (serverQuery) {
       invariant(
         !!forward,
@@ -90,27 +92,22 @@ export class LocalResolversLink extends ApolloLink {
       );
 
       operation.query = serverQuery;
-
-      return forward(operation).pipe(
-        mergeMap((result) => {
-          return from(
-            this.localState.runResolvers({
-              document: clientQuery,
-              remoteResult: result,
-              context: operation.getContext(),
-              variables: operation.variables,
-            })
-          );
-        })
-      );
+      remoteObservable = forward(operation);
     }
 
-    return from(
-      this.localState.runResolvers({
-        document: clientQuery,
-        remoteResult: { data: {} },
-        context: operation.getContext(),
-        variables: operation.variables,
+    return remoteObservable.pipe(
+      mergeMap((result) => {
+        return from(
+          this.localState.runResolvers({
+            document: clientQuery,
+            remoteResult: result,
+            context: {
+              ...operation.getContext(),
+              ...operation.getApolloContext(),
+            },
+            variables: operation.variables,
+          })
+        );
       })
     );
   }

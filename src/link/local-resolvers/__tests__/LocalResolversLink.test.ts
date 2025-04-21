@@ -804,6 +804,33 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
   expect(fie).not.toHaveBeenCalled();
 });
 
+test("does not confuse fields aliased to each other", async () => {
+  const query = gql`
+    query Test {
+      fie: foo @client {
+        fum: bar
+        bar: fum
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ bar: true, fum: false, __typename: "Foo" }),
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query: query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      fie: { fum: true, bar: false, __typename: "Foo" },
+    },
+  });
+  await expect(stream).toComplete();
+});
+
 test("allows child resolvers from a parent resolved field from a local resolver", async () => {
   const query = gql`
     query UserData {

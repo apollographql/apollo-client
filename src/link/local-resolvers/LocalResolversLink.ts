@@ -74,6 +74,7 @@ export declare namespace LocalResolversLink {
 }
 
 type ExecContext = {
+  operation: Operation;
   cache: ApolloCache;
   fragmentMap: FragmentMap;
   context: any;
@@ -189,6 +190,7 @@ export class LocalResolversLink extends ApolloLink {
       : "Query";
 
     const execContext: ExecContext = {
+      operation,
       cache,
       fragmentMap,
       context: { ...context, ...operation.getApolloContext() },

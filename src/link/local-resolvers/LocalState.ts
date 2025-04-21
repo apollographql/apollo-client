@@ -57,26 +57,13 @@ type LocalStateOptions = {
 };
 
 export class LocalState {
-  private cache: ApolloCache;
-  private client?: ApolloClient;
   private resolvers?: Resolvers;
   private selectionsToResolveCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
   >();
 
-  constructor({
-    cache,
-    client,
-    resolvers,
-    fragmentMatcher,
-  }: LocalStateOptions) {
-    this.cache = cache;
-
-    if (client) {
-      this.client = client;
-    }
-
+  constructor({ resolvers, fragmentMatcher }: LocalStateOptions) {
     if (resolvers) {
       this.addResolvers(resolvers);
     }
@@ -249,14 +236,9 @@ export class LocalState {
         definitionOperation.slice(1)
       : "Query";
 
-    const { cache, client } = this;
     const execContext: ExecContext = {
       fragmentMap,
-      context: {
-        ...context,
-        cache,
-        client,
-      },
+      context,
       variables,
       fragmentMatcher,
       defaultOperationType,

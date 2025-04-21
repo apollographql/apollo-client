@@ -167,21 +167,19 @@ export class LocalResolversLink extends ApolloLink {
       definitionOperation.charAt(0).toUpperCase() +
       definitionOperation.slice(1);
 
-    const execContext: ExecContext = {
-      operation,
-      fragmentMap,
-      context,
-      variables,
-      fragmentMatcher: () => true,
-      defaultOperationType,
-      selectionsToResolve,
-    };
-
     const localResult = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
       remoteResult.data,
-      execContext
+      {
+        operation,
+        fragmentMap,
+        context,
+        variables,
+        fragmentMatcher: () => true,
+        defaultOperationType,
+        selectionsToResolve,
+      }
     );
 
     return { ...remoteResult, data: localResult };

@@ -115,6 +115,124 @@ test("handles queries with a mix of @client and server fields", async () => {
   await expect(stream).toComplete();
 });
 
+test("runs resolvers for deeply nested @client queries", async () => {
+  const query = gql`
+    query Test {
+      user {
+        id
+        bestFriend {
+          firstName
+          lastName
+          fullName @client
+        }
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() => {
+    return of({
+      data: {
+        user: {
+          __typename: "User",
+          id: 1,
+          bestFriend: {
+            __typename: "User",
+            firstName: "Test",
+            lastName: "User",
+          },
+        },
+      },
+    });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      User: {
+        fullName: (user) => `${user.firstName} ${user.lastName}`,
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: {
+          __typename: "User",
+          firstName: "Test",
+          lastName: "User",
+          fullName: "Test User",
+        },
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("runs resolvers for deeply nested @client queries with aliases", async () => {
+  const query = gql`
+    query Test {
+      user {
+        id
+        bestFriend {
+          first: firstName
+          last: lastName
+          name: fullName @client
+        }
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() => {
+    return of({
+      data: {
+        user: {
+          __typename: "User",
+          id: 1,
+          bestFriend: {
+            __typename: "User",
+            first: "Test",
+            last: "User",
+          },
+        },
+      },
+    });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      User: {
+        fullName: (user) => `${user.firstName} ${user.lastName}`,
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: {
+          __typename: "User",
+          first: "Test",
+          last: "User",
+          name: "Test User",
+        },
+      },
+    },
+  });
+
+  await expect(stream).toComplete();
+});
+
 test("handles a mix of @client fields with fragments and server fields", async () => {
   const query = gql`
     fragment client on ClientData {

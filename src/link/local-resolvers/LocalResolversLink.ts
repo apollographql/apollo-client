@@ -180,10 +180,8 @@ export class LocalResolversLink extends ApolloLink {
     const definitionOperation = mainDefinition.operation;
 
     const defaultOperationType =
-      definitionOperation ?
-        definitionOperation.charAt(0).toUpperCase() +
-        definitionOperation.slice(1)
-      : "Query";
+      definitionOperation.charAt(0).toUpperCase() +
+      definitionOperation.slice(1);
 
     const execContext: ExecContext = {
       operation,

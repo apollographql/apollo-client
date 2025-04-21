@@ -804,7 +804,7 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
   expect(fie).not.toHaveBeenCalled();
 });
 
-test("allows child resolvers from a parent resolved from a local resolver", async () => {
+test("allows child resolvers from a parent resolved field from a local resolver", async () => {
   const query = gql`
     query UserData {
       userData @client {

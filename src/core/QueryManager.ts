@@ -30,7 +30,6 @@ import {
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type {
-  ApolloContext,
   ApolloExecuteContext,
   FetchResult,
   GraphQLRequest,

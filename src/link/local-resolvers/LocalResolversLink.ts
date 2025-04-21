@@ -75,7 +75,6 @@ export declare namespace LocalResolversLink {
 
 type ExecContext = {
   operation: Operation;
-  cache: ApolloCache;
   fragmentMap: FragmentMap;
   context: any;
   variables: OperationVariables;
@@ -169,7 +168,6 @@ export class LocalResolversLink extends ApolloLink {
     onlyRunForcedResolvers: boolean = false
   ) {
     const { variables } = operation;
-    const { cache } = operation.getApolloContext();
     const context = operation.getContext();
     const mainDefinition = getMainDefinition(
       document
@@ -191,7 +189,6 @@ export class LocalResolversLink extends ApolloLink {
 
     const execContext: ExecContext = {
       operation,
-      cache,
       fragmentMap,
       context: { ...context, ...operation.getApolloContext() },
       variables,
@@ -292,7 +289,8 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { cache, variables } = execContext;
+    const { operation, variables } = execContext;
+    const { cache } = operation.getApolloContext();
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;

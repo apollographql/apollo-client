@@ -3,7 +3,6 @@ import { ApolloClient, execute, InMemoryCache } from "@apollo/client";
 import type { ApolloExecuteContext } from "@apollo/client/link/core";
 import { createOperation } from "@apollo/client/link/utils";
 
-
 function createDefaultApolloContext() {
   return { client: new ApolloClient({ cache: new InMemoryCache() }) };
 }

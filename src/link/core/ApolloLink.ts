@@ -70,7 +70,7 @@ export class ApolloLink {
   public static execute(
     link: ApolloLink,
     operation: GraphQLRequest,
-    apolloContext: ApolloContext
+    apolloContext: Pick<ApolloContext, "client">
   ): Observable<FetchResult> {
     return (
       link.request(

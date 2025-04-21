@@ -216,7 +216,7 @@ export class LocalResolversLink extends ApolloLink {
           execContext
         );
 
-        if (typeof fieldResult !== "undefined") {
+        if (fieldResult !== undefined) {
           resultsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
           } as TData);

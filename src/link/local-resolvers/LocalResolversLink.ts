@@ -148,18 +148,16 @@ export class LocalResolversLink extends ApolloLink {
     clientQuery: DocumentNode | null;
     remoteResult: FetchResult;
   }): Promise<FetchResult> {
-    if (clientQuery) {
-      return this.resolveDocument(
-        operation,
-        clientQuery,
-        remoteResult.data
-      ).then((localResult) => ({
-        ...remoteResult,
-        data: localResult.result,
-      }));
+    if (!clientQuery) {
+      return remoteResult;
     }
 
-    return remoteResult;
+    return this.resolveDocument(operation, clientQuery, remoteResult.data).then(
+      (localResult) => ({
+        ...remoteResult,
+        data: localResult.result,
+      })
+    );
   }
 
   private async resolveDocument(

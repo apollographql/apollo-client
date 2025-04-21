@@ -139,15 +139,15 @@ export class LocalResolversLink extends ApolloLink {
     );
   }
 
-  private async runResolvers<TData>({
+  private async runResolvers({
     operation,
     clientQuery,
     remoteResult,
   }: {
     operation: Operation;
     clientQuery: DocumentNode | null;
-    remoteResult: FetchResult<TData>;
-  }): Promise<FetchResult<TData>> {
+    remoteResult: FetchResult;
+  }): Promise<FetchResult> {
     if (clientQuery) {
       return this.resolveDocument(
         operation,
@@ -162,10 +162,10 @@ export class LocalResolversLink extends ApolloLink {
     return remoteResult;
   }
 
-  private async resolveDocument<TData>(
+  private async resolveDocument(
     operation: Operation,
     document: DocumentNode,
-    rootValue: TData,
+    rootValue: Record<string, any> | null | undefined,
     fragmentMatcher: FragmentMatcher = () => true,
     onlyRunForcedResolvers: boolean = false
   ) {

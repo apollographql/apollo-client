@@ -1,7 +1,6 @@
 import type { Observable } from "rxjs";
 import { EMPTY } from "rxjs";
 
-import type { ApolloContext } from "@apollo/client";
 import {
   createOperation,
   transformOperation,
@@ -13,6 +12,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type {
+  ApolloExecuteContext,
   FetchResult,
   GraphQLRequest,
   NextLink,
@@ -70,7 +70,7 @@ export class ApolloLink {
   public static execute(
     link: ApolloLink,
     operation: GraphQLRequest,
-    apolloContext: Pick<ApolloContext, "client">
+    apolloContext: ApolloExecuteContext
   ): Observable<FetchResult> {
     return (
       link.request(

@@ -116,6 +116,11 @@ export interface ApolloContext {
   readonly client: ApolloClient;
 }
 
+/** @internal */
+export interface ApolloExecuteContext {
+  readonly client: ApolloClient;
+}
+
 export interface OperationContext extends DefaultContext {
   clientAwareness?: ClientAwareness;
 }

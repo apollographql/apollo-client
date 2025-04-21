@@ -31,6 +31,7 @@ import {
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type {
   ApolloContext,
+  ApolloExecuteContext,
   FetchResult,
   GraphQLRequest,
 } from "@apollo/client/link/core";
@@ -1182,7 +1183,7 @@ export class QueryManager {
       };
     };
 
-    const apolloContext: ApolloContext = {
+    const apolloContext: ApolloExecuteContext = {
       client: this.client,
     };
 

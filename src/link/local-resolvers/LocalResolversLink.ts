@@ -114,7 +114,7 @@ export class LocalResolversLink extends ApolloLink {
   ): Observable<FetchResult> {
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
-    let remoteObservable: Observable<FetchResult> = of({ data: {} });
+    let remote: Observable<FetchResult> = of({ data: {} });
 
     if (serverQuery) {
       invariant(
@@ -123,10 +123,10 @@ export class LocalResolversLink extends ApolloLink {
       );
 
       operation.query = serverQuery;
-      remoteObservable = forward(operation);
+      remote = forward(operation);
     }
 
-    return remoteObservable.pipe(
+    return remote.pipe(
       mergeMap((result) => {
         return from(
           this.runResolvers({

@@ -42,6 +42,7 @@ export type FragmentMatcher = (
 ) => boolean;
 
 type ExecContext = {
+  cache: ApolloCache;
   fragmentMap: FragmentMap;
   context: any;
   variables: OperationVariables;
@@ -237,6 +238,7 @@ export class LocalState {
       : "Query";
 
     const execContext: ExecContext = {
+      cache: context.cache,
       fragmentMap,
       context,
       variables,
@@ -337,7 +339,7 @@ export class LocalState {
       return null;
     }
 
-    const { variables } = execContext;
+    const { cache, variables } = execContext;
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;
@@ -361,7 +363,7 @@ export class LocalState {
           resultPromise = Promise.resolve(
             // In case the resolve function accesses reactive variables,
             // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(this.cache, resolve, [
+            cacheSlot.withValue(cache, resolve, [
               rootValue,
               argumentsObjectFromField(field, variables),
               execContext.context,

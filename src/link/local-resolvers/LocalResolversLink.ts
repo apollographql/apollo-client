@@ -324,7 +324,7 @@ export class LocalResolversLink extends ApolloLink {
       if (result === undefined) {
         invariant.warn(
           "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. Return `null` instead if you didn't mean to return a value.",
-          `${typename}.${fieldName}`
+          getResolverName(typename, fieldName)
         );
         result = null;
       }
@@ -360,7 +360,7 @@ export class LocalResolversLink extends ApolloLink {
           result.__typename,
           "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
           result,
-          `${typename}.${fieldName}`
+          getResolverName(typename, fieldName)
         );
 
         return this.resolveSelectionSet(
@@ -399,7 +399,7 @@ export class LocalResolversLink extends ApolloLink {
       if (defaultValue === undefined) {
         invariant.warn(
           "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-          `${typename}.${fieldName}`
+          getResolverName(typename, fieldName)
         );
 
         defaultValue = null;
@@ -567,6 +567,10 @@ function addApolloExtension(error: GraphQLFormattedError) {
 
 function getRootTypename({ operation }: OperationDefinitionNode) {
   return operation.charAt(0).toUpperCase() + operation.slice(1);
+}
+
+function getResolverName(typename: string, fieldName: string) {
+  return `${typename}.${fieldName}`;
 }
 
 if (__DEV__) {

@@ -134,33 +134,40 @@ export declare namespace useMutation {
     TContext = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
   > = [
-    mutate: (
-      ...[options]: {} extends TVariables ?
-        [
-          options?: MutationFunctionOptions<
-            TData,
-            TVariables,
-            TContext,
-            TCache
-          > & {
-            /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-            variables?: TVariables;
-          },
-        ]
-      : [
-          options: MutationFunctionOptions<
-            TData,
-            TVariables,
-            TContext,
-            TCache
-          > & {
-            /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-            variables: TVariables;
-          },
-        ]
-    ) => Promise<MutateResult<MaybeMasked<TData>>>,
+    mutate: MutationFunction<TData, TVariables, TContext, TCache>,
     result: Result<TData>,
   ];
+
+  export type MutationFunction<
+    TData,
+    TVariables extends OperationVariables,
+    TContext = DefaultContext,
+    TCache extends ApolloCache = ApolloCache,
+  > = (
+    ...[options]: {} extends TVariables ?
+      [
+        options?: MutationFunctionOptions<
+          TData,
+          TVariables,
+          TContext,
+          TCache
+        > & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+          variables?: TVariables;
+        },
+      ]
+    : [
+        options: MutationFunctionOptions<
+          TData,
+          TVariables,
+          TContext,
+          TCache
+        > & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+          variables: TVariables;
+        },
+      ]
+  ) => Promise<MutateResult<MaybeMasked<TData>>>;
 
   export type MutationFunctionOptions<
     TData = unknown,

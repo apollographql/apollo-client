@@ -23,6 +23,7 @@ import type {
   OperationVariables,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
+import { toErrorLike } from "@apollo/client/errors";
 import type {
   ApolloContext,
   FetchResult,
@@ -83,6 +84,8 @@ type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
 };
+
+type Path = Array<string | number>;
 
 export class LocalResolversLink extends ApolloLink {
   private selectionsToResolveCache = new WeakMap<
@@ -180,7 +183,8 @@ export class LocalResolversLink extends ApolloLink {
       mainDefinition.selectionSet,
       false,
       remoteResult.data ?? {},
-      execContext
+      execContext,
+      []
     );
 
     let errors = execContext.errors;
@@ -205,7 +209,8 @@ export class LocalResolversLink extends ApolloLink {
     selectionSet: SelectionSetNode,
     isClientFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,
-    execContext: ExecContext
+    execContext: ExecContext,
+    path: Path
   ) {
     const { fragmentMap, context, variables } = execContext;
     const resultsToMerge: Array<Record<string, any>> = [];
@@ -230,7 +235,8 @@ export class LocalResolversLink extends ApolloLink {
           isClientFieldDescendant,
           rootValue,
           execContext,
-          selectionSet
+          selectionSet,
+          path.concat(selection.name.value)
         );
 
         if (fieldResult !== undefined) {
@@ -259,7 +265,8 @@ export class LocalResolversLink extends ApolloLink {
             fragment.selectionSet,
             isClientFieldDescendant,
             rootValue,
-            execContext
+            execContext,
+            []
           );
 
           resultsToMerge.push(fragmentResult);
@@ -279,7 +286,8 @@ export class LocalResolversLink extends ApolloLink {
     isClientFieldDescendant: boolean,
     rootValue: any,
     execContext: ExecContext,
-    parentSelectionSet: SelectionSetNode
+    parentSelectionSet: SelectionSetNode,
+    path: Path
   ): Promise<any> {
     if (!rootValue) {
       return null;
@@ -301,57 +309,66 @@ export class LocalResolversLink extends ApolloLink {
       defaultResult
     );
 
-    let result = await Promise.resolve(
-      // In case the resolve function accesses reactive variables,
-      // set cacheSlot to the current cache instance.
-      cacheSlot.withValue(cache, resolver, [
-        // Ensure the parent value passed to the resolver does not contain
-        // aliased fields, otherwise it is nearly impossible to determine
-        // what property in the parent type contains the field you want to
-        // read from. `dealias` contains a shallow copy of `rootValue`
-        dealias(parentSelectionSet, rootValue),
-        argumentsObjectFromField(field, variables),
-        { ...execContext.context, ...operation.getApolloContext() },
-        { field, fragmentMap: execContext.fragmentMap },
-      ])
-    );
-
-    if (result === undefined) {
-      result = defaultResult;
-    }
-
-    // Handle all scalar types here.
-    if (!field.selectionSet) {
-      return result;
-    }
-
-    // From here down, the field has a selection set, which means it's trying
-    // to query a GraphQLObjectType.
-    if (result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
-      return result;
-    }
-
-    const isClientField =
-      field.directives?.some((d) => d.name.value === "client") ?? false;
-
-    if (Array.isArray(result)) {
-      return this.resolveSubSelectedArray(
-        field,
-        isClientFieldDescendant || isClientField,
-        result,
-        execContext
+    try {
+      let result = await Promise.resolve(
+        // In case the resolve function accesses reactive variables,
+        // set cacheSlot to the current cache instance.
+        cacheSlot.withValue(cache, resolver, [
+          // Ensure the parent value passed to the resolver does not contain
+          // aliased fields, otherwise it is nearly impossible to determine
+          // what property in the parent type contains the field you want to
+          // read from. `dealias` contains a shallow copy of `rootValue`
+          dealias(parentSelectionSet, rootValue),
+          argumentsObjectFromField(field, variables),
+          { ...execContext.context, ...operation.getApolloContext() },
+          { field, fragmentMap: execContext.fragmentMap },
+        ])
       );
-    }
 
-    // Returned value is an object, and the query has a sub-selection. Recurse.
-    if (field.selectionSet) {
-      return this.resolveSelectionSet(
-        field.selectionSet,
-        isClientFieldDescendant || isClientField,
-        result,
-        execContext
-      );
+      if (result === undefined) {
+        result = defaultResult;
+      }
+
+      // Handle all scalar types here.
+      if (!field.selectionSet) {
+        return result;
+      }
+
+      // From here down, the field has a selection set, which means it's trying
+      // to query a GraphQLObjectType.
+      if (result == null) {
+        // Basically any field in a GraphQL response can be null, or missing
+        return result;
+      }
+
+      const isClientField =
+        field.directives?.some((d) => d.name.value === "client") ?? false;
+
+      if (Array.isArray(result)) {
+        return this.resolveSubSelectedArray(
+          field,
+          isClientFieldDescendant || isClientField,
+          result,
+          execContext,
+          path
+        );
+      }
+
+      // Returned value is an object, and the query has a sub-selection. Recurse.
+      if (field.selectionSet) {
+        return this.resolveSelectionSet(
+          field.selectionSet,
+          isClientFieldDescendant || isClientField,
+          result,
+          execContext,
+          path
+        );
+      }
+    } catch (e) {
+      const error = toErrorLike(e);
+      execContext.errors.push({ message: error.message, path });
+
+      return null;
     }
   }
 
@@ -383,10 +400,11 @@ export class LocalResolversLink extends ApolloLink {
     field: FieldNode,
     isClientFieldDescendant: boolean,
     result: any[],
-    execContext: ExecContext
+    execContext: ExecContext,
+    path: Path
   ): any {
     return Promise.all(
-      result.map((item) => {
+      result.map((item, idx) => {
         if (item === null) {
           return null;
         }
@@ -397,7 +415,8 @@ export class LocalResolversLink extends ApolloLink {
             field,
             isClientFieldDescendant,
             item,
-            execContext
+            execContext,
+            path.concat(idx)
           );
         }
 
@@ -407,7 +426,8 @@ export class LocalResolversLink extends ApolloLink {
             field.selectionSet,
             isClientFieldDescendant,
             item,
-            execContext
+            execContext,
+            path.concat(idx)
           );
         }
       })

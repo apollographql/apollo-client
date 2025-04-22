@@ -29,7 +29,7 @@ import type { IgnoreModifier } from "../../cache/core/types/common.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 
-type SetOptionalVariables<
+type MakeRequiredVariablesOptional<
   TVariables extends OperationVariables,
   TConfiguredVariables extends Partial<TVariables>,
 > = Prettify<
@@ -250,7 +250,7 @@ export function useMutation<
   >
 ): useMutation.ResultTuple<
   TData,
-  SetOptionalVariables<TVariables, TConfiguredVariables>,
+  MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,
   TContext,
   TCache
 > {

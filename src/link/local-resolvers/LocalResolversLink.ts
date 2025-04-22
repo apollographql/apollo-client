@@ -280,12 +280,12 @@ export class LocalResolversLink extends ApolloLink {
       rootValue.__typename || execContext.defaultOperationType;
     const resolverMap = this.resolvers?.[resolverType];
     if (resolverMap) {
-      const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
-      if (resolve) {
+      const resolver = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
+      if (resolver) {
         resultPromise = Promise.resolve(
           // In case the resolve function accesses reactive variables,
           // set cacheSlot to the current cache instance.
-          cacheSlot.withValue(cache, resolve, [
+          cacheSlot.withValue(cache, resolver, [
             // Ensure the parent value passed to the resolver does not contain
             // aliased fields, otherwise it is nearly impossible to determine
             // what property in the parent type contains the field you want to

@@ -96,7 +96,6 @@ export interface Operation {
   readonly client: ApolloClient;
 }
 
-/** @internal */
 export interface ExecuteContext {
   client: ApolloClient;
 }

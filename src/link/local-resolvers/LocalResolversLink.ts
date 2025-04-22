@@ -300,7 +300,6 @@ export class LocalResolversLink extends ApolloLink {
     const { cache } = operation.getApolloContext();
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
-    const aliasUsed = fieldName !== aliasedFieldName;
     let defaultResult = rootValue[fieldName];
     if (defaultResult === undefined) {
       defaultResult = rootValue[aliasedFieldName];
@@ -308,7 +307,7 @@ export class LocalResolversLink extends ApolloLink {
 
     const resolver = this.getResolver(
       rootValue.__typename || execContext.defaultOperationType,
-      aliasUsed ? fieldName : aliasedFieldName,
+      fieldName,
       defaultResult
     );
 

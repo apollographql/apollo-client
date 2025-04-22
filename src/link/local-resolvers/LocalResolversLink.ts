@@ -268,7 +268,7 @@ export class LocalResolversLink extends ApolloLink {
             isClientFieldDescendant,
             rootValue,
             execContext,
-            []
+            path
           );
 
           resultsToMerge.push(fragmentResult);

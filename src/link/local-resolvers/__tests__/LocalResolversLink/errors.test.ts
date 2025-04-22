@@ -446,3 +446,59 @@ test("handles rejected promises returned in async resolvers", async () => {
 
   await expect(stream).toComplete();
 });
+
+test("handles errors thrown for resolvers on fields inside fragments", async () => {
+  const query = gql`
+    fragment Foo on Foo {
+      bar
+      ...Foo2
+    }
+    fragment Foo2 on Foo {
+      __typename
+      baz @client
+    }
+    query Mixed {
+      foo {
+        ...Foo
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() => {
+    return of({
+      data: {
+        foo: { bar: true, __typename: `Foo` },
+      },
+    });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Foo: {
+        baz: () => {
+          throw new Error("Could not get baz");
+        },
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: { bar: true, baz: null, __typename: "Foo" },
+    },
+    errors: [
+      {
+        message: "Could not get baz",
+        path: ["foo", "baz"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});

@@ -86,14 +86,14 @@ test("handles queries with a mix of @client and server fields", async () => {
   const mockLink = new MockLink([
     {
       request: { query: serverQuery },
-      result: { data: { bar: { baz: true } } },
+      result: { data: { bar: { __typename: "Bar", baz: true } } },
     },
   ]);
 
   const localResolversLink = new LocalResolversLink({
     resolvers: {
       Query: {
-        foo: () => ({ bar: true }),
+        foo: () => ({ __typename: "Foo", bar: true }),
       },
     },
   });
@@ -103,8 +103,8 @@ test("handles queries with a mix of @client and server fields", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: {
-      foo: { bar: true },
-      bar: { baz: true },
+      foo: { __typename: "Foo", bar: true },
+      bar: { __typename: "Bar", baz: true },
     },
   });
 

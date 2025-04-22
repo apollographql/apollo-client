@@ -1420,12 +1420,23 @@ export class QueryManager {
       // observables to complete before itself completes.
       fetchCancelSubject.complete();
     };
-    this.fetchCancelFns.set(queryInfo.queryId, (reason) => {
-      fetchCancelSubject.error(reason);
+    this.fetchCancelFns.set(queryInfo.queryId, (error) => {
+      fetchCancelSubject.next({
+        kind: "E",
+        error,
+        query,
+        variables,
+        source: "network",
+        fetchPolicy,
+        reason: networkStatus,
+      });
+      fetchCancelSubject.complete();
       cleanupCancelFn();
     });
 
-    const fetchCancelSubject = new Subject<never>();
+    const fetchCancelSubject = new Subject<
+      QueryNotification.Value<TData, TVars>
+    >();
     let observable: Observable<QueryNotification.Value<TData, TVars>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to

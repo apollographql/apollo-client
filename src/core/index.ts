@@ -112,9 +112,7 @@ export {
   split,
 } from "@apollo/client/link/core";
 export type {
-  ApolloContext,
   ApolloPayloadResult,
-  CombineLinkContextOptions,
   DocumentNode,
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,

@@ -285,6 +285,45 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
   await expect(stream).toComplete();
 });
 
+test("overwrites apollo extension from thrown GraphQLError if provided", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => {
+          throw new GraphQLError("Something went wrong", {
+            extensions: { apollo: { shouldNotBeSeen: true } },
+          });
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: null },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});
+
 test("concatenates client errors with server errors", async () => {
   const query = gql`
     query Test {

@@ -357,6 +357,13 @@ export class LocalResolversLink extends ApolloLink {
 
       // Returned value is an object, and the query has a sub-selection. Recurse.
       if (field.selectionSet) {
+        invariant(
+          result.__typename,
+          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+          result,
+          `${typename}.${fieldName}`
+        );
+
         return this.resolveSelectionSet(
           field.selectionSet,
           isClientFieldDescendant || isClientField,

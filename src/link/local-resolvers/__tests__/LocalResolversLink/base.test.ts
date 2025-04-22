@@ -553,11 +553,15 @@ test("adds an error when the __typename cannot be resolved", async () => {
     data: { foo: null },
     errors: [
       {
-        message: `Could not resolve __typename from object ${JSON.stringify(
+        message: `Could not resolve __typename on object ${JSON.stringify(
           { bar: true },
           null,
           2
-        )}. This is an error and can cause issues when writing to the cache.`,
+        )} returned from resolver 'Query.foo'. This is an error and will cause issues when writing to the cache.`,
+        path: ["foo"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
       },
     ],
   });

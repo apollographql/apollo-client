@@ -33,7 +33,15 @@ test("handles errors thrown in a resolver", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: { foo: null },
-    errors: [{ message: "Something went wrong", path: ["foo"] }],
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
   });
 
   await expect(stream).toComplete();
@@ -65,7 +73,15 @@ test("handles errors thrown in a child resolver", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: { foo: { __typename: "Foo", bar: null } },
-    errors: [{ message: "Something went wrong", path: ["foo", "bar"] }],
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo", "bar"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
   });
 
   await expect(stream).toComplete();
@@ -104,8 +120,20 @@ test("adds errors for each field that throws errors", async () => {
   await expect(stream).toEmitTypedValue({
     data: { foo: { __typename: "Foo", bar: null, baz: null, qux: true } },
     errors: [
-      { message: "Bar error", path: ["foo", "bar"] },
-      { message: "Baz error", path: ["foo", "baz"] },
+      {
+        message: "Bar error",
+        path: ["foo", "bar"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+      {
+        message: "Baz error",
+        path: ["foo", "baz"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
     ],
   });
 
@@ -144,8 +172,20 @@ test("handles errors thrown in a child resolver from parent array", async () => 
       ],
     },
     errors: [
-      { message: "Something went wrong", path: ["foo", 0, "bar"] },
-      { message: "Something went wrong", path: ["foo", 1, "bar"] },
+      {
+        message: "Something went wrong",
+        path: ["foo", 0, "bar"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+      {
+        message: "Something went wrong",
+        path: ["foo", 1, "bar"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
     ],
   });
 
@@ -191,13 +231,21 @@ test("handles errors thrown in a child resolver for an array from a single item"
         { __typename: "Foo", id: 2, bar: null },
       ],
     },
-    errors: [{ message: "Something went wrong", path: ["foo", 1, "bar"] }],
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo", 1, "bar"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
   });
 
   await expect(stream).toComplete();
 });
 
-test("serializes a thrown GraphQLError", async () => {
+test("serializes a thrown GraphQLError and merges extensions", async () => {
   const query = gql`
     query Test {
       foo @client {
@@ -226,7 +274,10 @@ test("serializes a thrown GraphQLError", async () => {
       {
         message: "Something went wrong",
         path: ["foo"],
-        extensions: { custom: true },
+        extensions: {
+          custom: true,
+          apollo: { source: "LocalResolversLink" },
+        },
       },
     ],
   });
@@ -270,7 +321,13 @@ test("concatenates client errors with server errors", async () => {
     data: { foo: null, baz: { __typename: "Baz", qux: null } },
     errors: [
       { message: "Could not get qux", path: ["baz", "qux"] },
-      { message: "Something went wrong", path: ["foo"] },
+      {
+        message: "Something went wrong",
+        path: ["foo"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
     ],
   });
 

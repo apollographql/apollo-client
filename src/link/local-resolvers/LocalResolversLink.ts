@@ -369,9 +369,11 @@ export class LocalResolversLink extends ApolloLink {
     } catch (e) {
       const error = toErrorLike(e);
       execContext.errors.push(
-        isGraphQLError(error) ?
-          { ...error.toJSON(), path }
-        : { message: error.message, path }
+        addApolloExtension(
+          isGraphQLError(error) ?
+            { ...error.toJSON(), path }
+          : { message: error.message, path }
+        )
       );
 
       return null;
@@ -544,6 +546,15 @@ function isGraphQLError(error: ErrorLike): error is GraphQLError {
     "locations" in error &&
     "extensions" in error
   );
+}
+
+function addApolloExtension(error: GraphQLFormattedError) {
+  return {
+    ...error,
+    extensions: mergeDeep(error.extensions, {
+      apollo: { source: "LocalResolversLink" },
+    }),
+  };
 }
 
 if (__DEV__) {

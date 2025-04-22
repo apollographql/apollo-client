@@ -9,7 +9,6 @@ export type {
   ApolloContext,
   ApolloExecuteContext,
   ApolloPayloadResult,
-  CombineLinkContextOptions,
   DocumentNode,
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,

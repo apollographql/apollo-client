@@ -495,9 +495,8 @@ test("warns when a resolver is missing for an `@client` field", async () => {
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' type is missing a resolver for the '%s' field",
-    "Query",
-    "foo"
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "Query.foo"
   );
 });
 

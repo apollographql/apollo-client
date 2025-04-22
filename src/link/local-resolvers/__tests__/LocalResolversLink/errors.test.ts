@@ -1,3 +1,5 @@
+import { GraphQLError } from "graphql";
+
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
@@ -188,6 +190,43 @@ test("handles errors thrown in a child resolver for an array from a single item"
       ],
     },
     errors: [{ message: "Something went wrong", path: ["foo", 1, "bar"] }],
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("serializes a thrown GraphQLError", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => {
+          throw new GraphQLError("Something went wrong", {
+            extensions: { custom: true },
+          });
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: null },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo"],
+        extensions: { custom: true },
+      },
+    ],
   });
 
   await expect(stream).toComplete();

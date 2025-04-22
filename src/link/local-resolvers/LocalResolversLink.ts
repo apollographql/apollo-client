@@ -12,13 +12,14 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { isSelectionNode, visit } from "graphql";
+import { GraphQLError, isSelectionNode, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
 
 import type {
   DefaultContext,
+  ErrorLike,
   FragmentMatcher,
   OperationVariables,
 } from "@apollo/client";
@@ -366,7 +367,11 @@ export class LocalResolversLink extends ApolloLink {
       }
     } catch (e) {
       const error = toErrorLike(e);
-      execContext.errors.push({ message: error.message, path });
+      execContext.errors.push(
+        isGraphQLError(error) ?
+          { ...error.toJSON(), path }
+        : { message: error.message, path }
+      );
 
       return null;
     }
@@ -525,6 +530,10 @@ const getTransformedQuery = wrap(
       defaultCacheSizes["LocalResolversLink.getTransformedQuery"],
   }
 );
+
+function isGraphQLError(error: ErrorLike): error is GraphQLError {
+  return error instanceof GraphQLError;
+}
 
 if (__DEV__) {
   Object.assign(LocalResolversLink, {

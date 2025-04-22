@@ -1,15 +1,13 @@
 import { of } from "rxjs";
 
-import { ApolloLink, gql as origGql } from "@apollo/client";
+import { ApolloLink } from "@apollo/client";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
 } from "@apollo/client/testing/internal";
-import { addTypenameToDocument } from "@apollo/client/utilities";
 
-const gql = (...args: Parameters<typeof origGql>) =>
-  addTypenameToDocument(origGql(...args));
+import { gql } from "./testUtils.js";
 
 test("resolves @client fields mixed with aliased server fields", async () => {
   const query = gql`

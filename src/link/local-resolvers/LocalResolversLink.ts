@@ -98,13 +98,7 @@ export class LocalResolversLink extends ApolloLink {
   }
 
   addResolvers(resolvers: LocalResolversLink.Resolvers) {
-    if (Array.isArray(resolvers)) {
-      resolvers.forEach((resolverGroup) => {
-        this.resolvers = mergeDeep(this.resolvers, resolverGroup);
-      });
-    } else {
-      this.resolvers = mergeDeep(this.resolvers, resolvers);
-    }
+    this.resolvers = mergeDeep(this.resolvers, resolvers);
   }
 
   override request(

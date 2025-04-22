@@ -343,6 +343,16 @@ export class LocalResolversLink extends ApolloLink {
     const resolver = this.resolvers[typename]?.[fieldName];
 
     if (!resolver) {
+      if (defaultValue === undefined) {
+        invariant.warn(
+          "The '%s' type is missing a resolver for the '%s' field",
+          typename,
+          fieldName
+        );
+
+        defaultValue = null;
+      }
+
       return () => defaultValue;
     }
 

@@ -115,7 +115,7 @@ test("handles queries with a mix of @client and server fields", async () => {
   await expect(stream).toComplete();
 });
 
-test("runs resolvers for deeply nested @client queries", async () => {
+test("runs resolvers for deeply nested @client fields", async () => {
   const query = gql`
     query Test {
       user {

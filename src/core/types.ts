@@ -23,7 +23,9 @@ export interface ClientAwareness {
   version?: string;
 }
 
-export interface DefaultContext extends Record<string, any> {}
+export interface DefaultContext extends Record<string, any> {
+  queryDeduplication?: boolean;
+}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 

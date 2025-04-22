@@ -848,7 +848,7 @@ export class QueryManager {
           id: queryId,
         }),
       }))
-      .finally(() => this.stopQuery(queryId));
+      .finally(() => this.removeQuery(queryId));
   }
 
   private queryIdCounter = 1;
@@ -1120,11 +1120,6 @@ export class QueryManager {
     }
 
     return makeObservable(variables);
-  }
-
-  public stopQuery(queryId: string) {
-    this.removeQuery(queryId);
-    this.broadcastQueries();
   }
 
   public removeQuery(queryId: string) {

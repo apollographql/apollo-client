@@ -1296,7 +1296,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
-    this.queryManager.stopQuery(this.queryId);
+    this.queryManager.removeQuery(this.queryId);
     this.isTornDown = true;
   }
 

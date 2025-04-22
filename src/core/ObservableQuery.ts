@@ -81,7 +81,12 @@ interface Last<TData, TVariables> {
 }
 
 const newNetworkStatusSymbol: any = Symbol();
-const uninitialized = {} as ApolloQueryResult<any>;
+const uninitialized: ApolloQueryResult<any> = {
+  loading: true,
+  networkStatus: NetworkStatus.loading,
+  data: undefined,
+  partial: true,
+};
 
 export declare namespace ObservableQuery {
   export type Options<
@@ -1336,6 +1341,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.dirty = false;
   }
 
+  /** @internal */
+  public resetResult() {
+    this.input.next({
+      source: "setResult",
+      kind: "N",
+      value: uninitialized,
+      query: this.query,
+      variables: this.variables,
+    } satisfies QueryNotification.SetResult<TData, TVariables>);
+  }
+
   private operator: OperatorFunction<
     QueryNotification.Value<TData, TVariables>,
     QueryNotification.InternalResult<
@@ -1374,6 +1390,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           v.source === "network"
       )
     );
+
+    const setResult = obs.pipe(
+      filter(
+        (v): v is QueryNotification.SetResult<TData, TVariables> =>
+          v.source === "setResult"
+      )
+    );
     // TODO
     // const fromFetchMore = obs.pipe(
     //   filter(
@@ -1401,88 +1424,95 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     ) => isEqualQuery(value, this);
 
     return merge(
-      fromCache.pipe(
-        filter(
-          (value) =>
-            (this.options.fetchPolicy !== "no-cache" &&
-              this.options.fetchPolicy !== "standby") ||
-            value.reason === NetworkStatus.refetch
+      setResult.pipe(
+        map(({ variables, query, value }) => ({
+          variables,
+          query,
+          result: value,
+        }))
+      ),
+      merge(
+        fromCache.pipe(
+          filter(
+            (value) =>
+              (this.options.fetchPolicy !== "no-cache" &&
+                this.options.fetchPolicy !== "standby") ||
+              value.reason === NetworkStatus.refetch
+          ),
+          filter(filterForCurrentQuery),
+          dematerializeInternalResult<
+            ApolloQueryResult<TData>,
+            TData,
+            TVariables
+          >(),
+          tap((result) => {
+            if (result.result.partial) {
+              this.scheduleNotify();
+            }
+          }),
+          filter(
+            ({ result }) =>
+              result.networkStatus !== NetworkStatus.ready ||
+              !result.partial ||
+              !!this.options.returnPartialData ||
+              this.options.fetchPolicy === "cache-only"
+          )
         ),
-        filter(filterForCurrentQuery),
-        dematerializeInternalResult<
-          ApolloQueryResult<TData>,
-          TData,
-          TVariables
-        >(),
-        tap((result) => {
-          if (result.result.partial) {
-            this.scheduleNotify();
-          }
-        }),
-        filter(
-          ({ result }) =>
-            result.networkStatus !== NetworkStatus.ready ||
-            !result.partial ||
-            !!this.options.returnPartialData ||
-            this.options.fetchPolicy === "cache-only"
+        fromNetwork.pipe(
+          filter(
+            (value) =>
+              // always handle errors
+              value.kind !== "N" ||
+              // also handle "errors as values"
+              value.value.networkStatus === NetworkStatus.error ||
+              // handle values from the link in case of `no-cache` or `network-only` `fetchPolicy`
+              this.options.fetchPolicy === "no-cache" ||
+              this.options.fetchPolicy === "network-only" ||
+              (this.options.fetchPolicy === "standby" &&
+                value.reason === NetworkStatus.refetch) ||
+              // an error with `errorPolicy`: `ignore` might end up with a completely
+              // empty value that will not be written to the cache, but might need
+              // an update from the link
+              value.value.data === undefined
+          ),
+          filter(filterForCurrentQuery),
+          // convert errors into "errors as values"
+          map((value): QueryNotification.FromNetwork<TData, TVariables> => {
+            if (value.kind !== "E") return value;
+            const lastValue = this.internalSubject.getValue();
+            return {
+              ...value,
+              kind: "N",
+              value: {
+                data: undefined,
+                partial: true,
+                ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
+                error: value.error,
+                networkStatus: NetworkStatus.error,
+                loading: false,
+              },
+            };
+          }),
+          dematerializeInternalResult()
+        ),
+        fromNetworkStatus.pipe(
+          dematerializeInternalResult(),
+          map((value) => {
+            const previousResult = this.internalSubject.getValue();
+            return {
+              query: value.query,
+              variables: value.variables,
+              result: {
+                ...(isEqualQuery(previousResult, value) ?
+                  previousResult.result
+                : this.getInitialResult()),
+                error: undefined,
+                networkStatus: value.result.networkStatus,
+              },
+            };
+          })
         )
-      ),
-      fromNetwork.pipe(
-        filter(
-          (value) =>
-            // always handle errors
-            value.kind !== "N" ||
-            // also handle "errors as values"
-            value.value.networkStatus === NetworkStatus.error ||
-            // handle values from the link in case of `no-cache` or `network-only` `fetchPolicy`
-            this.options.fetchPolicy === "no-cache" ||
-            this.options.fetchPolicy === "network-only" ||
-            (this.options.fetchPolicy === "standby" &&
-              value.reason === NetworkStatus.refetch) ||
-            // an error with `errorPolicy`: `ignore` might end up with a completely
-            // empty value that will not be written to the cache, but might need
-            // an update from the link
-            value.value.data === undefined
-        ),
-        filter(filterForCurrentQuery),
-        // convert errors into "errors as values"
-        map((value): QueryNotification.FromNetwork<TData, TVariables> => {
-          if (value.kind !== "E") return value;
-          const lastValue = this.internalSubject.getValue();
-          return {
-            ...value,
-            kind: "N",
-            value: {
-              data: undefined,
-              partial: true,
-              ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
-              error: value.error,
-              networkStatus: NetworkStatus.error,
-              loading: false,
-            },
-          };
-        }),
-        dematerializeInternalResult()
-      ),
-      fromNetworkStatus.pipe(
-        dematerializeInternalResult(),
-        map((value) => {
-          const previousResult = this.internalSubject.getValue();
-          return {
-            query: value.query,
-            variables: value.variables,
-            result: {
-              ...(isEqualQuery(previousResult, value) ?
-                previousResult.result
-              : this.getInitialResult()),
-              error: undefined,
-              networkStatus: value.result.networkStatus,
-            },
-          };
-        })
-      )
-    )
-      .pipe(
+      ).pipe(
         // normalize result shape
         map(({ query, variables, result }) => {
           if ("error" in result && !result.error) delete result.error;
@@ -1502,9 +1532,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }),
         distinctUntilKeyChanged("result", equal)
       )
-      .pipe(
-        tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
-      );
+    ).pipe(
+      tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
+    );
   });
 
   // Reobserve with fetchPolicy effectively set to "network-only" (or keeping "no-cache")

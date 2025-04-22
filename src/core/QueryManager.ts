@@ -895,8 +895,7 @@ export class QueryManager {
       if (queryInfo.observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        // TODO
-        // queryInfo.observableQuery["networkStatus"] = NetworkStatus.loading;
+        queryInfo.observableQuery.resetResult();
       } else {
         queryInfo.stop();
       }

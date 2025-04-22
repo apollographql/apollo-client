@@ -279,6 +279,13 @@ export declare namespace QueryNotification {
       source: "newNetworkStatus";
     };
 
+  type SetResult<TData, TVariables> = NextNotification<
+    ApolloQueryResult<TData>
+  > &
+    Meta<TData, TVariables> & {
+      source: "setResult";
+    };
+
   type FromNetwork<TData, TVariables> = ObservableNotification<
     ApolloQueryResult<TData>
   > &
@@ -310,7 +317,8 @@ export declare namespace QueryNotification {
     | FromCache<TData, TVariables>
     | FromNetwork<TData, TVariables>
     | FromFetchMore<TData, TVariables>
-    | NewNetworkStatus<TData, TVariables>;
+    | NewNetworkStatus<TData, TVariables>
+    | SetResult<TData, TVariables>;
 
   type InternalResult<T, TData, TVariables> = {
     result: T;

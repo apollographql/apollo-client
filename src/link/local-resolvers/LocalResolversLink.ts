@@ -276,27 +276,26 @@ export class LocalResolversLink extends ApolloLink {
     }
     let resultPromise = Promise.resolve(defaultResult);
 
-    const resolverType =
-      rootValue.__typename || execContext.defaultOperationType;
-    const resolverMap = this.resolvers?.[resolverType];
-    if (resolverMap) {
-      const resolver = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
-      if (resolver) {
-        resultPromise = Promise.resolve(
-          // In case the resolve function accesses reactive variables,
-          // set cacheSlot to the current cache instance.
-          cacheSlot.withValue(cache, resolver, [
-            // Ensure the parent value passed to the resolver does not contain
-            // aliased fields, otherwise it is nearly impossible to determine
-            // what property in the parent type contains the field you want to
-            // read from. `dealias` contains a shallow copy of `rootValue`
-            dealias(parentSelectionSet, rootValue),
-            argumentsObjectFromField(field, variables),
-            { ...execContext.context, ...operation.getApolloContext() },
-            { field, fragmentMap: execContext.fragmentMap },
-          ])
-        );
-      }
+    const resolver = this.getResolver(
+      rootValue.__typename || execContext.defaultOperationType,
+      aliasUsed ? fieldName : aliasedFieldName
+    );
+
+    if (resolver) {
+      resultPromise = Promise.resolve(
+        // In case the resolve function accesses reactive variables,
+        // set cacheSlot to the current cache instance.
+        cacheSlot.withValue(cache, resolver, [
+          // Ensure the parent value passed to the resolver does not contain
+          // aliased fields, otherwise it is nearly impossible to determine
+          // what property in the parent type contains the field you want to
+          // read from. `dealias` contains a shallow copy of `rootValue`
+          dealias(parentSelectionSet, rootValue),
+          argumentsObjectFromField(field, variables),
+          { ...execContext.context, ...operation.getApolloContext() },
+          { field, fragmentMap: execContext.fragmentMap },
+        ])
+      );
     }
 
     let result = await resultPromise;
@@ -338,6 +337,10 @@ export class LocalResolversLink extends ApolloLink {
         execContext
       );
     }
+  }
+
+  private getResolver(typename: string, fieldName: string) {
+    return this.resolvers[typename]?.[fieldName];
   }
 
   private resolveSubSelectedArray(

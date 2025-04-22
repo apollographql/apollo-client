@@ -79,11 +79,11 @@ export declare namespace LocalResolversLink {
 
 type ExecContext = {
   operation: Operation;
+  operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
   context: any;
   variables: OperationVariables;
   fragmentMatcher: FragmentMatcher;
-  defaultOperationType: string;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
 };
@@ -165,19 +165,13 @@ export class LocalResolversLink extends ApolloLink {
       fragmentMap
     );
 
-    const definitionOperation = mainDefinition.operation;
-
-    const defaultOperationType =
-      definitionOperation.charAt(0).toUpperCase() +
-      definitionOperation.slice(1);
-
     const execContext: ExecContext = {
       operation,
+      operationDefinition: mainDefinition,
       fragmentMap,
       context,
       variables,
       fragmentMatcher: () => true,
-      defaultOperationType,
       selectionsToResolve,
       errors: [],
     };
@@ -296,7 +290,7 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, variables } = execContext;
+    const { operation, operationDefinition, variables } = execContext;
     const { cache } = operation.getApolloContext();
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
@@ -305,11 +299,14 @@ export class LocalResolversLink extends ApolloLink {
       defaultResult = rootValue[aliasedFieldName];
     }
 
-    const resolver = this.getResolver(
-      rootValue.__typename || execContext.defaultOperationType,
-      fieldName,
-      defaultResult
-    );
+    const definitionOperation = operationDefinition.operation;
+
+    const defaultOperationType =
+      definitionOperation.charAt(0).toUpperCase() +
+      definitionOperation.slice(1);
+
+    const typename = rootValue.__typename || defaultOperationType;
+    const resolver = this.getResolver(typename, fieldName, defaultResult);
 
     try {
       let result = await Promise.resolve(

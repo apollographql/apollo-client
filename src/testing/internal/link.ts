@@ -1,24 +1,24 @@
 import type { ApolloLink, GraphQLRequest } from "@apollo/client";
 import { ApolloClient, execute, InMemoryCache } from "@apollo/client";
-import type { ApolloExecuteContext } from "@apollo/client/link/core";
+import type { ExecuteContext } from "@apollo/client/link/core";
 import { createOperation } from "@apollo/client/link/utils";
 
-function createDefaultApolloContext() {
+function createDefaultExecuteContext() {
   return { client: new ApolloClient({ cache: new InMemoryCache() }) };
 }
 
 export function executeWithDefaultContext(
   link: ApolloLink,
   operation: GraphQLRequest,
-  apolloContext: ApolloExecuteContext = createDefaultApolloContext()
+  context: ExecuteContext = createDefaultExecuteContext()
 ) {
-  return execute(link, operation, apolloContext);
+  return execute(link, operation, context);
 }
 
 export function createOperationWithDefaultContext(
   context: any,
   operation: GraphQLRequest,
-  apolloContext: ApolloExecuteContext = createDefaultApolloContext()
+  executeContext: ExecuteContext = createDefaultExecuteContext()
 ) {
-  return createOperation(context, operation, apolloContext);
+  return createOperation(context, operation, executeContext);
 }

@@ -372,3 +372,77 @@ test("concatenates client errors with server errors", async () => {
 
   await expect(stream).toComplete();
 });
+
+test("handles errors thrown in async resolvers", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: async () => {
+          throw new Error("Something went wrong");
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: null },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("handles rejected promises returned in async resolvers", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: async () => {
+          return Promise.reject(new Error("Something went wrong"));
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: null },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["foo"],
+        extensions: {
+          apollo: { source: "LocalResolversLink" },
+        },
+      },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});

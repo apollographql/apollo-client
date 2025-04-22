@@ -299,13 +299,9 @@ export class LocalResolversLink extends ApolloLink {
       defaultResult = rootValue[aliasedFieldName];
     }
 
-    const definitionOperation = operationDefinition.operation;
-
+    const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fallbackTypename =
-      parentSelectionSet === operationDefinition.selectionSet ?
-        definitionOperation.charAt(0).toUpperCase() +
-        definitionOperation.slice(1)
-      : undefined;
+      isRootField ? getRootTypename(operationDefinition) : undefined;
 
     const typename = rootValue.__typename || fallbackTypename;
     const resolver = this.getResolver(typename, fieldName, defaultResult);
@@ -559,6 +555,10 @@ function addApolloExtension(error: GraphQLFormattedError) {
       apollo: { source: "LocalResolversLink" },
     },
   };
+}
+
+function getRootTypename({ operation }: OperationDefinitionNode) {
+  return operation.charAt(0).toUpperCase() + operation.slice(1);
 }
 
 if (__DEV__) {

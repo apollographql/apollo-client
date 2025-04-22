@@ -2556,15 +2556,15 @@ describe("client", () => {
     expect(onResetStoreOne).toHaveBeenCalled();
   });
 
-  it("has a reFetchObservableQueries method which calls QueryManager", async () => {
+  it("has a refetchObservableQueries method which calls QueryManager", async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
     // @ts-ignore
-    const spy = jest.spyOn(client.queryManager, "reFetchObservableQueries");
-    await client.reFetchObservableQueries();
+    const spy = jest.spyOn(client.queryManager, "refetchObservableQueries");
+    await client.refetchObservableQueries();
     expect(spy).toHaveBeenCalled();
   });
 

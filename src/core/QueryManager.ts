@@ -1010,7 +1010,7 @@ export class QueryManager {
     return queries;
   }
 
-  public reFetchObservableQueries(
+  public refetchObservableQueries(
     includeStandby: boolean = false
   ): Promise<QueryResult<any>[]> {
     const observableQueryPromises: Promise<QueryResult<any>>[] = [];

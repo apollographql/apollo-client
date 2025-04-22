@@ -298,7 +298,7 @@ export class ApolloClient implements DataProxy {
     this.mutate = this.mutate.bind(this);
     this.watchFragment = this.watchFragment.bind(this);
     this.resetStore = this.resetStore.bind(this);
-    this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
+    this.refetchObservableQueries = this.refetchObservableQueries.bind(this);
 
     this.version = version;
 
@@ -708,7 +708,7 @@ export class ApolloClient implements DataProxy {
         })
       )
       .then(() => Promise.all(this.resetStoreCallbacks.map((fn) => fn())))
-      .then(() => this.reFetchObservableQueries());
+      .then(() => this.refetchObservableQueries());
   }
 
   /**
@@ -756,23 +756,23 @@ export class ApolloClient implements DataProxy {
   /**
    * Refetches all of your active queries.
    *
-   * `reFetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
+   * `refetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
    *
-   * It is important to remember that `reFetchObservableQueries()` *will* refetch any active
+   * It is important to remember that `refetchObservableQueries()` *will* refetch any active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
-  public reFetchObservableQueries(
+  public refetchObservableQueries(
     includeStandby?: boolean
   ): Promise<QueryResult<any>[]> {
-    return this.queryManager.reFetchObservableQueries(includeStandby);
+    return this.queryManager.refetchObservableQueries(includeStandby);
   }
 
   /**
-   * Refetches specified active queries. Similar to "reFetchObservableQueries()" but with a specific list of queries.
+   * Refetches specified active queries. Similar to "refetchObservableQueries()" but with a specific list of queries.
    *
    * `refetchQueries()` is useful for use cases to imperatively refresh a selection of queries.
    *

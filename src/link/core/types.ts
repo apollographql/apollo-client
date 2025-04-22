@@ -105,7 +105,7 @@ export interface OperationContext extends DefaultContext {
   /**
    * Indicates whether `queryDeduplication` was enabled for the request.
    */
-  queryDeduplication?: boolean;
+  queryDeduplication: boolean;
   clientAwareness: ClientAwareness;
 }
 

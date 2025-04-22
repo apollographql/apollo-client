@@ -52,7 +52,7 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export declare namespace LocalResolversLink {
   export interface Options {
-    resolvers: Resolvers;
+    resolvers?: Resolvers;
   }
 
   export interface Resolvers {
@@ -87,15 +87,17 @@ export class LocalResolversLink extends ApolloLink {
     ExecutableDefinitionNode,
     Set<SelectionNode>
   >();
-  private resolvers!: LocalResolversLink.Resolvers;
+  private resolvers: LocalResolversLink.Resolvers = {};
 
-  constructor(options: LocalResolversLink.Options) {
+  constructor(options: LocalResolversLink.Options = {}) {
     super();
-    this.addResolvers(options.resolvers);
+
+    if (options.resolvers) {
+      this.addResolvers(options.resolvers);
+    }
   }
 
   addResolvers(resolvers: LocalResolversLink.Resolvers) {
-    this.resolvers = this.resolvers || {};
     if (Array.isArray(resolvers)) {
       resolvers.forEach((resolverGroup) => {
         this.resolvers = mergeDeep(this.resolvers, resolverGroup);

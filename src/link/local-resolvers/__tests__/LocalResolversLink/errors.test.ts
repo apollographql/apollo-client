@@ -1,5 +1,7 @@
 import { GraphQLError } from "graphql";
+import { of } from "rxjs";
 
+import { ApolloLink } from "@apollo/client";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
@@ -226,6 +228,49 @@ test("serializes a thrown GraphQLError", async () => {
         path: ["foo"],
         extensions: { custom: true },
       },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("concatenates client errors with server errors", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+      baz {
+        qux
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() => {
+    return of({
+      data: { baz: { __typename: "Baz", qux: null } },
+      errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
+    });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => {
+          throw new Error("Something went wrong");
+        },
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: null, baz: { __typename: "Baz", qux: null } },
+    errors: [
+      { message: "Could not get qux", path: ["baz", "qux"] },
+      { message: "Something went wrong", path: ["foo"] },
     ],
   });
 

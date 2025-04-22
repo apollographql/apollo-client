@@ -570,3 +570,31 @@ test.failing(
     await expect(stream).toComplete();
   }
 );
+
+test("can return more data than needed in resolver which is accessible by child resolver but omitted in output", async () => {
+  const query = gql`
+    query {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", bar: true, random: true }),
+      },
+      Foo: {
+        bar: (foo) => (foo.random ? "random" : "not random"),
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: { __typename: "Foo", bar: "random" } },
+  });
+  await expect(stream).toComplete();
+});

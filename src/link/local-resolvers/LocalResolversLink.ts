@@ -297,8 +297,8 @@ export class LocalResolversLink extends ApolloLink {
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const rootTypename =
       isRootField ? getRootTypename(operationDefinition) : undefined;
-
     const typename = rootValue.__typename || rootTypename;
+
     const resolver = this.getResolver(
       typename,
       fieldName,
@@ -398,9 +398,8 @@ export class LocalResolversLink extends ApolloLink {
     if (!resolver) {
       if (defaultValue === undefined) {
         invariant.warn(
-          "The '%s' type is missing a resolver for the '%s' field",
-          typename,
-          fieldName
+          "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+          `${typename}.${fieldName}`
         );
 
         defaultValue = null;

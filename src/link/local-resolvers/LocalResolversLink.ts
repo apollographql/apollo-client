@@ -300,10 +300,10 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
-    const fallbackTypename =
+    const rootTypename =
       isRootField ? getRootTypename(operationDefinition) : undefined;
 
-    const typename = rootValue.__typename || fallbackTypename;
+    const typename = rootValue.__typename || rootTypename;
     const resolver = this.getResolver(typename, fieldName, defaultResult);
 
     try {

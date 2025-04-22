@@ -102,7 +102,11 @@ export interface ExecuteContext {
 }
 
 export interface OperationContext extends DefaultContext {
-  clientAwareness?: ClientAwareness;
+  /**
+   * Indicates whether `queryDeduplication` was enabled for the request.
+   */
+  queryDeduplication?: boolean;
+  clientAwareness: ClientAwareness;
 }
 
 export interface SingleExecutionResult<

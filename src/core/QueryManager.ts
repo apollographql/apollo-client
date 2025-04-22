@@ -1178,6 +1178,7 @@ export class QueryManager {
       return {
         ...this.defaultContext,
         ...newContext,
+        queryDeduplication: deduplication,
         clientAwareness: this.clientAwareness,
       };
     };

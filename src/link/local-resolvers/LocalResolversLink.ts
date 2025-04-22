@@ -72,6 +72,7 @@ export declare namespace LocalResolversLink {
     info: {
       field: FieldNode;
       fragmentMap: FragmentMap;
+      path: Path;
     }
   ) => any;
 }
@@ -323,7 +324,7 @@ export class LocalResolversLink extends ApolloLink {
           dealias(parentSelectionSet, rootValue),
           argumentsObjectFromField(field, variables),
           { ...execContext.context, ...operation.getApolloContext() },
-          { field, fragmentMap: execContext.fragmentMap },
+          { field, fragmentMap: execContext.fragmentMap, path },
         ])
       );
 

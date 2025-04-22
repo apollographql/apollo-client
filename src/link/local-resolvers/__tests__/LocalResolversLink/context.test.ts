@@ -7,39 +7,7 @@ import {
 
 import { gql } from "./testUtils.js";
 
-test("passes context to @client resolvers", async () => {
-  const query = gql`
-    query WithContext {
-      foo @client {
-        bar
-      }
-    }
-  `;
-
-  const link = new LocalResolversLink({
-    resolvers: {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
-      },
-      Foo: {
-        // @ts-expect-error FIXME before this is merged
-        bar: (_data: any, _args: any, { id }: { id: number }) => id,
-      },
-    },
-  });
-
-  const stream = new ObservableStream(
-    execute(link, { query, context: { id: 1 } })
-  );
-
-  await expect(stream).toEmitTypedValue({
-    data: { foo: { __typename: "Foo", bar: 1 } },
-  });
-
-  await expect(stream).toComplete();
-});
-
-test("passes apollo context to @client resolvers", async () => {
+test("passes operation in context to resolvers", async () => {
   const query = gql`
     query WithContext {
       foo @client {
@@ -71,8 +39,12 @@ test("passes apollo context to @client resolvers", async () => {
     { __typename: "Foo" },
     null,
     {
-      client,
-      cache: client.cache,
+      operation: expect.objectContaining({
+        query,
+        client,
+        variables: {},
+        operationName: "WithContext",
+      }),
     },
     {
       field: expect.objectContaining({
@@ -84,7 +56,7 @@ test("passes apollo context to @client resolvers", async () => {
   );
 });
 
-test("mixes apollo context and passed context to @client resolvers", async () => {
+test("can access request context through operation.getContext in resolvers", async () => {
   const query = gql`
     query WithContext {
       foo @client {
@@ -93,19 +65,20 @@ test("mixes apollo context and passed context to @client resolvers", async () =>
     }
   `;
 
-  const barResolver = jest.fn(() => 1);
   const link = new LocalResolversLink({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
       },
-      Foo: { bar: barResolver },
+      Foo: {
+        bar: (_data: any, _args: any, { operation }) =>
+          operation.getContext().id,
+      },
     },
   });
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
   const stream = new ObservableStream(
-    execute(link, { query, context: { id: 1 } }, { client })
+    execute(link, { query, context: { id: 1 } })
   );
 
   await expect(stream).toEmitTypedValue({
@@ -113,72 +86,4 @@ test("mixes apollo context and passed context to @client resolvers", async () =>
   });
 
   await expect(stream).toComplete();
-
-  expect(barResolver).toHaveBeenCalledWith(
-    { __typename: "Foo" },
-    null,
-    {
-      id: 1,
-      client,
-      cache: client.cache,
-    },
-    {
-      field: expect.objectContaining({
-        name: { kind: "Name", value: "bar" },
-      }),
-      fragmentMap: expect.any(Object),
-      path: ["foo", "bar"],
-    }
-  );
-});
-
-test("overwrites client and cache fields if provided in context", async () => {
-  const query = gql`
-    query WithContext {
-      foo @client {
-        bar
-      }
-    }
-  `;
-
-  const barResolver = jest.fn(() => 1);
-  const link = new LocalResolversLink({
-    resolvers: {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
-      },
-      Foo: { bar: barResolver },
-    },
-  });
-
-  const client = new ApolloClient({ cache: new InMemoryCache() });
-  const stream = new ObservableStream(
-    execute(
-      link,
-      { query, context: { client: "client", cache: "cache" } },
-      { client }
-    )
-  );
-
-  await expect(stream).toEmitTypedValue({
-    data: { foo: { __typename: "Foo", bar: 1 } },
-  });
-
-  await expect(stream).toComplete();
-
-  expect(barResolver).toHaveBeenCalledWith(
-    { __typename: "Foo" },
-    null,
-    {
-      client,
-      cache: client.cache,
-    },
-    {
-      field: expect.objectContaining({
-        name: { kind: "Name", value: "bar" },
-      }),
-      fragmentMap: expect.any(Object),
-      path: ["foo", "bar"],
-    }
-  );
 });

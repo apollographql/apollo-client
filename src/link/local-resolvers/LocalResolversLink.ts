@@ -19,7 +19,6 @@ import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
 
 import type {
-  DefaultContext,
   ErrorLike,
   FragmentMatcher,
   OperationVariables,
@@ -27,13 +26,12 @@ import type {
 import { cacheSlot } from "@apollo/client/cache";
 import { toErrorLike } from "@apollo/client/errors";
 import type {
-  ApolloContext,
   FetchResult,
   NextLink,
   Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type { FragmentMap, Merge } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   cacheSizes,
@@ -68,13 +66,17 @@ export declare namespace LocalResolversLink {
   export type Resolver = (
     rootValue: any,
     args: any,
-    context: Merge<DefaultContext, ApolloContext>,
+    context: ResolverContext,
     info: {
       field: FieldNode;
       fragmentMap: FragmentMap;
       path: Path;
     }
   ) => any;
+
+  export interface ResolverContext {
+    operation: Operation;
+  }
 }
 
 type ExecContext = {
@@ -291,7 +293,6 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     const { operation, operationDefinition, variables } = execContext;
-    const { cache } = operation.getApolloContext();
     const fieldName = field.name.value;
 
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
@@ -309,14 +310,14 @@ export class LocalResolversLink extends ApolloLink {
       let result = await Promise.resolve(
         // In case the resolve function accesses reactive variables,
         // set cacheSlot to the current cache instance.
-        cacheSlot.withValue(cache, resolver, [
+        cacheSlot.withValue(operation.client.cache, resolver, [
           // Ensure the parent value passed to the resolver does not contain
           // aliased fields, otherwise it is nearly impossible to determine
           // what property in the parent type contains the field you want to
           // read from. `dealias` contains a shallow copy of `rootValue`
           dealias(parentSelectionSet, rootValue),
           argumentsObjectFromField(field, variables),
-          { ...execContext.context, ...operation.getApolloContext() },
+          { operation },
           { field, fragmentMap: execContext.fragmentMap, path },
         ])
       );

@@ -1193,7 +1193,7 @@ export class QueryManager {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: prepareContext(context),
+        context: prepareContext({ ...context, forceFetch: !deduplication }),
         extensions,
       };
 

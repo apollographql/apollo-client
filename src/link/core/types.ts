@@ -3,7 +3,6 @@ import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
 import type {
-  ApolloCache,
   ApolloClient,
   ClientAwareness,
   DefaultContext,

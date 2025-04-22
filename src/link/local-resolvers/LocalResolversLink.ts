@@ -278,7 +278,7 @@ export class LocalResolversLink extends ApolloLink {
 
     const resolverType =
       rootValue.__typename || execContext.defaultOperationType;
-    const resolverMap = this.resolvers && this.resolvers[resolverType];
+    const resolverMap = this.resolvers?.[resolverType];
     if (resolverMap) {
       const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
       if (resolve) {

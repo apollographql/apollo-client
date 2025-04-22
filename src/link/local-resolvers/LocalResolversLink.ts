@@ -6,13 +6,14 @@ import type {
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
+  GraphQLError,
   GraphQLFormattedError,
   InlineFragmentNode,
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { GraphQLError, isSelectionNode, visit } from "graphql";
+import { isSelectionNode, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
@@ -531,8 +532,18 @@ const getTransformedQuery = wrap(
   }
 );
 
+// eslint-disable-next-line @typescript-eslint/no-restricted-types
 function isGraphQLError(error: ErrorLike): error is GraphQLError {
-  return error instanceof GraphQLError;
+  return (
+    error.name === "GraphQLError" &&
+    // Check to see if the error contains keys returned in toJSON. The values
+    // might be `undefined` if not set, but we don't care about those as we
+    // can be reasonably sure this is a GraphQLError if all of these properties
+    // exist on the error
+    "path" in error &&
+    "locations" in error &&
+    "extensions" in error
+  );
 }
 
 if (__DEV__) {

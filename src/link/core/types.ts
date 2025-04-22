@@ -94,11 +94,6 @@ export interface Operation {
     ): void;
   };
   getContext: () => OperationContext;
-  getApolloContext: () => ApolloContext;
-}
-
-export interface ApolloContext {
-  readonly cache: ApolloCache;
   readonly client: ApolloClient;
 }
 

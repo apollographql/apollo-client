@@ -6,7 +6,6 @@ export { execute } from "./execute.js";
 export { ApolloLink } from "./ApolloLink.js";
 
 export type {
-  ApolloContext,
   ApolloPayloadResult,
   DocumentNode,
   ExecuteContext,

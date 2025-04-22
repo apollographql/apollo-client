@@ -9,7 +9,6 @@ export function createOperation(
   operation: GraphQLRequest,
   { client }: ExecuteContext
 ): Operation {
-  const apolloContext = { client, cache: client.cache };
   let context = { ...starting };
 
   const setContext: Operation["setContext"] = (next) => {
@@ -20,7 +19,6 @@ export function createOperation(
     }
   };
   const getContext: Operation["getContext"] = () => ({ ...context });
-  const getApolloContext: Operation["getApolloContext"] = () => apolloContext;
 
   Object.defineProperty(operation, "setContext", {
     enumerable: false,
@@ -32,9 +30,11 @@ export function createOperation(
     value: getContext,
   });
 
-  Object.defineProperty(operation, "getApolloContext", {
-    enumerable: false,
-    value: getApolloContext,
+  Object.defineProperty(operation, "client", {
+    enumerable: true,
+    writable: false,
+    configurable: false,
+    value: client,
   });
 
   return operation as Operation;

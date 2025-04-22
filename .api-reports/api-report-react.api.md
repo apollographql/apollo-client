@@ -422,6 +422,11 @@ type LocalStateOptions = {
 };
 
 // @public (undocumented)
+type MakeRequiredVariablesOptional<TVariables extends OperationVariables, TConfiguredVariables extends Partial<TVariables>> = Prettify<{
+    [K in keyof TVariables as K extends keyof TConfiguredVariables ? K : never]?: TVariables[K];
+} & Omit<TVariables, keyof TConfiguredVariables>>;
+
+// @public (undocumented)
 interface MaskFragmentOptions<TData> {
     // (undocumented)
     data: TData;
@@ -944,11 +949,6 @@ interface Resolvers {
 }
 
 // @public (undocumented)
-type SetOptionalVariables<TVariables extends OperationVariables, TConfiguredVariables extends Partial<TVariables>> = Prettify<{
-    [K in keyof TVariables as K extends keyof TConfiguredVariables ? K : never]?: TVariables[K];
-} & Omit<TVariables, keyof TConfiguredVariables>>;
-
-// @public (undocumented)
 export type SkipToken = typeof skipToken;
 
 // @public (undocumented)
@@ -1294,15 +1294,25 @@ export namespace useLoadableQuery {
 // @public @deprecated (undocumented)
 export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLoadableQuery.Result<TData, TVariables>;
 
-// Warning: (ae-forgotten-export) The symbol "SetOptionalVariables" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "MakeRequiredVariablesOptional" needs to be exported by the entry point index.d.ts
 //
 // @public
 export function useMutation<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2, TConfiguredVariables extends Partial<TVariables> = {}>(mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, TContext, TCache, {
     [K in keyof TConfiguredVariables]: K extends keyof TVariables ? TConfiguredVariables[K] : never;
-}>): useMutation.ResultTuple<TData, SetOptionalVariables<TVariables, TConfiguredVariables>, TContext, TCache>;
+}>): useMutation.ResultTuple<TData, MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>, TContext, TCache>;
 
 // @public (undocumented)
 export namespace useMutation {
+    // (undocumented)
+    export type MutationFunction<TData, TVariables extends OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = (...[options]: {} extends TVariables ? [
+    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache> & {
+        variables?: TVariables;
+    }
+    ] : [
+    options: MutationFunctionOptions<TData, TVariables, TContext, TCache> & {
+        variables: TVariables;
+    }
+    ]) => Promise<MutateResult_2<MaybeMasked_2<TData>>>;
     // (undocumented)
     export type MutationFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = Options<TData, TVariables, TContext, TCache> & {
         mutation?: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -1338,15 +1348,7 @@ export namespace useMutation {
     }
     // (undocumented)
     export type ResultTuple<TData, TVariables extends OperationVariables, TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = [
-    mutate: (...[options]: {} extends TVariables ? [
-    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache> & {
-        variables?: TVariables;
-    }
-    ] : [
-    options: MutationFunctionOptions<TData, TVariables, TContext, TCache> & {
-        variables: TVariables;
-    }
-    ]) => Promise<MutateResult_2<MaybeMasked_2<TData>>>,
+    mutate: MutationFunction<TData, TVariables, TContext, TCache>,
     result: Result<TData>
     ];
 }

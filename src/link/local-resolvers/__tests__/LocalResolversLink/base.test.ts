@@ -22,7 +22,7 @@ test("runs resolvers for @client queries", async () => {
   const link = new LocalResolversLink({
     resolvers: {
       Query: {
-        foo: () => ({ bar: true }),
+        foo: () => ({ __typename: "Foo", bar: true }),
       },
     },
   });
@@ -30,7 +30,7 @@ test("runs resolvers for @client queries", async () => {
   const stream = new ObservableStream(execute(link, { query }));
 
   await expect(stream).toEmitTypedValue({
-    data: { foo: { bar: true } },
+    data: { foo: { __typename: "Foo", bar: true } },
   });
 
   await expect(stream).toComplete();
@@ -49,14 +49,14 @@ test("can add resolvers after the link is instantiated", async () => {
 
   link.addResolvers({
     Query: {
-      foo: () => ({ bar: true }),
+      foo: () => ({ __typename: "Foo", bar: true }),
     },
   });
 
   const stream = new ObservableStream(execute(link, { query }));
 
   await expect(stream).toEmitTypedValue({
-    data: { foo: { bar: true } },
+    data: { foo: { __typename: "Foo", bar: true } },
   });
 
   await expect(stream).toComplete();

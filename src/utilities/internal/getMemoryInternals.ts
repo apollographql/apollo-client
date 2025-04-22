@@ -121,6 +121,8 @@ function getCurrentCacheSizes() {
       defaultCacheSizes["inMemoryCache.executeSelectionSet"],
     "inMemoryCache.executeSubSelectedArray":
       defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
+    "LocalResolversLink.getTransformedQuery":
+      defaultCacheSizes["LocalResolversLink.getTransformedQuery"],
   };
   return Object.fromEntries(
     Object.entries(defaults).map(([k, v]) => [

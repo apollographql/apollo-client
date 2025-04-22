@@ -226,3 +226,30 @@ test("does not confuse fields aliased to each other with boolean values", async 
   });
   await expect(stream).toComplete();
 });
+
+test("does not confuse aliased __typename", async () => {
+  const query = gql`
+    query Test {
+      fie: foo @client {
+        bar: __typename
+        typename: bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ bar: true, __typename: "Foo" }),
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query: query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      fie: { bar: "Foo", typename: true },
+    },
+  });
+  await expect(stream).toComplete();
+});

@@ -274,7 +274,6 @@ export class LocalResolversLink extends ApolloLink {
     if (defaultResult === undefined) {
       defaultResult = rootValue[aliasedFieldName];
     }
-    let resultPromise = Promise.resolve(defaultResult);
 
     const resolver = this.getResolver(
       rootValue.__typename || execContext.defaultOperationType,
@@ -282,7 +281,7 @@ export class LocalResolversLink extends ApolloLink {
       defaultResult
     );
 
-    resultPromise = Promise.resolve(
+    let result = await Promise.resolve(
       // In case the resolve function accesses reactive variables,
       // set cacheSlot to the current cache instance.
       cacheSlot.withValue(cache, resolver, [
@@ -296,8 +295,6 @@ export class LocalResolversLink extends ApolloLink {
         { field, fragmentMap: execContext.fragmentMap },
       ])
     );
-
-    let result = await resultPromise;
 
     if (result === undefined) {
       result = defaultResult;

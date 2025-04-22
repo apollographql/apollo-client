@@ -366,17 +366,20 @@ export class LocalResolversLink extends ApolloLink {
         );
       }
     } catch (e) {
-      const error = toErrorLike(e);
-      execContext.errors.push(
-        addApolloExtension(
-          isGraphQLError(error) ?
-            { ...error.toJSON(), path }
-          : { message: error.message, path }
-        )
-      );
+      this.addError(toErrorLike(e), path, execContext);
 
       return null;
     }
+  }
+
+  private addError(error: ErrorLike, path: Path, execContext: ExecContext) {
+    execContext.errors.push(
+      addApolloExtension(
+        isGraphQLError(error) ?
+          { ...error.toJSON(), path }
+        : { message: error.message, path }
+      )
+    );
   }
 
   private getResolver(

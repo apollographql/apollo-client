@@ -324,7 +324,7 @@ export class LocalResolversLink extends ApolloLink {
 
       if (result === undefined) {
         invariant.warn(
-          "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. Return `null` instead if you didn't mean to return a value.",
+          "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
           getResolverName(typename, fieldName)
         );
         result = null;

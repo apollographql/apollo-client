@@ -2,6 +2,7 @@ import { of } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link/core";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
+import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
@@ -50,10 +51,8 @@ test("handles nested asynchronous @client resolvers", async () => {
     }
   `;
 
-  function randomDelay(range: number) {
-    return new Promise((resolve) =>
-      setTimeout(resolve, Math.round(Math.random() * range))
-    );
+  async function randomDelay(range: number) {
+    await wait(Math.round(Math.random() * range));
   }
 
   function uuid() {

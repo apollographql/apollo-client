@@ -23,8 +23,8 @@ test("can write to the cache with a mutation", async () => {
   const link = new LocalResolversLink({
     resolvers: {
       Mutation: {
-        start(_data, _args, { cache }) {
-          cache.writeQuery({ query, data: { field: 1 } });
+        start(_data, _args, { operation }) {
+          operation.client.cache.writeQuery({ query, data: { field: 1 } });
           return true;
         },
       },
@@ -61,15 +61,16 @@ test("can write to the cache with a mutation using an ID", async () => {
   const link = new LocalResolversLink({
     resolvers: {
       Mutation: {
-        start(_, __, { cache }) {
-          cache.writeQuery({
+        start(_, __, { operation }) {
+          const { client } = operation;
+          client.writeQuery({
             query,
             data: {
               obj: { field: 1, id: "uniqueId", __typename: "Object" },
             },
           });
 
-          cache.modify<{ id: string; field: number }>({
+          client.cache.modify<{ id: string; field: number }>({
             id: "Object:uniqueId",
             fields: {
               field(value) {
@@ -119,8 +120,10 @@ test("does not overwrite __typename when writing to the cache with an id", async
   const link = new LocalResolversLink({
     resolvers: {
       Mutation: {
-        start(_, __, { cache }) {
-          cache.writeQuery({
+        start(_, __, { operation }) {
+          const { client } = operation;
+
+          client.writeQuery({
             query,
             data: {
               obj: {
@@ -130,7 +133,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
               },
             },
           });
-          cache.modify<{ field: { field2: number } }>({
+          client.cache.modify<{ field: { field2: number } }>({
             id: "Object:uniqueId",
             fields: {
               field(value) {

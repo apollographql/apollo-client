@@ -1162,7 +1162,7 @@ export class QueryManager {
 
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
-    context: any,
+    context: DefaultContext | undefined,
     variables?: OperationVariables,
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.

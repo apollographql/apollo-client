@@ -34,3 +34,161 @@ test("handles errors thrown in a resolver", async () => {
 
   await expect(stream).toComplete();
 });
+
+test("handles errors thrown in a child resolver", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo" }),
+      },
+      Foo: {
+        bar: () => {
+          throw new Error("Something went wrong");
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: { __typename: "Foo", bar: null } },
+    errors: [{ message: "Something went wrong", path: ["foo", "bar"] }],
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("adds errors for each field that throws errors", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+        baz
+        qux
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo" }),
+      },
+      Foo: {
+        bar: () => {
+          throw new Error("Bar error");
+        },
+        baz: () => {
+          throw new Error("Baz error");
+        },
+        qux: () => true,
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: { __typename: "Foo", bar: null, baz: null, qux: true } },
+    errors: [
+      { message: "Bar error", path: ["foo", "bar"] },
+      { message: "Baz error", path: ["foo", "baz"] },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("handles errors thrown in a child resolver from parent array", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => [{ __typename: "Foo" }, { __typename: "Foo" }],
+      },
+      Foo: {
+        bar: () => {
+          throw new Error("Something went wrong");
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: [
+        { __typename: "Foo", bar: null },
+        { __typename: "Foo", bar: null },
+      ],
+    },
+    errors: [
+      { message: "Something went wrong", path: ["foo", 0, "bar"] },
+      { message: "Something went wrong", path: ["foo", 1, "bar"] },
+    ],
+  });
+
+  await expect(stream).toComplete();
+});
+
+test("handles errors thrown in a child resolver for an array from a single item", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        id
+        bar
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => [
+          { __typename: "Foo", id: 1 },
+          { __typename: "Foo", id: 2 },
+        ],
+      },
+      Foo: {
+        bar: (parent) => {
+          if (parent.id === 2) {
+            throw new Error("Something went wrong");
+          }
+
+          return true;
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: [
+        { __typename: "Foo", id: 1, bar: true },
+        { __typename: "Foo", id: 2, bar: null },
+      ],
+    },
+    errors: [{ message: "Something went wrong", path: ["foo", 1, "bar"] }],
+  });
+
+  await expect(stream).toComplete();
+});

@@ -79,6 +79,7 @@ test("passes apollo context to @client resolvers", async () => {
         name: { kind: "Name", value: "bar" },
       }),
       fragmentMap: expect.any(Object),
+      path: ["foo", "bar"],
     }
   );
 });
@@ -126,6 +127,7 @@ test("mixes apollo context and passed context to @client resolvers", async () =>
         name: { kind: "Name", value: "bar" },
       }),
       fragmentMap: expect.any(Object),
+      path: ["foo", "bar"],
     }
   );
 });
@@ -176,6 +178,7 @@ test("overwrites client and cache fields if provided in context", async () => {
         name: { kind: "Name", value: "bar" },
       }),
       fragmentMap: expect.any(Object),
+      path: ["foo", "bar"],
     }
   );
 });

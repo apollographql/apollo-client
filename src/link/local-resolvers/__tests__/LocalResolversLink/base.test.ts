@@ -523,7 +523,7 @@ test("warns when a resolver returns undefined and sets value to null", async () 
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. Return `null` instead if you didn't mean to return a value.",
+    "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
     "Query.foo"
   );
 });

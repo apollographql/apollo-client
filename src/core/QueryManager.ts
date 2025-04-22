@@ -30,7 +30,7 @@ import {
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type {
-  ApolloExecuteContext,
+  ExecuteContext,
   FetchResult,
   GraphQLRequest,
 } from "@apollo/client/link/core";
@@ -1182,7 +1182,7 @@ export class QueryManager {
       };
     };
 
-    const apolloContext: ApolloExecuteContext = {
+    const executeContext: ExecuteContext = {
       client: this.client,
     };
 
@@ -1213,7 +1213,7 @@ export class QueryManager {
           observable = entry.observable = execute(
             link,
             operation,
-            apolloContext
+            executeContext
           ).pipe(
             onAnyEvent((event) => {
               if (
@@ -1230,7 +1230,7 @@ export class QueryManager {
           );
         }
       } else {
-        observable = execute(link, operation, apolloContext) as Observable<
+        observable = execute(link, operation, executeContext) as Observable<
           FetchResult<TData>
         >;
       }

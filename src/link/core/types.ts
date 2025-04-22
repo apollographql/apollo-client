@@ -103,8 +103,8 @@ export interface ApolloContext {
 }
 
 /** @internal */
-export interface ApolloExecuteContext {
-  readonly client: ApolloClient;
+export interface ExecuteContext {
+  client: ApolloClient;
 }
 
 export interface OperationContext extends DefaultContext {

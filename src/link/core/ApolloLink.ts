@@ -12,7 +12,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type {
-  ApolloExecuteContext,
+  ExecuteContext,
   FetchResult,
   GraphQLRequest,
   NextLink,
@@ -70,14 +70,14 @@ export class ApolloLink {
   public static execute(
     link: ApolloLink,
     operation: GraphQLRequest,
-    apolloContext: ApolloExecuteContext
+    context: ExecuteContext
   ): Observable<FetchResult> {
     return (
       link.request(
         createOperation(
           operation.context,
           transformOperation(validateOperation(operation)),
-          apolloContext
+          context
         )
       ) || EMPTY
     );

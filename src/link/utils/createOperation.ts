@@ -1,5 +1,5 @@
 import type {
-  ApolloExecuteContext,
+  ExecuteContext,
   GraphQLRequest,
   Operation,
 } from "@apollo/client/link/core";
@@ -7,7 +7,7 @@ import type {
 export function createOperation(
   starting: any,
   operation: GraphQLRequest,
-  { client }: ApolloExecuteContext
+  { client }: ExecuteContext
 ): Operation {
   const apolloContext = { client, cache: client.cache };
   let context = { ...starting };

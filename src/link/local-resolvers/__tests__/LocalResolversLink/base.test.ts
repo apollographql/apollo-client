@@ -501,6 +501,34 @@ test("warns when a resolver is missing for an `@client` field", async () => {
   );
 });
 
+test("warns when a resolver returns undefined and sets value to null", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      foo @client
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => {},
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({ data: { foo: null } });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. Return `null` instead if you didn't mean to return a value.",
+    "Query.foo"
+  );
+});
+
 test.failing(
   "adds an error when the __typename cannot be resolved",
   async () => {

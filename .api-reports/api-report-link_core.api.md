@@ -4,29 +4,12 @@
 
 ```ts
 
-import type { ApolloCache } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import type { Merge } from '@apollo/client/utilities';
 import type { Observable } from 'rxjs';
-import type { Prettify } from '@apollo/client/utilities';
-
-// @public (undocumented)
-export interface ApolloContext {
-    // (undocumented)
-    readonly cache: ApolloCache;
-    // (undocumented)
-    readonly client: ApolloClient;
-}
-
-// @internal (undocumented)
-export interface ApolloExecuteContext {
-    // (undocumented)
-    readonly client: ApolloClient;
-}
 
 // @public (undocumented)
 export class ApolloLink {
@@ -37,10 +20,8 @@ export class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
     static empty(): ApolloLink;
-    // Warning: (ae-incompatible-release-tags) The symbol "execute" is marked as @public, but its signature references "ApolloExecuteContext" which is marked as @internal
-    //
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloExecuteContext): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal
@@ -66,12 +47,6 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
 }
 
 // @public (undocumented)
-export type CombineLinkContextOptions<TLinkContextOptions extends Array<Record<string, any>>, TCombined extends Record<string, any> = {}> = TLinkContextOptions extends [] ? Prettify<TCombined> : TLinkContextOptions extends ([
-infer First extends Record<string, any>,
-...infer Rest extends Array<Record<string, any>>
-]) ? CombineLinkContextOptions<Rest, Merge<TCombined, First>> : never;
-
-// @public (undocumented)
 export const concat: typeof ApolloLink.concat;
 
 export { DocumentNode }
@@ -81,6 +56,12 @@ export const empty: typeof ApolloLink.empty;
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
+
+// @public (undocumented)
+export interface ExecuteContext {
+    // (undocumented)
+    client: ApolloClient;
+}
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
@@ -157,9 +138,9 @@ export type NextLink = (operation: Operation) => Observable<FetchResult>;
 // @public (undocumented)
 export interface Operation {
     // (undocumented)
-    extensions: Record<string, any>;
+    readonly client: ApolloClient;
     // (undocumented)
-    getApolloContext: () => ApolloContext;
+    extensions: Record<string, any>;
     // (undocumented)
     getContext: () => OperationContext;
     // (undocumented)
@@ -178,7 +159,8 @@ export interface Operation {
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
     // (undocumented)
-    clientAwareness?: ClientAwareness;
+    clientAwareness: ClientAwareness;
+    queryDeduplication: boolean;
 }
 
 // @public (undocumented)

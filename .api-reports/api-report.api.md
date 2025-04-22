@@ -179,20 +179,6 @@ export interface ApolloClientOptions {
 }
 
 // @public (undocumented)
-export interface ApolloContext {
-    // (undocumented)
-    readonly cache: ApolloCache;
-    // (undocumented)
-    readonly client: ApolloClient;
-}
-
-// @internal (undocumented)
-interface ApolloExecuteContext {
-    // (undocumented)
-    readonly client: ApolloClient;
-}
-
-// @public (undocumented)
 export class ApolloLink {
     constructor(request?: RequestHandler);
     // (undocumented)
@@ -201,10 +187,10 @@ export class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
     static empty(): ApolloLink;
-    // Warning: (ae-forgotten-export) The symbol "ApolloExecuteContext" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "ExecuteContext" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest, apolloContext: ApolloExecuteContext): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal
@@ -454,14 +440,6 @@ type CombineIntersection<T> = Exclude<T, {
     __typename?: string;
 }>>;
 
-// Warning: (ae-forgotten-export) The symbol "Merge" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type CombineLinkContextOptions<TLinkContextOptions extends Array<Record<string, any>>, TCombined extends Record<string, any> = {}> = TLinkContextOptions extends [] ? Prettify<TCombined> : TLinkContextOptions extends ([
-infer First extends Record<string, any>,
-...infer Rest extends Array<Record<string, any>>
-]) ? CombineLinkContextOptions<Rest, Merge<TCombined, First>> : never;
-
 // @public (undocumented)
 export const concat: typeof ApolloLink.concat;
 
@@ -587,6 +565,8 @@ type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
+    // (undocumented)
+    queryDeduplication?: boolean;
 }
 
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
@@ -791,6 +771,12 @@ type Exact<in out T> = (x: T) => T;
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
+
+// @public (undocumented)
+interface ExecuteContext {
+    // (undocumented)
+    client: ApolloClient;
+}
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
@@ -1437,11 +1423,6 @@ export type MaybeMasked<TData> = DataMasking extends {
 } ? TData : TData;
 
 // @public (undocumented)
-type Merge<Target, Source> = {
-    [K in keyof Target as K extends keyof Source ? never : K]: Target[K];
-} & Source;
-
-// @public (undocumented)
 export interface MergeInfo {
     // (undocumented)
     field: FieldNode;
@@ -1782,9 +1763,9 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 // @public (undocumented)
 export interface Operation {
     // (undocumented)
-    extensions: Record<string, any>;
+    readonly client: ApolloClient;
     // (undocumented)
-    getApolloContext: () => ApolloContext;
+    extensions: Record<string, any>;
     // (undocumented)
     getContext: () => OperationContext;
     // (undocumented)
@@ -1803,7 +1784,8 @@ export interface Operation {
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
     // (undocumented)
-    clientAwareness?: ClientAwareness;
+    clientAwareness: ClientAwareness;
+    queryDeduplication: boolean;
 }
 
 // @public (undocumented)

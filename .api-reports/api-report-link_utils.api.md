@@ -4,13 +4,13 @@
 
 ```ts
 
-import type { ApolloExecuteContext } from '@apollo/client/link/core';
 import type { DocumentNode } from 'graphql';
+import type { ExecuteContext } from '@apollo/client/link/core';
 import type { GraphQLRequest } from '@apollo/client/link/core';
 import type { Operation } from '@apollo/client/link/core';
 
 // @public (undocumented)
-export function createOperation(starting: any, operation: GraphQLRequest, { client }: ApolloExecuteContext): Operation;
+export function createOperation(starting: any, operation: GraphQLRequest, { client }: ExecuteContext): Operation;
 
 // @public (undocumented)
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {

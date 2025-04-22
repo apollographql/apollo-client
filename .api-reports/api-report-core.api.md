@@ -5,7 +5,6 @@
 ```ts
 
 import { ApolloCache } from '@apollo/client/cache';
-import { ApolloContext } from '@apollo/client/link/core';
 import { ApolloLink } from '@apollo/client/link/core';
 import { ApolloPayloadResult } from '@apollo/client/link/core';
 import { ApolloReducerConfig } from '@apollo/client/cache';
@@ -15,7 +14,6 @@ import { checkFetcher } from '@apollo/client/link/http';
 import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
-import { CombineLinkContextOptions } from '@apollo/client/link/core';
 import { concat } from '@apollo/client/link/core';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
@@ -205,8 +203,6 @@ export interface ApolloClientOptions {
     version?: string;
 }
 
-export { ApolloContext }
-
 export { ApolloLink }
 
 export { ApolloPayloadResult }
@@ -254,8 +250,6 @@ export { CombinedGraphQLErrors }
 
 export { CombinedProtocolErrors }
 
-export { CombineLinkContextOptions }
-
 export { concat }
 
 export { createHttpLink }
@@ -268,6 +262,8 @@ export { DataProxy }
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
+    // (undocumented)
+    queryDeduplication?: boolean;
 }
 
 export { defaultDataIdFromObject }

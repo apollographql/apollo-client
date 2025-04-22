@@ -474,7 +474,6 @@ test("forwards query to terminating link if there are no client fields", async (
       member {
         firstName
         lastName
-        fullName @client
       }
     }
   `;

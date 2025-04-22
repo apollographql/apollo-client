@@ -293,18 +293,17 @@ export class LocalResolversLink extends ApolloLink {
     const { operation, operationDefinition, variables } = execContext;
     const { cache } = operation.getApolloContext();
     const fieldName = field.name.value;
-    const aliasedFieldName = resultKeyNameFromField(field);
-    let defaultResult = rootValue[fieldName];
-    if (defaultResult === undefined) {
-      defaultResult = rootValue[aliasedFieldName];
-    }
 
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const rootTypename =
       isRootField ? getRootTypename(operationDefinition) : undefined;
 
     const typename = rootValue.__typename || rootTypename;
-    const resolver = this.getResolver(typename, fieldName, defaultResult);
+    const resolver = this.getResolver(
+      typename,
+      fieldName,
+      rootValue[fieldName]
+    );
 
     try {
       let result = await Promise.resolve(

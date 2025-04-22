@@ -45,7 +45,7 @@ test("can add resolvers after the link is instantiated", async () => {
     }
   `;
 
-  const link = new LocalResolversLink({ resolvers: {} });
+  const link = new LocalResolversLink();
 
   link.addResolvers({
     Query: {

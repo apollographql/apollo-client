@@ -3,7 +3,7 @@ import { of } from "rxjs";
 import type { Operation } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 
-test("can get apollo context from getApolloContext", async () => {
+test("can get the client from the operation", async () => {
   const query = gql`
     query {
       greeting
@@ -21,10 +21,7 @@ test("can get apollo context from getApolloContext", async () => {
   await client.query({ query });
   const [operation] = request.mock.calls[0];
 
-  expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client, cache: client.cache },
-    { includeKnownClassInstances: true }
-  );
+  expect(operation.client).toBe(client);
 });
 
 test("allows custom context", async () => {
@@ -49,10 +46,6 @@ test("allows custom context", async () => {
     foo: true,
     clientAwareness: { name: undefined, version: undefined },
   });
-  expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client, cache: client.cache },
-    { includeKnownClassInstances: true }
-  );
 });
 
 test("uses context from defaultOptions", async () => {
@@ -80,10 +73,6 @@ test("uses context from defaultOptions", async () => {
     foo: true,
     clientAwareness: { name: undefined, version: undefined },
   });
-  expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client, cache: client.cache },
-    { includeKnownClassInstances: true }
-  );
 });
 
 test("can override global default", async () => {
@@ -111,8 +100,4 @@ test("can override global default", async () => {
     foo: false,
     clientAwareness: { name: undefined, version: undefined },
   });
-  expect(operation.getApolloContext()).toStrictEqualTyped(
-    { client, cache: client.cache },
-    { includeKnownClassInstances: true }
-  );
 });

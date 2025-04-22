@@ -10,7 +10,7 @@ import { ApolloLink } from "@apollo/client/link/core";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 describe("Link interactions", () => {
-  it("includes the cache on the context for eviction links", (done) => {
+  it("includes the client on the operation for eviction links", (done) => {
     expect.assertions(3);
     const query = gql`
       query CachedLuke {
@@ -31,12 +31,12 @@ describe("Link interactions", () => {
     };
 
     const evictionLink = (operation: Operation, forward: NextLink) => {
-      const { cache } = operation.getApolloContext();
-      expect(cache).toBeDefined();
+      const { client } = operation;
+      expect(client).toBeDefined();
       return forward(operation).pipe(
         map((result) => {
           setTimeout(() => {
-            const cacheResult = cache.read({ query, optimistic: true });
+            const cacheResult = client.cache.read({ query, optimistic: true });
             expect(cacheResult).toEqual(initialData);
             expect(cacheResult).toEqual(result.data);
             if (count === 2) {
@@ -217,7 +217,7 @@ describe("Link interactions", () => {
     });
   });
 
-  it("includes the cache on the context for mutations", (done) => {
+  it("includes the client on the operation for mutations", (done) => {
     const mutation = gql`
       mutation UpdateLuke {
         people_one(id: 1) {
@@ -230,8 +230,8 @@ describe("Link interactions", () => {
     `;
 
     const evictionLink = (operation: Operation, forward: NextLink) => {
-      const { cache } = operation.getApolloContext();
-      expect(cache).toBeDefined();
+      const { client } = operation;
+      expect(client).toBeDefined();
       done();
       return forward(operation);
     };

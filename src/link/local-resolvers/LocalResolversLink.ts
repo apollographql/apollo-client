@@ -439,12 +439,12 @@ export class LocalResolversLink extends ApolloLink {
 // improvement of dealiasing all nested data. Until that need arises, we can
 // keep this simple.
 function dealias(
-  fieldSelections: SelectionSetNode,
+  selectionSet: SelectionSetNode,
   fieldValue: Record<string, any>
 ) {
   const data = { ...fieldValue };
 
-  for (const selection of fieldSelections.selections) {
+  for (const selection of selectionSet.selections) {
     if (isField(selection) && selection.alias) {
       data[selection.name.value] = data[selection.alias.value];
       delete data[selection.alias.value];

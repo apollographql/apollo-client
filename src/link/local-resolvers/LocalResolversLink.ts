@@ -551,9 +551,10 @@ function isGraphQLError(error: ErrorLike): error is GraphQLError {
 function addApolloExtension(error: GraphQLFormattedError) {
   return {
     ...error,
-    extensions: mergeDeep(error.extensions, {
+    extensions: {
+      ...error.extensions,
       apollo: { source: "LocalResolversLink" },
-    }),
+    },
   };
 }
 

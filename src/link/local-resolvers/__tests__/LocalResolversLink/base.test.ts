@@ -6,6 +6,7 @@ import { MockLink } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -507,4 +508,27 @@ test("forwards query to terminating link if there are no client fields", async (
     },
   });
   await expect(stream).toComplete();
+});
+
+test("warns when a resolver is missing for an `@client` field", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      foo @client
+    }
+  `;
+
+  const link = new LocalResolversLink();
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({ data: { foo: null } });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' type is missing a resolver for the '%s' field",
+    "Query",
+    "foo"
+  );
 });

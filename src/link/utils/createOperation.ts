@@ -31,9 +31,7 @@ export function createOperation(
   });
 
   Object.defineProperty(operation, "client", {
-    enumerable: true,
-    writable: false,
-    configurable: false,
+    enumerable: false,
     value: client,
   });
 

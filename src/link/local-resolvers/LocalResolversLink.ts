@@ -499,7 +499,7 @@ export class LocalResolversLink extends ApolloLink {
   }
 }
 
-// Note: this is only a shallow dealias function. We might consider a future
+// Note: this is a shallow dealias function. We might consider a future
 // improvement of dealiasing all nested data. Until that need arises, we can
 // keep this simple.
 function dealias(

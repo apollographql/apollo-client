@@ -21,7 +21,7 @@ import type {
   OperationVariables,
   Unmasked,
 } from "@apollo/client";
-import type { NoInfer } from "@apollo/client/utilities";
+import type { NoInfer, Prettify } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";
@@ -29,12 +29,23 @@ import type { IgnoreModifier } from "../../cache/core/types/common.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 
+type MakeRequiredVariablesOptional<
+  TVariables extends OperationVariables,
+  TConfiguredVariables extends Partial<TVariables>,
+> = Prettify<
+  {
+    [K in keyof TVariables as K extends keyof TConfiguredVariables ? K
+    : never]?: TVariables[K];
+  } & Omit<TVariables, keyof TConfiguredVariables>
+>;
+
 export declare namespace useMutation {
   export interface Options<
     TData = unknown,
-    TVariables = OperationVariables,
+    TVariables extends OperationVariables = OperationVariables,
     TContext = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
+    TConfiguredVariables extends Partial<TVariables> = Partial<TVariables>,
   > {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
     optimisticResponse?:
@@ -67,7 +78,7 @@ export declare namespace useMutation {
     errorPolicy?: ErrorPolicy;
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
-    variables?: TVariables;
+    variables?: TConfiguredVariables;
 
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
     context?: TContext;
@@ -119,27 +130,56 @@ export declare namespace useMutation {
 
   export type ResultTuple<
     TData,
-    TVariables,
+    TVariables extends OperationVariables,
     TContext = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
   > = [
-    mutate: (
-      options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-    ) => Promise<MutateResult<MaybeMasked<TData>>>,
+    mutate: MutationFunction<TData, TVariables, TContext, TCache>,
     result: Result<TData>,
   ];
 
-  export interface MutationFunctionOptions<
-    TData = unknown,
-    TVariables = OperationVariables,
+  export type MutationFunction<
+    TData,
+    TVariables extends OperationVariables,
     TContext = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
-  > extends Options<TData, TVariables, TContext, TCache> {
+  > = (
+    ...[options]: {} extends TVariables ?
+      [
+        options?: MutationFunctionOptions<
+          TData,
+          TVariables,
+          TContext,
+          TCache
+        > & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+          variables?: TVariables;
+        },
+      ]
+    : [
+        options: MutationFunctionOptions<
+          TData,
+          TVariables,
+          TContext,
+          TCache
+        > & {
+          /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+          variables: TVariables;
+        },
+      ]
+  ) => Promise<MutateResult<MaybeMasked<TData>>>;
+
+  export type MutationFunctionOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+    TContext = DefaultContext,
+    TCache extends ApolloCache = ApolloCache,
+  > = Options<TData, TVariables, TContext, TCache> & {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
     // TODO: Remove this option. We shouldn't allow the mutation to be overridden
     // in the mutation function
     mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  }
+  };
 }
 
 /**
@@ -191,18 +231,29 @@ export declare namespace useMutation {
  */
 export function useMutation<
   TData = unknown,
-  TVariables = OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
+  TConfiguredVariables extends Partial<TVariables> = {},
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: useMutation.Options<
     NoInfer<TData>,
     NoInfer<TVariables>,
     TContext,
-    TCache
+    TCache,
+    {
+      [K in keyof TConfiguredVariables]: K extends keyof TVariables ?
+        TConfiguredVariables[K]
+      : never;
+    }
   >
-): useMutation.ResultTuple<TData, TVariables, TContext, TCache> {
+): useMutation.ResultTuple<
+  TData,
+  MakeRequiredVariablesOptional<TVariables, TConfiguredVariables>,
+  TContext,
+  TCache
+> {
   const client = useApolloClient(options?.client);
   const [result, setResult] = React.useState<
     Omit<useMutation.Result<TData>, "reset">
@@ -228,7 +279,12 @@ export function useMutation<
         TVariables,
         TContext,
         TCache
-      > = {}
+      > = {} as useMutation.MutationFunctionOptions<
+        TData,
+        TVariables,
+        TContext,
+        TCache
+      >
     ) => {
       const { options, mutation } = ref.current;
       const baseOptions = { ...options, mutation };
@@ -247,7 +303,7 @@ export function useMutation<
       }
 
       const mutationId = ++ref.current.mutationId;
-      const clientOptions = mergeOptions(baseOptions, executeOptions);
+      const clientOptions = mergeOptions(baseOptions, executeOptions as any);
 
       return client
         .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
@@ -334,7 +390,7 @@ export function useMutation<
     };
   }, []);
 
-  return [execute, { reset, ...result }];
+  return [execute as any, { reset, ...result }];
 }
 
 function createInitialResult(client: ApolloClient) {

@@ -107,7 +107,7 @@ export class LocalResolversLink extends ApolloLink {
   ): Observable<FetchResult> {
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
-    let remote: Observable<FetchResult> = of({ data: {} });
+    let remote: Observable<FetchResult> = of({ data: null });
 
     if (serverQuery) {
       invariant(
@@ -166,7 +166,7 @@ export class LocalResolversLink extends ApolloLink {
     const localResult = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
-      remoteResult.data,
+      remoteResult.data ?? {},
       {
         operation,
         fragmentMap,

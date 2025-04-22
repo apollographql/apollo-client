@@ -301,11 +301,13 @@ export class LocalResolversLink extends ApolloLink {
 
     const definitionOperation = operationDefinition.operation;
 
-    const defaultOperationType =
-      definitionOperation.charAt(0).toUpperCase() +
-      definitionOperation.slice(1);
+    const fallbackTypename =
+      parentSelectionSet === operationDefinition.selectionSet ?
+        definitionOperation.charAt(0).toUpperCase() +
+        definitionOperation.slice(1)
+      : undefined;
 
-    const typename = rootValue.__typename || defaultOperationType;
+    const typename = rootValue.__typename || fallbackTypename;
     const resolver = this.getResolver(typename, fieldName, defaultResult);
 
     try {

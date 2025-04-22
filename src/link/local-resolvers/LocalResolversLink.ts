@@ -6,6 +6,7 @@ import type {
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
+  GraphQLFormattedError,
   InlineFragmentNode,
   OperationDefinitionNode,
   SelectionNode,
@@ -80,6 +81,7 @@ type ExecContext = {
   fragmentMatcher: FragmentMatcher;
   defaultOperationType: string;
   selectionsToResolve: Set<SelectionNode>;
+  errors: GraphQLFormattedError[];
 };
 
 export class LocalResolversLink extends ApolloLink {
@@ -163,22 +165,40 @@ export class LocalResolversLink extends ApolloLink {
       definitionOperation.charAt(0).toUpperCase() +
       definitionOperation.slice(1);
 
+    const execContext: ExecContext = {
+      operation,
+      fragmentMap,
+      context,
+      variables,
+      fragmentMatcher: () => true,
+      defaultOperationType,
+      selectionsToResolve,
+      errors: [],
+    };
+
     const localResult = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
       remoteResult.data ?? {},
-      {
-        operation,
-        fragmentMap,
-        context,
-        variables,
-        fragmentMatcher: () => true,
-        defaultOperationType,
-        selectionsToResolve,
-      }
+      execContext
     );
 
-    return { ...remoteResult, data: mergeDeep(remoteResult.data, localResult) };
+    let errors = execContext.errors;
+
+    if (remoteResult.errors) {
+      errors = remoteResult.errors.concat(errors);
+    }
+
+    const result = {
+      ...remoteResult,
+      data: mergeDeep(remoteResult.data, localResult),
+    };
+
+    if (errors.length > 0) {
+      result.errors = errors;
+    }
+
+    return result;
   }
 
   private async resolveSelectionSet(

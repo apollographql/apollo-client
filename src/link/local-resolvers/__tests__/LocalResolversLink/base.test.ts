@@ -532,3 +532,41 @@ test("warns when a resolver is missing for an `@client` field", async () => {
     "foo"
   );
 });
+
+test.failing(
+  "adds an error when the __typename cannot be resolved",
+  async () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query {
+        foo @client {
+          bar
+        }
+      }
+    `;
+
+    const link = new LocalResolversLink({
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true }),
+        },
+      },
+    });
+
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: { foo: null },
+      errors: [
+        {
+          message: `Could not resolve __typename from object ${JSON.stringify(
+            { bar: true },
+            null,
+            2
+          )}. This is an error and can cause issues when writing to the cache.`,
+        },
+      ],
+    });
+    await expect(stream).toComplete();
+  }
+);

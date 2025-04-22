@@ -17,14 +17,13 @@ declare module "@apollo/client" {
 }
 ```
 
-Apollo Client now ships with a `CombineLinkContextOptions` type that allows you to add types for links used in your link chain. Any links that provide context options can be used with this type to provide those links types to context. For example, to add context options from `HttpLink`, add the following code:
+Links that provide context options can be used with this type to add those context types to `DefaultContext`. For example, to add context options from `HttpLink`, add the following code:
 
 ```ts
-import { CombineLinkContextOptions, HttpLink } from "@apollo/client";
+import { HttpLink } from "@apollo/client";
 
 declare module "@apollo/client" {
-  interface DefaultContext extends
-    CombineLinkContextOptions<[HttpLink.ContextOptions]> {
+  interface DefaultContext extends HttpLink.ContextOptions {
     myProperty: string;
   }
 }

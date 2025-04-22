@@ -467,3 +467,45 @@ test("can use remote result to resolve @client field", async () => {
   });
   await expect(stream).toComplete();
 });
+
+test("forwards query to terminating link if there are no client fields", async () => {
+  const query = gql`
+    query Member {
+      member {
+        firstName
+        lastName
+        fullName @client
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({
+      data: {
+        member: {
+          __typename: "Member",
+          firstName: "John",
+          lastName: "Smithsonian",
+        },
+      },
+    })
+  );
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {},
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      member: {
+        __typename: "Member",
+        firstName: "John",
+        lastName: "Smithsonian",
+      },
+    },
+  });
+  await expect(stream).toComplete();
+});

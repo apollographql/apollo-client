@@ -211,6 +211,13 @@ export class ObservableQuery<
     return this.subject.getValue().networkStatus;
   }
 
+  /**
+   * The last known emitted value when `reobserve` is called.
+   * This value will be forced to "re-emit" even if it is the same value as the
+   * previously emitted value.
+   */
+  private reemitEvenIfEqual?: ApolloQueryResult<TData>;
+
   constructor({
     queryManager,
     queryInfo,
@@ -1097,6 +1104,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.resubscribeCache(newOptions);
     this.resetNotifications();
     this.isTornDown = false;
+    this.reemitEvenIfEqual = this.internalSubject.getValue().result;
     let newNetworkStatus: NetworkStatus | undefined;
 
     if (newOptions) {
@@ -1530,7 +1538,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         })
       )
     ).pipe(
-      distinctUntilKeyChanged("result", equal),
+      distinctUntilKeyChanged(
+        "result",
+        (previous, current) =>
+          equal(previous, current) && !equal(previous, this.reemitEvenIfEqual)
+      ),
+      tap(() => {
+        // we only want to reemit if equal once, and if the value changed
+        // we also don't want to reemit in the future,
+        // so no matter what value is emitted here, we can safely
+        // reset `this.reemitEvenIfEqual`
+        this.reemitEvenIfEqual = undefined;
+      }),
       tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
     );
   });

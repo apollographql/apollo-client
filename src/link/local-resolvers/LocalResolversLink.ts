@@ -679,7 +679,7 @@ export class LocalResolversLink extends ApolloLink {
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
   ) {
-    const stack: boolean[] = [];
+    const clientDescendantStack: boolean[] = [];
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
@@ -707,14 +707,14 @@ export class LocalResolversLink extends ApolloLink {
               // This approach has one downside in that it is order dependent.
               // `@client` must come before `@export` in order for this to
               // detect properly, otherwise the `@export` field is ignored.
-              stack.push(stack.at(-1) || false);
+              clientDescendantStack.push(clientDescendantStack.at(-1) || false);
             },
             leave() {
-              stack.pop();
+              clientDescendantStack.pop();
             },
           },
           Directive: (node, _, __, ___, ancestors) => {
-            if (node.name.value === "export" && stack.at(-1)) {
+            if (node.name.value === "export" && clientDescendantStack.at(-1)) {
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {
                   exportMatches.add(node);
@@ -723,7 +723,7 @@ export class LocalResolversLink extends ApolloLink {
             }
 
             if (node.name.value === "client") {
-              stack[stack.length - 1] = true;
+              clientDescendantStack[clientDescendantStack.length - 1] = true;
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {
                   clientMatches.add(node);

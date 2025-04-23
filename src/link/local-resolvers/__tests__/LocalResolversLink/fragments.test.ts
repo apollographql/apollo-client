@@ -1,3 +1,6 @@
+import { of } from "rxjs";
+
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link/core";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
@@ -124,3 +127,59 @@ test("handles a mix of @client fields with fragments and server fields", async (
 
   await expect(stream).toComplete();
 });
+
+it("matches fragments with fragment conditions", async () => {
+  const query = gql`
+    {
+      foo {
+        ... on Bar {
+          bar @client
+        }
+        ... on Baz {
+          baz @client
+        }
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({
+      data: { foo: [{ __typename: "Bar" }, { __typename: "Baz" }] },
+    })
+  );
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Bar: {
+        bar: () => "Bar",
+      },
+      Baz: {
+        baz: () => "Baz",
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      possibleTypes: {
+        Foo: ["Bar", "Baz"],
+      },
+    }),
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: [
+        { __typename: "Bar", bar: "Bar" },
+        { __typename: "Baz", baz: "Baz" },
+      ],
+    },
+  });
+});
+
+test.todo(
+  "returns error when fragment spread type condition does not match typename"
+);

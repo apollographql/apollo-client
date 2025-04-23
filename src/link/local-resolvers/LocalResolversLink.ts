@@ -207,11 +207,7 @@ export class LocalResolversLink extends ApolloLink {
       []
     );
 
-    let errors = execContext.errors;
-
-    if (remoteResult.errors) {
-      errors = remoteResult.errors.concat(errors);
-    }
+    const errors = (remoteResult.errors ?? []).concat(execContext.errors);
 
     const result = {
       ...remoteResult,

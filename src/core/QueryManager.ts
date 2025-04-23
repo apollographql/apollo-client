@@ -1151,7 +1151,7 @@ export class QueryManager {
 
   public broadcastQueries() {
     if (this.onBroadcast) this.onBroadcast();
-    this.queries.forEach((info) => info.observableQuery?.["notify"]());
+    this.queries.forEach((info) => info.observableQuery?.notify());
   }
 
   public getLocalState() {

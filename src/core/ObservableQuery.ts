@@ -201,10 +201,6 @@ export class ObservableQuery<
   private queryInfo: QueryInfo;
 
   private linkSubscription?: Subscription;
-  private linkObservable?: Observable<
-    | QueryNotification.FromCache<TData, TVariables>
-    | QueryNotification.FromNetwork<TData, TVariables>
-  >;
 
   private pollingInfo?: {
     interval: number;
@@ -1099,6 +1095,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     this.resubscribeCache(newOptions);
+    this.resetNotifications();
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
 
@@ -1259,9 +1256,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    if (this.linkObservable && this.linkSubscription) {
+    if (this.linkSubscription) {
       this.linkSubscription.unsubscribe();
-      delete this.linkObservable;
       delete this.linkSubscription;
     }
 
@@ -1296,20 +1292,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private notifyTimeout?: ReturnType<typeof setTimeout>;
 
   /** @internal */
-  protected resetNotifications() {
-    this.cancelNotifyTimeout();
-    this.dirty = false;
-  }
-
-  private cancelNotifyTimeout() {
+  private resetNotifications() {
     if (this.notifyTimeout) {
       clearTimeout(this.notifyTimeout);
       this.notifyTimeout = void 0;
     }
+    this.dirty = false;
   }
 
   /** @internal */
-  public scheduleNotify() {
+  private scheduleNotify() {
     if (this.dirty) return;
     this.dirty = true;
     if (!this.notifyTimeout) {
@@ -1318,10 +1310,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  protected notify() {
-    this.cancelNotifyTimeout();
+  public notify() {
+    const { dirty } = this;
+    this.resetNotifications();
 
-    if (this.dirty) {
+    if (dirty) {
       if (
         this.options.fetchPolicy == "cache-only" ||
         this.options.fetchPolicy == "cache-and-network" ||
@@ -1341,8 +1334,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       }
     }
-
-    this.dirty = false;
   }
 
   /** @internal */
@@ -1450,7 +1441,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             TVariables
           >(),
           tap((result) => {
-            if (result.result.partial) {
+            if (
+              !isNetworkRequestInFlight(result.result.networkStatus) &&
+              result.result.partial
+            ) {
               this.scheduleNotify();
             }
           }),

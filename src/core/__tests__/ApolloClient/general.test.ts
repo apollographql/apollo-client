@@ -530,7 +530,7 @@ describe("ApolloClient", () => {
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 20);
+        }, 30);
 
         return () => {
           onRequestUnsubscribe();
@@ -580,7 +580,7 @@ describe("ApolloClient", () => {
     stream.unsubscribe();
 
     // Now validate that both requests unsubscribe
-    await wait(20);
+    await wait(30);
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });

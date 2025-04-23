@@ -77,7 +77,6 @@ type ExecContext = {
   operation: Operation;
   operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
-  variables: OperationVariables;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   exportedVariables?: OperationVariables;
@@ -166,7 +165,6 @@ export class LocalResolversLink extends ApolloLink {
       operation,
       operationDefinition: mainDefinition,
       fragmentMap,
-      variables,
       selectionsToResolve,
       errors: [],
       exportedVariables: {},
@@ -204,7 +202,6 @@ export class LocalResolversLink extends ApolloLink {
       return remoteResult;
     }
 
-    const { variables } = operation;
     const mainDefinition = getMainDefinition(
       clientQuery
     ) as OperationDefinitionNode;
@@ -219,7 +216,6 @@ export class LocalResolversLink extends ApolloLink {
       operation,
       operationDefinition: mainDefinition,
       fragmentMap,
-      variables,
       selectionsToResolve,
       errors: [],
     };
@@ -257,8 +253,8 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { fragmentMap, variables, operation } = execContext;
-    const { client } = operation;
+    const { fragmentMap, operation } = execContext;
+    const { client, variables } = operation;
     const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
@@ -350,8 +346,8 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, operationDefinition, variables, exportedVariables } =
-      execContext;
+    const { operation, operationDefinition, exportedVariables } = execContext;
+    const { variables } = operation;
     const fieldName = field.name.value;
 
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;

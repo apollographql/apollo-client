@@ -146,15 +146,18 @@ export class LocalResolversLink extends ApolloLink {
     const fragments = getFragmentDefinitions(clientQuery);
     const fragmentMap = createFragmentMap(fragments);
 
+    this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
+
+    const selectionsToResolve =
+      this.selectionsToResolveCache.get(mainDefinition)!;
+
     const execContext: ExecContext = {
       operation,
       operationDefinition: mainDefinition,
       fragmentMap,
-      selectionsToResolve: new Set(),
+      selectionsToResolve,
       errors: [],
     };
-
-    this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap, execContext);
 
     return from(
       this.addExportedVariables({
@@ -660,8 +663,7 @@ export class LocalResolversLink extends ApolloLink {
   // Complexity equals to a single `visit` over the full document.
   private traverseAndCollectQueryInfo(
     mainDefinition: OperationDefinitionNode,
-    fragmentMap: FragmentMap,
-    execContext: ExecContext
+    fragmentMap: FragmentMap
   ) {
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
@@ -736,7 +738,7 @@ export class LocalResolversLink extends ApolloLink {
       return this.selectionsToResolveCache.get(definitionNode)!;
     };
 
-    execContext.selectionsToResolve = traverseDefinition(mainDefinition);
+    traverseDefinition(mainDefinition);
   }
 }
 

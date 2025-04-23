@@ -132,6 +132,7 @@ Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
   "LinkError",
+  "LocalResolversError",
   "PROTOCOL_ERRORS_SYMBOL",
   "ServerError",
   "ServerParseError",

@@ -388,7 +388,7 @@ test("supports combining @client @export variables, calculated by a local resolv
   const mockLink = new ApolloLink(({ variables }) => {
     return of({
       data: {
-        upvostPost: variables.postId === testPostId ? testPost : null,
+        upvotePost: variables.postId === testPostId ? testPost : null,
       },
     });
   });

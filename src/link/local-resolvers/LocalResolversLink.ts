@@ -120,7 +120,12 @@ export class LocalResolversLink extends ApolloLink {
       operation.variables = variables;
 
       if (!serverQuery) {
-        return of({ data: null });
+        // If we don't have a server query, then we have a client-only query.
+        // Intentionally use `{}` here as the value to ensure that client-only
+        // fields are merged into the final result. If this were `null`, then
+        // the client fields would add errors to the error array and return
+        // `data` of `null`.
+        return of({ data: {} });
       }
 
       invariant(

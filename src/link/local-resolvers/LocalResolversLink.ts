@@ -389,7 +389,7 @@ export class LocalResolversLink extends ApolloLink {
             // In case the resolve function accesses reactive variables,
             // set cacheSlot to the current cache instance.
             cacheSlot.withValue(operation.client.cache, resolver, [
-              // TODO: Add a `rootField` option to `LocalResolversLink`
+              // TODO: Add a `rootValue` option to `LocalResolversLink`
               {},
               argumentsObjectFromField(field, operation.variables),
               { phase, operation },

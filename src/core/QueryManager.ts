@@ -1519,6 +1519,10 @@ export class QueryManager {
 
     const results: InternalRefetchQueriesMap<TResult> = new Map();
 
+    // TODO: at the end of this PR, check again if this failsafe is really necessary
+    // if the timing of writing the cache changes, this might not be necessary anymore
+    const handled = new Set<ObservableQuery<any>>();
+
     if (updateCache) {
       this.cache.batch({
         update: updateCache,
@@ -1564,11 +1568,11 @@ export class QueryManager {
         removeOptimistic,
 
         onWatchUpdated(watch, diff, lastDiff) {
-          const oq =
-            watch.watcher instanceof QueryInfo && watch.watcher.observableQuery;
+          const oq = watch.watcher instanceof ObservableQuery && watch.watcher;
 
           if (oq) {
-            if (onQueryUpdated) {
+            if (onQueryUpdated && !handled.has(oq)) {
+              handled.add(oq);
               // Since we're about to handle this query now, remove it from
               // includedQueriesById, in case it was added earlier because of
               // options.include.

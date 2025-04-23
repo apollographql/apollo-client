@@ -4222,7 +4222,10 @@ describe("ObservableQuery", () => {
       },
       // Verify that the cache.modify operation did trigger a cache broadcast.
       onWatchUpdated(watch, diff) {
-        expect(watch.watcher).toBe(queryInfo);
+        expect(
+          // TODO undo this once `queryInfo` is not watching the cache anymore
+          watch.watcher === observable || watch.watcher === queryInfo
+        ).toBe(true);
         expect(diff).toEqual({
           complete: true,
           result: {
@@ -4240,7 +4243,8 @@ describe("ObservableQuery", () => {
     expect(setDiffSpy).toHaveBeenCalledTimes(1);
     expect(notifySpy).not.toHaveBeenCalled();
     expect(invalidateCount).toBe(1);
-    expect(onWatchUpdatedCount).toBe(1);
+    // TODO undo this once `queryInfo` is not watching the cache anymore
+    expect(onWatchUpdatedCount).toBe(2);
     client.stop();
 
     await expect(stream).not.toEmitAnything();

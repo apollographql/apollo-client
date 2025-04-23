@@ -477,6 +477,7 @@ export class ObservableQuery<
         query,
         variables,
         optimistic: true,
+        watcher: this,
         callback: (diff) => {
           if (diff.result) {
             observer.next({

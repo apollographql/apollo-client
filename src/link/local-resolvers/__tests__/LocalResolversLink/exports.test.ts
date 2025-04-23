@@ -299,6 +299,59 @@ test("ignores @export directives if not used with @client", async () => {
   await expect(stream).toComplete();
 });
 
+test("ignores @export directive if it is not a descendant of a client field", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        name
+        authorId @export(as: "authorId")
+      }
+      # This is intentionally after the client-field above since it runs after
+      # currentAuthor. We should not see its value
+      authorId @export(as: "authorId")
+      postCount(authorId: $authorId)
+    }
+  `;
+
+  const testAuthor = {
+    name: "John Smith",
+    authorId: 100,
+    __typename: "Author",
+  };
+  const testPostCount = 200;
+
+  const mockLink = new ApolloLink((operation) => {
+    return of({
+      data: {
+        currentAuthor: testAuthor,
+        postCount:
+          operation.variables.authorId === testAuthor.authorId ?
+            testPostCount
+          : 0,
+      },
+    });
+  });
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        authorId: () => 1000,
+        currentAuthor: () => testAuthor,
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { authorId: 100 } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthor: testAuthor,
+      postCount: testPostCount,
+    },
+  });
+  await expect(stream).toComplete();
+});
 // TODO: Determine how we want to handle data that isn't loaded by the server by
 // exported variables
 test.failing(

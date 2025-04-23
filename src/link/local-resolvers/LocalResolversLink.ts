@@ -4,11 +4,9 @@ import type {
   DocumentNode,
   ExecutableDefinitionNode,
   FieldNode,
-  FragmentDefinitionNode,
   FragmentSpreadNode,
   GraphQLError,
   GraphQLFormattedError,
-  InlineFragmentNode,
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
@@ -40,7 +38,6 @@ import {
   getMainDefinition,
   hasDirectives,
   isField,
-  isInlineFragment,
   mergeDeep,
   mergeDeepArray,
   removeDirectivesFromDocument,
@@ -289,7 +286,7 @@ export class LocalResolversLink extends ApolloLink {
         return;
       }
 
-      if (isField(selection)) {
+      if (selection.kind === Kind.FIELD) {
         const fieldResult = await this.resolveField(
           selection,
           isClientFieldDescendant,
@@ -308,21 +305,17 @@ export class LocalResolversLink extends ApolloLink {
         return;
       }
 
-      let fragment: InlineFragmentNode | FragmentDefinitionNode;
-
-      if (isInlineFragment(selection)) {
-        fragment = selection;
-      } else {
-        // This is a named fragment.
-        fragment = fragmentMap[selection.name.value];
-        invariant(fragment, `No fragment named %s`, selection.name.value);
-      }
-
-      if (fragment && fragment.typeCondition) {
-        const typeCondition = fragment.typeCondition.name.value;
-        if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
+      if (selection.kind === Kind.INLINE_FRAGMENT) {
+        if (
+          selection.typeCondition &&
+          execContext.fragmentMatcher(
+            rootValue,
+            selection.typeCondition.name.value,
+            context
+          )
+        ) {
           const fragmentResult = await this.resolveSelectionSet(
-            fragment.selectionSet,
+            selection.selectionSet,
             isClientFieldDescendant,
             rootValue,
             execContext,
@@ -333,6 +326,23 @@ export class LocalResolversLink extends ApolloLink {
 
           return;
         }
+      }
+
+      if (selection.kind === Kind.FRAGMENT_SPREAD) {
+        const fragment = fragmentMap[selection.name.value];
+        invariant(fragment, `No fragment named %s`, selection.name.value);
+
+        const fragmentResult = await this.resolveSelectionSet(
+          fragment.selectionSet,
+          isClientFieldDescendant,
+          rootValue,
+          execContext,
+          path
+        );
+
+        resultsToMerge.push(fragmentResult);
+
+        return;
       }
     };
 

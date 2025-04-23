@@ -7,8 +7,10 @@
 import type { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client';
 import type { ApolloPayloadResult } from '@apollo/client';
+import type { ExecuteContext } from '@apollo/client/link/core';
 import { FetchResult } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql-17-alpha2';
+import type { GraphQLRequest } from '@apollo/client';
 import { HttpLink } from '@apollo/client/link/http';
 import type { InitialIncrementalExecutionResult } from 'graphql-17-alpha2';
 import type { MaskedDocumentNode } from '@apollo/client/masking';
@@ -17,6 +19,8 @@ import { MockedRequest } from '@apollo/client/testing/core';
 import type { MockedResponse } from '@apollo/client/testing/core';
 import { MockLink } from '@apollo/client/testing/core';
 import type { Observable } from 'rxjs';
+import { Observable as Observable_2 } from '@apollo/client';
+import { Operation } from '@apollo/client';
 import type { Queries } from '@testing-library/dom';
 import type { queries } from '@testing-library/dom';
 import * as React_2 from 'react';
@@ -60,7 +64,13 @@ export function createMockWrapper(renderOptions: MockedProviderProps, Wrapper?: 
 }>;
 
 // @public (undocumented)
+export function createOperationWithDefaultContext(context: any, operation: GraphQLRequest, executeContext?: ExecuteContext): Operation;
+
+// @public (undocumented)
 export function enableFakeTimers(config?: FakeTimersConfig | LegacyFakeTimersConfig): Disposable;
+
+// @public (undocumented)
+export function executeWithDefaultContext(link: ApolloLink, operation: GraphQLRequest, context?: ExecuteContext): Observable_2<FetchResult>;
 
 // @public (undocumented)
 type HydrateableContainer = Parameters<(typeof ReactDOMClient)["hydrateRoot"]>[0];

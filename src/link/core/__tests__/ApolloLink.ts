@@ -2,6 +2,7 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
@@ -40,6 +41,10 @@ const sampleQuery = gql`
 
 const setContext = () => ({ add: 1 });
 
+const defaultExecuteContext = {
+  client: new ApolloClient({ cache: new InMemoryCache() }),
+};
+
 describe("ApolloClient", () => {
   describe("context", () => {
     it("should merge context when using a function", async () => {
@@ -58,7 +63,7 @@ describe("ApolloClient", () => {
         return of({ data: { count: op.getContext().add } });
       });
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -81,7 +86,7 @@ describe("ApolloClient", () => {
         return of({ data: { count: op.getContext().add } });
       });
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -96,7 +101,7 @@ describe("ApolloClient", () => {
         return of({ data: { count: operation.getContext().add } });
       });
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -111,7 +116,7 @@ describe("ApolloClient", () => {
       const link = returnOne.concat(mock);
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -131,7 +136,7 @@ describe("ApolloClient", () => {
       const link = returnOne.concat(mock);
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -149,7 +154,7 @@ describe("ApolloClient", () => {
       });
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -172,7 +177,7 @@ describe("ApolloClient", () => {
         .concat(mock);
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -191,7 +196,7 @@ describe("ApolloClient", () => {
         .concat((op, forward) => of({ data: { count: op.getContext().add } }));
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -213,7 +218,7 @@ describe("ApolloClient", () => {
       const link = returnOne.concat(mock1).concat(mock2);
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery })
+        execute(link, { query: sampleQuery }, defaultExecuteContext)
       );
 
       await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -238,7 +243,11 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link.concat(mock2), { query: sampleQuery })
+          execute(
+            link.concat(mock2),
+            { query: sampleQuery },
+            defaultExecuteContext
+          )
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 5 } });
@@ -247,7 +256,11 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link.concat(mock3), { query: sampleQuery })
+          execute(
+            link.concat(mock3),
+            { query: sampleQuery },
+            defaultExecuteContext
+          )
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 6 } });
@@ -259,7 +272,11 @@ describe("ApolloClient", () => {
   describe("empty", () => {
     it("should returns an immediately completed Observable", async () => {
       const stream = new ObservableStream(
-        execute(ApolloLink.empty(), { query: sampleQuery })
+        execute(
+          ApolloLink.empty(),
+          { query: sampleQuery },
+          defaultExecuteContext
+        )
       );
 
       await expect(stream).toComplete();
@@ -289,11 +306,15 @@ describe("ApolloClient", () => {
         return EMPTY;
       });
       const stream = new ObservableStream(
-        execute(link, {
-          query,
-          variables: { id: 1 },
-          extensions: { cache: true },
-        })
+        execute(
+          link,
+          {
+            query,
+            variables: { id: 1 },
+            extensions: { cache: true },
+          },
+          defaultExecuteContext
+        )
       );
 
       await expect(stream).toComplete();
@@ -320,7 +341,7 @@ describe("ApolloClient", () => {
         link.request = () => null;
 
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toComplete();
@@ -328,7 +349,11 @@ describe("ApolloClient", () => {
 
       it("should return an empty observable when a link is empty", async () => {
         const stream = new ObservableStream(
-          execute(ApolloLink.empty(), { query: sampleQuery })
+          execute(
+            ApolloLink.empty(),
+            { query: sampleQuery },
+            defaultExecuteContext
+          )
         );
 
         await expect(stream).toComplete();
@@ -340,7 +365,7 @@ describe("ApolloClient", () => {
         }).concat(() => null);
 
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toComplete();
@@ -356,7 +381,7 @@ describe("ApolloClient", () => {
 
         {
           const stream = new ObservableStream(
-            execute(link, { query: sampleQuery })
+            execute(link, { query: sampleQuery }, defaultExecuteContext)
           );
 
           await expect(stream).toComplete();
@@ -366,7 +391,7 @@ describe("ApolloClient", () => {
 
         {
           const stream = new ObservableStream(
-            execute(link, { query: sampleQuery })
+            execute(link, { query: sampleQuery }, defaultExecuteContext)
           );
 
           await expect(stream).toComplete();
@@ -386,13 +411,15 @@ describe("ApolloClient", () => {
           expect((operation as any)["variables"]).toBeUndefined();
           expect((operation as any)["context"]).toBeUndefined();
           expect((operation as any)["extensions"]).toBeUndefined();
-          expect(op["variables"]).toBeDefined();
+          expect(op.variables).toBeDefined();
           expect((op as any)["context"]).toBeUndefined();
           expect(op["extensions"]).toBeDefined();
           return EMPTY;
         });
 
-        const stream = new ObservableStream(execute(link, operation));
+        const stream = new ObservableStream(
+          execute(link, operation, defaultExecuteContext)
+        );
 
         await expect(stream).toComplete();
       });
@@ -408,9 +435,11 @@ describe("ApolloClient", () => {
     };
 
     it("should create an observable that completes when passed an empty array", async () => {
-      const observable = ApolloLink.execute(ApolloLink.from([]), {
-        query: sampleQuery,
-      });
+      const observable = ApolloLink.execute(
+        ApolloLink.from([]),
+        { query: sampleQuery },
+        defaultExecuteContext
+      );
       const stream = new ObservableStream(observable);
 
       await expect(stream).toComplete();
@@ -437,7 +466,11 @@ describe("ApolloClient", () => {
       };
       const chain = ApolloLink.from([new ApolloLink(() => of(data))]);
       // Smoke tests execute as a static method
-      const observable = ApolloLink.execute(chain, uniqueOperation);
+      const observable = ApolloLink.execute(
+        chain,
+        uniqueOperation,
+        defaultExecuteContext
+      );
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue(data);
@@ -453,7 +486,7 @@ describe("ApolloClient", () => {
       const stub = jest.fn();
 
       const chain = ApolloLink.from([new ApolloLink(stub)]);
-      ApolloLink.execute(chain, astOperation);
+      ApolloLink.execute(chain, astOperation, defaultExecuteContext);
 
       expect(stub).toHaveBeenCalledWith({
         query: sampleQuery,
@@ -484,7 +517,11 @@ describe("ApolloClient", () => {
           });
         }),
       ]);
-      const observable = ApolloLink.execute(chain, uniqueOperation);
+      const observable = ApolloLink.execute(
+        chain,
+        uniqueOperation,
+        defaultExecuteContext
+      );
       const stream = new ObservableStream(observable);
 
       await expect(stream).toComplete();
@@ -503,7 +540,11 @@ describe("ApolloClient", () => {
         }),
         new ApolloLink(() => of(data)),
       ]);
-      const observable = ApolloLink.execute(chain, uniqueOperation);
+      const observable = ApolloLink.execute(
+        chain,
+        uniqueOperation,
+        defaultExecuteContext
+      );
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue(data);
@@ -540,7 +581,11 @@ describe("ApolloClient", () => {
         new ApolloLink(() => of(data)),
       ]);
 
-      const result = ApolloLink.execute(chain, uniqueOperation);
+      const result = ApolloLink.execute(
+        chain,
+        uniqueOperation,
+        defaultExecuteContext
+      );
       const stream = new ObservableStream(result);
 
       await expect(stream).toEmitTypedValue({
@@ -576,7 +621,11 @@ describe("ApolloClient", () => {
       ]);
 
       const stream = new ObservableStream(
-        execute(link, { query: sampleQuery, context: { num: 0 } })
+        execute(
+          link,
+          { query: sampleQuery, context: { num: 0 } },
+          defaultExecuteContext
+        )
       );
 
       await expect(stream).toEmitTypedValue({ data: { num: 5 } });
@@ -602,7 +651,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -613,7 +662,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 4 } });
@@ -642,7 +691,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -653,7 +702,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 4 } });
@@ -680,7 +729,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -691,7 +740,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 4 } });
@@ -724,7 +773,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -735,7 +784,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 3 } });
@@ -765,7 +814,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -776,7 +825,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery })
+          execute(link, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toComplete();
@@ -784,7 +833,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(concat, { query: sampleQuery })
+          execute(concat, { query: sampleQuery }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -802,7 +851,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -813,7 +862,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toComplete();
@@ -831,7 +880,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -842,7 +891,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -861,7 +910,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -872,7 +921,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -891,7 +940,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -902,7 +951,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -924,7 +973,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -934,7 +983,7 @@ describe("ApolloClient", () => {
       context.test = false;
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });
@@ -951,7 +1000,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 2 } });
@@ -962,7 +1011,7 @@ describe("ApolloClient", () => {
 
       {
         const stream = new ObservableStream(
-          execute(link, { query: sampleQuery, context })
+          execute(link, { query: sampleQuery, context }, defaultExecuteContext)
         );
 
         await expect(stream).toEmitTypedValue({ data: { count: 1 } });

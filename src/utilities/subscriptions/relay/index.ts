@@ -3,13 +3,13 @@ import { Observable } from "relay-runtime";
 
 import type { OperationVariables } from "@apollo/client";
 import { serializeFetchParameter } from "@apollo/client";
+import type { HttpLink } from "@apollo/client/link/http";
 import { maybe } from "@apollo/client/utilities";
 
 import {
   handleError,
   readMultipartBody,
 } from "../../../link/http/parseAndCheckHttpResponse.js";
-import type { Body } from "../../../link/http/selectHttpOptionsAndBody.js";
 import { fallbackHttpConfig } from "../../../link/http/selectHttpOptionsAndBody.js";
 
 const backupFetch = maybe(() => fetch);
@@ -27,7 +27,7 @@ export function createFetchMultipartSubscription(
     operation: RequestParameters,
     variables: OperationVariables
   ): Observable<GraphQLResponse> {
-    const body: Body = {
+    const body: HttpLink.Body = {
       operationName: operation.name,
       variables,
       query: operation.text || "",

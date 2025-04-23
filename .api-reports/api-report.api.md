@@ -174,7 +174,7 @@ export interface ApolloClientOptions {
     ssrMode?: boolean;
     // (undocumented)
     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-    uri?: string | UriFunction;
+    uri?: string | HttpLink.UriFunction;
     version?: string;
 }
 
@@ -187,8 +187,10 @@ export class ApolloLink {
     concat(next: ApolloLink | RequestHandler): ApolloLink;
     // (undocumented)
     static empty(): ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "ExecuteContext" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal
@@ -237,18 +239,6 @@ type AsStoreObject<T extends {
 }> = {
     [K in keyof T]: T[K];
 };
-
-// @public (undocumented)
-interface Body_2 {
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    query?: string;
-    // (undocumented)
-    variables?: Record<string, any>;
-}
 
 // @public (undocumented)
 type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" | "onWatchUpdated">;
@@ -372,6 +362,14 @@ type CanReadFunction = (value: StoreValue) => boolean;
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
+// @public (undocumented)
+export interface ClientAwareness {
+    // (undocumented)
+    name?: string;
+    // (undocumented)
+    version?: string;
+}
+
 // Warning: (ae-forgotten-export) The symbol "InvariantError" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -453,7 +451,7 @@ export const concat: typeof ApolloLink.concat;
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public (undocumented)
-export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
+export const createHttpLink: (linkOptions?: HttpLink.Options) => ApolloLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -567,6 +565,8 @@ type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
+    // (undocumented)
+    queryDeduplication?: boolean;
 }
 
 // Warning: (ae-forgotten-export) The symbol "KeyFieldsContext" needs to be exported by the entry point index.d.ts
@@ -584,10 +584,8 @@ export interface DefaultOptions {
     watchQuery?: Partial<WatchQueryOptions<any, any>>;
 }
 
-// Warning: (ae-forgotten-export) The symbol "Printer" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export const defaultPrinter: Printer;
+export const defaultPrinter: HttpLink.Printer;
 
 // @public (undocumented)
 interface DeleteModifier {
@@ -774,6 +772,12 @@ type Exact<in out T> = (x: T) => T;
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
 
+// @public (undocumented)
+interface ExecuteContext {
+    // (undocumented)
+    client: ApolloClient;
+}
+
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -818,7 +822,7 @@ type ExtractByMatchingTypeNames<Union extends {
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
-    http: HttpQueryOptions;
+    http: HttpLink.HttpOptions;
     headers: {
         accept: string;
         "content-type": string;
@@ -1043,40 +1047,64 @@ interface HttpConfig {
     // (undocumented)
     headers?: Record<string, string>;
     // (undocumented)
-    http?: HttpQueryOptions;
+    http?: HttpLink.HttpOptions;
     // (undocumented)
     options?: any;
 }
 
 // @public (undocumented)
+export namespace HttpLink {
+    // (undocumented)
+    export interface Body {
+        // (undocumented)
+        extensions?: Record<string, any>;
+        // (undocumented)
+        operationName?: string;
+        // (undocumented)
+        query?: string;
+        // (undocumented)
+        variables?: Record<string, any>;
+    }
+    // (undocumented)
+    export interface ContextOptions {
+        credentials?: RequestCredentials;
+        fetchOptions?: RequestInit;
+        headers?: Record<string, string>;
+        http?: HttpOptions;
+        uri?: string | UriFunction;
+    }
+    // (undocumented)
+    export interface HttpOptions {
+        includeExtensions?: boolean;
+        includeQuery?: boolean;
+        preserveHeaderCase?: boolean;
+    }
+    // (undocumented)
+    export interface Options {
+        credentials?: string;
+        fetch?: typeof fetch;
+        fetchOptions?: any;
+        headers?: Record<string, string>;
+        includeExtensions?: boolean;
+        includeUnusedVariables?: boolean;
+        preserveHeaderCase?: boolean;
+        print?: Printer;
+        uri?: string | UriFunction;
+        useGETForQueries?: boolean;
+    }
+    // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
+    // (undocumented)
+    export type UriFunction = (operation: Operation) => string;
+}
+
+// @public (undocumented)
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpOptions);
+    constructor(options?: HttpLink.Options);
     // (undocumented)
-    options: HttpOptions;
-}
-
-// @public (undocumented)
-export interface HttpOptions {
-    credentials?: string;
-    fetch?: typeof fetch;
-    fetchOptions?: any;
-    headers?: Record<string, string>;
-    includeExtensions?: boolean;
-    includeUnusedVariables?: boolean;
-    preserveHeaderCase?: boolean;
-    print?: Printer;
-    uri?: string | UriFunction;
-    useGETForQueries?: boolean;
-}
-
-// @public (undocumented)
-interface HttpQueryOptions {
-    // (undocumented)
-    includeExtensions?: boolean;
-    // (undocumented)
-    includeQuery?: boolean;
-    // (undocumented)
-    preserveHeaderCase?: boolean;
+    options: HttpLink.Options;
 }
 
 // @public (undocumented)
@@ -1315,7 +1343,6 @@ class LocalState {
     getResolvers(): Resolvers;
     // (undocumented)
     prepareContext(context?: Record<string, any>): {
-        cache: ApolloCache;
         getCacheKey(obj: StoreObject): string | undefined;
     };
     // (undocumented)
@@ -1736,20 +1763,29 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 // @public (undocumented)
 export interface Operation {
     // (undocumented)
+    readonly client: ApolloClient;
+    // (undocumented)
     extensions: Record<string, any>;
     // (undocumented)
-    getContext: () => DefaultContext;
+    getContext: () => OperationContext;
     // (undocumented)
     operationName: string;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+        (context: Partial<OperationContext>): void;
+        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
     // (undocumented)
     variables: Record<string, any>;
+}
+
+// @public (undocumented)
+export interface OperationContext extends DefaultContext {
+    // (undocumented)
+    clientAwareness?: ClientAwareness;
+    queryDeduplication?: boolean;
 }
 
 // @public (undocumented)
@@ -1832,14 +1868,6 @@ const print_2: ((ast: ASTNode) => string) & {
 };
 
 // @public (undocumented)
-interface Printer {
-    // Warning: (ae-forgotten-export) The symbol "print_2" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    (node: ASTNode, originalPrint: typeof print_2): string;
-}
-
-// @public (undocumented)
 class QueryInfo {
     constructor(queryManager: QueryManager, queryId?: string);
     // (undocumented)
@@ -1889,9 +1917,11 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    cache: ApolloCache;
+    get cache(): ApolloCache;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    readonly client: ApolloClient;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -1933,7 +1963,7 @@ class QueryManager {
         observable?: Observable<FetchResult<any>>;
     }>;
     // (undocumented)
-    link: ApolloLink;
+    get link(): ApolloLink;
     // (undocumented)
     markMutationOptimistic<TData, TVariables extends OperationVariables, TContext, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
         mutationId: string;
@@ -2002,9 +2032,9 @@ interface QueryManagerOptions {
     // (undocumented)
     assumeImmutableResults: boolean;
     // (undocumented)
-    cache: ApolloCache;
+    client: ApolloClient;
     // (undocumented)
-    clientAwareness: Record<string, string>;
+    clientAwareness: ClientAwareness;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -2013,8 +2043,6 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
-    // (undocumented)
-    link: ApolloLink;
     // (undocumented)
     localState: LocalState;
     // (undocumented)
@@ -2163,10 +2191,8 @@ export interface Resolvers {
     };
 }
 
-// Warning: (ae-forgotten-export) The symbol "Body_2" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: Body_2): {
+export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -2182,13 +2208,13 @@ type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 // @public (undocumented)
 export function selectHttpOptionsAndBody(operation: Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: Body_2;
+    body: HttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: Body_2;
+    body: HttpLink.Body;
 };
 
 // @public (undocumented)
@@ -2433,12 +2459,6 @@ export type UpdateQueryOptions<TData, TVariables> = {
 });
 
 // @public (undocumented)
-export interface UriFunction {
-    // (undocumented)
-    (operation: Operation): string;
-}
-
-// @public (undocumented)
 type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {
     variables?: TVariables;
 } : {
@@ -2536,10 +2556,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:465:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:262:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

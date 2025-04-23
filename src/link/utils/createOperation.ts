@@ -1,10 +1,16 @@
-import type { GraphQLRequest, Operation } from "@apollo/client/link/core";
+import type {
+  ExecuteContext,
+  GraphQLRequest,
+  Operation,
+} from "@apollo/client/link/core";
 
 export function createOperation(
   starting: any,
-  operation: GraphQLRequest
+  operation: GraphQLRequest,
+  { client }: ExecuteContext
 ): Operation {
   let context = { ...starting };
+
   const setContext: Operation["setContext"] = (next) => {
     if (typeof next === "function") {
       context = { ...context, ...next(context) };
@@ -22,6 +28,11 @@ export function createOperation(
   Object.defineProperty(operation, "getContext", {
     enumerable: false,
     value: getContext,
+  });
+
+  Object.defineProperty(operation, "client", {
+    enumerable: false,
+    value: client,
   });
 
   return operation as Operation;

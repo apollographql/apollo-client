@@ -8,6 +8,7 @@ export { ApolloLink } from "./ApolloLink.js";
 export type {
   ApolloPayloadResult,
   DocumentNode,
+  ExecuteContext,
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
@@ -16,6 +17,7 @@ export type {
   IncrementalPayload,
   NextLink,
   Operation,
+  OperationContext,
   Path,
   RequestHandler,
   SingleExecutionResult,

@@ -29,7 +29,11 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import type {
+  ExecuteContext,
+  FetchResult,
+  GraphQLRequest,
+} from "@apollo/client/link/core";
 import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
@@ -68,7 +72,7 @@ import {
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type { DefaultOptions } from "./ApolloClient.js";
+import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
@@ -79,6 +83,7 @@ import {
 } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
+  ClientAwareness,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -141,14 +146,13 @@ interface MaskOperationOptions<TData> {
 }
 
 interface QueryManagerOptions {
-  cache: ApolloCache;
-  link: ApolloLink;
+  client: ApolloClient;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
-  clientAwareness: Record<string, string>;
+  clientAwareness: ClientAwareness;
   localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
@@ -156,10 +160,9 @@ interface QueryManagerOptions {
 }
 
 export class QueryManager {
-  public cache: ApolloCache;
-  public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
+  public readonly client: ApolloClient;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -167,7 +170,7 @@ export class QueryManager {
   public readonly dataMasking: boolean;
 
   private queryDeduplication: boolean;
-  private clientAwareness: Record<string, string> = {};
+  private clientAwareness: ClientAwareness = {};
   private localState: LocalState;
 
   /**
@@ -204,8 +207,7 @@ export class QueryManager {
       { cache: false }
     );
 
-    this.cache = options.cache;
-    this.link = options.link;
+    this.client = options.client;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;
@@ -229,6 +231,14 @@ export class QueryManager {
     if ((this.onBroadcast = options.onBroadcast)) {
       this.mutationStore = {};
     }
+  }
+
+  get link() {
+    return this.client.link;
+  }
+
+  get cache() {
+    return this.client.cache;
   }
 
   /**
@@ -1152,7 +1162,7 @@ export class QueryManager {
 
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
-    context: any,
+    context: DefaultContext | undefined,
     variables?: OperationVariables,
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
@@ -1162,17 +1172,29 @@ export class QueryManager {
     let observable: Observable<FetchResult<TData>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+
+    const prepareContext = (context = {}): DefaultContext => {
+      const newContext = this.localState.prepareContext(context);
+      return {
+        ...this.defaultContext,
+        ...newContext,
+        queryDeduplication: deduplication,
+        clientAwareness: this.clientAwareness,
+      };
+    };
+
+    const executeContext: ExecuteContext = {
+      client: this.client,
+    };
+
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation = {
+      const operation: GraphQLRequest = {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: this.prepareContext({
-          ...context,
-          forceFetch: !deduplication,
-        }),
+        context: prepareContext(context),
         extensions,
       };
 
@@ -1189,7 +1211,11 @@ export class QueryManager {
 
         observable = entry.observable;
         if (!observable) {
-          observable = entry.observable = execute(link, operation).pipe(
+          observable = entry.observable = execute(
+            link,
+            operation,
+            executeContext
+          ).pipe(
             onAnyEvent((event) => {
               if (
                 (event.type !== "next" ||
@@ -1205,11 +1231,13 @@ export class QueryManager {
           );
         }
       } else {
-        observable = execute(link, operation) as Observable<FetchResult<TData>>;
+        observable = execute(link, operation, executeContext) as Observable<
+          FetchResult<TData>
+        >;
       }
     } else {
       observable = of({ data: {} } as FetchResult<TData>);
-      context = this.prepareContext(context);
+      context = prepareContext(context);
     }
 
     if (clientQuery) {
@@ -1859,15 +1887,6 @@ export class QueryManager {
       this.queries.set(queryId, new QueryInfo(this, queryId));
     }
     return this.queries.get(queryId)!;
-  }
-
-  private prepareContext(context = {}) {
-    const newContext = this.localState.prepareContext(context);
-    return {
-      ...this.defaultContext,
-      ...newContext,
-      clientAwareness: this.clientAwareness,
-    };
   }
 }
 

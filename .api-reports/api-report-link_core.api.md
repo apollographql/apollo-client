@@ -4,6 +4,8 @@
 
 ```ts
 
+import type { ApolloClient } from '@apollo/client';
+import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
@@ -19,7 +21,7 @@ export class ApolloLink {
     // (undocumented)
     static empty(): ApolloLink;
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal
@@ -54,6 +56,12 @@ export const empty: typeof ApolloLink.empty;
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
+
+// @public (undocumented)
+export interface ExecuteContext {
+    // (undocumented)
+    client: ApolloClient;
+}
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
@@ -130,20 +138,29 @@ export type NextLink = (operation: Operation) => Observable<FetchResult>;
 // @public (undocumented)
 export interface Operation {
     // (undocumented)
+    readonly client: ApolloClient;
+    // (undocumented)
     extensions: Record<string, any>;
     // (undocumented)
-    getContext: () => DefaultContext;
+    getContext: () => OperationContext;
     // (undocumented)
     operationName: string;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+        (context: Partial<OperationContext>): void;
+        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
     // (undocumented)
     variables: Record<string, any>;
+}
+
+// @public (undocumented)
+export interface OperationContext extends DefaultContext {
+    // (undocumented)
+    clientAwareness?: ClientAwareness;
+    queryDeduplication?: boolean;
 }
 
 // @public (undocumented)

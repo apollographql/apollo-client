@@ -78,7 +78,7 @@ type ExecContext =
       operation: Operation;
       operationDefinition: OperationDefinitionNode;
       fragmentMap: FragmentMap;
-      exportsToResolve: Set<SelectionNode>;
+      selectionsToResolve: Set<SelectionNode>;
       errors: GraphQLFormattedError[];
       exportedVariables: OperationVariables;
       errorMeta?: Record<string, any>;
@@ -171,7 +171,7 @@ export class LocalResolversLink extends ApolloLink {
     return from(
       this.addExportedVariables({
         ...execContext,
-        exportsToResolve,
+        selectionsToResolve: exportsToResolve,
         exportedVariables: {},
         phase: "exports",
       })
@@ -248,16 +248,15 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { fragmentMap, operation, operationDefinition, phase } = execContext;
+    const { fragmentMap, operation, operationDefinition } = execContext;
     const { client, variables } = operation;
     const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
-      const shouldResolve =
-        phase === "exports" ?
-          execContext.exportsToResolve.has(selection)
-        : execContext.selectionsToResolve.has(selection);
-      if (!isClientFieldDescendant && !shouldResolve) {
+      if (
+        !isClientFieldDescendant &&
+        !execContext.selectionsToResolve.has(selection)
+      ) {
         // Skip selections without @client directives
         // (still processing if one of the ancestors or one of the child fields has @client directive)
         return;

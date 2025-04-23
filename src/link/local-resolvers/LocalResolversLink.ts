@@ -667,16 +667,13 @@ export class LocalResolversLink extends ApolloLink {
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
 
-    const selectionsToResolveCache = this.selectionsToResolveCache;
-    const definitionsWithExportsCache = this.definitionsWithExportsCache;
-
-    function collectByDefinition(
+    const collectByDefinition = (
       definitionNode: ExecutableDefinitionNode
-    ): Set<SelectionNode> {
-      if (!selectionsToResolveCache.has(definitionNode)) {
+    ): Set<SelectionNode> => {
+      if (!this.selectionsToResolveCache.has(definitionNode)) {
         const matches = new Set<SelectionNode>();
         const stack: boolean[] = [];
-        selectionsToResolveCache.set(definitionNode, matches);
+        this.selectionsToResolveCache.set(definitionNode, matches);
 
         visit(definitionNode, {
           Field: {
@@ -698,12 +695,12 @@ export class LocalResolversLink extends ApolloLink {
               stack.pop();
             },
           },
-          Directive(node: DirectiveNode, _, __, ___, ancestors) {
+          Directive: (node: DirectiveNode, _, __, ___, ancestors) => {
             if (
               node.name.value === "export" &&
               definitionNode.kind === Kind.OPERATION_DEFINITION
             ) {
-              definitionsWithExportsCache.add(definitionNode);
+              this.definitionsWithExportsCache.add(definitionNode);
             }
 
             if (node.name.value === "client") {
@@ -715,7 +712,13 @@ export class LocalResolversLink extends ApolloLink {
               });
             }
           },
-          FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {
+          FragmentSpread: (
+            spread: FragmentSpreadNode,
+            _,
+            __,
+            ___,
+            ancestors
+          ) => {
             const fragment = fragmentMap[spread.name.value];
             invariant(fragment, `No fragment named %s`, spread.name.value);
 
@@ -736,8 +739,8 @@ export class LocalResolversLink extends ApolloLink {
           },
         });
       }
-      return selectionsToResolveCache.get(definitionNode)!;
-    }
+      return this.selectionsToResolveCache.get(definitionNode)!;
+    };
 
     execContext.selectionsToResolve = collectByDefinition(mainDefinition);
   }

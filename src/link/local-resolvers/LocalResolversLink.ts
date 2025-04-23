@@ -228,7 +228,7 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { fragmentMap, operation } = execContext;
+    const { fragmentMap, operation, operationDefinition } = execContext;
     const { client, variables } = operation;
     const resultsToMerge: Array<Record<string, any>> = [];
 
@@ -247,14 +247,24 @@ export class LocalResolversLink extends ApolloLink {
       }
 
       if (selection.kind === Kind.FIELD) {
-        const fieldResult = await this.resolveField(
-          selection,
-          isClientFieldDescendant,
-          rootValue,
-          execContext,
-          selectionSet,
-          path.concat(selection.name.value)
-        );
+        const isRootField = selectionSet === operationDefinition.selectionSet;
+
+        const fieldResult =
+          isRootField ?
+            await this.resolveRootField(
+              selection,
+              rootValue,
+              execContext,
+              path.concat(selection.name.value)
+            )
+          : await this.resolveChildField(
+              selection,
+              isClientFieldDescendant,
+              rootValue,
+              execContext,
+              selectionSet,
+              path.concat(selection.name.value)
+            );
 
         if (fieldResult !== undefined) {
           resultsToMerge.push({
@@ -307,35 +317,6 @@ export class LocalResolversLink extends ApolloLink {
     await Promise.all(selectionSet.selections.map(execute));
 
     return mergeDeepArray(resultsToMerge);
-  }
-
-  private async resolveField(
-    field: FieldNode,
-    isClientFieldDescendant: boolean,
-    rootValue: any,
-    execContext: ExecContext,
-    parentSelectionSet: SelectionSetNode,
-    path: Path
-  ): Promise<any> {
-    if (!rootValue) {
-      return null;
-    }
-
-    const { operationDefinition } = execContext;
-    const isRootField = parentSelectionSet === operationDefinition.selectionSet;
-
-    if (isRootField) {
-      return this.resolveRootField(field, rootValue, execContext, path);
-    }
-
-    return this.resolveChildField(
-      field,
-      isClientFieldDescendant,
-      rootValue,
-      execContext,
-      parentSelectionSet,
-      path
-    );
   }
 
   private async resolveRootField(

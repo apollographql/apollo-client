@@ -79,7 +79,7 @@ type ExecContext =
       fragmentMap: FragmentMap;
       exportsToResolve: Set<SelectionNode>;
       errors: GraphQLFormattedError[];
-      exportedVariables?: OperationVariables;
+      exportedVariables: OperationVariables;
       errorMeta?: Record<string, any>;
       phase: "exports";
     }
@@ -90,7 +90,6 @@ type ExecContext =
       selectionsToResolve: Set<SelectionNode>;
       errors: GraphQLFormattedError[];
       errorMeta?: Record<string, any>;
-      exportedVariables?: OperationVariables;
       phase: "resolve";
     };
 
@@ -172,8 +171,8 @@ export class LocalResolversLink extends ApolloLink {
       this.addExportedVariables({
         ...execContext,
         exportsToResolve,
-        phase: "exports",
         exportedVariables: {},
+        phase: "exports",
       })
     ).pipe(
       mergeMap(getServerResult),
@@ -350,7 +349,7 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { exportedVariables, operationDefinition, operation } = execContext;
+    const { operationDefinition, operation, phase } = execContext;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
 
@@ -406,12 +405,12 @@ export class LocalResolversLink extends ApolloLink {
         result = null;
       }
 
-      if (exportedVariables && field.directives) {
+      if (phase === "exports" && field.directives) {
         field.directives.forEach((directive) => {
           if (directive.name.value === "export" && directive.arguments) {
             directive.arguments.forEach((arg) => {
               if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-                exportedVariables[arg.value.value] = result;
+                execContext.exportedVariables[arg.value.value] = result;
               }
             });
           }
@@ -505,7 +504,7 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, exportedVariables } = execContext;
+    const { operation, phase } = execContext;
     const { variables } = operation;
     const fieldName = field.name.value;
     const isClientField =
@@ -558,12 +557,12 @@ export class LocalResolversLink extends ApolloLink {
         result = null;
       }
 
-      if (exportedVariables && field.directives) {
+      if (phase === "exports" && field.directives) {
         field.directives.forEach((directive) => {
           if (directive.name.value === "export" && directive.arguments) {
             directive.arguments.forEach((arg) => {
               if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-                exportedVariables[arg.value.value] = result;
+                execContext.exportedVariables[arg.value.value] = result;
               }
             });
           }

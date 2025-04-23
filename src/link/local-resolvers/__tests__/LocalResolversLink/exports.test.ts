@@ -224,12 +224,12 @@ test("supports @client @export variables that are nested multiple levels deep", 
 
   const testPostCount = 200;
 
-  const mockLink = new ApolloLink((operation) =>
+  const mockLink = new ApolloLink(({ variables }) =>
     of({
       data: {
         postCount:
           (
-            operation.variables.authorId ===
+            variables.authorId ===
             appContainer.systemDetails.currentAuthor.authorId
           ) ?
             testPostCount

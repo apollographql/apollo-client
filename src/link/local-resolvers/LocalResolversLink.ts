@@ -334,7 +334,7 @@ export class LocalResolversLink extends ApolloLink {
     const resolverName = getResolverName(typename, fieldName);
 
     const defaultResolver =
-      // We expect a resolver to be defined for all top-level `@client` fields
+      // We expect a resolver to be defined for all root-level `@client` fields
       // so we warn if a resolver is not defined.
       isClientField ?
         () => {

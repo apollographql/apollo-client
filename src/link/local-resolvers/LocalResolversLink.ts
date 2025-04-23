@@ -321,125 +321,21 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, operationDefinition, exportedVariables } = execContext;
-    const { variables } = operation;
-    const fieldName = field.name.value;
-
-    const isClientField =
-      field.directives?.some((d) => d.name.value === "client") ?? false;
+    const { operationDefinition } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
 
     if (isRootField) {
       return this.resolveRootField(field, rootValue, execContext, path);
     }
 
-    const rootTypename =
-      isRootField ? getRootTypename(operationDefinition) : undefined;
-    const typename = rootValue.__typename || rootTypename;
-    const resolverName = getResolverName(typename, fieldName);
-
-    const defaultResolver =
-      // We expect a resolver to be defined for all top-level `@client` fields
-      // so we warn if a resolver is not defined.
-      isClientField && !isClientFieldDescendant ?
-        () => {
-          invariant.warn(
-            "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-            resolverName
-          );
-
-          return null;
-        }
-      : () => rootValue[fieldName];
-
-    const resolver = this.resolvers[typename]?.[fieldName];
-
-    try {
-      let result =
-        resolver ?
-          await Promise.resolve(
-            // In case the resolve function accesses reactive variables,
-            // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(operation.client.cache, resolver, [
-              // Ensure the parent value passed to the resolver does not contain
-              // aliased fields, otherwise it is nearly impossible to determine
-              // what property in the parent type contains the field you want to
-              // read from. `dealias` contains a shallow copy of `rootValue`
-              dealias(parentSelectionSet, rootValue),
-              argumentsObjectFromField(field, variables),
-              { operation },
-              { field, fragmentMap: execContext.fragmentMap, path },
-            ])
-          )
-        : defaultResolver();
-
-      if (result === undefined) {
-        invariant.warn(
-          isClientFieldDescendant ?
-            "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
-          : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
-          resolverName
-        );
-        result = null;
-      }
-
-      if (exportedVariables && field.directives) {
-        field.directives.forEach((directive) => {
-          if (directive.name.value === "export" && directive.arguments) {
-            directive.arguments.forEach((arg) => {
-              if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-                exportedVariables[arg.value.value] = result;
-              }
-            });
-          }
-        });
-      }
-
-      // Handle all scalar types here.
-      if (!field.selectionSet) {
-        return result;
-      }
-
-      // From here down, the field has a selection set, which means it's trying
-      // to query a GraphQLObjectType.
-      if (result == null) {
-        // Basically any field in a GraphQL response can be null, or missing
-        return result;
-      }
-      if (Array.isArray(result)) {
-        return this.resolveSubSelectedArray(
-          field,
-          isClientFieldDescendant || isClientField,
-          result,
-          execContext,
-          path
-        );
-      }
-
-      // Returned value is an object, and the query has a sub-selection. Recurse.
-      if (field.selectionSet) {
-        invariant(
-          result.__typename,
-          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-          result,
-          resolverName
-        );
-
-        return this.resolveSelectionSet(
-          field.selectionSet,
-          isClientFieldDescendant || isClientField,
-          result,
-          execContext,
-          path
-        );
-      }
-    } catch (e) {
-      this.addError(toErrorLike(e), path, execContext, {
-        resolver: resolverName,
-      });
-
-      return null;
-    }
+    return this.resolveChildField(
+      field,
+      isClientFieldDescendant,
+      rootValue,
+      execContext,
+      parentSelectionSet,
+      path
+    );
   }
 
   private async resolveRootField(
@@ -541,6 +437,130 @@ export class LocalResolversLink extends ApolloLink {
         return this.resolveSelectionSet(
           field.selectionSet,
           isClientField,
+          result,
+          execContext,
+          path
+        );
+      }
+    } catch (e) {
+      this.addError(toErrorLike(e), path, execContext, {
+        resolver: resolverName,
+      });
+
+      return null;
+    }
+  }
+
+  private async resolveChildField(
+    field: FieldNode,
+    isClientFieldDescendant: boolean,
+    rootValue: any,
+    execContext: ExecContext,
+    parentSelectionSet: SelectionSetNode,
+    path: Path
+  ) {
+    if (!rootValue) {
+      return null;
+    }
+
+    const { operation, exportedVariables } = execContext;
+    const { variables } = operation;
+    const fieldName = field.name.value;
+    const isClientField =
+      field.directives?.some((d) => d.name.value === "client") ?? false;
+    const typename = rootValue.__typename;
+    const resolverName = getResolverName(typename, fieldName);
+
+    const defaultResolver =
+      // We expect a resolver to be defined for all top-level `@client` fields
+      // so we warn if a resolver is not defined.
+      isClientField && !isClientFieldDescendant ?
+        () => {
+          invariant.warn(
+            "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+            resolverName
+          );
+
+          return null;
+        }
+      : () => rootValue[fieldName];
+
+    const resolver = this.resolvers[typename]?.[fieldName];
+
+    try {
+      let result =
+        resolver ?
+          await Promise.resolve(
+            // In case the resolve function accesses reactive variables,
+            // set cacheSlot to the current cache instance.
+            cacheSlot.withValue(operation.client.cache, resolver, [
+              // Ensure the parent value passed to the resolver does not contain
+              // aliased fields, otherwise it is nearly impossible to determine
+              // what property in the parent type contains the field you want to
+              // read from. `dealias` contains a shallow copy of `rootValue`
+              dealias(parentSelectionSet, rootValue),
+              argumentsObjectFromField(field, variables),
+              { operation },
+              { field, fragmentMap: execContext.fragmentMap, path },
+            ])
+          )
+        : defaultResolver();
+
+      if (result === undefined) {
+        invariant.warn(
+          isClientFieldDescendant ?
+            "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
+          : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+          resolverName
+        );
+        result = null;
+      }
+
+      if (exportedVariables && field.directives) {
+        field.directives.forEach((directive) => {
+          if (directive.name.value === "export" && directive.arguments) {
+            directive.arguments.forEach((arg) => {
+              if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
+                exportedVariables[arg.value.value] = result;
+              }
+            });
+          }
+        });
+      }
+
+      // Handle all scalar types here.
+      if (!field.selectionSet) {
+        return result;
+      }
+
+      // From here down, the field has a selection set, which means it's trying
+      // to query a GraphQLObjectType.
+      if (result == null) {
+        // Basically any field in a GraphQL response can be null, or missing
+        return result;
+      }
+      if (Array.isArray(result)) {
+        return this.resolveSubSelectedArray(
+          field,
+          isClientFieldDescendant || isClientField,
+          result,
+          execContext,
+          path
+        );
+      }
+
+      // Returned value is an object, and the query has a sub-selection. Recurse.
+      if (field.selectionSet) {
+        invariant(
+          result.__typename,
+          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+          result,
+          resolverName
+        );
+
+        return this.resolveSelectionSet(
+          field.selectionSet,
+          isClientFieldDescendant || isClientField,
           result,
           execContext,
           path

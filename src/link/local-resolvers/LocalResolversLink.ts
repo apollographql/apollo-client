@@ -665,6 +665,7 @@ export class LocalResolversLink extends ApolloLink {
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
   ) {
+    const stack: boolean[] = [];
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
@@ -674,7 +675,6 @@ export class LocalResolversLink extends ApolloLink {
     ): Set<SelectionNode> => {
       if (!this.selectionsToResolveCache.has(definitionNode)) {
         const matches = new Set<SelectionNode>();
-        const stack: boolean[] = [];
         this.selectionsToResolveCache.set(definitionNode, matches);
 
         visit(definitionNode, {

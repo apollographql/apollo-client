@@ -32,6 +32,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
+  hasClientExports,
   hasDirectives,
   isField,
   mergeDeep,
@@ -89,6 +90,7 @@ export class LocalResolversLink extends ApolloLink {
     ExecutableDefinitionNode,
     Set<SelectionNode>
   >();
+  private definitionsWithExportsCache = new WeakSet<OperationDefinitionNode>();
   private resolvers: LocalResolversLink.Resolvers = {};
 
   constructor(options: LocalResolversLink.Options = {}) {
@@ -137,7 +139,7 @@ export class LocalResolversLink extends ApolloLink {
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(clientQuery);
     const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectSelectionsToResolve(
+    const selectionsToResolve = this.collectDefinitionInfo(
       mainDefinition,
       fragmentMap
     );
@@ -169,6 +171,14 @@ export class LocalResolversLink extends ApolloLink {
   }
 
   private async addExportedVariables(execContext: ExecContext) {
+    const { variables } = execContext.operation;
+
+    if (
+      !this.definitionsWithExportsCache.has(execContext.operationDefinition)
+    ) {
+      return variables;
+    }
+
     await this.resolveSelectionSet(
       execContext.operationDefinition.selectionSet,
       false,
@@ -178,7 +188,7 @@ export class LocalResolversLink extends ApolloLink {
     );
 
     return {
-      ...execContext.operation.variables,
+      ...variables,
       ...stripTypename(execContext.exportedVariables),
     };
   }
@@ -490,14 +500,24 @@ export class LocalResolversLink extends ApolloLink {
   // Collect selection nodes on paths from document root down to all @client directives.
   // This function takes into account transitive fragment spreads.
   // Complexity equals to a single `visit` over the full document.
-  private collectSelectionsToResolve(
+  private collectDefinitionInfo(
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
-  ): Set<SelectionNode> {
+  ) {
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
+
+    const hasExportDirective = (parentNode: ASTNode | readonly ASTNode[]) => {
+      return (
+        Array.isArray(parentNode) &&
+        parentNode.some(
+          (node) => node.kind === Kind.DIRECTIVE && node.name.value === "export"
+        )
+      );
+    };
     const selectionsToResolveCache = this.selectionsToResolveCache;
+    const definitionsWithExportsCache = this.definitionsWithExportsCache;
 
     function collectByDefinition(
       definitionNode: ExecutableDefinitionNode
@@ -507,13 +527,22 @@ export class LocalResolversLink extends ApolloLink {
         selectionsToResolveCache.set(definitionNode, matches);
 
         visit(definitionNode, {
-          Directive(node: DirectiveNode, _, __, ___, ancestors) {
+          Directive(node: DirectiveNode, _, parent, ___, ancestors) {
             if (node.name.value === "client") {
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {
                   matches.add(node);
                 }
               });
+
+              if (
+                parent &&
+                definitionNode.kind === Kind.OPERATION_DEFINITION &&
+                !definitionsWithExportsCache.has(definitionNode) &&
+                hasExportDirective(parent)
+              ) {
+                definitionsWithExportsCache.add(definitionNode);
+              }
             }
           },
           FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {

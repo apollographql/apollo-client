@@ -1104,13 +1104,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.resubscribeCache(newOptions);
     this.resetNotifications();
     this.isTornDown = false;
-    this.reemitEvenIfEqual = this.internalSubject.getValue().result;
     let newNetworkStatus: NetworkStatus | undefined;
 
     if (newOptions) {
       newNetworkStatus = (newOptions as any)[newNetworkStatusSymbol];
       // Avoid setting the symbol option in this.options
       delete (newOptions as any)[newNetworkStatusSymbol];
+    }
+    if (newNetworkStatus) {
+      this.reemitEvenIfEqual = this.internalSubject.getValue().result;
     }
 
     const useDisposableObservable =

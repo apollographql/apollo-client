@@ -1,5 +1,64 @@
 # @apollo/client
 
+## 4.0.0-alpha.11
+
+### Major Changes
+
+- [#12576](https://github.com/apollographql/apollo-client/pull/12576) [`a92ff78`](https://github.com/apollographql/apollo-client/commit/a92ff780abee60896bb9632867e90c82d0829255) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `cache` and `forceFetch` properties are no longer available on context when calling `operation.getContext()`. `cache` can be accessed through the `operation` with `operation.client.cache` instead. `forceFetch` has been replaced with `queryDeduplication` which specifies whether `queryDeduplication` was enabled for the request or not.
+
+- [#12576](https://github.com/apollographql/apollo-client/pull/12576) [`a92ff78`](https://github.com/apollographql/apollo-client/commit/a92ff780abee60896bb9632867e90c82d0829255) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ApolloLink.execute` now requires a third argument which provides the `client` that initiated the request to the link chain. If you use `execute` directly, add a third argument with a `client` property:
+
+  ```ts
+  ApolloLink.execute(link, operation, { client });
+
+  // or if you import the `execute` function directly:
+  execute(link, operation, { client });
+  ```
+
+- [#12566](https://github.com/apollographql/apollo-client/pull/12566) [`ce4b488`](https://github.com/apollographql/apollo-client/commit/ce4b488bef13f2f5ce1b348d8c3196e198165dd6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't `broadcastQueries` when a query is torn down.
+
+### Minor Changes
+
+- [#12576](https://github.com/apollographql/apollo-client/pull/12576) [`a92ff78`](https://github.com/apollographql/apollo-client/commit/a92ff780abee60896bb9632867e90c82d0829255) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Provide an extension to define types for `context` passed to the link chain. To define your own types, use [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) to add properties to the `DefaultContext` type.
+
+  ```ts
+  // @apollo-client.d.ts
+  // This import is necessary to ensure all Apollo Client imports
+  // are still available to the rest of the application.
+  import "@apollo/client";
+
+  declare module "@apollo/client" {
+    interface DefaultContext extends Record<string, any> {
+      myProperty: string;
+    }
+  }
+  ```
+
+  Links that provide context options can be used with this type to add those context types to `DefaultContext`. For example, to add context options from `HttpLink`, add the following code:
+
+  ```ts
+  import { HttpLink } from "@apollo/client";
+
+  declare module "@apollo/client" {
+    interface DefaultContext extends HttpLink.ContextOptions {
+      myProperty: string;
+    }
+  }
+  ```
+
+  At this time, the following built-in links support context options:
+
+  - `HttpLink.ContextOptions`
+  - `BatchHttpLink.ContextOptions`
+
+- [#12576](https://github.com/apollographql/apollo-client/pull/12576) [`a92ff78`](https://github.com/apollographql/apollo-client/commit/a92ff780abee60896bb9632867e90c82d0829255) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a `client` property to the `operation` passed to the link chain. This `client` is set as the `client` making the request to the link chain.
+
+### Patch Changes
+
+- [#12574](https://github.com/apollographql/apollo-client/pull/12574) [`0098ec9`](https://github.com/apollographql/apollo-client/commit/0098ec9f860e4e08a2070823f723dce401ae588a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export `gql` from the `@apollo/client/react` entrypoint.
+
+- [#12572](https://github.com/apollographql/apollo-client/pull/12572) [`3dc50e6`](https://github.com/apollographql/apollo-client/commit/3dc50e6476dcedf82ed3856bf9f4571a32a760a6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adjust `useMutation` types to better handle required variables. When required variables are missing, TypeScript will now complain if they are not provided either to the hook or the returned `mutate` function. Providing required variables to `useMutation` will make them optional in the returned `mutate` function.
+
 ## 4.0.0-alpha.10
 
 ### Major Changes

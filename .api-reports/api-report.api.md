@@ -1784,8 +1784,8 @@ export interface Operation {
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
     // (undocumented)
-    clientAwareness: ClientAwareness;
-    queryDeduplication: boolean;
+    clientAwareness?: ClientAwareness;
+    queryDeduplication?: boolean;
 }
 
 // @public (undocumented)

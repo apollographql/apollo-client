@@ -328,7 +328,8 @@ export class LocalResolversLink extends ApolloLink {
     const { exportedVariables, operationDefinition, operation } = execContext;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
-    const typename = getRootTypename(operationDefinition);
+    const typename =
+      rootValue?.__typename || inferRootTypename(operationDefinition);
     const fieldName = field.name.value;
     const resolverName = getResolverName(typename, fieldName);
 
@@ -759,7 +760,7 @@ function addApolloExtension(
   };
 }
 
-function getRootTypename({ operation }: OperationDefinitionNode) {
+function inferRootTypename({ operation }: OperationDefinitionNode) {
   return operation.charAt(0).toUpperCase() + operation.slice(1);
 }
 

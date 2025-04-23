@@ -1,5 +1,6 @@
 import type {
   ASTNode,
+  DirectiveNode,
   DocumentNode,
   ExecutableDefinitionNode,
   FieldNode,
@@ -605,12 +606,12 @@ export class LocalResolversLink extends ApolloLink {
 
     if (phase === "exports" && field.directives) {
       field.directives.forEach((directive) => {
-        if (directive.name.value === "export" && directive.arguments) {
-          directive.arguments.forEach((arg) => {
-            if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-              execContext.exportedVariables[arg.value.value] = result;
-            }
-          });
+        if (directive.name.value === "export") {
+          const name = getExportedVariableName(directive);
+
+          if (name) {
+            execContext.exportedVariables[name] = result;
+          }
         }
       });
     }
@@ -830,6 +831,16 @@ function inferRootTypename({ operation }: OperationDefinitionNode) {
 
 function getResolverName(typename: string, fieldName: string) {
   return `${typename}.${fieldName}`;
+}
+
+function getExportedVariableName(directive: DirectiveNode) {
+  if (directive.arguments) {
+    for (const arg of directive.arguments) {
+      if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
+        return arg.value.value;
+      }
+    }
+  }
 }
 
 if (__DEV__) {

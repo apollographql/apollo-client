@@ -691,8 +691,7 @@ export class LocalResolversLink extends ApolloLink {
         });
       }
 
-      const { selectionsToResolve, exportsToResolve } =
-        this.traverseCache.get(definitionNode)!;
+      const cache = this.traverseCache.get(definitionNode)!;
 
       visit(definitionNode, {
         Field: {
@@ -718,7 +717,7 @@ export class LocalResolversLink extends ApolloLink {
           if (node.name.value === "export" && clientDescendantStack.at(-1)) {
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
-                exportsToResolve.add(node);
+                cache.exportsToResolve.add(node);
               }
             });
           }
@@ -727,7 +726,7 @@ export class LocalResolversLink extends ApolloLink {
             clientDescendantStack[clientDescendantStack.length - 1] = true;
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
-                selectionsToResolve.add(node);
+                cache.selectionsToResolve.add(node);
               }
             });
           }
@@ -744,18 +743,18 @@ export class LocalResolversLink extends ApolloLink {
             // Collect selection nodes on paths from the root down to fields with the @client directive
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
-                selectionsToResolve.add(node);
+                cache.selectionsToResolve.add(node);
               }
             });
-            selectionsToResolve.add(spread);
+            cache.selectionsToResolve.add(spread);
             fragmentSelections.forEach((selection) => {
-              selectionsToResolve.add(selection);
+              cache.selectionsToResolve.add(selection);
             });
           }
         },
       });
 
-      return { selectionsToResolve, exportsToResolve };
+      return cache;
     };
 
     return traverseDefinition(mainDefinition);

@@ -46,6 +46,7 @@ import {
   removeDirectivesFromDocument,
   resultKeyNameFromField,
   shouldInclude,
+  stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -191,7 +192,7 @@ export class LocalResolversLink extends ApolloLink {
       []
     );
 
-    return { ...variables, ...execContext.exportedVariables };
+    return { ...variables, ...stripTypename(execContext.exportedVariables) };
 
     // let errors = execContext.errors;
     //

@@ -657,7 +657,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
         )} returned from resolver 'Query.foo'. This is an error and will cause issues when writing to the cache.`,
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],

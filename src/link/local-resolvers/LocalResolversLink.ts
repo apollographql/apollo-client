@@ -338,7 +338,7 @@ export class LocalResolversLink extends ApolloLink {
     const typename = rootValue.__typename || rootTypename;
 
     const defaultResolver =
-      isClientField ?
+      isClientField && !isClientFieldDescendant ?
         () => {
           invariant.warn(
             "Could not find a resolver for the '%s' field. The field value has been set to `null`.",

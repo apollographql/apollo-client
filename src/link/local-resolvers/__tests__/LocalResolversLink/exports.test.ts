@@ -2,6 +2,7 @@ import { of } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { LocalResolversError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
@@ -352,72 +353,63 @@ test("ignores @export directive if it is not a descendant of a client field", as
   });
   await expect(stream).toComplete();
 });
-// TODO: Determine how we want to handle data that isn't loaded by the server by
-// exported variables
-test.failing(
-  "supports setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.",
-  async () => {
-    const query = gql`
-      query postRequiringReview($reviewerId: Int!) {
-        postRequiringReview {
-          id
-          title
-          currentReviewer @client {
-            id @export(as: "reviewerId")
-          }
-        }
-        reviewerDetails(reviewerId: $reviewerId) {
-          name
+
+test("emits error when using an exported variable as a child of a remote field", async () => {
+  const query = gql`
+    query postRequiringReview($reviewerId: Int!) {
+      postRequiringReview {
+        id
+        title
+        currentReviewer @client {
+          id @export(as: "reviewerId")
         }
       }
-    `;
+      reviewerDetails(reviewerId: $reviewerId) {
+        name
+      }
+    }
+  `;
 
-    const postRequiringReview = {
-      id: 10,
-      title: "The Local State Conundrum",
-      __typename: "Post",
-    };
-    const reviewerDetails = {
-      name: "John Smith",
-      __typename: "Reviewer",
-    };
-    const currentReviewer = {
-      id: 100,
-      __typename: "CurrentReviewer",
-    };
+  const postRequiringReview = {
+    id: 10,
+    title: "The Local State Conundrum",
+    __typename: "Post",
+  };
+  const reviewerDetails = {
+    name: "John Smith",
+    __typename: "Reviewer",
+  };
+  const currentReviewer = {
+    id: 100,
+    __typename: "CurrentReviewer",
+  };
 
-    const mockLink = new ApolloLink(({ variables }) => {
-      return of({
-        data:
-          variables.reviewerId === currentReviewer.id ?
-            { postRequiringReview, reviewerDetails }
-          : { postRequiringReview: null, reviewerDetails: null },
-      });
+  const mockLink = new ApolloLink(({ variables }) => {
+    return of({
+      data:
+        variables.reviewerId === currentReviewer.id ?
+          { postRequiringReview, reviewerDetails }
+        : { postRequiringReview: null, reviewerDetails: null },
     });
+  });
 
-    const localResolversLink = new LocalResolversLink({
-      resolvers: {
-        Post: {
-          currentReviewer: () => currentReviewer,
-        },
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Post: {
+        currentReviewer: () => currentReviewer,
       },
-    });
-    const link = ApolloLink.from([localResolversLink, mockLink]);
-    const stream = new ObservableStream(execute(link, { query }));
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitTypedValue({
-      data: {
-        postRequiringReview: {
-          id: postRequiringReview.id,
-          title: postRequiringReview.title,
-          currentReviewer,
-        },
-        reviewerDetails,
-      },
-    });
-    await expect(stream).toComplete();
-  }
-);
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field."
+    )
+  );
+  await expect(stream).toComplete();
+});
 
 test("supports combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {
   const mutation = gql`

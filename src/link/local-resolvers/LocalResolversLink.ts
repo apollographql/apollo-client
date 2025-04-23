@@ -80,6 +80,7 @@ type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   exportedVariables?: OperationVariables;
+  errorMeta?: Record<string, any>;
 };
 
 type Path = Array<string | number>;
@@ -396,6 +397,13 @@ export class LocalResolversLink extends ApolloLink {
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
+        execContext.errorMeta = { data: result };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+
         return result;
       }
 
@@ -407,13 +415,22 @@ export class LocalResolversLink extends ApolloLink {
       }
 
       if (Array.isArray(result)) {
-        return this.resolveSubSelectedArray(
+        const fieldResult = await this.resolveSubSelectedArray(
           field,
           isClientField,
           result,
           execContext,
           path
         );
+
+        execContext.errorMeta = { data: fieldResult };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+
+        return fieldResult;
       }
 
       // Returned value is an object, and the query has a sub-selection. Recurse.
@@ -425,13 +442,22 @@ export class LocalResolversLink extends ApolloLink {
           resolverName
         );
 
-        return this.resolveSelectionSet(
+        const fieldResult = await this.resolveSelectionSet(
           field.selectionSet,
           isClientField,
           result,
           execContext,
           path
         );
+
+        execContext.errorMeta = { data: fieldResult };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+
+        return fieldResult;
       }
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
@@ -577,7 +603,7 @@ export class LocalResolversLink extends ApolloLink {
         isGraphQLError(error) ?
           { ...error.toJSON(), path }
         : { message: error.message, path },
-        meta
+        { ...execContext.errorMeta, ...meta }
       )
     );
   }

@@ -349,23 +349,26 @@ export class LocalResolversLink extends ApolloLink {
         }
       : () => rootValue[fieldName];
 
-    const resolver = this.resolvers[typename]?.[fieldName] ?? defaultResolver;
+    const resolver = this.resolvers[typename]?.[fieldName];
 
     try {
-      let result = await Promise.resolve(
-        // In case the resolve function accesses reactive variables,
-        // set cacheSlot to the current cache instance.
-        cacheSlot.withValue(operation.client.cache, resolver, [
-          // Ensure the parent value passed to the resolver does not contain
-          // aliased fields, otherwise it is nearly impossible to determine
-          // what property in the parent type contains the field you want to
-          // read from. `dealias` contains a shallow copy of `rootValue`
-          dealias(parentSelectionSet, rootValue),
-          argumentsObjectFromField(field, variables),
-          { operation },
-          { field, fragmentMap: execContext.fragmentMap, path },
-        ])
-      );
+      let result =
+        resolver ?
+          await Promise.resolve(
+            // In case the resolve function accesses reactive variables,
+            // set cacheSlot to the current cache instance.
+            cacheSlot.withValue(operation.client.cache, resolver, [
+              // Ensure the parent value passed to the resolver does not contain
+              // aliased fields, otherwise it is nearly impossible to determine
+              // what property in the parent type contains the field you want to
+              // read from. `dealias` contains a shallow copy of `rootValue`
+              dealias(parentSelectionSet, rootValue),
+              argumentsObjectFromField(field, variables),
+              { operation },
+              { field, fragmentMap: execContext.fragmentMap, path },
+            ])
+          )
+        : defaultResolver();
 
       if (result === undefined) {
         invariant.warn(

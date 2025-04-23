@@ -266,7 +266,7 @@ export class LocalResolversLink extends ApolloLink {
               path.concat(selection.name.value)
             );
 
-        if (fieldResult !== undefined) {
+        if (fieldResult !== undefined && (!isRootField || rootValue !== null)) {
           resultsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
           });

@@ -1,10 +1,8 @@
 import type {
   ASTNode,
-  DirectiveNode,
   DocumentNode,
   ExecutableDefinitionNode,
   FieldNode,
-  FragmentSpreadNode,
   GraphQLError,
   GraphQLFormattedError,
   OperationDefinitionNode,
@@ -92,6 +90,7 @@ type ExecContext =
       selectionsToResolve: Set<SelectionNode>;
       errors: GraphQLFormattedError[];
       errorMeta?: Record<string, any>;
+      exportedVariables?: OperationVariables;
       phase: "resolve";
     };
 
@@ -102,7 +101,6 @@ export class LocalResolversLink extends ApolloLink {
     ExecutableDefinitionNode,
     Set<SelectionNode>
   >();
-  private definitionsWithExportsCache = new WeakSet<OperationDefinitionNode>();
   private selectionsWithExportsCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
@@ -200,12 +198,6 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext & { phase: "exports" }
   ) {
     const { variables } = execContext.operation;
-
-    if (
-      !this.definitionsWithExportsCache.has(execContext.operationDefinition)
-    ) {
-      return variables;
-    }
 
     await this.resolveSelectionSet(
       execContext.operationDefinition.selectionSet,
@@ -722,13 +714,6 @@ export class LocalResolversLink extends ApolloLink {
             },
           },
           Directive: (node, _, __, ___, ancestors) => {
-            if (
-              node.name.value === "export" &&
-              definitionNode.kind === Kind.OPERATION_DEFINITION
-            ) {
-              this.definitionsWithExportsCache.add(definitionNode);
-            }
-
             if (node.name.value === "export" && stack.at(-1)) {
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {

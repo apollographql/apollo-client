@@ -323,7 +323,7 @@ test("ignores @export directive if it is not a descendant of a client field", as
   const mockLink = new ApolloLink((operation) => {
     return of({
       data: {
-        currentAuthor: testAuthor,
+        authorId: "from server",
         postCount:
           operation.variables.authorId === testAuthor.authorId ?
             testPostCount
@@ -331,6 +331,7 @@ test("ignores @export directive if it is not a descendant of a client field", as
       },
     });
   });
+
   const localResolversLink = new LocalResolversLink({
     resolvers: {
       Query: {
@@ -340,12 +341,11 @@ test("ignores @export directive if it is not a descendant of a client field", as
     },
   });
   const link = ApolloLink.from([localResolversLink, mockLink]);
-  const stream = new ObservableStream(
-    execute(link, { query, variables: { authorId: 100 } })
-  );
+  const stream = new ObservableStream(execute(link, { query }));
 
   await expect(stream).toEmitTypedValue({
     data: {
+      authorId: "from server",
       currentAuthor: testAuthor,
       postCount: testPostCount,
     },

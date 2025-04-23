@@ -451,33 +451,30 @@ export class LocalResolversLink extends ApolloLink {
         );
       }
 
-      // Returned value is an object, and the query has a sub-selection. Recurse.
-      if (field.selectionSet) {
-        invariant(
-          result.__typename,
-          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-          result,
-          resolverName
-        );
+      invariant(
+        result.__typename,
+        "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+        result,
+        resolverName
+      );
 
-        return tap(
-          await this.resolveSelectionSet(
-            field.selectionSet,
-            isClientField,
-            result,
-            execContext,
-            path
-          ),
-          (fieldResult) => {
-            execContext.errorMeta = { data: fieldResult };
-            invariant(
-              rootValue !== null,
-              "Could not merge data from '%s' resolver with remote data since data was `null`.",
-              resolverName
-            );
-          }
-        );
-      }
+      return tap(
+        await this.resolveSelectionSet(
+          field.selectionSet,
+          isClientField,
+          result,
+          execContext,
+          path
+        ),
+        (fieldResult) => {
+          execContext.errorMeta = { data: fieldResult };
+          invariant(
+            rootValue !== null,
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          );
+        }
+      );
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
@@ -565,6 +562,7 @@ export class LocalResolversLink extends ApolloLink {
         // Basically any field in a GraphQL response can be null, or missing
         return result;
       }
+
       if (Array.isArray(result)) {
         return this.resolveSubSelectedArray(
           field,
@@ -575,23 +573,20 @@ export class LocalResolversLink extends ApolloLink {
         );
       }
 
-      // Returned value is an object, and the query has a sub-selection. Recurse.
-      if (field.selectionSet) {
-        invariant(
-          result.__typename,
-          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-          result,
-          resolverName
-        );
+      invariant(
+        result.__typename,
+        "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+        result,
+        resolverName
+      );
 
-        return this.resolveSelectionSet(
-          field.selectionSet,
-          isClientFieldDescendant || isClientField,
-          result,
-          execContext,
-          path
-        );
-      }
+      return this.resolveSelectionSet(
+        field.selectionSet,
+        isClientFieldDescendant || isClientField,
+        result,
+        execContext,
+        path
+      );
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,

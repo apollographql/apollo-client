@@ -594,3 +594,33 @@ test("can return more data than needed in resolver which is accessible by child 
   });
   await expect(stream).toComplete();
 });
+
+// TODO: Is this correct?
+test("handles when remote data returns null", async () => {
+  const query = gql`
+    query {
+      foo @client
+      bar {
+        id
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() => of({ data: null }));
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => true,
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: true },
+  });
+  await expect(stream).toComplete();
+});

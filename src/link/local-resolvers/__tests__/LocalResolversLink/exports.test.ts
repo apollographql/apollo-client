@@ -580,7 +580,7 @@ test("uses the value of the last @export variable defined, if multiple variables
   await expect(stream).toComplete();
 });
 
-it("supports reading a value from the cache in a resolver for an @client @export variable, loaded from the cache", async () => {
+test("supports reading a value from the cache in a resolver for an @client @export variable, loaded from the cache", async () => {
   const cacheQuery: TypedDocumentNode<
     { loggedInReviewerId: number },
     Record<string, never>

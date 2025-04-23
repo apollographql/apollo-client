@@ -13,7 +13,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { isSelectionNode, visit } from "graphql";
+import { isSelectionNode, Kind, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
@@ -119,6 +119,10 @@ export class LocalResolversLink extends ApolloLink {
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
     function getServerResult(variables: OperationVariables) {
+      // Modify `variables` early to ensure they are available to other client
+      // resolvers when there is not a server query.
+      operation.variables = variables;
+
       if (!serverQuery) {
         return of({ data: null });
       }
@@ -129,7 +133,6 @@ export class LocalResolversLink extends ApolloLink {
       );
 
       operation.query = serverQuery;
-      operation.variables = variables;
 
       return forward(operation);
     }
@@ -349,7 +352,8 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, operationDefinition, variables } = execContext;
+    const { operation, operationDefinition, variables, exportedVariables } =
+      execContext;
     const fieldName = field.name.value;
 
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
@@ -385,6 +389,18 @@ export class LocalResolversLink extends ApolloLink {
           getResolverName(typename, fieldName)
         );
         result = null;
+      }
+
+      if (exportedVariables && field.directives) {
+        field.directives.forEach((directive) => {
+          if (directive.name.value === "export" && directive.arguments) {
+            directive.arguments.forEach((arg) => {
+              if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
+                exportedVariables[arg.value.value] = result;
+              }
+            });
+          }
+        });
       }
 
       // Handle all scalar types here.

@@ -684,76 +684,78 @@ export class LocalResolversLink extends ApolloLink {
     ): node is ASTNode => !Array.isArray(node);
 
     const traverseDefinition = (definitionNode: ExecutableDefinitionNode) => {
-      if (!this.traverseCache.has(definitionNode)) {
-        const cache = {
-          selectionsToResolve: new Set<SelectionNode>(),
-          exportsToResolve: new Set<SelectionNode>(),
-        };
-        this.traverseCache.set(definitionNode, cache);
-
-        visit(definitionNode, {
-          Field: {
-            enter() {
-              // We determine if a field is a descendant of a client field by
-              // pushing booleans onto this stack. The `Directive` visitor is
-              // responsible for changing this value to `true` if an `@client`
-              // field is detected. We determine if we are a descendant of a
-              // client field by pushing the value from the last field, which
-              // should be `true` if an `@client` field was detected. Once
-              // leaving the field, we pop the value off the stack.
-              //
-              // This approach has one downside in that it is order dependent.
-              // `@client` must come before `@export` in order for this to
-              // detect properly, otherwise the `@export` field is ignored.
-              clientDescendantStack.push(clientDescendantStack.at(-1) || false);
-            },
-            leave() {
-              clientDescendantStack.pop();
-            },
-          },
-          Directive: (node, _, __, ___, ancestors) => {
-            if (node.name.value === "export" && clientDescendantStack.at(-1)) {
-              ancestors.forEach((node) => {
-                if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  cache.exportsToResolve.add(node);
-                }
-              });
-            }
-
-            if (node.name.value === "client") {
-              clientDescendantStack[clientDescendantStack.length - 1] = true;
-              ancestors.forEach((node) => {
-                if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  cache.selectionsToResolve.add(node);
-                }
-              });
-            }
-          },
-          FragmentSpread: (spread, _, __, ___, ancestors) => {
-            const fragment = fragmentMap[spread.name.value];
-            invariant(fragment, `No fragment named %s`, spread.name.value);
-
-            const { selectionsToResolve: fragmentSelections } =
-              traverseDefinition(fragment);
-
-            if (fragmentSelections.size > 0) {
-              // Fragment for this spread contains @client directive (either directly or transitively)
-              // Collect selection nodes on paths from the root down to fields with the @client directive
-              ancestors.forEach((node) => {
-                if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  cache.selectionsToResolve.add(node);
-                }
-              });
-              cache.selectionsToResolve.add(spread);
-              fragmentSelections.forEach((selection) => {
-                cache.selectionsToResolve.add(selection);
-              });
-            }
-          },
-        });
+      if (this.traverseCache.has(definitionNode)) {
+        return this.traverseCache.get(definitionNode)!;
       }
 
-      return this.traverseCache.get(definitionNode)!;
+      const cache = {
+        selectionsToResolve: new Set<SelectionNode>(),
+        exportsToResolve: new Set<SelectionNode>(),
+      };
+      this.traverseCache.set(definitionNode, cache);
+
+      visit(definitionNode, {
+        Field: {
+          enter() {
+            // We determine if a field is a descendant of a client field by
+            // pushing booleans onto this stack. The `Directive` visitor is
+            // responsible for changing this value to `true` if an `@client`
+            // field is detected. We determine if we are a descendant of a
+            // client field by pushing the value from the last field, which
+            // should be `true` if an `@client` field was detected. Once
+            // leaving the field, we pop the value off the stack.
+            //
+            // This approach has one downside in that it is order dependent.
+            // `@client` must come before `@export` in order for this to
+            // detect properly, otherwise the `@export` field is ignored.
+            clientDescendantStack.push(clientDescendantStack.at(-1) || false);
+          },
+          leave() {
+            clientDescendantStack.pop();
+          },
+        },
+        Directive: (node, _, __, ___, ancestors) => {
+          if (node.name.value === "export" && clientDescendantStack.at(-1)) {
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                cache.exportsToResolve.add(node);
+              }
+            });
+          }
+
+          if (node.name.value === "client") {
+            clientDescendantStack[clientDescendantStack.length - 1] = true;
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                cache.selectionsToResolve.add(node);
+              }
+            });
+          }
+        },
+        FragmentSpread: (spread, _, __, ___, ancestors) => {
+          const fragment = fragmentMap[spread.name.value];
+          invariant(fragment, `No fragment named %s`, spread.name.value);
+
+          const { selectionsToResolve: fragmentSelections } =
+            traverseDefinition(fragment);
+
+          if (fragmentSelections.size > 0) {
+            // Fragment for this spread contains @client directive (either directly or transitively)
+            // Collect selection nodes on paths from the root down to fields with the @client directive
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                cache.selectionsToResolve.add(node);
+              }
+            });
+            cache.selectionsToResolve.add(spread);
+            fragmentSelections.forEach((selection) => {
+              cache.selectionsToResolve.add(selection);
+            });
+          }
+        },
+      });
+
+      return cache;
     };
 
     return traverseDefinition(mainDefinition);

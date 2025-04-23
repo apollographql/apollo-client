@@ -557,6 +557,39 @@ test("warns when a resolver returns undefined and sets value to null", async () 
   );
 });
 
+test("warns if a parent resolver omits a field with no child resolver", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      foo @client {
+        bar
+        baz
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", bar: true }),
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: { __typename: "Foo", bar: true, baz: null } },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value or because the child resolver returned undefined.",
+    "Foo.baz"
+  );
+});
+
 test("adds an error when the __typename cannot be resolved", async () => {
   using _ = spyOnConsole("warn");
   const query = gql`

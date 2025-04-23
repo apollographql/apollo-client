@@ -330,16 +330,26 @@ export class LocalResolversLink extends ApolloLink {
     const { variables } = operation;
     const fieldName = field.name.value;
 
+    const isClientField =
+      field.directives?.some((d) => d.name.value === "client") ?? false;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const rootTypename =
       isRootField ? getRootTypename(operationDefinition) : undefined;
     const typename = rootValue.__typename || rootTypename;
 
-    const resolver = this.getResolver(
-      typename,
-      fieldName,
-      rootValue[fieldName]
-    );
+    const defaultResolver =
+      isClientField ?
+        () => {
+          invariant.warn(
+            "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+            getResolverName(typename, fieldName)
+          );
+
+          return null;
+        }
+      : () => rootValue[fieldName];
+
+    const resolver = this.resolvers[typename]?.[fieldName] ?? defaultResolver;
 
     try {
       let result = await Promise.resolve(
@@ -359,7 +369,9 @@ export class LocalResolversLink extends ApolloLink {
 
       if (result === undefined) {
         invariant.warn(
-          "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+          isClientFieldDescendant ?
+            "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value or because the child resolver returned undefined."
+          : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
           getResolverName(typename, fieldName)
         );
         result = null;
@@ -388,10 +400,6 @@ export class LocalResolversLink extends ApolloLink {
         // Basically any field in a GraphQL response can be null, or missing
         return result;
       }
-
-      const isClientField =
-        field.directives?.some((d) => d.name.value === "client") ?? false;
-
       if (Array.isArray(result)) {
         return this.resolveSubSelectedArray(
           field,
@@ -434,29 +442,6 @@ export class LocalResolversLink extends ApolloLink {
         : { message: error.message, path }
       )
     );
-  }
-
-  private getResolver(
-    typename: string,
-    fieldName: string,
-    defaultValue: unknown
-  ) {
-    const resolver = this.resolvers[typename]?.[fieldName];
-
-    if (!resolver) {
-      if (defaultValue === undefined) {
-        invariant.warn(
-          "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-          getResolverName(typename, fieldName)
-        );
-
-        defaultValue = null;
-      }
-
-      return () => defaultValue;
-    }
-
-    return resolver;
   }
 
   private resolveSubSelectedArray(

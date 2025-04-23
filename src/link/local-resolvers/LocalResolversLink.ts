@@ -69,6 +69,7 @@ export declare namespace LocalResolversLink {
 
   export interface ResolverContext {
     operation: Operation;
+    phase: "exports" | "resolve";
   }
 }
 
@@ -349,7 +350,7 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { operationDefinition, operation } = execContext;
+    const { operationDefinition, operation, phase } = execContext;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
 
@@ -391,7 +392,7 @@ export class LocalResolversLink extends ApolloLink {
               // TODO: Add a `rootField` option to `LocalResolversLink`
               {},
               argumentsObjectFromField(field, operation.variables),
-              { operation },
+              { phase, operation },
               { field, fragmentMap: execContext.fragmentMap, path },
             ])
           )
@@ -494,7 +495,7 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation } = execContext;
+    const { operation, phase } = execContext;
     const { variables } = operation;
     const fieldName = field.name.value;
     const isClientField =
@@ -531,7 +532,7 @@ export class LocalResolversLink extends ApolloLink {
               // read from. `dealias` contains a shallow copy of `rootValue`
               dealias(parentSelectionSet, rootValue),
               argumentsObjectFromField(field, variables),
-              { operation },
+              { operation, phase },
               { field, fragmentMap: execContext.fragmentMap, path },
             ])
           )

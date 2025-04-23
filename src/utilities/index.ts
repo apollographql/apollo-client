@@ -132,6 +132,7 @@ export {
   isExecutionPatchResult,
   mergeIncrementalData,
 } from "./common/incrementalResult.js";
+export { tap } from "./common/tap.js";
 
 export { canonicalStringify } from "./common/canonicalStringify.js";
 export { omitDeep } from "./common/omitDeep.js";

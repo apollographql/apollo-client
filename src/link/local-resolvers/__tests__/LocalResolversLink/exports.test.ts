@@ -657,6 +657,52 @@ test("supports reading a value from the cache in a resolver for an @client @expo
   await expect(stream).toComplete();
 });
 
+test("does not execute client resolvers for client subtrees without an export directive", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const currentAuthor = jest.fn(() => ({
+    __typename: "Author",
+    id: testAuthor.id,
+  }));
+  const author = jest.fn(() => testAuthor);
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        author,
+        currentAuthor,
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthor: { __typename: "Author", id: testAuthor.id },
+      author: testAuthor,
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(currentAuthor).toHaveBeenCalledTimes(2);
+  expect(author).toHaveBeenCalledTimes(1);
+});
+
 test.skip("Does ??? when a resolver throws an error for an exported variable", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {

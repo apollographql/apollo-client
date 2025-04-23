@@ -74,15 +74,26 @@ export declare namespace LocalResolversLink {
   }
 }
 
-type ExecContext = {
-  operation: Operation;
-  operationDefinition: OperationDefinitionNode;
-  fragmentMap: FragmentMap;
-  selectionsToResolve: Set<SelectionNode>;
-  errors: GraphQLFormattedError[];
-  exportedVariables?: OperationVariables;
-  errorMeta?: Record<string, any>;
-};
+type ExecContext =
+  | {
+      operation: Operation;
+      operationDefinition: OperationDefinitionNode;
+      fragmentMap: FragmentMap;
+      exportsToResolve: Set<SelectionNode>;
+      errors: GraphQLFormattedError[];
+      exportedVariables?: OperationVariables;
+      errorMeta?: Record<string, any>;
+      phase: "exports";
+    }
+  | {
+      operation: Operation;
+      operationDefinition: OperationDefinitionNode;
+      fragmentMap: FragmentMap;
+      selectionsToResolve: Set<SelectionNode>;
+      errors: GraphQLFormattedError[];
+      errorMeta?: Record<string, any>;
+      phase: "resolve";
+    };
 
 type Path = Array<string | number>;
 
@@ -92,6 +103,10 @@ export class LocalResolversLink extends ApolloLink {
     Set<SelectionNode>
   >();
   private definitionsWithExportsCache = new WeakSet<OperationDefinitionNode>();
+  private selectionsWithExportsCache = new WeakMap<
+    ExecutableDefinitionNode,
+    Set<SelectionNode>
+  >();
   private resolvers: LocalResolversLink.Resolvers = {};
 
   constructor(options: LocalResolversLink.Options = {}) {
@@ -148,20 +163,18 @@ export class LocalResolversLink extends ApolloLink {
 
     this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
 
-    const selectionsToResolve =
-      this.selectionsToResolveCache.get(mainDefinition)!;
-
-    const execContext: ExecContext = {
+    const execContext = {
       operation,
       operationDefinition: mainDefinition,
       fragmentMap,
-      selectionsToResolve,
       errors: [],
-    };
+    } satisfies Partial<ExecContext>;
 
     return from(
       this.addExportedVariables({
         ...execContext,
+        exportsToResolve: this.selectionsWithExportsCache.get(mainDefinition)!,
+        phase: "exports",
         exportedVariables: {},
       })
     ).pipe(
@@ -170,14 +183,22 @@ export class LocalResolversLink extends ApolloLink {
         return from(
           this.runResolvers({
             remoteResult: result,
-            execContext: { ...execContext, errors: [] },
+            execContext: {
+              ...execContext,
+              selectionsToResolve:
+                this.selectionsToResolveCache.get(mainDefinition)!,
+              phase: "resolve",
+              errors: [],
+            },
           })
         );
       })
     );
   }
 
-  private async addExportedVariables(execContext: ExecContext) {
+  private async addExportedVariables(
+    execContext: ExecContext & { phase: "exports" }
+  ) {
     const { variables } = execContext.operation;
 
     if (
@@ -205,7 +226,7 @@ export class LocalResolversLink extends ApolloLink {
     execContext,
   }: {
     remoteResult: FetchResult;
-    execContext: ExecContext;
+    execContext: ExecContext & { phase: "resolve" };
   }): Promise<FetchResult> {
     const localResult = await this.resolveSelectionSet(
       execContext.operationDefinition.selectionSet,
@@ -236,15 +257,16 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { fragmentMap, operation, operationDefinition } = execContext;
+    const { fragmentMap, operation, operationDefinition, phase } = execContext;
     const { client, variables } = operation;
     const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
-      if (
-        !isClientFieldDescendant &&
-        !execContext.selectionsToResolve.has(selection)
-      ) {
+      const shouldResolve =
+        phase === "exports" ?
+          execContext.exportsToResolve.has(selection)
+        : execContext.selectionsToResolve.has(selection);
+      if (!isClientFieldDescendant && !shouldResolve) {
         // Skip selections without @client directives
         // (still processing if one of the ancestors or one of the child fields has @client directive)
         return;
@@ -674,8 +696,10 @@ export class LocalResolversLink extends ApolloLink {
       definitionNode: ExecutableDefinitionNode
     ): Set<SelectionNode> => {
       if (!this.selectionsToResolveCache.has(definitionNode)) {
-        const matches = new Set<SelectionNode>();
-        this.selectionsToResolveCache.set(definitionNode, matches);
+        const clientMatches = new Set<SelectionNode>();
+        const exportMatches = new Set<SelectionNode>();
+        this.selectionsToResolveCache.set(definitionNode, clientMatches);
+        this.selectionsWithExportsCache.set(definitionNode, exportMatches);
 
         visit(definitionNode, {
           Field: {
@@ -705,11 +729,19 @@ export class LocalResolversLink extends ApolloLink {
               this.definitionsWithExportsCache.add(definitionNode);
             }
 
+            if (node.name.value === "export" && stack.at(-1)) {
+              ancestors.forEach((node) => {
+                if (isSingleASTNode(node) && isSelectionNode(node)) {
+                  exportMatches.add(node);
+                }
+              });
+            }
+
             if (node.name.value === "client") {
               stack[stack.length - 1] = true;
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  matches.add(node);
+                  clientMatches.add(node);
                 }
               });
             }
@@ -724,12 +756,12 @@ export class LocalResolversLink extends ApolloLink {
               // Collect selection nodes on paths from the root down to fields with the @client directive
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  matches.add(node);
+                  clientMatches.add(node);
                 }
               });
-              matches.add(spread);
+              clientMatches.add(spread);
               fragmentSelections.forEach((selection) => {
-                matches.add(selection);
+                clientMatches.add(selection);
               });
             }
           },

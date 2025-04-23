@@ -616,6 +616,9 @@ test("warns if a parent resolver omits a field and child has @client field", asy
   });
   await expect(stream).toComplete();
 
+  // We don't want to see the missing resolver warning since the child field
+  // should not be required to define a resolver since its a descendent of
+  // another child field.
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
     "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`.",

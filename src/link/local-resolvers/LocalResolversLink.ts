@@ -695,7 +695,7 @@ export class LocalResolversLink extends ApolloLink {
               stack.pop();
             },
           },
-          Directive: (node: DirectiveNode, _, __, ___, ancestors) => {
+          Directive: (node, _, __, ___, ancestors) => {
             if (
               node.name.value === "export" &&
               definitionNode.kind === Kind.OPERATION_DEFINITION
@@ -712,13 +712,7 @@ export class LocalResolversLink extends ApolloLink {
               });
             }
           },
-          FragmentSpread: (
-            spread: FragmentSpreadNode,
-            _,
-            __,
-            ___,
-            ancestors
-          ) => {
+          FragmentSpread: (spread, _, __, ___, ancestors) => {
             const fragment = fragmentMap[spread.name.value];
             invariant(fragment, `No fragment named %s`, spread.name.value);
 

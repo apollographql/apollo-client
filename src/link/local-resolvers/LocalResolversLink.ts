@@ -13,7 +13,7 @@ import type {
 import { isSelectionNode, Kind, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
-import { from, mergeMap, of } from "rxjs";
+import { defer, from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike, OperationVariables } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
@@ -156,45 +156,47 @@ export class LocalResolversLink extends ApolloLink {
       return forward(operation);
     }
 
-    const mainDefinition = getMainDefinition(
-      clientQuery
-    ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(clientQuery);
-    const fragmentMap = createFragmentMap(fragments);
+    return defer(() => {
+      const mainDefinition = getMainDefinition(
+        clientQuery
+      ) as OperationDefinitionNode;
+      const fragments = getFragmentDefinitions(clientQuery);
+      const fragmentMap = createFragmentMap(fragments);
 
-    const { selectionsToResolve, exportsToResolve } =
-      this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
+      const { selectionsToResolve, exportsToResolve } =
+        this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
 
-    const execContext = {
-      operation,
-      operationDefinition: mainDefinition,
-      fragmentMap,
-      errors: [],
-    } satisfies Partial<ExecContext>;
+      const execContext = {
+        operation,
+        operationDefinition: mainDefinition,
+        fragmentMap,
+        errors: [],
+      } satisfies Partial<ExecContext>;
 
-    return from(
-      this.addExportedVariables({
-        ...execContext,
-        selectionsToResolve: exportsToResolve,
-        exportedVariables: {},
-        phase: "exports",
-      })
-    ).pipe(
-      mergeMap(getServerResult),
-      mergeMap((result) => {
-        return from(
-          this.runResolvers({
-            remoteResult: result,
-            execContext: {
-              ...execContext,
-              selectionsToResolve,
-              phase: "resolve",
-              errors: [],
-            },
-          })
-        );
-      })
-    );
+      return from(
+        this.addExportedVariables({
+          ...execContext,
+          selectionsToResolve: exportsToResolve,
+          exportedVariables: {},
+          phase: "exports",
+        })
+      ).pipe(
+        mergeMap(getServerResult),
+        mergeMap((result) => {
+          return from(
+            this.runResolvers({
+              remoteResult: result,
+              execContext: {
+                ...execContext,
+                selectionsToResolve,
+                phase: "resolve",
+                errors: [],
+              },
+            })
+          );
+        })
+      );
+    });
   }
 
   private async addExportedVariables(

@@ -338,6 +338,14 @@ export class LocalResolversLink extends ApolloLink {
     const { exportedVariables, operationDefinition, operation } = execContext;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
+
+    // If the root field contains a selection with an `@client` field, but the
+    // server result did not return a value, we can short-circuit this execution
+    // to avoid calling child resolvers unnecessarily.
+    if (!rootValue && !isClientField) {
+      return rootValue;
+    }
+
     const typename =
       rootValue?.__typename || inferRootTypename(operationDefinition);
     const fieldName = field.name.value;

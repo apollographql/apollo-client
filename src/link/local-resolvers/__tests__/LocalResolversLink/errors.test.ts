@@ -38,7 +38,7 @@ test("handles errors thrown in a resolver", async () => {
         message: "Something went wrong",
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],
@@ -78,7 +78,7 @@ test("handles errors thrown in a child resolver", async () => {
         message: "Something went wrong",
         path: ["foo", "bar"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.bar" },
         },
       },
     ],
@@ -124,14 +124,14 @@ test("adds errors for each field that throws errors", async () => {
         message: "Bar error",
         path: ["foo", "bar"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.bar" },
         },
       },
       {
         message: "Baz error",
         path: ["foo", "baz"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.baz" },
         },
       },
     ],
@@ -176,14 +176,14 @@ test("handles errors thrown in a child resolver from parent array", async () => 
         message: "Something went wrong",
         path: ["foo", 0, "bar"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.bar" },
         },
       },
       {
         message: "Something went wrong",
         path: ["foo", 1, "bar"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.bar" },
         },
       },
     ],
@@ -236,7 +236,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
         message: "Something went wrong",
         path: ["foo", 1, "bar"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.bar" },
         },
       },
     ],
@@ -276,7 +276,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
         path: ["foo"],
         extensions: {
           custom: true,
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],
@@ -315,7 +315,7 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
         message: "Something went wrong",
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],
@@ -364,7 +364,7 @@ test("concatenates client errors with server errors", async () => {
         message: "Something went wrong",
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],
@@ -401,7 +401,7 @@ test("handles errors thrown in async resolvers", async () => {
         message: "Something went wrong",
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],
@@ -438,7 +438,7 @@ test("handles rejected promises returned in async resolvers", async () => {
         message: "Something went wrong",
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
         },
       },
     ],
@@ -494,7 +494,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
         message: "Could not get baz",
         path: ["foo", "baz"],
         extensions: {
-          apollo: { source: "LocalResolversLink" },
+          apollo: { source: "LocalResolversLink", resolver: "Foo.baz" },
         },
       },
     ],

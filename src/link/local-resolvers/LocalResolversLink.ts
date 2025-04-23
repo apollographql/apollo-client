@@ -335,6 +335,7 @@ export class LocalResolversLink extends ApolloLink {
     const rootTypename =
       isRootField ? getRootTypename(operationDefinition) : undefined;
     const typename = rootValue.__typename || rootTypename;
+    const resolverName = getResolverName(typename, fieldName);
 
     const defaultResolver =
       // We expect a resolver to be defined for all top-level `@client` fields
@@ -343,7 +344,7 @@ export class LocalResolversLink extends ApolloLink {
         () => {
           invariant.warn(
             "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-            getResolverName(typename, fieldName)
+            resolverName
           );
 
           return null;
@@ -376,7 +377,7 @@ export class LocalResolversLink extends ApolloLink {
           isClientFieldDescendant ?
             "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
           : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
-          getResolverName(typename, fieldName)
+          resolverName
         );
         result = null;
       }
@@ -420,7 +421,7 @@ export class LocalResolversLink extends ApolloLink {
           result.__typename,
           "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
           result,
-          getResolverName(typename, fieldName)
+          resolverName
         );
 
         return this.resolveSelectionSet(
@@ -432,18 +433,26 @@ export class LocalResolversLink extends ApolloLink {
         );
       }
     } catch (e) {
-      this.addError(toErrorLike(e), path, execContext);
+      this.addError(toErrorLike(e), path, execContext, {
+        resolver: resolverName,
+      });
 
       return null;
     }
   }
 
-  private addError(error: ErrorLike, path: Path, execContext: ExecContext) {
+  private addError(
+    error: ErrorLike,
+    path: Path,
+    execContext: ExecContext,
+    meta: { resolver: string }
+  ) {
     execContext.errors.push(
       addApolloExtension(
         isGraphQLError(error) ?
           { ...error.toJSON(), path }
-        : { message: error.message, path }
+        : { message: error.message, path },
+        meta
       )
     );
   }
@@ -622,12 +631,15 @@ function isGraphQLError(error: ErrorLike): error is GraphQLError {
   );
 }
 
-function addApolloExtension(error: GraphQLFormattedError) {
+function addApolloExtension(
+  error: GraphQLFormattedError,
+  meta: { resolver: string }
+) {
   return {
     ...error,
     extensions: {
       ...error.extensions,
-      apollo: { source: "LocalResolversLink" },
+      apollo: { source: "LocalResolversLink", ...meta },
     },
   };
 }

@@ -81,9 +81,16 @@ interface Last<TData, TVariables> {
 }
 
 const newNetworkStatusSymbol: any = Symbol();
-const uninitialized: ApolloQueryResult<any> = {
+export const uninitialized: ApolloQueryResult<any> = {
   loading: true,
   networkStatus: NetworkStatus.loading,
+  data: undefined,
+  partial: true,
+};
+
+export const empty: ApolloQueryResult<any> = {
+  loading: false,
+  networkStatus: NetworkStatus.ready,
   data: undefined,
   partial: true,
 };
@@ -1101,6 +1108,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
+    console.trace(`ObservableQuery.reobserve(%o)`, newOptions);
     this.resubscribeCache(newOptions);
     this.resetNotifications();
     this.isTornDown = false;
@@ -1326,6 +1334,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (dirty) {
       if (
+        // TODO: this seems wrong for the change to `reobserveFromNetwork` we did here
         this.options.fetchPolicy == "cache-only" ||
         this.options.fetchPolicy == "cache-and-network" ||
         !isNetworkRequestInFlight(this.networkStatus)
@@ -1347,11 +1356,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  public resetResult() {
+  public setResult(result: ApolloQueryResult<TData>) {
     this.input.next({
       source: "setResult",
       kind: "N",
-      value: uninitialized,
+      value: result,
       query: this.query,
       variables: this.variables,
     } satisfies QueryNotification.SetResult<TData, TVariables>);

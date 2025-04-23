@@ -73,7 +73,12 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 import type { DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
+import {
+  empty,
+  logMissingFieldErrors,
+  ObservableQuery,
+  uninitialized,
+} from "./ObservableQuery.js";
 import {
   CacheWriteBehavior,
   QueryInfo,
@@ -892,10 +897,17 @@ export class QueryManager {
     );
 
     this.queries.forEach((queryInfo) => {
-      if (queryInfo.observableQuery) {
+      const { observableQuery } = queryInfo;
+      if (observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        queryInfo.observableQuery.resetResult();
+        observableQuery.setResult(
+          // exception for cache-only queries - we reset them into a "ready" state
+          // as we won't trigger a refetch for them
+          observableQuery.options.fetchPolicy === "cache-only" ?
+            empty
+          : uninitialized
+        );
       } else {
         queryInfo.stop();
       }

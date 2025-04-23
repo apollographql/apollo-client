@@ -445,9 +445,9 @@ test("removes __typename from @export-ed objects", async () => {
       ],
     },
   };
-  const mockLink = new ApolloLink((request) => {
-    expect(request.variables.where).toEqual(currentFilter);
-    expect(print(request.query)).toMatchDocument(gql`
+  const mockLink = new ApolloLink((operation) => {
+    expect(operation.variables.where).toEqual(currentFilter);
+    expect(operation.query).toMatchDocument(gql`
       query GetListItems($where: LessonFilter) {
         lessonCollection(where: $where) {
           items {

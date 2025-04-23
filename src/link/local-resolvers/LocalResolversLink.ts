@@ -16,11 +16,7 @@ import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
 
-import type {
-  ErrorLike,
-  FragmentMatcher,
-  OperationVariables,
-} from "@apollo/client";
+import type { ErrorLike, OperationVariables } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { toErrorLike } from "@apollo/client/errors";
 import type {
@@ -83,7 +79,6 @@ type ExecContext = {
   fragmentMap: FragmentMap;
   context: any;
   variables: OperationVariables;
-  fragmentMatcher: FragmentMatcher;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   exportedVariables?: OperationVariables;
@@ -175,7 +170,6 @@ export class LocalResolversLink extends ApolloLink {
       fragmentMap,
       context,
       variables,
-      fragmentMatcher: () => true,
       selectionsToResolve,
       errors: [],
       exportedVariables: {},
@@ -231,7 +225,6 @@ export class LocalResolversLink extends ApolloLink {
       fragmentMap,
       context,
       variables,
-      fragmentMatcher: () => true,
       selectionsToResolve,
       errors: [],
     };
@@ -269,7 +262,8 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { fragmentMap, context, variables } = execContext;
+    const { fragmentMap, variables, operation } = execContext;
+    const { client } = operation;
     const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
@@ -308,11 +302,9 @@ export class LocalResolversLink extends ApolloLink {
       if (selection.kind === Kind.INLINE_FRAGMENT) {
         if (
           selection.typeCondition &&
-          execContext.fragmentMatcher(
-            rootValue,
-            selection.typeCondition.name.value,
-            context
-          )
+          rootValue?.__typename &&
+          // TODO: Warn if fragmentMatches is undefined
+          client.cache.fragmentMatches?.(selection, rootValue.__typename)
         ) {
           const fragmentResult = await this.resolveSelectionSet(
             selection.selectionSet,

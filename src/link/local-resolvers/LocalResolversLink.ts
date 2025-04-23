@@ -97,13 +97,21 @@ type ExecContext =
 
 type Path = Array<string | number>;
 
+interface ExportedVariable {
+  required: boolean;
+  usedInServerField: boolean;
+}
+
+interface TraverseCacheEntry {
+  selectionsToResolve: Set<SelectionNode>;
+  exportsToResolve: Set<SelectionNode>;
+  exportedVariables: { [variableName: string]: ExportedVariable };
+}
+
 export class LocalResolversLink extends ApolloLink {
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
-    {
-      selectionsToResolve: Set<SelectionNode>;
-      exportsToResolve: Set<SelectionNode>;
-    }
+    TraverseCacheEntry
   >();
   private resolvers: LocalResolversLink.Resolvers = {};
 
@@ -688,13 +696,25 @@ export class LocalResolversLink extends ApolloLink {
         return this.traverseCache.get(definitionNode)!;
       }
 
-      const cache = {
+      // Track a separate list of all variable definitions since not all variable
+      // definitions are used as exports of an `@export` field.
+      const allVariableDefinitions: TraverseCacheEntry["exportedVariables"] =
+        {};
+
+      const cache: TraverseCacheEntry = {
         selectionsToResolve: new Set<SelectionNode>(),
         exportsToResolve: new Set<SelectionNode>(),
+        exportedVariables: {},
       };
       this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
+        VariableDefinition: (node) => {
+          allVariableDefinitions[node.variable.name.value] = {
+            required: node.type.kind === Kind.NON_NULL_TYPE,
+            usedInServerField: false,
+          };
+        },
         Field: {
           enter() {
             // We determine if a field is a descendant of a client field by
@@ -710,17 +730,39 @@ export class LocalResolversLink extends ApolloLink {
             // detect properly, otherwise the `@export` field is ignored.
             clientDescendantStack.push(clientDescendantStack.at(-1) || false);
           },
-          leave() {
-            clientDescendantStack.pop();
+          leave(node) {
+            const isClientFieldOrDescendent = clientDescendantStack.pop();
+
+            node.arguments?.forEach((arg) => {
+              if (arg.value.kind === Kind.VARIABLE) {
+                const variableDef =
+                  allVariableDefinitions[arg.value.name.value];
+
+                if (variableDef) {
+                  variableDef.usedInServerField ||= !isClientFieldOrDescendent;
+                }
+              }
+            });
           },
         },
         Directive: (node, _, __, ___, ancestors) => {
-          if (node.name.value === "export" && clientDescendantStack.at(-1)) {
+          const isClientFieldOrDescendent = clientDescendantStack.at(-1);
+          if (node.name.value === "export" && isClientFieldOrDescendent) {
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);
               }
             });
+
+            const variableName = getExportedVariableName(node);
+
+            // TODO: Bail early if there is no variable definition for the
+            // export field or if there is no "as" argument
+            // const variableName = node.arguments?.
+            if (variableName) {
+              cache.exportedVariables[variableName] =
+                allVariableDefinitions[variableName];
+            }
           }
 
           if (node.name.value === "client") {

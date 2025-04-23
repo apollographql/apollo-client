@@ -251,7 +251,7 @@ test("supports @client @export variables that are nested multiple levels deep", 
   await expect(stream).toEmitTypedValue({
     data: {
       appContainer,
-      testPostCount: testPostCount,
+      postCount: testPostCount,
     },
   });
 });

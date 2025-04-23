@@ -702,3 +702,5 @@ test.skip("Does ??? when a resolver throws an error for an exported variable", a
 test.todo(
   "errors when resolver returns null or undefined for a required variable"
 );
+
+test.todo("overwrites variables passed to link chain");

@@ -32,7 +32,6 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
-  hasClientExports,
   hasDirectives,
   isField,
   mergeDeep,
@@ -498,14 +497,6 @@ export class LocalResolversLink extends ApolloLink {
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
 
-    const hasExportDirective = (parentNode: ASTNode | readonly ASTNode[]) => {
-      return (
-        Array.isArray(parentNode) &&
-        parentNode.some(
-          (node) => node.kind === Kind.DIRECTIVE && node.name.value === "export"
-        )
-      );
-    };
     const selectionsToResolveCache = this.selectionsToResolveCache;
     const definitionsWithExportsCache = this.definitionsWithExportsCache;
 
@@ -514,25 +505,44 @@ export class LocalResolversLink extends ApolloLink {
     ): Set<SelectionNode> {
       if (!selectionsToResolveCache.has(definitionNode)) {
         const matches = new Set<SelectionNode>();
+        const stack: boolean[] = [];
         selectionsToResolveCache.set(definitionNode, matches);
 
         visit(definitionNode, {
-          Directive(node: DirectiveNode, _, parent, ___, ancestors) {
+          Field: {
+            enter() {
+              // We determine if a field is a descendant of a client field by
+              // pushing booleans onto this stack. The `Directive` visitor is
+              // responsible for changing this value to `true` if an `@client`
+              // fiels is detected. We determine if we are a descendant of a
+              // client field by pushing the value from the last field, which
+              // should be `true` if an `@client` field was detected. Once
+              // leaving the field, we pop the value off the stack.
+              //
+              // This approach has one downside in that it is order dependent.
+              // `@client` must come before `@export` in order for this to
+              // detect properly, otherwise the `@export` field is ignored.
+              stack.push(stack.at(-1) || false);
+            },
+            leave() {
+              stack.pop();
+            },
+          },
+          Directive(node: DirectiveNode, _, __, ___, ancestors) {
+            if (
+              node.name.value === "export" &&
+              definitionNode.kind === Kind.OPERATION_DEFINITION
+            ) {
+              definitionsWithExportsCache.add(definitionNode);
+            }
+
             if (node.name.value === "client") {
+              stack[stack.length - 1] = true;
               ancestors.forEach((node) => {
                 if (isSingleASTNode(node) && isSelectionNode(node)) {
                   matches.add(node);
                 }
               });
-
-              if (
-                parent &&
-                definitionNode.kind === Kind.OPERATION_DEFINITION &&
-                !definitionsWithExportsCache.has(definitionNode) &&
-                hasExportDirective(parent)
-              ) {
-                definitionsWithExportsCache.add(definitionNode);
-              }
             }
           },
           FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {

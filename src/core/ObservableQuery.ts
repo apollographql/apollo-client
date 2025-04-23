@@ -275,7 +275,11 @@ export class ObservableQuery<
             !result.loading ||
             // data could be defined for cache-and-network fetch policies
             // when emitting the cache result while loading the network result
-            !!result.data)
+            !!result.data) &&
+          // only the case if the query has been reset - we don't want to emit
+          // an event for that, this will likely be followed by a refetch
+          // immediately
+          result !== uninitialized
         );
       })
     );
@@ -1529,10 +1533,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               };
             }
           },
-        }),
-        distinctUntilKeyChanged("result", equal)
+        })
       )
     ).pipe(
+      distinctUntilKeyChanged("result", equal),
       tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
     );
   });

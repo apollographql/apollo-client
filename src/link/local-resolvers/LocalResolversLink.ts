@@ -295,7 +295,9 @@ export class LocalResolversLink extends ApolloLink {
             path
           );
 
-          resultsToMerge.push(fragmentResult);
+          if (fragmentResult) {
+            resultsToMerge.push(fragmentResult);
+          }
 
           return;
         }
@@ -313,7 +315,9 @@ export class LocalResolversLink extends ApolloLink {
           path
         );
 
-        resultsToMerge.push(fragmentResult);
+        if (fragmentResult) {
+          resultsToMerge.push(fragmentResult);
+        }
 
         return;
       }
@@ -321,7 +325,7 @@ export class LocalResolversLink extends ApolloLink {
 
     await Promise.all(selectionSet.selections.map(execute));
 
-    return mergeDeepArray(resultsToMerge);
+    return resultsToMerge.length > 0 ? mergeDeepArray(resultsToMerge) : null;
   }
 
   private async resolveRootField(

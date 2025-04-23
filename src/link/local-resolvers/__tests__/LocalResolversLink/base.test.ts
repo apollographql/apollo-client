@@ -500,6 +500,35 @@ test("warns when a resolver is missing for an `@client` field", async () => {
   );
 });
 
+test("does not warn for fields resolved from the server", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      foo {
+        bar @client
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({ data: { foo: { __typename: "Foo" } } })
+  );
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { foo: { __typename: "Foo", bar: null } },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "Foo.bar"
+  );
+});
+
 test("warns when a resolver returns undefined and sets value to null", async () => {
   using _ = spyOnConsole("warn");
   const query = gql`

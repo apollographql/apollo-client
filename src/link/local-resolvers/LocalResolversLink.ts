@@ -39,7 +39,6 @@ import {
   resultKeyNameFromField,
   shouldInclude,
   stripTypename,
-  tap,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -414,14 +413,14 @@ export class LocalResolversLink extends ApolloLink {
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
-        return tap(result, () => {
-          execContext.errorMeta = { data: result };
-          invariant(
-            rootValue !== null,
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          );
-        });
+        execContext.errorMeta = { data: result };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+
+        return result;
       }
 
       // From here down, the field has a selection set, which means it's trying
@@ -432,23 +431,21 @@ export class LocalResolversLink extends ApolloLink {
       }
 
       if (Array.isArray(result)) {
-        return tap(
-          await this.resolveSubSelectedArray(
-            field,
-            isClientField,
-            result,
-            execContext,
-            path
-          ),
-          (fieldResult) => {
-            execContext.errorMeta = { data: fieldResult };
-            invariant(
-              rootValue !== null,
-              "Could not merge data from '%s' resolver with remote data since data was `null`.",
-              resolverName
-            );
-          }
+        const fieldResult = await this.resolveSubSelectedArray(
+          field,
+          isClientField,
+          result,
+          execContext,
+          path
         );
+
+        execContext.errorMeta = { data: fieldResult };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+        return fieldResult;
       }
 
       invariant(
@@ -458,23 +455,22 @@ export class LocalResolversLink extends ApolloLink {
         resolverName
       );
 
-      return tap(
-        await this.resolveSelectionSet(
-          field.selectionSet,
-          isClientField,
-          result,
-          execContext,
-          path
-        ),
-        (fieldResult) => {
-          execContext.errorMeta = { data: fieldResult };
-          invariant(
-            rootValue !== null,
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          );
-        }
+      const fieldResult = await this.resolveSelectionSet(
+        field.selectionSet,
+        isClientField,
+        result,
+        execContext,
+        path
       );
+
+      execContext.errorMeta = { data: fieldResult };
+      invariant(
+        rootValue !== null,
+        "Could not merge data from '%s' resolver with remote data since data was `null`.",
+        resolverName
+      );
+
+      return fieldResult;
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,

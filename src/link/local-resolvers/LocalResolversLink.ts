@@ -109,6 +109,10 @@ export class LocalResolversLink extends ApolloLink {
   ): Observable<FetchResult> {
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
+    if (!clientQuery) {
+      return getServerResult(operation.variables);
+    }
+
     function getServerResult(variables: OperationVariables) {
       // Modify `variables` early to ensure they are available to other client
       // resolvers when there is not a server query.

@@ -595,6 +595,37 @@ test("can return more data than needed in resolver which is accessible by child 
   await expect(stream).toComplete();
 });
 
+test("does not execute child resolver when parent is null", async () => {
+  const query = gql`
+    query {
+      currentUser {
+        id
+        foo @client
+      }
+    }
+  `;
+
+  const foo = jest.fn(() => true);
+  const mockLink = new ApolloLink(() => of({ data: { currentUser: null } }));
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      User: {
+        foo,
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { currentUser: null },
+  });
+  await expect(stream).toComplete();
+
+  expect(foo).not.toHaveBeenCalled();
+});
+
 // TODO: Is this correct?
 test("handles when remote data returns null", async () => {
   const query = gql`

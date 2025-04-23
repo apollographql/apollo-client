@@ -300,7 +300,7 @@ test("ignores @export directives if not used with @client", async () => {
   await expect(stream).toComplete();
 });
 
-test("should support setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.", async () => {
+test("supports setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.", async () => {
   const query = gql`
     query postRequiringReview($reviewerId: Int!) {
       postRequiringReview {

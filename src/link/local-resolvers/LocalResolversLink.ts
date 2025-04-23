@@ -699,7 +699,7 @@ export class LocalResolversLink extends ApolloLink {
               // We determine if a field is a descendant of a client field by
               // pushing booleans onto this stack. The `Directive` visitor is
               // responsible for changing this value to `true` if an `@client`
-              // fiels is detected. We determine if we are a descendant of a
+              // field is detected. We determine if we are a descendant of a
               // client field by pushing the value from the last field, which
               // should be `true` if an `@client` field was detected. Once
               // leaving the field, we pop the value off the stack.

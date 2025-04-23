@@ -202,7 +202,7 @@ export class LocalResolversLink extends ApolloLink {
     const localResult = await this.resolveSelectionSet(
       execContext.operationDefinition.selectionSet,
       false,
-      remoteResult.data ?? {},
+      remoteResult.data,
       execContext,
       []
     );

@@ -868,11 +868,11 @@ test("adds multiple errors for each client field to errors array when remote dat
       {
         message:
           "Could not merge data from 'Query.bar' resolver with remote data since data was `null`.",
-        path: ["foo"],
+        path: ["bar"],
         extensions: {
           apollo: {
             source: "LocalResolversLink",
-            resolver: "Query.foo",
+            resolver: "Query.bar",
             data: { __typename: "Bar", baz: false },
           },
         },

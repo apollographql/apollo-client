@@ -683,9 +683,7 @@ export class LocalResolversLink extends ApolloLink {
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
 
-    const traverseDefinition = (
-      definitionNode: ExecutableDefinitionNode
-    ): Set<SelectionNode> => {
+    const traverseDefinition = (definitionNode: ExecutableDefinitionNode) => {
       if (!this.traverseCache.has(definitionNode)) {
         this.traverseCache.set(definitionNode, {
           selectionsToResolve: new Set(),
@@ -738,7 +736,9 @@ export class LocalResolversLink extends ApolloLink {
           const fragment = fragmentMap[spread.name.value];
           invariant(fragment, `No fragment named %s`, spread.name.value);
 
-          const fragmentSelections = traverseDefinition(fragment);
+          const { selectionsToResolve: fragmentSelections } =
+            traverseDefinition(fragment);
+
           if (fragmentSelections.size > 0) {
             // Fragment for this spread contains @client directive (either directly or transitively)
             // Collect selection nodes on paths from the root down to fields with the @client directive
@@ -754,12 +754,11 @@ export class LocalResolversLink extends ApolloLink {
           }
         },
       });
-      return selectionsToResolve;
+
+      return { selectionsToResolve, exportsToResolve };
     };
 
-    traverseDefinition(mainDefinition);
-
-    return this.traverseCache.get(mainDefinition)!;
+    return traverseDefinition(mainDefinition);
   }
 }
 

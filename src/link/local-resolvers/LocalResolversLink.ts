@@ -132,100 +132,66 @@ export class LocalResolversLink extends ApolloLink {
       return forward(operation);
     }
 
-    return from(this.addExportedVariables(clientQuery, operation)).pipe(
+    const mainDefinition = getMainDefinition(
+      clientQuery
+    ) as OperationDefinitionNode;
+    const fragments = getFragmentDefinitions(clientQuery);
+    const fragmentMap = createFragmentMap(fragments);
+    const selectionsToResolve = this.collectSelectionsToResolve(
+      mainDefinition,
+      fragmentMap
+    );
+
+    const execContext: ExecContext = {
+      operation,
+      operationDefinition: mainDefinition,
+      fragmentMap,
+      selectionsToResolve,
+      errors: [],
+    };
+
+    return from(
+      this.addExportedVariables({
+        ...execContext,
+        exportedVariables: {},
+      })
+    ).pipe(
       mergeMap(getServerResult),
       mergeMap((result) => {
         return from(
           this.runResolvers({
-            operation,
-            clientQuery,
             remoteResult: result,
+            execContext: { ...execContext, errors: [] },
           })
         );
       })
     );
   }
 
-  private async addExportedVariables(
-    clientQuery: DocumentNode | null,
-    operation: Operation
-  ) {
-    if (!clientQuery) {
-      return operation.variables;
-    }
-
-    const { variables } = operation;
-    const mainDefinition = getMainDefinition(
-      clientQuery
-    ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(clientQuery);
-    const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectSelectionsToResolve(
-      mainDefinition,
-      fragmentMap
-    );
-
-    const execContext: ExecContext = {
-      operation,
-      operationDefinition: mainDefinition,
-      fragmentMap,
-      selectionsToResolve,
-      errors: [],
-      exportedVariables: {},
-    };
-
+  private async addExportedVariables(execContext: ExecContext) {
     await this.resolveSelectionSet(
-      mainDefinition.selectionSet,
+      execContext.operationDefinition.selectionSet,
       false,
       {},
       execContext,
       []
     );
 
-    return { ...variables, ...stripTypename(execContext.exportedVariables) };
-
-    // let errors = execContext.errors;
-    //
-    // if (errors.length > 0) {
-    //   result.errors = errors;
-    // }
-
-    // return result;
+    return {
+      ...execContext.operation.variables,
+      ...stripTypename(execContext.exportedVariables),
+    };
   }
 
   private async runResolvers({
-    operation,
-    clientQuery,
     remoteResult,
+    execContext,
   }: {
-    operation: Operation;
-    clientQuery: DocumentNode | null;
     remoteResult: FetchResult;
+    execContext: ExecContext;
   }): Promise<FetchResult> {
-    if (!clientQuery) {
-      return remoteResult;
-    }
-
-    const mainDefinition = getMainDefinition(
-      clientQuery
-    ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(clientQuery);
-    const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectSelectionsToResolve(
-      mainDefinition,
-      fragmentMap
-    );
-
-    const execContext: ExecContext = {
-      operation,
-      operationDefinition: mainDefinition,
-      fragmentMap,
-      selectionsToResolve,
-      errors: [],
-    };
-
     const localResult = await this.resolveSelectionSet(
-      mainDefinition.selectionSet,
+      execContext.operationDefinition.selectionSet,
       false,
       remoteResult.data ?? {},
       execContext,

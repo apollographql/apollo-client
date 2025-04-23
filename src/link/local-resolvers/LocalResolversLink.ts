@@ -77,7 +77,6 @@ type ExecContext = {
   operation: Operation;
   operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
-  context: any;
   variables: OperationVariables;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
@@ -153,7 +152,6 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     const { variables } = operation;
-    const context = operation.getContext();
     const mainDefinition = getMainDefinition(
       clientQuery
     ) as OperationDefinitionNode;
@@ -168,7 +166,6 @@ export class LocalResolversLink extends ApolloLink {
       operation,
       operationDefinition: mainDefinition,
       fragmentMap,
-      context,
       variables,
       selectionsToResolve,
       errors: [],
@@ -208,7 +205,6 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     const { variables } = operation;
-    const context = operation.getContext();
     const mainDefinition = getMainDefinition(
       clientQuery
     ) as OperationDefinitionNode;
@@ -223,7 +219,6 @@ export class LocalResolversLink extends ApolloLink {
       operation,
       operationDefinition: mainDefinition,
       fragmentMap,
-      context,
       variables,
       selectionsToResolve,
       errors: [],

@@ -49,7 +49,7 @@ test("allows custom context", async () => {
   });
 });
 
-test("uses context from defaultOptions", async () => {
+test("uses context from defaultContext", async () => {
   const query = gql`
     query {
       greeting

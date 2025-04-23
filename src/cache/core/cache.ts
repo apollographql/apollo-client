@@ -168,7 +168,7 @@ export abstract class ApolloCache implements DataProxy {
   // disabled since we will not be able to accurately determine if a given type
   // condition for a union or interface matches a particular type.
   public fragmentMatches?(
-    fragment: InlineFragmentNode,
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string
   ): boolean;
 

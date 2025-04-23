@@ -645,3 +645,7 @@ test.skip("Does ??? when a resolver throws an error for an exported variable", a
   });
   await expect(stream).toComplete();
 });
+
+test.todo(
+  "errors when resolver returns null or undefined for a required variable"
+);

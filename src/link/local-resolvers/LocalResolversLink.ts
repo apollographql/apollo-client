@@ -74,26 +74,22 @@ export declare namespace LocalResolversLink {
   }
 }
 
-type ExecContext =
+type ExecContext = {
+  operation: Operation;
+  operationDefinition: OperationDefinitionNode;
+  fragmentMap: FragmentMap;
+  selectionsToResolve: Set<SelectionNode>;
+  errors: GraphQLFormattedError[];
+  errorMeta?: Record<string, any>;
+} & (
   | {
-      operation: Operation;
-      operationDefinition: OperationDefinitionNode;
-      fragmentMap: FragmentMap;
-      selectionsToResolve: Set<SelectionNode>;
-      errors: GraphQLFormattedError[];
       exportedVariables: OperationVariables;
-      errorMeta?: Record<string, any>;
       phase: "exports";
     }
   | {
-      operation: Operation;
-      operationDefinition: OperationDefinitionNode;
-      fragmentMap: FragmentMap;
-      selectionsToResolve: Set<SelectionNode>;
-      errors: GraphQLFormattedError[];
-      errorMeta?: Record<string, any>;
       phase: "resolve";
-    };
+    }
+);
 
 type Path = Array<string | number>;
 

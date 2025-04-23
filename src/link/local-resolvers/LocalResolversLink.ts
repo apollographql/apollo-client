@@ -88,6 +88,7 @@ type ExecContext = {
   fragmentMatcher: FragmentMatcher;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
+  exportedVariables?: OperationVariables;
 };
 
 type Path = Array<string | number>;
@@ -117,19 +118,24 @@ export class LocalResolversLink extends ApolloLink {
   ): Observable<FetchResult> {
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
-    let remote: Observable<FetchResult> = of({ data: null });
+    function getServerResult(variables: OperationVariables) {
+      if (!serverQuery) {
+        return of({ data: null });
+      }
 
-    if (serverQuery) {
       invariant(
         !!forward,
         "`LocalResolversLink` must not be a terminating link when there are non-`@client` fields in the query"
       );
 
       operation.query = serverQuery;
-      remote = forward(operation);
+      operation.variables = variables;
+
+      return forward(operation);
     }
 
-    return remote.pipe(
+    return from(this.addExportedVariables(clientQuery, operation)).pipe(
+      mergeMap(getServerResult),
       mergeMap((result) => {
         return from(
           this.runResolvers({
@@ -140,6 +146,57 @@ export class LocalResolversLink extends ApolloLink {
         );
       })
     );
+  }
+
+  private async addExportedVariables(
+    clientQuery: DocumentNode | null,
+    operation: Operation
+  ) {
+    if (!clientQuery) {
+      return operation.variables;
+    }
+
+    const { variables } = operation;
+    const context = operation.getContext();
+    const mainDefinition = getMainDefinition(
+      clientQuery
+    ) as OperationDefinitionNode;
+    const fragments = getFragmentDefinitions(clientQuery);
+    const fragmentMap = createFragmentMap(fragments);
+    const selectionsToResolve = this.collectSelectionsToResolve(
+      mainDefinition,
+      fragmentMap
+    );
+
+    const execContext: ExecContext = {
+      operation,
+      operationDefinition: mainDefinition,
+      fragmentMap,
+      context,
+      variables,
+      fragmentMatcher: () => true,
+      selectionsToResolve,
+      errors: [],
+      exportedVariables: {},
+    };
+
+    await this.resolveSelectionSet(
+      mainDefinition.selectionSet,
+      false,
+      {},
+      execContext,
+      []
+    );
+
+    return { ...variables, ...execContext.exportedVariables };
+
+    // let errors = execContext.errors;
+    //
+    // if (errors.length > 0) {
+    //   result.errors = errors;
+    // }
+
+    // return result;
   }
 
   private async runResolvers({

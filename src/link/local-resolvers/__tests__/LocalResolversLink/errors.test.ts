@@ -502,3 +502,44 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
 
   await expect(stream).toComplete();
 });
+
+test("handles remote errors with no local resolver errors", async () => {
+  const query = gql`
+    query Test {
+      foo @client {
+        bar
+      }
+      baz {
+        qux
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() => {
+    return of({
+      data: { baz: { __typename: "Baz", qux: null } },
+      errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
+    });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", bar: true }),
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: { __typename: "Foo", bar: true },
+      baz: { __typename: "Baz", qux: null },
+    },
+    errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
+  });
+
+  await expect(stream).toComplete();
+});

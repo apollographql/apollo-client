@@ -883,6 +883,7 @@ test("adds multiple errors for each client field to errors array when remote dat
 });
 
 test("does not execute resolver if client field is a child of a server field when data returns `null`", async () => {
+  using _ = spyOnConsole("warn");
   const query = gql`
     query {
       baz {
@@ -915,4 +916,5 @@ test("does not execute resolver if client field is a child of a server field whe
   await expect(stream).toComplete();
 
   expect(foo).not.toHaveBeenCalled();
+  expect(console.warn).not.toHaveBeenCalled();
 });

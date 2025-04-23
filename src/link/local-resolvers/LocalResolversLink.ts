@@ -349,7 +349,7 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    const { operationDefinition, operation, phase } = execContext;
+    const { operationDefinition, operation } = execContext;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
 
@@ -405,17 +405,7 @@ export class LocalResolversLink extends ApolloLink {
         result = null;
       }
 
-      if (phase === "exports" && field.directives) {
-        field.directives.forEach((directive) => {
-          if (directive.name.value === "export" && directive.arguments) {
-            directive.arguments.forEach((arg) => {
-              if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-                execContext.exportedVariables[arg.value.value] = result;
-              }
-            });
-          }
-        });
-      }
+      this.addExports(field, result, execContext);
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
@@ -504,7 +494,7 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, phase } = execContext;
+    const { operation } = execContext;
     const { variables } = operation;
     const fieldName = field.name.value;
     const isClientField =
@@ -557,17 +547,7 @@ export class LocalResolversLink extends ApolloLink {
         result = null;
       }
 
-      if (phase === "exports" && field.directives) {
-        field.directives.forEach((directive) => {
-          if (directive.name.value === "export" && directive.arguments) {
-            directive.arguments.forEach((arg) => {
-              if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-                execContext.exportedVariables[arg.value.value] = result;
-              }
-            });
-          }
-        });
-      }
+      this.addExports(field, result, execContext);
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
@@ -613,6 +593,26 @@ export class LocalResolversLink extends ApolloLink {
       });
 
       return null;
+    }
+  }
+
+  private addExports(
+    field: FieldNode,
+    result: unknown,
+    execContext: ExecContext
+  ) {
+    const { phase } = execContext;
+
+    if (phase === "exports" && field.directives) {
+      field.directives.forEach((directive) => {
+        if (directive.name.value === "export" && directive.arguments) {
+          directive.arguments.forEach((arg) => {
+            if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
+              execContext.exportedVariables[arg.value.value] = result;
+            }
+          });
+        }
+      });
     }
   }
 

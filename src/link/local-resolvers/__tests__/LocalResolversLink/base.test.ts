@@ -724,8 +724,7 @@ test("does not execute child resolver when parent is null", async () => {
   expect(foo).not.toHaveBeenCalled();
 });
 
-// TODO: Is this correct?
-test("handles when remote data returns null", async () => {
+test("adds error to errors array with scalar resolver data when remote data returns null", async () => {
   const query = gql`
     query {
       foo @client
@@ -735,7 +734,9 @@ test("handles when remote data returns null", async () => {
     }
   `;
 
-  const mockLink = new ApolloLink(() => of({ data: null }));
+  const mockLink = new ApolloLink(() =>
+    of({ data: null, errors: [{ message: "Something went wrong" }] })
+  );
 
   const localResolversLink = new LocalResolversLink({
     resolvers: {
@@ -749,7 +750,169 @@ test("handles when remote data returns null", async () => {
   const stream = new ObservableStream(execute(link, { query }));
 
   await expect(stream).toEmitTypedValue({
-    data: { foo: true },
+    data: null,
+    errors: [
+      { message: "Something went wrong" },
+      {
+        message:
+          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
+        path: ["foo"],
+        extensions: {
+          apollo: {
+            source: "LocalResolversLink",
+            resolver: "Query.foo",
+            data: true,
+          },
+        },
+      },
+    ],
   });
   await expect(stream).toComplete();
+});
+
+test("adds error to errors array with object resolver data when remote data returns null", async () => {
+  const query = gql`
+    query {
+      foo @client {
+        baz
+      }
+      bar {
+        id
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({ data: null, errors: [{ message: "Something went wrong" }] })
+  );
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", baz: true }),
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: null,
+    errors: [
+      { message: "Something went wrong" },
+      {
+        message:
+          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
+        path: ["foo"],
+        extensions: {
+          apollo: {
+            source: "LocalResolversLink",
+            resolver: "Query.foo",
+            data: { __typename: "Foo", baz: true },
+          },
+        },
+      },
+    ],
+  });
+  await expect(stream).toComplete();
+});
+
+test("adds multiple errors for each client field to errors array when remote data returns null", async () => {
+  const query = gql`
+    query {
+      foo @client {
+        baz
+      }
+      bar @client {
+        baz
+      }
+      baz {
+        id
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({ data: null, errors: [{ message: "Something went wrong" }] })
+  );
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", baz: true }),
+        bar: () => ({ __typename: "Bar", baz: false }),
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: null,
+    errors: [
+      { message: "Something went wrong" },
+      {
+        message:
+          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
+        path: ["foo"],
+        extensions: {
+          apollo: {
+            source: "LocalResolversLink",
+            resolver: "Query.foo",
+            data: { __typename: "Foo", baz: true },
+          },
+        },
+      },
+      {
+        message:
+          "Could not merge data from 'Query.bar' resolver with remote data since data was `null`.",
+        path: ["foo"],
+        extensions: {
+          apollo: {
+            source: "LocalResolversLink",
+            resolver: "Query.foo",
+            data: { __typename: "Bar", baz: false },
+          },
+        },
+      },
+    ],
+  });
+  await expect(stream).toComplete();
+});
+
+test("does not execute resolver if client field is a child of a server field when data returns `null`", async () => {
+  const query = gql`
+    query {
+      baz {
+        id
+        foo @client
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({ data: null, errors: [{ message: "Something went wrong" }] })
+  );
+
+  const foo = jest.fn(() => true);
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Baz: {
+        foo,
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: null,
+    errors: [{ message: "Something went wrong" }],
+  });
+  await expect(stream).toComplete();
+
+  expect(foo).not.toHaveBeenCalled();
 });

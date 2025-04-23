@@ -603,3 +603,45 @@ it("supports reading a value from the cache in a resolver for an @client @export
   });
   await expect(stream).toComplete();
 });
+
+test.skip("Does ??? when a resolver throws an error for an exported variable", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { author: testAuthor } });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => {
+          throw new Error("Something went wrong");
+        },
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthorId: testAuthor,
+      author: testAuthor,
+    },
+  });
+  await expect(stream).toComplete();
+});

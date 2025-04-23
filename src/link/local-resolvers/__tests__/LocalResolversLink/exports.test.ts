@@ -8,7 +8,6 @@ import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
-  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";

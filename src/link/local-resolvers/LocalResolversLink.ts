@@ -362,15 +362,10 @@ export class LocalResolversLink extends ApolloLink {
     execContext: ExecContext,
     path: Path
   ) {
-    if (!rootValue) {
-      return rootValue;
-    }
+    const result = rootValue?.[field.name.value];
 
-    const fieldName = field.name.value;
-    const result = rootValue[fieldName];
-
-    if (result === null) {
-      return null;
+    if (result == null) {
+      return result;
     }
 
     if (!field.selectionSet) {

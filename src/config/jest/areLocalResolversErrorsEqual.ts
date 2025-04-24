@@ -12,7 +12,9 @@ export const areLocalResolversErrorsEqual: Tester = function (
 
   if (isALocalResolversError && isBLocalResolversError) {
     return (
-      a.message === b.message && this.equals(a.path, b.path, customTesters)
+      a.message === b.message &&
+      this.equals(a.path, b.path, customTesters) &&
+      this.equals(a.cause, b.cause, customTesters)
     );
   } else if (isALocalResolversError === isBLocalResolversError) {
     return undefined;

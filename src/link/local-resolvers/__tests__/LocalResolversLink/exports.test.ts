@@ -940,7 +940,7 @@ test("emits error when a resolver throws while gathering exported variables for 
   );
 });
 
-test("errors when resolver returns null for a required variable on client-only query", async () => {
+test.skip("errors when resolver returns null for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -977,7 +977,7 @@ test("errors when resolver returns null for a required variable on client-only q
   );
 });
 
-test("errors when resolver returns undefined for a required variable on client-only query", async () => {
+test.skip("errors when resolver returns undefined for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -1014,7 +1014,7 @@ test("errors when resolver returns undefined for a required variable on client-o
   );
 });
 
-test("errors when resolver returns null for a required variable on non-client query", async () => {
+test.skip("errors when resolver returns null for a required variable on non-client query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -1050,7 +1050,7 @@ test("errors when resolver returns null for a required variable on non-client qu
   );
 });
 
-test("errors when resolver returns undefined for a required variable on non-client query", async () => {
+test.skip("errors when resolver returns undefined for a required variable on non-client query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")

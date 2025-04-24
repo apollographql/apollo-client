@@ -405,7 +405,8 @@ test("emits error when using an exported variable as a child of a remote field",
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field."
+      "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field.",
+      { path: ["postRequiringReview", "currentReviewer", "id"] }
     )
   );
 });

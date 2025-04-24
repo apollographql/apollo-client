@@ -686,6 +686,10 @@ export class LocalResolversLink extends ApolloLink {
       hasClientRoot: boolean;
     }> = [];
 
+    function getCurrentPath() {
+      return fields.map((field) => field.name);
+    }
+
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
         return this.traverseCache.get(definitionNode)!;
@@ -753,7 +757,8 @@ export class LocalResolversLink extends ApolloLink {
           ) {
             if (!fieldInfo.hasClientRoot) {
               throw new LocalResolversError(
-                "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field."
+                "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field.",
+                { path: getCurrentPath() }
               );
             }
             ancestors.forEach((node) => {

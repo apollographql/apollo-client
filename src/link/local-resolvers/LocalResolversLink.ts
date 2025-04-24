@@ -502,6 +502,17 @@ export class LocalResolversLink extends ApolloLink {
           const name = getExportedVariableName(directive);
 
           if (name) {
+            const info = execContext.exportedVariableDefs[name];
+
+            if (info.required && result == null) {
+              throw new LocalResolversError(
+                `Resolver '${resolverName}' returned \`${String(
+                  result
+                )}\` for required variable '${name}'.`,
+                { path }
+              );
+            }
+
             execContext.exportedVariables[name] = result;
           }
         }

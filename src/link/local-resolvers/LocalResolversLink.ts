@@ -377,8 +377,8 @@ export class LocalResolversLink extends ApolloLink {
     );
 
     const defaultResolver =
-      // We expect a resolver to be defined for all top-level `@client` fields
-      // so we warn if a resolver is not defined.
+      // We expect a resolver to be defined for all top-level `@client` fields.
+      // Warn if a resolver is not defined.
       isClientField && !isClientFieldDescendant ?
         () => {
           if (__DEV__) {

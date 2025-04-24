@@ -434,12 +434,14 @@ export class LocalResolversLink extends ApolloLink {
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
-        execContext.errorMeta = { data: result };
-        invariant(
-          rootValue !== null,
-          "Could not merge data from '%s' resolver with remote data since data was `null`.",
-          resolverName
-        );
+        if (execContext.phase === "resolve") {
+          execContext.errorMeta = { data: result };
+          invariant(
+            rootValue !== null,
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          );
+        }
 
         return result;
       }
@@ -460,21 +462,25 @@ export class LocalResolversLink extends ApolloLink {
           path
         );
 
-        execContext.errorMeta = { data: fieldResult };
-        invariant(
-          rootValue !== null,
-          "Could not merge data from '%s' resolver with remote data since data was `null`.",
-          resolverName
-        );
+        if (execContext.phase === "resolve") {
+          execContext.errorMeta = { data: fieldResult };
+          invariant(
+            rootValue !== null,
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          );
+        }
         return fieldResult;
       }
 
-      invariant(
-        result.__typename,
-        "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-        result,
-        resolverName
-      );
+      if (execContext.phase === "resolve") {
+        invariant(
+          result.__typename,
+          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+          result,
+          resolverName
+        );
+      }
 
       const fieldResult = await this.resolveSelectionSet(
         field.selectionSet,
@@ -484,12 +490,14 @@ export class LocalResolversLink extends ApolloLink {
         path
       );
 
-      execContext.errorMeta = { data: fieldResult };
-      invariant(
-        rootValue !== null,
-        "Could not merge data from '%s' resolver with remote data since data was `null`.",
-        resolverName
-      );
+      if (execContext.phase === "resolve") {
+        execContext.errorMeta = { data: fieldResult };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+      }
 
       return fieldResult;
     } catch (e) {
@@ -592,12 +600,14 @@ export class LocalResolversLink extends ApolloLink {
         );
       }
 
-      invariant(
-        result.__typename,
-        "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-        result,
-        resolverName
-      );
+      if (execContext.phase === "resolve") {
+        invariant(
+          result.__typename,
+          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+          result,
+          resolverName
+        );
+      }
 
       return this.resolveSelectionSet(
         field.selectionSet,

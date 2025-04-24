@@ -8,7 +8,6 @@ import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
-  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -941,9 +940,151 @@ test("emits error when a resolver throws while gathering exported variables for 
   );
 });
 
-test.todo(
-  "errors when resolver returns null or undefined for a required variable"
-);
+test("errors when resolver returns null for a required variable on client-only query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => null,
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Resolver 'Query.currentAuthorId' returned `null` for required variable 'authorId'.",
+      { path: ["currentAuthorId"] }
+    )
+  );
+});
+
+test("errors when resolver returns undefined for a required variable on client-only query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => {},
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
+      { path: ["currentAuthorId"] }
+    )
+  );
+});
+
+test("errors when resolver returns null for a required variable on non-client query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const mockLink = new ApolloLink(() => of({ data: { author: testAuthor } }));
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => null,
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Resolver 'Query.currentAuthorId' returned `null` for required variable 'authorId'.",
+      { path: ["currentAuthorId"] }
+    )
+  );
+});
+
+test("errors when resolver returns undefined for a required variable on non-client query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const mockLink = new ApolloLink(() => of({ data: { author: testAuthor } }));
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => {},
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
+      { path: ["currentAuthorId"] }
+    )
+  );
+});
 
 test.todo("overwrites variables passed to link chain");
 test.todo("allows user-provided variables");

@@ -15,12 +15,16 @@ export class LocalResolversError extends Error {
     return isBranded(error, "LocalResolversError");
   }
 
-  readonly path: Array<string | number>;
+  /**
+   * The path to the field that caused the error, if the error is caused by a
+   * field.
+   */
+  readonly path?: Array<string | number>;
 
   constructor(message: string, options: LocalResolversError.Options = {}) {
     super(message);
     this.name = "LocalResolversError";
-    this.path = options.path ?? [];
+    this.path = options.path;
 
     brand(this);
     Object.setPrototypeOf(this, LocalResolversError.prototype);

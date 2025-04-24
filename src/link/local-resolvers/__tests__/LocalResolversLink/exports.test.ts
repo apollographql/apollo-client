@@ -920,6 +920,94 @@ test("warns and does not set variable for client-only query when parent resolver
   );
 });
 
+test("warns and does not set variable for multiple nested exported variables on client-only query", async () => {
+  using _ = spyOnConsole("error");
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int, $authorName: String) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+        name @export(as: "authorName")
+      }
+      author(id: $authorId, name: $authorName) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => {
+          throw new Error("Something went wrong");
+        },
+        author: (_, { id }) => {
+          return id === undefined ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthor: null,
+      author: null,
+    },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["currentAuthor"],
+        extensions: {
+          apollo: {
+            phase: "exports",
+            resolver: "Query.currentAuthor",
+            source: "LocalResolversLink",
+            cause: new Error("Something went wrong"),
+          },
+        },
+      },
+      {
+        message: "Something went wrong",
+        path: ["currentAuthor"],
+        extensions: {
+          apollo: {
+            phase: "resolve",
+            resolver: "Query.currentAuthor",
+            source: "LocalResolversLink",
+            cause: new Error("Something went wrong"),
+          },
+        },
+      },
+    ],
+  });
+  await expect(stream).toComplete();
+
+  expect(console.error).toHaveBeenCalledTimes(2);
+  expect(console.error).toHaveBeenNthCalledWith(
+    1,
+    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+    "authorId",
+    "Query.currentAuthor",
+    "Error",
+    "Something went wrong"
+  );
+  expect(console.error).toHaveBeenNthCalledWith(
+    2,
+    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+    "authorName",
+    "Query.currentAuthor",
+    "Error",
+    "Something went wrong"
+  );
+});
+
 test("warns and does not set optional variable for client-only query when child resolver throws", async () => {
   using _ = spyOnConsole("error");
   const query = gql`

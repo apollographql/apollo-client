@@ -54,6 +54,7 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export declare namespace LocalResolversLink {
   export interface Options {
+    rootValue?: unknown;
     resolvers?: Resolvers;
   }
 
@@ -87,6 +88,7 @@ type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   exportedVariableDefs: Record<string, ExportedVariable>;
+  rootValue?: any;
 } & (
   | {
       exportedVariables: OperationVariables;
@@ -116,10 +118,12 @@ export class LocalResolversLink extends ApolloLink {
     TraverseCacheEntry
   >();
   private resolvers: LocalResolversLink.Resolvers = {};
+  private rootValue?: LocalResolversLink.Options["rootValue"];
 
   constructor(options: LocalResolversLink.Options = {}) {
     super();
 
+    this.rootValue = options.rootValue;
     if (options.resolvers) {
       this.addResolvers(options.resolvers);
     }
@@ -179,6 +183,7 @@ export class LocalResolversLink extends ApolloLink {
         fragmentMap,
         errors: [],
         exportedVariableDefs,
+        rootValue: this.rootValue,
       } satisfies Partial<ExecContext>;
 
       return from(
@@ -443,8 +448,9 @@ export class LocalResolversLink extends ApolloLink {
         resolver ?
           await Promise.resolve(
             cacheSlot.withValue(operation.client.cache, resolver, [
-              // TODO: Add support for a `rootValue` option to use for root fields to `LocalResolversLink`
-              isRootField ? {} : dealias(parentSelectionSet, rootValue) ?? {},
+              isRootField ?
+                execContext.rootValue
+              : dealias(parentSelectionSet, rootValue) ?? {},
               argumentsObjectFromField(field, operation.variables),
               { phase, operation },
               { field, fragmentMap: execContext.fragmentMap, path },

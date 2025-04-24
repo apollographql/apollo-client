@@ -771,13 +771,12 @@ export class LocalResolversLink extends ApolloLink {
               );
             }
 
-            ancestors.forEach((node) => {
-              if (isSingleASTNode(node) && isSelectionNode(node)) {
-                cache.exportsToResolve.add(node);
-              }
-            });
-
-            const variableName = getExportedVariableName(directive);
+            if (!allVariableDefinitions[variableName]) {
+              throw new LocalResolversError(
+                `\`@export\` directive on field '${fieldInfo.name}' does not have an associated variable definition for the '${variableName}' variable.`,
+                { path: getCurrentPath() }
+              );
+            }
 
             // TODO: Bail early if there is no variable definition for the
             // export field
@@ -785,6 +784,12 @@ export class LocalResolversLink extends ApolloLink {
               cache.exportedVariables[variableName] =
                 allVariableDefinitions[variableName];
             }
+
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                cache.exportsToResolve.add(node);
+              }
+            });
           }
 
           if (directive.name.value === "client") {

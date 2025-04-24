@@ -53,8 +53,16 @@ import {
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export declare namespace LocalResolversLink {
-  export interface Options {
-    rootValue?: unknown;
+  export interface Options<RootValue = unknown> {
+    /**
+     * Value used as the root
+     */
+    rootValue?:
+      | ((options: {
+          phase: "exports" | "resolve";
+          operation: Operation;
+        }) => RootValue)
+      | RootValue;
     resolvers?: Resolvers;
   }
 
@@ -112,7 +120,11 @@ interface TraverseCacheEntry {
   exportedVariableDefs: { [variableName: string]: ExportedVariable };
 }
 
-export class LocalResolversLink extends ApolloLink {
+export class LocalResolversLink<
+  // Reserved for future schema types
+  _Schema = never,
+  RootValue = unknown,
+> extends ApolloLink {
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
     TraverseCacheEntry
@@ -120,7 +132,7 @@ export class LocalResolversLink extends ApolloLink {
   private resolvers: LocalResolversLink.Resolvers = {};
   private rootValue?: LocalResolversLink.Options["rootValue"];
 
-  constructor(options: LocalResolversLink.Options = {}) {
+  constructor(options: LocalResolversLink.Options<RootValue> = {}) {
     super();
 
     this.rootValue = options.rootValue;
@@ -183,12 +195,15 @@ export class LocalResolversLink extends ApolloLink {
         fragmentMap,
         errors: [],
         exportedVariableDefs,
-        rootValue: this.rootValue,
       } satisfies Partial<ExecContext>;
 
       return from(
         this.addExportedVariables({
           ...execContext,
+          rootValue:
+            typeof this.rootValue === "function" ?
+              this.rootValue({ phase: "exports", operation })
+            : this.rootValue,
           selectionsToResolve: exportsToResolve,
           exportedVariables: {},
           phase: "exports",
@@ -201,6 +216,10 @@ export class LocalResolversLink extends ApolloLink {
               remoteResult: result,
               execContext: {
                 ...execContext,
+                rootValue:
+                  typeof this.rootValue === "function" ?
+                    this.rootValue({ phase: "resolve", operation })
+                  : this.rootValue,
                 selectionsToResolve,
                 phase: "resolve",
               },

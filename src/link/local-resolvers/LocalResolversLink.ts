@@ -745,6 +745,8 @@ export class LocalResolversLink extends ApolloLink {
 
           if (
             node.name.value === "export" &&
+            // Ignore export directives that aren't inside client fields.
+            // These will get sent to the server
             fieldInfo?.isClientFieldOrDescendent
           ) {
             if (!fieldInfo.hasClientRoot) {

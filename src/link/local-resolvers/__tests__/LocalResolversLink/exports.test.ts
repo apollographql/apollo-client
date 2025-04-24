@@ -1042,6 +1042,50 @@ test("emits error when a resolver throws while gathering exported variables for 
   );
 });
 
+test("emits error when a parent resolver throws while gathering exported variables from child field for a required variable in client-only query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => {
+          throw new Error("Something went wrong");
+        },
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "An error was thrown from resolver 'Query.currentAuthor' while resolving required variable 'authorId'.",
+      {
+        path: ["currentAuthor"],
+        sourceError: new Error("Something went wrong"),
+      }
+    )
+  );
+});
+
 test("errors when resolver returns null for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {

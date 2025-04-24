@@ -705,7 +705,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
           { bar: true },
           null,
           2
-        )} returned from resolver 'Query.foo'. This is an error and will cause issues when writing to the cache.`,
+        )} returned from resolver 'Query.foo'. '__typename' needs to be returned to properly resolve child fields.`,
         path: ["foo"],
         extensions: {
           apollo: {

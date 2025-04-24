@@ -977,6 +977,123 @@ test("errors when resolver returns null for a required variable on client-only q
   );
 });
 
+test("errors when nested field is null for a required variable on client-only query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => ({ __typename: "Author", id: null }),
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Field 'Author.id' returned `null` for required variable 'authorId'.",
+      { path: ["currentAuthor", "id"] }
+    )
+  );
+});
+
+test("errors when nested field is null for a required variable on client-only query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => ({ __typename: "Author" }),
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+      Author: {
+        id: () => null,
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Resolver 'Author.id' returned `null` for required variable 'authorId'.",
+      { path: ["currentAuthor", "id"] }
+    )
+  );
+});
+
+test.skip("does ??? when top-level field returns null with child exports", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => null,
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError("FIXME", { path: ["currentAuthorId"] })
+  );
+});
+
 test.skip("errors when resolver returns undefined for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {

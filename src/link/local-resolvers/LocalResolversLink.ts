@@ -503,7 +503,10 @@ export class LocalResolversLink extends ApolloLink {
               );
             }
 
-            execContext.exportedVariables[name] = result;
+            // Avoid setting the key if the value is undefined
+            if (result !== undefined) {
+              execContext.exportedVariables[name] = result;
+            }
           }
         }
       });

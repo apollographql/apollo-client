@@ -17,7 +17,7 @@ import { defer, from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike, OperationVariables } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
-import { toErrorLike } from "@apollo/client/errors";
+import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
 import type {
   FetchResult,
   NextLink,
@@ -716,9 +716,11 @@ export class LocalResolversLink extends ApolloLink {
             fields.push({
               isRoot: fieldDepth++ === 0,
               isClientFieldOrDescendent:
-                parent?.isClientFieldOrDescendent || false,
+                parent?.isClientFieldOrDescendent ?? false,
               hasClientRoot:
-                (parent?.isRoot && parent?.isClientFieldOrDescendent) || false,
+                parent?.hasClientRoot ||
+                (parent?.isRoot && parent?.isClientFieldOrDescendent) ||
+                false,
             });
           },
           leave(node) {
@@ -740,10 +742,16 @@ export class LocalResolversLink extends ApolloLink {
         },
         Directive: (node, _, __, ___, ancestors) => {
           const fieldInfo = fields.at(-1);
+
           if (
             node.name.value === "export" &&
             fieldInfo?.isClientFieldOrDescendent
           ) {
+            if (!fieldInfo.hasClientRoot) {
+              throw new LocalResolversError(
+                "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field."
+              );
+            }
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);
@@ -762,11 +770,11 @@ export class LocalResolversLink extends ApolloLink {
           }
 
           if (node.name.value === "client") {
-            const fieldInfo = fields.at(-1);
             if (fieldInfo) {
               fieldInfo.isClientFieldOrDescendent = true;
-              fieldInfo.hasClientRoot = fieldInfo.isRoot;
+              fieldInfo.hasClientRoot ||= fieldInfo.isRoot;
             }
+
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);

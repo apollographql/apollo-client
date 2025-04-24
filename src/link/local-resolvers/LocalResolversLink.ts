@@ -731,7 +731,7 @@ export class LocalResolversLink extends ApolloLink {
           ) {
             if (!fieldInfo.hasClientRoot) {
               throw new LocalResolversError(
-                "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field.",
+                "Cannot export a variable from a field that is a child of a remote field. Exported variables must originate either from a root-level client field or a child of a root-level client field.",
                 { path: getCurrentPath() }
               );
             }

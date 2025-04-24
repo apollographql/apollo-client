@@ -680,6 +680,7 @@ export class LocalResolversLink extends ApolloLink {
     ): node is ASTNode => !Array.isArray(node);
     let fieldDepth = 0;
     const fields: Array<{
+      name: string;
       isRoot: boolean;
       isClientFieldOrDescendent: boolean;
       hasClientRoot: boolean;
@@ -710,10 +711,11 @@ export class LocalResolversLink extends ApolloLink {
           };
         },
         Field: {
-          enter() {
+          enter(field) {
             const parent = fields.at(-1);
 
             fields.push({
+              name: field.name.value,
               isRoot: fieldDepth++ === 0,
               isClientFieldOrDescendent:
                 parent?.isClientFieldOrDescendent ?? false,

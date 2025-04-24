@@ -833,7 +833,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return true from onQueryUpdated when using options.updateCache", async () => {
-    expect.assertions(17);
+    expect.assertions(21);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 

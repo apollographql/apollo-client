@@ -675,10 +675,15 @@ export class LocalResolversLink extends ApolloLink {
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
   ) {
-    const clientDescendantStack: boolean[] = [];
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
+    let fieldDepth = 0;
+    const fields: Array<{
+      isRoot: boolean;
+      isClientFieldOrDescendent: boolean;
+      hasClientRoot: boolean;
+    }> = [];
 
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
@@ -706,21 +711,19 @@ export class LocalResolversLink extends ApolloLink {
         },
         Field: {
           enter() {
-            // We determine if a field is a descendant of a client field by
-            // pushing booleans onto this stack. The `Directive` visitor is
-            // responsible for changing this value to `true` if an `@client`
-            // field is detected. We determine if we are a descendant of a
-            // client field by pushing the value from the last field, which
-            // should be `true` if an `@client` field was detected. Once
-            // leaving the field, we pop the value off the stack.
-            //
-            // This approach has one downside in that it is order dependent.
-            // `@client` must come before `@export` in order for this to
-            // detect properly, otherwise the `@export` field is ignored.
-            clientDescendantStack.push(clientDescendantStack.at(-1) || false);
+            const parent = fields.at(-1);
+
+            fields.push({
+              isRoot: fieldDepth++ === 0,
+              isClientFieldOrDescendent:
+                parent?.isClientFieldOrDescendent || false,
+              hasClientRoot:
+                (parent?.isRoot && parent?.isClientFieldOrDescendent) || false,
+            });
           },
           leave(node) {
-            const isClientFieldOrDescendent = clientDescendantStack.pop();
+            fieldDepth--;
+            const fieldInfo = fields.pop();
 
             node.arguments?.forEach((arg) => {
               if (arg.value.kind === Kind.VARIABLE) {
@@ -728,15 +731,19 @@ export class LocalResolversLink extends ApolloLink {
                   allVariableDefinitions[arg.value.name.value];
 
                 if (variableDef) {
-                  variableDef.usedInServerField ||= !isClientFieldOrDescendent;
+                  variableDef.usedInServerField ||=
+                    !fieldInfo?.isClientFieldOrDescendent;
                 }
               }
             });
           },
         },
         Directive: (node, _, __, ___, ancestors) => {
-          const isClientFieldOrDescendent = clientDescendantStack.at(-1);
-          if (node.name.value === "export" && isClientFieldOrDescendent) {
+          const fieldInfo = fields.at(-1);
+          if (
+            node.name.value === "export" &&
+            fieldInfo?.isClientFieldOrDescendent
+          ) {
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);
@@ -755,7 +762,11 @@ export class LocalResolversLink extends ApolloLink {
           }
 
           if (node.name.value === "client") {
-            clientDescendantStack[clientDescendantStack.length - 1] = true;
+            const fieldInfo = fields.at(-1);
+            if (fieldInfo) {
+              fieldInfo.isClientFieldOrDescendent = true;
+              fieldInfo.hasClientRoot = fieldInfo.isRoot;
+            }
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);

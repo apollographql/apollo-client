@@ -734,6 +734,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { finalize, pushNotification } = this.pushOperation(
       NetworkStatus.fetchMore
     );
+    if (this.options.notifyOnNetworkStatusChange !== false) {
+      pushNotification({
+        source: "newNetworkStatus",
+        kind: "N",
+        value: {
+          networkStatus: NetworkStatus.fetchMore,
+        },
+      });
+    }
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
@@ -827,7 +836,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // likely because the written data were the same as what was already in
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
-        // this should be taken care of by `finalize` above
+        pushNotification({
+          kind: "N",
+          source: "newNetworkStatus",
+          value: { networkStatus: NetworkStatus.ready },
+        });
       });
   }
 
@@ -1641,7 +1654,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               result: {
                 ...baseResult,
                 error: undefined,
-                networkStatus: baseResult.networkStatus,
+                networkStatus: value.result.networkStatus,
               },
             };
           })

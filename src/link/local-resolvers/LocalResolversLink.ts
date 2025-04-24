@@ -704,9 +704,9 @@ export class LocalResolversLink extends ApolloLink {
       this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
-        VariableDefinition: (node) => {
-          allVariableDefinitions[node.variable.name.value] = {
-            required: node.type.kind === Kind.NON_NULL_TYPE,
+        VariableDefinition: (definition) => {
+          allVariableDefinitions[definition.variable.name.value] = {
+            required: definition.type.kind === Kind.NON_NULL_TYPE,
             usedInServerField: false,
           };
         },
@@ -725,11 +725,11 @@ export class LocalResolversLink extends ApolloLink {
                 false,
             });
           },
-          leave(node) {
+          leave(field) {
             fieldDepth--;
             const fieldInfo = fields.pop();
 
-            node.arguments?.forEach((arg) => {
+            field.arguments?.forEach((arg) => {
               if (arg.value.kind === Kind.VARIABLE) {
                 const variableDef =
                   allVariableDefinitions[arg.value.name.value];
@@ -742,11 +742,11 @@ export class LocalResolversLink extends ApolloLink {
             });
           },
         },
-        Directive: (node, _, __, ___, ancestors) => {
+        Directive: (directive, _, __, ___, ancestors) => {
           const fieldInfo = fields.at(-1);
 
           if (
-            node.name.value === "export" &&
+            directive.name.value === "export" &&
             // Ignore export directives that aren't inside client fields.
             // These will get sent to the server
             fieldInfo?.isClientFieldOrDescendent
@@ -762,7 +762,7 @@ export class LocalResolversLink extends ApolloLink {
               }
             });
 
-            const variableName = getExportedVariableName(node);
+            const variableName = getExportedVariableName(directive);
 
             // TODO: Bail early if there is no variable definition for the
             // export field or if there is no "as" argument
@@ -773,7 +773,7 @@ export class LocalResolversLink extends ApolloLink {
             }
           }
 
-          if (node.name.value === "client") {
+          if (directive.name.value === "client") {
             if (fieldInfo) {
               fieldInfo.isClientFieldOrDescendent = true;
               fieldInfo.hasClientRoot ||= fieldInfo.isRoot;

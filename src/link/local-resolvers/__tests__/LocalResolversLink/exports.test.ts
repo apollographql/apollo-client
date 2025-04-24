@@ -442,7 +442,7 @@ test("emits error if `@export` does not include an `as` argument", async () => {
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "`@export` directive on field 'authorId' used without providing an `as` argument to specify which variable to export the value.",
+      "Cannot determine the variable name from the `@export` directive used on field 'authorId'. Perhaps you forgot the `as` argument?",
       { path: ["authorId"] }
     )
   );

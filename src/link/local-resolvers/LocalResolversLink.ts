@@ -762,9 +762,11 @@ export class LocalResolversLink extends ApolloLink {
               );
             }
 
-            if (!directive.arguments?.some((arg) => arg.name.value === "as")) {
+            const variableName = getExportedVariableName(directive);
+
+            if (!variableName) {
               throw new LocalResolversError(
-                "`@export` directive on field 'authorId' used without providing an `as` argument to specify which variable to export the value.",
+                `Cannot determine the variable name from the \`@export\` directive used on field '${fieldInfo.name}'. Perhaps you forgot the \`as\` argument?`,
                 { path: getCurrentPath() }
               );
             }

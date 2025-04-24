@@ -422,7 +422,7 @@ export class LocalResolversLink extends ApolloLink {
     const defaultResolver =
       isClientFieldDescendant ?
         () => rootValue?.[fieldName]
-        // We expect a resolver to be defined for all top-level `@client` fields.
+        // We expect a resolver to be defined for all `@client` root fields.
         // Warn if a resolver is not defined.
       : () => {
           if (__DEV__) {

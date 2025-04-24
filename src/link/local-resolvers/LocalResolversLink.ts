@@ -484,18 +484,6 @@ export class LocalResolversLink extends ApolloLink {
       return data;
     };
 
-    if (result === undefined) {
-      if (__DEV__) {
-        invariant.warn(
-          resolver ?
-            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
-          : "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
-          resolverName
-        );
-      }
-      result = null;
-    }
-
     if (phase === "exports" && field.directives) {
       field.directives.forEach((directive) => {
         if (directive.name.value === "export") {
@@ -506,13 +494,11 @@ export class LocalResolversLink extends ApolloLink {
 
             if (info.required && result == null) {
               throw new LocalResolversError(
-                resolver ?
-                  `Resolver '${resolverName}' returned \`${String(
-                    result
-                  )}\` for required variable '${name}'.`
-                : `Field '${resolverName}' returned \`${String(
-                    result
-                  )}\` for required variable '${name}'.`,
+                `${
+                  resolver ? "Resolver" : "Field"
+                } '${resolverName}' returned \`${String(
+                  result
+                )}\` for required variable '${name}'.`,
                 { path }
               );
             }
@@ -521,6 +507,18 @@ export class LocalResolversLink extends ApolloLink {
           }
         }
       });
+    }
+
+    if (result === undefined) {
+      if (__DEV__) {
+        invariant.warn(
+          resolver ?
+            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
+          : "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+          resolverName
+        );
+      }
+      result = null;
     }
 
     if (result === null || !field.selectionSet) {

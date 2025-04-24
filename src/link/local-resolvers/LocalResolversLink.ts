@@ -449,7 +449,7 @@ export class LocalResolversLink extends ApolloLink {
           )
         : defaultResolver();
     } catch (e) {
-      if (__DEV__ && execContext.phase === "exports") {
+      if (execContext.phase === "exports") {
         throw new LocalResolversError(
           `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
           { path, sourceError: e }

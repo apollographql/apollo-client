@@ -17,7 +17,11 @@ import { defer, from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike, OperationVariables } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
-import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
+import {
+  isErrorLike,
+  LocalResolversError,
+  toErrorLike,
+} from "@apollo/client/errors";
 import type {
   FetchResult,
   NextLink,
@@ -449,15 +453,35 @@ export class LocalResolversLink extends ApolloLink {
           )
         : defaultResolver();
     } catch (e) {
-      if (execContext.phase === "exports") {
-        throw new LocalResolversError(
-          `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
-          { path, sourceError: e }
-        );
+      if (__DEV__ && execContext.phase === "exports") {
+        for (const [name, def] of Object.entries(
+          execContext.exportedVariableDefs
+        )) {
+          if (result == null && def.ancestors.has(field)) {
+            if (def.required) {
+              throw new LocalResolversError(
+                `An error was thrown from resolver '${resolverName}' while resolving required variable '${name}'.`,
+                {
+                  path: ["currentAuthorId"],
+                  sourceError: new Error("Something went wrong"),
+                }
+              );
+            }
+
+            invariant.error(
+              "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+              name,
+              resolverName,
+              isErrorLike(e) ? e.name : "Error",
+              isErrorLike(e) ? e.message : ""
+            );
+          }
+        }
       }
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         phase: execContext.phase,
+        cause: e,
       });
 
       return null;

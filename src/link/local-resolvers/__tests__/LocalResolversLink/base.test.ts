@@ -657,7 +657,11 @@ test("adds an error when the __typename cannot be resolved", async () => {
         )} returned from resolver 'Query.foo'. This is an error and will cause issues when writing to the cache.`,
         path: ["foo"],
         extensions: {
-          apollo: { source: "LocalResolversLink", resolver: "Query.foo" },
+          apollo: {
+            source: "LocalResolversLink",
+            resolver: "Query.foo",
+            phase: "resolve",
+          },
         },
       },
     ],
@@ -761,6 +765,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
+            phase: "resolve",
             data: true,
           },
         },
@@ -809,6 +814,7 @@ test("adds error to errors array with object resolver data when remote data retu
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
+            phase: "resolve",
             data: { __typename: "Foo", baz: true },
           },
         },
@@ -861,6 +867,7 @@ test("adds multiple errors for each client field to errors array when remote dat
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
+            phase: "resolve",
             data: { __typename: "Foo", baz: true },
           },
         },
@@ -873,6 +880,7 @@ test("adds multiple errors for each client field to errors array when remote dat
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.bar",
+            phase: "resolve",
             data: { __typename: "Bar", baz: false },
           },
         },

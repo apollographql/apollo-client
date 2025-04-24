@@ -582,7 +582,7 @@ export class LocalResolversLink extends ApolloLink {
     if (execContext.phase === "resolve" && !(result as any).__typename) {
       this.addError(
         newInvariantError(
-          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+          "Could not resolve __typename on object %o returned from resolver '%s'. '__typename' needs to be returned to properly resolve child fields.",
           result,
           resolverName
         ),

@@ -343,6 +343,57 @@ test("does not run resolvers without @client directive", async () => {
   expect(barResolver).not.toHaveBeenCalled();
 });
 
+test("does not run resolvers without @client directive with nested field", async () => {
+  const query = gql`
+    query Mixed {
+      foo {
+        bar
+        baz @client {
+          qux
+        }
+      }
+    }
+  `;
+
+  const mockLink = new ApolloLink(() =>
+    of({ data: { foo: { __typename: "Foo", bar: true } } })
+  );
+
+  const barResolver = jest.fn(() => true);
+  const fooResolver = jest.fn(() => ({
+    __typename: "Foo",
+    bar: false,
+  }));
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: fooResolver,
+      },
+      Foo: {
+        bar: barResolver,
+        baz: () => ({ __typename: "Baz", qux: false }),
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: {
+        __typename: "Foo",
+        bar: true,
+        baz: { __typename: "Baz", qux: false },
+      },
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(fooResolver).not.toHaveBeenCalled();
+  expect(barResolver).not.toHaveBeenCalled();
+});
+
 test("allows child resolvers from a parent resolved field from a local resolver", async () => {
   const query = gql`
     query UserData {

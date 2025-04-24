@@ -1059,7 +1059,7 @@ test("errors when nested field is null for a required variable on client-only qu
   );
 });
 
-test.skip("does ??? when top-level field returns null with child exports", async () => {
+test("emits error when top-level resolver returns null with nested export for required variable", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthor @client {
@@ -1091,7 +1091,49 @@ test.skip("does ??? when top-level field returns null with child exports", async
   const stream = new ObservableStream(execute(link, { query }));
 
   await expect(stream).toEmitError(
-    new LocalResolversError("FIXME", { path: ["currentAuthorId"] })
+    new LocalResolversError(
+      "Resolver 'Query.currentAuthor' returned `null` which contains a selection set for required variable 'authorId'",
+      { path: ["currentAuthor"] }
+    )
+  );
+});
+
+test("emits error when top-level resolver returns undefined with nested export for required variable", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => {},
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Resolver 'Query.currentAuthor' returned `undefined` which contains a selection set for required variable 'authorId'",
+      { path: ["currentAuthor"] }
+    )
   );
 });
 

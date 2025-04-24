@@ -1008,6 +1008,138 @@ test("warns and does not set variable for multiple nested exported variables on 
   );
 });
 
+test("handles multiple exported fields across different client fields when resolvers throw", async () => {
+  using _ = spyOnConsole("error");
+  const query = gql`
+    query currentAuthorPostCount($userId: ID, $teamId: ID) {
+      currentUser @client {
+        id @export(as: "userId")
+      }
+      favoriteTeam @client {
+        id @export(as: "teamId")
+      }
+      user(id: $userId) @client {
+        id
+        name
+      }
+      team(id: $teamId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testUser = {
+    __typename: "User",
+    id: 1,
+    name: "John Smith",
+  };
+
+  const testTeam = {
+    __typename: "Team",
+    id: 1,
+    name: "Denver Broncos",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentUser: () => {
+          throw new Error("Could not get current user");
+        },
+        favoriteTeam: () => {
+          throw new Error("Could not get favorite team");
+        },
+        user: (_, { id }) => {
+          return id === undefined ? null : testUser;
+        },
+        team: (_, { id }) => {
+          return id === undefined ? null : testTeam;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentUser: null,
+      favoriteTeam: null,
+      user: null,
+      team: null,
+    },
+    errors: [
+      {
+        message: "Could not get current user",
+        path: ["currentUser"],
+        extensions: {
+          apollo: {
+            phase: "exports",
+            resolver: "Query.currentUser",
+            source: "LocalResolversLink",
+            cause: new Error("Could not get current user"),
+          },
+        },
+      },
+      {
+        message: "Could not get favorite team",
+        path: ["favoriteTeam"],
+        extensions: {
+          apollo: {
+            phase: "exports",
+            resolver: "Query.favoriteTeam",
+            source: "LocalResolversLink",
+            cause: new Error("Could not get favorite team"),
+          },
+        },
+      },
+      {
+        message: "Could not get current user",
+        path: ["currentUser"],
+        extensions: {
+          apollo: {
+            phase: "resolve",
+            resolver: "Query.currentUser",
+            source: "LocalResolversLink",
+            cause: new Error("Could not get current user"),
+          },
+        },
+      },
+      {
+        message: "Could not get favorite team",
+        path: ["favoriteTeam"],
+        extensions: {
+          apollo: {
+            phase: "resolve",
+            resolver: "Query.favoriteTeam",
+            source: "LocalResolversLink",
+            cause: new Error("Could not get favorite team"),
+          },
+        },
+      },
+    ],
+  });
+  await expect(stream).toComplete();
+
+  expect(console.error).toHaveBeenCalledTimes(2);
+  expect(console.error).toHaveBeenNthCalledWith(
+    1,
+    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+    "userId",
+    "Query.currentUser",
+    "Error",
+    "Could not get current user"
+  );
+  expect(console.error).toHaveBeenNthCalledWith(
+    2,
+    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+    "teamId",
+    "Query.favoriteTeam",
+    "Error",
+    "Could not get favorite team"
+  );
+});
+
 test("warns and does not set optional variable for client-only query when child resolver throws", async () => {
   using _ = spyOnConsole("error");
   const query = gql`

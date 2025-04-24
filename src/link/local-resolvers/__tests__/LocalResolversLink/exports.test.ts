@@ -1504,7 +1504,7 @@ test("emits error when top-level resolver returns null with nested export for re
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "Resolver 'Query.currentAuthor' returned `null` which contains exported required variable 'authorId'",
+      "Resolver 'Query.currentAuthor' returned `null` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor"] }
     )
   );
@@ -1543,7 +1543,7 @@ test("emits error when top-level resolver returns undefined with nested export f
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "Resolver 'Query.currentAuthor' returned `undefined` which contains exported required variable 'authorId'",
+      "Resolver 'Query.currentAuthor' returned `undefined` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor"] }
     )
   );
@@ -1654,6 +1654,46 @@ test("errors when resolver returns undefined for a required variable on non-clie
     new LocalResolversError(
       "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
+    )
+  );
+});
+
+test("errors when resolver returns object with null field for a required variable", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        profile {
+          id @export(as: "authorId")
+        }
+      }
+      author(id: $authorId) {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const mockLink = new ApolloLink(() => of({ data: { author: testAuthor } }));
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => ({ __typename: "Author", profile: null }),
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Field 'Author.profile' returned `null` which contains exported required variable 'authorId'.",
+      { path: ["currentAuthor", "profile"] }
     )
   );
 });

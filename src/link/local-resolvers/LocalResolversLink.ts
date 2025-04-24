@@ -391,6 +391,13 @@ export class LocalResolversLink extends ApolloLink {
     );
   }
 
+  private getResolver(
+    typename: string,
+    fieldName: string
+  ): LocalResolversLink.Resolver | undefined {
+    return this.resolvers[typename]?.[fieldName];
+  }
+
   private async resolveClientField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
@@ -431,7 +438,7 @@ export class LocalResolversLink extends ApolloLink {
           return null;
         };
 
-    const resolver = this.resolvers[typename]?.[fieldName];
+    const resolver = this.getResolver(typename, fieldName);
     let result: unknown;
 
     try {
@@ -465,9 +472,9 @@ export class LocalResolversLink extends ApolloLink {
     if (result === undefined) {
       if (__DEV__) {
         invariant.warn(
-          isClientFieldDescendant ?
-            "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
-          : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+          resolver ?
+            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
+          : "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`.",
           resolverName
         );
       }

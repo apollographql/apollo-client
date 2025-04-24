@@ -481,7 +481,17 @@ export class LocalResolversLink extends ApolloLink {
       result = null;
     }
 
-    this.addExports(field, result, execContext);
+    if (phase === "exports" && field.directives) {
+      field.directives.forEach((directive) => {
+        if (directive.name.value === "export") {
+          const name = getExportedVariableName(directive);
+
+          if (name) {
+            execContext.exportedVariables[name] = result;
+          }
+        }
+      });
+    }
 
     if (result === null) {
       if (
@@ -600,26 +610,6 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     return fieldResult;
-  }
-
-  private addExports(
-    field: FieldNode,
-    result: unknown,
-    execContext: ExecContext
-  ) {
-    const { phase } = execContext;
-
-    if (phase === "exports" && field.directives) {
-      field.directives.forEach((directive) => {
-        if (directive.name.value === "export") {
-          const name = getExportedVariableName(directive);
-
-          if (name) {
-            execContext.exportedVariables[name] = result;
-          }
-        }
-      });
-    }
   }
 
   private addError(

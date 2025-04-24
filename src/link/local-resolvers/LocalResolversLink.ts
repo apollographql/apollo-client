@@ -377,10 +377,12 @@ export class LocalResolversLink extends ApolloLink {
       // so we warn if a resolver is not defined.
       isClientField ?
         () => {
-          invariant.warn(
-            "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-            resolverName
-          );
+          if (__DEV__) {
+            invariant.warn(
+              "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+              resolverName
+            );
+          }
 
           return null;
         }
@@ -405,10 +407,12 @@ export class LocalResolversLink extends ApolloLink {
         : defaultResolver();
 
       if (result === undefined) {
-        invariant.warn(
-          "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
-          resolverName
-        );
+        if (__DEV__) {
+          invariant.warn(
+            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+            resolverName
+          );
+        }
         result = null;
       }
 
@@ -475,7 +479,7 @@ export class LocalResolversLink extends ApolloLink {
 
       return fieldResult;
     } catch (e) {
-      if (execContext.phase === "exports") {
+      if (__DEV__ && execContext.phase === "exports") {
         invariant.error(
           "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
           resolverName
@@ -516,10 +520,12 @@ export class LocalResolversLink extends ApolloLink {
       // so we warn if a resolver is not defined.
       isClientField && !isClientFieldDescendant ?
         () => {
-          invariant.warn(
-            "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-            resolverName
-          );
+          if (__DEV__) {
+            invariant.warn(
+              "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+              resolverName
+            );
+          }
 
           return null;
         }
@@ -547,12 +553,14 @@ export class LocalResolversLink extends ApolloLink {
         : defaultResolver();
 
       if (result === undefined) {
-        invariant.warn(
-          isClientFieldDescendant ?
-            "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
-          : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
-          resolverName
-        );
+        if (__DEV__) {
+          invariant.warn(
+            isClientFieldDescendant ?
+              "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
+            : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+            resolverName
+          );
+        }
         result = null;
       }
 
@@ -596,10 +604,12 @@ export class LocalResolversLink extends ApolloLink {
       );
     } catch (e) {
       if (execContext.phase === "exports") {
-        invariant.error(
-          "An error was thrown from resolver '%s' while resolving the exported variable '%s'. Because this was an optional variable, the value has been set to `null`.",
-          resolverName
-        );
+        if (__DEV__) {
+          invariant.error(
+            "An error was thrown from resolver '%s' while resolving the exported variable '%s'. Because this was an optional variable, the value has been set to `null`.",
+            resolverName
+          );
+        }
       }
       this.addExports(field, null, execContext);
       this.addError(toErrorLike(e), path, execContext, {

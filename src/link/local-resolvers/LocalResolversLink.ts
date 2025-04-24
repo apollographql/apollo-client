@@ -475,6 +475,13 @@ export class LocalResolversLink extends ApolloLink {
 
       return fieldResult;
     } catch (e) {
+      if (execContext.phase === "exports") {
+        invariant.error(
+          "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
+          resolverName
+        );
+      }
+      this.addExports(field, null, execContext);
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         phase: execContext.phase,
@@ -588,6 +595,13 @@ export class LocalResolversLink extends ApolloLink {
         path
       );
     } catch (e) {
+      if (execContext.phase === "exports") {
+        invariant.error(
+          "An error was thrown from resolver '%s' while resolving the exported variable '%s'. Because this was an optional variable, the value has been set to `null`.",
+          resolverName
+        );
+      }
+      this.addExports(field, null, execContext);
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         phase: execContext.phase,

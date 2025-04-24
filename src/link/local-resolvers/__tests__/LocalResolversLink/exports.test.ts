@@ -8,6 +8,7 @@ import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -763,6 +764,77 @@ test("does not execute client resolvers for client subtrees without an export di
 
   expect(currentAuthor).toHaveBeenCalledTimes(2);
   expect(author).toHaveBeenCalledTimes(1);
+});
+
+test("warns and sets exported variable to null for client-only query when resolver throws error", async () => {
+  using _ = spyOnConsole("error");
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => {
+          throw new Error("Something went wrong");
+        },
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthorId: null,
+      author: null,
+    },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["currentAuthorId"],
+        extensions: {
+          apollo: {
+            phase: "exports",
+            resolver: "Query.currentAuthorId",
+            source: "LocalResolversLink",
+          },
+        },
+      },
+      {
+        message: "Something went wrong",
+        path: ["currentAuthorId"],
+        extensions: {
+          apollo: {
+            phase: "resolve",
+            resolver: "Query.currentAuthorId",
+            source: "LocalResolversLink",
+          },
+        },
+      },
+    ],
+  });
+  await expect(stream).toComplete();
+
+  expect(console.error).toHaveBeenCalledTimes(1);
+  expect(console.error).toHaveBeenCalledWith(
+    "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
+    "Query.currentAuthorId"
+  );
 });
 
 test.skip("Does ??? when a resolver throws an error for an exported variable", async () => {

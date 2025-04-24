@@ -837,6 +837,79 @@ test("warns and does not set optional exported variable for client-only query wh
   );
 });
 
+test("warns and sets exported variable to null for client-only query when resolver throws error on nested field", async () => {
+  using _ = spyOnConsole("error");
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int) {
+      currentAuthor @client {
+        id @client @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => {
+          throw new Error("Something went wrong");
+        },
+        author: (_, { id }) => {
+          return id === undefined ? null : testAuthor;
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthor: null,
+      author: null,
+    },
+    errors: [
+      {
+        message: "Something went wrong",
+        path: ["currentAuthor"],
+        extensions: {
+          apollo: {
+            phase: "exports",
+            resolver: "Query.currentAuthor",
+            source: "LocalResolversLink",
+          },
+        },
+      },
+      {
+        message: "Something went wrong",
+        path: ["currentAuthor"],
+        extensions: {
+          apollo: {
+            phase: "resolve",
+            resolver: "Query.currentAuthor",
+            source: "LocalResolversLink",
+          },
+        },
+      },
+    ],
+  });
+  await expect(stream).toComplete();
+
+  expect(console.error).toHaveBeenCalledTimes(1);
+  expect(console.error).toHaveBeenCalledWith(
+    "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
+    "Query.currentAuthor"
+  );
+});
+
 test.skip("emits error when a resolver throws while gathering exported variables for a required variable in client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {

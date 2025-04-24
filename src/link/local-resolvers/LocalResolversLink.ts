@@ -82,7 +82,6 @@ type ExecContext = {
   fragmentMap: FragmentMap;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
-  errorMeta?: Record<string, any>;
   exportedVariableDefs: Record<string, ExportedVariable>;
 } & (
   | {
@@ -445,7 +444,6 @@ export class LocalResolversLink extends ApolloLink {
         execContext.phase === "resolve" &&
         rootValue === null
       ) {
-        execContext.errorMeta = { data: result };
         this.addError(
           newInvariantError(
             "Could not merge data from '%s' resolver with remote data since data was `null`.",
@@ -453,7 +451,7 @@ export class LocalResolversLink extends ApolloLink {
           ),
           path,
           execContext,
-          { resolver: resolverName, phase: execContext.phase }
+          { resolver: resolverName, phase: execContext.phase, data: result }
         );
 
         return null;
@@ -483,7 +481,6 @@ export class LocalResolversLink extends ApolloLink {
         execContext.phase === "resolve" &&
         rootValue === null
       ) {
-        execContext.errorMeta = { data: fieldResult };
         this.addError(
           newInvariantError(
             "Could not merge data from '%s' resolver with remote data since data was `null`.",
@@ -491,7 +488,11 @@ export class LocalResolversLink extends ApolloLink {
           ),
           path,
           execContext,
-          { resolver: resolverName, phase: execContext.phase }
+          {
+            resolver: resolverName,
+            phase: execContext.phase,
+            data: fieldResult,
+          }
         );
 
         return null;
@@ -500,7 +501,7 @@ export class LocalResolversLink extends ApolloLink {
       return fieldResult;
     }
 
-    if (execContext.phase === "resolve" && !result.__typename) {
+    if (execContext.phase === "resolve" && !(result as any).__typename) {
       this.addError(
         newInvariantError(
           "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
@@ -524,7 +525,6 @@ export class LocalResolversLink extends ApolloLink {
     );
 
     if (isRootField && execContext.phase === "resolve" && rootValue === null) {
-      execContext.errorMeta = { data: fieldResult };
       this.addError(
         newInvariantError(
           "Could not merge data from '%s' resolver with remote data since data was `null`.",
@@ -532,7 +532,7 @@ export class LocalResolversLink extends ApolloLink {
         ),
         path,
         execContext,
-        { resolver: resolverName, phase: execContext.phase }
+        { resolver: resolverName, phase: execContext.phase, data: fieldResult }
       );
 
       return null;
@@ -559,14 +559,14 @@ export class LocalResolversLink extends ApolloLink {
     error: ErrorLike,
     path: Path,
     execContext: ExecContext,
-    meta: { resolver: string; phase: "exports" | "resolve" }
+    meta: { [key: string]: any; resolver: string; phase: "exports" | "resolve" }
   ) {
     execContext.errors.push(
       addApolloExtension(
         isGraphQLError(error) ?
           { ...error.toJSON(), path }
         : { message: error.message, path },
-        { ...execContext.errorMeta, ...meta }
+        meta
       )
     );
   }

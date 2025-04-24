@@ -766,7 +766,7 @@ test("does not execute client resolvers for client subtrees without an export di
   expect(author).toHaveBeenCalledTimes(1);
 });
 
-test("warns and sets exported variable to null for client-only query when resolver throws error", async () => {
+test("warns and does not set optional exported variable for client-only query when resolver throws error", async () => {
   using _ = spyOnConsole("error");
   const query = gql`
     query currentAuthorPostCount($authorId: Int) {
@@ -791,7 +791,7 @@ test("warns and sets exported variable to null for client-only query when resolv
           throw new Error("Something went wrong");
         },
         author: (_, { id }) => {
-          return id === null ? null : testAuthor;
+          return id === undefined ? null : testAuthor;
         },
       },
     },

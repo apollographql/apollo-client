@@ -55,7 +55,26 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 export declare namespace LocalResolversLink {
   export interface Options<RootValue = unknown> {
     /**
-     * Value used as the root
+     * A value or function called with the current `operation` and `phase`
+     * creating the root value passed to any root field resolvers. Providing a
+     * function is useful if you want to use a different root value depending on
+     * the operation details.
+     *
+     * @example
+     * ```ts
+     * new LocalResolversLink({
+     *   rootValue: {
+     *     env: "development"
+     *   },
+     *   resolvers: {
+     *     Query: {
+     *       rootField: (parent) => {
+     *         // parent is { env: "development" }
+     *       }
+     *     }
+     *   }
+     * })
+     * ````
      */
     rootValue?:
       | ((options: {
@@ -63,6 +82,10 @@ export declare namespace LocalResolversLink {
           operation: Operation;
         }) => RootValue)
       | RootValue;
+
+    /**
+     * The map of resolvers used to provide values for `@client` fields.
+     */
     resolvers?: Resolvers;
   }
 

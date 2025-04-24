@@ -677,14 +677,14 @@ export class LocalResolversLink extends ApolloLink {
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
     const fields: Array<{
-      name: string;
+      node: FieldNode;
       isRoot: boolean;
       isClientFieldOrDescendent: boolean;
       hasClientRoot: boolean;
     }> = [];
 
     function getCurrentPath() {
-      return fields.map((field) => field.name);
+      return fields.map((field) => field.node.name.value);
     }
 
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
@@ -717,7 +717,7 @@ export class LocalResolversLink extends ApolloLink {
             const parent = fields.at(-1);
 
             fields.push({
-              name: field.name.value,
+              node: field,
               isRoot: fields.length === 0,
               isClientFieldOrDescendent:
                 parent?.isClientFieldOrDescendent ?? false,
@@ -752,6 +752,8 @@ export class LocalResolversLink extends ApolloLink {
             // These will get sent to the server
             fieldInfo?.isClientFieldOrDescendent
           ) {
+            const fieldName = fieldInfo.node.name.value;
+
             if (!fieldInfo.hasClientRoot) {
               throw new LocalResolversError(
                 "Cannot export a variable from a field that is a child of a remote field. Exported variables must originate either from a root-level client field or a child of a root-level client field.",
@@ -763,14 +765,14 @@ export class LocalResolversLink extends ApolloLink {
 
             if (!variableName) {
               throw new LocalResolversError(
-                `Cannot determine the variable name from the \`@export\` directive used on field '${fieldInfo.name}'. Perhaps you forgot the \`as\` argument?`,
+                `Cannot determine the variable name from the \`@export\` directive used on field '${fieldName}'. Perhaps you forgot the \`as\` argument?`,
                 { path: getCurrentPath() }
               );
             }
 
             if (!allVariableDefinitions[variableName]) {
               throw new LocalResolversError(
-                `\`@export\` directive on field '${fieldInfo.name}' does not have an associated variable definition for the '${variableName}' variable.`,
+                `\`@export\` directive on field '${fieldName}' does not have an associated variable definition for the '${variableName}' variable.`,
                 { path: getCurrentPath() }
               );
             }

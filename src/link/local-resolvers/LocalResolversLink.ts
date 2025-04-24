@@ -761,6 +761,14 @@ export class LocalResolversLink extends ApolloLink {
                 { path: getCurrentPath() }
               );
             }
+
+            if (!directive.arguments?.some((arg) => arg.name.value === "as")) {
+              throw new LocalResolversError(
+                "`@export` directive on field 'authorId' used without providing an `as` argument to specify which variable to export the value.",
+                { path: getCurrentPath() }
+              );
+            }
+
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);

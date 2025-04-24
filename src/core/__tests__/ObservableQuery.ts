@@ -2925,13 +2925,6 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
-      await expect(stream).toEmitTypedValue({
-        data: dataOne,
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -3612,26 +3605,9 @@ describe("ObservableQuery", () => {
           data: undefined,
           partial: true,
         },
-        resultAfterCacheUpdate2: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterLinkNext: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterCacheUpdate3: {
-          ...loadingStates.done,
-          data: {
-            hello: "world (from cache again, 3)",
-          },
-          partial: false,
-        },
+        resultAfterCacheUpdate2: linkOnly.resultAfterCacheUpdate2,
         // like cacheAndLink:
         // resultAfterLinkNext
-        // resultAfterCacheUpdate2
         // resultAfterCacheUpdate3
         // resultAfterRefetchNext
         // resultAfterCacheUpdate4
@@ -3659,7 +3635,6 @@ describe("ObservableQuery", () => {
           data: cacheValues.update1,
           partial: false,
         },
-
         resultAfterCacheUpdate3: {
           ...cacheAndLink.resultAfterCacheUpdate3,
           loading: false,

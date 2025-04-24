@@ -1558,22 +1558,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           )
         ),
         fromNetwork.pipe(
-          filter(
-            (value) =>
-              // always handle errors
-              value.kind !== "N" ||
-              // also handle "errors as values"
-              value.value.networkStatus === NetworkStatus.error ||
-              // handle values from the link in case of `no-cache` or `network-only` `fetchPolicy`
-              this.options.fetchPolicy === "no-cache" ||
-              this.options.fetchPolicy === "network-only" ||
-              (this.options.fetchPolicy === "standby" &&
-                value.reason === NetworkStatus.refetch) ||
-              // an error with `errorPolicy`: `ignore` might end up with a completely
-              // empty value that will not be written to the cache, but might need
-              // an update from the link
-              value.value.data === undefined
-          ),
           filter(filterForCurrentQuery),
           // convert errors into "errors as values"
           map(
@@ -1581,20 +1565,31 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               value
             ): QueryNotification.FromNetwork<TData, TVariables> &
               QueryNotification.Meta<TData, TVariables> => {
-              if (value.kind !== "E") return value;
-              const lastValue = this.internalSubject.getValue();
-              return {
-                ...value,
-                kind: "N",
-                value: {
-                  data: undefined,
-                  partial: true,
-                  ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
-                  error: value.error,
-                  networkStatus: NetworkStatus.error,
-                  loading: false,
-                },
-              };
+              if (value.kind == "E") {
+                const lastValue = this.internalSubject.getValue();
+                return {
+                  ...value,
+                  kind: "N",
+                  value: {
+                    data: undefined,
+                    partial: true,
+                    ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
+                    error: value.error,
+                    networkStatus: NetworkStatus.error,
+                    loading: false,
+                  },
+                };
+              }
+              // else if (
+              //   value.kind === "N" &&
+              //   value.fetchPolicy !== "no-cache"
+              // ) {
+              //    TODO:
+              //    the value has already been written to the cache at this point
+              //    it might be a good idea to read the value from the cache
+              //    instead of using the value from the network here
+              // }
+              return value;
             }
           ),
           dematerializeInternalResult()

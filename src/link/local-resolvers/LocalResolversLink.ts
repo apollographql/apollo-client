@@ -778,8 +778,7 @@ export class LocalResolversLink extends ApolloLink {
             const variableName = getExportedVariableName(directive);
 
             // TODO: Bail early if there is no variable definition for the
-            // export field or if there is no "as" argument
-            // const variableName = node.arguments?.
+            // export field
             if (variableName) {
               cache.exportedVariables[variableName] =
                 allVariableDefinitions[variableName];

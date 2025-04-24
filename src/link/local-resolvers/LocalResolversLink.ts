@@ -469,6 +469,28 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
+    const resultOrMergeError = (data: unknown) => {
+      if (
+        isRootField &&
+        execContext.phase === "resolve" &&
+        rootValue === null
+      ) {
+        this.addError(
+          newInvariantError(
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          ),
+          path,
+          execContext,
+          { resolver: resolverName, phase: execContext.phase, data }
+        );
+
+        return null;
+      }
+
+      return data;
+    };
+
     if (result === undefined) {
       if (__DEV__) {
         invariant.warn(
@@ -494,48 +516,12 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     if (result === null) {
-      if (
-        isRootField &&
-        execContext.phase === "resolve" &&
-        rootValue === null
-      ) {
-        this.addError(
-          newInvariantError(
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          ),
-          path,
-          execContext,
-          { resolver: resolverName, phase: execContext.phase, data: result }
-        );
-
-        return null;
-      }
-
-      return result;
+      return resultOrMergeError(null);
     }
 
     // Handle all scalar types here.
     if (!field.selectionSet) {
-      if (
-        isRootField &&
-        execContext.phase === "resolve" &&
-        rootValue === null
-      ) {
-        this.addError(
-          newInvariantError(
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          ),
-          path,
-          execContext,
-          { resolver: resolverName, phase: execContext.phase, data: result }
-        );
-
-        return null;
-      }
-
-      return result;
+      return resultOrMergeError(result);
     }
 
     if (Array.isArray(result)) {
@@ -547,29 +533,7 @@ export class LocalResolversLink extends ApolloLink {
         path
       );
 
-      if (
-        isRootField &&
-        execContext.phase === "resolve" &&
-        rootValue === null
-      ) {
-        this.addError(
-          newInvariantError(
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          ),
-          path,
-          execContext,
-          {
-            resolver: resolverName,
-            phase: execContext.phase,
-            data: fieldResult,
-          }
-        );
-
-        return null;
-      }
-
-      return fieldResult;
+      return resultOrMergeError(fieldResult);
     }
 
     if (execContext.phase === "resolve" && !(result as any).__typename) {
@@ -595,21 +559,7 @@ export class LocalResolversLink extends ApolloLink {
       path
     );
 
-    if (isRootField && execContext.phase === "resolve" && rootValue === null) {
-      this.addError(
-        newInvariantError(
-          "Could not merge data from '%s' resolver with remote data since data was `null`.",
-          resolverName
-        ),
-        path,
-        execContext,
-        { resolver: resolverName, phase: execContext.phase, data: fieldResult }
-      );
-
-      return null;
-    }
-
-    return fieldResult;
+    return resultOrMergeError(fieldResult);
   }
 
   private addError(

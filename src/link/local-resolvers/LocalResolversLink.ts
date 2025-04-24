@@ -418,9 +418,10 @@ export class LocalResolversLink extends ApolloLink {
       : () => rootValue?.[fieldName];
 
     const resolver = this.resolvers[typename]?.[fieldName];
+    let result: unknown;
 
     try {
-      let result =
+      result =
         resolver ?
           await this.executeResolver(
             resolver,
@@ -430,88 +431,49 @@ export class LocalResolversLink extends ApolloLink {
             execContext
           )
         : defaultResolver();
-
-      if (result === undefined) {
-        if (__DEV__) {
-          invariant.warn(
-            isClientFieldDescendant ?
-              "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
-            : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
-            resolverName
-          );
-        }
-        result = null;
-      }
-
-      this.addExports(field, result, execContext);
-
-      // Handle all scalar types here.
-      if (!field.selectionSet) {
-        if (
-          isRootField &&
-          execContext.phase === "resolve" &&
-          rootValue === null
-        ) {
-          execContext.errorMeta = { data: result };
-          this.addError(
-            newInvariantError(
-              "Could not merge data from '%s' resolver with remote data since data was `null`.",
-              resolverName
-            ),
-            path,
-            execContext,
-            { resolver: resolverName, phase: execContext.phase }
-          );
-
-          return null;
-        }
-
-        return result;
-      }
-
-      // From here down, the field has a selection set, which means it's trying
-      // to query a GraphQLObjectType.
-      if (result == null) {
-        // Basically any field in a GraphQL response can be null, or missing
-        return result;
-      }
-
-      if (Array.isArray(result)) {
-        const fieldResult = await this.resolveSubSelectedArray(
-          field,
-          isClientFieldDescendant || isClientField,
-          result,
-          execContext,
-          path
+    } catch (e) {
+      if (__DEV__ && execContext.phase === "exports") {
+        execContext.bail(
+          new LocalResolversError(
+            `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
+            { path, sourceError: e }
+          )
         );
-
-        if (
-          isRootField &&
-          execContext.phase === "resolve" &&
-          rootValue === null
-        ) {
-          execContext.errorMeta = { data: fieldResult };
-          this.addError(
-            newInvariantError(
-              "Could not merge data from '%s' resolver with remote data since data was `null`.",
-              resolverName
-            ),
-            path,
-            execContext,
-            { resolver: resolverName, phase: execContext.phase }
-          );
-
-          return null;
-        }
-
-        return fieldResult;
+        return null;
       }
+      this.addError(toErrorLike(e), path, execContext, {
+        resolver: resolverName,
+        phase: execContext.phase,
+      });
 
-      if (execContext.phase === "resolve" && !result.__typename) {
+      return null;
+    }
+
+    if (result === undefined) {
+      if (__DEV__) {
+        invariant.warn(
+          isClientFieldDescendant ?
+            "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`."
+          : "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+          resolverName
+        );
+      }
+      result = null;
+    }
+
+    this.addExports(field, result, execContext);
+
+    // Handle all scalar types here.
+    if (!field.selectionSet) {
+      if (
+        isRootField &&
+        execContext.phase === "resolve" &&
+        rootValue === null
+      ) {
+        execContext.errorMeta = { data: result };
         this.addError(
           newInvariantError(
-            "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-            result,
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
             resolverName
           ),
           path,
@@ -522,8 +484,19 @@ export class LocalResolversLink extends ApolloLink {
         return null;
       }
 
-      const fieldResult = await this.resolveSelectionSet(
-        field.selectionSet,
+      return result;
+    }
+
+    // From here down, the field has a selection set, which means it's trying
+    // to query a GraphQLObjectType.
+    if (result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return result;
+    }
+
+    if (Array.isArray(result)) {
+      const fieldResult = await this.resolveSubSelectedArray(
+        field,
         isClientFieldDescendant || isClientField,
         result,
         execContext,
@@ -550,23 +523,47 @@ export class LocalResolversLink extends ApolloLink {
       }
 
       return fieldResult;
-    } catch (e) {
-      if (__DEV__ && execContext.phase === "exports") {
-        execContext.bail(
-          new LocalResolversError(
-            `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
-            { path, sourceError: e }
-          )
-        );
-        return null;
-      }
-      this.addError(toErrorLike(e), path, execContext, {
-        resolver: resolverName,
-        phase: execContext.phase,
-      });
+    }
+
+    if (execContext.phase === "resolve" && !result.__typename) {
+      this.addError(
+        newInvariantError(
+          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+          result,
+          resolverName
+        ),
+        path,
+        execContext,
+        { resolver: resolverName, phase: execContext.phase }
+      );
 
       return null;
     }
+
+    const fieldResult = await this.resolveSelectionSet(
+      field.selectionSet,
+      isClientFieldDescendant || isClientField,
+      result,
+      execContext,
+      path
+    );
+
+    if (isRootField && execContext.phase === "resolve" && rootValue === null) {
+      execContext.errorMeta = { data: fieldResult };
+      this.addError(
+        newInvariantError(
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        ),
+        path,
+        execContext,
+        { resolver: resolverName, phase: execContext.phase }
+      );
+
+      return null;
+    }
+
+    return fieldResult;
   }
 
   private addExports(

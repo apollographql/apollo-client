@@ -533,10 +533,6 @@ export class LocalResolversLink extends ApolloLink {
     parentSelectionSet: SelectionSetNode,
     path: Path
   ) {
-    if (!rootValue) {
-      return null;
-    }
-
     const fieldName = field.name.value;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;

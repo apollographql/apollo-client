@@ -274,51 +274,42 @@ export declare namespace QueryNotification {
 
   type NewNetworkStatus<TData, TVariables> = NextNotification<{
     networkStatus: NetworkStatus;
-  }> &
-    Meta<TData, TVariables> & {
-      source: "newNetworkStatus";
-    };
+  }> & {
+    source: "newNetworkStatus";
+  };
 
   type SetResult<TData, TVariables> = NextNotification<
     ApolloQueryResult<TData>
-  > &
-    Meta<TData, TVariables> & {
-      source: "setResult";
-    };
+  > & {
+    source: "setResult";
+  };
 
   type FromNetwork<TData, TVariables> = ObservableNotification<
     ApolloQueryResult<TData>
-  > &
-    Meta<TData, TVariables> & {
-      source: "network";
-      fetchPolicy: WatchQueryFetchPolicy;
-      reason: NetworkStatus;
-    };
-
-  type FromFetchMore<TData, TVariables> = ObservableNotification<
-    ApolloQueryResult<any>
-  > &
-    Meta<TData, TVariables> & {
-      source: "fetchMore";
-    };
+  > & {
+    source: "network";
+    fetchPolicy: WatchQueryFetchPolicy;
+    reason: NetworkStatus;
+  };
 
   type FromCache<TData, TVariables> = NextNotification<
     ApolloQueryResult<TData>
-  > &
-    Meta<TData, TVariables> & {
-      source: "cache";
-      /** only present if triggered from link */
-      fetchPolicy?: WatchQueryFetchPolicy;
-      /** only present if triggered from link */
-      reason?: NetworkStatus;
-    };
+  > & {
+    source: "cache";
+    /** only present if triggered from link */
+    fetchPolicy?: WatchQueryFetchPolicy;
+    /** only present if triggered from link */
+    reason?: NetworkStatus;
+  };
 
-  type Value<TData, TVariables> =
+  type ValueWithoutMeta<TData, TVariables> =
     | FromCache<TData, TVariables>
     | FromNetwork<TData, TVariables>
-    | FromFetchMore<TData, TVariables>
     | NewNetworkStatus<TData, TVariables>
     | SetResult<TData, TVariables>;
+
+  type Value<TData, TVariables> = ValueWithoutMeta<TData, TVariables> &
+    Meta<TData, TVariables>;
 
   type InternalResult<T, TData, TVariables> = {
     result: T;

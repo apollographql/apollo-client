@@ -1436,8 +1436,6 @@ export class QueryManager {
       fetchCancelSubject.next({
         kind: "E",
         error,
-        query,
-        variables,
         source: "network",
         fetchPolicy,
         reason: networkStatus,
@@ -1447,9 +1445,11 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<
-      QueryNotification.Value<TData, TVars>
+      QueryNotification.ValueWithoutMeta<TData, TVars>
     >();
-    let observable: Observable<QueryNotification.Value<TData, TVars>>,
+    let observable: Observable<
+        QueryNotification.ValueWithoutMeta<TData, TVars>
+      >,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1797,8 +1797,6 @@ export class QueryManager {
                   kind: "N",
                   value: toResult(resolved.data || void 0),
                   source: "cache",
-                  query,
-                  variables,
                   fetchPolicy: fetchPolicy || "cache-first",
                   reason: newNetworkStatus,
                 }) satisfies QueryNotification.FromCache<TData, TVars>
@@ -1839,8 +1837,6 @@ export class QueryManager {
           networkStatus: newNetworkStatus,
         },
         source: "newNetworkStatus",
-        query: query,
-        variables: variables,
       });
 
     const resultsFromLink = () =>
@@ -1857,8 +1853,6 @@ export class QueryManager {
           (result): QueryNotification.FromNetwork<TData, TVars> => ({
             ...result,
             source: "network",
-            query,
-            variables,
             fetchPolicy: fetchPolicy || "cache-first",
             reason: newNetworkStatus,
           })
@@ -1971,5 +1965,5 @@ function validateDidEmitValue<T>() {
 export interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
-  observable: Observable<QueryNotification.Value<TData, any>>;
+  observable: Observable<QueryNotification.ValueWithoutMeta<TData, any>>;
 }

@@ -80,6 +80,17 @@ interface Last<TData, TVariables> {
   error?: ErrorLike;
 }
 
+interface TrackedOperation {
+  networkStatus: NetworkStatus;
+  abort: () => void;
+  /**
+   * `query` that was used by the `ObservableQuery` as the "main query" at the time the operation was started
+   * This is not necessarily the same query as the query the operation itself is doing.
+   */
+  query: DocumentNode;
+  variables: OperationVariables;
+}
+
 const newNetworkStatusSymbol: any = Symbol();
 export const uninitialized: ApolloQueryResult<any> = {
   loading: true,
@@ -709,10 +720,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       );
     }
 
+    const { finalize, pushNotification } = this.pushOperation(
+      NetworkStatus.fetchMore
+    );
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
+
+        finalize();
 
         if (isCached) {
           // Performing this cache update inside a cache.batch transaction ensures
@@ -772,12 +788,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // adjustment to the types on `updateQuery` since that function
           // expects that the first argument always contains previous result
           // data, but not `undefined`.
-          const lastResult = this.getLast("result")!;
+          const lastResult = this.getCurrentResult();
           const data = updateQuery!(lastResult.data as Unmasked<TData>, {
             fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
-          this.input.next({
+          pushNotification({
             kind: "N",
             value: {
               data: data as any,
@@ -787,11 +803,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               partial: false,
             },
             source: "network",
-            query: this.query,
-            variables: this.variables,
             fetchPolicy: combinedOptions.fetchPolicy || "cache-first",
             reason: NetworkStatus.fetchMore,
-          } satisfies QueryNotification.FromNetwork<TData, TVariables>);
+          });
         }
 
         return this.maskResult(fetchMoreResult);
@@ -802,10 +816,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // likely because the written data were the same as what was already in
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
-        if (isCached && !updatedQuerySet.has(this.query)) {
-          // TODO deliver current cache result
-          // this.reobserveCacheFirst();
-        }
+        // this should be taken care of by `finalize` above
       });
   }
 
@@ -1120,13 +1131,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Avoid setting the symbol option in this.options
       delete (newOptions as any)[newNetworkStatusSymbol];
     }
-    if (newNetworkStatus) {
-      this.reemitEvenIfEqual = this.internalSubject.getValue().result;
-    }
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
-      // options/variables, without permanently altering the options of the
+      // options, without permanently altering the options of the
       // original ObservableQuery.
       newNetworkStatus === NetworkStatus.refetch ||
       // The fetchMore method does not actually call the reobserve method, but,
@@ -1214,6 +1222,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
+    if (
+      newNetworkStatus == NetworkStatus.refetch ||
+      newNetworkStatus == NetworkStatus.setVariables
+    ) {
+      this.reemitEvenIfEqual = this.internalSubject.getValue().result;
+    }
+
     if (fetchPolicy === "standby") {
       this.cancelPolling();
     }
@@ -1233,9 +1248,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.linkSubscription.unsubscribe();
       }
 
-      this.linkSubscription = observable.subscribe(this.input);
+      this.linkSubscription = this.trackOperation(observable, newNetworkStatus);
     } else {
-      observable.subscribe(this.input);
+      this.trackOperation(observable, newNetworkStatus);
     }
 
     return preventUnhandledRejection(
@@ -1356,6 +1371,77 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
+  private activeOperations = new Set<TrackedOperation>();
+  private pushOperation(networkStatus: NetworkStatus): {
+    finalize: () => void;
+    pushNotification: (
+      notification: QueryNotification.ValueWithoutMeta<TData, TVariables>
+    ) => void;
+  } {
+    let aborted = false;
+    // track query and variables from the start of the operation
+    const { query, variables } = this;
+    const finalize = () => {
+      this.activeOperations.delete(operation);
+    };
+    const operation: TrackedOperation = {
+      networkStatus,
+      abort: () => {
+        aborted = true;
+        finalize();
+      },
+      query,
+      variables,
+    };
+    this.activeOperations.add(operation);
+    return {
+      finalize,
+      pushNotification: (
+        notification: QueryNotification.ValueWithoutMeta<TData, TVariables>
+      ) => {
+        if (!aborted) {
+          this.input.next({
+            ...notification,
+            query,
+            variables,
+          } as QueryNotification.Value<TData, TVariables>);
+        }
+      },
+    };
+  }
+
+  private trackOperation(
+    observable: Observable<
+      QueryNotification.ValueWithoutMeta<TData, TVariables>
+    >,
+    networkStatus: NetworkStatus
+  ) {
+    // track query and variables from the start of the operation
+    const { query, variables } = this;
+    const operation = {
+      networkStatus,
+      abort: () => {
+        subscription.unsubscribe();
+      },
+      query,
+      variables,
+    };
+    this.activeOperations.add(operation);
+    const subscription = observable
+      .pipe(
+        tap({
+          finalize: () => this.activeOperations.delete(operation),
+        }),
+        map((valueWithoutMeta) => ({
+          ...valueWithoutMeta,
+          query,
+          variables,
+        }))
+      )
+      .subscribe(this.input);
+    return subscription;
+  }
+
   /** @internal */
   public setResult(result: ApolloQueryResult<TData>) {
     this.input.next({
@@ -1364,7 +1450,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       value: result,
       query: this.query,
       variables: this.variables,
-    } satisfies QueryNotification.SetResult<TData, TVariables>);
+    });
   }
 
   private operator: OperatorFunction<
@@ -1394,22 +1480,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
 
     const fromCache = obs.pipe(
-      filter(
-        (v): v is QueryNotification.FromCache<TData, TVariables> =>
-          v.source === "cache"
-      )
+      filter((v): v is typeof v & { source: "cache" } => v.source === "cache")
     );
     const fromNetwork = obs.pipe(
       filter(
-        (v): v is QueryNotification.FromNetwork<TData, TVariables> =>
-          v.source === "network"
+        (v): v is typeof v & { source: "network" } => v.source === "network"
       )
     );
 
     const setResult = obs.pipe(
       filter(
-        (v): v is QueryNotification.SetResult<TData, TVariables> =>
-          v.source === "setResult"
+        (v): v is typeof v & { source: "setResult" } => v.source === "setResult"
       )
     );
     // TODO
@@ -1420,7 +1501,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // );
     const fromNetworkStatus = obs.pipe(
       filter(
-        (v): v is QueryNotification.NewNetworkStatus<TData, TVariables> =>
+        (v): v is typeof v & { source: "newNetworkStatus" } =>
           v.source === "newNetworkStatus"
       )
     );
@@ -1495,22 +1576,27 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           ),
           filter(filterForCurrentQuery),
           // convert errors into "errors as values"
-          map((value): QueryNotification.FromNetwork<TData, TVariables> => {
-            if (value.kind !== "E") return value;
-            const lastValue = this.internalSubject.getValue();
-            return {
-              ...value,
-              kind: "N",
-              value: {
-                data: undefined,
-                partial: true,
-                ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
-                error: value.error,
-                networkStatus: NetworkStatus.error,
-                loading: false,
-              },
-            };
-          }),
+          map(
+            (
+              value
+            ): QueryNotification.FromNetwork<TData, TVariables> &
+              QueryNotification.Meta<TData, TVariables> => {
+              if (value.kind !== "E") return value;
+              const lastValue = this.internalSubject.getValue();
+              return {
+                ...value,
+                kind: "N",
+                value: {
+                  data: undefined,
+                  partial: true,
+                  ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
+                  error: value.error,
+                  networkStatus: NetworkStatus.error,
+                  loading: false,
+                },
+              };
+            }
+          ),
           dematerializeInternalResult()
         ),
         fromNetworkStatus.pipe(

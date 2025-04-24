@@ -940,7 +940,7 @@ test("emits error when a resolver throws while gathering exported variables for 
   );
 });
 
-test.skip("errors when resolver returns null for a required variable on client-only query", async () => {
+test("errors when resolver returns null for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")

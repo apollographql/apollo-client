@@ -1244,5 +1244,39 @@ test("does not warn when gathering variable exports for optional variables", asy
   expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
-test.todo("overwrites variables passed to link chain");
+test("exported variables overwrite variables passed to link chain", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      postCount(authorId: $authorId) @client
+    }
+  `;
+
+  const testAuthorId = 100;
+  const testPostCount = 200;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => testAuthorId,
+        postCount(_, { authorId }) {
+          return authorId === testAuthorId ? testPostCount : 0;
+        },
+      },
+    },
+  });
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { authorId: 200 } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthorId: testAuthorId,
+      postCount: testPostCount,
+    },
+  });
+  await expect(stream).toComplete();
+});
+
 test.todo("allows user-provided variables");

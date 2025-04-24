@@ -793,7 +793,7 @@ function dealias(
 
   for (const selection of selectionSet.selections) {
     if (isField(selection) && selection.alias) {
-      data[selection.name.value] = data[selection.alias.value];
+      data[selection.name.value] = fieldValue[selection.alias.value];
       delete data[selection.alias.value];
     }
   }

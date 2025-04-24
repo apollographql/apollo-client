@@ -511,12 +511,10 @@ export class LocalResolversLink extends ApolloLink {
           execContext.exportedVariables[name] = result;
         }
       });
-    }
 
-    if (phase === "exports") {
-      const defs = Object.entries(execContext.exportedVariableDefs);
-
-      for (const [name, def] of defs) {
+      for (const [name, def] of Object.entries(
+        execContext.exportedVariableDefs
+      )) {
         if (result == null && def.ancestors.has(field) && def.required) {
           throw new LocalResolversError(
             `Resolver '${resolverName}' returned \`${result}\` which contains a selection set for required variable '${name}'`,

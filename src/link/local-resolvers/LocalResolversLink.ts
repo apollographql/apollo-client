@@ -98,7 +98,7 @@ type Path = Array<string | number>;
 interface ExportedVariable {
   required: boolean;
   usedInServerField: boolean;
-  ancestors: Set<ASTNode>;
+  ancestors: WeakSet<ASTNode>;
 }
 
 interface TraverseCacheEntry {
@@ -674,7 +674,7 @@ export class LocalResolversLink extends ApolloLink {
           allVariableDefinitions[definition.variable.name.value] = {
             required: definition.type.kind === Kind.NON_NULL_TYPE,
             usedInServerField: false,
-            ancestors: new Set(),
+            ancestors: new WeakSet(),
           };
         },
         Field: {

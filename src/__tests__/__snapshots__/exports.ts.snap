@@ -138,6 +138,7 @@ Array [
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "isErrorLike",
   "registerLinkError",
   "toErrorLike",
 ]

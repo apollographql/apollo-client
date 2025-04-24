@@ -478,6 +478,7 @@ export class LocalResolversLink extends ApolloLink {
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
+        phase: execContext.phase,
       });
 
       return null;
@@ -590,6 +591,7 @@ export class LocalResolversLink extends ApolloLink {
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
+        phase: execContext.phase,
       });
 
       return null;
@@ -620,7 +622,7 @@ export class LocalResolversLink extends ApolloLink {
     error: ErrorLike,
     path: Path,
     execContext: ExecContext,
-    meta: { resolver: string }
+    meta: { resolver: string; phase: "exports" | "resolve" }
   ) {
     execContext.errors.push(
       addApolloExtension(

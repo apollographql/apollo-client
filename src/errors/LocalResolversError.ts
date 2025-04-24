@@ -3,6 +3,7 @@ import { brand, isBranded } from "./utils.js";
 export declare namespace LocalResolversError {
   export interface Options {
     path?: Array<string | number>;
+    sourceError?: unknown;
   }
 }
 
@@ -22,7 +23,7 @@ export class LocalResolversError extends Error {
   readonly path?: Array<string | number>;
 
   constructor(message: string, options: LocalResolversError.Options = {}) {
-    super(message);
+    super(message, { cause: options.sourceError });
     this.name = "LocalResolversError";
     this.path = options.path;
 

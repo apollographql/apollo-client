@@ -1,12 +1,13 @@
 import { of } from "rxjs";
 
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link/core";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -178,6 +179,46 @@ it("matches fragments with fragment conditions", async () => {
       ],
     },
   });
+});
+
+test("warns when cache does not implement fragmentMatches", async () => {
+  // @ts-expect-error we don't care about the cache methods for this test
+  class TestCache extends ApolloCache {}
+
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    fragment Foo on Foo {
+      bar
+    }
+    query {
+      foo @client {
+        ...Foo
+      }
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new TestCache() });
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", bar: true }),
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      foo: { __typename: "Foo", bar: true },
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The configured cache does not support fragment matching which may lead to incorrect results when executing local resolvers. Please use a cache matches fragments to silence this warning."
+  );
 });
 
 test.todo(

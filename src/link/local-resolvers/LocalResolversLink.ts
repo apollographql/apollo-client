@@ -178,6 +178,12 @@ export class LocalResolversLink<
       return getServerResult(operation.variables);
     }
 
+    if (__DEV__) {
+      if (!operation.client.cache.fragmentMatches) {
+        warnOnImproperCacheImplementation();
+      }
+    }
+
     function getServerResult(variables: OperationVariables) {
       // Modify `variables` early to ensure they are available to other client
       // resolvers when there is not a server query.
@@ -363,7 +369,6 @@ export class LocalResolversLink<
         if (
           selection.typeCondition &&
           rootValue?.__typename &&
-          // TODO: Warn if fragmentMatches is undefined
           client.cache.fragmentMatches?.(selection, rootValue.__typename)
         ) {
           const fragmentResult = await this.resolveSelectionSet(
@@ -960,4 +965,14 @@ if (__DEV__) {
       };
     },
   });
+}
+
+let issuedWarning = false;
+export function warnOnImproperCacheImplementation() {
+  if (!issuedWarning) {
+    issuedWarning = true;
+    invariant.warn(
+      "The configured cache does not support fragment matching which may lead to incorrect results when executing local resolvers. Please use a cache matches fragments to silence this warning."
+    );
+  }
 }

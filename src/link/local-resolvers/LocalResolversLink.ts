@@ -41,7 +41,10 @@ import {
   stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
@@ -444,13 +447,23 @@ export class LocalResolversLink extends ApolloLink {
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
-        if (isRootField && execContext.phase === "resolve") {
+        if (
+          isRootField &&
+          execContext.phase === "resolve" &&
+          rootValue === null
+        ) {
           execContext.errorMeta = { data: result };
-          invariant(
-            rootValue !== null,
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
+          this.addError(
+            newInvariantError(
+              "Could not merge data from '%s' resolver with remote data since data was `null`.",
+              resolverName
+            ),
+            path,
+            execContext,
+            { resolver: resolverName, phase: execContext.phase }
           );
+
+          return null;
         }
 
         return result;
@@ -472,25 +485,41 @@ export class LocalResolversLink extends ApolloLink {
           path
         );
 
-        if (isRootField && execContext.phase === "resolve") {
+        if (
+          isRootField &&
+          execContext.phase === "resolve" &&
+          rootValue === null
+        ) {
           execContext.errorMeta = { data: fieldResult };
-          invariant(
-            rootValue !== null,
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
+          this.addError(
+            newInvariantError(
+              "Could not merge data from '%s' resolver with remote data since data was `null`.",
+              resolverName
+            ),
+            path,
+            execContext,
+            { resolver: resolverName, phase: execContext.phase }
           );
+
+          return null;
         }
 
         return fieldResult;
       }
 
-      if (execContext.phase === "resolve") {
-        invariant(
-          result.__typename,
-          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-          result,
-          resolverName
+      if (execContext.phase === "resolve" && !result.__typename) {
+        this.addError(
+          newInvariantError(
+            "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
+            result,
+            resolverName
+          ),
+          path,
+          execContext,
+          { resolver: resolverName, phase: execContext.phase }
         );
+
+        return null;
       }
 
       const fieldResult = await this.resolveSelectionSet(
@@ -501,13 +530,23 @@ export class LocalResolversLink extends ApolloLink {
         path
       );
 
-      if (isRootField && execContext.phase === "resolve") {
+      if (
+        isRootField &&
+        execContext.phase === "resolve" &&
+        rootValue === null
+      ) {
         execContext.errorMeta = { data: fieldResult };
-        invariant(
-          rootValue !== null,
-          "Could not merge data from '%s' resolver with remote data since data was `null`.",
-          resolverName
+        this.addError(
+          newInvariantError(
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          ),
+          path,
+          execContext,
+          { resolver: resolverName, phase: execContext.phase }
         );
+
+        return null;
       }
 
       return fieldResult;

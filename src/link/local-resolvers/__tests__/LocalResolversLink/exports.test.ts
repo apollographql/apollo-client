@@ -837,11 +837,11 @@ test("warns and sets exported variable to null for client-only query when resolv
   );
 });
 
-test.skip("Does ??? when a resolver throws an error for an exported variable", async () => {
+test.skip("emits error when a resolver throws while gathering exported variables for a required variable in client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
-      author(id: $authorId) {
+      author(id: $authorId) @client {
         id
         name
       }
@@ -854,29 +854,29 @@ test.skip("Does ??? when a resolver throws an error for an exported variable", a
     name: "John Smith",
   };
 
-  const mockLink = new ApolloLink(() => {
-    return of({ data: { author: testAuthor } });
-  });
-
-  const localResolversLink = new LocalResolversLink({
+  const link = new LocalResolversLink({
     resolvers: {
       Query: {
         currentAuthorId: () => {
           throw new Error("Something went wrong");
         },
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
       },
     },
   });
-  const link = ApolloLink.from([localResolversLink, mockLink]);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitTypedValue({
-    data: {
-      currentAuthorId: testAuthor,
-      author: testAuthor,
-    },
-  });
-  await expect(stream).toComplete();
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "An error was thrown while running 'Query.currentAuthorId' when resolving exported variables.",
+      {
+        path: ["currentAuthorId"],
+        sourceError: new Error("Something went wrong"),
+      }
+    )
+  );
 });
 
 test.todo(

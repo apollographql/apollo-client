@@ -38,6 +38,7 @@ export function toErrorLike(error: unknown) {
   return new UnconventionalError(error);
 }
 
+export { isErrorLike } from "./isErrorLike.js";
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 export { LinkError, registerLinkError } from "./LinkError.js";

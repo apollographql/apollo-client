@@ -12,68 +12,6 @@ import {
 
 import { gql } from "./testUtils.js";
 
-test("does not break @client only queries when the @export directive is used", async () => {
-  const query = gql`
-    {
-      field @client @export(as: "someVar")
-    }
-  `;
-
-  const link = new LocalResolversLink({
-    resolvers: {
-      Query: {
-        field: () => true,
-      },
-    },
-  });
-  const stream = new ObservableStream(execute(link, { query }));
-
-  await expect(stream).toEmitTypedValue({
-    data: { field: true },
-  });
-  await expect(stream).toComplete();
-});
-
-test("does not break @client only queries when the @export directive is used on nested fields", async () => {
-  const query = gql`
-    {
-      car @client {
-        engine {
-          torque @export(as: "torque")
-        }
-      }
-    }
-  `;
-
-  const link = new LocalResolversLink({
-    resolvers: {
-      Query: {
-        car: () => ({
-          __typename: "Car",
-          engine: {
-            __typename: "Engine",
-            torque: 7200,
-          },
-        }),
-      },
-    },
-  });
-  const stream = new ObservableStream(execute(link, { query }));
-
-  await expect(stream).toEmitTypedValue({
-    data: {
-      car: {
-        __typename: "Car",
-        engine: {
-          __typename: "Engine",
-          torque: 7200,
-        },
-      },
-    },
-  });
-  await expect(stream).toComplete();
-});
-
 test("stores the @client field value in the specified @export variable, and make it available to a subsequent resolver", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
@@ -444,6 +382,64 @@ test("emits error if `@export` does not include an `as` argument", async () => {
     new LocalResolversError(
       "Cannot determine the variable name from the `@export` directive used on field 'authorId'. Perhaps you forgot the `as` argument?",
       { path: ["authorId"] }
+    )
+  );
+});
+
+test("emits error on @client only queries when the @export directive is used on root field with no associated variable definition", async () => {
+  const query = gql`
+    {
+      field @client @export(as: "someVar")
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        field: () => true,
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
+      { path: ["field"] }
+    )
+  );
+});
+
+test("emits error on @client only queries when the @export directive is used on nested fields with no associated variable definition", async () => {
+  const query = gql`
+    {
+      car @client {
+        engine {
+          torque @export(as: "torque")
+        }
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        car: () => ({
+          __typename: "Car",
+          engine: {
+            __typename: "Engine",
+            torque: 7200,
+          },
+        }),
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
+      { path: ["car", "engine", "torque"] }
     )
   );
 });

@@ -461,10 +461,7 @@ export class LocalResolversLink extends ApolloLink {
             if (def.required) {
               throw new LocalResolversError(
                 `An error was thrown from resolver '${resolverName}' while resolving required variable '${name}'.`,
-                {
-                  path: ["currentAuthorId"],
-                  sourceError: new Error("Something went wrong"),
-                }
+                { path, sourceError: e }
               );
             }
 

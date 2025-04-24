@@ -474,7 +474,7 @@ export class LocalResolversLink extends ApolloLink {
         invariant.warn(
           resolver ?
             "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
-          : "The '%s' field returned `undefined` instead of a value. This is either because the parent resolver forgot to include the property in the returned value, a resolver is not defined for the field, or the resolver returned `undefined`.",
+          : "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
           resolverName
         );
       }

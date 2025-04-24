@@ -1094,7 +1094,7 @@ test.skip("does ??? when top-level field returns null with child exports", async
   );
 });
 
-test.skip("errors when resolver returns undefined for a required variable on client-only query", async () => {
+test("errors when resolver returns undefined for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -1131,7 +1131,7 @@ test.skip("errors when resolver returns undefined for a required variable on cli
   );
 });
 
-test.skip("errors when resolver returns null for a required variable on non-client query", async () => {
+test("errors when resolver returns null for a required variable on non-client query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -1167,7 +1167,7 @@ test.skip("errors when resolver returns null for a required variable on non-clie
   );
 });
 
-test.skip("errors when resolver returns undefined for a required variable on non-client query", async () => {
+test("errors when resolver returns undefined for a required variable on non-client query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")

@@ -391,13 +391,6 @@ export class LocalResolversLink extends ApolloLink {
     );
   }
 
-  private getResolver(
-    typename: string,
-    fieldName: string
-  ): LocalResolversLink.Resolver | undefined {
-    return this.resolvers[typename]?.[fieldName];
-  }
-
   private async resolveClientField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
@@ -555,6 +548,13 @@ export class LocalResolversLink extends ApolloLink {
     );
 
     return resultOrMergeError(fieldResult);
+  }
+
+  private getResolver(
+    typename: string,
+    fieldName: string
+  ): LocalResolversLink.Resolver | undefined {
+    return this.resolvers[typename]?.[fieldName];
   }
 
   private addError(

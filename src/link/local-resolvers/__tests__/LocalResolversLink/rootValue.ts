@@ -78,3 +78,34 @@ test("can pass `rootValue` as function that will be used with root client resolv
     operation: expect.objectContaining({ query, operationName: "Test" }),
   });
 });
+
+test.each([
+  ["string", "enabled"],
+  ["number", 1],
+  ["boolean", false],
+  ["null", null],
+  ["array", [1, 2, 3]],
+])("can pass `rootValue` as %s", async (_type, rootValue) => {
+  const query = gql`
+    query Test {
+      rootValue @client
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    rootValue,
+    resolvers: {
+      Query: {
+        rootValue: (rootValue) => rootValue,
+      },
+    },
+  });
+
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { rootValue },
+  });
+
+  await expect(stream).toComplete();
+});

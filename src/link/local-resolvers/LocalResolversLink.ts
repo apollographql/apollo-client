@@ -496,9 +496,7 @@ export class LocalResolversLink extends ApolloLink {
           return;
         }
 
-        const info = execContext.exportedVariableDefs[name];
-
-        if (info.required && result == null) {
+        if (execContext.exportedVariableDefs[name].required && result == null) {
           throw new LocalResolversError(
             `${
               resolver ? "Resolver" : "Field"

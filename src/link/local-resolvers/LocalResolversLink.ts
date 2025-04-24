@@ -513,6 +513,19 @@ export class LocalResolversLink extends ApolloLink {
       });
     }
 
+    if (phase === "exports") {
+      const defs = Object.entries(execContext.exportedVariableDefs);
+
+      for (const [name, def] of defs) {
+        if (result == null && def.ancestors.has(field) && def.required) {
+          throw new LocalResolversError(
+            `Resolver '${resolverName}' returned \`${result}\` which contains a selection set for required variable '${name}'`,
+            { path }
+          );
+        }
+      }
+    }
+
     if (result === undefined) {
       // Its ok to return undefined for an exported variable if the variable is
       // optional. We don't want to warn in that case.

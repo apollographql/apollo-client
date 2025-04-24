@@ -1641,9 +1641,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               result: {
                 ...baseResult,
                 error: undefined,
-                networkStatus: this.caclulateNetworkStatus(
-                  baseResult.networkStatus
-                ),
+                networkStatus: baseResult.networkStatus,
               },
             };
           })

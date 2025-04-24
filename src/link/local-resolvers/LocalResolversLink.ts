@@ -101,7 +101,6 @@ type Path = Array<string | number>;
 
 interface ExportedVariable {
   required: boolean;
-  usedInServerField: boolean;
   ancestors: WeakSet<ASTNode>;
 }
 
@@ -708,7 +707,6 @@ export class LocalResolversLink extends ApolloLink {
         VariableDefinition: (definition) => {
           allVariableDefinitions[definition.variable.name.value] = {
             required: definition.type.kind === Kind.NON_NULL_TYPE,
-            usedInServerField: false,
             ancestors: new WeakSet(),
           };
         },
@@ -727,20 +725,8 @@ export class LocalResolversLink extends ApolloLink {
                 false,
             });
           },
-          leave(field) {
-            const fieldInfo = fields.pop();
-
-            field.arguments?.forEach((arg) => {
-              if (arg.value.kind === Kind.VARIABLE) {
-                const variableDef =
-                  allVariableDefinitions[arg.value.name.value];
-
-                if (variableDef) {
-                  variableDef.usedInServerField ||=
-                    !fieldInfo?.isClientFieldOrDescendent;
-                }
-              }
-            });
+          leave() {
+            fields.pop();
           },
         },
         Directive: (directive, _, __, ___, ancestors) => {

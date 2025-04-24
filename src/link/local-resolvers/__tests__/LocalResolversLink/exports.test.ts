@@ -1086,6 +1086,53 @@ test("emits error when a parent resolver throws while gathering exported variabl
   );
 });
 
+test("emits error when a child resolver throws while gathering exported variables from child field for a required variable in client-only query", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      currentAuthor @client {
+        id @export(as: "authorId")
+      }
+      author(id: $authorId) @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthor: () => ({ __typename: "Author" }),
+        author: (_, { id }) => {
+          return id === null ? null : testAuthor;
+        },
+      },
+      Author: {
+        id: () => {
+          throw new Error("Could not get id");
+        },
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "An error was thrown from resolver 'Author.id' while resolving required variable 'authorId'.",
+      {
+        path: ["currentAuthor", "id"],
+        sourceError: new Error("Could not get id"),
+      }
+    )
+  );
+});
+
 test("errors when resolver returns null for a required variable on client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {

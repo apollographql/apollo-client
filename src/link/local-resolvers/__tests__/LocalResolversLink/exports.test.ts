@@ -1279,4 +1279,59 @@ test("exported variables overwrite variables passed to link chain", async () => 
   await expect(stream).toComplete();
 });
 
-test.todo("allows user-provided variables");
+test("combines exported variables with user-defined variables", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!, $limit: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      posts(authorId: $authorId, limit: $limit) {
+        id
+      }
+    }
+  `;
+
+  const testAuthorId = 100;
+
+  function times<T>(num: number, fn: (num: number) => T) {
+    const values: T[] = [];
+
+    for (let i = 0; i < num; i++) {
+      values.push(fn(i));
+    }
+
+    return values;
+  }
+  const mockLink = new ApolloLink(({ variables }) => {
+    return of({
+      data: {
+        posts:
+          variables.authorId === testAuthorId ?
+            times(variables.limit, (num) => ({
+              __typename: "Post",
+              id: num,
+            }))
+          : [],
+      },
+    });
+  });
+
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => testAuthorId,
+      },
+    },
+  });
+
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { limit: 10 } })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentAuthorId: testAuthorId,
+      posts: times(10, (num) => ({ __typename: "Post", id: num })),
+    },
+  });
+  await expect(stream).toComplete();
+});

@@ -13,7 +13,7 @@ import type {
 import { isSelectionNode, Kind, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
-import { defer, from, mergeMap, of } from "rxjs";
+import { defer, from, mergeMap, mergeWith, of, Subject, tap } from "rxjs";
 
 import type { ErrorLike, OperationVariables } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
@@ -81,6 +81,7 @@ type ExecContext = {
   errors: GraphQLFormattedError[];
   errorMeta?: Record<string, any>;
   exportedVariableDefs: Record<string, ExportedVariable>;
+  bail: (reason: ErrorLike) => void;
 } & (
   | {
       exportedVariables: OperationVariables;
@@ -167,12 +168,15 @@ export class LocalResolversLink extends ApolloLink {
       const { selectionsToResolve, exportsToResolve, exportedVariableDefs } =
         this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
 
+      const subject = new Subject<never>();
+
       const execContext = {
         operation,
         operationDefinition: mainDefinition,
         fragmentMap,
         errors: [],
         exportedVariableDefs,
+        bail: (error) => subject.error(error),
       } satisfies Partial<ExecContext>;
 
       return from(
@@ -195,7 +199,9 @@ export class LocalResolversLink extends ApolloLink {
               },
             })
           );
-        })
+        }),
+        tap({ finalize: () => subject.complete() }),
+        mergeWith(subject)
       );
     });
   }
@@ -502,10 +508,13 @@ export class LocalResolversLink extends ApolloLink {
       return fieldResult;
     } catch (e) {
       if (__DEV__ && execContext.phase === "exports") {
-        throw new LocalResolversError(
-          `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
-          { path, sourceError: e }
+        execContext.bail(
+          new LocalResolversError(
+            `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
+            { path, sourceError: e }
+          )
         );
+        return null;
       }
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
@@ -616,12 +625,14 @@ export class LocalResolversLink extends ApolloLink {
         path
       );
     } catch (e) {
-      // TODO: This is getting caught in the parent catch
       if (__DEV__ && execContext.phase === "exports") {
-        throw new LocalResolversError(
-          `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
-          { path, sourceError: e }
+        execContext.bail(
+          new LocalResolversError(
+            `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
+            { path, sourceError: e }
+          )
         );
+        return null;
       }
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,

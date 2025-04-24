@@ -192,7 +192,6 @@ export class LocalResolversLink extends ApolloLink {
                 ...execContext,
                 selectionsToResolve,
                 phase: "resolve",
-                errors: [],
               },
             })
           );

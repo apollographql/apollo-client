@@ -489,24 +489,26 @@ export class LocalResolversLink extends ApolloLink {
         if (directive.name.value === "export") {
           const name = getExportedVariableName(directive);
 
-          if (name) {
-            const info = execContext.exportedVariableDefs[name];
+          if (!name) {
+            return;
+          }
 
-            if (info.required && result == null) {
-              throw new LocalResolversError(
-                `${
-                  resolver ? "Resolver" : "Field"
-                } '${resolverName}' returned \`${String(
-                  result
-                )}\` for required variable '${name}'.`,
-                { path }
-              );
-            }
+          const info = execContext.exportedVariableDefs[name];
 
-            // Avoid setting the key if the value is undefined
-            if (result !== undefined) {
-              execContext.exportedVariables[name] = result;
-            }
+          if (info.required && result == null) {
+            throw new LocalResolversError(
+              `${
+                resolver ? "Resolver" : "Field"
+              } '${resolverName}' returned \`${String(
+                result
+              )}\` for required variable '${name}'.`,
+              { path }
+            );
+          }
+
+          // Avoid setting the key if the value is undefined
+          if (result !== undefined) {
+            execContext.exportedVariables[name] = result;
           }
         }
       });

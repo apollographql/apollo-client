@@ -406,15 +406,6 @@ export class LocalResolversLink extends ApolloLink {
   ) {
     const { operation, operationDefinition, phase } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
-    const isClientField =
-      field.directives?.some((d) => d.name.value === "client") ?? false;
-
-    // If the root field is a field resolved from the server but did not return
-    // a value, we can short-circuit this execution to avoid calling child
-    // resolvers unnecessarily.
-    if (isRootField && !rootValue && !isClientField) {
-      return rootValue;
-    }
 
     const fieldName = field.name.value;
     const typename =
@@ -429,10 +420,11 @@ export class LocalResolversLink extends ApolloLink {
     );
 
     const defaultResolver =
-      // We expect a resolver to be defined for all top-level `@client` fields.
-      // Warn if a resolver is not defined.
-      isClientField && !isClientFieldDescendant ?
-        () => {
+      isClientFieldDescendant ?
+        () => rootValue?.[fieldName]
+        // We expect a resolver to be defined for all top-level `@client` fields.
+        // Warn if a resolver is not defined.
+      : () => {
           if (__DEV__) {
             invariant.warn(
               "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
@@ -441,8 +433,7 @@ export class LocalResolversLink extends ApolloLink {
           }
 
           return null;
-        }
-      : () => rootValue?.[fieldName];
+        };
 
     const resolver = this.resolvers[typename]?.[fieldName];
     let result: unknown;
@@ -537,7 +528,7 @@ export class LocalResolversLink extends ApolloLink {
     if (Array.isArray(result)) {
       const fieldResult = await this.resolveSubSelectedArray(
         field,
-        isClientFieldDescendant || isClientField,
+        true,
         result,
         execContext,
         path
@@ -585,7 +576,7 @@ export class LocalResolversLink extends ApolloLink {
 
     const fieldResult = await this.resolveSelectionSet(
       field.selectionSet,
-      isClientFieldDescendant || isClientField,
+      true,
       result,
       execContext,
       path

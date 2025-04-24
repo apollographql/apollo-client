@@ -540,7 +540,7 @@ export class LocalResolversLink extends ApolloLink {
       )) {
         if (result == null && def.ancestors.has(field) && def.required) {
           throw new LocalResolversError(
-            `Resolver '${resolverName}' returned \`${result}\` which contains a selection set for required variable '${name}'`,
+            `Resolver '${resolverName}' returned \`${result}\` which contains exported required variable '${name}'`,
             { path }
           );
         }

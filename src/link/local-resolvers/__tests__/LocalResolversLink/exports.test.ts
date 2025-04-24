@@ -1504,7 +1504,7 @@ test("emits error when top-level resolver returns null with nested export for re
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "Resolver 'Query.currentAuthor' returned `null` which contains a selection set for required variable 'authorId'",
+      "Resolver 'Query.currentAuthor' returned `null` which contains exported required variable 'authorId'",
       { path: ["currentAuthor"] }
     )
   );
@@ -1543,7 +1543,7 @@ test("emits error when top-level resolver returns undefined with nested export f
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "Resolver 'Query.currentAuthor' returned `undefined` which contains a selection set for required variable 'authorId'",
+      "Resolver 'Query.currentAuthor' returned `undefined` which contains exported required variable 'authorId'",
       { path: ["currentAuthor"] }
     )
   );

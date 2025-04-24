@@ -502,20 +502,10 @@ export class LocalResolversLink extends ApolloLink {
       return fieldResult;
     } catch (e) {
       if (__DEV__ && execContext.phase === "exports") {
-        forEachExportedVariable(field, execContext, (name, info) => {
-          if (info.required) {
-            throw new LocalResolversError(
-              `An error was thrown when resolving required exported variable '${name}' from resolver '${resolverName}'.`,
-              { path, sourceError: e }
-            );
-          } else {
-            invariant.error(
-              "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
-              name,
-              resolverName
-            );
-          }
-        });
+        throw new LocalResolversError(
+          `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
+          { path, sourceError: e }
+        );
       }
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,

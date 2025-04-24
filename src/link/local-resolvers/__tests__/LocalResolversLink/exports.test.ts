@@ -766,8 +766,7 @@ test("does not execute client resolvers for client subtrees without an export di
   expect(author).toHaveBeenCalledTimes(1);
 });
 
-test("warns and does not set optional exported variable for client-only query when resolver throws error", async () => {
-  using _ = spyOnConsole("error");
+test("emits error for client-only query when resolver throws error", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int) {
       currentAuthorId @client @export(as: "authorId")
@@ -798,48 +797,18 @@ test("warns and does not set optional exported variable for client-only query wh
   });
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitTypedValue({
-    data: {
-      currentAuthorId: null,
-      author: null,
-    },
-    errors: [
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "An error was thrown when resolving exported variables from resolver 'Query.currentAuthorId'. Resolvers must not throw while gathering exported variables. Check the `phase` from the resolver context if you would otherwise prefer to throw.",
       {
-        message: "Something went wrong",
         path: ["currentAuthorId"],
-        extensions: {
-          apollo: {
-            phase: "exports",
-            resolver: "Query.currentAuthorId",
-            source: "LocalResolversLink",
-          },
-        },
-      },
-      {
-        message: "Something went wrong",
-        path: ["currentAuthorId"],
-        extensions: {
-          apollo: {
-            phase: "resolve",
-            resolver: "Query.currentAuthorId",
-            source: "LocalResolversLink",
-          },
-        },
-      },
-    ],
-  });
-  await expect(stream).toComplete();
-
-  expect(console.error).toHaveBeenCalledTimes(1);
-  expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
-    "authorId",
-    "Query.currentAuthorId"
+        sourceError: new Error("Something went wrong"),
+      }
+    )
   );
 });
 
-test.skip("warns and does not set variable for client-only query when resolver throws error on nested field", async () => {
-  using _ = spyOnConsole("error");
+test("emits error for client-only query when resolver throws error on nested field", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int) {
       currentAuthor @client {
@@ -872,42 +841,14 @@ test.skip("warns and does not set variable for client-only query when resolver t
   });
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitTypedValue({
-    data: {
-      currentAuthor: null,
-      author: null,
-    },
-    errors: [
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "An error was thrown when resolving exported variables from resolver 'Query.currentAuthor'. Resolvers must not throw while gathering exported variables. Check the `phase` from the resolver context if you would otherwise prefer to throw.",
       {
-        message: "Something went wrong",
         path: ["currentAuthor"],
-        extensions: {
-          apollo: {
-            phase: "exports",
-            resolver: "Query.currentAuthor",
-            source: "LocalResolversLink",
-          },
-        },
-      },
-      {
-        message: "Something went wrong",
-        path: ["currentAuthor"],
-        extensions: {
-          apollo: {
-            phase: "resolve",
-            resolver: "Query.currentAuthor",
-            source: "LocalResolversLink",
-          },
-        },
-      },
-    ],
-  });
-  await expect(stream).toComplete();
-
-  expect(console.error).toHaveBeenCalledTimes(1);
-  expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
-    "Query.currentAuthor"
+        sourceError: new Error("Something went wrong"),
+      }
+    )
   );
 });
 
@@ -944,7 +885,7 @@ test("emits error when a resolver throws while gathering exported variables for 
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "An error was thrown when resolving required exported variable 'authorId' from resolver 'Query.currentAuthorId'.",
+      "An error was thrown when resolving exported variables from resolver 'Query.currentAuthorId'. Resolvers must not throw while gathering exported variables. Check the `phase` from the resolver context if you would otherwise prefer to throw.",
       {
         path: ["currentAuthorId"],
         sourceError: new Error("Something went wrong"),

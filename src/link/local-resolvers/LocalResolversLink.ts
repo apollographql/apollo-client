@@ -485,8 +485,8 @@ export class LocalResolversLink extends ApolloLink {
       return data;
     };
 
-    if (phase === "exports" && field.directives) {
-      field.directives.forEach((directive) => {
+    if (phase === "exports") {
+      field.directives?.forEach((directive) => {
         if (directive.name.value !== "export") {
           return;
         }

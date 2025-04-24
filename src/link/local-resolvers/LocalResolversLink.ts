@@ -510,7 +510,9 @@ export class LocalResolversLink extends ApolloLink {
     }
 
     if (result === undefined) {
-      if (__DEV__) {
+      // Its ok to return undefined for an exported variable if the variable is
+      // optional. We don't want to warn in that case.
+      if (__DEV__ && phase === "resolve") {
         invariant.warn(
           resolver ?
             "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."

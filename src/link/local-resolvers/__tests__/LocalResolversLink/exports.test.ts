@@ -8,6 +8,7 @@ import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -1201,6 +1202,46 @@ test("errors when resolver returns undefined for a required variable on non-clie
       { path: ["currentAuthorId"] }
     )
   );
+});
+
+test("does not warn when gathering variable exports for optional variables", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int) {
+      currentAuthorId @client @export(as: "authorId")
+      author(id: $authorId) {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const mockLink = new ApolloLink(({ variables }) =>
+    of({ data: { author: variables.id === undefined ? null : testAuthor } })
+  );
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentAuthorId: () => {},
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { currentAuthorId: null, author: null },
+  });
+
+  // If the warning was emitted during the exports phase, we'd see the console
+  // called twice (the 2nd time is for resolving the value for the end result.)
+  expect(console.warn).toHaveBeenCalledTimes(1);
 });
 
 test.todo("overwrites variables passed to link chain");

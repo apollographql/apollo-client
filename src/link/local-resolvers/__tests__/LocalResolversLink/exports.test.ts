@@ -812,3 +812,4 @@ test.todo(
 );
 
 test.todo("overwrites variables passed to link chain");
+test.todo("allows user-provided variables");

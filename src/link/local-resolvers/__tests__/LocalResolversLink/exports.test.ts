@@ -411,6 +411,43 @@ test("emits error when using an exported variable as a child of a remote field",
   );
 });
 
+test("emits error if `@export` does not include an `as` argument", async () => {
+  const query = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      authorId @client @export
+      author(id: $authorId) {
+        id
+        name
+      }
+    }
+  `;
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const mockLink = ApolloLink.empty();
+  const localResolversLink = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        author: () => testAuthor,
+        authorId: () => testAuthor.id,
+      },
+    },
+  });
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "`@export` directive on field 'authorId' used without providing an `as` argument to specify which variable to export the value.",
+      { path: ["authorId"] }
+    )
+  );
+});
+
 test("supports combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {
   const mutation = gql`
     mutation upvotePost($postId: Int!) {

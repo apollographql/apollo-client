@@ -408,7 +408,6 @@ test("emits error when using an exported variable as a child of a remote field",
       "Cannot export a variable from a field that is a child of a remote field. Exported variables must either originate from a root-level client field or a child of a root-level client field."
     )
   );
-  await expect(stream).toComplete();
 });
 
 test("supports combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {

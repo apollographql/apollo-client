@@ -277,15 +277,27 @@ export class LocalResolversLink extends ApolloLink {
 
       if (selection.kind === Kind.FIELD) {
         const isRootField = selectionSet === operationDefinition.selectionSet;
+        const isClientField =
+          isClientFieldDescendant ||
+          (selection.directives?.some((d) => d.name.value === "client") ??
+            false);
 
-        const fieldResult = await this.resolveField(
-          selection,
-          isClientFieldDescendant,
-          rootValue,
-          execContext,
-          selectionSet,
-          path.concat(selection.name.value)
-        );
+        const fieldResult =
+          isClientField ?
+            await this.resolveClientField(
+              selection,
+              isClientFieldDescendant,
+              rootValue,
+              execContext,
+              selectionSet,
+              path.concat(selection.name.value)
+            )
+          : await this.resolveServerField(
+              selection,
+              rootValue,
+              execContext,
+              path.concat(selection.name.value)
+            );
 
         if (fieldResult !== undefined && (!isRootField || rootValue !== null)) {
           resultsToMerge.push({
@@ -344,7 +356,47 @@ export class LocalResolversLink extends ApolloLink {
     return resultsToMerge.length > 0 ? mergeDeepArray(resultsToMerge) : null;
   }
 
-  private async resolveField(
+  private async resolveServerField(
+    field: FieldNode,
+    rootValue: Record<string, any> | null | undefined,
+    execContext: ExecContext,
+    path: Path
+  ) {
+    if (!rootValue) {
+      return rootValue;
+    }
+
+    const fieldName = field.name.value;
+    const result = rootValue[fieldName];
+
+    if (result === null) {
+      return null;
+    }
+
+    if (!field.selectionSet) {
+      return result;
+    }
+
+    if (Array.isArray(result)) {
+      return this.resolveSubSelectedArray(
+        field,
+        false,
+        result,
+        execContext,
+        path
+      );
+    }
+
+    return this.resolveSelectionSet(
+      field.selectionSet,
+      false,
+      result,
+      execContext,
+      path
+    );
+  }
+
+  private async resolveClientField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,

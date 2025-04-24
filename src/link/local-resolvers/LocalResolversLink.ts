@@ -437,8 +437,7 @@ export class LocalResolversLink extends ApolloLink {
 
     this.addExports(field, result, execContext);
 
-    // Handle all scalar types here.
-    if (!field.selectionSet) {
+    if (result === null) {
       if (
         isRootField &&
         execContext.phase === "resolve" &&
@@ -460,10 +459,26 @@ export class LocalResolversLink extends ApolloLink {
       return result;
     }
 
-    // From here down, the field has a selection set, which means it's trying
-    // to query a GraphQLObjectType.
-    if (result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
+    // Handle all scalar types here.
+    if (!field.selectionSet) {
+      if (
+        isRootField &&
+        execContext.phase === "resolve" &&
+        rootValue === null
+      ) {
+        this.addError(
+          newInvariantError(
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          ),
+          path,
+          execContext,
+          { resolver: resolverName, phase: execContext.phase, data: result }
+        );
+
+        return null;
+      }
+
       return result;
     }
 

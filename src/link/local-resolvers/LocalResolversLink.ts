@@ -778,12 +778,8 @@ export class LocalResolversLink extends ApolloLink {
               );
             }
 
-            // TODO: Bail early if there is no variable definition for the
-            // export field
-            if (variableName) {
-              cache.exportedVariables[variableName] =
-                allVariableDefinitions[variableName];
-            }
+            cache.exportedVariables[variableName] =
+              allVariableDefinitions[variableName];
 
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {

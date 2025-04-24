@@ -453,7 +453,7 @@ export class LocalResolversLink extends ApolloLink {
           )
         : defaultResolver();
     } catch (e) {
-      if (__DEV__ && execContext.phase === "exports") {
+      if (execContext.phase === "exports") {
         for (const [name, def] of Object.entries(
           execContext.exportedVariableDefs
         )) {
@@ -465,13 +465,15 @@ export class LocalResolversLink extends ApolloLink {
               );
             }
 
-            invariant.error(
-              "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-              name,
-              resolverName,
-              isErrorLike(e) ? e.name : "Error",
-              isErrorLike(e) ? e.message : ""
-            );
+            if (__DEV__) {
+              invariant.error(
+                "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+                name,
+                resolverName,
+                isErrorLike(e) ? e.name : "Error",
+                isErrorLike(e) ? e.message : ""
+              );
+            }
           }
         }
       }

@@ -1,5 +1,11 @@
 import { brand, isBranded } from "./utils.js";
 
+export declare namespace LocalResolversError {
+  export interface Options {
+    path?: Array<string | number>;
+  }
+}
+
 /**
  * Represents an error when executing the `LocalResolversLink`.
  */
@@ -9,9 +15,12 @@ export class LocalResolversError extends Error {
     return isBranded(error, "LocalResolversError");
   }
 
-  constructor(message: string) {
+  readonly path: Array<string | number>;
+
+  constructor(message: string, options: LocalResolversError.Options = {}) {
     super(message);
     this.name = "LocalResolversError";
+    this.path = options.path ?? [];
 
     brand(this);
     Object.setPrototypeOf(this, LocalResolversError.prototype);

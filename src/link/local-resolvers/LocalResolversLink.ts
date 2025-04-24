@@ -282,22 +282,14 @@ export class LocalResolversLink extends ApolloLink {
       if (selection.kind === Kind.FIELD) {
         const isRootField = selectionSet === operationDefinition.selectionSet;
 
-        const fieldResult =
-          isRootField ?
-            await this.resolveRootField(
-              selection,
-              rootValue,
-              execContext,
-              path.concat(selection.name.value)
-            )
-          : await this.resolveChildField(
-              selection,
-              isClientFieldDescendant,
-              rootValue,
-              execContext,
-              selectionSet,
-              path.concat(selection.name.value)
-            );
+        const fieldResult = await this.resolveField(
+          selection,
+          isClientFieldDescendant,
+          rootValue,
+          execContext,
+          selectionSet,
+          path.concat(selection.name.value)
+        );
 
         if (fieldResult !== undefined && (!isRootField || rootValue !== null)) {
           resultsToMerge.push({
@@ -374,170 +366,37 @@ export class LocalResolversLink extends ApolloLink {
     );
   }
 
-  private async resolveRootField(
-    field: FieldNode,
-    rootValue: Record<string, any> | null | undefined,
-    execContext: ExecContext,
-    path: Path
-  ) {
-    const { operationDefinition } = execContext;
-    const isClientField =
-      field.directives?.some((d) => d.name.value === "client") ?? false;
-
-    // If the root field contains a selection with `@client` field, but the
-    // server result did not return a value, we can short-circuit this execution
-    // to avoid calling child resolvers unnecessarily.
-    if (!rootValue && !isClientField) {
-      return rootValue;
-    }
-
-    const typename =
-      rootValue?.__typename || inferRootTypename(operationDefinition);
-    const fieldName = field.name.value;
-    const resolverName = getResolverName(typename, fieldName);
-
-    const defaultResolver =
-      // We expect a resolver to be defined for all root-level `@client` fields
-      // so we warn if a resolver is not defined.
-      isClientField ?
-        () => {
-          if (__DEV__) {
-            invariant.warn(
-              "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-              resolverName
-            );
-          }
-
-          return null;
-        }
-      : () => rootValue?.[fieldName] ?? null;
-
-    const resolver = this.resolvers[typename]?.[fieldName];
-
-    try {
-      let result =
-        resolver ?
-          await this.executeResolver(
-            resolver,
-            // TODO: Add support for a `rootValue` option to `LocalResolversLink`
-            {},
-            { field, fragmentMap: execContext.fragmentMap, path },
-            execContext
-          )
-        : defaultResolver();
-
-      if (result === undefined) {
-        if (__DEV__) {
-          invariant.warn(
-            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
-            resolverName
-          );
-        }
-        result = null;
-      }
-
-      this.addExports(field, result, execContext);
-
-      // Handle all scalar types here.
-      if (!field.selectionSet) {
-        if (execContext.phase === "resolve") {
-          execContext.errorMeta = { data: result };
-          invariant(
-            rootValue !== null,
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          );
-        }
-
-        return result;
-      }
-
-      // From here down, the field has a selection set, which means it's trying
-      // to query a GraphQLObjectType.
-      if (result == null) {
-        // Basically any field in a GraphQL response can be null, or missing
-        return result;
-      }
-
-      if (Array.isArray(result)) {
-        const fieldResult = await this.resolveSubSelectedArray(
-          field,
-          isClientField,
-          result,
-          execContext,
-          path
-        );
-
-        if (execContext.phase === "resolve") {
-          execContext.errorMeta = { data: fieldResult };
-          invariant(
-            rootValue !== null,
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          );
-        }
-        return fieldResult;
-      }
-
-      if (execContext.phase === "resolve") {
-        invariant(
-          result.__typename,
-          "Could not resolve __typename on object %o returned from resolver '%s'. This is an error and will cause issues when writing to the cache.",
-          result,
-          resolverName
-        );
-      }
-
-      const fieldResult = await this.resolveSelectionSet(
-        field.selectionSet,
-        isClientField,
-        result,
-        execContext,
-        path
-      );
-
-      if (execContext.phase === "resolve") {
-        execContext.errorMeta = { data: fieldResult };
-        invariant(
-          rootValue !== null,
-          "Could not merge data from '%s' resolver with remote data since data was `null`.",
-          resolverName
-        );
-      }
-
-      return fieldResult;
-    } catch (e) {
-      if (__DEV__ && execContext.phase === "exports") {
-        execContext.bail(
-          new LocalResolversError(
-            `An error was thrown when resolving exported variables from resolver '${resolverName}'. Resolvers must not throw while gathering exported variables. Check the \`phase\` from the resolver context if you would otherwise prefer to throw.`,
-            { path, sourceError: e }
-          )
-        );
-        return null;
-      }
-      this.addError(toErrorLike(e), path, execContext, {
-        resolver: resolverName,
-        phase: execContext.phase,
-      });
-
-      return null;
-    }
-  }
-
-  private async resolveChildField(
+  private async resolveField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
-    rootValue: any,
+    rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
     parentSelectionSet: SelectionSetNode,
     path: Path
   ) {
-    const fieldName = field.name.value;
+    const { operationDefinition } = execContext;
+    const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
-    const typename = rootValue.__typename;
+
+    // If the root field is a field resolved from the server but did not return
+    // a value, we can short-circuit this execution to avoid calling child
+    // resolvers unnecessarily.
+    if (isRootField && !rootValue && !isClientField) {
+      return rootValue;
+    }
+
+    const fieldName = field.name.value;
+    const typename =
+      rootValue?.__typename ||
+      (isRootField ? inferRootTypename(operationDefinition) : undefined);
     const resolverName = getResolverName(typename, fieldName);
+
+    invariant(
+      typename,
+      "Could not determine typename when resolving field '%s'. Ensure the parent resolver returns `__typename`.",
+      fieldName
+    );
 
     const defaultResolver =
       // We expect a resolver to be defined for all top-level `@client` fields
@@ -553,7 +412,7 @@ export class LocalResolversLink extends ApolloLink {
 
           return null;
         }
-      : () => rootValue[fieldName];
+      : () => rootValue?.[fieldName];
 
     const resolver = this.resolvers[typename]?.[fieldName];
 
@@ -562,7 +421,8 @@ export class LocalResolversLink extends ApolloLink {
         resolver ?
           await this.executeResolver(
             resolver,
-            dealias(parentSelectionSet, rootValue),
+            // TODO: Add support for a `rootValue` option to use for root fields to `LocalResolversLink`
+            isRootField ? {} : dealias(parentSelectionSet, rootValue) ?? {},
             { field, fragmentMap: execContext.fragmentMap, path },
             execContext
           )
@@ -584,6 +444,15 @@ export class LocalResolversLink extends ApolloLink {
 
       // Handle all scalar types here.
       if (!field.selectionSet) {
+        if (isRootField && execContext.phase === "resolve") {
+          execContext.errorMeta = { data: result };
+          invariant(
+            rootValue !== null,
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          );
+        }
+
         return result;
       }
 
@@ -595,13 +464,24 @@ export class LocalResolversLink extends ApolloLink {
       }
 
       if (Array.isArray(result)) {
-        return this.resolveSubSelectedArray(
+        const fieldResult = await this.resolveSubSelectedArray(
           field,
           isClientFieldDescendant || isClientField,
           result,
           execContext,
           path
         );
+
+        if (isRootField && execContext.phase === "resolve") {
+          execContext.errorMeta = { data: fieldResult };
+          invariant(
+            rootValue !== null,
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          );
+        }
+
+        return fieldResult;
       }
 
       if (execContext.phase === "resolve") {
@@ -613,13 +493,24 @@ export class LocalResolversLink extends ApolloLink {
         );
       }
 
-      return this.resolveSelectionSet(
+      const fieldResult = await this.resolveSelectionSet(
         field.selectionSet,
         isClientFieldDescendant || isClientField,
         result,
         execContext,
         path
       );
+
+      if (isRootField && execContext.phase === "resolve") {
+        execContext.errorMeta = { data: fieldResult };
+        invariant(
+          rootValue !== null,
+          "Could not merge data from '%s' resolver with remote data since data was `null`.",
+          resolverName
+        );
+      }
+
+      return fieldResult;
     } catch (e) {
       if (__DEV__ && execContext.phase === "exports") {
         execContext.bail(
@@ -875,8 +766,12 @@ export class LocalResolversLink extends ApolloLink {
 // keep this simple.
 function dealias(
   selectionSet: SelectionSetNode,
-  fieldValue: Record<string, any>
+  fieldValue: Record<string, any> | null | undefined
 ) {
+  if (!fieldValue) {
+    return fieldValue;
+  }
+
   const data = { ...fieldValue };
 
   for (const selection of selectionSet.selections) {

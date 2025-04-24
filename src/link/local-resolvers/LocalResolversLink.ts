@@ -515,11 +515,7 @@ export class LocalResolversLink extends ApolloLink {
       });
     }
 
-    if (result === null) {
-      return resultOrMergeError(null);
-    }
-
-    if (!field.selectionSet) {
+    if (result === null || !field.selectionSet) {
       return resultOrMergeError(result);
     }
 

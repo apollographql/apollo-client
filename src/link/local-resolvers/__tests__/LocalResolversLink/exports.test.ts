@@ -808,7 +808,7 @@ test("emits error for client-only query when resolver throws error", async () =>
   );
 });
 
-test("emits error for client-only query when resolver throws error on nested field", async () => {
+test("emits error for client-only query when parent resolver throws with nested export", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int) {
       currentAuthor @client {
@@ -851,6 +851,56 @@ test("emits error for client-only query when resolver throws error on nested fie
     )
   );
 });
+
+test.failing(
+  "emits error for client-only query when child resolver throws",
+  async () => {
+    const query = gql`
+      query currentAuthorPostCount($authorId: Int) {
+        currentAuthor @client {
+          id @export(as: "authorId")
+        }
+        author(id: $authorId) @client {
+          id
+          name
+        }
+      }
+    `;
+
+    const testAuthor = {
+      __typename: "Author",
+      id: 100,
+      name: "John Smith",
+    };
+
+    const link = new LocalResolversLink({
+      resolvers: {
+        Query: {
+          currentAuthor: () => ({ __typename: "Author" }),
+          author: (_, { id }) => {
+            return id === undefined ? null : testAuthor;
+          },
+        },
+        Author: {
+          id: () => {
+            throw new Error("Something went wrong");
+          },
+        },
+      },
+    });
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(
+      new LocalResolversError(
+        "An error was thrown when resolving exported variables from resolver 'Author.id'. Resolvers must not throw while gathering exported variables. Check the `phase` from the resolver context if you would otherwise prefer to throw.",
+        {
+          path: ["currentAuthor", "id"],
+          sourceError: new Error("Something went wrong"),
+        }
+      )
+    );
+  }
+);
 
 test("emits error when a resolver throws while gathering exported variables for a required variable in client-only query", async () => {
   const query = gql`

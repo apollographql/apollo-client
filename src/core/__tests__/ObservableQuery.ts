@@ -3477,7 +3477,7 @@ describe("ObservableQuery", () => {
           partial: false,
         },
         resultAfterCacheUpdate1: {
-          ...loadingStates.done,
+          ...loadingStates.loading,
           data: cacheValues.update1,
           partial: false,
         },
@@ -4334,9 +4334,8 @@ test("regression test for #10587", async () => {
               b: "",
             },
           },
-          // TODO: this should be `true`, but that seems to be a separate bug!
-          loading: false,
-          networkStatus: 7,
+          loading: true,
+          networkStatus: 1,
           partial: false,
         },
       ],

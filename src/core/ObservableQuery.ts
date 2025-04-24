@@ -81,7 +81,18 @@ interface Last<TData, TVariables> {
 }
 
 interface TrackedOperation {
+  /**
+   * The network status that should be caused by this operation.
+   * Currently not used, might get removed
+   */
   networkStatus: NetworkStatus;
+  /**
+   * This NetworkStatus will be used to override the current networkStatus
+   */
+  override?: NetworkStatus;
+  /**
+   * Will abort tracking the operation from this ObservableQuery and remove it from `activeOperations`
+   */
   abort: () => void;
   /**
    * `query` that was used by the `ObservableQuery` as the "main query" at the time the operation was started
@@ -1386,6 +1397,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
     const operation: TrackedOperation = {
       networkStatus,
+      override: networkStatus,
       abort: () => {
         aborted = true;
         finalize();
@@ -1418,7 +1430,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ) {
     // track query and variables from the start of the operation
     const { query, variables } = this;
-    const operation = {
+    const operation: TrackedOperation = {
       networkStatus,
       abort: () => {
         subscription.unsubscribe();
@@ -1430,6 +1442,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const subscription = observable
       .pipe(
         tap({
+          next: (value) => {
+            if (value.kind === "N") {
+              operation.override = value.value.networkStatus;
+            } else {
+              delete operation.override;
+            }
+          },
           finalize: () => this.activeOperations.delete(operation),
         }),
         map((valueWithoutMeta) => ({
@@ -1440,6 +1459,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       )
       .subscribe(this.input);
     return subscription;
+  }
+
+  private caclulateNetworkStatus(baseNetworkStatus: NetworkStatus) {
+    // in the future, this could be more complex logic, e.g. "refetch" and
+    // "fetchMore" having priority over "polling" or "loading" network statuses
+    // as for now we just take the "latest" operation that is still active,
+    // as that lines up best with previous behavior[]
+    if (baseNetworkStatus === NetworkStatus.error) {
+      //  return baseNetworkStatus;
+    }
+    const operation = Array.from(this.activeOperations.values()).findLast(
+      (operation) => operation.override !== undefined
+    );
+    return operation?.override ?? baseNetworkStatus;
   }
 
   /** @internal */
@@ -1598,15 +1631,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           dematerializeInternalResult(),
           map((value) => {
             const previousResult = this.internalSubject.getValue();
+            const baseResult =
+              isEqualQuery(previousResult, value) ?
+                previousResult.result
+              : this.getInitialResult();
             return {
               query: value.query,
               variables: value.variables,
               result: {
-                ...(isEqualQuery(previousResult, value) ?
-                  previousResult.result
-                : this.getInitialResult()),
+                ...baseResult,
                 error: undefined,
-                networkStatus: value.result.networkStatus,
+                networkStatus: this.caclulateNetworkStatus(
+                  baseResult.networkStatus
+                ),
               },
             };
           })
@@ -1615,6 +1652,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // normalize result shape
         map(({ query, variables, result }) => {
           if ("error" in result && !result.error) delete result.error;
+          result.networkStatus = this.caclulateNetworkStatus(
+            result.networkStatus
+          );
           result.loading = isNetworkRequestInFlight(result.networkStatus);
           return { query, variables, result: this.maskResult(result) };
         }),

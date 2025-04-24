@@ -519,7 +519,6 @@ export class LocalResolversLink extends ApolloLink {
       return resultOrMergeError(null);
     }
 
-    // Handle all scalar types here.
     if (!field.selectionSet) {
       return resultOrMergeError(result);
     }

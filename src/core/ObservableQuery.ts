@@ -483,12 +483,12 @@ export class ObservableQuery<
     }
   }
 
-  private resubscribeCache({
-    variables = this.variables,
-    query = this.query,
-    fetchPolicy = this.options.fetchPolicy,
-  } = {}) {
+  private resubscribeCache() {
+    const { variables, fetchPolicy } = this.options;
+    const query = this.query;
+
     this.cacheSubscription?.unsubscribe();
+
     if (fetchPolicy === "standby" || fetchPolicy === "no-cache") {
       return;
     }
@@ -524,14 +524,12 @@ export class ObservableQuery<
           console.log("subscribing to cache for", {
             query,
             variables,
-            fetchPolicy,
           });
         },
         unsubscribe() {
           console.log("unsubscribing from cache for", {
             query,
             variables,
-            fetchPolicy,
           });
         },
       })
@@ -1145,7 +1143,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     console.trace(`ObservableQuery.reobserve(%o)`, newOptions);
-    this.resubscribeCache(newOptions);
     this.resetNotifications();
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
@@ -1255,6 +1252,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (fetchPolicy === "standby") {
       this.cancelPolling();
+    }
+    if (
+      !useDisposableObservable ||
+      // TODO: investigate - should `refetch` actually be a disposable Query?
+      newNetworkStatus === NetworkStatus.refetch
+    ) {
+      this.resubscribeCache();
     }
 
     const { notifyOnNetworkStatusChange = true } = options;
@@ -1575,12 +1579,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ),
       merge(
         fromCache.pipe(
-          filter(
-            (value) =>
-              (this.options.fetchPolicy !== "no-cache" &&
-                this.options.fetchPolicy !== "standby") ||
-              value.reason === NetworkStatus.refetch
-          ),
           filter(filterForCurrentQuery),
           dematerializeInternalResult<
             ApolloQueryResult<TData>,

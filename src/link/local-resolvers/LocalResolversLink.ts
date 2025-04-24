@@ -502,9 +502,7 @@ export class LocalResolversLink extends ApolloLink {
           throw new LocalResolversError(
             `${
               resolver ? "Resolver" : "Field"
-            } '${resolverName}' returned \`${String(
-              result
-            )}\` for required variable '${name}'.`,
+            } '${resolverName}' returned \`${result}\` for required variable '${name}'.`,
             { path }
           );
         }

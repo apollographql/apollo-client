@@ -350,13 +350,31 @@ export class LocalResolversLink extends ApolloLink {
     return resultsToMerge.length > 0 ? mergeDeepArray(resultsToMerge) : null;
   }
 
+  private executeResolver(
+    resolver: LocalResolversLink.Resolver,
+    rootValue: Record<string, any>,
+    info: Parameters<LocalResolversLink.Resolver>[3],
+    execContext: ExecContext
+  ) {
+    const { operation, phase } = execContext;
+
+    return Promise.resolve(
+      cacheSlot.withValue(operation.client.cache, resolver, [
+        rootValue,
+        argumentsObjectFromField(info.field, operation.variables),
+        { phase, operation },
+        info,
+      ])
+    );
+  }
+
   private async resolveRootField(
     field: FieldNode,
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
     path: Path
   ) {
-    const { operationDefinition, operation, phase } = execContext;
+    const { operationDefinition } = execContext;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
 
@@ -393,16 +411,12 @@ export class LocalResolversLink extends ApolloLink {
     try {
       let result =
         resolver ?
-          await Promise.resolve(
-            // In case the resolve function accesses reactive variables,
-            // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(operation.client.cache, resolver, [
-              // TODO: Add a `rootValue` option to `LocalResolversLink`
-              {},
-              argumentsObjectFromField(field, operation.variables),
-              { phase, operation },
-              { field, fragmentMap: execContext.fragmentMap, path },
-            ])
+          await this.executeResolver(
+            resolver,
+            // TODO: Add support for a `rootValue` option to `LocalResolversLink`
+            {},
+            { field, fragmentMap: execContext.fragmentMap, path },
+            execContext
           )
         : defaultResolver();
 
@@ -507,8 +521,6 @@ export class LocalResolversLink extends ApolloLink {
       return null;
     }
 
-    const { operation, phase } = execContext;
-    const { variables } = operation;
     const fieldName = field.name.value;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
@@ -536,19 +548,11 @@ export class LocalResolversLink extends ApolloLink {
     try {
       let result =
         resolver ?
-          await Promise.resolve(
-            // In case the resolve function accesses reactive variables,
-            // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(operation.client.cache, resolver, [
-              // Ensure the parent value passed to the resolver does not contain
-              // aliased fields, otherwise it is nearly impossible to determine
-              // what property in the parent type contains the field you want to
-              // read from. `dealias` contains a shallow copy of `rootValue`
-              dealias(parentSelectionSet, rootValue),
-              argumentsObjectFromField(field, variables),
-              { operation, phase },
-              { field, fragmentMap: execContext.fragmentMap, path },
-            ])
+          await this.executeResolver(
+            resolver,
+            dealias(parentSelectionSet, rootValue),
+            { field, fragmentMap: execContext.fragmentMap, path },
+            execContext
           )
         : defaultResolver();
 

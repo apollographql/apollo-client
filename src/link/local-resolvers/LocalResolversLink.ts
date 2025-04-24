@@ -80,6 +80,7 @@ type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   errorMeta?: Record<string, any>;
+  exportedVariables: Record<string, ExportedVariable>;
 } & (
   | {
       exportedVariables: OperationVariables;
@@ -163,7 +164,7 @@ export class LocalResolversLink extends ApolloLink {
       const fragments = getFragmentDefinitions(clientQuery);
       const fragmentMap = createFragmentMap(fragments);
 
-      const { selectionsToResolve, exportsToResolve } =
+      const { selectionsToResolve, exportsToResolve, exportedVariables } =
         this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
 
       const execContext = {
@@ -171,6 +172,7 @@ export class LocalResolversLink extends ApolloLink {
         operationDefinition: mainDefinition,
         fragmentMap,
         errors: [],
+        exportedVariables,
       } satisfies Partial<ExecContext>;
 
       return from(

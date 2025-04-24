@@ -80,7 +80,7 @@ type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   errorMeta?: Record<string, any>;
-  exportedVariables: Record<string, ExportedVariable>;
+  exportedVariableDefs: Record<string, ExportedVariable>;
 } & (
   | {
       exportedVariables: OperationVariables;
@@ -101,7 +101,7 @@ interface ExportedVariable {
 interface TraverseCacheEntry {
   selectionsToResolve: Set<SelectionNode>;
   exportsToResolve: Set<SelectionNode>;
-  exportedVariables: { [variableName: string]: ExportedVariable };
+  exportedVariableDefs: { [variableName: string]: ExportedVariable };
 }
 
 export class LocalResolversLink extends ApolloLink {
@@ -164,7 +164,7 @@ export class LocalResolversLink extends ApolloLink {
       const fragments = getFragmentDefinitions(clientQuery);
       const fragmentMap = createFragmentMap(fragments);
 
-      const { selectionsToResolve, exportsToResolve, exportedVariables } =
+      const { selectionsToResolve, exportsToResolve, exportedVariableDefs } =
         this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
 
       const execContext = {
@@ -172,7 +172,7 @@ export class LocalResolversLink extends ApolloLink {
         operationDefinition: mainDefinition,
         fragmentMap,
         errors: [],
-        exportedVariables,
+        exportedVariableDefs,
       } satisfies Partial<ExecContext>;
 
       return from(
@@ -502,10 +502,20 @@ export class LocalResolversLink extends ApolloLink {
       return fieldResult;
     } catch (e) {
       if (__DEV__ && execContext.phase === "exports") {
-        invariant.error(
-          "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
-          resolverName
-        );
+        forEachExportedVariable(field, execContext, (name, info) => {
+          if (info.required) {
+            throw new LocalResolversError(
+              `An error was thrown when resolving required exported variable '${name}' from resolver '${resolverName}'.`,
+              { path, sourceError: e }
+            );
+          } else {
+            invariant.error(
+              "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
+              name,
+              resolverName
+            );
+          }
+        });
       }
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
@@ -616,14 +626,20 @@ export class LocalResolversLink extends ApolloLink {
         path
       );
     } catch (e) {
-      if (execContext.phase === "exports") {
-        if (__DEV__) {
+      forEachExportedVariable(field, execContext, (name, info) => {
+        if (info.required) {
+          throw new LocalResolversError(
+            `An error was thrown when resolving required exported variable '${name}' from resolver '${resolverName}'.`,
+            { path, sourceError: e }
+          );
+        } else {
           invariant.error(
-            "An error was thrown from resolver '%s' while resolving the exported variable '%s'. Because this was an optional variable, the value has been set to `null`.",
+            "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
+            name,
             resolverName
           );
         }
-      }
+      });
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         phase: execContext.phase,
@@ -730,13 +746,13 @@ export class LocalResolversLink extends ApolloLink {
 
       // Track a separate list of all variable definitions since not all variable
       // definitions are used as exports of an `@export` field.
-      const allVariableDefinitions: TraverseCacheEntry["exportedVariables"] =
+      const allVariableDefinitions: TraverseCacheEntry["exportedVariableDefs"] =
         {};
 
       const cache: TraverseCacheEntry = {
         selectionsToResolve: new Set<SelectionNode>(),
         exportsToResolve: new Set<SelectionNode>(),
-        exportedVariables: {},
+        exportedVariableDefs: {},
       };
       this.traverseCache.set(definitionNode, cache);
 
@@ -811,7 +827,7 @@ export class LocalResolversLink extends ApolloLink {
               );
             }
 
-            cache.exportedVariables[variableName] =
+            cache.exportedVariableDefs[variableName] =
               allVariableDefinitions[variableName];
 
             ancestors.forEach((node) => {
@@ -948,7 +964,7 @@ function getExportedVariableName(directive: DirectiveNode) {
 function forEachExportedVariable(
   field: FieldNode,
   execContext: ExecContext,
-  fn: (name: string, exportedVariable: ExportedVariable | undefined) => void
+  fn: (name: string, exportedVariable: ExportedVariable) => void
 ) {
   if (field.directives) {
     field.directives.forEach((directive) => {
@@ -956,7 +972,7 @@ function forEachExportedVariable(
         const name = getExportedVariableName(directive);
 
         if (name) {
-          fn(name, execContext.exportedVariables[name]);
+          fn(name, execContext.exportedVariableDefs[name]);
         }
       }
     });

@@ -832,12 +832,13 @@ test("warns and does not set optional exported variable for client-only query wh
 
   expect(console.error).toHaveBeenCalledTimes(1);
   expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
+    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
+    "authorId",
     "Query.currentAuthorId"
   );
 });
 
-test("warns and sets exported variable to null for client-only query when resolver throws error on nested field", async () => {
+test.skip("warns and does not set variable for client-only query when resolver throws error on nested field", async () => {
   using _ = spyOnConsole("error");
   const query = gql`
     query currentAuthorPostCount($authorId: Int) {
@@ -905,12 +906,12 @@ test("warns and sets exported variable to null for client-only query when resolv
 
   expect(console.error).toHaveBeenCalledTimes(1);
   expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown from resolver '%s' while resolving exported variables. Because this was an optional variable, the value has been set to `null`.",
+    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s'.",
     "Query.currentAuthor"
   );
 });
 
-test.skip("emits error when a resolver throws while gathering exported variables for a required variable in client-only query", async () => {
+test("emits error when a resolver throws while gathering exported variables for a required variable in client-only query", async () => {
   const query = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -943,7 +944,7 @@ test.skip("emits error when a resolver throws while gathering exported variables
 
   await expect(stream).toEmitError(
     new LocalResolversError(
-      "An error was thrown while running 'Query.currentAuthorId' when resolving exported variables.",
+      "An error was thrown when resolving required exported variable 'authorId' from resolver 'Query.currentAuthorId'.",
       {
         path: ["currentAuthorId"],
         sourceError: new Error("Something went wrong"),

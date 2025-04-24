@@ -345,24 +345,6 @@ export class LocalResolversLink extends ApolloLink {
     return resultsToMerge.length > 0 ? mergeDeepArray(resultsToMerge) : null;
   }
 
-  private executeResolver(
-    resolver: LocalResolversLink.Resolver,
-    rootValue: Record<string, any>,
-    info: Parameters<LocalResolversLink.Resolver>[3],
-    execContext: ExecContext
-  ) {
-    const { operation, phase } = execContext;
-
-    return Promise.resolve(
-      cacheSlot.withValue(operation.client.cache, resolver, [
-        rootValue,
-        argumentsObjectFromField(info.field, operation.variables),
-        { phase, operation },
-        info,
-      ])
-    );
-  }
-
   private async resolveField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
@@ -371,7 +353,7 @@ export class LocalResolversLink extends ApolloLink {
     parentSelectionSet: SelectionSetNode,
     path: Path
   ) {
-    const { operationDefinition } = execContext;
+    const { operation, operationDefinition, phase } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const isClientField =
       field.directives?.some((d) => d.name.value === "client") ?? false;
@@ -417,12 +399,14 @@ export class LocalResolversLink extends ApolloLink {
     try {
       result =
         resolver ?
-          await this.executeResolver(
-            resolver,
-            // TODO: Add support for a `rootValue` option to use for root fields to `LocalResolversLink`
-            isRootField ? {} : dealias(parentSelectionSet, rootValue) ?? {},
-            { field, fragmentMap: execContext.fragmentMap, path },
-            execContext
+          await Promise.resolve(
+            cacheSlot.withValue(operation.client.cache, resolver, [
+              // TODO: Add support for a `rootValue` option to use for root fields to `LocalResolversLink`
+              isRootField ? {} : dealias(parentSelectionSet, rootValue) ?? {},
+              argumentsObjectFromField(field, operation.variables),
+              { phase, operation },
+              { field, fragmentMap: execContext.fragmentMap, path },
+            ])
           )
         : defaultResolver();
     } catch (e) {

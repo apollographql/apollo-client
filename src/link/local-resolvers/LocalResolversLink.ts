@@ -409,8 +409,9 @@ export class LocalResolversLink extends ApolloLink {
 
     const fieldName = field.name.value;
     const typename =
-      rootValue?.__typename ||
-      (isRootField ? inferRootTypename(operationDefinition) : undefined);
+      isRootField ?
+        rootValue?.__typename || inferRootTypename(operationDefinition)
+      : rootValue?.__typename;
     const resolverName = getResolverName(typename, fieldName);
 
     invariant(

@@ -51,7 +51,10 @@ test("handles @client fields inside fragments", async () => {
     {
       request: { query: serverQuery },
       result: {
-        data: { foo: { bar: true, __typename: `Foo` }, bar: { baz: true } },
+        data: {
+          foo: { bar: true, __typename: "Foo" },
+          bar: { baz: true, __typename: "Bar" },
+        },
       },
     },
   ]);
@@ -70,7 +73,7 @@ test("handles @client fields inside fragments", async () => {
   await expect(stream).toEmitTypedValue({
     data: {
       foo: { bar: true, baz: false, __typename: "Foo" },
-      bar: { baz: true },
+      bar: { baz: true, __typename: "Bar" },
     },
   });
 

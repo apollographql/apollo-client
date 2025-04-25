@@ -1,0 +1,5 @@
+scalar Date
+
+extend type User {
+  lastLoggedInAt: Date
+}

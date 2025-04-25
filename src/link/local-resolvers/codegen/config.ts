@@ -4,6 +4,7 @@ const defaultConfig = {
   avoidOptionals: {
     field: true,
   },
+  defaultScalarType: "unknown",
 };
 
 export function createLocalResolversLinkCodegenConfig(

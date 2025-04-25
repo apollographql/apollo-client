@@ -522,7 +522,8 @@ export class LocalResolversLink<
               isRootField ?
                 execContext.rootValue
               : dealias(parentSelectionSet, rootValue) ?? {},
-              argumentsObjectFromField(field, operation.variables),
+              (argumentsObjectFromField(field, operation.variables) ??
+                {}) as Record<string, unknown>,
               { phase, operation },
               { field, fragmentMap: execContext.fragmentMap, path },
             ])

@@ -164,9 +164,25 @@ interface TraverseCacheEntry {
   exportedVariableDefs: { [variableName: string]: ExportedVariable };
 }
 
+type InferRootValueFromField<TField> =
+  TField extends { [key: string]: infer Resolver } ?
+    Resolver extends LocalResolversLink.Resolver<any, infer Parent, any> ?
+      Parent
+    : unknown
+  : unknown;
+
+type InferRootValueFromResolvers<TResolvers> =
+  TResolvers extends { Query?: infer QueryResolvers } ?
+    InferRootValueFromField<QueryResolvers>
+  : TResolvers extends { Mutation?: infer MutationResolvers } ?
+    InferRootValueFromField<MutationResolvers>
+  : TResolvers extends { Subscription?: infer SubscriptionResolvers } ?
+    InferRootValueFromField<SubscriptionResolvers>
+  : unknown;
+
 export class LocalResolversLink<
   Resolvers = LocalResolversLink.Resolvers,
-  RootValue = unknown,
+  RootValue = InferRootValueFromResolvers<Resolvers>,
 > extends ApolloLink {
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,

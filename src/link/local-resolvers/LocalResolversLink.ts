@@ -6,6 +6,7 @@ import type {
   FieldNode,
   GraphQLError,
   GraphQLFormattedError,
+  GraphQLScalarType,
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,
@@ -52,13 +53,20 @@ import {
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
+type OmitScalarResolvers<TResolvers> = {
+  [K in keyof TResolvers as NonNullable<TResolvers[K]> extends (
+    GraphQLScalarType<any, any>
+  ) ?
+    never
+  : K]: TResolvers[K];
+};
+
 export declare namespace LocalResolversLink {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
   export interface Options<
-    Resolvers extends
-      LocalResolversLink.Resolvers = LocalResolversLink.Resolvers,
+    Resolvers = LocalResolversLink.Resolvers,
     RootValue = unknown,
   > {
     /**
@@ -93,7 +101,7 @@ export declare namespace LocalResolversLink {
     /**
      * The map of resolvers used to provide values for `@client` fields.
      */
-    resolvers?: Resolvers;
+    resolvers?: OmitScalarResolvers<Resolvers>;
   }
 
   export interface Resolvers {
@@ -157,7 +165,7 @@ interface TraverseCacheEntry {
 }
 
 export class LocalResolversLink<
-  Resolvers extends LocalResolversLink.Resolvers = LocalResolversLink.Resolvers,
+  Resolvers = LocalResolversLink.Resolvers,
   RootValue = unknown,
 > extends ApolloLink {
   private traverseCache = new WeakMap<

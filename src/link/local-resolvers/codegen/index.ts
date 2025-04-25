@@ -3,4 +3,4 @@ export type {
   LocalResolversLinkResolveInfo,
   LocalResolversLinkResolverFn,
 } from "./types.js";
-export { localResolversCodegenConfig } from "./config.js";
+export { createLocalResolversLinkCodegenConfig } from "./config.js";

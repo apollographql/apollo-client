@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { LocalResolversLinkResolverFn as ResolverFn } from "@apollo/client/link/local-resolvers/codegen";
-import { GraphQLResolveInfo } from "graphql";
+import { LocalResolversLinkResolveInfo as GraphQLResolveInfo } from "@apollo/client/link/local-resolvers/codegen";
+import { LocalResolversLinkContextType } from "@apollo/client/link/local-resolvers/codegen";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -32,18 +33,18 @@ export type Scalars = {
 };
 
 export type Food = {
-  __typename?: "Food";
-  name?: Maybe<Scalars["String"]["output"]>;
+  __typename: "Food";
+  name: Maybe<Scalars["String"]["output"]>;
 };
 
 export type Query = {
-  __typename?: "Query";
-  currentUserId?: Maybe<Scalars["ID"]["output"]>;
+  __typename: "Query";
+  currentUserId: Maybe<Scalars["ID"]["output"]>;
 };
 
 export type User = {
-  __typename?: "User";
-  favoriteFood?: Maybe<Food>;
+  __typename: "User";
+  favoriteFood: Maybe<Food>;
   isLoggedIn: Scalars["Boolean"]["output"];
 };
 
@@ -166,7 +167,7 @@ export type ResolversParentTypes = {
 };
 
 export type FoodResolvers<
-  ContextType = any,
+  ContextType = LocalResolversLinkContextType,
   ParentType extends
     ResolversParentTypes["Food"] = ResolversParentTypes["Food"],
 > = {
@@ -175,7 +176,7 @@ export type FoodResolvers<
 };
 
 export type QueryResolvers<
-  ContextType = any,
+  ContextType = LocalResolversLinkContextType,
   ParentType extends
     ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
 > = {
@@ -183,7 +184,7 @@ export type QueryResolvers<
 };
 
 export type UserResolvers<
-  ContextType = any,
+  ContextType = LocalResolversLinkContextType,
   ParentType extends
     ResolversParentTypes["User"] = ResolversParentTypes["User"],
 > = {
@@ -196,7 +197,7 @@ export type UserResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type Resolvers<ContextType = any> = {
+export type Resolvers<ContextType = LocalResolversLinkContextType> = {
   Food?: FoodResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;

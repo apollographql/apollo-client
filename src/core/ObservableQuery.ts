@@ -811,14 +811,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
+          // was reportResult
           pushNotification({
             kind: "N",
             value: {
-              data: data as any,
-              loading: false,
+              ...lastResult,
               networkStatus: originalNetworkStatus,
-              error: undefined,
-              partial: false,
+              // will be overwritten anyways, just here for types sake
+              loading: false,
+              data: data as TData,
             },
             source: "network",
             fetchPolicy: combinedOptions.fetchPolicy || "cache-first",
@@ -829,16 +830,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         return this.maskResult(fetchMoreResult);
       })
       .finally(() => {
+        // call `finalize` a second time in case the `.then` case above was not reached
+        finalize();
+
         // In case the cache writes above did not generate a broadcast
         // notification (which would have been intercepted by onWatchUpdated),
         // likely because the written data were the same as what was already in
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
-        pushNotification({
-          kind: "N",
-          source: "newNetworkStatus",
-          value: { networkStatus: NetworkStatus.ready },
-        });
+        if (isCached && !updatedQuerySet.has(this.query)) {
+          pushNotification({
+            kind: "N",
+            source: "newNetworkStatus",
+            value: { networkStatus: NetworkStatus.ready },
+          });
+        }
       });
   }
 

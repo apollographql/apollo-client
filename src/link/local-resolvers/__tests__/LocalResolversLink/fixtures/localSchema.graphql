@@ -4,4 +4,9 @@ extend type Query {
 
 extend type User {
   isLoggedIn: Boolean!
+  favoriteFood: Food
+}
+
+type Food {
+  name: String
 }

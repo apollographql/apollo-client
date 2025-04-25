@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { LocalResolversLinkResolverFn as ResolverFn } from "@apollo/client/link/local-resolvers/codegen";
 import { GraphQLResolveInfo } from "graphql";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -20,6 +21,7 @@ export type Incremental<T> =
   | {
       [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
     };
+export { ResolverFn };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string };
@@ -29,6 +31,11 @@ export type Scalars = {
   Float: { input: number; output: number };
 };
 
+export type Food = {
+  __typename?: "Food";
+  name?: Maybe<Scalars["String"]["output"]>;
+};
+
 export type Query = {
   __typename?: "Query";
   currentUserId?: Maybe<Scalars["ID"]["output"]>;
@@ -36,24 +43,18 @@ export type Query = {
 
 export type User = {
   __typename?: "User";
+  favoriteFood?: Maybe<Food>;
   isLoggedIn: Scalars["Boolean"]["output"];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
 
-export type ResolverWithResolve<TResult, TParent, TContext, TArgs> = {
-  resolve: ResolverFn<TResult, TParent, TContext, TArgs>;
-};
-export type Resolver<TResult, TParent = {}, TContext = {}, TArgs = {}> =
-  | ResolverFn<TResult, TParent, TContext, TArgs>
-  | ResolverWithResolve<TResult, TParent, TContext, TArgs>;
-
-export type ResolverFn<TResult, TParent, TContext, TArgs> = (
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => Promise<TResult> | TResult;
+export type Resolver<
+  TResult,
+  TParent = {},
+  TContext = {},
+  TArgs = {},
+> = ResolverFn<TResult, TParent, TContext, TArgs>;
 
 export type SubscriptionSubscribeFn<TResult, TParent, TContext, TArgs> = (
   parent: TParent,
@@ -147,6 +148,7 @@ export type DirectiveResolverFn<
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
+  Food: ResolverTypeWrapper<Food>;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
@@ -156,10 +158,20 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars["Boolean"]["output"];
+  Food: Food;
   ID: Scalars["ID"]["output"];
   Query: {};
   String: Scalars["String"]["output"];
   User: User;
+};
+
+export type FoodResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes["Food"] = ResolversParentTypes["Food"],
+> = {
+  name?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type QueryResolvers<
@@ -167,11 +179,7 @@ export type QueryResolvers<
   ParentType extends
     ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
 > = {
-  currentUserId?: Resolver<
-    Maybe<ResolversTypes["ID"]>,
-    ParentType,
-    ContextType
-  >;
+  currentUserId: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
 };
 
 export type UserResolvers<
@@ -179,11 +187,17 @@ export type UserResolvers<
   ParentType extends
     ResolversParentTypes["User"] = ResolversParentTypes["User"],
 > = {
+  favoriteFood?: Resolver<
+    Maybe<ResolversTypes["Food"]>,
+    ParentType,
+    ContextType
+  >;
   isLoggedIn?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {
+  Food?: FoodResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };

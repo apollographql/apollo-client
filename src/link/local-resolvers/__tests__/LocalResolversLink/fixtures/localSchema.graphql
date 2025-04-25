@@ -1,0 +1,7 @@
+extend type Query {
+  currentUserId: ID
+}
+
+extend type User {
+  isLoggedIn: Boolean!
+}

@@ -37,6 +37,7 @@ export function createLocalResolversLinkCodegenConfig(
         contextType:
           "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkContextType",
         makeResolverTypeCallable: true,
+        nonOptionalTypename: true,
       }
     ),
   } satisfies import("@graphql-codegen/plugin-helpers").Types.ConfiguredOutput;

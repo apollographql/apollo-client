@@ -56,7 +56,11 @@ export declare namespace LocalResolversLink {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
-  export interface Options<RootValue = unknown> {
+  export interface Options<
+    Resolvers extends
+      LocalResolversLink.Resolvers = LocalResolversLink.Resolvers,
+    RootValue = unknown,
+  > {
     /**
      * A value or function called with the current `operation` and `phase`
      * creating the root value passed to any root field resolvers. Providing a
@@ -94,20 +98,26 @@ export declare namespace LocalResolversLink {
 
   export interface Resolvers {
     [typename: string]: {
-      [field: string]: Resolver;
+      [field: string]: Resolver<any, any, any>;
     };
   }
 
-  export type Resolver = (
-    rootValue: any,
-    args: any,
+  export interface ResolveInfo {
+    field: FieldNode;
+    fragmentMap: FragmentMap;
+    path: Path;
+  }
+
+  export type Resolver<
+    TResult = unknown,
+    TParent = unknown,
+    TArgs = Record<string, unknown>,
+  > = (
+    parent: TParent,
+    args: TArgs,
     context: ResolverContext,
-    info: {
-      field: FieldNode;
-      fragmentMap: FragmentMap;
-      path: Path;
-    }
-  ) => any;
+    info: ResolveInfo
+  ) => TResult;
 
   export interface ResolverContext {
     operation: Operation;
@@ -147,8 +157,7 @@ interface TraverseCacheEntry {
 }
 
 export class LocalResolversLink<
-  // Reserved for future schema types
-  _Schema = never,
+  Resolvers extends LocalResolversLink.Resolvers = LocalResolversLink.Resolvers,
   RootValue = unknown,
 > extends ApolloLink {
   private traverseCache = new WeakMap<
@@ -158,7 +167,7 @@ export class LocalResolversLink<
   private resolvers: LocalResolversLink.Resolvers = {};
   private rootValue?: LocalResolversLink.Options["rootValue"];
 
-  constructor(options: LocalResolversLink.Options<RootValue> = {}) {
+  constructor(options: LocalResolversLink.Options<Resolvers, RootValue> = {}) {
     super();
 
     this.rootValue = options.rootValue;

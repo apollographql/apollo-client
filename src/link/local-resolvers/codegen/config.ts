@@ -6,7 +6,7 @@ const defaultConfig = {
   },
 };
 
-export function localResolversCodegenConfig(
+export function createLocalResolversLinkCodegenConfig(
   baseConfig: import("@graphql-codegen/plugin-helpers").Types.ConfiguredOutput
 ) {
   const plugins = baseConfig.plugins ?? [];

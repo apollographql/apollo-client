@@ -53,6 +53,9 @@ import {
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export declare namespace LocalResolversLink {
+  // `rootValue` can be any value, but using `any` or `unknown` does not allow
+  // the ability to add a function signature to this definition. The generic
+  // allows us to provide the function signature while allowing any value.
   export interface Options<RootValue = unknown> {
     /**
      * A value or function called with the current `operation` and `phase`

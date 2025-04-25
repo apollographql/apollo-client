@@ -1,6 +1,7 @@
 import { of } from "rxjs";
 
 import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
+import { LocalResolversError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
@@ -221,6 +222,65 @@ test("warns when cache does not implement fragmentMatches", async () => {
   );
 });
 
-test.todo(
-  "returns error when fragment spread type condition does not match typename"
-);
+test("emits error when fragment spread type condition does not match typename", async () => {
+  const query = gql`
+    fragment FooDetails on Bar {
+      bar
+    }
+    query {
+      foo @client {
+        ...FooDetails
+      }
+    }
+  `;
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo", bar: true }),
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitError(
+    new LocalResolversError(
+      "Fragment 'FooDetails' cannot be used with type 'Foo' as objects of type 'Foo' can never be of type 'Bar'.",
+      { path: ["foo"] }
+    )
+  );
+});
+
+test("can use a fragments on interface types defined by possibleTypes", async () => {
+  const query = gql`
+    query {
+      currentUser @client {
+        ...ProfileDetails
+      }
+    }
+
+    fragment ProfileDetails on Profile {
+      id
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ possibleTypes: { Profile: ["User"] } }),
+  });
+
+  const link = new LocalResolversLink({
+    resolvers: {
+      Query: {
+        currentUser: () => ({ __typename: "User", id: 1 }),
+      },
+    },
+  });
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      currentUser: { __typename: "User", id: 1 },
+    },
+  });
+  await expect(stream).toComplete();
+});

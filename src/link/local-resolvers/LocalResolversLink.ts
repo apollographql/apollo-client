@@ -391,6 +391,27 @@ export class LocalResolversLink<
         const fragment = fragmentMap[selection.name.value];
         invariant(fragment, `No fragment named %s`, selection.name.value);
 
+        const typename = rootValue?.__typename;
+        const typeCondition = fragment.typeCondition.name.value;
+
+        // Allow exact matches on typename even if the cache doesn't implement
+        // the fragmentMatches API.
+        let fragmentMatches = typename === typeCondition;
+
+        if (!fragmentMatches && client.cache.fragmentMatches) {
+          fragmentMatches = client.cache.fragmentMatches(
+            fragment,
+            typename ?? ""
+          );
+        }
+
+        if (!fragmentMatches) {
+          throw new LocalResolversError(
+            `Fragment '${fragment.name.value}' cannot be used with type '${typename}' as objects of type '${typename}' can never be of type '${fragment.typeCondition.name.value}'.`,
+            { path }
+          );
+        }
+
         const fragmentResult = await this.resolveSelectionSet(
           fragment.selectionSet,
           isClientFieldDescendant,

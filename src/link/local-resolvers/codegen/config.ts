@@ -29,9 +29,13 @@ export function localResolversCodegenConfig(
           mutation: true,
           subscription: true,
         },
-        makeResolverTypeCallable: true,
+        customResolveInfo:
+          "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkResolveInfo",
         customResolverFn:
           "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkResolverFn",
+        contextType:
+          "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkContextType",
+        makeResolverTypeCallable: true,
       }
     ),
   } satisfies import("@graphql-codegen/plugin-helpers").Types.ConfiguredOutput;

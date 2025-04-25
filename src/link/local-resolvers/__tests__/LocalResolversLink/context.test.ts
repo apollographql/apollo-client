@@ -37,7 +37,7 @@ test("passes operation in context to resolvers", async () => {
 
   expect(barResolver).toHaveBeenCalledWith(
     { __typename: "Foo" },
-    null,
+    {},
     {
       phase: "resolve",
       operation: expect.objectContaining({

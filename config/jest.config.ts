@@ -57,8 +57,7 @@ const tsStandardConfig = {
     ignoreDTSFiles,
     ignoreTSXFiles,
     "src/link/local-resolvers/__tests__/LocalResolversLink/testUtils.ts",
-    "src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers.ts",
-    "src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-with-scalar.ts",
+    "src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/.*.ts$",
   ],
 };
 

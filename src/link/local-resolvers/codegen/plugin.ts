@@ -28,19 +28,15 @@ export const plugin: PluginFunction<
   const importType = config.useTypeImports ? "import type" : "import";
   const prepend: string[] = [];
   const defsToInclude: string[] = [];
-  const directiveResolverMappings = {} as Record<string, string>;
 
   let transformedSchema = schema;
 
-  const visitor = new LocalResolversLinkVisitor(
-    { ...config, directiveResolverMappings },
-    transformedSchema
-  );
+  const visitor = new LocalResolversLinkVisitor(config, transformedSchema);
 
   const astNode = getCachedDocumentNodeFromSchema(transformedSchema);
 
   // runs visitor
-  const visitorResult = oldVisit(astNode, { leave: visitor });
+  const visitorResult = oldVisit(astNode, { leave: visitor as any });
 
   const resolverType = `export type Resolver<TResult, TParent = Record<string, unknown>, TArgs = Record<string, unknown>> =`;
   const resolverFnUsage = `ResolverFn<TResult, TParent, TArgs>`;
@@ -85,7 +81,7 @@ ${defsToInclude.join("\n")}
     `${importType} { LocalResolversLink } from '@apollo/client/link/local-resolvers'`
   );
   prepend.push(
-    `type ResolverFn<TResult, TParent, TArgs> = LocalResolversLink.Resolver<TResult, TParent, TArgs>`
+    `type ResolverFn<TResult, TParent = unknown, TArgs = Record<string, unknown>> = LocalResolversLink.Resolver<TResult, TParent, TArgs>`
   );
 
   prepend.push(...mappersImports, ...visitor.globalDeclarations);
@@ -100,7 +96,9 @@ ${defsToInclude.join("\n")}
       resolversInterfaceTypesMapping,
       resolversTypeMapping,
       resolversParentTypeMapping,
-      ...visitorResult.definitions.filter((d) => typeof d === "string"),
+      ...visitorResult.definitions.filter(
+        (d: unknown) => typeof d === "string"
+      ),
       rootResolver.content,
       getAllDirectiveResolvers(),
     ].join("\n"),

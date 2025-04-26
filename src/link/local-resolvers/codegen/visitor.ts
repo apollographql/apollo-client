@@ -2,32 +2,42 @@ import { TypeScriptOperationVariablesToObject } from "@graphql-codegen/typescrip
 import type {
   DeclarationKind,
   ParsedResolversConfig,
+  RootResolver,
 } from "@graphql-codegen/visitor-plugin-common";
 import {
   BaseResolversVisitor,
+  DeclarationBlock,
+  getBaseTypeNode,
   getConfigValue,
+  indent,
   normalizeAvoidOptionals,
 } from "@graphql-codegen/visitor-plugin-common";
 import autoBind from "auto-bind";
 import type {
+  DirectiveDefinitionNode,
   EnumTypeDefinitionNode,
   FieldDefinitionNode,
   GraphQLSchema,
+  InterfaceTypeDefinitionNode,
   ListTypeNode,
   NamedTypeNode,
   NonNullTypeNode,
+  ObjectTypeDefinitionNode,
+  UnionTypeDefinitionNode,
 } from "graphql";
 
 import type { LocalResolversLinkPluginConfig } from "./config.js";
+
+type FieldDefinitionPrintFn = (
+  parentName: string,
+  avoidResolverOptionals: boolean
+) => string | null;
 
 export const ENUM_RESOLVERS_SIGNATURE =
   "export type EnumResolverSignature<T, AllowedValues = any> = { [key in keyof T]?: AllowedValues };";
 
 export interface ParsedTypeScriptResolversConfig extends ParsedResolversConfig {
-  useIndexSignature: boolean;
-  wrapFieldDefinitions: boolean;
   allowParentTypeOverride: boolean;
-  optionalInfoArgument: boolean;
 }
 
 export class LocalResolversLinkVisitor extends BaseResolversVisitor<
@@ -46,13 +56,12 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
           mutation: true,
           subscription: true,
         }),
-        useIndexSignature: false,
-        wrapFieldDefinitions: false,
         allowParentTypeOverride: getConfigValue(
           pluginConfig.allowParentTypeOverride,
           false
         ),
-        optionalInfoArgument: false,
+        // TODO: This doesn't seem to be working
+        nonOptionalTypename: true,
       } as ParsedTypeScriptResolversConfig,
       schema
     );
@@ -103,6 +112,236 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
 
   ListType(node: ListTypeNode): string {
     return `Maybe<${super.ListType(node)}>`;
+  }
+
+  DirectiveDefinition(
+    _node: DirectiveDefinitionNode,
+    _key: string | number,
+    _parent: any
+  ): string {
+    throw new Error(
+      "Custom directives are not supported with `LocalResolversLink`"
+    );
+  }
+
+  EnumTypeDefinition(_node: EnumTypeDefinitionNode): string {
+    throw new Error("Enums are not supported with `LocalResolversLink`");
+  }
+
+  ObjectTypeDefinition(node: ObjectTypeDefinitionNode): string {
+    const declarationKind = "type";
+    const name = this.convertName(node, {
+      suffix: this.config.resolverTypeSuffix,
+    });
+    const typeName = node.name as any as string;
+    const parentType = this.getParentTypeToUse(typeName);
+
+    const rootType = ((): false | "query" | "mutation" | "subscription" => {
+      if (this.schema.getQueryType()?.name === typeName) {
+        return "query";
+      }
+      if (this.schema.getMutationType()?.name === typeName) {
+        return "mutation";
+      }
+      if (this.schema.getSubscriptionType()?.name === typeName) {
+        return "subscription";
+      }
+      return false;
+    })();
+
+    const fieldsContent = (
+      node.fields as unknown as FieldDefinitionPrintFn[]
+    ).map((f) => {
+      return f(
+        typeName,
+        (rootType === "query" && this.config.avoidOptionals.query) ||
+          (rootType === "mutation" && this.config.avoidOptionals.mutation) ||
+          (rootType === "subscription" &&
+            this.config.avoidOptionals.subscription) ||
+          (rootType === false && this.config.avoidOptionals.resolvers)
+      );
+    });
+
+    const block = new DeclarationBlock(this._declarationBlockConfig)
+      .export()
+      .asKind(declarationKind)
+      .withName(name, `<${this.transformParentGenericType(parentType)}>`)
+      .withBlock(fieldsContent.join("\n"));
+
+    this._collectedResolvers[node.name as any] = {
+      typename: name,
+      baseGeneratedTypename: name,
+    };
+
+    return block.string;
+  }
+
+  UnionTypeDefinition(
+    _node: UnionTypeDefinitionNode,
+    _key: string | number,
+    _parent: any
+  ): string {
+    throw new Error("Unions are not supported with `LocalResolversLink`");
+  }
+
+  FieldDefinition(
+    node: FieldDefinitionNode,
+    key: string | number,
+    parent: any
+  ): FieldDefinitionPrintFn {
+    const hasArguments = node.arguments && node.arguments.length > 0;
+    const declarationKind = "type";
+
+    return (parentName, avoidResolverOptionals) => {
+      const original: FieldDefinitionNode = parent[key];
+      const parentType = this.schema.getType(parentName)!;
+
+      let argsType =
+        hasArguments ?
+          this.convertName(
+            parentName +
+              (this.config.addUnderscoreToArgsType ? "_" : "") +
+              this.convertName(node.name, {
+                useTypesPrefix: false,
+                useTypesSuffix: false,
+              }) +
+              "Args",
+            {
+              useTypesPrefix: true,
+            },
+            true
+          )
+        : null;
+
+      if (argsType !== null) {
+        const argsToForceRequire = original.arguments!.filter(
+          (arg) => !!arg.defaultValue || arg.type.kind === "NonNullType"
+        );
+
+        if (argsToForceRequire.length > 0) {
+          argsType = this.applyRequireFields(argsType, argsToForceRequire);
+        } else if (original.arguments!.length > 0) {
+          argsType = this.applyOptionalFields(argsType, original.arguments!);
+        }
+      }
+
+      const parentTypeSignature = this._federation.transformParentType({
+        fieldNode: original,
+        parentType,
+        parentTypeSignature: this.getParentTypeForSignature(node),
+      });
+
+      const { mappedTypeKey, resolverType } = ((): {
+        mappedTypeKey: string;
+        resolverType: string;
+      } => {
+        const baseType = getBaseTypeNode(original.type);
+        const realType = baseType.name.value;
+        const typeToUse = this.getTypeToUse(realType);
+        /**
+         * Turns GraphQL type to TypeScript types (`mappedType`) e.g.
+         * - String!  -> ResolversTypes['String']>
+         * - String   -> Maybe<ResolversTypes['String']>
+         * - [String] -> Maybe<Array<Maybe<ResolversTypes['String']>>>
+         * - [String!]! -> Array<ResolversTypes['String']>
+         */
+        const mappedType = this._variablesTransformer.wrapAstTypeWithModifiers(
+          typeToUse,
+          original.type
+        );
+
+        const subscriptionType = this.schema.getSubscriptionType();
+        const isSubscriptionType =
+          subscriptionType && subscriptionType.name === parentName;
+
+        if (isSubscriptionType) {
+          return {
+            mappedTypeKey: `${mappedType}, "${node.name}"`,
+            resolverType: "SubscriptionResolver",
+          };
+        }
+
+        return {
+          mappedTypeKey: mappedType,
+          resolverType: "Resolver",
+        };
+      })();
+
+      const signature: {
+        name: string;
+        modifier: string;
+        type: string;
+        genericTypes: string[];
+      } = {
+        name: node.name as any,
+        modifier: avoidResolverOptionals ? "" : "?",
+        type: resolverType,
+        genericTypes: [mappedTypeKey, parentTypeSignature, argsType!].filter(
+          (f) => f
+        ),
+      };
+
+      return indent(
+        `${signature.name}${signature.modifier}: ${
+          signature.type
+        }<${signature.genericTypes.join(", ")}>${this.getPunctuation(
+          declarationKind
+        )}`
+      );
+    };
+  }
+
+  InterfaceTypeDefinition(_node: InterfaceTypeDefinitionNode): string {
+    throw new Error("Interfaces are not supported by `LocalResolversLink`");
+  }
+
+  public getRootResolver(): RootResolver {
+    const name = this.convertName(this.config.allResolversTypeName);
+    const declarationKind = "type";
+
+    const userDefinedTypes: RootResolver["generatedResolverTypes"]["userDefined"] =
+      {};
+    const content = [
+      new DeclarationBlock(this._declarationBlockConfig)
+        .export()
+        .asKind(declarationKind)
+        .withName(name)
+        .withBlock(
+          Object.keys(this._collectedResolvers)
+            .map((schemaTypeName) => {
+              const resolverType = this._collectedResolvers[schemaTypeName];
+
+              if (resolverType.baseGeneratedTypename) {
+                userDefinedTypes[schemaTypeName] = {
+                  name: resolverType.baseGeneratedTypename,
+                };
+
+                const federationMeta =
+                  this._federation.getMeta()[schemaTypeName];
+                if (federationMeta) {
+                  userDefinedTypes[schemaTypeName].federation = federationMeta;
+                }
+              }
+
+              return indent(
+                this.formatRootResolver(
+                  schemaTypeName,
+                  resolverType.typename,
+                  declarationKind
+                )
+              );
+            })
+            .join("\n")
+        ).string,
+    ].join("\n");
+
+    return {
+      content,
+      generatedResolverTypes: {
+        resolversMap: { name },
+        userDefined: userDefinedTypes,
+      },
+    };
   }
 
   protected wrapWithListType(str: string): string {

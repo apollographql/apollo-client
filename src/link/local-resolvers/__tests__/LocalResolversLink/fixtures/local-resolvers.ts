@@ -2,6 +2,7 @@
 import { LocalResolversLinkResolverFn as ResolverFn } from "@apollo/client/link/local-resolvers/codegen";
 import { LocalResolversLinkResolveInfo as GraphQLResolveInfo } from "@apollo/client/link/local-resolvers/codegen";
 import { LocalResolversLinkContextType } from "@apollo/client/link/local-resolvers/codegen";
+import { RootValue } from "../types.test.js";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -151,7 +152,7 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
   Food: ResolverTypeWrapper<Food>;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
-  Query: ResolverTypeWrapper<{}>;
+  Query: ResolverTypeWrapper<RootValue>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
   User: ResolverTypeWrapper<User>;
 };
@@ -161,7 +162,7 @@ export type ResolversParentTypes = {
   Boolean: Scalars["Boolean"]["output"];
   Food: Food;
   ID: Scalars["ID"]["output"];
-  Query: {};
+  Query: RootValue;
   String: Scalars["String"]["output"];
   User: User;
 };

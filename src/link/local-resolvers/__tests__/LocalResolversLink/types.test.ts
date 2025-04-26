@@ -52,6 +52,7 @@ describe.skip("Type tests", () => {
     new LocalResolversLink<Resolvers>();
 
     new LocalResolversLink<Resolvers>({
+      // @ts-expect-error missing Query resolver
       resolvers: {},
     });
 
@@ -98,6 +99,9 @@ describe.skip("Type tests", () => {
 
     new LocalResolversLink<Resolvers>({
       resolvers: {
+        Query: {
+          currentUserId: () => "1",
+        },
         User: {
           // @ts-expect-error missing name field
           favoriteFood: () => ({ __typename: "Food" }),

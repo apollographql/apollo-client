@@ -103,6 +103,7 @@ describe.skip("Type tests", () => {
           currentUserId: () => "1",
         },
         User: {
+          // @ts-expect-error missing name field
           favoriteFood: () => ({ __typename: "Food" }),
         },
       },

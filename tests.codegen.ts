@@ -8,21 +8,33 @@ const config: CodegenConfig = {
   },
   generates: {
     "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers.ts":
-      createLocalResolversLinkCodegenConfig({
+      {
         schema: [
           "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/localSchema.graphql",
         ],
-        plugins: [{ add: { content: "/* eslint-disable */" } }],
+        plugins: [
+          { add: { content: "/* eslint-disable */" } },
+          "typescript",
+          "@apollo/client/link/local-resolvers/codegen",
+        ],
         config: {
+          nonOptionalTypename: true,
           rootValueType: "../types.test.js#RootValue",
         },
-      }),
+      },
     "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-with-scalar.ts":
       createLocalResolversLinkCodegenConfig({
         schema: [
           "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/localSchemaWithScalars.graphql",
         ],
-        plugins: [{ add: { content: "/* eslint-disable */" } }],
+        plugins: [
+          { add: { content: "/* eslint-disable */" } },
+          "typescript",
+          "@apollo/client/link/local-resolvers/codegen",
+        ],
+        config: {
+          nonOptionalTypename: true,
+        },
       }),
   },
 };

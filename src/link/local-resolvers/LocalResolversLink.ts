@@ -6,7 +6,6 @@ import type {
   FieldNode,
   GraphQLError,
   GraphQLFormattedError,
-  GraphQLScalarType,
   OperationDefinitionNode,
   SelectionNode,
   SelectionSetNode,

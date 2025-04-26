@@ -169,7 +169,6 @@
     "@eslint/js": "9.18.0",
     "@graphql-codegen/add": "^5.0.3",
     "@graphql-codegen/cli": "^5.0.5",
-    "@graphql-codegen/typescript-resolvers": "^4.5.0",
     "@graphql-tools/merge": "9.0.4",
     "@graphql-tools/schema": "10.0.4",
     "@graphql-tools/utils": "10.5.0",

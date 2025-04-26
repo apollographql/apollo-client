@@ -13,6 +13,9 @@ const config: CodegenConfig = {
           "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/localSchema.graphql",
         ],
         plugins: [{ add: { content: "/* eslint-disable */" } }],
+        config: {
+          rootValueType: "../types.test.js#RootValue",
+        },
       }),
     "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-with-scalar.ts":
       createLocalResolversLinkCodegenConfig({

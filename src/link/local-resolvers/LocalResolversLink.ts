@@ -53,20 +53,12 @@ import {
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
-type OmitScalarResolvers<TResolvers> = {
-  [K in keyof TResolvers as NonNullable<TResolvers[K]> extends (
-    GraphQLScalarType<any, any>
-  ) ?
-    never
-  : K]: TResolvers[K];
-};
-
 export declare namespace LocalResolversLink {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
   export interface Options<
-    Resolvers = LocalResolversLink.Resolvers,
+    TResolvers = LocalResolversLink.Resolvers,
     RootValue = unknown,
   > {
     /**
@@ -101,7 +93,7 @@ export declare namespace LocalResolversLink {
     /**
      * The map of resolvers used to provide values for `@client` fields.
      */
-    resolvers?: OmitScalarResolvers<Resolvers>;
+    resolvers?: TResolvers;
   }
 
   export interface Resolvers {
@@ -164,7 +156,7 @@ interface TraverseCacheEntry {
   exportedVariableDefs: { [variableName: string]: ExportedVariable };
 }
 
-type InferRootValueFromField<TField> =
+type InferRootValueFromFieldResolver<TField> =
   TField extends { [key: string]: infer Resolver } ?
     Resolver extends LocalResolversLink.Resolver<any, infer Parent, any> ?
       Parent
@@ -173,11 +165,11 @@ type InferRootValueFromField<TField> =
 
 type InferRootValueFromResolvers<TResolvers> =
   TResolvers extends { Query?: infer QueryResolvers } ?
-    InferRootValueFromField<QueryResolvers>
+    InferRootValueFromFieldResolver<QueryResolvers>
   : TResolvers extends { Mutation?: infer MutationResolvers } ?
-    InferRootValueFromField<MutationResolvers>
+    InferRootValueFromFieldResolver<MutationResolvers>
   : TResolvers extends { Subscription?: infer SubscriptionResolvers } ?
-    InferRootValueFromField<SubscriptionResolvers>
+    InferRootValueFromFieldResolver<SubscriptionResolvers>
   : unknown;
 
 export class LocalResolversLink<
@@ -191,12 +183,23 @@ export class LocalResolversLink<
   private resolvers: LocalResolversLink.Resolvers = {};
   private rootValue?: LocalResolversLink.Options["rootValue"];
 
-  constructor(options: LocalResolversLink.Options<Resolvers, RootValue> = {}) {
+  constructor(
+    options: LocalResolversLink.Options<
+      {
+        [K in keyof Resolvers]: NonNullable<Resolvers[K]> extends (
+          GraphQLScalarType
+        ) ?
+          never
+        : Resolvers[K];
+      },
+      NoInfer<RootValue>
+    > = {}
+  ) {
     super();
 
     this.rootValue = options.rootValue;
     if (options.resolvers) {
-      this.addResolvers(options.resolvers);
+      this.addResolvers(options.resolvers as LocalResolversLink.Resolvers);
     }
   }
 

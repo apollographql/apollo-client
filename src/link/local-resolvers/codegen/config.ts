@@ -1,44 +1,10 @@
-import type {
-  EnumValuesMap,
-  RawConfig,
-} from "@graphql-codegen/visitor-plugin-common";
+import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
 
-import { mergeDeep } from "@apollo/client/utilities";
-
-const defaultConfig = {
-  avoidOptionals: {
-    field: true,
-  },
-  defaultScalarType: "unknown",
-};
-
+// TODO: figure out why codegen breaks without this function
 export function createLocalResolversLinkCodegenConfig(
   baseConfig: import("@graphql-codegen/plugin-helpers").Types.ConfiguredOutput
 ) {
-  const plugins = baseConfig.plugins ?? [];
-
-  return {
-    ...baseConfig,
-    plugins: [
-      ...new Set(
-        plugins.concat([
-          "typescript",
-          "@apollo/client/link/local-resolvers/codegen",
-        ])
-      ),
-    ],
-    config: mergeDeep(
-      defaultConfig,
-      // If `baseConfig.config` is `null` or `undefined`, it replaces
-      // `defaultConfig` rather than using` defaultConfig` as the base. To
-      // ensure `defaultConfig` is applied when `baseConfig.config` is not
-      // provided, we use it as the default value here.
-      baseConfig.config ?? defaultConfig,
-      {
-        nonOptionalTypename: true,
-      }
-    ),
-  } satisfies import("@graphql-codegen/plugin-helpers").Types.ConfiguredOutput;
+  return baseConfig;
 }
 
 /**

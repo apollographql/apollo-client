@@ -35,18 +35,6 @@ export function createLocalResolversLinkCodegenConfig(
       // provided, we use it as the default value here.
       baseConfig.config ?? defaultConfig,
       {
-        avoidOptionals: {
-          query: true,
-          mutation: true,
-          subscription: true,
-        },
-        customResolveInfo:
-          "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkResolveInfo",
-        customResolverFn:
-          "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkResolverFn",
-        contextType:
-          "@apollo/client/link/local-resolvers/codegen#LocalResolversLinkContextType",
-        makeResolverTypeCallable: true,
         nonOptionalTypename: true,
       }
     ),

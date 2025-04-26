@@ -18,7 +18,7 @@ import type {
   NonNullTypeNode,
 } from "graphql";
 
-import type { TypeScriptResolversPluginConfig } from "./config.js";
+import type { LocalResolversLinkPluginConfig } from "./config.js";
 
 export const ENUM_RESOLVERS_SIGNATURE =
   "export type EnumResolverSignature<T, AllowedValues = any> = { [key in keyof T]?: AllowedValues };";
@@ -30,34 +30,29 @@ export interface ParsedTypeScriptResolversConfig extends ParsedResolversConfig {
   optionalInfoArgument: boolean;
 }
 
-export class TypeScriptResolversVisitor extends BaseResolversVisitor<
-  TypeScriptResolversPluginConfig,
+export class LocalResolversLinkVisitor extends BaseResolversVisitor<
+  LocalResolversLinkPluginConfig,
   ParsedTypeScriptResolversConfig
 > {
   constructor(
-    pluginConfig: TypeScriptResolversPluginConfig,
+    pluginConfig: LocalResolversLinkPluginConfig,
     schema: GraphQLSchema
   ) {
     super(
       pluginConfig,
       {
-        avoidOptionals: normalizeAvoidOptionals(pluginConfig.avoidOptionals),
-        useIndexSignature: getConfigValue(
-          pluginConfig.useIndexSignature,
-          false
-        ),
-        wrapFieldDefinitions: getConfigValue(
-          pluginConfig.wrapFieldDefinitions,
-          false
-        ),
+        avoidOptionals: normalizeAvoidOptionals({
+          query: true,
+          mutation: true,
+          subscription: true,
+        }),
+        useIndexSignature: false,
+        wrapFieldDefinitions: false,
         allowParentTypeOverride: getConfigValue(
           pluginConfig.allowParentTypeOverride,
           false
         ),
-        optionalInfoArgument: getConfigValue(
-          pluginConfig.optionalInfoArgument,
-          false
-        ),
+        optionalInfoArgument: false,
       } as ParsedTypeScriptResolversConfig,
       schema
     );
@@ -75,14 +70,6 @@ export class TypeScriptResolversVisitor extends BaseResolversVisitor<
         this.config.enumValues
       )
     );
-
-    if (this.config.useIndexSignature) {
-      this._declarationBlockConfig = {
-        blockTransformer(block) {
-          return `ResolversObject<${block}>`;
-        },
-      };
-    }
   }
 
   protected transformParentGenericType(parentType: string): string {
@@ -98,7 +85,9 @@ export class TypeScriptResolversVisitor extends BaseResolversVisitor<
     resolverType: string,
     declarationKind: DeclarationKind
   ): string {
-    const avoidOptionals = this.config.avoidOptionals.resolvers;
+    const rootTypes = ["Query", "Mutation", "Subscription"];
+    const avoidOptionals = rootTypes.includes(schemaTypeName);
+
     return `${schemaTypeName}${
       avoidOptionals ? "" : "?"
     }: ${resolverType}${this.getPunctuation(declarationKind)}`;
@@ -120,13 +109,7 @@ export class TypeScriptResolversVisitor extends BaseResolversVisitor<
     return `${this.config.immutableTypes ? "ReadonlyArray" : "Array"}<${str}>`;
   }
 
-  protected getParentTypeForSignature(node: FieldDefinitionNode) {
-    if (
-      this._federation.isResolveReferenceField(node) &&
-      this.config.wrapFieldDefinitions
-    ) {
-      return "UnwrappedObject<ParentType>";
-    }
+  protected getParentTypeForSignature(_node: FieldDefinitionNode) {
     return "ParentType";
   }
 

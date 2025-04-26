@@ -39,7 +39,7 @@ describe.skip("Type tests", () => {
           favoriteFood: () => ({ __typename: "Food" }),
         },
         Food: {
-          name: (parent: Food, args) => parent.name,
+          name: (parent: Food) => parent.name,
           ingredients: () => {},
         },
       },

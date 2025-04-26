@@ -38,17 +38,17 @@ export type Scalars = {
 
 export type Food = {
   __typename: "Food";
-  name?: Maybe<Scalars["String"]["output"]>;
+  name: Maybe<Scalars["String"]["output"]>;
 };
 
 export type Query = {
   __typename: "Query";
-  currentUserId?: Maybe<Scalars["ID"]["output"]>;
+  currentUserId: Maybe<Scalars["ID"]["output"]>;
 };
 
 export type User = {
   __typename: "User";
-  favoriteFood?: Maybe<Food>;
+  favoriteFood: Maybe<Food>;
   isLoggedIn: Scalars["Boolean"]["output"];
 };
 

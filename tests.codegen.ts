@@ -18,6 +18,9 @@ const config: CodegenConfig = {
           "@apollo/client/link/local-resolvers/codegen",
         ],
         config: {
+          avoidOptionals: {
+            field: true,
+          },
           nonOptionalTypename: true,
           rootValueType: "../types.test.js#RootValue",
         },

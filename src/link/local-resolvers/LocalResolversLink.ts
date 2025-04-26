@@ -59,7 +59,7 @@ export declare namespace LocalResolversLink {
   // allows us to provide the function signature while allowing any value.
   export interface Options<
     TResolvers = LocalResolversLink.Resolvers,
-    RootValue = unknown,
+    TRootValue = unknown,
   > {
     /**
      * A value or function called with the current `operation` and `phase`
@@ -87,8 +87,8 @@ export declare namespace LocalResolversLink {
       | ((options: {
           phase: "exports" | "resolve";
           operation: Operation;
-        }) => RootValue)
-      | RootValue;
+        }) => TRootValue)
+      | TRootValue;
 
     /**
      * The map of resolvers used to provide values for `@client` fields.
@@ -98,7 +98,7 @@ export declare namespace LocalResolversLink {
 
   export interface Resolvers {
     [typename: string]: {
-      [field: string]: Resolver<any, any, any>;
+      [field: string]: Resolver<unknown, unknown, Record<string, any>>;
     };
   }
 
@@ -157,9 +157,9 @@ interface TraverseCacheEntry {
 }
 
 type InferRootValueFromFieldResolver<TField> =
-  TField extends { [key: string]: infer Resolver } ?
-    Resolver extends LocalResolversLink.Resolver<any, infer Parent, any> ?
-      Parent
+  TField extends { [key: string]: infer TResolver } ?
+    TResolver extends LocalResolversLink.Resolver<any, infer TRootValue, any> ?
+      TRootValue
     : unknown
   : unknown;
 
@@ -173,8 +173,8 @@ type InferRootValueFromResolvers<TResolvers> =
   : unknown;
 
 export class LocalResolversLink<
-  Resolvers = LocalResolversLink.Resolvers,
-  RootValue = InferRootValueFromResolvers<Resolvers>,
+  TResolvers = LocalResolversLink.Resolvers,
+  TRootValue = InferRootValueFromResolvers<TResolvers>,
 > extends ApolloLink {
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
@@ -186,13 +186,13 @@ export class LocalResolversLink<
   constructor(
     options: LocalResolversLink.Options<
       {
-        [K in keyof Resolvers]: NonNullable<Resolvers[K]> extends (
+        [K in keyof TResolvers]: NonNullable<TResolvers[K]> extends (
           GraphQLScalarType
         ) ?
           never
-        : Resolvers[K];
+        : TResolvers[K];
       },
-      NoInfer<RootValue>
+      NoInfer<TRootValue>
     > = {}
   ) {
     super();

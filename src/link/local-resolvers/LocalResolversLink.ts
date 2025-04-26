@@ -98,7 +98,7 @@ export declare namespace LocalResolversLink {
 
   export interface Resolvers {
     [typename: string]: {
-      [field: string]: Resolver<unknown, unknown, Record<string, any>>;
+      [field: string]: Resolver<any, any, Record<string, any>>;
     };
   }
 
@@ -173,7 +173,8 @@ type InferRootValueFromResolvers<TResolvers> =
   : unknown;
 
 export class LocalResolversLink<
-  TResolvers = LocalResolversLink.Resolvers,
+  TResolvers extends
+    LocalResolversLink.Resolvers = LocalResolversLink.Resolvers,
   TRootValue = InferRootValueFromResolvers<TResolvers>,
 > extends ApolloLink {
   private traverseCache = new WeakMap<
@@ -184,16 +185,7 @@ export class LocalResolversLink<
   private rootValue?: LocalResolversLink.Options["rootValue"];
 
   constructor(
-    options: LocalResolversLink.Options<
-      {
-        [K in keyof TResolvers]: NonNullable<TResolvers[K]> extends (
-          GraphQLScalarType
-        ) ?
-          never
-        : TResolvers[K];
-      },
-      NoInfer<TRootValue>
-    > = {}
+    options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>> = {}
   ) {
     super();
 

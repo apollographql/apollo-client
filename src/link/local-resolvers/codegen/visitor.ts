@@ -23,6 +23,7 @@ import type {
   NamedTypeNode,
   NonNullTypeNode,
   ObjectTypeDefinitionNode,
+  ScalarTypeDefinitionNode,
   UnionTypeDefinitionNode,
 } from "graphql";
 
@@ -60,8 +61,6 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
           pluginConfig.allowParentTypeOverride,
           false
         ),
-        // TODO: This doesn't seem to be working
-        nonOptionalTypename: true,
       } as ParsedTypeScriptResolversConfig,
       schema
     );
@@ -348,6 +347,11 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
     const baseValue = super.NonNullType(node);
 
     return this.clearOptional(baseValue);
+  }
+
+  ScalarTypeDefinition(_node: ScalarTypeDefinitionNode): string {
+    this._hasScalars = true;
+    return "";
   }
 
   protected getPunctuation(_declarationKind: DeclarationKind): string {

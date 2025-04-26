@@ -62,12 +62,7 @@ ${defsToInclude.join("\n")}
     getAllDirectiveResolvers,
     mappersImports,
     unusedMappers,
-    hasScalars,
   } = visitor;
-
-  if (hasScalars()) {
-    imports.push("GraphQLScalarType", "GraphQLScalarTypeConfig");
-  }
 
   if (showUnusedMappers && unusedMappers.length) {
     console.warn(`Unused mappers: ${unusedMappers.join(",")}`);

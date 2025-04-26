@@ -349,7 +349,10 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
     return this.clearOptional(baseValue);
   }
 
-  ScalarTypeDefinition(_node: ScalarTypeDefinitionNode): string {
+  ScalarTypeDefinition(node: ScalarTypeDefinitionNode): string {
+    console.warn(
+      `Custom scalars type '${node.name.value}' is ignored and cannot be resolved with \`LocalResolversLink\`. Please map the scalar type to a primitive with the \`scalars\` config.`
+    );
     this._hasScalars = true;
     return "";
   }

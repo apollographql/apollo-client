@@ -194,7 +194,6 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
 
     return (parentName, avoidResolverOptionals) => {
       const original: FieldDefinitionNode = parent[key];
-      const parentType = this.schema.getType(parentName)!;
 
       let argsType =
         hasArguments ?
@@ -224,12 +223,7 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
           argsType = this.applyOptionalFields(argsType, original.arguments!);
         }
       }
-
-      const parentTypeSignature = this._federation.transformParentType({
-        fieldNode: original,
-        parentType,
-        parentTypeSignature: this.getParentTypeForSignature(node),
-      });
+      const parentTypeSignature = this.getParentTypeForSignature(node);
 
       const { mappedTypeKey, resolverType } = ((): {
         mappedTypeKey: string;
@@ -315,12 +309,6 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
                 userDefinedTypes[schemaTypeName] = {
                   name: resolverType.baseGeneratedTypename,
                 };
-
-                const federationMeta =
-                  this._federation.getMeta()[schemaTypeName];
-                if (federationMeta) {
-                  userDefinedTypes[schemaTypeName].federation = federationMeta;
-                }
               }
 
               return indent(

@@ -14,3 +14,16 @@ export type LocalResolversLinkResolverFn<
 
 export type LocalResolversLinkResolveInfo = LocalResolversLink.ResolveInfo;
 export type LocalResolversLinkContextType = LocalResolversLink.ResolverContext;
+
+// GraphQL Codegen has no way to turn off some features, such as the generated
+// __isTypeOf field with a resolver that is incompatible with
+// LocalResolversLink. This type wraps Resolvers
+export type FixCodegenResolversForLocalResolversLink<TResolvers> = {
+  [Typename in keyof TResolvers]: OmitUnsupportedResolvers<
+    TResolvers[Typename]
+  >;
+};
+
+type OmitUnsupportedResolvers<T> =
+  T extends Record<string, any> ? Omit<T, "__isTypeOf" | "__resolveType">
+  : never;

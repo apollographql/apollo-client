@@ -19,7 +19,6 @@ import {
 } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link/core";
-import { HttpLink } from "@apollo/client/link/http";
 import type { Masked } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -48,34 +47,10 @@ describe("ApolloClient", () => {
       }).toThrowErrorMatchingSnapshot();
     });
 
-    it("should create an `HttpLink` instance if `uri` is provided", () => {
-      const uri = "http://localhost:4000";
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        uri,
-      });
-
-      expect(client.link).toBeDefined();
-      expect((client.link as HttpLink).options.uri).toEqual(uri);
-    });
-
-    it("should accept `link` over `uri` if both are provided", () => {
-      const uri1 = "http://localhost:3000";
-      const uri2 = "http://localhost:4000";
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        uri: uri1,
-        link: new HttpLink({ uri: uri2 }),
-      });
-      expect((client.link as HttpLink).options.uri).toEqual(uri2);
-    });
-
-    it("should create an empty Link if `uri` and `link` are not provided", () => {
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-      });
-      expect(client.link).toBeDefined();
-      expect(client.link instanceof ApolloLink).toBeTruthy();
+    it("will throw an error if link is not passed in", () => {
+      expect(() => {
+        new ApolloClient({ cache: new InMemoryCache() } as any);
+      }).toThrowErrorMatchingSnapshot();
     });
   });
 

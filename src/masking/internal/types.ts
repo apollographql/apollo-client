@@ -1,10 +1,9 @@
 import type {
+  IsAny,
   Prettify,
   Primitive,
   RemoveIndexSignature,
 } from "@apollo/client/utilities";
-
-export type IsAny<T> = 0 extends 1 & T ? true : false;
 
 export type UnwrapFragmentRefs<TData> =
   true extends IsAny<TData> ? TData

@@ -15,10 +15,7 @@ import type { DocumentTransform } from "@apollo/client/utilities";
 import { checkDocument, mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
@@ -222,13 +219,19 @@ export class ApolloClient implements DataProxy {
    * ```
    */
   constructor(options: ApolloClientOptions) {
-    if (!options.cache) {
-      throw newInvariantError(
-        "To initialize Apollo Client, you must specify a 'cache' property " +
-          "in the options object. \n" +
-          "For more information, please visit: https://go.apollo.dev/c/docs"
-      );
-    }
+    invariant(
+      options.cache,
+      "To initialize Apollo Client, you must specify a 'cache' property " +
+        "in the options object. \n" +
+        "For more information, please visit: https://go.apollo.dev/c/docs"
+    );
+
+    invariant(
+      options.link,
+      "To initialize Apollo Client, you must specify a 'link' property " +
+        "in the options object. \n" +
+        "For more information, please visit: https://go.apollo.dev/c/docs"
+    );
 
     const {
       cache,

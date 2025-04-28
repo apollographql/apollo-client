@@ -1596,7 +1596,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               !isNetworkRequestInFlight(result.result.networkStatus) &&
               result.result.partial
             ) {
-              this.scheduleNotify();
+              const previousResult = this.internalSubject.getValue().result;
+              // if the query is currently in an error state, an incoming parital
+              // result should not trigger a notify - we have no reason to assume
+              // that the error is resolved
+              if (previousResult.networkStatus !== NetworkStatus.error) {
+                this.scheduleNotify();
+              }
             }
           }),
           filter(

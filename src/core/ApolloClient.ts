@@ -8,9 +8,8 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { GraphQLRequest } from "@apollo/client/link/core";
-import { ApolloLink, execute } from "@apollo/client/link/core";
-import { HttpLink } from "@apollo/client/link/http";
+import type { ApolloLink, GraphQLRequest } from "@apollo/client/link/core";
+import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { checkDocument, mergeOptions } from "@apollo/client/utilities";
@@ -232,9 +231,6 @@ export class ApolloClient implements DataProxy {
     }
 
     const {
-      uri,
-      credentials,
-      headers,
       cache,
       documentTransform,
       ssrMode = false,
@@ -253,14 +249,8 @@ export class ApolloClient implements DataProxy {
       version: clientAwarenessVersion,
       devtools,
       dataMasking,
+      link,
     } = options;
-
-    let { link } = options;
-
-    if (!link) {
-      link =
-        uri ? new HttpLink({ uri, credentials, headers }) : ApolloLink.empty();
-    }
 
     this.link = link;
     this.cache = cache;

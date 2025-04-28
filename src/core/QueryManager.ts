@@ -901,13 +901,7 @@ export class QueryManager {
       if (observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        observableQuery.setResult(
-          // exception for cache-only queries - we reset them into a "ready" state
-          // as we won't trigger a refetch for them
-          observableQuery.options.fetchPolicy === "cache-only" ?
-            empty
-          : uninitialized
-        );
+        observableQuery.reset();
       } else {
         queryInfo.stop();
       }

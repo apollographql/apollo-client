@@ -1474,9 +1474,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { query, variables } = this;
     const operation: TrackedOperation = {
       networkStatus,
-      abort: () => {
-        subscription.unsubscribe();
-      },
+      abort: () => subscription.unsubscribe(),
       query,
       variables,
     };
@@ -1515,6 +1513,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       (operation) => operation.override !== undefined
     );
     return operation?.override ?? baseNetworkStatus;
+  }
+
+  /**
+   * @internal
+   * Called from `clearStore`.
+   * * resets the query to its initial state
+   * * cancels all active operations and their subscriptions
+   */
+  public reset() {
+    this.setResult(
+      // exception for cache-only queries - we reset them into a "ready" state
+      // as we won't trigger a refetch for them
+      this.options.fetchPolicy === "cache-only" ? empty : uninitialized
+    );
+    this.activeOperations.forEach((operation) => operation.abort());
   }
 
   /** @internal */

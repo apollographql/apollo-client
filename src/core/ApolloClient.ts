@@ -90,7 +90,7 @@ export interface ApolloClientOptions {
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
-  link?: ApolloLink;
+  link: ApolloLink;
   /**
    * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
    *

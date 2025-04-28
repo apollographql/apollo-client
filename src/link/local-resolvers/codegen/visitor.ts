@@ -123,8 +123,44 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
     );
   }
 
-  EnumTypeDefinition(_node: EnumTypeDefinitionNode): string {
-    throw new Error("Enums are not supported with `LocalResolversLink`");
+  EnumTypeDefinition(node: EnumTypeDefinitionNode): string {
+    const rawTypeName = node.name as any;
+
+    // If we have enumValues set, and it's point to an external enum - we need to allow internal values resolvers
+    // In case we have enumValues set but as explicit values, no need to to do mapping since it's already
+    // have type validation (the original enum has been modified by base types plugin).
+    // If we have mapper for that type - we can skip
+    if (
+      !this.config.mappers[rawTypeName] &&
+      !this.config.enumValues[rawTypeName]
+    ) {
+      return "";
+    }
+
+    const name = this.convertName(node, {
+      suffix: this.config.resolverTypeSuffix,
+    });
+    this._collectedResolvers[rawTypeName] = {
+      typename: name,
+      baseGeneratedTypename: name,
+    };
+    const hasExplicitValues = this.config.enumValues[rawTypeName]?.mappedValues;
+
+    return new DeclarationBlock(this._declarationBlockConfig)
+      .export()
+      .asKind("type")
+      .withName(name)
+      .withContent(
+        hasExplicitValues ?
+          this.buildEnumResolversExplicitMappedValues(
+            node,
+            this.config.enumValues[rawTypeName].mappedValues!
+          )
+        : this.buildEnumResolverContentBlock(
+            node,
+            this.getTypeToUse(rawTypeName)
+          )
+      ).string;
   }
 
   ObjectTypeDefinition(node: ObjectTypeDefinitionNode): string {

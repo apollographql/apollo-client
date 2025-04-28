@@ -5385,6 +5385,41 @@ describe("useQuery Hook", () => {
       });
     }
 
+    if (IS_REACT_17) {
+      const { snapshot } = await renderStream.takeRender();
+
+      // We don't see the update from the cache for one more render cycle, hence
+      // why this is still showing the error result even though the result from
+      // the other query has finished and re-rendered.
+      expect(snapshot.useQueryResult!).toStrictEqualTyped({
+        data: undefined,
+        error: new CombinedGraphQLErrors({
+          data: { person: null },
+          errors: [{ message: "Intentional error" }],
+        }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
+        data: {
+          person: {
+            __typename: "Person",
+            id: 1,
+            firstName: "John",
+            lastName: "Doe",
+          },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
     {
       const { snapshot } = await renderStream.takeRender();
 

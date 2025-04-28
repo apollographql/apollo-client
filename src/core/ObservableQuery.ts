@@ -9,13 +9,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import {
-  distinctUntilChanged,
-  distinctUntilKeyChanged,
-  merge,
-  Observable,
-  share,
-} from "rxjs";
+import { distinctUntilChanged, merge, Observable, share } from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -356,11 +350,29 @@ export class ObservableQuery<
           }
         },
       }),
-      distinctUntilKeyChanged(
-        "result",
-        (previous, current) =>
-          equal(previous, current) && !equal(previous, this.reemitEvenIfEqual)
-      ),
+      distinctUntilChanged((previous, current) => {
+        const documentInfo = this.queryManager.getDocumentInfo(current.query);
+        const dataMasking = this.queryManager.dataMasking;
+        const query =
+          dataMasking ? documentInfo.nonReactiveQuery : current.query;
+
+        const resultIsEqual =
+          dataMasking || documentInfo.hasNonreactiveDirective ?
+            equalByQuery(
+              query,
+              previous.result,
+              current.result,
+              current.variables
+            )
+          : equal(previous.result, current.result);
+
+        return (
+          resultIsEqual &&
+          (!current.variables ||
+            equal(previous.variables, current.variables)) &&
+          !equal(previous.result, this.reemitEvenIfEqual)
+        );
+      }),
       tap(() => {
         // we only want to reemit if equal once, and if the value changed
         // we also don't want to reemit in the future,
@@ -576,30 +588,6 @@ export class ObservableQuery<
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
     const value = this.subject.getValue().result;
     return value !== uninitialized ? value : this.getInitialResult();
-  }
-
-  // Compares newResult to the snapshot we took of this.lastResult when it was
-  // first received.
-  public isDifferentFromLastResult(
-    newResult: ApolloQueryResult<TData>,
-    variables?: TVariables
-  ) {
-    if (!this.last) {
-      return true;
-    }
-
-    const documentInfo = this.queryManager.getDocumentInfo(this.query);
-    const dataMasking = this.queryManager.dataMasking;
-    const query = dataMasking ? documentInfo.nonReactiveQuery : this.query;
-
-    const resultIsDifferent =
-      dataMasking || documentInfo.hasNonreactiveDirective ?
-        !equalByQuery(query, this.last.result, newResult, this.variables)
-      : !equal(this.last.result, newResult);
-
-    return (
-      resultIsDifferent || (variables && !equal(this.last.variables, variables))
-    );
   }
 
   private getLast<K extends keyof Last<TData, TVariables>>(
@@ -1433,7 +1421,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // network requests, even when options.fetchPolicy is "network-only"
           // or "cache-and-network". All other fetch policies are preserved by
           // this method, and are handled by calling oq.reobserve(). If this
-          // reobservation is spurious, isDifferentFromLastResult still has a
+          // reobservation is spurious, distinctUntilChanged still has a
           // chance to catch it before delivery to ObservableQuery subscribers.
           this.reobserveFromNetwork();
         }

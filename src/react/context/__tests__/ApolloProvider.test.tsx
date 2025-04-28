@@ -3,7 +3,7 @@ import React, { useContext } from "react";
 
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react";
 
 import type { ApolloContextValue } from "../ApolloContext.js";

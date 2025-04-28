@@ -15,8 +15,8 @@ import type {
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,

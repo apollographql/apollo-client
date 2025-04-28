@@ -2,8 +2,8 @@ import type { Observable } from "rxjs";
 import type { ClientOptions } from "subscriptions-transport-ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
-import type { FetchResult, Operation } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 
 export namespace WebSocketLink {
   /**

@@ -4,7 +4,7 @@ import { of } from "rxjs";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import {
   ObservableStream,
   spyOnConsole,

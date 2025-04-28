@@ -6,7 +6,7 @@ import {
   ServerError,
   ServerParseError,
 } from "@apollo/client/errors";
-import type { Operation } from "@apollo/client/link/core";
+import type { Operation } from "@apollo/client/link";
 import { isApolloPayloadResult } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 

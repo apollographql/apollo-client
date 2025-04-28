@@ -5,7 +5,7 @@ import { map, Observable } from "rxjs";
 import type { ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,

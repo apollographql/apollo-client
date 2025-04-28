@@ -5,7 +5,7 @@ import { of } from "rxjs";
 import type { QueryResult, Resolvers } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 

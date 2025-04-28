@@ -1,11 +1,7 @@
 import type { Observable } from "rxjs";
 
-import type {
-  FetchResult,
-  NextLink,
-  Operation,
-} from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 
 import type { BatchHandler } from "./batching.js";
 import { OperationBatcher } from "./batching.js";

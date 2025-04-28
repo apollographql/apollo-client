@@ -18,7 +18,7 @@ import {
   setLogVerbosity,
 } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import type { Masked } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {

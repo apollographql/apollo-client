@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type {
   DeepPartial,

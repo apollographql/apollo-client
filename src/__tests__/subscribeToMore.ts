@@ -3,8 +3,8 @@ import { gql } from "graphql-tag";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { Operation } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import {
   MockLink,
   mockObservableLink,

@@ -1,4 +1,4 @@
-import type { Operation } from "@apollo/client/link/core";
+import type { Operation } from "@apollo/client/link";
 
 export const selectURI = (
   operation: Operation,

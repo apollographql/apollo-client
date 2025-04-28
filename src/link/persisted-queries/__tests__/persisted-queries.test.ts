@@ -6,7 +6,7 @@ import { gql } from "graphql-tag";
 import { times } from "lodash";
 import { firstValueFrom, Observable } from "rxjs";
 
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink as createPersistedQuery,

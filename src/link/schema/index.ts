@@ -2,8 +2,8 @@ import type { GraphQLSchema } from "graphql";
 import { execute, validate } from "graphql";
 import { Observable } from "rxjs";
 
-import type { FetchResult, Operation } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 
 export namespace SchemaLink {
   export type ResolverContext = Record<string, any>;

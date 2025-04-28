@@ -33,8 +33,8 @@ import type {
   ExecuteContext,
   FetchResult,
   GraphQLRequest,
-} from "@apollo/client/link/core";
-import { execute } from "@apollo/client/link/core";
+} from "@apollo/client/link";
+import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";

@@ -2,7 +2,7 @@ import type {
   ExecuteContext,
   GraphQLRequest,
   Operation,
-} from "@apollo/client/link/core";
+} from "@apollo/client/link";
 
 export function createOperation(
   starting: any,

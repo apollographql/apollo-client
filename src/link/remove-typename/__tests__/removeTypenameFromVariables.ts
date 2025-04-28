@@ -1,7 +1,7 @@
 import { firstValueFrom, of } from "rxjs";
 
 import { gql } from "@apollo/client";
-import type { ApolloLink, Operation } from "@apollo/client/link/core";
+import type { ApolloLink, Operation } from "@apollo/client/link";
 import {
   KEEP,
   removeTypenameFromVariables,

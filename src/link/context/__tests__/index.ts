@@ -1,8 +1,8 @@
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
+import { ApolloLink } from "@apollo/client/link";
 import { setContext } from "@apollo/client/link/context";
-import { ApolloLink } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,

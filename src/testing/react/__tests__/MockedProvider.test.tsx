@@ -5,8 +5,8 @@ import React from "react";
 import type { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { useQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing/core";
 import { MockLink } from "@apollo/client/testing/core";

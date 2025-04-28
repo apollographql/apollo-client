@@ -9,8 +9,8 @@ import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { FetchResult, RequestHandler } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, RequestHandler } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink } from "@apollo/client/testing";
 import { wait } from "@apollo/client/testing/core";
 import {

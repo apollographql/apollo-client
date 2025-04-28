@@ -9,7 +9,7 @@ import type { FetchResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import type { MockedResponse } from "@apollo/client/testing";
 import { mockSingleLink } from "@apollo/client/testing";
 import {

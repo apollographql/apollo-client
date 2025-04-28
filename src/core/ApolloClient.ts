@@ -73,19 +73,6 @@ let hasSuggestedDevtools = false;
 
 export interface ApolloClientOptions {
   /**
-   * The URI of the GraphQL endpoint that Apollo Client will communicate with.
-   *
-   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-   */
-  uri?: string | HttpLink.UriFunction;
-  credentials?: string;
-  /**
-   * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
-   *
-   * This value will be ignored when using the `link` option.
-   */
-  headers?: Record<string, string>;
-  /**
    * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.

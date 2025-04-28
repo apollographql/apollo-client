@@ -1,10 +1,9 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type { Prettify } from "@apollo/client/utilities";
+import type { IsAny, Prettify } from "@apollo/client/utilities";
 
 import type {
   ContainsFragmentsRefs,
-  IsAny,
   RemoveFragmentName,
   RemoveMaskedMarker,
   UnwrapFragmentRefs,

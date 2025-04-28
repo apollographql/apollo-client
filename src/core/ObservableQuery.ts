@@ -380,6 +380,25 @@ export class ObservableQuery<
       .pipe(map((value) => value.result))
       .subscribe(this.subject);
 
+    this.input.subscribe({
+      next: (notification) => {
+        if (
+          notification.source == "cache" &&
+          !isNetworkRequestInFlight(notification.value.networkStatus) &&
+          notification.value.partial &&
+          !this.options.returnPartialData
+        ) {
+          const previousResult = this.internalSubject.getValue().result;
+          // if the query is currently in an error state, an incoming parital
+          // result should not trigger a notify - we have no reason to assume
+          // that the error is resolved
+          if (previousResult.networkStatus !== NetworkStatus.error) {
+            this.scheduleNotify();
+          }
+        }
+      },
+    });
+
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
 
     const opDef = getOperationDefinition(this.query);
@@ -1591,20 +1610,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             TData,
             TVariables
           >(),
-          tap((result) => {
-            if (
-              !isNetworkRequestInFlight(result.result.networkStatus) &&
-              result.result.partial
-            ) {
-              const previousResult = this.internalSubject.getValue().result;
-              // if the query is currently in an error state, an incoming parital
-              // result should not trigger a notify - we have no reason to assume
-              // that the error is resolved
-              if (previousResult.networkStatus !== NetworkStatus.error) {
-                this.scheduleNotify();
-              }
-            }
-          }),
+
           filter(
             ({ result }) =>
               result.networkStatus !== NetworkStatus.ready ||

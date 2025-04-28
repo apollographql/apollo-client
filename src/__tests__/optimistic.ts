@@ -1003,6 +1003,7 @@ describe("optimistic mutation results", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
       });
 
       client

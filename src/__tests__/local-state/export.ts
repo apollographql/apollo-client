@@ -94,6 +94,7 @@ describe("@client @export tests", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           postCount(_, { authorId }) {
@@ -140,6 +141,7 @@ describe("@client @export tests", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           postCount(_, { authorId }) {
@@ -947,6 +949,7 @@ describe("@client @export tests", () => {
 
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           doubleWidgets(_, { widgetCount }) {

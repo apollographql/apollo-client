@@ -2592,7 +2592,7 @@ describe("ApolloClient", () => {
 
     it("supports the @includes directive with `variables` - parallel cache modification", async () => {
       const cache = new InMemoryCache();
-      const client = new ApolloClient({ cache });
+      const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
       const FullFragment = gql`
         fragment ItemFragment on Item {
@@ -2899,6 +2899,7 @@ describe("ApolloClient", () => {
   describe("setLink", () => {
     it("should override default link with newly set link", async () => {
       const client = new ApolloClient({
+        link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
       expect(client.link).toBeDefined();
@@ -3019,7 +3020,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
 
       const promise = client.mutate({
         mutation,
@@ -3070,7 +3074,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
 
       const promise = client.mutate({
         variables: { id: "1" },
@@ -3144,7 +3151,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
 
       const result = await client.mutate({
         variables: { id: "1" },
@@ -3207,7 +3217,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
       const result = await client.query({ variables: { id: "1" }, query });
 
       expectTypeOf(result.data).toMatchTypeOf<Query | null | undefined>();
@@ -3282,7 +3295,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
       const observableQuery = client.watchQuery({
         query,
         variables: { id: "1" },

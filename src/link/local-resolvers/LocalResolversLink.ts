@@ -97,7 +97,7 @@ export declare namespace LocalResolversLink {
 
   export interface Resolvers {
     [typename: string]: {
-      [field: string]: Resolver<any, any, Record<string, any>>;
+      [field: string]: Resolver<any, any, any>;
     };
   }
 

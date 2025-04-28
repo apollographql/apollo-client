@@ -531,17 +531,14 @@ export class ApolloClient implements DataProxy {
   public mutate<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TContext extends Record<string, any> = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
   >(
-    options: MutationOptions<TData, TVariables, TContext>
+    options: MutationOptions<TData, TVariables, TCache>
   ): Promise<MutateResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
-    return this.queryManager.mutate<TData, TVariables, TContext, TCache>(
-      options
-    );
+    return this.queryManager.mutate<TData, TVariables, TCache>(options);
   }
 
   /**

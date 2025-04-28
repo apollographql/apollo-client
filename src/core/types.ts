@@ -222,13 +222,12 @@ export type MutationUpdaterFn<T = { [key: string]: any }> = (
 export type MutationUpdaterFunction<
   TData,
   TVariables,
-  TContext,
   TCache extends ApolloCache,
 > = (
   cache: TCache,
   result: Omit<FetchResult<Unmasked<TData>>, "context">,
   options: {
-    context?: TContext;
+    context?: DefaultContext;
     variables?: TVariables;
   }
 ) => void;

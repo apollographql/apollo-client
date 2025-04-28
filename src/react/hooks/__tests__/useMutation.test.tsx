@@ -2331,17 +2331,16 @@ describe("useMutation Hook", () => {
 
       let foundContext = false;
       const Component = () => {
-        const [createTodo] = useMutation<
-          Todo,
-          { description: string },
-          { id: number }
-        >(CREATE_TODO_MUTATION, {
-          context,
-          update(_, __, options) {
-            expect(options.context).toEqual(context);
-            foundContext = true;
-          },
-        });
+        const [createTodo] = useMutation<Todo, { description: string }>(
+          CREATE_TODO_MUTATION,
+          {
+            context,
+            update(_, __, options) {
+              expect(options.context).toEqual(context);
+              foundContext = true;
+            },
+          }
+        );
 
         useEffect(() => {
           void createTodo({ variables });

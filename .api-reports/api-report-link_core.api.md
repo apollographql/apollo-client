@@ -43,7 +43,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
+    payload: SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -99,7 +99,7 @@ interface ExecutionPatchResultBase {
 }
 
 // @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
 
 // @public (undocumented)
 export const from: typeof ApolloLink.from;
@@ -170,9 +170,9 @@ export type Path = ReadonlyArray<string | number>;
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 // @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
+export interface SingleExecutionResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
     // (undocumented)
-    context?: TContext;
+    context?: DefaultContext;
     // (undocumented)
     data?: TData | null;
     // (undocumented)

@@ -11,6 +11,7 @@ describe.skip("Type tests", () => {
       name: string;
     }
     new LocalResolversLink();
+    new LocalResolversLink({ resolvers: {} });
 
     new LocalResolversLink({
       resolvers: {
@@ -265,6 +266,15 @@ describe.skip("Type tests", () => {
       rootValue: () => ({
         env: "staging",
       }),
+      resolvers: {
+        Query: {
+          currentUserId: (_rootValue: RootValue) => 1,
+        },
+      },
+    });
+
+    // @ts-expect-error rootValue is not provided
+    new LocalResolversLink({
       resolvers: {
         Query: {
           currentUserId: (_rootValue: RootValue) => 1,

@@ -70,7 +70,6 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
-import { snapshot } from "node:test";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

@@ -66,11 +66,15 @@ describe.skip("Type tests", () => {
           favoriteFood: () => ({
             __typename: "Food",
             name: "Pasta",
-            category: FoodCategory.Italian,
+            categories: [FoodCategory.Italian],
           }),
         },
         Food: {
           name: (food) => food.name?.toUpperCase() ?? null,
+          categories: (food, { limit, offset }) => {
+            limit = limit ?? 5;
+            return food.categories?.slice(offset, offset + limit) ?? [];
+          },
         },
       },
     });

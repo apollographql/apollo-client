@@ -19,7 +19,7 @@ export const plugin: PluginFunction<
   _documents: Types.DocumentFile[],
   config: LocalResolversLinkPluginConfig
 ) => {
-  const imports = [];
+  const imports: string[] = [];
   const showUnusedMappers =
     typeof config.showUnusedMappers === "boolean" ?
       config.showUnusedMappers

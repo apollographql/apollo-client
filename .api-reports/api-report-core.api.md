@@ -176,8 +176,6 @@ export interface ApolloClientOptions {
     cache: ApolloCache;
     // @deprecated
     connectToDevTools?: boolean;
-    // (undocumented)
-    credentials?: string;
     dataMasking?: boolean;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
@@ -187,15 +185,13 @@ export interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     fragmentMatcher?: FragmentMatcher;
-    headers?: Record<string, string>;
-    link?: ApolloLink;
+    link: ApolloLink;
     name?: string;
     queryDeduplication?: boolean;
     // (undocumented)
     resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    uri?: string | HttpLink.UriFunction;
     version?: string;
 }
 

@@ -61,6 +61,9 @@ describe.skip("Type tests", () => {
     });
 
     new LocalResolversLink<Resolvers>({
+      rootValue: {
+        env: "prod",
+      },
       resolvers: {
         Query: {
           currentUserId: () => "1",

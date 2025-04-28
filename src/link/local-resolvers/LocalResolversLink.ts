@@ -28,7 +28,7 @@ import type {
   Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type { FragmentMap } from "@apollo/client/utilities";
+import type { FragmentMap, IsAny, NoInfer } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   cacheSizes,
@@ -53,8 +53,19 @@ import {
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 type MaybeRequireResolvers<TResolvers> =
-  {} extends TResolvers ? { resolvers?: TResolvers }
-  : { resolvers: TResolvers };
+  {} extends TResolvers ? {} : { resolvers: TResolvers };
+
+type MaybeRequireRootValue<TRootValue> =
+  true extends IsAny<TRootValue> ? {}
+  : unknown extends TRootValue ? {}
+  : {
+      rootValue:
+        | ((options: {
+            phase: "exports" | "resolve";
+            operation: Operation;
+          }) => TRootValue)
+        | TRootValue;
+    };
 
 export declare namespace LocalResolversLink {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
@@ -97,7 +108,8 @@ export declare namespace LocalResolversLink {
      * The map of resolvers used to provide values for `@client` fields.
      */
     resolvers?: TResolvers;
-  } & MaybeRequireResolvers<TResolvers>;
+  } & MaybeRequireResolvers<TResolvers> &
+    MaybeRequireRootValue<TRootValue>;
 
   export interface Resolvers {
     [typename: string]: {

@@ -219,19 +219,21 @@ export class ApolloClient implements DataProxy {
    * ```
    */
   constructor(options: ApolloClientOptions) {
-    invariant(
-      options.cache,
-      "To initialize Apollo Client, you must specify a 'cache' property " +
-        "in the options object. \n" +
-        "For more information, please visit: https://go.apollo.dev/c/docs"
-    );
+    if (__DEV__) {
+      invariant(
+        options.cache,
+        "To initialize Apollo Client, you must specify a 'cache' property " +
+          "in the options object. \n" +
+          "For more information, please visit: https://go.apollo.dev/c/docs"
+      );
 
-    invariant(
-      options.link,
-      "To initialize Apollo Client, you must specify a 'link' property " +
-        "in the options object. \n" +
-        "For more information, please visit: https://go.apollo.dev/c/docs"
-    );
+      invariant(
+        options.link,
+        "To initialize Apollo Client, you must specify a 'link' property " +
+          "in the options object. \n" +
+          "For more information, please visit: https://go.apollo.dev/c/docs"
+      );
+    }
 
     const {
       cache,

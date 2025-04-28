@@ -10800,7 +10800,6 @@ describe("useSuspenseQuery", () => {
 
     const { snapshot } = renderStream.getCurrentRender();
 
-    console.log("------- fetchMore -------");
     snapshot.result!.fetchMore({ variables: { offset: 2 } }).catch(() => {});
 
     {

@@ -1610,14 +1610,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             TData,
             TVariables
           >(),
-
-          filter(
-            ({ result }) =>
+          filter(({ result }) => {
+            const previousResult = this.internalSubject.getValue().result;
+            return (
               result.networkStatus !== NetworkStatus.ready ||
               !result.partial ||
-              !!this.options.returnPartialData ||
+              (!!this.options.returnPartialData &&
+                previousResult.networkStatus !== NetworkStatus.error) ||
               this.options.fetchPolicy === "cache-only"
-          )
+            );
+          })
         ),
         fromNetwork.pipe(
           filter(filterForCurrentQuery),

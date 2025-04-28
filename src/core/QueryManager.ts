@@ -73,12 +73,7 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 import type { DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import {
-  empty,
-  logMissingFieldErrors,
-  ObservableQuery,
-  uninitialized,
-} from "./ObservableQuery.js";
+import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import {
   CacheWriteBehavior,
   QueryInfo,

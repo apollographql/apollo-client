@@ -1490,6 +1490,7 @@ export class QueryManager {
       string,
       {
         oq: ObservableQuery<any>;
+        // TODO remove?
         lastDiff?: Cache.DiffResult<any>;
         diff?: Cache.DiffResult<any>;
       }

@@ -414,8 +414,7 @@ export class ObservableQuery<
         if (
           notification.source == "cache" &&
           !isNetworkRequestInFlight(notification.value.networkStatus) &&
-          notification.value.partial &&
-          !this.options.returnPartialData
+          notification.value.partial
         ) {
           const previousResult = this.subject.getValue().result;
           // if the query is currently in an error state, an incoming parital
@@ -1348,6 +1347,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
+    this.cacheSubscription?.unsubscribe();
     if (this.linkSubscription) {
       this.linkSubscription.unsubscribe();
       delete this.linkSubscription;
@@ -1359,7 +1359,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.subscriptions.clear();
     this.queryManager.stopQuery(this.queryId);
     this.isTornDown = true;
-    this.reset()
+    this.reset();
   }
 
   private transformDocument(document: DocumentNode) {

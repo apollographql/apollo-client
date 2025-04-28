@@ -9,7 +9,13 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { distinctUntilKeyChanged, merge, Observable, share } from "rxjs";
+import {
+  distinctUntilChanged,
+  distinctUntilKeyChanged,
+  merge,
+  Observable,
+  share,
+} from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -204,12 +210,11 @@ export class ObservableQuery<
 
   private cacheSubscription?: Subscription;
   private input: Subject<QueryNotification.Value<TData, TVariables>>;
-  private internalSubject: BehaviorSubject<{
+  private subject: BehaviorSubject<{
     query: DocumentNode;
     variables?: TVariables;
     result: ApolloQueryResult<MaybeMasked<TData>>;
   }>;
-  private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
@@ -237,7 +242,7 @@ export class ObservableQuery<
   };
 
   private get networkStatus(): NetworkStatus {
-    return this.subject.getValue().networkStatus;
+    return this.subject.getValue().result.networkStatus;
   }
 
   /**
@@ -257,71 +262,6 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
-
-    this.subject = new BehaviorSubject(uninitialized);
-    this.observable = this.subject.pipe(
-      tap({
-        subscribe: () => {
-          if (startedInactive) {
-            queryManager["queries"].set(this.queryId, queryInfo);
-            startedInactive = false;
-          }
-          if (!this.subject.observed) {
-            if (this.subject.value === uninitialized) {
-              // Emitting a value in the `subscribe` callback of `tap` gives
-              // the subject a chance to save this initial result without
-              // emitting the placeholder value since this callback is executed
-              // before `tap` subscribes to the source observable (the subject).
-              // `reobserve` also has the chance to update this value if it
-              // synchronously emits one (usually due to reporting a cache
-              // value).
-              //
-              // We don't initialize the `BehaviorSubject` with
-              // `getInitialResult` because its possible the cache might have
-              // updated between when the `ObservableQuery` was instantiated and
-              // when it is subscribed to. Updating the value here ensures we
-              // report the most up-to-date result from the cache.
-              this.subject.next(this.getInitialResult({ observed: true }));
-            }
-
-            this.reobserve();
-
-            // TODO: See if we can rework updatePolling to better handle this.
-            // reobserve calls updatePolling but this `subscribe` callback is
-            // called before the subject is subscribed to so `updatePolling`
-            // can't accurately detect if there is an active subscription.
-            // Calling it again here ensures that it can detect if it can poll
-            setTimeout(() => this.updatePolling());
-          }
-        },
-        unsubscribe: () => {
-          if (!this.subject.observed) {
-            this.tearDownQuery();
-          }
-        },
-      }),
-      filter((result) => {
-        return (
-          this.options.fetchPolicy !== "standby" &&
-          (this.options.notifyOnNetworkStatusChange ||
-            !result.loading ||
-            // data could be defined for cache-and-network fetch policies
-            // when emitting the cache result while loading the network result
-            !!result.data) &&
-          // only the case if the query has been reset - we don't want to emit
-          // an event for that, this will likely be followed by a refetch
-          // immediately
-          result !== uninitialized
-        );
-      })
-    );
-
-    this["@@observable"] = () => this;
-    if (Symbol.observable) {
-      this[Symbol.observable] = () => this;
-    }
-    this.pipe = this.observable.pipe.bind(this.observable);
-    this.subscribe = this.observable.subscribe.bind(this.observable);
 
     // related classes
     this.queryInfo = queryInfo;
@@ -362,8 +302,7 @@ export class ObservableQuery<
       variables: this.getVariablesWithDefaults(options.variables),
     };
 
-    this.input = new Subject();
-    this.internalSubject = new BehaviorSubject<{
+    this.subject = new BehaviorSubject<{
       query: DocumentNode;
       variables?: TVariables;
       result: ApolloQueryResult<MaybeMasked<TData>>;
@@ -372,14 +311,80 @@ export class ObservableQuery<
       variables: this.variables,
       result: uninitialized,
     });
+    this.observable = this.subject.pipe(
+      tap({
+        subscribe: () => {
+          if (startedInactive) {
+            queryManager["queries"].set(this.queryId, queryInfo);
+            startedInactive = false;
+          }
+          if (!this.subject.observed) {
+            if (this.subject.value.result === uninitialized) {
+              // Emitting a value in the `subscribe` callback of `tap` gives
+              // the subject a chance to save this initial result without
+              // emitting the placeholder value since this callback is executed
+              // before `tap` subscribes to the source observable (the subject).
+              // `reobserve` also has the chance to update this value if it
+              // synchronously emits one (usually due to reporting a cache
+              // value).
+              //
+              // We don't initialize the `BehaviorSubject` with
+              // `getInitialResult` because its possible the cache might have
+              // updated between when the `ObservableQuery` was instantiated and
+              // when it is subscribed to. Updating the value here ensures we
+              // report the most up-to-date result from the cache.
+              this.subject.next({
+                variables: this.variables,
+                query: this.query,
+                result: this.getInitialResult({ observed: true }),
+              });
+            }
+
+            this.reobserve();
+
+            // TODO: See if we can rework updatePolling to better handle this.
+            // reobserve calls updatePolling but this `subscribe` callback is
+            // called before the subject is subscribed to so `updatePolling`
+            // can't accurately detect if there is an active subscription.
+            // Calling it again here ensures that it can detect if it can poll
+            setTimeout(() => this.updatePolling());
+          }
+        },
+        unsubscribe: () => {
+          if (!this.subject.observed) {
+            this.tearDownQuery();
+          }
+        },
+      }),
+      map((value) => value.result),
+      filter((result) => {
+        return (
+          this.options.fetchPolicy !== "standby" &&
+          (this.options.notifyOnNetworkStatusChange ||
+            !result.loading ||
+            // data could be defined for cache-and-network fetch policies
+            // when emitting the cache result while loading the network result
+            !!result.data) &&
+          // only the case if the query has been reset - we don't want to emit
+          // an event for that, this will likely be followed by a refetch
+          // immediately
+          result !== uninitialized
+        );
+      })
+    );
+
+    this["@@observable"] = () => this;
+    if (Symbol.observable) {
+      this[Symbol.observable] = () => this;
+    }
+    this.pipe = this.observable.pipe.bind(this.observable);
+    this.subscribe = this.observable.subscribe.bind(this.observable);
+
+    this.input = new Subject();
     // we want to feed many streams into `this.subject`, but none of them should
     // be able to close `this.input`
     this.input.complete = () => {};
-    this.input.pipe(this.operator).subscribe(this.internalSubject);
-    this.internalSubject
-      .pipe(map((value) => value.result))
-      .subscribe(this.subject);
-
+    this.input.pipe(this.operator).subscribe(this.subject);
     this.input.subscribe({
       next: (notification) => {
         if (
@@ -388,7 +393,7 @@ export class ObservableQuery<
           notification.value.partial &&
           !this.options.returnPartialData
         ) {
-          const previousResult = this.internalSubject.getValue().result;
+          const previousResult = this.subject.getValue().result;
           // if the query is currently in an error state, an incoming parital
           // result should not trigger a notify - we have no reason to assume
           // that the error is resolved
@@ -557,7 +562,7 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
-    const value = this.subject.getValue();
+    const value = this.subject.getValue().result;
     return value !== uninitialized ? value : this.getInitialResult();
   }
 
@@ -964,14 +969,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return toQueryResult(this.subject.getValue());
+      return toQueryResult(this.subject.getValue().result);
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return toQueryResult(this.subject.getValue());
+      return toQueryResult(this.subject.getValue().result);
     }
 
     return this.reobserve({
@@ -1272,7 +1277,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       newNetworkStatus == NetworkStatus.refetch ||
       newNetworkStatus == NetworkStatus.setVariables
     ) {
-      this.reemitEvenIfEqual = this.internalSubject.getValue().result;
+      this.reemitEvenIfEqual = this.subject.getValue().result;
     }
 
     if (fetchPolicy === "standby") {
@@ -1624,7 +1629,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             TVariables
           >(),
           filter(({ result }) => {
-            const previousResult = this.internalSubject.getValue().result;
+            const previousResult = this.subject.getValue().result;
             return (
               result.networkStatus !== NetworkStatus.ready ||
               !result.partial ||
@@ -1643,7 +1648,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             ): QueryNotification.FromNetwork<TData, TVariables> &
               QueryNotification.Meta<TData, TVariables> => {
               if (value.kind == "E") {
-                const lastValue = this.internalSubject.getValue();
+                const lastValue = this.subject.getValue();
                 return {
                   ...value,
                   kind: "N",
@@ -1674,7 +1679,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         fromNetworkStatus.pipe(
           dematerializeInternalResult(),
           map((value) => {
-            const previousResult = this.internalSubject.getValue();
+            const previousResult = this.subject.getValue();
             const baseResult =
               isEqualQuery(previousResult, value) ?
                 previousResult.result

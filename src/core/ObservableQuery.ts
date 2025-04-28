@@ -1359,6 +1359,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.subscriptions.clear();
     this.queryManager.stopQuery(this.queryId);
     this.isTornDown = true;
+    this.reset()
   }
 
   private transformDocument(document: DocumentNode) {

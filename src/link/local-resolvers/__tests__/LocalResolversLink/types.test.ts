@@ -50,7 +50,10 @@ describe.skip("Type tests", () => {
     type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
     const { FoodCategory } = await import("./fixtures/local-resolvers.js");
 
+    // @ts-expect-error missing argument
     new LocalResolversLink<Resolvers>();
+    // @ts-expect-error missing resolvers option
+    new LocalResolversLink<Resolvers>({});
 
     new LocalResolversLink<Resolvers>({
       // @ts-expect-error missing Query resolver
@@ -165,6 +168,11 @@ describe.skip("Type tests", () => {
       rootValue: {
         env: "dev",
       },
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
     });
 
     new LocalResolversLink<Resolvers, RootValue>({
@@ -172,12 +180,22 @@ describe.skip("Type tests", () => {
         // @ts-expect-error invalid value
         env: "staging",
       },
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
     });
 
     new LocalResolversLink<Resolvers, RootValue>({
       rootValue: () => ({
         env: "prod",
       }),
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
     });
 
     new LocalResolversLink<Resolvers, RootValue>({
@@ -185,6 +203,11 @@ describe.skip("Type tests", () => {
       rootValue: () => ({
         env: "staging",
       }),
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
     });
 
     new LocalResolversLink<Resolvers, RootValue>({
@@ -193,7 +216,7 @@ describe.skip("Type tests", () => {
       },
       resolvers: {
         Query: {
-          currentUserId: (parent: RootValue) => "1",
+          currentUserId: (rootValue: RootValue) => rootValue.env,
         },
       },
     });
@@ -205,7 +228,7 @@ describe.skip("Type tests", () => {
       resolvers: {
         Query: {
           // @ts-expect-error parent is incorrect type
-          currentUserId: (parent: { invalid: boolean }) => "1",
+          currentUserId: (rootValue: { invalid: boolean }) => "1",
         },
       },
     });
@@ -217,7 +240,7 @@ describe.skip("Type tests", () => {
       },
       resolvers: {
         Query: {
-          currentUserId: (_rootValue) => "1",
+          currentUserId: (rootValue) => rootValue.env,
         },
       },
     });

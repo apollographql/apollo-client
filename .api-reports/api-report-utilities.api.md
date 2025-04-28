@@ -4,16 +4,16 @@
 
 ```ts
 
-import type { ApolloPayloadResult } from '@apollo/client/link/core';
+import type { ApolloPayloadResult } from '@apollo/client/link';
 import type { ArgumentNode } from 'graphql';
 import type { ASTNode } from 'graphql';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
-import type { ExecutionPatchIncrementalResult } from '@apollo/client/link/core';
-import type { ExecutionPatchInitialResult } from '@apollo/client/link/core';
-import type { ExecutionPatchResult } from '@apollo/client/link/core';
-import type { FetchResult } from '@apollo/client/link/core';
+import type { ExecutionPatchIncrementalResult } from '@apollo/client/link';
+import type { ExecutionPatchInitialResult } from '@apollo/client/link';
+import type { ExecutionPatchResult } from '@apollo/client/link';
+import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
 import type { FragmentDefinitionNode } from 'graphql';

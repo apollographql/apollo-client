@@ -7,7 +7,7 @@
 import type { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client';
 import type { ApolloPayloadResult } from '@apollo/client';
-import type { ExecuteContext } from '@apollo/client/link/core';
+import type { ExecuteContext } from '@apollo/client/link';
 import { FetchResult } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql-17-alpha2';
 import type { GraphQLRequest } from '@apollo/client';

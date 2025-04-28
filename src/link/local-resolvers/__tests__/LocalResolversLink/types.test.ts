@@ -46,8 +46,9 @@ describe.skip("Type tests", () => {
     });
   });
 
-  test("works with codegen resolver types", () => {
+  test("works with codegen resolver types", async () => {
     type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
+    const { FoodCategory } = await import("./fixtures/local-resolvers.js");
 
     new LocalResolversLink<Resolvers>();
 
@@ -62,7 +63,11 @@ describe.skip("Type tests", () => {
           currentUserId: () => "1",
         },
         User: {
-          favoriteFood: () => ({ __typename: "Food", name: "Pizza" }),
+          favoriteFood: () => ({
+            __typename: "Food",
+            name: "Pasta",
+            category: FoodCategory.Italian,
+          }),
         },
         Food: {
           name: (food) => food.name?.toUpperCase() ?? null,

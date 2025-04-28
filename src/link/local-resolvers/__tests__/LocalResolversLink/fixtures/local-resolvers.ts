@@ -38,8 +38,13 @@ export type Scalars = {
 
 export type Food = {
   __typename: "Food";
+  category: Maybe<FoodCategory>;
   name: Maybe<Scalars["String"]["output"]>;
 };
+
+export enum FoodCategory {
+  Italian = "ITALIAN",
+}
 
 export type Query = {
   __typename: "Query";
@@ -64,6 +69,7 @@ export type Resolver<
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
   Food: ResolverTypeWrapper<Food>;
+  FoodCategory: FoodCategory;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
   Query: ResolverTypeWrapper<RootValue>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
@@ -84,6 +90,7 @@ export type FoodResolvers<
   ParentType extends
     ResolversParentTypes["Food"] = ResolversParentTypes["Food"],
 > = {
+  category?: Resolver<Maybe<ResolversTypes["FoodCategory"]>, ParentType>;
   name?: Resolver<Maybe<ResolversTypes["String"]>, ParentType>;
 };
 

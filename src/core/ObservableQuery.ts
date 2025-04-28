@@ -356,6 +356,18 @@ export class ObservableQuery<
           }
         },
       }),
+      distinctUntilKeyChanged(
+        "result",
+        (previous, current) =>
+          equal(previous, current) && !equal(previous, this.reemitEvenIfEqual)
+      ),
+      tap(() => {
+        // we only want to reemit if equal once, and if the value changed
+        // we also don't want to reemit in the future,
+        // so no matter what value is emitted here, we can safely
+        // reset `this.reemitEvenIfEqual`
+        this.reemitEvenIfEqual = undefined;
+      }),
       map((value) => value.result),
       filter((result) => {
         return (
@@ -1718,18 +1730,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         })
       )
     ).pipe(
-      distinctUntilKeyChanged(
-        "result",
-        (previous, current) =>
-          equal(previous, current) && !equal(previous, this.reemitEvenIfEqual)
-      ),
-      tap(() => {
-        // we only want to reemit if equal once, and if the value changed
-        // we also don't want to reemit in the future,
-        // so no matter what value is emitted here, we can safely
-        // reset `this.reemitEvenIfEqual`
-        this.reemitEvenIfEqual = undefined;
-      }),
       tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
     );
   });

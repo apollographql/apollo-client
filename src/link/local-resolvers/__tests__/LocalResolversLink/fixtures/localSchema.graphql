@@ -9,7 +9,7 @@ extend type User {
 
 type Food {
   name: String
-  category: FoodCategory
+  categories(limit: Int, offset: Int!): [FoodCategory!]
 }
 
 enum FoodCategory {

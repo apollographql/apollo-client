@@ -20,7 +20,7 @@ export type Incremental<T> =
   | {
       [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
     };
-export { ResolverFn };
+export type { ResolverFn };
 type ResolverFn<
   TResult,
   TParent = unknown,

@@ -21,12 +21,15 @@ export type Incremental<T> =
   | {
       [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
     };
-export { ResolverFn };
+export type { ResolverFn };
 type ResolverFn<
   TResult,
   TParent = unknown,
   TArgs = Record<string, unknown>,
 > = LocalResolversLink.Resolver<TResult, TParent, TArgs>;
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
+  [P in K]-?: NonNullable<T[P]>;
+};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string };
@@ -38,8 +41,13 @@ export type Scalars = {
 
 export type Food = {
   __typename: "Food";
-  category: Maybe<FoodCategory>;
+  categories: Maybe<Array<FoodCategory>>;
   name: Maybe<Scalars["String"]["output"]>;
+};
+
+export type FoodCategoriesArgs = {
+  limit?: InputMaybe<Scalars["Int"]["input"]>;
+  offset: Scalars["Int"]["input"];
 };
 
 export enum FoodCategory {
@@ -71,6 +79,7 @@ export type ResolversTypes = {
   Food: ResolverTypeWrapper<Food>;
   FoodCategory: FoodCategory;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
+  Int: ResolverTypeWrapper<Scalars["Int"]["output"]>;
   Query: ResolverTypeWrapper<RootValue>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
   User: ResolverTypeWrapper<User>;
@@ -81,6 +90,7 @@ export type ResolversParentTypes = {
   Boolean: Scalars["Boolean"]["output"];
   Food: Food;
   ID: Scalars["ID"]["output"];
+  Int: Scalars["Int"]["output"];
   Query: RootValue;
   String: Scalars["String"]["output"];
   User: User;
@@ -90,7 +100,11 @@ export type FoodResolvers<
   ParentType extends
     ResolversParentTypes["Food"] = ResolversParentTypes["Food"],
 > = {
-  category?: Resolver<Maybe<ResolversTypes["FoodCategory"]>, ParentType>;
+  categories?: Resolver<
+    Maybe<Array<ResolversTypes["FoodCategory"]>>,
+    ParentType,
+    RequireFields<FoodCategoriesArgs, "offset">
+  >;
   name?: Resolver<Maybe<ResolversTypes["String"]>, ParentType>;
 };
 

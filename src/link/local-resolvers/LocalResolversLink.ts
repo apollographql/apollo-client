@@ -52,14 +52,18 @@ import {
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
+type MaybeRequireResolvers<TResolvers> =
+  {} extends TResolvers ? { resolvers?: TResolvers }
+  : { resolvers: TResolvers };
+
 export declare namespace LocalResolversLink {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
-  export interface Options<
+  export type Options<
     TResolvers = LocalResolversLink.Resolvers,
     TRootValue = unknown,
-  > {
+  > = {
     /**
      * A value or function called with the current `operation` and `phase`
      * creating the root value passed to any root field resolvers. Providing a
@@ -93,7 +97,7 @@ export declare namespace LocalResolversLink {
      * The map of resolvers used to provide values for `@client` fields.
      */
     resolvers?: TResolvers;
-  }
+  } & MaybeRequireResolvers<TResolvers>;
 
   export interface Resolvers {
     [typename: string]: {
@@ -184,12 +188,14 @@ export class LocalResolversLink<
   private rootValue?: LocalResolversLink.Options["rootValue"];
 
   constructor(
-    options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>> = {}
+    ...[options]: {} extends TResolvers ?
+      [options?: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>>]
+    : [options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>>]
   ) {
     super();
 
-    this.rootValue = options.rootValue;
-    if (options.resolvers) {
+    this.rootValue = options?.rootValue;
+    if (options?.resolvers) {
       this.addResolvers(options.resolvers as LocalResolversLink.Resolvers);
     }
   }

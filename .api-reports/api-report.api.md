@@ -138,8 +138,6 @@ export class ApolloClient implements DataProxy {
     stop(): void;
     subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
-    readonly typeDefs: ApolloClientOptions["typeDefs"];
-    // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<TData>>;
     watchQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, TData>): ObservableQuery<TData, TVariables>;
@@ -172,8 +170,6 @@ export interface ApolloClientOptions {
     resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    // (undocumented)
-    typeDefs?: string | string[] | DocumentNode | DocumentNode[];
     uri?: string | HttpLink.UriFunction;
     version?: string;
 }

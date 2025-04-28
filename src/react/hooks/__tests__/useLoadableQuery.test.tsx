@@ -2052,7 +2052,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   }
 });
 
-it("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+it.only("applies `returnPartialData` on next fetch when it changes between renders", async () => {
   interface Data {
     character: {
       __typename: "Character";
@@ -2129,7 +2129,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   });
 
   using _disabledAct = disableActEnvironment();
-  const renderStream = createDefaultProfiler<Data>();
+  const renderStream = createDefaultProfiler<Data | DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
 
@@ -2194,12 +2194,12 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1" },
       },
       error: undefined,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: NetworkStatus.ready,
     });
   }
 

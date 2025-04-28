@@ -4157,7 +4157,6 @@ describe("ObservableQuery", () => {
 
     const queryInfo = observable["queryInfo"];
     const cache = queryInfo["cache"];
-    const setDiffSpy = jest.spyOn(queryInfo, "setDiff");
     const notifySpy = jest.spyOn(
       observable,
       "notify" as any /* this is not a public method so we cast */
@@ -4215,11 +4214,9 @@ describe("ObservableQuery", () => {
 
     await wait(100);
 
-    expect(setDiffSpy).toHaveBeenCalledTimes(1);
     expect(notifySpy).not.toHaveBeenCalled();
     expect(invalidateCount).toBe(1);
-    // TODO undo this once `queryInfo` is not watching the cache anymore
-    expect(onWatchUpdatedCount).toBe(2);
+    expect(onWatchUpdatedCount).toBe(1);
     client.stop();
 
     await expect(stream).not.toEmitAnything();

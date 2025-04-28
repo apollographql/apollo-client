@@ -1025,9 +1025,7 @@ export class QueryManager {
         ) {
           observableQueryPromises.push(observableQuery.refetch());
         }
-        (this.queries.get(queryId) || observableQuery["queryInfo"]).setDiff(
-          null
-        );
+        (this.queries.get(queryId) || observableQuery["queryInfo"]).resetDiff();
       }
     );
 
@@ -1501,7 +1499,7 @@ export class QueryManager {
       this.getObservableQueries(include).forEach((oq, queryId) => {
         includedQueriesById.set(queryId, {
           oq,
-          lastDiff: (this.queries.get(queryId) || oq["queryInfo"]).getDiff(),
+          // TODO lastDiff has been removed - we're not really tracking that anymore
         });
       });
     }
@@ -1716,7 +1714,7 @@ export class QueryManager {
       variables,
     });
 
-    const readCache = () => queryInfo.getDiff();
+    const readCache = () => this.cache.diff<any>(queryInfo.getDiffOptions());
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,

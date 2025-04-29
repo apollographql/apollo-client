@@ -123,7 +123,10 @@ export class QueryInfo {
       this.stopped = true;
 
       // Cancel the pending notify timeout
+      // TODO: move this over into `ObservableQuery` and track `ObservableQuery` instances
+      // instead of `QueryInfo` instances in `QueryManager`.
       this.observableQuery?.["resetNotifications"]();
+      this.observableQuery?.["cacheSubscription"]?.unsubscribe();
 
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();

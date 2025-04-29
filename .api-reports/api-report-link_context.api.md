@@ -4,9 +4,9 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
-import type { GraphQLRequest } from '@apollo/client/link/core';
-import type { OperationContext } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
+import type { GraphQLRequest } from '@apollo/client/link';
+import type { OperationContext } from '@apollo/client/link';
 
 // @public (undocumented)
 export type ContextSetter = (operation: GraphQLRequest, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;

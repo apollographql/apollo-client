@@ -110,7 +110,7 @@ export {
   execute,
   from,
   split,
-} from "@apollo/client/link/core";
+} from "@apollo/client/link";
 export type {
   ApolloPayloadResult,
   DocumentNode,
@@ -126,7 +126,7 @@ export type {
   Path,
   RequestHandler,
   SingleExecutionResult,
-} from "@apollo/client/link/core";
+} from "@apollo/client/link";
 
 export {
   checkFetcher,

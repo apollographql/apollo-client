@@ -8,8 +8,8 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { ApolloLink, GraphQLRequest } from "@apollo/client/link/core";
-import { execute } from "@apollo/client/link/core";
+import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
+import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { checkDocument, mergeOptions } from "@apollo/client/utilities";

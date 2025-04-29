@@ -33,7 +33,7 @@ import {
   CombinedGraphQLErrors,
   UnconventionalError,
 } from "@apollo/client/errors";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,

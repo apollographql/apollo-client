@@ -4,11 +4,11 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import type { ClientOptions } from 'subscriptions-transport-ws';
-import type { FetchResult } from '@apollo/client/link/core';
+import type { FetchResult } from '@apollo/client/link';
 import type { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 // @public (undocumented)

@@ -4,12 +4,12 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import { BatchLink } from '@apollo/client/link/batch';
-import type { FetchResult } from '@apollo/client/link/core';
+import type { FetchResult } from '@apollo/client/link';
 import type { HttpLink } from '@apollo/client/link/http';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export namespace BatchHttpLink {

@@ -6,7 +6,7 @@ import { map, of } from "rxjs";
 import type { NextLink, Operation, Reference } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 describe("Link interactions", () => {

@@ -4,10 +4,10 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
 import type { InvariantError } from '@apollo/client/utilities/invariant';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 import type { print as print_2 } from '@apollo/client/utilities';
 
 // @public (undocumented)

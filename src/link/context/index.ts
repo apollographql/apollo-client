@@ -1,11 +1,8 @@
 import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type {
-  GraphQLRequest,
-  OperationContext,
-} from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { GraphQLRequest, OperationContext } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 
 export type ContextSetter = (
   operation: GraphQLRequest,

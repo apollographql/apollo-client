@@ -1,7 +1,7 @@
 import type { DefinitionNode } from "graphql";
 import { Observable, throwError } from "rxjs";
 
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import { hasDirectives } from "@apollo/client/utilities";
 import {

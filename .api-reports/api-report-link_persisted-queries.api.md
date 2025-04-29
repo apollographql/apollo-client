@@ -4,11 +4,11 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 import type { ServerError } from '@apollo/client/errors';
 import type { ServerParseError } from '@apollo/client/errors';
 

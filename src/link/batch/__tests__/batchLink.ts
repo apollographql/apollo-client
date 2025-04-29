@@ -2,8 +2,8 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
+import { ApolloLink } from "@apollo/client/link";
 import { BatchLink, OperationBatcher } from "@apollo/client/link/batch";
-import { ApolloLink } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,

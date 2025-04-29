@@ -3,7 +3,7 @@ import { of } from "rxjs";
 
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("Basic functionality", () => {

@@ -1,4 +1,4 @@
-import type { Operation } from "@apollo/client/link/core";
+import type { Operation } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
 
 import type { HttpLink } from "./HttpLink.js";

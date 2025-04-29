@@ -3,7 +3,7 @@ import React from "react";
 
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import {
   ApolloConsumer,
   ApolloProvider,

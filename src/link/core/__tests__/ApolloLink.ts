@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { ApolloLink, execute } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
 import type {

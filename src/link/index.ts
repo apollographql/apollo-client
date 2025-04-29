@@ -1,9 +1,9 @@
-export { empty } from "./empty.js";
-export { from } from "./from.js";
-export { split } from "./split.js";
-export { concat } from "./concat.js";
-export { execute } from "./execute.js";
-export { ApolloLink } from "./ApolloLink.js";
+export { empty } from "./core/empty.js";
+export { from } from "./core/from.js";
+export { split } from "./core/split.js";
+export { concat } from "./core/concat.js";
+export { execute } from "./core/execute.js";
+export { ApolloLink } from "./core/ApolloLink.js";
 
 export type {
   ApolloPayloadResult,
@@ -21,4 +21,4 @@ export type {
   Path,
   RequestHandler,
   SingleExecutionResult,
-} from "./types.js";
+} from "./core/types.js";

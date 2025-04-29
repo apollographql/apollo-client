@@ -6,8 +6,9 @@
 
 import type { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client';
+import { ApolloLink as ApolloLink_2 } from '@apollo/client/link';
 import type { ApolloPayloadResult } from '@apollo/client';
-import type { ExecuteContext } from '@apollo/client/link/core';
+import type { ExecuteContext } from '@apollo/client/link';
 import { FetchResult } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql-17-alpha2';
 import type { GraphQLRequest } from '@apollo/client';
@@ -70,7 +71,7 @@ export function createOperationWithDefaultContext(context: any, operation: Graph
 export function enableFakeTimers(config?: FakeTimersConfig | LegacyFakeTimersConfig): Disposable;
 
 // @public (undocumented)
-export function executeWithDefaultContext(link: ApolloLink, operation: GraphQLRequest, context?: ExecuteContext): Observable_2<FetchResult>;
+export function executeWithDefaultContext(link: ApolloLink_2, operation: GraphQLRequest, context?: ExecuteContext): Observable_2<FetchResult>;
 
 // @public (undocumented)
 type HydrateableContainer = Parameters<(typeof ReactDOMClient)["hydrateRoot"]>[0];

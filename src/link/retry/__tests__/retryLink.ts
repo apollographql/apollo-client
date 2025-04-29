@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 import { Observable, of, throwError } from "rxjs";
 
 import { CombinedProtocolErrors } from "@apollo/client";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { RetryLink } from "@apollo/client/link/retry";
 import {
   executeWithDefaultContext as execute,

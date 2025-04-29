@@ -1,11 +1,7 @@
 import type { GraphQLRequest } from "@apollo/client";
-import {
-  ApolloClient,
-  ApolloLink,
-  execute,
-  InMemoryCache,
-} from "@apollo/client";
-import type { ExecuteContext } from "@apollo/client/link/core";
+import { ApolloClient, execute, InMemoryCache } from "@apollo/client";
+import type { ExecuteContext } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { createOperation } from "@apollo/client/link/utils";
 
 function createDefaultExecuteContext() {

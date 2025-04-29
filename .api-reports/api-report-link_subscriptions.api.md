@@ -4,11 +4,11 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import type { Client } from 'graphql-ws';
-import type { FetchResult } from '@apollo/client/link/core';
+import type { FetchResult } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export class GraphQLWsLink extends ApolloLink {

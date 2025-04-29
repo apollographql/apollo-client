@@ -5,9 +5,9 @@ import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 
+import type { FetchResult } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import type { FetchResult } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,

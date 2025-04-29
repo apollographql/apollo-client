@@ -6,7 +6,7 @@
 
 import type { ApolloCache } from '@apollo/client/cache';
 import { ApolloClient } from '@apollo/client';
-import type { ApolloLink } from '@apollo/client/link/core';
+import type { ApolloLink } from '@apollo/client/link';
 import type { DefaultOptions } from '@apollo/client';
 import type { MockedResponse } from '@apollo/client/testing/core';
 import { MockLink } from '@apollo/client/testing/core';

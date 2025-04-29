@@ -8,18 +8,14 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { GraphQLRequest } from "@apollo/client/link/core";
-import { ApolloLink, execute } from "@apollo/client/link/core";
-import { HttpLink } from "@apollo/client/link/http";
+import type { ApolloLink, GraphQLRequest } from "@apollo/client/link/core";
+import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { checkDocument, mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
@@ -73,24 +69,11 @@ let hasSuggestedDevtools = false;
 
 export interface ApolloClientOptions {
   /**
-   * The URI of the GraphQL endpoint that Apollo Client will communicate with.
-   *
-   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-   */
-  uri?: string | HttpLink.UriFunction;
-  credentials?: string;
-  /**
-   * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
-   *
-   * This value will be ignored when using the `link` option.
-   */
-  headers?: Record<string, string>;
-  /**
    * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
-  link?: ApolloLink;
+  link: ApolloLink;
   /**
    * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
    *
@@ -236,18 +219,23 @@ export class ApolloClient implements DataProxy {
    * ```
    */
   constructor(options: ApolloClientOptions) {
-    if (!options.cache) {
-      throw newInvariantError(
+    if (__DEV__) {
+      invariant(
+        options.cache,
         "To initialize Apollo Client, you must specify a 'cache' property " +
+          "in the options object. \n" +
+          "For more information, please visit: https://go.apollo.dev/c/docs"
+      );
+
+      invariant(
+        options.link,
+        "To initialize Apollo Client, you must specify a 'link' property " +
           "in the options object. \n" +
           "For more information, please visit: https://go.apollo.dev/c/docs"
       );
     }
 
     const {
-      uri,
-      credentials,
-      headers,
       cache,
       documentTransform,
       ssrMode = false,
@@ -266,14 +254,8 @@ export class ApolloClient implements DataProxy {
       version: clientAwarenessVersion,
       devtools,
       dataMasking,
+      link,
     } = options;
-
-    let { link } = options;
-
-    if (!link) {
-      link =
-        uri ? new HttpLink({ uri, credentials, headers }) : ApolloLink.empty();
-    }
 
     this.link = link;
     this.cache = cache;

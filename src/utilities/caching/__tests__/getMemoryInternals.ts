@@ -194,6 +194,7 @@ it("returns information about cache usage (some query triggered)", () => {
 it("reports user-declared cacheSizes", () => {
   const client = new ApolloClient({
     cache: new InMemoryCache({}),
+    link: ApolloLink.empty(),
   });
 
   cacheSizes["inMemoryCache.executeSubSelectedArray"] = 90;

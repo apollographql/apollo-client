@@ -926,7 +926,10 @@ describe("useMutation Hook", () => {
   });
 
   it("should return the current client instance in the result object", async () => {
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
       wrapper: ({ children }) => (

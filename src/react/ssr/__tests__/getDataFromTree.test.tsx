@@ -6,7 +6,11 @@ import { gql } from "graphql-tag";
 import React from "react";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, CombinedGraphQLErrors } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+} from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloProvider,
@@ -22,6 +26,7 @@ describe("SSR", () => {
       const client = new ApolloClient({
         name: "oyez",
         cache: new Cache(),
+        link: ApolloLink.empty(),
       });
       const ApolloContext = getApolloContext();
 

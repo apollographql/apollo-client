@@ -32,7 +32,6 @@ import { getApolloClientMemoryInternals } from '@apollo/client/utilities/interna
 import { gql } from '@apollo/client';
 import type { GraphQLRequest } from '@apollo/client/link/core';
 import type { HookWrappers } from '@apollo/client/react/internal';
-import { HttpLink } from '@apollo/client/link/http';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsStrictlyAny } from '@apollo/client/utilities';
@@ -158,8 +157,6 @@ interface ApolloClientOptions {
     cache: ApolloCache;
     // @deprecated
     connectToDevTools?: boolean;
-    // (undocumented)
-    credentials?: string;
     dataMasking?: boolean;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
@@ -169,15 +166,13 @@ interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     fragmentMatcher?: FragmentMatcher;
-    headers?: Record<string, string>;
-    link?: ApolloLink;
+    link: ApolloLink;
     name?: string;
     queryDeduplication?: boolean;
     // (undocumented)
     resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    uri?: string | HttpLink.UriFunction;
     version?: string;
 }
 

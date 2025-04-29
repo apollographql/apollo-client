@@ -19,7 +19,6 @@ import {
 } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link/core";
-import { HttpLink } from "@apollo/client/link/http";
 import type { Masked } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -48,34 +47,10 @@ describe("ApolloClient", () => {
       }).toThrowErrorMatchingSnapshot();
     });
 
-    it("should create an `HttpLink` instance if `uri` is provided", () => {
-      const uri = "http://localhost:4000";
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        uri,
-      });
-
-      expect(client.link).toBeDefined();
-      expect((client.link as HttpLink).options.uri).toEqual(uri);
-    });
-
-    it("should accept `link` over `uri` if both are provided", () => {
-      const uri1 = "http://localhost:3000";
-      const uri2 = "http://localhost:4000";
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        uri: uri1,
-        link: new HttpLink({ uri: uri2 }),
-      });
-      expect((client.link as HttpLink).options.uri).toEqual(uri2);
-    });
-
-    it("should create an empty Link if `uri` and `link` are not provided", () => {
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-      });
-      expect(client.link).toBeDefined();
-      expect(client.link instanceof ApolloLink).toBeTruthy();
+    it("will throw an error if link is not passed in", () => {
+      expect(() => {
+        new ApolloClient({ cache: new InMemoryCache() } as any);
+      }).toThrowErrorMatchingSnapshot();
     });
   });
 
@@ -2617,7 +2592,7 @@ describe("ApolloClient", () => {
 
     it("supports the @includes directive with `variables` - parallel cache modification", async () => {
       const cache = new InMemoryCache();
-      const client = new ApolloClient({ cache });
+      const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
       const FullFragment = gql`
         fragment ItemFragment on Item {
@@ -2924,6 +2899,7 @@ describe("ApolloClient", () => {
   describe("setLink", () => {
     it("should override default link with newly set link", async () => {
       const client = new ApolloClient({
+        link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
       expect(client.link).toBeDefined();
@@ -3044,7 +3020,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
 
       const promise = client.mutate({
         mutation,
@@ -3095,7 +3074,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
 
       const promise = client.mutate({
         variables: { id: "1" },
@@ -3169,7 +3151,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
 
       const result = await client.mutate({
         variables: { id: "1" },
@@ -3232,7 +3217,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
       const result = await client.query({ variables: { id: "1" }, query });
 
       expectTypeOf(result.data).toMatchTypeOf<Query | null | undefined>();
@@ -3307,7 +3295,10 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
       const observableQuery = client.watchQuery({
         query,
         variables: { id: "1" },

@@ -1,5 +1,42 @@
 # @apollo/client
 
+## 4.0.0-alpha.12
+
+### Major Changes
+
+- [#12586](https://github.com/apollographql/apollo-client/pull/12586) [`605db8e`](https://github.com/apollographql/apollo-client/commit/605db8e94fe2ce74c0a395f38f6873d40f431365) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `typeDefs` option from `ApolloClient`.
+
+- [#12588](https://github.com/apollographql/apollo-client/pull/12588) [`eed825a`](https://github.com/apollographql/apollo-client/commit/eed825a2549f1d21fff2ec179815206b3baf0fcb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `TContext` generic argument from all types that use it. `TContext` is replaced with `DefaultContext` which can be modified using declaration merging.
+
+- [#12590](https://github.com/apollographql/apollo-client/pull/12590) [`a005e82`](https://github.com/apollographql/apollo-client/commit/a005e822de7b24783f85be45df142ffbb9bc561b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Drop `graphql` v15 as a valid peer dependency.
+
+- [#12591](https://github.com/apollographql/apollo-client/pull/12591) [`a7e7383`](https://github.com/apollographql/apollo-client/commit/a7e738328951f5dac25a5fe48d28b3640a3e0eb9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Rename the `@apollo/client/link/core` entrypoint to `@apollo/client/link`.
+
+- [#12589](https://github.com/apollographql/apollo-client/pull/12589) [`15f5a1c`](https://github.com/apollographql/apollo-client/commit/15f5a1c29ac05015387a7bbc2dbe9a91d09fedfa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Require the `link` option when instantiating `ApolloClient`. This removes the `uri`, `credentials` and `headers` options from `ApolloClient` in favor of passing an instantiated `HttpLink` directly. To migrate:
+
+  **If using `uri`, `credentials`, or `headers` options**
+
+  ```diff
+  new ApolloClient({
+    // ...
+  - uri,
+  - credentials,
+  - headers,
+  + link: new HttpLink({ uri, credentials, headers }),
+  // or if you prefer the function call approach:
+  + link: createHttpLink({ uri, credentials, headers }),
+  });
+  ```
+
+  **If creating a client without the `link` option**
+
+  ```diff
+  new ApolloClient({
+    // ...
+  + link: ApolloLink.empty()
+  });
+  ```
+
 ## 4.0.0-alpha.11
 
 ### Major Changes

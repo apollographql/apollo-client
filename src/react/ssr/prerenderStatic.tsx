@@ -1,6 +1,7 @@
 import { print } from "graphql";
 import type * as ReactTypes from "react";
 import * as React from "react";
+import type { Observer, Subscription } from "rxjs";
 import { filter, firstValueFrom } from "rxjs";
 
 import type {
@@ -159,6 +160,8 @@ export declare namespace prerenderStatic {
   }>;
 }
 
+const noopObserver: Observer<unknown> = { complete() {} };
+
 /**
  * This function will rerender your React tree until no more network requests need
  * to be made.
@@ -189,6 +192,7 @@ export function prerenderStatic({
     ObservableQueryKey,
     ObservableQuery
   >();
+  const subscriptions = new Set<Subscription>();
   let recentlyCreatedObservableQueries = new Set<ObservableQuery>();
   let renderCount = 0;
 
@@ -207,6 +211,9 @@ export function prerenderStatic({
         getObservableQueryKey(query, variables),
         observable
       );
+      // we keep the observable subscribed to until we are done with rendering
+      // otherwise it will be torn down after every render pass
+      subscriptions.add(observable.subscribe(noopObserver));
       if (observable.options.fetchPolicy !== "cache-only") {
         recentlyCreatedObservableQueries.add(observable);
       }
@@ -296,6 +303,8 @@ you have an infinite render loop in your application.`,
     .finally(() => {
       availableObservableQueries.clear();
       recentlyCreatedObservableQueries.clear();
+      subscriptions.forEach((subscription) => subscription.unsubscribe());
+      subscriptions.clear();
     });
 
   async function consume(

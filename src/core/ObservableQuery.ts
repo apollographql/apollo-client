@@ -103,14 +103,14 @@ interface TrackedOperation {
 }
 
 const newNetworkStatusSymbol: any = Symbol();
-export const uninitialized: ApolloQueryResult<any> = {
+const uninitialized: ApolloQueryResult<any> = {
   loading: true,
   networkStatus: NetworkStatus.loading,
   data: undefined,
   partial: true,
 };
 
-export const empty: ApolloQueryResult<any> = {
+const empty: ApolloQueryResult<any> = {
   loading: false,
   networkStatus: NetworkStatus.ready,
   data: undefined,

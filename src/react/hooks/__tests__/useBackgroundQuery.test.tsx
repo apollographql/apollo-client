@@ -2861,7 +2861,9 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
-  const renderStream = createDefaultProfiler<VariablesCaseData | DeepPartial<VariablesCaseData>>();
+  const renderStream = createDefaultProfiler<
+    VariablesCaseData | DeepPartial<VariablesCaseData>
+  >();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 

@@ -42,7 +42,10 @@ const sampleQuery = gql`
 const setContext = () => ({ add: 1 });
 
 const defaultExecuteContext = {
-  client: new ApolloClient({ cache: new InMemoryCache() }),
+  client: new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  }),
 };
 
 describe("ApolloClient", () => {

@@ -17,6 +17,7 @@ describe("client.refetchQueries", () => {
     expect.assertions(6);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
     expect(typeof client.refetchQueries).toBe("function");
     const onQueryUpdated = jest.fn();

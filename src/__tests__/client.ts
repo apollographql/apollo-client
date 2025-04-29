@@ -3254,7 +3254,7 @@ describe("@connection", () => {
       },
     });
 
-    const client = new ApolloClient({ cache });
+    const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
     const obsQueries = new Set<ObservableQuery<any>>();
     function watch(
@@ -3477,7 +3477,7 @@ describe("@connection", () => {
       },
     });
 
-    const client = new ApolloClient({ cache });
+    const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
     const obsQueries = new Set<ObservableQuery<any>>();
     const subs = new Set<Subscription>();

@@ -452,6 +452,7 @@ describe("Basic resolver capabilities", () => {
 
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           isInCart: () => false,
@@ -505,6 +506,7 @@ describe("Basic resolver capabilities", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           async developer(_, { id }) {
@@ -1127,6 +1129,7 @@ describe("Force local resolvers", () => {
     let isLoggedInCount = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           name() {
@@ -1169,6 +1172,7 @@ describe("Force local resolvers", () => {
     let callCount = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           isUserLoggedIn() {
@@ -1218,6 +1222,7 @@ describe("Force local resolvers", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           userData() {
@@ -1261,6 +1266,7 @@ describe("Async resolvers", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
       resolvers: {
         Query: {
           isLoggedIn() {

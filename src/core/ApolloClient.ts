@@ -1,4 +1,4 @@
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type { FormattedExecutionResult } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
@@ -8,18 +8,14 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { GraphQLRequest } from "@apollo/client/link/core";
-import { ApolloLink, execute } from "@apollo/client/link/core";
-import { HttpLink } from "@apollo/client/link/http";
+import type { ApolloLink, GraphQLRequest } from "@apollo/client/link/core";
+import { execute } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { checkDocument, mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
@@ -73,24 +69,11 @@ let hasSuggestedDevtools = false;
 
 export interface ApolloClientOptions {
   /**
-   * The URI of the GraphQL endpoint that Apollo Client will communicate with.
-   *
-   * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
-   */
-  uri?: string | HttpLink.UriFunction;
-  credentials?: string;
-  /**
-   * An object representing headers to include in every HTTP request, such as `{Authorization: 'Bearer 1234'}`
-   *
-   * This value will be ignored when using the `link` option.
-   */
-  headers?: Record<string, string>;
-  /**
    * You can provide an `ApolloLink` instance to serve as Apollo Client's network layer. For more information, see [Advanced HTTP networking](https://www.apollographql.com/docs/react/networking/advanced-http-networking/).
    *
    * One of `uri` or `link` is **required**. If you provide both, `link` takes precedence.
    */
-  link?: ApolloLink;
+  link: ApolloLink;
   /**
    * The cache that Apollo Client should use to store query results locally. The recommended cache is `InMemoryCache`, which is provided by the `@apollo/client` package.
    *
@@ -136,7 +119,6 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
-  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
@@ -202,7 +184,6 @@ export class ApolloClient implements DataProxy {
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
-  public readonly typeDefs: ApolloClientOptions["typeDefs"];
   public readonly devtoolsConfig: DevtoolsOptions;
 
   private queryManager: QueryManager;
@@ -238,18 +219,23 @@ export class ApolloClient implements DataProxy {
    * ```
    */
   constructor(options: ApolloClientOptions) {
-    if (!options.cache) {
-      throw newInvariantError(
+    if (__DEV__) {
+      invariant(
+        options.cache,
         "To initialize Apollo Client, you must specify a 'cache' property " +
+          "in the options object. \n" +
+          "For more information, please visit: https://go.apollo.dev/c/docs"
+      );
+
+      invariant(
+        options.link,
+        "To initialize Apollo Client, you must specify a 'link' property " +
           "in the options object. \n" +
           "For more information, please visit: https://go.apollo.dev/c/docs"
       );
     }
 
     const {
-      uri,
-      credentials,
-      headers,
       cache,
       documentTransform,
       ssrMode = false,
@@ -263,26 +249,18 @@ export class ApolloClient implements DataProxy {
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
-      typeDefs,
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
       dataMasking,
+      link,
     } = options;
-
-    let { link } = options;
-
-    if (!link) {
-      link =
-        uri ? new HttpLink({ uri, credentials, headers }) : ApolloLink.empty();
-    }
 
     this.link = link;
     this.cache = cache;
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || {};
-    this.typeDefs = typeDefs;
     this.devtoolsConfig = {
       ...devtools,
       enabled: devtools?.enabled ?? connectToDevTools,
@@ -531,17 +509,14 @@ export class ApolloClient implements DataProxy {
   public mutate<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TContext extends Record<string, any> = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
   >(
-    options: MutationOptions<TData, TVariables, TContext>
+    options: MutationOptions<TData, TVariables, TCache>
   ): Promise<MutateResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
-    return this.queryManager.mutate<TData, TVariables, TContext, TCache>(
-      options
-    );
+    return this.queryManager.mutate<TData, TVariables, TCache>(options);
   }
 
   /**

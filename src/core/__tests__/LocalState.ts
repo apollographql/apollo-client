@@ -1,4 +1,4 @@
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 
 /**
  * Creates an apollo-client instance with a local query resolver named 'localQuery'.
@@ -14,6 +14,7 @@ const setupClientWithLocalQueryResolver = (localQueryResolver: any) => {
   const client = new ApolloClient({
     cache,
     resolvers,
+    link: ApolloLink.empty(),
   });
 
   return client;

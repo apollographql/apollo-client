@@ -255,7 +255,6 @@ export type SubscriptionOptions<
 export type MutationOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-  TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
 > = {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
@@ -278,7 +277,7 @@ export type MutationOptions<
   awaitRefetchQueries?: boolean;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
-  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+  update?: MutationUpdaterFunction<TData, TVariables, TCache>;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
   onQueryUpdated?: OnQueryUpdated<any>;
@@ -287,7 +286,7 @@ export type MutationOptions<
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
-  context?: TContext;
+  context?: DefaultContext;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: MutationFetchPolicy;

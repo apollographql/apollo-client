@@ -758,7 +758,10 @@ describe("cache-and-network", function () {
 
 describe("standby", () => {
   test("is not supported with client.query", async () => {
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     expect(() =>
       client.query({

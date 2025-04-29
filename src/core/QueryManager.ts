@@ -263,7 +263,6 @@ export class QueryManager {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TContext extends Record<string, any>,
     TCache extends ApolloCache,
   >({
     mutation,
@@ -278,7 +277,7 @@ export class QueryManager {
     errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
     keepRootFields,
     context,
-  }: MutationOptions<TData, TVariables, TContext>): Promise<
+  }: MutationOptions<TData, TVariables, TCache>): Promise<
     MutateResult<MaybeMasked<TData>>
   > {
     invariant(
@@ -318,7 +317,7 @@ export class QueryManager {
 
     const isOptimistic =
       optimisticResponse &&
-      this.markMutationOptimistic<TData, TVariables, TContext, TCache>(
+      this.markMutationOptimistic<TData, TVariables, TCache>(
         optimisticResponse,
         {
           mutationId,
@@ -372,7 +371,7 @@ export class QueryManager {
             }
 
             return from(
-              this.markMutationResult<TData, TVariables, TContext, TCache>({
+              this.markMutationResult<TData, TVariables, TCache>({
                 mutationId,
                 result: storeResult,
                 document: mutation,
@@ -451,7 +450,6 @@ export class QueryManager {
   public markMutationResult<
     TData,
     TVariables extends OperationVariables,
-    TContext,
     TCache extends ApolloCache,
   >(
     mutation: {
@@ -461,9 +459,9 @@ export class QueryManager {
       variables?: TVariables;
       fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
-      context?: TContext;
+      context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
       awaitRefetchQueries?: boolean;
       refetchQueries?: InternalRefetchQueriesInclude;
       removeOptimistic?: string;
@@ -662,7 +660,6 @@ export class QueryManager {
   public markMutationOptimistic<
     TData,
     TVariables extends OperationVariables,
-    TContext,
     TCache extends ApolloCache,
   >(
     optimisticResponse: any,
@@ -672,9 +669,9 @@ export class QueryManager {
       variables?: TVariables;
       fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
-      context?: TContext;
+      context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
       keepRootFields?: boolean;
     }
   ) {
@@ -689,7 +686,7 @@ export class QueryManager {
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult<TData, TVariables, TContext, TCache>(
+        this.markMutationResult<TData, TVariables, TCache>(
           {
             ...mutation,
             result: { data },

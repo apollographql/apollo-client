@@ -56,7 +56,7 @@ export interface ApolloPayloadResult<
   TExtensions = Record<string, any>,
 > {
   payload:
-    | SingleExecutionResult<TData, DefaultContext, TExtensions>
+    | SingleExecutionResult<TData, TExtensions>
     | ExecutionPatchResult<TData, TExtensions>
     | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
@@ -110,22 +110,20 @@ export interface OperationContext extends DefaultContext {
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,
-  TContext = DefaultContext,
   TExtensions = Record<string, any>,
 > {
   // data might be undefined if errorPolicy was set to 'ignore'
   data?: TData | null;
-  context?: TContext;
+  context?: DefaultContext;
   errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: TExtensions;
 }
 
 export type FetchResult<
   TData = Record<string, any>,
-  TContext = Record<string, any>,
   TExtensions = Record<string, any>,
 > =
-  | SingleExecutionResult<TData, TContext, TExtensions>
+  | SingleExecutionResult<TData, TExtensions>
   | ExecutionPatchResult<TData, TExtensions>;
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;

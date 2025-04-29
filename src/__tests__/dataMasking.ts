@@ -2016,6 +2016,7 @@ describe("client.watchQuery", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeQuery({
@@ -2872,6 +2873,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -2953,6 +2955,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: false,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3039,6 +3042,7 @@ describe("client.watchFragment", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3119,6 +3123,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3181,6 +3186,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3265,6 +3271,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3363,6 +3370,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3488,6 +3496,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3608,6 +3617,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3731,6 +3741,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3796,6 +3807,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache({ fragments }),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({

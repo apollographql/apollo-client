@@ -1,4 +1,4 @@
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type { FormattedExecutionResult } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
@@ -136,7 +136,6 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
-  typeDefs?: string | string[] | DocumentNode | DocumentNode[];
   fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
@@ -202,7 +201,6 @@ export class ApolloClient implements DataProxy {
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
-  public readonly typeDefs: ApolloClientOptions["typeDefs"];
   public readonly devtoolsConfig: DevtoolsOptions;
 
   private queryManager: QueryManager;
@@ -263,7 +261,6 @@ export class ApolloClient implements DataProxy {
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
-      typeDefs,
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
@@ -282,7 +279,6 @@ export class ApolloClient implements DataProxy {
     this.cache = cache;
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || {};
-    this.typeDefs = typeDefs;
     this.devtoolsConfig = {
       ...devtools,
       enabled: devtools?.enabled ?? connectToDevTools,

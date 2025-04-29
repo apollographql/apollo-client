@@ -84,6 +84,7 @@ import type { wrapperSymbol } from '@apollo/client/react/internal';
 class ApolloClient_2 implements DataProxy {
     // (undocumented)
     __actionHookForDevTools(cb: () => any): void;
+    // Warning: (ae-forgotten-export) The symbol "ApolloClientOptions" needs to be exported by the entry point index.d.ts
     constructor(options: ApolloClientOptions);
     // (undocumented)
     __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
@@ -139,10 +140,6 @@ class ApolloClient_2 implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "SubscriptionOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "SubscribeResult" needs to be exported by the entry point index.d.ts
     subscribe<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2>(options: SubscriptionOptions<TVariables, TData>): Observable<SubscribeResult<MaybeMasked<TData>>>;
-    // Warning: (ae-forgotten-export) The symbol "ApolloClientOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    readonly typeDefs: ApolloClientOptions["typeDefs"];
     // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables = OperationVariables_2>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<TData>>;
@@ -179,8 +176,6 @@ interface ApolloClientOptions {
     resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    // (undocumented)
-    typeDefs?: string | string[] | DocumentNode | DocumentNode[];
     uri?: string | HttpLink.UriFunction;
     version?: string;
 }

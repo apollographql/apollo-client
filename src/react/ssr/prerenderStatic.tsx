@@ -160,7 +160,7 @@ export declare namespace prerenderStatic {
   }>;
 }
 
-const noopObserver: Observer<unknown> = { complete() {} };
+const noopObserver: Partial<Observer<unknown>> = { complete() {} };
 
 /**
  * This function will rerender your React tree until no more network requests need

@@ -29,7 +29,7 @@ interface EnterLeaveVisitor<TVisitedNode extends ASTNode> {
   readonly leave?: ASTVisitFn<TVisitedNode>;
 }
 
-export type RemoveNodeConfig<N> = {
+type RemoveNodeConfig<N> = {
   name?: string;
   test?: (node: N) => boolean;
   remove?: boolean;

@@ -70,7 +70,6 @@ export type {
   RemoveArgumentsConfig,
   RemoveDirectiveConfig,
   RemoveFragmentDefinitionConfig,
-  RemoveNodeConfig,
   RemoveVariableDefinitionConfig,
 } from "./graphql/transform.js";
 export {

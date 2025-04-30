@@ -3,7 +3,6 @@ import { addTypenameToDocument } from "@apollo/client/utilities";
 import {
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
-  removeFragmentSpreadFromDocument,
 } from "@apollo/client/utilities/internal";
 
 describe("removeDirectivesFromDocument", () => {
@@ -817,48 +816,6 @@ describe("removeClientSetsFromDocument", () => {
 
       fragment SomeOtherFragment on SomeType {
         yetAnotherField(someArg: $someVar)
-      }
-    `);
-  });
-});
-
-describe("removeFragmentSpreadFromDocument", () => {
-  it("should remove a named fragment spread", () => {
-    const query = gql`
-      query Simple {
-        ...FragmentSpread
-        property
-        ...ValidSpread
-      }
-
-      fragment FragmentSpread on Thing {
-        foo
-        bar
-        baz
-      }
-
-      fragment ValidSpread on Thing {
-        oof
-        rab
-        zab
-      }
-    `;
-
-    const doc = removeFragmentSpreadFromDocument(
-      [{ name: "FragmentSpread", remove: true }],
-      query
-    )!;
-
-    expect(doc).toMatchDocument(gql`
-      query Simple {
-        property
-        ...ValidSpread
-      }
-
-      fragment ValidSpread on Thing {
-        oof
-        rab
-        zab
       }
     `);
   });

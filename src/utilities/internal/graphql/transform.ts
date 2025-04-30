@@ -83,29 +83,6 @@ export function removeClientSetsFromDocument(
   return modifiedDoc;
 }
 
-type RemoveFragmentSpreadConfig = RemoveNodeConfig<FragmentSpreadNode>;
-
-/** @internal */
-export function removeFragmentSpreadFromDocument(
-  config: RemoveFragmentSpreadConfig[],
-  doc: DocumentNode
-): DocumentNode | null {
-  function enter(
-    node: FragmentSpreadNode | FragmentDefinitionNode
-  ): null | void {
-    if (config.some((def) => def.name === node.name.value)) {
-      return null;
-    }
-  }
-
-  return nullIfDocIsEmpty(
-    visit(doc, {
-      FragmentSpread: { enter },
-      FragmentDefinition: { enter },
-    })
-  );
-}
-
 function isEmpty(
   op: OperationDefinitionNode | FragmentDefinitionNode,
   fragmentMap: FragmentMap

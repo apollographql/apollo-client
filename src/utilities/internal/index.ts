@@ -38,5 +38,4 @@ export {
   addNonReactiveToNamedFragments,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
-  removeFragmentSpreadFromDocument,
 } from "./graphql/transform.js";

@@ -4,6 +4,7 @@ export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
+export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
@@ -16,8 +17,6 @@ export {
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
-
-export { getFragmentQueryDocument } from "./graphql/fragments.js";
 
 export {
   checkDocument,

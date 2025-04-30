@@ -17,11 +17,7 @@ import { defer, from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike, OperationVariables } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
-import {
-  isErrorLike,
-  LocalResolversError,
-  toErrorLike,
-} from "@apollo/client/errors";
+import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { FragmentMap, IsAny, NoInfer } from "@apollo/client/utilities";
@@ -564,30 +560,6 @@ export class LocalResolversLink<
           )
         : defaultResolver();
     } catch (e) {
-      if (execContext.phase === "exports") {
-        for (const [name, def] of Object.entries(
-          execContext.exportedVariableDefs
-        )) {
-          if (result == null && def.ancestors.has(field)) {
-            if (def.required) {
-              throw new LocalResolversError(
-                `An error was thrown from resolver '${resolverName}' while resolving required variable '${name}'.`,
-                { path, sourceError: e }
-              );
-            }
-
-            if (__DEV__) {
-              invariant.error(
-                "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-                name,
-                resolverName,
-                isErrorLike(e) ? e.name : "Error",
-                isErrorLike(e) ? e.message : ""
-              );
-            }
-          }
-        }
-      }
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         phase: execContext.phase,
@@ -618,47 +590,6 @@ export class LocalResolversLink<
 
       return data;
     };
-
-    if (phase === "exports") {
-      field.directives?.forEach((directive) => {
-        if (directive.name.value !== "export") {
-          return;
-        }
-
-        const name = getExportedVariableName(directive);
-
-        if (!name) {
-          return;
-        }
-
-        if (execContext.exportedVariableDefs[name].required && result == null) {
-          throw new LocalResolversError(
-            `${
-              resolver ? "Resolver" : "Field"
-            } '${resolverName}' returned \`${result}\` for required variable '${name}'.`,
-            { path }
-          );
-        }
-
-        // Avoid setting the key if the value is undefined
-        if (result !== undefined) {
-          execContext.exportedVariables[name] = result;
-        }
-      });
-
-      for (const [name, def] of Object.entries(
-        execContext.exportedVariableDefs
-      )) {
-        if (result == null && def.ancestors.has(field) && def.required) {
-          throw new LocalResolversError(
-            `${
-              resolver ? "Resolver" : "Field"
-            } '${resolverName}' returned \`${result}\` which contains exported required variable '${name}'.`,
-            { path }
-          );
-        }
-      }
-    }
 
     if (result === undefined) {
       // Its ok to return undefined for an exported variable if the variable is

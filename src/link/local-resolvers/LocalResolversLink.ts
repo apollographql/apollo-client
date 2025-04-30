@@ -130,7 +130,6 @@ type ExecContext = {
   fragmentMap: FragmentMap;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
-  exportedVariableDefs: Record<string, ExportedVariable>;
   rootValue?: any;
 };
 
@@ -246,7 +245,6 @@ export class LocalResolversLink<
         operationDefinition: mainDefinition,
         fragmentMap,
         errors: [],
-        exportedVariableDefs,
       } satisfies Partial<ExecContext>;
 
       return from(Promise.resolve(operation.variables)).pipe(

@@ -22,12 +22,8 @@ import {
   LocalResolversError,
   toErrorLike,
 } from "@apollo/client/errors";
-import type {
-  FetchResult,
-  NextLink,
-  Operation,
-} from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import type { FragmentMap, IsAny, NoInfer } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,

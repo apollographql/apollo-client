@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
@@ -26,7 +26,10 @@ test("passes operation in context to resolvers", async () => {
     },
   });
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
   const stream = new ObservableStream(execute(link, { query }, { client }));
 
   await expect(stream).toEmitTypedValue({

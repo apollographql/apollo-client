@@ -3,7 +3,7 @@ import { of } from "rxjs";
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { LocalResolversError } from "@apollo/client/errors";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
@@ -699,7 +699,10 @@ test("supports reading a value from the cache in a resolver for an @client @expo
       },
     },
   });
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
   client.writeQuery({
     query: cacheQuery,
     data: {

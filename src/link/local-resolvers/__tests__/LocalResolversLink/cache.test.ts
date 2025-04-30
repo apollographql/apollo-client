@@ -1,4 +1,9 @@
-import { ApolloClient, InMemoryCache, isReference } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  InMemoryCache,
+  isReference,
+} from "@apollo/client";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
@@ -31,7 +36,10 @@ test("can write to the cache with a mutation", async () => {
     },
   });
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const stream = new ObservableStream(
     execute(link, { query: mutation }, { client })
@@ -85,7 +93,10 @@ test("can write to the cache with a mutation using an ID", async () => {
     },
   });
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
   const stream = new ObservableStream(
     execute(link, { query: mutation }, { client })
   );
@@ -115,7 +126,10 @@ test("does not overwrite __typename when writing to the cache with an id", async
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const link = new LocalResolversLink({
     resolvers: {

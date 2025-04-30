@@ -1,21 +1,15 @@
 import type {
   ApolloPayloadResult,
-  ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
   FetchResult,
 } from "@apollo/client/link";
 import {
   DeepMerger,
+  isExecutionPatchIncrementalResult,
   isNonEmptyArray,
   isNonNullObject,
 } from "@apollo/client/utilities/internal";
-
-export function isExecutionPatchIncrementalResult<T>(
-  value: FetchResult<T>
-): value is ExecutionPatchIncrementalResult {
-  return "incremental" in value;
-}
 
 export function isExecutionPatchInitialResult<T>(
   value: FetchResult<T>

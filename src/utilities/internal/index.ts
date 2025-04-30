@@ -21,6 +21,7 @@ export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
+export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncrementalResult.js";
 export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";

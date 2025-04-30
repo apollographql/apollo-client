@@ -56,8 +56,6 @@ export {
   // internal
   isApolloPayloadResult,
   // internal
-  isExecutionPatchIncrementalResult,
-  // internal
   isExecutionPatchInitialResult,
   // internal
   isExecutionPatchResult,

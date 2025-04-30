@@ -135,14 +135,8 @@ type ExecContext = {
 
 type Path = Array<string | number>;
 
-interface ExportedVariable {
-  required: boolean;
-  ancestors: WeakSet<ASTNode>;
-}
-
 interface TraverseCacheEntry {
   selectionsToResolve: Set<SelectionNode>;
-  exportedVariableDefs: { [variableName: string]: ExportedVariable };
 }
 
 type InferRootValueFromFieldResolver<TField> =
@@ -237,8 +231,10 @@ export class LocalResolversLink<
       const fragments = getFragmentDefinitions(clientQuery);
       const fragmentMap = createFragmentMap(fragments);
 
-      const { selectionsToResolve, exportedVariableDefs } =
-        this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
+      const { selectionsToResolve } = this.traverseAndCollectQueryInfo(
+        mainDefinition,
+        fragmentMap
+      );
 
       const execContext = {
         operation,
@@ -686,24 +682,12 @@ export class LocalResolversLink<
         return this.traverseCache.get(definitionNode)!;
       }
 
-      // Track a separate list of all variable definitions since not all variable
-      // definitions are used as exports of an `@export` field.
-      const allVariableDefinitions: TraverseCacheEntry["exportedVariableDefs"] =
-        {};
-
       const cache: TraverseCacheEntry = {
         selectionsToResolve: new Set<SelectionNode>(),
-        exportedVariableDefs: {},
       };
       this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
-        VariableDefinition: (definition) => {
-          allVariableDefinitions[definition.variable.name.value] = {
-            required: definition.type.kind === Kind.NON_NULL_TYPE,
-            ancestors: new WeakSet(),
-          };
-        },
         Field: {
           enter(field) {
             const parent = fields.at(-1);
@@ -749,22 +733,6 @@ export class LocalResolversLink<
                 { path: getCurrentPath() }
               );
             }
-
-            if (!allVariableDefinitions[variableName]) {
-              throw new LocalResolversError(
-                `\`@export\` directive on field '${fieldName}' does not have an associated variable definition for the '${variableName}' variable.`,
-                { path: getCurrentPath() }
-              );
-            }
-
-            cache.exportedVariableDefs[variableName] =
-              allVariableDefinitions[variableName];
-
-            ancestors.forEach((node) => {
-              if (isSingleASTNode(node) && isSelectionNode(node)) {
-                cache.exportedVariableDefs[variableName].ancestors.add(node);
-              }
-            });
           }
 
           if (directive.name.value === "client") {

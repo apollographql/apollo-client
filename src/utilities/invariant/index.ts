@@ -1,9 +1,10 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { global } from "@apollo/client/utilities/globals";
-import { stringifyForDisplay } from "@apollo/client/utilities/internal";
 
 import type { ErrorCodes } from "../../invariantErrorCodes.js";
 import { version } from "../../version.js";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
+import { stringifyForDisplay } from "../internal/stringifyForDisplay.js";
 
 const genericMessage = "Invariant Violation";
 export class InvariantError extends Error {

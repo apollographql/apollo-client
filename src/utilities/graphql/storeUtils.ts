@@ -1,15 +1,10 @@
 import type {
   DocumentNode,
   FieldNode,
-  FragmentSpreadNode,
   InlineFragmentNode,
   SelectionNode,
-  SelectionSetNode,
   VariableNode,
 } from "graphql";
-
-import type { FragmentMap } from "@apollo/client/utilities/internal";
-import { getFragmentFromSelection } from "@apollo/client/utilities/internal";
 
 import { canonicalStringify } from "../common/canonicalStringify.js";
 import { isNonNullObject } from "../common/objects.js";
@@ -197,40 +192,6 @@ export const getStoreKeyName = Object.assign(
 
 export function resultKeyNameFromField(field: FieldNode): string {
   return field.alias ? field.alias.value : field.name.value;
-}
-
-export function getTypenameFromResult(
-  result: Record<string, any>,
-  selectionSet: SelectionSetNode,
-  fragmentMap?: FragmentMap
-): string | undefined {
-  let fragments: undefined | Array<InlineFragmentNode | FragmentSpreadNode>;
-  for (const selection of selectionSet.selections) {
-    if (isField(selection)) {
-      if (selection.name.value === "__typename") {
-        return result[resultKeyNameFromField(selection)];
-      }
-    } else if (fragments) {
-      fragments.push(selection);
-    } else {
-      fragments = [selection];
-    }
-  }
-  if (typeof result.__typename === "string") {
-    return result.__typename;
-  }
-  if (fragments) {
-    for (const selection of fragments) {
-      const typename = getTypenameFromResult(
-        result,
-        getFragmentFromSelection(selection, fragmentMap)!.selectionSet,
-        fragmentMap
-      );
-      if (typeof typename === "string") {
-        return typename;
-      }
-    }
-  }
 }
 
 export function isField(selection: SelectionNode): selection is FieldNode {

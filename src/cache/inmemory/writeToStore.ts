@@ -1,6 +1,11 @@
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
-import type { FieldNode, SelectionSetNode } from "graphql";
+import type {
+  FieldNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  SelectionSetNode,
+} from "graphql";
 import { Kind } from "graphql";
 
 import type { Cache, OperationVariables } from "@apollo/client";
@@ -13,7 +18,6 @@ import {
   addTypenameToDocument,
   canonicalStringify,
   cloneDeep,
-  getTypenameFromResult,
   isField,
   isNonEmptyArray,
   isReference,
@@ -890,4 +894,38 @@ For more information about these options, please refer to the documentation:
     { ...existing },
     { ...incoming }
   );
+}
+
+function getTypenameFromResult(
+  result: Record<string, any>,
+  selectionSet: SelectionSetNode,
+  fragmentMap?: FragmentMap
+): string | undefined {
+  let fragments: undefined | Array<InlineFragmentNode | FragmentSpreadNode>;
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (selection.name.value === "__typename") {
+        return result[resultKeyNameFromField(selection)];
+      }
+    } else if (fragments) {
+      fragments.push(selection);
+    } else {
+      fragments = [selection];
+    }
+  }
+  if (typeof result.__typename === "string") {
+    return result.__typename;
+  }
+  if (fragments) {
+    for (const selection of fragments) {
+      const typename = getTypenameFromResult(
+        result,
+        getFragmentFromSelection(selection, fragmentMap)!.selectionSet,
+        fragmentMap
+      );
+      if (typeof typename === "string") {
+        return typename;
+      }
+    }
+  }
 }

@@ -17,8 +17,6 @@ export {
   // internal
   getStoreKeyName,
   // internal
-  getTypenameFromResult,
-  // internal
   isDocumentNode,
   // internal
   isField,

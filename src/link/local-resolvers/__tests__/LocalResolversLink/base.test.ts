@@ -711,7 +711,6 @@ test("adds an error when the __typename cannot be resolved", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
           },
         },
       },
@@ -816,7 +815,6 @@ test("adds error to errors array with scalar resolver data when remote data retu
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             data: true,
           },
         },
@@ -863,7 +861,6 @@ test("adds error to errors array with scalar resolver that returns null when rem
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             data: null,
           },
         },
@@ -912,7 +909,6 @@ test("adds error to errors array with object resolver data when remote data retu
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             data: { __typename: "Foo", baz: true },
           },
         },
@@ -965,7 +961,6 @@ test("adds error to errors array with object resolver with child resolver when r
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             data: { __typename: "Foo", bar: true, baz: false },
           },
         },
@@ -1014,7 +1009,6 @@ test("adds error to errors array with object resolver that returns null when rem
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             data: null,
           },
         },
@@ -1067,7 +1061,6 @@ test("adds multiple errors for each client field to errors array when remote dat
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             data: { __typename: "Foo", baz: true },
           },
         },
@@ -1080,7 +1073,6 @@ test("adds multiple errors for each client field to errors array when remote dat
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.bar",
-            phase: "resolve",
             data: { __typename: "Bar", baz: false },
           },
         },

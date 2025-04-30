@@ -41,7 +41,6 @@ test("handles errors thrown in a resolver", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -86,7 +85,6 @@ test("handles errors thrown in a child resolver", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.bar",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -137,7 +135,6 @@ test("adds errors for each field that throws errors", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.bar",
-            phase: "resolve",
             cause: new Error("Bar error"),
           },
         },
@@ -149,7 +146,6 @@ test("adds errors for each field that throws errors", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.baz",
-            phase: "resolve",
             cause: new Error("Baz error"),
           },
         },
@@ -199,7 +195,6 @@ test("handles errors thrown in a child resolver from parent array", async () => 
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.bar",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -211,7 +206,6 @@ test("handles errors thrown in a child resolver from parent array", async () => 
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.bar",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -269,7 +263,6 @@ test("handles errors thrown in a child resolver for an array from a single item"
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.bar",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -314,7 +307,6 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             cause: new GraphQLError("Something went wrong", {
               extensions: { custom: true },
             }),
@@ -360,7 +352,6 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             cause: new GraphQLError("Something went wrong", {
               extensions: { apollo: { shouldNotBeSeen: true } },
             }),
@@ -416,7 +407,6 @@ test("concatenates client errors with server errors", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -458,7 +448,6 @@ test("handles errors thrown in async resolvers", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -500,7 +489,6 @@ test("handles rejected promises returned in async resolvers", async () => {
           apollo: {
             source: "LocalResolversLink",
             resolver: "Query.foo",
-            phase: "resolve",
             cause: new Error("Something went wrong"),
           },
         },
@@ -561,7 +549,6 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
           apollo: {
             source: "LocalResolversLink",
             resolver: "Foo.baz",
-            phase: "resolve",
             cause: new Error("Could not get baz"),
           },
         },

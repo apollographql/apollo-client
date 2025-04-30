@@ -132,14 +132,7 @@ type ExecContext = {
   errors: GraphQLFormattedError[];
   exportedVariableDefs: Record<string, ExportedVariable>;
   rootValue?: any;
-} & (
-  | {
-      phase: "exports";
-    }
-  | {
-      phase: "resolve";
-    }
-);
+};
 
 type Path = Array<string | number>;
 
@@ -265,7 +258,6 @@ export class LocalResolversLink<
               this.rootValue({ operation })
             : this.rootValue,
           selectionsToResolve: exportsToResolve,
-          phase: "exports",
         })
       ).pipe(
         mergeMap(getServerResult),
@@ -280,7 +272,6 @@ export class LocalResolversLink<
                     this.rootValue({ operation })
                   : this.rootValue,
                 selectionsToResolve,
-                phase: "resolve",
               },
             })
           );
@@ -289,9 +280,7 @@ export class LocalResolversLink<
     });
   }
 
-  private async addExportedVariables(
-    execContext: ExecContext & { phase: "exports" }
-  ) {
+  private async addExportedVariables(execContext: ExecContext) {
     const { variables } = execContext.operation;
 
     await this.resolveSelectionSet(
@@ -312,7 +301,7 @@ export class LocalResolversLink<
     execContext,
   }: {
     remoteResult: FetchResult;
-    execContext: ExecContext & { phase: "resolve" };
+    execContext: ExecContext;
   }): Promise<FetchResult> {
     const localResult = await this.resolveSelectionSet(
       execContext.operationDefinition.selectionSet,

@@ -9,6 +9,7 @@ export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { shouldInclude } from "./shouldInclude.js";
+export { toQueryResult } from "./toQueryResult.js";
 
 export {
   getApolloCacheMemoryInternals,
@@ -16,7 +17,6 @@ export {
   getInMemoryCacheMemoryInternals,
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
-export { toQueryResult } from "./toQueryResult.js";
 
 export {
   checkDocument,

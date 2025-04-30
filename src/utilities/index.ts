@@ -55,8 +55,6 @@ export { stringifyForDisplay } from "./common/stringifyForDisplay.js";
 export {
   // internal
   isApolloPayloadResult,
-  // internal
-  mergeIncrementalData,
 } from "./common/incrementalResult.js";
 
 export { canonicalStringify } from "./shared/canonicalStringify.js";

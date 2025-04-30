@@ -11,7 +11,6 @@ import {
   removeArgumentsFromDocument,
   removeConnectionDirectiveFromDocument,
   removeDirectivesFromDocument,
-  removeFragmentSpreadFromDocument,
 } from "@apollo/client/utilities";
 
 describe("removeArgumentsFromDocument", () => {
@@ -60,46 +59,7 @@ describe("removeArgumentsFromDocument", () => {
     expect(print(doc)).toBe(print(expected));
   });
 });
-describe("removeFragmentSpreadFromDocument", () => {
-  it("should remove a named fragment spread", () => {
-    const query = gql`
-      query Simple {
-        ...FragmentSpread
-        property
-        ...ValidSpread
-      }
 
-      fragment FragmentSpread on Thing {
-        foo
-        bar
-        baz
-      }
-
-      fragment ValidSpread on Thing {
-        oof
-        rab
-        zab
-      }
-    `;
-    const expected = gql`
-      query Simple {
-        property
-        ...ValidSpread
-      }
-
-      fragment ValidSpread on Thing {
-        oof
-        rab
-        zab
-      }
-    `;
-    const doc = removeFragmentSpreadFromDocument(
-      [{ name: "FragmentSpread", remove: true }],
-      query
-    )!;
-    expect(print(doc)).toBe(print(expected));
-  });
-});
 describe("removeDirectivesFromDocument", () => {
   it("should remove inline fragments using a directive", () => {
     const query = gql`

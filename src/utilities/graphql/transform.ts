@@ -25,7 +25,6 @@ import {
   checkDocument,
   getFragmentDefinition,
   getFragmentDefinitions,
-  getMainDefinition,
   getOperationDefinition,
 } from "./getFromAST.js";
 import { isField } from "./storeUtils.js";
@@ -647,26 +646,6 @@ export function removeArgumentsFromDocument(
           }
         },
       },
-    })
-  );
-}
-
-export function removeFragmentSpreadFromDocument(
-  config: RemoveFragmentSpreadConfig[],
-  doc: DocumentNode
-): DocumentNode | null {
-  function enter(
-    node: FragmentSpreadNode | FragmentDefinitionNode
-  ): null | void {
-    if (config.some((def) => def.name === node.name.value)) {
-      return null;
-    }
-  }
-
-  return nullIfDocIsEmpty(
-    visit(doc, {
-      FragmentSpread: { enter },
-      FragmentDefinition: { enter },
     })
   );
 }

@@ -9,4 +9,5 @@ export { toQueryResult } from "./toQueryResult.js";
 export {
   addNonReactiveToNamedFragments,
   removeClientSetsFromDocument,
+  removeFragmentSpreadFromDocument,
 } from "./graphql/transform.js";

@@ -1,10 +1,23 @@
-import type { DirectiveNode, DocumentNode } from "graphql";
+import type {
+  DirectiveNode,
+  DocumentNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+  OperationDefinitionNode,
+} from "graphql";
 import { Kind, visit } from "graphql";
 
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   checkDocument,
+  createFragmentMap,
+  getFragmentDefinition,
+  getFragmentDefinitions,
+  getOperationDefinition,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+
+import type { RemoveNodeConfig } from "../types/RemoveNodeConfig.js";
 
 /** @internal */
 export function addNonReactiveToNamedFragments(document: DocumentNode) {
@@ -52,4 +65,52 @@ export function removeClientSetsFromDocument(
   );
 
   return modifiedDoc;
+}
+
+type RemoveFragmentSpreadConfig = RemoveNodeConfig<FragmentSpreadNode>;
+
+/** @internal */
+export function removeFragmentSpreadFromDocument(
+  config: RemoveFragmentSpreadConfig[],
+  doc: DocumentNode
+): DocumentNode | null {
+  function enter(
+    node: FragmentSpreadNode | FragmentDefinitionNode
+  ): null | void {
+    if (config.some((def) => def.name === node.name.value)) {
+      return null;
+    }
+  }
+
+  return nullIfDocIsEmpty(
+    visit(doc, {
+      FragmentSpread: { enter },
+      FragmentDefinition: { enter },
+    })
+  );
+}
+
+function isEmpty(
+  op: OperationDefinitionNode | FragmentDefinitionNode,
+  fragmentMap: FragmentMap
+): boolean {
+  return (
+    !op ||
+    op.selectionSet.selections.every(
+      (selection) =>
+        selection.kind === Kind.FRAGMENT_SPREAD &&
+        isEmpty(fragmentMap[selection.name.value], fragmentMap)
+    )
+  );
+}
+
+function nullIfDocIsEmpty(doc: DocumentNode) {
+  return (
+      isEmpty(
+        getOperationDefinition(doc) || getFragmentDefinition(doc),
+        createFragmentMap(getFragmentDefinitions(doc))
+      )
+    ) ?
+      null
+    : doc;
 }

@@ -3,13 +3,14 @@ import type { DocumentNode } from "graphql";
 import { Slot } from "optimism";
 import type {
   InteropObservable,
+  Observable,
   ObservableNotification,
   Observer,
   OperatorFunction,
   Subscribable,
   Subscription,
 } from "rxjs";
-import { distinctUntilChanged, merge, Observable, share } from "rxjs";
+import { distinctUntilChanged, merge, share } from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -202,7 +203,7 @@ export class ObservableQuery<
     return this.options.variables;
   }
 
-  private cacheSubscription?: Subscription;
+  private unsubscribeFromCache?: () => void;
   private input: Subject<QueryNotification.Value<TData, TVariables>>;
   private subject: BehaviorSubject<{
     query: DocumentNode;
@@ -409,23 +410,6 @@ export class ObservableQuery<
     // be able to close `this.input`
     this.input.complete = () => {};
     this.input.pipe(this.operator).subscribe(this.subject);
-    this.input.subscribe({
-      next: (notification) => {
-        if (
-          notification.source == "cache" &&
-          !isNetworkRequestInFlight(notification.value.networkStatus) &&
-          notification.value.partial
-        ) {
-          const previousResult = this.subject.getValue().result;
-          // if the query is currently in an error state, an incoming parital
-          // result should not trigger a notify - we have no reason to assume
-          // that the error is resolved
-          if (previousResult.networkStatus !== NetworkStatus.error) {
-            this.scheduleNotify();
-          }
-        }
-      },
-    });
 
     this.queryId = queryInfo.queryId || queryManager.generateQueryId();
 
@@ -534,54 +518,38 @@ export class ObservableQuery<
     const { variables, fetchPolicy } = this.options;
     const query = this.query;
 
-    this.cacheSubscription?.unsubscribe();
+    this.unsubscribeFromCache?.();
 
     if (fetchPolicy === "standby" || fetchPolicy === "no-cache") {
       return;
     }
-    const observable = new Observable<
-      QueryNotification.Value<TData, TVariables>
-    >((observer) => {
-      return this.queryManager.cache.watch({
-        query,
-        variables,
-        optimistic: true,
-        watcher: this,
-        callback: (diff) => {
-          if (diff.result) {
-            observer.next({
-              kind: "N",
-              value: {
-                data: diff.result as TData,
-                networkStatus: NetworkStatus.ready,
-                loading: false,
-                error: undefined,
-                partial: !diff.complete,
-              },
-              source: "cache",
-              query,
-              variables,
-            });
-          }
-        },
-      });
-    }).pipe(
-      tap({
-        subscribe() {
-          console.log("subscribing to cache for", {
-            query,
-            variables,
-          });
-        },
-        unsubscribe() {
-          console.log("unsubscribing from cache for", {
-            query,
-            variables,
-          });
-        },
-      })
-    );
-    this.cacheSubscription = observable.subscribe(this.input);
+
+    this.unsubscribeFromCache = this.queryManager.cache.watch({
+      query,
+      variables,
+      optimistic: true,
+      watcher: this,
+      callback: (diff) => {
+        const previousResult = this.subject.getValue().result;
+
+        // If we are trying to deliver an incomplete cache result, we avoid
+        // reporting it if the query has errored, otherwise we let the broadcast try
+        // and repair the partial result by refetching the query. This check avoids
+        // a situation where a query that errors and another succeeds with
+        // overlapping data does not report the partial data result to the errored
+        // query.
+        //
+        // See https://github.com/apollographql/apollo-client/issues/11400 for more
+        // information on this issue.
+        if (diff && !diff.complete && previousResult.error) {
+          return;
+        }
+
+        //if (!equal(previousResult, diff && diff.result)) {
+        this.scheduleNotify();
+        //}
+      },
+    });
   }
 
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
@@ -740,7 +708,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.observe();
     }
 
-    const updatedQuerySet = new Set<DocumentNode>();
+    let wasUpdated = false;
 
     const updateQuery = fetchMoreOptions?.updateQuery;
     const isCached = this.options.fetchPolicy !== "no-cache";
@@ -809,9 +777,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             },
 
             onWatchUpdated: (watch) => {
-              // Record the DocumentNode associated with any watched query whose
-              // data were updated by the cache writes above.
-              updatedQuerySet.add(watch.query);
+              if (watch.watcher === this) {
+                wasUpdated = true;
+              }
             },
           });
         } else {
@@ -861,7 +829,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // likely because the written data were the same as what was already in
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
-        if (isCached && !updatedQuerySet.has(this.query)) {
+        if (isCached && !wasUpdated) {
           pushNotification({
             kind: "N",
             source: "newNetworkStatus",
@@ -1172,7 +1140,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     console.log(`ObservableQuery.reobserve(%o)`, newOptions);
-    this.resetNotifications();
+
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
 
@@ -1347,7 +1315,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    this.cacheSubscription?.unsubscribe();
+    this.unsubscribeFromCache?.();
     if (this.linkSubscription) {
       this.linkSubscription.unsubscribe();
       delete this.linkSubscription;
@@ -1409,13 +1377,33 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (dirty) {
       if (
-        // TODO: this seems wrong for the change to `reobserveFromNetwork` we did here
         this.options.fetchPolicy == "cache-only" ||
         this.options.fetchPolicy == "cache-and-network" ||
-        !isNetworkRequestInFlight(this.networkStatus)
+        !this.activeOperations.size
       ) {
         const diff = this.getCacheDiff();
-        if (!diff.fromOptimisticTransaction && !diff.complete) {
+        if (diff.fromOptimisticTransaction) {
+          // If this diff came from an optimistic transaction, deliver the
+          // current cache data to the ObservableQuery, but don't perform a
+          // reobservation, since oq.reobserveCacheFirst might make a network
+          // request, and we never want to trigger network requests in the
+          // middle of optimistic updates.
+          // if (diff.result) {
+          this.input.next({
+            kind: "N",
+            value: {
+              data: diff.result as TData,
+              networkStatus: NetworkStatus.ready,
+              loading: false,
+              error: undefined,
+              partial: !diff.complete,
+            },
+            source: "cache",
+            query: this.query,
+            variables: this.variables,
+          });
+          // }
+        } else {
           // Otherwise, make the ObservableQuery "reobserve" the latest data
           // using a temporary fetch policy of "cache-first", so complete cache
           // results have a chance to be delivered without triggering additional
@@ -1424,7 +1412,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // this method, and are handled by calling oq.reobserve(). If this
           // reobservation is spurious, distinctUntilChanged still has a
           // chance to catch it before delivery to ObservableQuery subscribers.
-          this.reobserveFromNetwork();
+          this.reobserveCacheFirst();
         }
       }
     }
@@ -1723,14 +1711,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
   });
 
-  // Reobserve with fetchPolicy effectively set to "network-only" (or keeping "no-cache")
-  // to get new data from the network, becaus the cache is currently missing data.
-  private reobserveFromNetwork() {
+  // Reobserve with fetchPolicy effectively set to "cache-first", triggering
+  // delivery of any new data from the cache, possibly falling back to the network
+  // if any cache data are missing. This allows _complete_ cache results to be
+  // delivered without also kicking off unnecessary network requests when
+  // this.options.fetchPolicy is "cache-and-network" or "network-only". When
+  // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
+  // "standby", or "no-cache"), we call this.reobserve() as usual.
+  private reobserveCacheFirst() {
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
-    if (fetchPolicy !== "no-cache" && fetchPolicy !== "network-only") {
+    if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
       return this.reobserve({
-        fetchPolicy: "network-only",
+        fetchPolicy: "cache-first",
         // Use a temporary nextFetchPolicy function that replaces itself with the
         // previous nextFetchPolicy value and returns the original fetchPolicy.
         nextFetchPolicy(

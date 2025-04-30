@@ -126,7 +126,7 @@ export class QueryInfo {
       // TODO: move this over into `ObservableQuery` and track `ObservableQuery` instances
       // instead of `QueryInfo` instances in `QueryManager`.
       this.observableQuery?.["resetNotifications"]();
-      this.observableQuery?.["cacheSubscription"]?.unsubscribe();
+      this.observableQuery?.["unsubscribeFromCache"]?.();
 
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();

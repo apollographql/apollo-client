@@ -5385,7 +5385,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    if (IS_REACT_17) {
+    {
       const { snapshot } = await renderStream.takeRender();
 
       // We don't see the update from the cache for one more render cycle, hence
@@ -5940,18 +5940,7 @@ describe("useQuery Hook", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult!).toStrictEqualTyped({
-        data: {
-          author: {
-            __typename: "Author",
-            id: 1,
-            name: "Author Lee",
-            post: {
-              __typename: "Post",
-              id: 1,
-              title: "Title",
-            },
-          },
-        },
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: {
@@ -6933,16 +6922,7 @@ describe("useQuery Hook", () => {
   });
 
   describe("Client Resolvers", () => {
-    /**
-     * Skipping this test because we will be scrapping `@client(always: true)` anyways
-     * that said, this could be an indicator that not forwarding cache updates
-     * if they originate from the same `ObservableQuery` is actually not a good
-     * idea, at least if we just take the result from the network.
-     * TODO:
-     * We might need to merge the current cache contents in with the incoming network
-     * response instead of only trusting the incoming network response.
-     */
-    it.skip("should receive up to date @client(always: true) fields on entity update", async () => {
+    it("should receive up to date @client(always: true) fields on entity update", async () => {
       const query = gql`
         query GetClientData($id: ID) {
           clientEntity(id: $id) @client(always: true) {

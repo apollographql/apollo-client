@@ -2918,8 +2918,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
       error: undefined,
-      // TODO: investigate why this is not `loading`
-      networkStatus: NetworkStatus.ready,
+      networkStatus: NetworkStatus.loading,
     });
   }
 

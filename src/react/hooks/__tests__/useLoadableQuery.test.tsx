@@ -2052,7 +2052,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   }
 });
 
-it.only("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+it("applies `returnPartialData` on next fetch when it changes between renders", async () => {
   interface Data {
     character: {
       __typename: "Character";
@@ -2199,7 +2199,7 @@ it.only("applies `returnPartialData` on next fetch when it changes between rende
         character: { __typename: "Character", id: "1" },
       },
       error: undefined,
-      networkStatus: NetworkStatus.ready,
+      networkStatus: NetworkStatus.loading,
     });
   }
 

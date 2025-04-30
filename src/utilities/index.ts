@@ -33,8 +33,6 @@ export {
   resultKeyNameFromField,
   // internal
   storeKeyNameFromField,
-  // internal
-  valueToObjectRepresentation,
 } from "./graphql/storeUtils.js";
 
 export { addTypenameToDocument } from "./graphql/transform.js";

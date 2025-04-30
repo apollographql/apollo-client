@@ -1,30 +1,20 @@
 import type {
-  BooleanValueNode,
   DirectiveNode,
   DocumentNode,
-  EnumValueNode,
   FieldNode,
-  FloatValueNode,
   FragmentSpreadNode,
   InlineFragmentNode,
-  IntValueNode,
-  ListValueNode,
-  NameNode,
-  NullValueNode,
-  ObjectValueNode,
   SelectionNode,
   SelectionSetNode,
-  StringValueNode,
-  ValueNode,
   VariableNode,
 } from "graphql";
 
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import { getFragmentFromSelection } from "@apollo/client/utilities/internal";
-import { newInvariantError } from "@apollo/client/utilities/invariant";
 
 import { canonicalStringify } from "../common/canonicalStringify.js";
 import { isNonNullObject } from "../common/objects.js";
+import { valueToObjectRepresentation } from "../internal/valueToObjectRepresentation.js";
 
 export interface Reference {
   readonly __ref: string;
@@ -80,87 +70,6 @@ export function isDocumentNode(value: any): value is DocumentNode {
     (value as DocumentNode).kind === "Document" &&
     Array.isArray((value as DocumentNode).definitions)
   );
-}
-
-function isStringValue(value: ValueNode): value is StringValueNode {
-  return value.kind === "StringValue";
-}
-
-function isBooleanValue(value: ValueNode): value is BooleanValueNode {
-  return value.kind === "BooleanValue";
-}
-
-function isIntValue(value: ValueNode): value is IntValueNode {
-  return value.kind === "IntValue";
-}
-
-function isFloatValue(value: ValueNode): value is FloatValueNode {
-  return value.kind === "FloatValue";
-}
-
-function isVariable(value: ValueNode): value is VariableNode {
-  return value.kind === "Variable";
-}
-
-function isObjectValue(value: ValueNode): value is ObjectValueNode {
-  return value.kind === "ObjectValue";
-}
-
-function isListValue(value: ValueNode): value is ListValueNode {
-  return value.kind === "ListValue";
-}
-
-function isEnumValue(value: ValueNode): value is EnumValueNode {
-  return value.kind === "EnumValue";
-}
-
-function isNullValue(value: ValueNode): value is NullValueNode {
-  return value.kind === "NullValue";
-}
-
-export function valueToObjectRepresentation(
-  argObj: any,
-  name: NameNode,
-  value: ValueNode,
-  variables?: Object
-) {
-  if (isIntValue(value) || isFloatValue(value)) {
-    argObj[name.value] = Number(value.value);
-  } else if (isBooleanValue(value) || isStringValue(value)) {
-    argObj[name.value] = value.value;
-  } else if (isObjectValue(value)) {
-    const nestedArgObj = {};
-    value.fields.map((obj) =>
-      valueToObjectRepresentation(nestedArgObj, obj.name, obj.value, variables)
-    );
-    argObj[name.value] = nestedArgObj;
-  } else if (isVariable(value)) {
-    const variableValue = (variables || ({} as any))[value.name.value];
-    argObj[name.value] = variableValue;
-  } else if (isListValue(value)) {
-    argObj[name.value] = value.values.map((listValue) => {
-      const nestedArgArrayObj = {};
-      valueToObjectRepresentation(
-        nestedArgArrayObj,
-        name,
-        listValue,
-        variables
-      );
-      return (nestedArgArrayObj as any)[name.value];
-    });
-  } else if (isEnumValue(value)) {
-    argObj[name.value] = (value as EnumValueNode).value;
-  } else if (isNullValue(value)) {
-    argObj[name.value] = null;
-  } else {
-    throw newInvariantError(
-      `The inline argument "%s" of kind "%s"` +
-        "is not supported. Use variables instead of inline arguments to " +
-        "overcome this limitation.",
-      name.value,
-      (value as any).kind
-    );
-  }
 }
 
 export function storeKeyNameFromField(

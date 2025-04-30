@@ -6,11 +6,12 @@ import type {
   ValueNode,
 } from "graphql";
 
-import { valueToObjectRepresentation } from "@apollo/client/utilities";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
+
+import { valueToObjectRepresentation } from "../valueToObjectRepresentation.js";
 
 /** @internal */
 export function getOperationDefinition(

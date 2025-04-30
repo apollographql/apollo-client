@@ -27,11 +27,11 @@ import {
   mergeDeep,
   mergeDeepArray,
   resultKeyNameFromField,
-  shouldInclude,
 } from "@apollo/client/utilities";
 import {
   hasDirectives,
   removeClientSetsFromDocument,
+  shouldInclude,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 

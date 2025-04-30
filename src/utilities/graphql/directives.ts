@@ -1,12 +1,9 @@
 import type {
   ArgumentNode,
-  BooleanValueNode,
   DirectiveNode,
   DocumentNode,
   FragmentSpreadNode,
-  SelectionNode,
   ValueNode,
-  VariableNode,
 } from "graphql";
 import { Kind } from "graphql";
 
@@ -20,32 +17,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
 };
-
-export function shouldInclude(
-  { directives }: SelectionNode,
-  variables?: Record<string, any>
-): boolean {
-  if (!directives || !directives.length) {
-    return true;
-  }
-  return getInclusionDirectives(directives).every(
-    ({ directive, ifArgument }) => {
-      let evaledValue: boolean = false;
-      if (ifArgument.value.kind === "Variable") {
-        evaledValue =
-          variables && variables[(ifArgument.value as VariableNode).name.value];
-        invariant(
-          evaledValue !== void 0,
-          `Invalid variable referenced in @%s directive.`,
-          directive.name.value
-        );
-      } else {
-        evaledValue = (ifArgument.value as BooleanValueNode).value;
-      }
-      return directive.name.value === "skip" ? !evaledValue : evaledValue;
-    }
-  );
-}
 
 export function hasClientExports(document: DocumentNode) {
   return document && hasDirectives(["client", "export"], document, true);

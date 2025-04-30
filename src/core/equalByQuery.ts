@@ -18,8 +18,8 @@ import {
   getMainDefinition,
   isField,
   resultKeyNameFromField,
-  shouldInclude,
 } from "@apollo/client/utilities";
+import { shouldInclude } from "@apollo/client/utilities/internal";
 
 import type { ApolloQueryResult, OperationVariables } from "./types.js";
 

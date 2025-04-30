@@ -34,7 +34,6 @@ import {
   removeDirectivesFromDocument,
   resultKeyNameFromField,
   shouldInclude,
-  stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
@@ -135,7 +134,6 @@ type ExecContext = {
   rootValue?: any;
 } & (
   | {
-      exportedVariables: OperationVariables;
       phase: "exports";
     }
   | {
@@ -267,7 +265,6 @@ export class LocalResolversLink<
               this.rootValue({ operation })
             : this.rootValue,
           selectionsToResolve: exportsToResolve,
-          exportedVariables: {},
           phase: "exports",
         })
       ).pipe(
@@ -307,7 +304,6 @@ export class LocalResolversLink<
 
     return {
       ...variables,
-      ...stripTypename(execContext.exportedVariables),
     };
   }
 

@@ -37,8 +37,12 @@ export const toRerenderWithSimilarSnapshot =
       reason =
         "match: \n" +
         this.utils.printDiffOrStringify(
-          getSerializableProperties(previousResult.snapshot, true),
-          getSerializableProperties(nextResult.snapshot, true),
+          getSerializableProperties(previousResult.snapshot, {
+            skipUnknownInstances: true,
+          }),
+          getSerializableProperties(nextResult.snapshot, {
+            skipUnknownInstances: true,
+          }),
           "Expected",
           "Received",
           true

@@ -238,8 +238,7 @@ export class LocalResolversLink<
         errors: [],
       } satisfies Partial<ExecContext>;
 
-      return from(Promise.resolve(operation.variables)).pipe(
-        mergeMap(getServerResult),
+      return from(getServerResult()).pipe(
         mergeMap((result) => {
           return from(
             this.runResolvers({

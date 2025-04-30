@@ -184,10 +184,6 @@ export function resultKeyNameFromField(field: FieldNode): string {
   return field.alias ? field.alias.value : field.name.value;
 }
 
-export function isField(selection: SelectionNode): selection is FieldNode {
-  return selection.kind === "Field";
-}
-
 export function isInlineFragment(
   selection: SelectionNode
 ): selection is InlineFragmentNode {

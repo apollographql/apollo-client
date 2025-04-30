@@ -18,7 +18,6 @@ import {
   addTypenameToDocument,
   canonicalStringify,
   cloneDeep,
-  isField,
   isNonEmptyArray,
   isReference,
   makeReference,
@@ -34,6 +33,7 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
+  isField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {

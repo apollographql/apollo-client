@@ -17,8 +17,6 @@ export {
   // internal
   getStoreKeyName,
   // internal
-  isField,
-  // internal
   isInlineFragment,
   isReference,
   // internal

@@ -4,6 +4,7 @@ export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { Primitive } from "./types/Primitive.js";
+export type { NoInfer } from "./types/NoInfer.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";

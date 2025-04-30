@@ -22,5 +22,7 @@ const { variables } = useQuery(typedNode, { variables: { bar: 4, nonExistingVari
 ```
 Without the use of `NoInfer`, `variables` would now be of the type `{ bar: number, nonExistingVariable: "string" }`.
 With `NoInfer`, it will instead give an error on `nonExistingVariable`.
+
+@deprecated use the official `NoInfer` type instead.
  */
 export type NoInfer<T> = [T][T extends any ? 0 : never];

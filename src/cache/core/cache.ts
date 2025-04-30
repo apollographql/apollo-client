@@ -14,10 +14,10 @@ import type {
   Unmasked,
 } from "@apollo/client/masking";
 import { maskFragment } from "@apollo/client/masking";
-import type { NoInfer, Reference, StoreObject } from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { DeepPartial } from "@apollo/client/utilities/internal";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities/internal";
 import {
   getApolloCacheMemoryInternals,
   getFragmentDefinition,

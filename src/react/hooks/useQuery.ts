@@ -34,7 +34,8 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
+import type { VariablesOption } from "@apollo/client/utilities";
+import type { NoInfer } from "@apollo/client/utilities/internal";
 import {
   maybeDeepFreeze,
   mergeOptions,

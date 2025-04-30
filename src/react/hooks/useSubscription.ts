@@ -15,7 +15,8 @@ import type {
   SubscriptionOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
+import type { VariablesOption } from "@apollo/client/utilities";
+import type { NoInfer } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";

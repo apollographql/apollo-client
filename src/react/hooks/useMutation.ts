@@ -21,8 +21,7 @@ import type {
   OperationVariables,
   Unmasked,
 } from "@apollo/client";
-import type { NoInfer } from "@apollo/client/utilities";
-import type { Prettify } from "@apollo/client/utilities/internal";
+import type { NoInfer, Prettify } from "@apollo/client/utilities/internal";
 import { mergeOptions } from "@apollo/client/utilities/internal";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";

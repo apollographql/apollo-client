@@ -24,9 +24,9 @@ import type {
   RefetchFunction,
 } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
-import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
+import type { VariablesOption } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { DeepPartial } from "@apollo/client/utilities/internal";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
 import { skipToken } from "./constants.js";

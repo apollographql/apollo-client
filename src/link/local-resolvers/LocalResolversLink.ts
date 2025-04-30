@@ -206,7 +206,7 @@ export class LocalResolversLink<
         // fields are merged into the final result. If this were `null`, then
         // the client fields would add errors to the error array and return
         // `data` of `null`.
-        return of({ data: {} });
+        return of({ data: {} } as FetchResult);
       }
 
       invariant(
@@ -238,7 +238,7 @@ export class LocalResolversLink<
         errors: [],
       } satisfies Partial<ExecContext>;
 
-      return from(getServerResult()).pipe(
+      return getServerResult().pipe(
         mergeMap((result) => {
           return from(
             this.runResolvers({

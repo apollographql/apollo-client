@@ -48,8 +48,6 @@ export {
 } from "./common/errorHandling.js";
 
 export { canonicalStringify } from "./shared/canonicalStringify.js";
-// internal
-export { omitDeep } from "./common/omitDeep.js";
 export { stripTypename } from "./common/stripTypename.js";
 
 // internal

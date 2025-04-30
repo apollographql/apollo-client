@@ -41,6 +41,7 @@ export { mergeDeep } from "./mergeDeep.js";
 export { mergeDeepArray } from "./mergeDeepArray.js";
 export { mergeIncrementalData } from "./mergeIncrementalData.js";
 export { mergeOptions } from "./mergeOptions.js";
+export { omitDeep } from "./omitDeep.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { preventUnhandledRejection } from "./preventUnhandledRejection.js";
 export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";

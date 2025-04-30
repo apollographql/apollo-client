@@ -6,4 +6,7 @@ export {
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
-export { addNonReactiveToNamedFragments } from "./graphql/transform.js";
+export {
+  addNonReactiveToNamedFragments,
+  removeClientSetsFromDocument,
+} from "./graphql/transform.js";

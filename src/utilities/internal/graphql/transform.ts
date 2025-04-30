@@ -1,7 +1,10 @@
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { Kind, visit } from "graphql";
 
-import { checkDocument } from "@apollo/client/utilities";
+import {
+  checkDocument,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
 
 /** @internal */
 export function addNonReactiveToNamedFragments(document: DocumentNode) {
@@ -29,4 +32,24 @@ export function addNonReactiveToNamedFragments(document: DocumentNode) {
       };
     },
   });
+}
+
+// Remove fields / selection sets that include an @client directive.
+/** @internal */
+export function removeClientSetsFromDocument(
+  document: DocumentNode
+): DocumentNode | null {
+  checkDocument(document);
+
+  let modifiedDoc = removeDirectivesFromDocument(
+    [
+      {
+        test: (directive: DirectiveNode) => directive.name.value === "client",
+        remove: true,
+      },
+    ],
+    document
+  );
+
+  return modifiedDoc;
 }

@@ -14,9 +14,9 @@ import {
   isDocumentNode,
   makeUniqueId,
   print,
-  removeClientSetsFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+import { removeClientSetsFromDocument } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */

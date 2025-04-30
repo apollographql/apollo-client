@@ -78,7 +78,6 @@ export {
   addTypenameToDocument,
   buildQueryFromSelectionSet,
   removeArgumentsFromDocument,
-  removeClientSetsFromDocument,
   removeConnectionDirectiveFromDocument,
   removeDirectivesFromDocument,
   removeFragmentSpreadFromDocument,

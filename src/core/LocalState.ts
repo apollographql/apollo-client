@@ -28,10 +28,10 @@ import {
   isInlineFragment,
   mergeDeep,
   mergeDeepArray,
-  removeClientSetsFromDocument,
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities";
+import { removeClientSetsFromDocument } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";

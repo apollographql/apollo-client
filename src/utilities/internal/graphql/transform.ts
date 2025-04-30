@@ -23,13 +23,17 @@ import {
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { RemoveNodeConfig } from "../types/RemoveNodeConfig.js";
-
 // https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23
 interface EnterLeaveVisitor<TVisitedNode extends ASTNode> {
   readonly enter?: ASTVisitFn<TVisitedNode>;
   readonly leave?: ASTVisitFn<TVisitedNode>;
 }
+
+type RemoveNodeConfig<N> = {
+  name?: string;
+  test?: (node: N) => boolean;
+  remove?: boolean;
+};
 
 /** @internal */
 export function addNonReactiveToNamedFragments(document: DocumentNode) {

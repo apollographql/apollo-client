@@ -23,7 +23,7 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
-import { maybeDeepFreeze } from "@apollo/client/utilities";
+import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";

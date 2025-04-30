@@ -50,8 +50,6 @@ export type {
 export { DeepMerger, mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
 // internal
 export { cloneDeep } from "./common/cloneDeep.js";
-// internal
-export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

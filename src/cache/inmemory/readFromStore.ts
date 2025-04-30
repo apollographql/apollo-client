@@ -10,7 +10,6 @@ import {
   canonicalStringify,
   DeepMerger,
   isReference,
-  maybeDeepFreeze,
   mergeDeepArray,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -27,6 +26,7 @@ import {
   isField,
   isNonNullObject,
   makeReference,
+  maybeDeepFreeze,
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

@@ -2,6 +2,7 @@ export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
+export { shouldInclude } from "./shouldInclude.js";
 
 export {
   getApolloCacheMemoryInternals,
@@ -10,8 +11,6 @@ export {
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
-
-export { shouldInclude } from "./graphql/directives.js";
 
 export type { FragmentMap, FragmentMapFunction } from "./graphql/fragments.js";
 export {

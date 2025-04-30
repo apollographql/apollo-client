@@ -9,6 +9,33 @@ import type {
 
 import { invariant } from "@apollo/client/utilities/invariant";
 
+/** @internal */
+export function shouldInclude(
+  { directives }: SelectionNode,
+  variables?: Record<string, any>
+): boolean {
+  if (!directives || !directives.length) {
+    return true;
+  }
+  return getInclusionDirectives(directives).every(
+    ({ directive, ifArgument }) => {
+      let evaledValue: boolean = false;
+      if (ifArgument.value.kind === "Variable") {
+        evaledValue =
+          variables && variables[(ifArgument.value as VariableNode).name.value];
+        invariant(
+          evaledValue !== void 0,
+          `Invalid variable referenced in @%s directive.`,
+          directive.name.value
+        );
+      } else {
+        evaledValue = (ifArgument.value as BooleanValueNode).value;
+      }
+      return directive.name.value === "skip" ? !evaledValue : evaledValue;
+    }
+  );
+}
+
 function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
   return value === "skip" || value === "include";
 }
@@ -58,31 +85,4 @@ function getInclusionDirectives(
   }
 
   return result;
-}
-
-/** @internal */
-export function shouldInclude(
-  { directives }: SelectionNode,
-  variables?: Record<string, any>
-): boolean {
-  if (!directives || !directives.length) {
-    return true;
-  }
-  return getInclusionDirectives(directives).every(
-    ({ directive, ifArgument }) => {
-      let evaledValue: boolean = false;
-      if (ifArgument.value.kind === "Variable") {
-        evaledValue =
-          variables && variables[(ifArgument.value as VariableNode).name.value];
-        invariant(
-          evaledValue !== void 0,
-          `Invalid variable referenced in @%s directive.`,
-          directive.name.value
-        );
-      } else {
-        evaledValue = (ifArgument.value as BooleanValueNode).value;
-      }
-      return directive.name.value === "skip" ? !evaledValue : evaledValue;
-    }
-  );
 }

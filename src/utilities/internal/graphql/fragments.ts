@@ -1,18 +1,14 @@
 import type {
   DocumentNode,
   FragmentDefinitionNode,
-  InlineFragmentNode,
   Kind,
   OperationTypeNode,
-  SelectionNode,
 } from "graphql";
 
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
-
-import type { FragmentMap } from "../types/FragmentMap.js";
 
 /**
  * Returns a query document which adds a single query operation that only
@@ -104,31 +100,4 @@ export function getFragmentQueryDocument(
   };
 
   return query;
-}
-
-/** @internal */
-export type FragmentMapFunction = (
-  fragmentName: string
-) => FragmentDefinitionNode | null;
-
-/** @internal */
-export function getFragmentFromSelection(
-  selection: SelectionNode,
-  fragmentMap?: FragmentMap | FragmentMapFunction
-): InlineFragmentNode | FragmentDefinitionNode | null {
-  switch (selection.kind) {
-    case "InlineFragment":
-      return selection;
-    case "FragmentSpread": {
-      const fragmentName = selection.name.value;
-      if (typeof fragmentMap === "function") {
-        return fragmentMap(fragmentName);
-      }
-      const fragment = fragmentMap && fragmentMap[fragmentName];
-      invariant(fragment, `No fragment named %s`, fragmentName);
-      return fragment || null;
-    }
-    default:
-      return null;
-  }
 }

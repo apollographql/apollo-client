@@ -1,9 +1,9 @@
 import {
-  argumentsObjectFromField,
   DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
 } from "@apollo/client/utilities";
+import { argumentsObjectFromField } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { hasOwn, isArray } from "./helpers.js";

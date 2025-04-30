@@ -15,8 +15,6 @@ export type {
 } from "./graphql/storeUtils.js";
 export {
   // internal
-  argumentsObjectFromField,
-  // internal
   getStoreKeyName,
   // internal
   getTypenameFromResult,

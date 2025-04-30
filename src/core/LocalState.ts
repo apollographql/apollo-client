@@ -18,7 +18,6 @@ import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { StoreObject } from "@apollo/client/utilities";
 import {
-  argumentsObjectFromField,
   isField,
   isInlineFragment,
   mergeDeep,
@@ -27,6 +26,7 @@ import {
 } from "@apollo/client/utilities";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
+  argumentsObjectFromField,
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,

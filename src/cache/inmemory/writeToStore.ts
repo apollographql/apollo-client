@@ -11,7 +11,6 @@ import type {
 } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
-  argumentsObjectFromField,
   canonicalStringify,
   cloneDeep,
   getTypenameFromResult,
@@ -27,6 +26,7 @@ import type {
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
+  argumentsObjectFromField,
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,

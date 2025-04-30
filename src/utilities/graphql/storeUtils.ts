@@ -1,5 +1,4 @@
 import type {
-  DirectiveNode,
   DocumentNode,
   FieldNode,
   FragmentSpreadNode,
@@ -195,20 +194,6 @@ export const getStoreKeyName = Object.assign(
     },
   }
 );
-
-export function argumentsObjectFromField(
-  field: FieldNode | DirectiveNode,
-  variables?: Record<string, any>
-): Object | null {
-  if (field.arguments && field.arguments.length) {
-    const argObj: Object = {};
-    field.arguments.forEach(({ name, value }) =>
-      valueToObjectRepresentation(argObj, name, value, variables)
-    );
-    return argObj;
-  }
-  return null;
-}
 
 export function resultKeyNameFromField(field: FieldNode): string {
   return field.alias ? field.alias.value : field.name.value;

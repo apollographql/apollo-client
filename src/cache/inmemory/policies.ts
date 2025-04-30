@@ -12,7 +12,6 @@ import type {
   StoreValue,
 } from "@apollo/client/utilities";
 import {
-  argumentsObjectFromField,
   getStoreKeyName,
   isNonNullObject,
   isReference,
@@ -21,6 +20,7 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
+import { argumentsObjectFromField } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,

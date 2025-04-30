@@ -8,7 +8,6 @@ import {
   addTypenameToDocument,
   cacheSizes,
   canonicalStringify,
-  DeepMerger,
   isReference,
   mergeDeepArray,
 } from "@apollo/client/utilities";
@@ -18,6 +17,7 @@ import type {
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
+  DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
   getMainDefinition,

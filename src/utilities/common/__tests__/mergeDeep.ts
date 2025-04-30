@@ -1,8 +1,4 @@
-import {
-  DeepMerger,
-  mergeDeep,
-  mergeDeepArray,
-} from "@apollo/client/utilities";
+import { mergeDeep, mergeDeepArray } from "@apollo/client/utilities";
 
 describe("mergeDeep", function () {
   it("should return an object if first argument falsy", function () {
@@ -149,36 +145,6 @@ describe("mergeDeep", function () {
     expect(mergeDeepArray(fs).check()).toBe("ok");
   });
 
-  it("supports custom reconciler functions", function () {
-    const merger = new DeepMerger(function (target, source, key) {
-      const targetValue = target[key];
-      const sourceValue = source[key];
-      if (Array.isArray(sourceValue)) {
-        if (!Array.isArray(targetValue)) {
-          return sourceValue;
-        }
-        return [...targetValue, ...sourceValue];
-      }
-      return this.merge(targetValue, sourceValue);
-    });
-
-    expect(
-      merger.merge(
-        {
-          a: [1, 2, 3],
-          b: "replace me",
-        },
-        {
-          a: [4, 5],
-          b: ["I", "win"],
-        }
-      )
-    ).toEqual({
-      a: [1, 2, 3, 4, 5],
-      b: ["I", "win"],
-    });
-  });
-
   it("returns original object references when possible", function () {
     const target = {
       a: 1,
@@ -311,70 +277,5 @@ describe("mergeDeep", function () {
         JSON.parse(JSON.stringify(targetWithArrays))
       )
     ).toBe(targetWithArrays);
-  });
-
-  it("provides optional context to reconciler function", function () {
-    const contextObject = {
-      contextWithSpaces: "c o n t e x t",
-    };
-
-    const shallowContextValues: any[] = [];
-    const shallowMerger = new DeepMerger<(typeof contextObject)[]>(function (
-      target,
-      source,
-      property,
-      context: typeof contextObject
-    ) {
-      shallowContextValues.push(context);
-      // Deliberately not passing context down to nested levels.
-      return this.merge(target[property], source[property]);
-    });
-
-    const typicalContextValues: any[] = [];
-    const typicalMerger = new DeepMerger<(typeof contextObject)[]>(function (
-      target,
-      source,
-      property,
-      context
-    ) {
-      typicalContextValues.push(context);
-      // Passing context down this time.
-      return this.merge(target[property], source[property], context);
-    });
-
-    const left = {
-      a: 1,
-      b: {
-        c: 2,
-        d: [3, 4],
-      },
-      e: 5,
-    };
-
-    const right = {
-      b: {
-        d: [3, 4, 5],
-      },
-    };
-
-    const expected = {
-      a: 1,
-      b: {
-        c: 2,
-        d: [3, 4, 5],
-      },
-      e: 5,
-    };
-
-    expect(shallowMerger.merge(left, right, contextObject)).toEqual(expected);
-    expect(typicalMerger.merge(left, right, contextObject)).toEqual(expected);
-
-    expect(shallowContextValues.length).toBe(2);
-    expect(shallowContextValues[0]).toBe(contextObject);
-    expect(shallowContextValues[1]).toBeUndefined();
-
-    expect(typicalContextValues.length).toBe(2);
-    expect(typicalContextValues[0]).toBe(contextObject);
-    expect(typicalContextValues[1]).toBe(contextObject);
   });
 });

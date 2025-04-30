@@ -1,6 +1,6 @@
-import { DeepMerger } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
+  DeepMerger,
   isArray,
   isNonEmptyArray,
   isNonNullObject,

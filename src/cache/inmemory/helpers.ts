@@ -9,13 +9,14 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import { compact, DeepMerger, isReference } from "@apollo/client/utilities";
+import { compact, isReference } from "@apollo/client/utilities";
 import type {
   FragmentMap,
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
+  DeepMerger,
   getFragmentDefinitions,
   isArray,
   isField,

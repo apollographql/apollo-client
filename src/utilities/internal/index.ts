@@ -5,6 +5,7 @@ export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { checkDocument } from "./checkDocument.js";
 export { cloneDeep } from "./cloneDeep.js";
 export { createFragmentMap } from "./createFragmentMap.js";
+export { DeepMerger } from "./DeepMerger.js";
 export { getDefaultValues } from "./getDefaultValues.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";

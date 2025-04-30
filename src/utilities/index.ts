@@ -42,12 +42,10 @@ export {
 
 export type {
   // internal
-  ReconcilerFunction,
-  // internal
   TupleToIntersection,
 } from "./common/mergeDeep.js";
 // internal
-export { DeepMerger, mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
+export { mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

@@ -17,10 +17,10 @@ import {
   addTypenameToDocument,
   cloneDeep,
   isReference,
-  makeReference,
 } from "@apollo/client/utilities";
 import {
   getMainDefinition,
+  makeReference,
   storeKeyNameFromField,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";

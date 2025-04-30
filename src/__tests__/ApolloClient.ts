@@ -11,12 +11,7 @@ import type {
   ObservableQuery,
   QueryOptions,
 } from "@apollo/client";
-import {
-  ApolloClient,
-  makeReference,
-  NetworkStatus,
-  setLogVerbosity,
-} from "@apollo/client";
+import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import type { Masked } from "@apollo/client/masking";
@@ -27,6 +22,7 @@ import {
   withCleanup,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
+import { makeReference } from "@apollo/client/utilities/internal";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {

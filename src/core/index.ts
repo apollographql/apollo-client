@@ -165,7 +165,6 @@ export type {
 export {
   DocumentTransform,
   isReference,
-  makeReference,
   Observable,
 } from "@apollo/client/utilities";
 

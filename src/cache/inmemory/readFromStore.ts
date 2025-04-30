@@ -11,7 +11,6 @@ import {
   DeepMerger,
   isNonNullObject,
   isReference,
-  makeReference,
   maybeDeepFreeze,
   mergeDeepArray,
   resultKeyNameFromField,
@@ -27,6 +26,7 @@ import {
   getMainDefinition,
   getQueryDefinition,
   isField,
+  makeReference,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {

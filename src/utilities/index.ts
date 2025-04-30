@@ -16,8 +16,6 @@ export type {
 export {
   isReference,
   // internal
-  makeReference,
-  // internal
   resultKeyNameFromField,
 } from "./graphql/storeUtils.js";
 

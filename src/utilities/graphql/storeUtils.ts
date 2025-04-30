@@ -4,10 +4,6 @@ export interface Reference {
   readonly __ref: string;
 }
 
-export function makeReference(id: string): Reference {
-  return { __ref: String(id) };
-}
-
 export function isReference(obj: any): obj is Reference {
   return Boolean(
     obj && typeof obj === "object" && typeof obj.__ref === "string"

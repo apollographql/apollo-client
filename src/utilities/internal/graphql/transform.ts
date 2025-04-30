@@ -104,6 +104,7 @@ function isEmpty(
   );
 }
 
+/** @internal */
 export function nullIfDocIsEmpty(doc: DocumentNode) {
   return (
       isEmpty(

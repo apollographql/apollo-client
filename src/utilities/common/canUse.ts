@@ -1,9 +1,7 @@
 import { maybe } from "@apollo/client/utilities/globals";
+import { canUseDOM } from "@apollo/client/utilities/internal";
 
 const isReactNative = maybe(() => navigator.product) == "ReactNative";
-
-export const canUseDOM =
-  typeof maybe(() => window.document.createElement) === "function";
 
 const usingJSDOM: boolean =
   // Following advice found in this comment from @domenic (maintainer of jsdom):

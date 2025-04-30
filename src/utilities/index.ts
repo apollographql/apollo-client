@@ -47,7 +47,7 @@ export {
   graphQLResultHasError,
 } from "./common/errorHandling.js";
 // internal
-export { canUseDOM, canUseLayoutEffect } from "./common/canUse.js";
+export { canUseLayoutEffect } from "./common/canUse.js";
 
 export { canonicalStringify } from "./shared/canonicalStringify.js";
 // internal

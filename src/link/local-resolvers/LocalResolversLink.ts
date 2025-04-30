@@ -283,14 +283,6 @@ export class LocalResolversLink<
   private async addExportedVariables(execContext: ExecContext) {
     const { variables } = execContext.operation;
 
-    await this.resolveSelectionSet(
-      execContext.operationDefinition.selectionSet,
-      false,
-      {},
-      execContext,
-      []
-    );
-
     return {
       ...variables,
     };

@@ -44,10 +44,4 @@ export type AsStoreObject<T extends { __typename?: string }> = {
   [K in keyof T]: T[K];
 };
 
-export type Directives = {
-  [directiveName: string]: {
-    [argName: string]: any;
-  };
-};
-
 export type VariableValue = (node: VariableNode) => any;

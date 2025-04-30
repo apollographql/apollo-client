@@ -7,8 +7,6 @@ export { print } from "./graphql/print.js";
 
 export type {
   AsStoreObject,
-  // internal
-  Directives,
   Reference,
   StoreObject,
   StoreValue,

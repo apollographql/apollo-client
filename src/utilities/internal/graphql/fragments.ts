@@ -107,12 +107,14 @@ export function getFragmentQueryDocument(
 /**
  * This is an interface that describes a map from fragment names to fragment definitions.
  */
+/** @internal */
 export interface FragmentMap {
   [fragmentName: string]: FragmentDefinitionNode;
 }
 
 // Utility function that takes a list of fragment definitions and makes a hash out of them
 // that maps the name of the fragment to the fragment definition.
+/** @internal */
 export function createFragmentMap(
   fragments: FragmentDefinitionNode[] = []
 ): FragmentMap {
@@ -123,10 +125,12 @@ export function createFragmentMap(
   return symTable;
 }
 
+/** @internal */
 export type FragmentMapFunction = (
   fragmentName: string
 ) => FragmentDefinitionNode | null;
 
+/** @internal */
 export function getFragmentFromSelection(
   selection: SelectionNode,
   fragmentMap?: FragmentMap | FragmentMapFunction

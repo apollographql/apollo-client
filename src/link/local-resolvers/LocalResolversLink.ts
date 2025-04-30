@@ -250,16 +250,7 @@ export class LocalResolversLink<
         exportedVariableDefs,
       } satisfies Partial<ExecContext>;
 
-      return from(
-        this.addExportedVariables({
-          ...execContext,
-          rootValue:
-            typeof this.rootValue === "function" ?
-              this.rootValue({ operation })
-            : this.rootValue,
-          selectionsToResolve: exportsToResolve,
-        })
-      ).pipe(
+      return from(Promise.resolve(operation.variables)).pipe(
         mergeMap(getServerResult),
         mergeMap((result) => {
           return from(
@@ -278,14 +269,6 @@ export class LocalResolversLink<
         })
       );
     });
-  }
-
-  private async addExportedVariables(execContext: ExecContext) {
-    const { variables } = execContext.operation;
-
-    return {
-      ...variables,
-    };
   }
 
   private async runResolvers({

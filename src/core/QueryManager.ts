@@ -46,7 +46,6 @@ import {
 } from "@apollo/client/utilities";
 import {
   DocumentTransform,
-  getDefaultValues,
   getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
@@ -61,6 +60,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   addNonReactiveToNamedFragments,
   checkDocument,
+  getDefaultValues,
   hasClientExports,
   hasDirectives,
   onAnyEvent,

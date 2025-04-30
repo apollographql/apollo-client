@@ -6,7 +6,6 @@ export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
 export {
-  getDefaultValues,
   getFragmentDefinition,
   getFragmentDefinitions,
   getMainDefinition,

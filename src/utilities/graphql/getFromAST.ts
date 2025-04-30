@@ -2,7 +2,6 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
-  ValueNode,
 } from "graphql";
 
 import { checkDocument } from "@apollo/client/utilities/internal";
@@ -10,8 +9,6 @@ import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
-
-import { valueToObjectRepresentation } from "./storeUtils.js";
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
   name: NonNullable<OperationDefinitionNode["name"]>;
@@ -120,23 +117,4 @@ export function getMainDefinition(
   throw newInvariantError(
     "Expected a parsed GraphQL query with a query, mutation, subscription, or a fragment."
   );
-}
-
-export function getDefaultValues(
-  definition: OperationDefinitionNode | undefined
-): Record<string, any> {
-  const defaultValues = {};
-  const defs = definition && definition.variableDefinitions;
-  if (defs && defs.length) {
-    defs.forEach((def) => {
-      if (def.defaultValue) {
-        valueToObjectRepresentation(
-          defaultValues,
-          def.variable.name,
-          def.defaultValue as ValueNode
-        );
-      }
-    });
-  }
-  return defaultValues;
 }

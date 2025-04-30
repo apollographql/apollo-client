@@ -14,7 +14,6 @@ import {
   argumentsObjectFromField,
   canonicalStringify,
   cloneDeep,
-  getDefaultValues,
   getOperationDefinition,
   getTypenameFromResult,
   isField,
@@ -29,6 +28,7 @@ import type {
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
+  getDefaultValues,
   getFragmentFromSelection,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

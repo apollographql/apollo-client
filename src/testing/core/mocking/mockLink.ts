@@ -8,7 +8,6 @@ import type { Unmasked } from "@apollo/client/masking";
 import {
   addTypenameToDocument,
   cloneDeep,
-  getDefaultValues,
   getOperationDefinition,
   isDocumentNode,
   makeUniqueId,
@@ -16,6 +15,7 @@ import {
 } from "@apollo/client/utilities";
 import {
   checkDocument,
+  getDefaultValues,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities/internal";

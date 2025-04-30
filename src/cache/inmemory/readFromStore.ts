@@ -9,7 +9,6 @@ import {
   cacheSizes,
   canonicalStringify,
   DeepMerger,
-  getDefaultValues,
   getMainDefinition,
   getQueryDefinition,
   isField,
@@ -26,6 +25,7 @@ import type {
   FragmentMapFunction,
 } from "@apollo/client/utilities/internal";
 import {
+  getDefaultValues,
   getFragmentFromSelection,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

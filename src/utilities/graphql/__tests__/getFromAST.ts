@@ -3,7 +3,6 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 
 import {
-  getDefaultValues,
   getFragmentDefinitions,
   getOperationName,
   getQueryDefinition,
@@ -176,37 +175,5 @@ describe("AST utility functions", () => {
     }).toThrowError(
       'Schema type definitions not allowed in queries. Found: "InputObjectTypeDefinition"'
     );
-  });
-
-  describe("getDefaultValues", () => {
-    it("will create an empty variable object if no default values are provided", () => {
-      const basicQuery = gql`
-        query people($first: Int, $second: String) {
-          allPeople(first: $first) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      expect(getDefaultValues(getQueryDefinition(basicQuery))).toEqual({});
-    });
-
-    it("will create a variable object based on the definition node with default values", () => {
-      const basicQuery = gql`
-        query people($first: Int = 1, $second: String!) {
-          allPeople(first: $first) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      expect(getDefaultValues(getQueryDefinition(basicQuery))).toEqual({
-        first: 1,
-      });
-    });
   });
 });

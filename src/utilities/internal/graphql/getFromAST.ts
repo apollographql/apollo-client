@@ -1,5 +1,11 @@
-import type { DocumentNode, OperationTypeNode } from "graphql";
+import type {
+  DocumentNode,
+  OperationDefinitionNode,
+  OperationTypeNode,
+  ValueNode,
+} from "graphql";
 
+import { valueToObjectRepresentation } from "@apollo/client/utilities";
 import {
   invariant,
   newInvariantError,
@@ -46,4 +52,23 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
   }
 
   return doc;
+}
+
+export function getDefaultValues(
+  definition: OperationDefinitionNode | undefined
+): Record<string, any> {
+  const defaultValues = {};
+  const defs = definition && definition.variableDefinitions;
+  if (defs && defs.length) {
+    defs.forEach((def) => {
+      if (def.defaultValue) {
+        valueToObjectRepresentation(
+          defaultValues,
+          def.variable.name,
+          def.defaultValue as ValueNode
+        );
+      }
+    });
+  }
+  return defaultValues;
 }

@@ -562,7 +562,6 @@ export class LocalResolversLink<
     } catch (e) {
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
-        phase: execContext.phase,
         cause: e,
       });
 
@@ -582,7 +581,7 @@ export class LocalResolversLink<
           ),
           path,
           execContext,
-          { resolver: resolverName, phase: execContext.phase, data }
+          { resolver: resolverName, data }
         );
 
         return null;
@@ -630,7 +629,7 @@ export class LocalResolversLink<
         ),
         path,
         execContext,
-        { resolver: resolverName, phase: execContext.phase }
+        { resolver: resolverName }
       );
 
       return null;
@@ -658,7 +657,7 @@ export class LocalResolversLink<
     error: ErrorLike,
     path: Path,
     execContext: ExecContext,
-    meta: { [key: string]: any; resolver: string; phase: "exports" | "resolve" }
+    meta: { [key: string]: any; resolver: string }
   ) {
     execContext.errors.push(
       addApolloExtension(

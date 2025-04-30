@@ -42,8 +42,6 @@ export {
 
 export {
   // internal
-  getGraphQLErrorsFromResult,
-  // internal
   graphQLResultHasError,
 } from "./common/errorHandling.js";
 

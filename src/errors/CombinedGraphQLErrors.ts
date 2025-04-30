@@ -1,7 +1,7 @@
 import type { GraphQLFormattedError } from "graphql";
 
 import type { FetchResult } from "@apollo/client";
-import { getGraphQLErrorsFromResult } from "@apollo/client/utilities";
+import { getGraphQLErrorsFromResult } from "@apollo/client/utilities/internal";
 
 import { brand, isBranded } from "./utils.js";
 

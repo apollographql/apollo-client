@@ -5,7 +5,7 @@ import type {
   RejectedPromise,
 } from "@apollo/client/utilities/internal";
 
-function isStatefulPromise<TValue>(
+function isDecoratedPromise<TValue>(
   promise: Promise<TValue>
 ): promise is DecoratedPromise<TValue> {
   return "status" in promise;
@@ -14,7 +14,7 @@ function isStatefulPromise<TValue>(
 export function wrapPromiseWithState<TValue>(
   promise: Promise<TValue>
 ): DecoratedPromise<TValue> {
-  if (isStatefulPromise(promise)) {
+  if (isDecoratedPromise(promise)) {
     return promise;
   }
 

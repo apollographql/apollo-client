@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
-import { cloneDeep } from "@apollo/client/utilities";
 import {
+  cloneDeep,
   getQueryDefinition,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

@@ -4,10 +4,10 @@ const { toString } = Object.prototype;
  * Deeply clones a value to create a new instance.
  */
 export function cloneDeep<T>(value: T): T {
-  return cloneDeepHelper(value);
+  return __cloneDeep(value);
 }
 
-function cloneDeepHelper<T>(val: T, seen?: Map<any, any>): T {
+function __cloneDeep<T>(val: T, seen?: Map<any, any>): T {
   switch (toString.call(val)) {
     case "[object Array]": {
       seen = seen || new Map();
@@ -15,7 +15,7 @@ function cloneDeepHelper<T>(val: T, seen?: Map<any, any>): T {
       const copy: T & any[] = (val as any).slice(0);
       seen.set(val, copy);
       copy.forEach(function (child, i) {
-        copy[i] = cloneDeepHelper(child, seen);
+        copy[i] = __cloneDeep(child, seen);
       });
       return copy;
     }
@@ -28,7 +28,7 @@ function cloneDeepHelper<T>(val: T, seen?: Map<any, any>): T {
       const copy = Object.create(Object.getPrototypeOf(val));
       seen.set(val, copy);
       Object.keys(val as T & Record<string, any>).forEach((key) => {
-        copy[key] = cloneDeepHelper((val as any)[key], seen);
+        copy[key] = __cloneDeep((val as any)[key], seen);
       });
       return copy;
     }

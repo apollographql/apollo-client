@@ -48,8 +48,6 @@ export type {
 } from "./common/mergeDeep.js";
 // internal
 export { DeepMerger, mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
-// internal
-export { cloneDeep } from "./common/cloneDeep.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

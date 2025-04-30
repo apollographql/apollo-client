@@ -13,9 +13,10 @@ import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import { cloneDeep, compact } from "@apollo/client/utilities";
+import { compact } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
+  cloneDeep,
   getOperationDefinition,
   getQueryDefinition,
   preventUnhandledRejection,

@@ -7,12 +7,12 @@ import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   addTypenameToDocument,
-  cloneDeep,
   makeUniqueId,
   print,
 } from "@apollo/client/utilities";
 import {
   checkDocument,
+  cloneDeep,
   getDefaultValues,
   getOperationDefinition,
   isDocumentNode,

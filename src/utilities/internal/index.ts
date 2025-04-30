@@ -13,6 +13,7 @@ export { getMainDefinition } from "./getMainDefinition.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";
 export { getQueryDefinition } from "./getQueryDefinition.js";
+export { getStoreKeyName } from "./getStoreKeyName.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { isDocumentNode } from "./isDocumentNode.js";

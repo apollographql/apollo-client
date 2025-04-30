@@ -9,7 +9,6 @@ import {
   addTypenameToDocument,
   getQueryDefinition,
   removeArgumentsFromDocument,
-  removeConnectionDirectiveFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 

@@ -22,6 +22,7 @@ export { onAnyEvent } from "./onAnyEvent.js";
 export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
 export { shouldInclude } from "./shouldInclude.js";
+export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
 export { toQueryResult } from "./toQueryResult.js";
 
 export {

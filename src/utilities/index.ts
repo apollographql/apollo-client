@@ -15,16 +15,12 @@ export type {
 } from "./graphql/storeUtils.js";
 export {
   // internal
-  getStoreKeyName,
-  // internal
   isInlineFragment,
   isReference,
   // internal
   makeReference,
   // internal
   resultKeyNameFromField,
-  // internal
-  storeKeyNameFromField,
 } from "./graphql/storeUtils.js";
 
 export { addTypenameToDocument } from "./graphql/transform.js";

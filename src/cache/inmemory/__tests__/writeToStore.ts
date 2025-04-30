@@ -18,9 +18,11 @@ import {
   cloneDeep,
   isReference,
   makeReference,
-  storeKeyNameFromField,
 } from "@apollo/client/utilities";
-import { getMainDefinition } from "@apollo/client/utilities/internal";
+import {
+  getMainDefinition,
+  storeKeyNameFromField,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 // not exported

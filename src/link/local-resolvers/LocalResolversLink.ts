@@ -1,6 +1,5 @@
 import type {
   ASTNode,
-  DirectiveNode,
   DocumentNode,
   ExecutableDefinitionNode,
   FieldNode,
@@ -673,10 +672,6 @@ export class LocalResolversLink<
       hasClientRoot: boolean;
     }> = [];
 
-    function getCurrentPath() {
-      return fields.map((field) => field.node.name.value);
-    }
-
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
         return this.traverseCache.get(definitionNode)!;
@@ -709,31 +704,6 @@ export class LocalResolversLink<
         },
         Directive: (directive, _, __, ___, ancestors) => {
           const fieldInfo = fields.at(-1);
-
-          if (
-            directive.name.value === "export" &&
-            // Ignore export directives that aren't inside client fields.
-            // These will get sent to the server
-            fieldInfo?.isClientFieldOrDescendent
-          ) {
-            const fieldName = fieldInfo.node.name.value;
-
-            if (!fieldInfo.hasClientRoot) {
-              throw new LocalResolversError(
-                "Cannot export a variable from a field that is a child of a remote field. Exported variables must originate either from a root-level client field or a child of a root-level client field.",
-                { path: getCurrentPath() }
-              );
-            }
-
-            const variableName = getExportedVariableName(directive);
-
-            if (!variableName) {
-              throw new LocalResolversError(
-                `Cannot determine the variable name from the \`@export\` directive used on field '${fieldName}'. Perhaps you forgot the \`as\` argument?`,
-                { path: getCurrentPath() }
-              );
-            }
-          }
 
           if (directive.name.value === "client") {
             if (fieldInfo) {
@@ -851,16 +821,6 @@ function inferRootTypename({ operation }: OperationDefinitionNode) {
 
 function getResolverName(typename: string, fieldName: string) {
   return `${typename}.${fieldName}`;
-}
-
-function getExportedVariableName(directive: DirectiveNode) {
-  if (directive.arguments) {
-    for (const arg of directive.arguments) {
-      if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
-        return arg.value.value;
-      }
-    }
-  }
 }
 
 if (__DEV__) {

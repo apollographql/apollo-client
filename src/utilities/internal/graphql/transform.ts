@@ -14,8 +14,9 @@ import { Kind, visit } from "graphql";
 import { isArray, isNonEmptyArray } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { FragmentMap } from "./fragments.js";
-import { createFragmentMap } from "./fragments.js";
+import { createFragmentMap } from "../createFragmentMap.js";
+import type { FragmentMap } from "../types/FragmentMap.js";
+
 import {
   checkDocument,
   getFragmentDefinition,

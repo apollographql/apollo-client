@@ -12,6 +12,8 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import type { FragmentMap } from "../types/FragmentMap.js";
+
 /**
  * Returns a query document which adds a single query operation that only
  * spreads the target fragment inside of it.
@@ -102,27 +104,6 @@ export function getFragmentQueryDocument(
   };
 
   return query;
-}
-
-/**
- * This is an interface that describes a map from fragment names to fragment definitions.
- */
-/** @internal */
-export interface FragmentMap {
-  [fragmentName: string]: FragmentDefinitionNode;
-}
-
-// Utility function that takes a list of fragment definitions and makes a hash out of them
-// that maps the name of the fragment to the fragment definition.
-/** @internal */
-export function createFragmentMap(
-  fragments: FragmentDefinitionNode[] = []
-): FragmentMap {
-  const symTable: FragmentMap = {};
-  fragments.forEach((fragment) => {
-    symTable[fragment.name.value] = fragment;
-  });
-  return symTable;
 }
 
 /** @internal */

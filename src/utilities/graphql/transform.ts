@@ -9,6 +9,11 @@ const TYPENAME_FIELD: FieldNode = {
   },
 };
 
+/**
+ * Adds `__typename` to all selection sets in the document.
+ *
+ * @param doc - The `ASTNode` to add `__typename` to
+ */
 export const addTypenameToDocument = Object.assign(
   function <TNode extends ASTNode>(doc: TNode): TNode {
     return visit(doc, {

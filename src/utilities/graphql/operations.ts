@@ -9,7 +9,9 @@ function isOperation(
 }
 
 /**
- * Determines if a document is a mutation document.
+ * Determine if a document is a mutation document.
+ *
+ * @param document - The GraphQL document to check
  *
  * @since 3.8.0
  */
@@ -18,7 +20,9 @@ export function isMutationOperation(document: DocumentNode) {
 }
 
 /**
- * Determines if a document is a query document.
+ * Determine if a document is a query document.
+ *
+ * @param document - The GraphQL document to check
  *
  * @since 3.8.0
  */
@@ -27,7 +31,9 @@ export function isQueryOperation(document: DocumentNode) {
 }
 
 /**
- * Determines if a document is a subscription document.
+ * Determine if a document is a subscription document.
+ *
+ * @param document - The GraphQL document to check
  *
  * @since 3.8.0
  */

@@ -55,8 +55,6 @@ export { stripTypename } from "./common/stripTypename.js";
 // internal
 export type { IsStrictlyAny } from "./types/IsStrictlyAny.js";
 // internal
-export type { DeepOmit } from "./types/DeepOmit.js";
-// internal
 export type { DeepPartial } from "./types/DeepPartial.js";
 // internal
 export type { Prettify } from "./types/Prettify.js";

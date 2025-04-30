@@ -1,6 +1,5 @@
+import type { DeepOmit } from "@apollo/client/utilities/internal";
 import { isPlainObject } from "@apollo/client/utilities/internal";
-
-import type { DeepOmit } from "../types/DeepOmit.js";
 
 export function omitDeep<T, K extends string>(value: T, key: K) {
   return __omitDeep(value, key);

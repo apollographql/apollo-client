@@ -1,4 +1,4 @@
-import type { Primitive } from "@apollo/client/utilities/internal";
+import type { Primitive } from "./Primitive.js";
 
 // DeepOmit primitives include functions since these are unmodified.
 type DeepOmitPrimitive = Primitive | Function;
@@ -19,6 +19,7 @@ type DeepOmitArray<T extends any[], K> = {
 // This should be fine as of the time of this writing until omitDeep gets
 // broader use since this utility is only used to strip __typename from
 // `variables`; a case in which class instances are invalid anyways.
+/** @internal */
 export type DeepOmit<T, K> =
   T extends DeepOmitPrimitive ? T
   : {

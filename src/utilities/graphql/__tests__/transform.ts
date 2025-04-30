@@ -8,56 +8,8 @@ disableFragmentWarnings();
 import {
   addTypenameToDocument,
   getQueryDefinition,
-  removeArgumentsFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
-
-describe("removeArgumentsFromDocument", () => {
-  it("should remove a single variable", () => {
-    const query = gql`
-      query Simple($variable: String!) {
-        field(usingVariable: $variable) {
-          child
-          foo
-        }
-        network
-      }
-    `;
-    const expected = gql`
-      query Simple {
-        field {
-          child
-          foo
-        }
-        network
-      }
-    `;
-    const doc = removeArgumentsFromDocument([{ name: "variable" }], query)!;
-    expect(print(doc)).toBe(print(expected));
-  });
-
-  it("should remove a single variable and the field from the query", () => {
-    const query = gql`
-      query Simple($variable: String!) {
-        field(usingVariable: $variable) {
-          child
-          foo
-        }
-        network
-      }
-    `;
-    const expected = gql`
-      query Simple {
-        network
-      }
-    `;
-    const doc = removeArgumentsFromDocument(
-      [{ name: "variable", remove: true }],
-      query
-    )!;
-    expect(print(doc)).toBe(print(expected));
-  });
-});
 
 describe("removeDirectivesFromDocument", () => {
   it("should remove inline fragments using a directive", () => {

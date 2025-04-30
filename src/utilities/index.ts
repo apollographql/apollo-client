@@ -74,7 +74,6 @@ export type {
 } from "./graphql/transform.js";
 export {
   addTypenameToDocument,
-  removeArgumentsFromDocument,
   removeDirectivesFromDocument,
 } from "./graphql/transform.js";
 

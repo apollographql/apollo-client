@@ -5,7 +5,6 @@ import { Kind } from "graphql";
 
 import type { Cache, OperationVariables } from "@apollo/client";
 import type {
-  FragmentMap,
   FragmentMapFunction,
   Reference,
   StoreObject,
@@ -27,6 +26,7 @@ import {
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import { shouldInclude } from "@apollo/client/utilities/internal";
 import {
   invariant,

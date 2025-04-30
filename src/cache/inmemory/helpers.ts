@@ -5,7 +5,6 @@ import type {
 } from "graphql";
 
 import type {
-  FragmentMap,
   FragmentMapFunction,
   Reference,
   StoreObject,
@@ -21,6 +20,7 @@ import {
   isReference,
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
   shouldInclude,

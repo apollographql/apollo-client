@@ -8,8 +8,8 @@ import type {
 import { visit } from "graphql";
 import { wrap } from "optimism";
 
-import type { FragmentMap } from "@apollo/client/utilities";
 import { cacheSizes, getFragmentDefinitions } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 export interface FragmentRegistryAPI {

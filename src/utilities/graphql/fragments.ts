@@ -4,30 +4,12 @@ import type {
   SelectionNode,
 } from "graphql";
 
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-/**
- * This is an interface that describes a map from fragment names to fragment definitions.
- */
-export interface FragmentMap {
-  [fragmentName: string]: FragmentDefinitionNode;
-}
 
 export type FragmentMapFunction = (
   fragmentName: string
 ) => FragmentDefinitionNode | null;
-
-// Utility function that takes a list of fragment definitions and makes a hash out of them
-// that maps the name of the fragment to the fragment definition.
-export function createFragmentMap(
-  fragments: FragmentDefinitionNode[] = []
-): FragmentMap {
-  const symTable: FragmentMap = {};
-  fragments.forEach((fragment) => {
-    symTable[fragment.name.value] = fragment;
-  });
-  return symTable;
-}
 
 export function getFragmentFromSelection(
   selection: SelectionNode,

@@ -16,7 +16,7 @@ import { BREAK, isSelectionNode, visit } from "graphql";
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
-import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
+import type { StoreObject } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   getFragmentDefinitions,
@@ -27,6 +27,7 @@ import {
   mergeDeepArray,
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
   hasDirectives,

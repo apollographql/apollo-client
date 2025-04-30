@@ -7,7 +7,6 @@ import type {
 
 import { disableWarningsSlot } from "@apollo/client/masking";
 import type {
-  FragmentMap,
   Reference,
   StoreObject,
   StoreValue,
@@ -21,6 +20,7 @@ import {
   stringifyForDisplay,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,

@@ -4,16 +4,16 @@
 
 ```ts
 
-import type { ApolloPayloadResult } from '@apollo/client/link/core';
+import type { ApolloPayloadResult } from '@apollo/client/link';
 import type { ArgumentNode } from 'graphql';
 import type { ASTNode } from 'graphql';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
-import type { ExecutionPatchIncrementalResult } from '@apollo/client/link/core';
-import type { ExecutionPatchInitialResult } from '@apollo/client/link/core';
-import type { ExecutionPatchResult } from '@apollo/client/link/core';
-import type { FetchResult } from '@apollo/client/link/core';
+import type { ExecutionPatchIncrementalResult } from '@apollo/client/link';
+import type { ExecutionPatchInitialResult } from '@apollo/client/link';
+import type { ExecutionPatchResult } from '@apollo/client/link';
+import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
 import type { FragmentDefinitionNode } from 'graphql';
@@ -412,7 +412,7 @@ export function mergeIncrementalData<TData extends object>(prevResult: TData, re
 // Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
+export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
 
 // @public
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
@@ -427,7 +427,7 @@ export function offsetLimitPagination<T = Reference_2>(keyArgs?: KeyArgs): Field
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
 
 // @public (undocumented)
-type OptionsUnion<TData, TVariables extends OperationVariables, TContext> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, TContext, any>;
+type OptionsUnion<TData, TVariables extends OperationVariables> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, any>;
 
 // @public (undocumented)
 interface PendingPromise<TValue> extends Promise<TValue> {

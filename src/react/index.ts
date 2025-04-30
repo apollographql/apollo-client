@@ -1,3 +1,5 @@
+export { gql } from "@apollo/client";
+
 export type { ApolloContextValue } from "./context/ApolloContext.js";
 export { ApolloConsumer } from "./context/ApolloConsumer.js";
 export { getApolloContext } from "./context/ApolloContext.js";

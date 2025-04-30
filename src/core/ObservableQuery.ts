@@ -1179,7 +1179,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // We want to ensure we can re-run the custom document transforms the next
     // time a request is made against the original query.
     const query = this.transformDocument(options.query);
-    const { fetchPolicy } = options;
 
     this.lastQuery = query;
 
@@ -1205,14 +1204,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         newOptions.variables &&
         !equal(newOptions.variables, oldVariables) &&
         // Don't mess with the fetchPolicy if it's currently "standby".
-        fetchPolicy !== "standby" &&
+        options.fetchPolicy !== "standby" &&
         // If we're changing the fetchPolicy anyway, don't try to change it here
         // using applyNextFetchPolicy. The explicit options.fetchPolicy wins.
-        (fetchPolicy === oldFetchPolicy ||
+        (options.fetchPolicy === oldFetchPolicy ||
           // A `nextFetchPolicy` function has even higher priority, though,
           // so in that case `applyNextFetchPolicy` must be called.
           typeof options.nextFetchPolicy === "function")
       ) {
+        // This might mutate options.fetchPolicy
         this.applyNextFetchPolicy("variables-changed", options);
         if (newNetworkStatus === void 0) {
           newNetworkStatus = NetworkStatus.setVariables;
@@ -1235,7 +1235,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
       // QueryManager does not emit any values for standby fetch policies so we
       // want ensure that the networkStatus remains ready.
-      if (fetchPolicy === "standby") {
+      if (options.fetchPolicy === "standby") {
         newNetworkStatus = NetworkStatus.ready;
       }
     }
@@ -1247,7 +1247,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.reemitEvenIfEqual = this.subject.getValue().result;
     }
 
-    if (fetchPolicy === "standby") {
+    if (options.fetchPolicy === "standby") {
       this.cancelPolling();
     }
     if (
@@ -1325,7 +1325,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
-    this.queryManager.stopQuery(this.queryId);
+    this.queryManager.removeQuery(this.queryId);
     this.isTornDown = true;
     this.reset();
   }

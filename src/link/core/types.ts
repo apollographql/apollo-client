@@ -2,7 +2,11 @@ import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type { DefaultContext } from "@apollo/client";
+import type {
+  ApolloClient,
+  ClientAwareness,
+  DefaultContext,
+} from "@apollo/client";
 
 export type { DocumentNode };
 
@@ -52,7 +56,7 @@ export interface ApolloPayloadResult<
   TExtensions = Record<string, any>,
 > {
   payload:
-    | SingleExecutionResult<TData, DefaultContext, TExtensions>
+    | SingleExecutionResult<TData, TExtensions>
     | ExecutionPatchResult<TData, TExtensions>
     | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
@@ -81,34 +85,45 @@ export interface Operation {
   operationName: string;
   extensions: Record<string, any>;
   setContext: {
-    (context: Partial<DefaultContext>): void;
+    (context: Partial<OperationContext>): void;
     (
       updateContext: (
-        previousContext: DefaultContext
-      ) => Partial<DefaultContext>
+        previousContext: OperationContext
+      ) => Partial<OperationContext>
     ): void;
   };
-  getContext: () => DefaultContext;
+  getContext: () => OperationContext;
+  readonly client: ApolloClient;
+}
+
+export interface ExecuteContext {
+  client: ApolloClient;
+}
+
+export interface OperationContext extends DefaultContext {
+  /**
+   * Indicates whether `queryDeduplication` was enabled for the request.
+   */
+  queryDeduplication?: boolean;
+  clientAwareness?: ClientAwareness;
 }
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,
-  TContext = DefaultContext,
   TExtensions = Record<string, any>,
 > {
   // data might be undefined if errorPolicy was set to 'ignore'
   data?: TData | null;
-  context?: TContext;
+  context?: DefaultContext;
   errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: TExtensions;
 }
 
 export type FetchResult<
   TData = Record<string, any>,
-  TContext = Record<string, any>,
   TExtensions = Record<string, any>,
 > =
-  | SingleExecutionResult<TData, TContext, TExtensions>
+  | SingleExecutionResult<TData, TExtensions>
   | ExecutionPatchResult<TData, TExtensions>;
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;

@@ -1,7 +1,7 @@
 import type { DefinitionNode } from "graphql";
 import { Observable, throwError } from "rxjs";
 
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import { hasDirectives } from "@apollo/client/utilities";
 import {
@@ -13,13 +13,13 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { checkFetcher } from "./checkFetcher.js";
+import type { HttpLink } from "./HttpLink.js";
 import {
   handleError,
   parseAndCheckHttpResponse,
   readMultipartBody,
 } from "./parseAndCheckHttpResponse.js";
 import { rewriteURIForGET } from "./rewriteURIForGET.js";
-import type { HttpOptions } from "./selectHttpOptionsAndBody.js";
 import {
   defaultPrinter,
   fallbackHttpConfig,
@@ -30,7 +30,7 @@ import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
 const backupFetch = maybe(() => fetch);
 
-export const createHttpLink = (linkOptions: HttpOptions = {}) => {
+export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
   let {
     uri = "/graphql",
     // use default global fetch if nothing passed in

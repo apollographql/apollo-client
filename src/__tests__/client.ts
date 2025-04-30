@@ -33,7 +33,7 @@ import {
   CombinedGraphQLErrors,
   UnconventionalError,
 } from "@apollo/client/errors";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -3254,7 +3254,7 @@ describe("@connection", () => {
       },
     });
 
-    const client = new ApolloClient({ cache });
+    const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
     const obsQueries = new Set<ObservableQuery<any>>();
     function watch(
@@ -3477,7 +3477,7 @@ describe("@connection", () => {
       },
     });
 
-    const client = new ApolloClient({ cache });
+    const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
     const obsQueries = new Set<ObservableQuery<any>>();
     const subs = new Set<Subscription>();

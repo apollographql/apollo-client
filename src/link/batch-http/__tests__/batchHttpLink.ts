@@ -5,10 +5,13 @@ import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 
+import type { FetchResult } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import type { FetchResult } from "@apollo/client/link/core";
-import { ApolloLink, execute } from "@apollo/client/link/core";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -107,10 +110,7 @@ describe("BatchHttpLink", () => {
 
     execute(link, {
       query: sampleQuery,
-      context: {
-        credentials: "two",
-        clientAwareness,
-      },
+      context: { credentials: "two", clientAwareness },
     }).subscribe(next(data), error, complete);
 
     execute(link, {
@@ -193,10 +193,7 @@ describe("BatchHttpLink", () => {
       };
 
       [1, 2].forEach((x) => {
-        execute(link, {
-          query,
-          variables: { endpoint: "/rofl" },
-        }).subscribe({
+        execute(link, { query, variables: { endpoint: "/rofl" } }).subscribe({
           next: next(roflData),
           error: (error) => {
             throw error;
@@ -204,10 +201,7 @@ describe("BatchHttpLink", () => {
           complete,
         });
 
-        execute(link, {
-          query,
-          variables: { endpoint: "/lawl" },
-        }).subscribe({
+        execute(link, { query, variables: { endpoint: "/lawl" } }).subscribe({
           next: next(lawlData),
           error: (error) => {
             throw error;
@@ -298,9 +292,7 @@ describe("SharedHttpTest", () => {
 
   it("calls next and then complete", async () => {
     const link = createHttpLink({ uri: "/data" });
-    const observable = execute(link, {
-      query: sampleQuery,
-    });
+    const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitNext();
@@ -309,9 +301,7 @@ describe("SharedHttpTest", () => {
 
   it("calls error when fetch fails", async () => {
     const link = createHttpLink({ uri: "/error" });
-    const observable = execute(link, {
-      query: sampleQuery,
-    });
+    const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitError(mockError.throws);
@@ -319,9 +309,7 @@ describe("SharedHttpTest", () => {
 
   it("calls error when fetch fails", async () => {
     const link = createHttpLink({ uri: "/error" });
-    const observable = execute(link, {
-      query: sampleMutation,
-    });
+    const observable = execute(link, { query: sampleMutation });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitError(mockError.throws);
@@ -377,9 +365,7 @@ describe("SharedHttpTest", () => {
 
   it("unsubscribes without calling subscriber", async () => {
     const link = createHttpLink({ uri: "/data" });
-    const observable = execute(link, {
-      query: sampleQuery,
-    });
+    const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
     stream.unsubscribe();
 
@@ -565,9 +551,7 @@ describe("SharedHttpTest", () => {
     expect(spyFn).not.toBe(fetch);
 
     subscriptions.add(
-      execute(httpLink, {
-        query: sampleQuery,
-      }).subscribe({
+      execute(httpLink, { query: sampleQuery }).subscribe({
         error: done.fail,
 
         next(result) {
@@ -580,9 +564,7 @@ describe("SharedHttpTest", () => {
           expect(window.fetch).toBe(fetch);
 
           subscriptions.add(
-            execute(httpLink, {
-              query: sampleQuery,
-            }).subscribe({
+            execute(httpLink, { query: sampleQuery }).subscribe({
               error: done.fail,
               next(result) {
                 expect(result).toEqual({
@@ -708,11 +690,7 @@ describe("SharedHttpTest", () => {
       http: { preserveHeaderCase: true },
     };
     const stream = new ObservableStream(
-      execute(link, {
-        query: sampleQuery,
-        variables,
-        context,
-      })
+      execute(link, { query: sampleQuery, variables, context })
     );
 
     await expect(stream).toEmitNext();

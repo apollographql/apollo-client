@@ -2,8 +2,8 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import { Observable, throwError } from "rxjs";
 
-import type { FetchResult, Operation } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   addTypenameToDocument,

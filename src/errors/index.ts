@@ -1,4 +1,4 @@
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 
 import { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 import { isErrorLike } from "./isErrorLike.js";

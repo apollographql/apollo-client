@@ -142,6 +142,17 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/link 1`] = `
+Array [
+  "ApolloLink",
+  "concat",
+  "empty",
+  "execute",
+  "from",
+  "split",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link/batch 1`] = `
 Array [
   "BatchLink",
@@ -158,17 +169,6 @@ Array [
 exports[`exports of public entry points @apollo/client/link/context 1`] = `
 Array [
   "setContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/link/core 1`] = `
-Array [
-  "ApolloLink",
-  "concat",
-  "empty",
-  "execute",
-  "from",
-  "split",
 ]
 `;
 
@@ -257,6 +257,7 @@ Array [
   "ApolloProvider",
   "createQueryPreloader",
   "getApolloContext",
+  "gql",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -364,7 +365,9 @@ Array [
   "addDelayToMocks",
   "createClientWrapper",
   "createMockWrapper",
+  "createOperationWithDefaultContext",
   "enableFakeTimers",
+  "executeWithDefaultContext",
   "mockDeferStream",
   "mockMultipartSubscriptionStream",
   "renderAsync",

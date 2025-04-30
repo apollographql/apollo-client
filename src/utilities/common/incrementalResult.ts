@@ -4,7 +4,7 @@ import type {
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
   FetchResult,
-} from "@apollo/client/link/core";
+} from "@apollo/client/link";
 
 import { isNonEmptyArray } from "./arrays.js";
 import { DeepMerger } from "./mergeDeep.js";

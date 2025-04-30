@@ -9,11 +9,12 @@ import {
   ServerError,
   UnconventionalError,
 } from "@apollo/client/errors";
-import type { FetchResult, Operation } from "@apollo/client/link/core";
-import { ApolloLink, execute } from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 import { wait } from "@apollo/client/testing";
 import {
+  executeWithDefaultContext as execute,
   mockDeferStream,
   mockMultipartSubscriptionStream,
   ObservableStream,

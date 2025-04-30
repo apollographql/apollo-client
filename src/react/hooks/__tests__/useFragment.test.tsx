@@ -357,6 +357,7 @@ describe("useFragment", () => {
     });
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
     });
     function Component() {
       const { data } = useFragment({
@@ -390,6 +391,7 @@ describe("useFragment", () => {
     });
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
     });
     function Component() {
       const { data } = useFragment({
@@ -1404,6 +1406,7 @@ describe("useFragment", () => {
   it("returns correct data when options change", async () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
     type User = { __typename: "User"; id: number; name: string };
     const fragment: TypedDocumentNode<User> = gql`
@@ -1467,6 +1470,7 @@ describe("useFragment", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     const fragment: TypedDocumentNode<Post> = gql`
@@ -1534,6 +1538,7 @@ describe("useFragment", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     const fragment: TypedDocumentNode<Post> = gql`
@@ -1615,7 +1620,10 @@ describe("useFragment", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1655,7 +1663,10 @@ describe("useFragment", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1694,7 +1705,10 @@ describe("useFragment", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     client.writeFragment({
       fragment,
@@ -1874,6 +1888,7 @@ describe("data masking", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     const fragment: TypedDocumentNode<Post> = gql`
@@ -1941,6 +1956,7 @@ describe("data masking", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     const fragment: TypedDocumentNode<Post> = gql`
@@ -2026,6 +2042,7 @@ describe("data masking", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     const childFragment: TypedDocumentNode<ChildFragment> = gql`
@@ -2247,6 +2264,7 @@ describe("has the same timing as `useQuery`", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });
 
@@ -2357,6 +2375,7 @@ describe("has the same timing as `useQuery`", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
+      link: ApolloLink.empty(),
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });
 

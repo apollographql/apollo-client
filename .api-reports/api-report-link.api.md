@@ -4,6 +4,8 @@
 
 ```ts
 
+import type { ApolloClient } from '@apollo/client';
+import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
@@ -19,7 +21,7 @@ export class ApolloLink {
     // (undocumented)
     static empty(): ApolloLink;
     // (undocumented)
-    static execute(link: ApolloLink, operation: GraphQLRequest): Observable<FetchResult>;
+    static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
     // @internal
@@ -41,7 +43,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
+    payload: SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -54,6 +56,12 @@ export const empty: typeof ApolloLink.empty;
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;
+
+// @public (undocumented)
+export interface ExecuteContext {
+    // (undocumented)
+    client: ApolloClient;
+}
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
@@ -91,7 +99,7 @@ interface ExecutionPatchResultBase {
 }
 
 // @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
 
 // @public (undocumented)
 export const from: typeof ApolloLink.from;
@@ -130,20 +138,29 @@ export type NextLink = (operation: Operation) => Observable<FetchResult>;
 // @public (undocumented)
 export interface Operation {
     // (undocumented)
+    readonly client: ApolloClient;
+    // (undocumented)
     extensions: Record<string, any>;
     // (undocumented)
-    getContext: () => DefaultContext;
+    getContext: () => OperationContext;
     // (undocumented)
     operationName: string;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
+        (context: Partial<OperationContext>): void;
+        (updateContext: (previousContext: OperationContext) => Partial<OperationContext>): void;
     };
     // (undocumented)
     variables: Record<string, any>;
+}
+
+// @public (undocumented)
+export interface OperationContext extends DefaultContext {
+    // (undocumented)
+    clientAwareness?: ClientAwareness;
+    queryDeduplication?: boolean;
 }
 
 // @public (undocumented)
@@ -153,9 +170,9 @@ export type Path = ReadonlyArray<string | number>;
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 // @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
+export interface SingleExecutionResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
     // (undocumented)
-    context?: TContext;
+    context?: DefaultContext;
     // (undocumented)
     data?: TData | null;
     // (undocumented)

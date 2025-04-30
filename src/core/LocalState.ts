@@ -15,7 +15,7 @@ import { BREAK, isSelectionNode, visit } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
@@ -186,7 +186,6 @@ export class LocalState {
     const { cache } = this;
     return {
       ...context,
-      cache,
       // Getting an entry's cache key is useful for local state resolvers.
       getCacheKey(obj: StoreObject) {
         return cache.identify(obj);

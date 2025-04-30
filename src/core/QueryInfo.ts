@@ -2,7 +2,7 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   graphQLResultHasError,

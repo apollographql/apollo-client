@@ -7,25 +7,41 @@ function isKnownClassInstance(value: unknown) {
 
 export function getSerializableProperties(
   obj: unknown,
-  skipUnknownInstances = false
+
+  {
+    includeKnownClassInstances = false,
+    skipUnknownInstances = false,
+  }: {
+    includeKnownClassInstances?: boolean;
+    skipUnknownInstances?: boolean;
+  } = {}
 ): any {
   if (Array.isArray(obj)) {
     return obj.map((item) =>
-      getSerializableProperties(item, skipUnknownInstances)
+      getSerializableProperties(item, {
+        includeKnownClassInstances,
+        skipUnknownInstances,
+      })
     );
   }
 
   if (isPlainObject(obj)) {
     return Object.entries(obj).reduce(
       (memo, [key, value]) => {
-        if (typeof value === "function" || isKnownClassInstance(value)) {
+        if (
+          typeof value === "function" ||
+          (!includeKnownClassInstances && isKnownClassInstance(value))
+        ) {
           return memo;
         }
 
         if (skipUnknownInstances) {
           return {
             ...memo,
-            [key]: getSerializableProperties(value, skipUnknownInstances),
+            [key]: getSerializableProperties(value, {
+              includeKnownClassInstances,
+              skipUnknownInstances,
+            }),
           };
         }
 

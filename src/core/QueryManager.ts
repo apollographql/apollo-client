@@ -31,8 +31,12 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
-import { execute } from "@apollo/client/link/core";
+import type {
+  ExecuteContext,
+  FetchResult,
+  GraphQLRequest,
+} from "@apollo/client/link";
+import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
@@ -70,7 +74,7 @@ import {
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type { DefaultOptions } from "./ApolloClient.js";
+import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
@@ -81,6 +85,7 @@ import {
 } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
+  ClientAwareness,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -144,14 +149,13 @@ interface MaskOperationOptions<TData> {
 }
 
 interface QueryManagerOptions {
-  cache: ApolloCache;
-  link: ApolloLink;
+  client: ApolloClient;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
-  clientAwareness: Record<string, string>;
+  clientAwareness: ClientAwareness;
   localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
@@ -159,10 +163,9 @@ interface QueryManagerOptions {
 }
 
 export class QueryManager {
-  public cache: ApolloCache;
-  public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
+  public readonly client: ApolloClient;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -170,7 +173,7 @@ export class QueryManager {
   public readonly dataMasking: boolean;
 
   private queryDeduplication: boolean;
-  private clientAwareness: Record<string, string> = {};
+  private clientAwareness: ClientAwareness = {};
   private localState: LocalState;
 
   /**
@@ -207,8 +210,7 @@ export class QueryManager {
       { cache: false }
     );
 
-    this.cache = options.cache;
-    this.link = options.link;
+    this.client = options.client;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;
@@ -234,6 +236,14 @@ export class QueryManager {
     }
   }
 
+  get link() {
+    return this.client.link;
+  }
+
+  get cache() {
+    return this.client.cache;
+  }
+
   /**
    * Call this method to terminate any active query processes, making it safe
    * to dispose of this QueryManager instance.
@@ -256,7 +266,6 @@ export class QueryManager {
   public async mutate<
     TData,
     TVariables extends OperationVariables,
-    TContext extends Record<string, any>,
     TCache extends ApolloCache,
   >({
     mutation,
@@ -271,7 +280,7 @@ export class QueryManager {
     errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
     keepRootFields,
     context,
-  }: MutationOptions<TData, TVariables, TContext>): Promise<
+  }: MutationOptions<TData, TVariables, TCache>): Promise<
     MutateResult<MaybeMasked<TData>>
   > {
     invariant(
@@ -311,7 +320,7 @@ export class QueryManager {
 
     const isOptimistic =
       optimisticResponse &&
-      this.markMutationOptimistic<TData, TVariables, TContext, TCache>(
+      this.markMutationOptimistic<TData, TVariables, TCache>(
         optimisticResponse,
         {
           mutationId,
@@ -365,7 +374,7 @@ export class QueryManager {
             }
 
             return from(
-              this.markMutationResult<TData, TVariables, TContext, TCache>({
+              this.markMutationResult<TData, TVariables, TCache>({
                 mutationId,
                 result: storeResult,
                 document: mutation,
@@ -444,7 +453,6 @@ export class QueryManager {
   public markMutationResult<
     TData,
     TVariables extends OperationVariables,
-    TContext,
     TCache extends ApolloCache,
   >(
     mutation: {
@@ -454,9 +462,9 @@ export class QueryManager {
       variables?: TVariables;
       fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
-      context?: TContext;
+      context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
       awaitRefetchQueries?: boolean;
       refetchQueries?: InternalRefetchQueriesInclude;
       removeOptimistic?: string;
@@ -655,7 +663,6 @@ export class QueryManager {
   public markMutationOptimistic<
     TData,
     TVariables extends OperationVariables,
-    TContext,
     TCache extends ApolloCache,
   >(
     optimisticResponse: any,
@@ -665,9 +672,9 @@ export class QueryManager {
       variables?: TVariables;
       fetchPolicy?: MutationFetchPolicy;
       errorPolicy: ErrorPolicy;
-      context?: TContext;
+      context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
       keepRootFields?: boolean;
     }
   ) {
@@ -682,7 +689,7 @@ export class QueryManager {
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult<TData, TVariables, TContext, TCache>(
+        this.markMutationResult<TData, TVariables, TCache>(
           {
             ...mutation,
             result: { data },
@@ -857,7 +864,7 @@ export class QueryManager {
           id: queryId,
         }),
       }))
-      .finally(() => this.stopQuery(queryId));
+      .finally(() => this.removeQuery(queryId));
   }
 
   private queryIdCounter = 1;
@@ -1130,11 +1137,6 @@ export class QueryManager {
     return makeObservable(variables);
   }
 
-  public stopQuery(queryId: string) {
-    this.removeQuery(queryId);
-    this.broadcastQueries();
-  }
-
   public removeQuery(queryId: string) {
     // teardown all links
     // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
@@ -1165,7 +1167,7 @@ export class QueryManager {
 
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
-    context: any,
+    context: DefaultContext | undefined,
     variables?: OperationVariables,
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
@@ -1175,17 +1177,29 @@ export class QueryManager {
     let observable: Observable<FetchResult<TData>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+
+    const prepareContext = (context = {}): DefaultContext => {
+      const newContext = this.localState.prepareContext(context);
+      return {
+        ...this.defaultContext,
+        ...newContext,
+        queryDeduplication: deduplication,
+        clientAwareness: this.clientAwareness,
+      };
+    };
+
+    const executeContext: ExecuteContext = {
+      client: this.client,
+    };
+
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation = {
+      const operation: GraphQLRequest = {
         query: serverQuery,
         variables,
         operationName: getOperationName(serverQuery) || void 0,
-        context: this.prepareContext({
-          ...context,
-          forceFetch: !deduplication,
-        }),
+        context: prepareContext(context),
         extensions,
       };
 
@@ -1202,7 +1216,11 @@ export class QueryManager {
 
         observable = entry.observable;
         if (!observable) {
-          observable = entry.observable = execute(link, operation).pipe(
+          observable = entry.observable = execute(
+            link,
+            operation,
+            executeContext
+          ).pipe(
             onAnyEvent((event) => {
               if (
                 (event.type !== "next" ||
@@ -1218,11 +1236,13 @@ export class QueryManager {
           );
         }
       } else {
-        observable = execute(link, operation) as Observable<FetchResult<TData>>;
+        observable = execute(link, operation, executeContext) as Observable<
+          FetchResult<TData>
+        >;
       }
     } else {
       observable = of({ data: {} } as FetchResult<TData>);
-      context = this.prepareContext(context);
+      context = prepareContext(context);
     }
 
     if (clientQuery) {
@@ -1922,15 +1942,6 @@ export class QueryManager {
     }
     return this.queries.get(queryId)!;
   }
-
-  private prepareContext(context = {}) {
-    const newContext = this.localState.prepareContext(context);
-    return {
-      ...this.defaultContext,
-      ...newContext,
-      clientAwareness: this.clientAwareness,
-    };
-  }
 }
 
 function validateDidEmitValue<T>() {
@@ -1950,7 +1961,7 @@ function validateDidEmitValue<T>() {
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.
-export interface ObservableAndInfo<TData> {
+interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
   observable: Observable<QueryNotification.ValueWithoutMeta<TData, any>>;

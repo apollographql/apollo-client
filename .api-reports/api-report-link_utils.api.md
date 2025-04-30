@@ -5,11 +5,12 @@
 ```ts
 
 import type { DocumentNode } from 'graphql';
-import type { GraphQLRequest } from '@apollo/client/link/core';
-import type { Operation } from '@apollo/client/link/core';
+import type { ExecuteContext } from '@apollo/client/link';
+import type { GraphQLRequest } from '@apollo/client/link';
+import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
-export function createOperation(starting: any, operation: GraphQLRequest): Operation;
+export function createOperation(starting: any, operation: GraphQLRequest, { client }: ExecuteContext): Operation;
 
 // @public (undocumented)
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {

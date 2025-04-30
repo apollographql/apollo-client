@@ -1,12 +1,12 @@
 import { firstValueFrom, of } from "rxjs";
 
 import { gql } from "@apollo/client";
-import type { ApolloLink, Operation } from "@apollo/client/link/core";
+import type { ApolloLink, Operation } from "@apollo/client/link";
 import {
   KEEP,
   removeTypenameFromVariables,
 } from "@apollo/client/link/remove-typename";
-import { createOperation } from "@apollo/client/link/utils";
+import { createOperationWithDefaultContext as createOperation } from "@apollo/client/testing/internal";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &
   Pick<Operation, "query">;

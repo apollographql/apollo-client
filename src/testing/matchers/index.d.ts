@@ -15,15 +15,22 @@ import { TakeOptions } from "../internal/ObservableStream.js";
 // argument is a class or not, so we need to manually keep track of known class
 // intances that we filter out.
 type KnownClassInstances = ApolloClient | ObservableQuery<any, any>;
-type FilterUnserializableProperties<T> =
-  T extends Array<infer TItem> ? Array<FilterUnserializableProperties<TItem>>
-  : T extends Record<string, any> ?
-    {
-      [K in keyof T as T[K] extends (...args: any[]) => any ? never
-      : T[K] extends KnownClassInstances ? never
-      : K]: T[K];
-    }
-  : T;
+type FilterUnserializableProperties<
+  T,
+  Options extends { includeKnownClassInstances: boolean } = {
+    includeKnownClassInstances: false;
+  },
+> = T extends Array<infer TItem> ? Array<FilterUnserializableProperties<TItem>>
+: T extends Record<string, any> ?
+  {
+    [K in keyof T as T[K] extends (...args: any[]) => any ? never
+    : false extends Options["includeKnownClassInstances"] ?
+      T[K] extends KnownClassInstances ?
+        never
+      : K
+    : K]: T[K];
+  }
+: T;
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -81,8 +88,28 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
 
   toStrictEqualTyped: [T] extends [Promise<infer TResult>] ?
-    (expected: FilterUnserializableProperties<TResult>) => R
-  : (expected: FilterUnserializableProperties<T>) => R;
+    <
+      TOptions extends { includeKnownClassInstances: boolean } = {
+        includeKnownClassInstances: false;
+      },
+    >(
+      expected: FilterUnserializableProperties<
+        TResult,
+        { includeKnownClassInstances: TOptions["includeKnownClassInstances"] }
+      >,
+      options?: TOptions
+    ) => R
+  : <
+      TOptions extends { includeKnownClassInstances: boolean } = {
+        includeKnownClassInstances: false;
+      },
+    >(
+      expected: FilterUnserializableProperties<
+        T,
+        { includeKnownClassInstances: TOptions["includeKnownClassInstances"] }
+      >,
+      options?: TOptions
+    ) => R;
 
   toRerenderWithSimilarSnapshot: T extends RenderStream<infer Snapshot> ?
     (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>

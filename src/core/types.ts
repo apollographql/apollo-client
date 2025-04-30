@@ -4,7 +4,7 @@ import type { NextNotification, ObservableNotification } from "rxjs";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { IsStrictlyAny } from "@apollo/client/utilities";
 
@@ -23,7 +23,14 @@ export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
 
-export interface DefaultContext extends Record<string, any> {}
+export interface ClientAwareness {
+  name?: string;
+  version?: string;
+}
+
+export interface DefaultContext extends Record<string, any> {
+  queryDeduplication?: boolean;
+}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
@@ -220,13 +227,12 @@ export type MutationUpdaterFn<T = { [key: string]: any }> = (
 export type MutationUpdaterFunction<
   TData,
   TVariables,
-  TContext,
   TCache extends ApolloCache,
 > = (
   cache: TCache,
   result: Omit<FetchResult<Unmasked<TData>>, "context">,
   options: {
-    context?: TContext;
+    context?: DefaultContext;
     variables?: TVariables;
   }
 ) => void;

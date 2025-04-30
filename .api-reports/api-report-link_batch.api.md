@@ -4,11 +4,11 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
-import type { FetchResult } from '@apollo/client/link/core';
-import type { NextLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
+import type { FetchResult } from '@apollo/client/link';
+import type { NextLink } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 export interface BatchableRequest {

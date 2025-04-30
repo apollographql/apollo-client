@@ -5,8 +5,8 @@
 ```ts
 
 import { ApolloCache } from '@apollo/client/cache';
-import { ApolloLink } from '@apollo/client/link/core';
-import { ApolloPayloadResult } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
+import { ApolloPayloadResult } from '@apollo/client/link';
 import { ApolloReducerConfig } from '@apollo/client/cache';
 import type { ASTNode } from 'graphql';
 import { Cache as Cache_2 } from '@apollo/client/cache';
@@ -14,7 +14,7 @@ import { checkFetcher } from '@apollo/client/link/http';
 import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
-import { concat } from '@apollo/client/link/core';
+import { concat } from '@apollo/client/link';
 import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
 import { DataMasking } from '@apollo/client/masking';
@@ -25,18 +25,18 @@ import { defaultPrinter } from '@apollo/client/link/http';
 import { DiffQueryAgainstStoreOptions } from '@apollo/client/cache';
 import { disableExperimentalFragmentVariables } from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
-import { DocumentNode } from '@apollo/client/link/core';
+import { DocumentNode } from '@apollo/client/link';
 import type { DocumentNode as DocumentNode_2 } from 'graphql';
 import { DocumentTransform } from '@apollo/client/utilities';
 import { DocumentTransformCacheKey } from '@apollo/client/utilities';
-import { empty } from '@apollo/client/link/core';
+import { empty } from '@apollo/client/link';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
-import { execute } from '@apollo/client/link/core';
-import { ExecutionPatchIncrementalResult } from '@apollo/client/link/core';
-import { ExecutionPatchInitialResult } from '@apollo/client/link/core';
-import { ExecutionPatchResult } from '@apollo/client/link/core';
+import { execute } from '@apollo/client/link';
+import { ExecutionPatchIncrementalResult } from '@apollo/client/link';
+import { ExecutionPatchInitialResult } from '@apollo/client/link';
+import { ExecutionPatchResult } from '@apollo/client/link';
 import { fallbackHttpConfig } from '@apollo/client/link/http';
-import { FetchResult } from '@apollo/client/link/core';
+import { FetchResult } from '@apollo/client/link';
 import { FieldFunctionOptions } from '@apollo/client/cache';
 import { FieldMergeFunction } from '@apollo/client/cache';
 import type { FieldNode } from 'graphql';
@@ -45,15 +45,14 @@ import { FieldReadFunction } from '@apollo/client/cache';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities';
 import { FragmentType } from '@apollo/client/masking';
-import { from } from '@apollo/client/link/core';
+import { from } from '@apollo/client/link';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import { gql } from 'graphql-tag';
-import { GraphQLRequest } from '@apollo/client/link/core';
+import { GraphQLRequest } from '@apollo/client/link';
 import { HttpLink } from '@apollo/client/link/http';
-import { HttpOptions } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
-import { IncrementalPayload } from '@apollo/client/link/core';
+import { IncrementalPayload } from '@apollo/client/link';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
 import type { InteropObservable } from 'rxjs';
@@ -69,24 +68,25 @@ import { MergeInfo } from '@apollo/client/cache';
 import { mergeOptions } from '@apollo/client/utilities';
 import { MergeTree } from '@apollo/client/cache';
 import { MissingFieldError } from '@apollo/client/cache';
-import { NextLink } from '@apollo/client/link/core';
+import { NextLink } from '@apollo/client/link';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
 import { Observable } from '@apollo/client/utilities';
 import { Observable as Observable_2 } from 'rxjs';
 import type { Observer } from 'rxjs';
-import { Operation } from '@apollo/client/link/core';
+import { Operation } from '@apollo/client/link';
+import { OperationContext } from '@apollo/client/link';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
-import { Path } from '@apollo/client/link/core';
+import { Path } from '@apollo/client/link';
 import { PossibleTypesMap } from '@apollo/client/cache';
 import { ReactiveVar } from '@apollo/client/cache';
 import { ReadMergeModifyContext } from '@apollo/client/cache';
 import { ReadQueryOptions } from '@apollo/client/cache';
 import { Reference } from '@apollo/client/utilities';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
-import { RequestHandler } from '@apollo/client/link/core';
+import { RequestHandler } from '@apollo/client/link';
 import { resetCaches } from 'graphql-tag';
 import { rewriteURIForGET } from '@apollo/client/link/http';
 import { selectHttpOptionsAndBody } from '@apollo/client/link/http';
@@ -96,8 +96,8 @@ import { serializeFetchParameter } from '@apollo/client/link/http';
 import { ServerError } from '@apollo/client/errors';
 import { ServerParseError } from '@apollo/client/errors';
 import { setVerbosity as setLogVerbosity } from '@apollo/client/utilities/invariant';
-import { SingleExecutionResult } from '@apollo/client/link/core';
-import { split } from '@apollo/client/link/core';
+import { SingleExecutionResult } from '@apollo/client/link';
+import { split } from '@apollo/client/link';
 import { StoreObject } from '@apollo/client/utilities';
 import { StoreValue } from '@apollo/client/cache';
 import type { Subscribable } from 'rxjs';
@@ -109,7 +109,6 @@ import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
 import { Unmasked } from '@apollo/client/masking';
-import { UriFunction } from '@apollo/client/link/http';
 import type { VariablesOption } from '@apollo/client/utilities';
 import { WatchFragmentOptions } from '@apollo/client/cache';
 import { WatchFragmentResult } from '@apollo/client/cache';
@@ -144,7 +143,7 @@ export class ApolloClient implements DataProxy {
     getResolvers(): Resolvers;
     // (undocumented)
     link: ApolloLink;
-    mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TContext>): Promise<MutateResult<MaybeMasked<TData>>>;
+    mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
@@ -164,8 +163,6 @@ export class ApolloClient implements DataProxy {
     stop(): void;
     subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable_2<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
-    readonly typeDefs: ApolloClientOptions["typeDefs"];
-    // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable_2<WatchFragmentResult<TData>>;
     watchQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, TData>): ObservableQuery<TData, TVariables>;
@@ -179,8 +176,6 @@ export interface ApolloClientOptions {
     cache: ApolloCache;
     // @deprecated
     connectToDevTools?: boolean;
-    // (undocumented)
-    credentials?: string;
     dataMasking?: boolean;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
@@ -190,17 +185,13 @@ export interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     fragmentMatcher?: FragmentMatcher;
-    headers?: Record<string, string>;
-    link?: ApolloLink;
+    link: ApolloLink;
     name?: string;
     queryDeduplication?: boolean;
     // (undocumented)
     resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    // (undocumented)
-    typeDefs?: string | string[] | DocumentNode_2 | DocumentNode_2[];
-    uri?: string | UriFunction;
     version?: string;
 }
 
@@ -237,6 +228,14 @@ const enum CacheWriteBehavior {
 
 export { checkFetcher }
 
+// @public (undocumented)
+export interface ClientAwareness {
+    // (undocumented)
+    name?: string;
+    // (undocumented)
+    version?: string;
+}
+
 export { ClientParseError }
 
 export { CombinedGraphQLErrors }
@@ -255,6 +254,8 @@ export { DataProxy }
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
+    // (undocumented)
+    queryDeduplication?: boolean;
 }
 
 export { defaultDataIdFromObject }
@@ -359,8 +360,6 @@ export { GraphQLRequest }
 
 export { HttpLink }
 
-export { HttpOptions }
-
 export { IdGetter }
 
 export { IdGetterObj }
@@ -425,7 +424,6 @@ class LocalState {
     getResolvers(): Resolvers;
     // (undocumented)
     prepareContext(context?: Record<string, any>): {
-        cache: ApolloCache;
         getCacheKey(obj: StoreObject): string | undefined;
     };
     // (undocumented)
@@ -510,17 +508,17 @@ export interface MutateResult<TData = unknown> {
 export type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
 
 // @public (undocumented)
-export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = {
+export type MutationOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache> = {
     optimisticResponse?: Unmasked<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
     updateQueries?: MutationQueryReducersMap<TData>;
     refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     awaitRefetchQueries?: boolean;
-    update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+    update?: MutationUpdaterFunction<TData, TVariables, TCache>;
     onQueryUpdated?: OnQueryUpdated<any>;
     errorPolicy?: ErrorPolicy;
-    context?: TContext;
+    context?: DefaultContext;
     fetchPolicy?: MutationFetchPolicy;
     keepRootFields?: boolean;
     mutation: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -558,8 +556,8 @@ export type MutationUpdaterFn<T = {
 }> = (cache: ApolloCache, mutationResult: FetchResult<T>) => void;
 
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables, TContext, TCache extends ApolloCache> = (cache: TCache, result: Omit<FetchResult<Unmasked<TData>>, "context">, options: {
-    context?: TContext;
+export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: Omit<FetchResult<Unmasked<TData>>, "context">, options: {
+    context?: DefaultContext;
     variables?: TVariables;
 }) => void;
 
@@ -687,6 +685,8 @@ export type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, di
 
 export { Operation }
 
+export { OperationContext }
+
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
 
@@ -748,9 +748,11 @@ class QueryManager {
     // (undocumented)
     broadcastQueries(): void;
     // (undocumented)
-    cache: ApolloCache;
+    get cache(): ApolloCache;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // (undocumented)
+    readonly client: ApolloClient;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -792,30 +794,30 @@ class QueryManager {
         observable?: Observable_2<FetchResult<any>>;
     }>;
     // (undocumented)
-    link: ApolloLink;
+    get link(): ApolloLink;
     // (undocumented)
-    markMutationOptimistic<TData, TVariables extends OperationVariables, TContext, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
+    markMutationOptimistic<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
         mutationId: string;
         document: DocumentNode_2;
         variables?: TVariables;
         fetchPolicy?: MutationFetchPolicy;
         errorPolicy: ErrorPolicy;
-        context?: TContext;
+        context?: DefaultContext;
         updateQueries: UpdateQueries<TData>;
-        update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         keepRootFields?: boolean;
     }): boolean;
     // (undocumented)
-    markMutationResult<TData, TVariables extends OperationVariables, TContext, TCache extends ApolloCache>(mutation: {
+    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(mutation: {
         mutationId: string;
         result: FetchResult<TData>;
         document: DocumentNode_2;
         variables?: TVariables;
         fetchPolicy?: MutationFetchPolicy;
         errorPolicy: ErrorPolicy;
-        context?: TContext;
+        context?: DefaultContext;
         updateQueries: UpdateQueries<TData>;
-        update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         awaitRefetchQueries?: boolean;
         refetchQueries?: InternalRefetchQueriesInclude;
         removeOptimistic?: string;
@@ -831,7 +833,7 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables, TContext extends Record<string, any>, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TContext>): Promise<MutateResult<MaybeMasked<TData>>>;
+    mutate<TData, TVariables extends OperationVariables, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
     // (undocumented)
     mutationStore?: {
         [mutationId: string]: MutationStoreValue;
@@ -851,8 +853,6 @@ class QueryManager {
     startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable_2<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
-    stopQuery(queryId: string): void;
-    // (undocumented)
     transform(document: DocumentNode_2): DocumentNode_2;
     // (undocumented)
     watchQuery<T, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
@@ -863,9 +863,9 @@ interface QueryManagerOptions {
     // (undocumented)
     assumeImmutableResults: boolean;
     // (undocumented)
-    cache: ApolloCache;
+    client: ApolloClient;
     // (undocumented)
-    clientAwareness: Record<string, string>;
+    clientAwareness: ClientAwareness;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -874,8 +874,6 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
-    // (undocumented)
-    link: ApolloLink;
     // (undocumented)
     localState: LocalState;
     // (undocumented)
@@ -1084,8 +1082,6 @@ export type UpdateQueryOptions<TData, TVariables> = {
     previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
-export { UriFunction }
-
 // @public (undocumented)
 export const version: string;
 
@@ -1116,9 +1112,9 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:455:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:262:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:463:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

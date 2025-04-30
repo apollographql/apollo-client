@@ -60,10 +60,10 @@ export type LazyQueryExecFunction<
 /** @deprecated Use `useMutation.Options` instead */
 export type MutationHookOptions<
   TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TVariables extends OperationVariables = OperationVariables,
+  _TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
-> = useMutation.Options<TData, TVariables, TContext, TCache>;
+> = useMutation.Options<TData, TVariables, TCache>;
 
 /** @deprecated Use `useMutation.Result` instead */
 export type MutationResult<TData = unknown> = useMutation.Result<TData>;
@@ -71,18 +71,18 @@ export type MutationResult<TData = unknown> = useMutation.Result<TData>;
 /** @deprecated Use `useMutation.MutationFunctionOptions` instead */
 export type MutationFunctionOptions<
   TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TVariables extends OperationVariables = OperationVariables,
+  _TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
-> = useMutation.MutationFunctionOptions<TData, TVariables, TContext, TCache>;
+> = useMutation.MutationFunctionOptions<TData, TVariables, TCache>;
 
 /** @deprecated Use `useMutation.ResultTuple` instead */
 export type MutationTuple<
   TData,
-  TVariables,
-  TContext = DefaultContext,
+  TVariables extends OperationVariables,
+  _TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
-> = useMutation.ResultTuple<TData, TVariables, TContext, TCache>;
+> = useMutation.ResultTuple<TData, TVariables, TCache>;
 
 /** @deprecated Use `useSubscription.Result` instead */
 export type SubscriptionResult<

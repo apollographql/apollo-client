@@ -4,23 +4,11 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
 import type { InvariantError } from '@apollo/client/utilities/invariant';
-import type { Operation } from '@apollo/client/link/core';
-import { print as print_2 } from '@apollo/client/utilities';
-
-// @public (undocumented)
-interface Body_2 {
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    query?: string;
-    // (undocumented)
-    variables?: Record<string, any>;
-}
+import type { Operation } from '@apollo/client/link';
+import type { print as print_2 } from '@apollo/client/utilities';
 
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
@@ -31,7 +19,7 @@ export type ClientParseError = InvariantError & {
 };
 
 // @public (undocumented)
-export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
+export const createHttpLink: (linkOptions?: HttpLink.Options) => ApolloLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -42,14 +30,12 @@ export const createSignalIfSupported: () => {
     signal: AbortSignal;
 };
 
-// Warning: (ae-forgotten-export) The symbol "Printer" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export const defaultPrinter: Printer;
+export const defaultPrinter: HttpLink.Printer;
 
 // @public (undocumented)
 export const fallbackHttpConfig: {
-    http: HttpQueryOptions;
+    http: HttpLink.HttpOptions;
     headers: {
         accept: string;
         "content-type": string;
@@ -66,55 +52,69 @@ interface HttpConfig {
     // (undocumented)
     headers?: Record<string, string>;
     // (undocumented)
-    http?: HttpQueryOptions;
+    http?: HttpLink.HttpOptions;
     // (undocumented)
     options?: any;
 }
 
 // @public (undocumented)
+export namespace HttpLink {
+    // (undocumented)
+    export interface Body {
+        // (undocumented)
+        extensions?: Record<string, any>;
+        // (undocumented)
+        operationName?: string;
+        // (undocumented)
+        query?: string;
+        // (undocumented)
+        variables?: Record<string, any>;
+    }
+    // (undocumented)
+    export interface ContextOptions {
+        credentials?: RequestCredentials;
+        fetchOptions?: RequestInit;
+        headers?: Record<string, string>;
+        http?: HttpOptions;
+        uri?: string | UriFunction;
+    }
+    // (undocumented)
+    export interface HttpOptions {
+        includeExtensions?: boolean;
+        includeQuery?: boolean;
+        preserveHeaderCase?: boolean;
+    }
+    // (undocumented)
+    export interface Options {
+        credentials?: string;
+        fetch?: typeof fetch;
+        fetchOptions?: any;
+        headers?: Record<string, string>;
+        includeExtensions?: boolean;
+        includeUnusedVariables?: boolean;
+        preserveHeaderCase?: boolean;
+        print?: Printer;
+        uri?: string | UriFunction;
+        useGETForQueries?: boolean;
+    }
+    // (undocumented)
+    export type Printer = (node: ASTNode, originalPrint: typeof print_2) => string;
+    // (undocumented)
+    export type UriFunction = (operation: Operation) => string;
+}
+
+// @public (undocumented)
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpOptions);
+    constructor(options?: HttpLink.Options);
     // (undocumented)
-    options: HttpOptions;
-}
-
-// @public (undocumented)
-export interface HttpOptions {
-    credentials?: string;
-    fetch?: typeof fetch;
-    fetchOptions?: any;
-    headers?: Record<string, string>;
-    includeExtensions?: boolean;
-    includeUnusedVariables?: boolean;
-    preserveHeaderCase?: boolean;
-    print?: Printer;
-    uri?: string | UriFunction;
-    useGETForQueries?: boolean;
-}
-
-// @public (undocumented)
-interface HttpQueryOptions {
-    // (undocumented)
-    includeExtensions?: boolean;
-    // (undocumented)
-    includeQuery?: boolean;
-    // (undocumented)
-    preserveHeaderCase?: boolean;
+    options: HttpLink.Options;
 }
 
 // @public (undocumented)
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
-interface Printer {
-    // (undocumented)
-    (node: ASTNode, originalPrint: typeof print_2): string;
-}
-
-// Warning: (ae-forgotten-export) The symbol "Body_2" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function rewriteURIForGET(chosenURI: string, body: Body_2): {
+export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
     parseError: unknown;
     newURI?: undefined;
 } | {
@@ -127,13 +127,13 @@ export function rewriteURIForGET(chosenURI: string, body: Body_2): {
 // @public (undocumented)
 export function selectHttpOptionsAndBody(operation: Operation, fallbackConfig: HttpConfig, ...configs: Array<HttpConfig>): {
     options: HttpConfig & Record<string, any>;
-    body: Body_2;
+    body: HttpLink.Body;
 };
 
 // @public (undocumented)
-export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: Printer, ...configs: HttpConfig[]): {
+export function selectHttpOptionsAndBodyInternal(operation: Operation, printer: HttpLink.Printer, ...configs: HttpConfig[]): {
     options: HttpConfig & Record<string, any>;
-    body: Body_2;
+    body: HttpLink.Body;
 };
 
 // @public (undocumented)
@@ -141,16 +141,6 @@ export const selectURI: (operation: Operation, fallbackURI?: string | ((operatio
 
 // @public (undocumented)
 export const serializeFetchParameter: (p: any, label: string) => string;
-
-// @public (undocumented)
-export interface UriFunction {
-    // (undocumented)
-    (operation: Operation): string;
-}
-
-// Warnings were encountered during analysis:
-//
-// src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

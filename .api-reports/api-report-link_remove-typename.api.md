@@ -4,7 +4,7 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 
 // @public (undocumented)
 export const KEEP = "__KEEP";

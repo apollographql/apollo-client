@@ -3,9 +3,11 @@ import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
-import { execute } from "@apollo/client/link/core";
 import { WebSocketLink } from "@apollo/client/link/ws";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const query = gql`
   query SampleQuery {

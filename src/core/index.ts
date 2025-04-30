@@ -24,6 +24,7 @@ export type {
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
   ApolloQueryResult,
+  ClientAwareness,
   DefaultContext,
   ErrorLike,
   InternalRefetchQueriesInclude,
@@ -109,7 +110,7 @@ export {
   execute,
   from,
   split,
-} from "@apollo/client/link/core";
+} from "@apollo/client/link";
 export type {
   ApolloPayloadResult,
   DocumentNode,
@@ -121,10 +122,11 @@ export type {
   IncrementalPayload,
   NextLink,
   Operation,
+  OperationContext,
   Path,
   RequestHandler,
   SingleExecutionResult,
-} from "@apollo/client/link/core";
+} from "@apollo/client/link";
 
 export {
   checkFetcher,
@@ -141,11 +143,7 @@ export {
   selectURI,
   serializeFetchParameter,
 } from "@apollo/client/link/http";
-export type {
-  ClientParseError,
-  HttpOptions,
-  UriFunction,
-} from "@apollo/client/link/http";
+export type { ClientParseError } from "@apollo/client/link/http";
 
 /* Masking */
 export type {

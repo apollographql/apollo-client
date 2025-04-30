@@ -46,8 +46,6 @@ export { stripTypename } from "./common/stripTypename.js";
 // internal
 export type { IsStrictlyAny } from "./types/IsStrictlyAny.js";
 // internal
-export type { UnionToIntersection } from "./types/UnionToIntersection.js";
-// internal
 export type { NoInfer } from "./types/NoInfer.js";
 // internal
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";

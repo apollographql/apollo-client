@@ -1,4 +1,5 @@
-import { canonicalStringify } from "@apollo/client/utilities";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
+import { canonicalStringify } from "../shared/canonicalStringify.js";
 
 type Directives = {
   [directiveName: string]: {

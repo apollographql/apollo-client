@@ -85,7 +85,7 @@ export {
   mergeIncrementalData,
 } from "./common/incrementalResult.js";
 
-export { canonicalStringify } from "./common/canonicalStringify.js";
+export { canonicalStringify } from "./shared/canonicalStringify.js";
 // internal
 export { omitDeep } from "./common/omitDeep.js";
 export { stripTypename } from "./common/stripTypename.js";

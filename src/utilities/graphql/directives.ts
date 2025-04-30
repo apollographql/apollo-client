@@ -1,10 +1,4 @@
-import type {
-  ArgumentNode,
-  DirectiveNode,
-  DocumentNode,
-  FragmentSpreadNode,
-  ValueNode,
-} from "graphql";
+import type { DocumentNode, FragmentSpreadNode } from "graphql";
 import { Kind } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -20,57 +14,6 @@ export type DirectiveInfo = {
 
 export function hasClientExports(document: DocumentNode) {
   return document && hasDirectives(["client", "export"], document, true);
-}
-
-export type InclusionDirectives = Array<{
-  directive: DirectiveNode;
-  ifArgument: ArgumentNode;
-}>;
-
-function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
-  return value === "skip" || value === "include";
-}
-
-export function getInclusionDirectives(
-  directives: ReadonlyArray<DirectiveNode>
-): InclusionDirectives {
-  const result: InclusionDirectives = [];
-
-  if (directives && directives.length) {
-    directives.forEach((directive) => {
-      if (!isInclusionDirective(directive)) return;
-
-      const directiveArguments = directive.arguments;
-      const directiveName = directive.name.value;
-
-      invariant(
-        directiveArguments && directiveArguments.length === 1,
-        `Incorrect number of arguments for the @%s directive.`,
-        directiveName
-      );
-
-      const ifArgument = directiveArguments![0];
-      invariant(
-        ifArgument.name && ifArgument.name.value === "if",
-        `Invalid argument for the @%s directive.`,
-        directiveName
-      );
-
-      const ifValue: ValueNode = ifArgument.value;
-
-      // means it has to be a variable value if this is a valid @skip or @include directive
-      invariant(
-        ifValue &&
-          (ifValue.kind === "Variable" || ifValue.kind === "BooleanValue"),
-        `Argument for the @%s directive must be a variable or a boolean value.`,
-        directiveName
-      );
-
-      result.push({ directive, ifArgument });
-    });
-  }
-
-  return result;
 }
 
 /** @internal */

@@ -2,15 +2,8 @@ export { Observable } from "rxjs";
 
 export { maybe } from "@apollo/client/utilities/globals";
 
-export type {
-  DirectiveInfo,
-  InclusionDirectives,
-} from "./graphql/directives.js";
-export {
-  getFragmentMaskMode,
-  getInclusionDirectives,
-  hasClientExports,
-} from "./graphql/directives.js";
+export type { DirectiveInfo } from "./graphql/directives.js";
+export { getFragmentMaskMode, hasClientExports } from "./graphql/directives.js";
 
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";

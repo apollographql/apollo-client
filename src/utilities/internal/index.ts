@@ -12,6 +12,7 @@ export { getOperationDefinition } from "./getOperationDefinition.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
+export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { toQueryResult } from "./toQueryResult.js";
@@ -29,5 +30,3 @@ export {
   getOperationName,
   getQueryDefinition,
 } from "./graphql/getFromAST.js";
-
-export { removeClientSetsFromDocument } from "./graphql/transform.js";

@@ -43,8 +43,5 @@ export {
 export { canonicalStringify } from "./shared/canonicalStringify.js";
 export { stripTypename } from "./common/stripTypename.js";
 
-// internal
-export type { IsStrictlyAny } from "./types/IsStrictlyAny.js";
-
 export { cacheSizes } from "./caching/index.js";
 export type { CacheSizes } from "./caching/index.js";

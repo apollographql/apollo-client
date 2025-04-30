@@ -2,6 +2,7 @@ export type { DeepOmit } from "./types/DeepOmit.js";
 export type { DeepPartial } from "./types/DeepPartial.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
+export type { IsAny } from "./types/IsAny.js";
 export type { NoInfer } from "./types/NoInfer.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { Primitive } from "./types/Primitive.js";

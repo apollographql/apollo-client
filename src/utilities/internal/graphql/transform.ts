@@ -17,10 +17,9 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import { checkDocument } from "../checkDocument.js";
 import { createFragmentMap } from "../createFragmentMap.js";
 import { getFragmentDefinition } from "../getFragmentDefinition.js";
+import { getFragmentDefinitions } from "../getFragmentDefinitions.js";
 import { getOperationDefinition } from "../getOperationDefinition.js";
 import type { FragmentMap } from "../types/FragmentMap.js";
-
-import { getFragmentDefinitions } from "./getFromAST.js";
 
 // https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23
 interface EnterLeaveVisitor<TVisitedNode extends ASTNode> {

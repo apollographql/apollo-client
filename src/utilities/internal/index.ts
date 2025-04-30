@@ -7,6 +7,7 @@ export { createFragmentMap } from "./createFragmentMap.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
 export { getFragmentDefinition } from "./getFragmentDefinition.js";
+export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
@@ -23,7 +24,6 @@ export {
 
 export {
   getDefaultValues,
-  getFragmentDefinitions,
   getMainDefinition,
   getOperationName,
   getQueryDefinition,

@@ -49,16 +49,6 @@ export function getDefaultValues(
   return defaultValues;
 }
 
-// Returns the FragmentDefinitions from a particular document as an array
-export function getFragmentDefinitions(
-  doc: DocumentNode
-): FragmentDefinitionNode[] {
-  return doc.definitions.filter(
-    (definition): definition is FragmentDefinitionNode =>
-      definition.kind === "FragmentDefinition"
-  );
-}
-
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   const queryDef = getOperationDefinition(doc)!;
 

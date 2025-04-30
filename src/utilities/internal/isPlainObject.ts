@@ -1,4 +1,7 @@
-export function isPlainObject(obj: any): obj is Record<string | number, any> {
+/** @internal */
+export function isPlainObject(
+  obj: unknown
+): obj is Record<string | number, any> {
   return (
     obj !== null &&
     typeof obj === "object" &&

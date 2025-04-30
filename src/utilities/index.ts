@@ -54,8 +54,6 @@ export { cloneDeep } from "./common/cloneDeep.js";
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
 // internal
 export { isArray, isNonEmptyArray } from "./common/arrays.js";
-// internal
-export { isPlainObject } from "./common/objects.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

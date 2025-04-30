@@ -1,4 +1,4 @@
-import { isNonNullObject } from "./objects.js";
+import { isNonNullObject } from "@apollo/client/utilities/internal";
 
 const { hasOwnProperty } = Object.prototype;
 

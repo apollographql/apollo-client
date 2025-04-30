@@ -27,8 +27,6 @@ export {
   relayStylePagination,
 } from "./policies/pagination.js";
 
-// internal
-export type { DecoratedPromise } from "./promises/decoration.js";
 export {
   // internal
   createFulfilledPromise,

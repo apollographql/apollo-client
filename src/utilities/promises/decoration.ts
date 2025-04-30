@@ -1,13 +1,9 @@
 import type {
+  DecoratedPromise,
   FulfilledPromise,
   PendingPromise,
   RejectedPromise,
 } from "@apollo/client/utilities/internal";
-
-export type DecoratedPromise<TValue> =
-  | PendingPromise<TValue>
-  | FulfilledPromise<TValue>
-  | RejectedPromise<TValue>;
 
 export function createFulfilledPromise<TValue>(value: TValue) {
   const promise = Promise.resolve(value) as FulfilledPromise<TValue>;

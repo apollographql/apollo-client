@@ -7,11 +7,11 @@ import type {
   WatchFragmentResult,
 } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { DecoratedPromise } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   wrapPromiseWithState,
 } from "@apollo/client/utilities";
+import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 
 import type { FragmentKey } from "./types.js";
 

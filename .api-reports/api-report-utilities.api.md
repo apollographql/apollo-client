@@ -4,50 +4,19 @@
 
 ```ts
 
-import type { ApolloPayloadResult } from '@apollo/client/link';
-import type { ArgumentNode } from 'graphql';
 import type { ASTNode } from 'graphql';
-import type { DirectiveNode } from 'graphql';
+import { DeepOmit } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
-import type { ExecutionPatchIncrementalResult } from '@apollo/client/link';
-import type { ExecutionPatchInitialResult } from '@apollo/client/link';
-import type { ExecutionPatchResult } from '@apollo/client/link';
-import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
-import type { FragmentDefinitionNode } from 'graphql';
-import type { FragmentSpreadNode } from 'graphql';
-import { GraphQLFormattedError } from 'graphql';
-import type { InlineFragmentNode } from 'graphql';
-import { maybe } from '@apollo/client/utilities/globals';
-import type { MutationOptions } from '@apollo/client';
-import type { NameNode } from 'graphql';
 import { Observable } from 'rxjs';
-import type { OperationDefinitionNode } from 'graphql';
-import type { OperationTypeNode } from 'graphql';
-import type { OperationVariables } from '@apollo/client';
-import type { QueryOptions } from '@apollo/client';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
-import type { SelectionNode } from 'graphql';
-import type { SelectionSetNode } from 'graphql';
-import { StrongCache } from '@wry/caches';
-import type { ValueNode } from 'graphql';
-import type { VariableDefinitionNode } from 'graphql';
-import type { VariableNode } from 'graphql';
-import type { WatchQueryOptions } from '@apollo/client';
-import { WeakCache } from '@wry/caches';
 
-// @public (undocumented)
-export function addNonReactiveToNamedFragments(document: DocumentNode): DocumentNode;
-
-// @public (undocumented)
+// @public
 export const addTypenameToDocument: (<TNode extends ASTNode>(doc: TNode) => TNode) & {
     added(field: FieldNode): boolean;
 };
-
-// @public (undocumented)
-export function argumentsObjectFromField(field: FieldNode | DirectiveNode, variables?: Record<string, any>): Object | null;
 
 // @public
 export type AsStoreObject<T extends {
@@ -55,21 +24,6 @@ export type AsStoreObject<T extends {
 }> = {
     [K in keyof T]: T[K];
 };
-
-// @internal
-export const AutoCleanedStrongCache: typeof StrongCache;
-
-// @internal (undocumented)
-export type AutoCleanedStrongCache<K, V> = StrongCache<K, V>;
-
-// @internal
-export const AutoCleanedWeakCache: typeof WeakCache;
-
-// @internal (undocumented)
-export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
-
-// @public (undocumented)
-export function buildQueryFromSelectionSet(document: DocumentNode): DocumentNode;
 
 // @public
 export interface CacheSizes {
@@ -96,109 +50,10 @@ export const canonicalStringify: ((value: any) => string) & {
     reset(): void;
 };
 
-// @public (undocumented)
-export const canUseDOM: boolean;
-
-// @public (undocumented)
-export const canUseLayoutEffect: boolean;
-
-// @public (undocumented)
-export function checkDocument(doc: DocumentNode, expectedType?: OperationTypeNode): DocumentNode;
-
-// @public
-export function cloneDeep<T>(value: T): T;
-
-// @public
-export function compact<TArgs extends any[]>(...objects: TArgs): TupleToIntersection<TArgs>;
-
 // Warning: (ae-forgotten-export) The symbol "KeyArgs" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function concatPagination<T = Reference_2>(keyArgs?: KeyArgs): FieldPolicy<T[]>;
-
-// @public (undocumented)
-export function createFragmentMap(fragments?: FragmentDefinitionNode[]): FragmentMap;
-
-// Warning: (ae-forgotten-export) The symbol "FulfilledPromise" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function createFulfilledPromise<TValue>(value: TValue): FulfilledPromise<TValue>;
-
-// Warning: (ae-forgotten-export) The symbol "RejectedPromise" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function createRejectedPromise<TValue = unknown>(reason: unknown): RejectedPromise<TValue>;
-
-// @public (undocumented)
-export class DeepMerger<TContextArgs extends any[]> {
-    constructor(reconciler?: ReconcilerFunction<TContextArgs>);
-    // (undocumented)
-    isObject: typeof isNonNullObject;
-    // (undocumented)
-    merge(target: any, source: any, ...context: TContextArgs): any;
-    // (undocumented)
-    shallowCopyForMerge<T>(value: T): T;
-}
-
-// Warning: (ae-forgotten-export) The symbol "DeepOmitPrimitive" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepOmitArray" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type DeepOmit<T, K> = T extends DeepOmitPrimitive ? T : {
-    [P in keyof T as P extends K ? never : P]: T[P] extends infer TP ? TP extends DeepOmitPrimitive ? TP : TP extends any[] ? DeepOmitArray<TP, K> : DeepOmit<TP, K> : never;
-};
-
-// @public (undocumented)
-type DeepOmitArray<T extends any[], K> = {
-    [P in keyof T]: DeepOmit<T[P], K>;
-};
-
-// @public (undocumented)
-type DeepOmitPrimitive = Primitive | Function;
-
-// Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlyMap" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialSet" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
-
-// @public (undocumented)
-type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
-
-// @public (undocumented)
-type DeepPartialObject<T extends object> = {
-    [K in keyof T]?: DeepPartial<T[K]>;
-};
-
-// @public (undocumented)
-type DeepPartialPrimitive = Primitive | Date | RegExp;
-
-// @public (undocumented)
-type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<DeepPartial<TKey>, DeepPartial<TValue>>;
-
-// @public (undocumented)
-type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
-
-// @public (undocumented)
-type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
-
-// @public (undocumented)
-export type DirectiveInfo = {
-    [fieldName: string]: {
-        [argName: string]: any;
-    };
-};
-
-// @public (undocumented)
-export type Directives = {
-    [directiveName: string]: {
-        [argName: string]: any;
-    };
-};
 
 // @public (undocumented)
 export class DocumentTransform {
@@ -233,245 +88,35 @@ interface DocumentTransformOptions {
 }
 
 // @public
-export interface FragmentMap {
-    // (undocumented)
-    [fragmentName: string]: FragmentDefinitionNode;
-}
-
-// @public (undocumented)
-export type FragmentMapFunction = (fragmentName: string) => FragmentDefinitionNode | null;
-
-// @public (undocumented)
-interface FulfilledPromise<TValue> extends Promise<TValue> {
-    // (undocumented)
-    status: "fulfilled";
-    // (undocumented)
-    value: TValue;
-}
-
-// @public (undocumented)
-export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
-
-// @public (undocumented)
-export type GetDirectiveConfig = GetNodeConfig<DirectiveNode>;
-
-// @public (undocumented)
-export function getDirectiveNames(root: ASTNode): string[];
-
-// @public (undocumented)
-export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode;
-
-// @public (undocumented)
-export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNode[];
-
-// @public (undocumented)
-export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?: FragmentMap | FragmentMapFunction): InlineFragmentNode | FragmentDefinitionNode | null;
-
-// @internal (undocumented)
-export function getFragmentMaskMode(fragment: FragmentSpreadNode): "mask" | "migrate" | "unmask";
-
-// @public
-export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
-
-// @public (undocumented)
-export type GetFragmentSpreadConfig = GetNodeConfig<FragmentSpreadNode>;
-
-// @public (undocumented)
-export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>): GraphQLFormattedError[];
-
-// @public (undocumented)
-export function getInclusionDirectives(directives: ReadonlyArray<DirectiveNode>): InclusionDirectives;
-
-// @public
-export function getMainDefinition(queryDoc: DocumentNode): OperationDefinitionNode | FragmentDefinitionNode;
-
-// @public (undocumented)
-export type GetNodeConfig<N> = {
-    name?: string;
-    test?: (node: N) => boolean;
-};
-
-// @public (undocumented)
-export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode | undefined;
-
-// @public (undocumented)
-export function getOperationName(doc: DocumentNode): string | null;
-
-// @public (undocumented)
-export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
-
-// @public (undocumented)
-export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
-    setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
-};
-
-// @public (undocumented)
-export function getTypenameFromResult(result: Record<string, any>, selectionSet: SelectionSetNode, fragmentMap?: FragmentMap): string | undefined;
-
-// @public (undocumented)
-export function graphQLResultHasError<T>(result: FetchResult<T>): boolean;
-
-// @public (undocumented)
-export const hasAllDirectives: (names: string[], root: ASTNode) => boolean;
-
-// @public (undocumented)
-export const hasAnyDirectives: (names: string[], root: ASTNode) => boolean;
-
-// @public (undocumented)
-export function hasClientExports(document: DocumentNode): boolean;
-
-// @public (undocumented)
-export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
-
-// @public (undocumented)
-export type InclusionDirectives = Array<{
-    directive: DirectiveNode;
-    ifArgument: ArgumentNode;
-}>;
-
-// @public (undocumented)
-export function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult;
-
-// @public (undocumented)
-export const isArray: (a: any) => a is any[] | readonly any[];
-
-// @public (undocumented)
-export function isDocumentNode(value: any): value is DocumentNode;
-
-// @public (undocumented)
-export function isExecutionPatchIncrementalResult<T>(value: FetchResult<T>): value is ExecutionPatchIncrementalResult;
-
-// @public (undocumented)
-export function isExecutionPatchInitialResult<T>(value: FetchResult<T>): value is ExecutionPatchInitialResult<T>;
-
-// @public (undocumented)
-export function isExecutionPatchResult<T>(value: FetchResult<T>): value is ExecutionPatchResult<T>;
-
-// @public (undocumented)
-export function isField(selection: SelectionNode): selection is FieldNode;
-
-// @public (undocumented)
-export function isFullyUnmaskedOperation(document: DocumentNode): boolean;
-
-// @public (undocumented)
-export function isInlineFragment(selection: SelectionNode): selection is InlineFragmentNode;
-
-// @public (undocumented)
 export function isMutationOperation(document: DocumentNode_2): boolean;
 
-// @public (undocumented)
-export function isNonEmptyArray<T>(value?: ArrayLike<T>): value is Array<T>;
-
-// @public (undocumented)
-export function isNonNullObject(obj: any): obj is Record<string | number, any>;
-
-// @public (undocumented)
-export function isPlainObject(obj: any): obj is Record<string | number, any>;
-
-// @public (undocumented)
+// @public
 export function isQueryOperation(document: DocumentNode_2): boolean;
 
-// @public (undocumented)
+// @public
 export function isReference(obj: any): obj is Reference;
 
-// @public (undocumented)
-export function isStatefulPromise<TValue>(promise: Promise<TValue>): promise is PromiseWithState<TValue>;
-
-// Warning: (ae-forgotten-export) The symbol "UnionToIntersection_2" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "UnionForAny" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type IsStrictlyAny<T> = UnionToIntersection_2<UnionForAny<T>> extends never ? true : false;
-
-// @public (undocumented)
+// @public
 export function isSubscriptionOperation(document: DocumentNode_2): boolean;
 
 // @public (undocumented)
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
-// @public (undocumented)
-export function makeReference(id: string): Reference;
-
-// @public (undocumented)
-export function makeUniqueId(prefix: string): string;
-
-export { maybe }
-
-// @public (undocumented)
-export function maybeDeepFreeze<T>(obj: T): T;
-
-// @public (undocumented)
-export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;
-
-// @public (undocumented)
-export function mergeDeepArray<T>(sources: T[]): T;
-
-// @public (undocumented)
-export function mergeIncrementalData<TData extends object>(prevResult: TData, result: ExecutionPatchResult<TData>): TData;
-
-// Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
-
-// @public
-type NoInfer_2<T> = [T][T extends any ? 0 : never];
-export { NoInfer_2 as NoInfer }
-
 export { Observable }
 
-// @public (undocumented)
+// @public
 export function offsetLimitPagination<T = Reference_2>(keyArgs?: KeyArgs): FieldPolicy<T[]>;
 
-// @public (undocumented)
-export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
-
-// @public (undocumented)
-type OptionsUnion<TData, TVariables extends OperationVariables> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, any>;
-
-// @public (undocumented)
-interface PendingPromise<TValue> extends Promise<TValue> {
-    // (undocumented)
-    status: "pending";
-}
-
-// @public (undocumented)
-export type Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
-
-// @public (undocumented)
-export function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T>;
-
-// @public (undocumented)
-export type Primitive = null | undefined | string | number | boolean | symbol | bigint;
-
-// @public (undocumented)
+// @public
 const print_2: ((ast: ASTNode) => string) & {
     reset(): void;
 };
 export { print_2 as print }
 
-// Warning: (ae-forgotten-export) The symbol "PendingPromise" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type PromiseWithState<TValue> = PendingPromise<TValue> | FulfilledPromise<TValue> | RejectedPromise<TValue>;
-
-// @public (undocumented)
-export type ReconcilerFunction<TContextArgs extends any[]> = (this: DeepMerger<TContextArgs>, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number, ...context: TContextArgs) => any;
-
-// @public (undocumented)
+// @public
 export interface Reference {
     // (undocumented)
     readonly __ref: string;
-}
-
-// @public (undocumented)
-interface RejectedPromise<TValue> extends Promise<TValue> {
-    // (undocumented)
-    reason: unknown;
-    // (undocumented)
-    status: "rejected";
 }
 
 // Warning: (ae-forgotten-export) The symbol "TExistingRelay" needs to be exported by the entry point index.d.ts
@@ -482,64 +127,10 @@ type RelayFieldPolicy<TNode> = FieldPolicy<TExistingRelay<TNode> | null, TIncomi
 
 // Warning: (ae-forgotten-export) The symbol "RelayFieldPolicy" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function relayStylePagination<TNode extends Reference_2 = Reference_2>(keyArgs?: KeyArgs): RelayFieldPolicy<TNode>;
 
-// @public (undocumented)
-export type RemoveArgumentsConfig = RemoveNodeConfig<ArgumentNode>;
-
-// @public (undocumented)
-export function removeArgumentsFromDocument(config: RemoveArgumentsConfig[], doc: DocumentNode): DocumentNode | null;
-
-// @public (undocumented)
-export function removeClientSetsFromDocument(document: DocumentNode): DocumentNode | null;
-
-// @public (undocumented)
-export function removeConnectionDirectiveFromDocument(doc: DocumentNode): DocumentNode | null;
-
-// @public (undocumented)
-export type RemoveDirectiveConfig = RemoveNodeConfig<DirectiveNode>;
-
-// @public (undocumented)
-export function removeDirectivesFromDocument(directives: RemoveDirectiveConfig[], doc: DocumentNode): DocumentNode | null;
-
-// @public (undocumented)
-export type RemoveFragmentDefinitionConfig = RemoveNodeConfig<FragmentDefinitionNode>;
-
-// @public (undocumented)
-export type RemoveFragmentSpreadConfig = RemoveNodeConfig<FragmentSpreadNode>;
-
-// @public (undocumented)
-export function removeFragmentSpreadFromDocument(config: RemoveFragmentSpreadConfig[], doc: DocumentNode): DocumentNode | null;
-
-// @public (undocumented)
-export type RemoveIndexSignature<T> = {
-    [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
-};
-
-// @public (undocumented)
-export type RemoveNodeConfig<N> = {
-    name?: string;
-    test?: (node: N) => boolean;
-    remove?: boolean;
-};
-
-// @public (undocumented)
-export type RemoveVariableDefinitionConfig = RemoveNodeConfig<VariableDefinitionNode>;
-
-// @public (undocumented)
-export function resultKeyNameFromField(field: FieldNode): string;
-
-// @public (undocumented)
-export function shouldInclude({ directives }: SelectionNode, variables?: Record<string, any>): boolean;
-
-// @public (undocumented)
-export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
-
-// @public (undocumented)
-let storeKeyNameStringify: (value: any) => string;
-
-// @public (undocumented)
+// @public
 export interface StoreObject {
     // (undocumented)
     [storeFieldName: string]: StoreValue;
@@ -547,13 +138,10 @@ export interface StoreObject {
     __typename?: string;
 }
 
-// @public (undocumented)
+// @public
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
-// @public (undocumented)
-export function stringifyForDisplay(value: any, space?: number): string;
-
-// @public (undocumented)
+// @public
 export function stripTypename<T>(value: T): DeepOmit<T, "__typename">;
 
 // @public (undocumented)
@@ -587,39 +175,10 @@ type TRelayPageInfo = {
     endCursor: string;
 };
 
-// @public (undocumented)
-export type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;
-
-// @public (undocumented)
-type UnionForAny<T> = T extends never ? "a" : 1;
-
-// @public (undocumented)
-export type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
-
-// @public (undocumented)
-type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
-
-// @public (undocumented)
-export function valueToObjectRepresentation(argObj: any, name: NameNode, value: ValueNode, variables?: Object): void;
-
-// @public (undocumented)
-export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {
-    variables?: TVariables;
-} : {
-    variables: TVariables;
-};
-
-// @public (undocumented)
-export type VariableValue = (node: VariableNode) => any;
-
-// @public (undocumented)
-export function wrapPromiseWithState<TValue>(promise: Promise<TValue>): PromiseWithState<TValue>;
-
 // Warnings were encountered during analysis:
 //
-// src/utilities/graphql/storeUtils.ts:283:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
-// src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
-// src/utilities/policies/pagination.ts:78:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
+// src/utilities/policies/pagination.ts:86:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
+// src/utilities/policies/pagination.ts:87:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

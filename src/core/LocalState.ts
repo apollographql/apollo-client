@@ -11,27 +11,26 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { BREAK, isSelectionNode, visit } from "graphql";
+import { BREAK, isSelectionNode, Kind, visit } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
-import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
+import type { StoreObject } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
-  buildQueryFromSelectionSet,
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
   hasDirectives,
   isField,
-  isInlineFragment,
   mergeDeep,
   mergeDeepArray,
   removeClientSetsFromDocument,
   resultKeyNameFromField,
   shouldInclude,
-} from "@apollo/client/utilities";
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { ApolloClient } from "./ApolloClient.js";
@@ -347,7 +346,7 @@ export class LocalState {
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
-      if (isInlineFragment(selection)) {
+      if (selection.kind === Kind.INLINE_FRAGMENT) {
         fragment = selection;
       } else {
         // This is a named fragment.
@@ -560,4 +559,30 @@ export class LocalState {
     }
     return collectByDefinition(mainDefinition);
   }
+}
+
+// If the incoming document is a query, return it as is. Otherwise, build a
+// new document containing a query operation based on the selection set
+// of the previous main operation.
+function buildQueryFromSelectionSet(document: DocumentNode): DocumentNode {
+  const definition = getMainDefinition(document);
+  const definitionOperation = (<OperationDefinitionNode>definition).operation;
+
+  if (definitionOperation === "query") {
+    // Already a query, so return the existing document.
+    return document;
+  }
+
+  // Build a new query using the selection set of the main operation.
+  const modifiedDoc = visit(document, {
+    OperationDefinition: {
+      enter(node) {
+        return {
+          ...node,
+          operation: "query",
+        };
+      },
+    },
+  });
+  return modifiedDoc;
 }

@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 import { ApolloClient, ApolloLink, gql, NetworkStatus } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ObservableStream } from "@apollo/client/testing/internal";
-import { getFragmentDefinitions } from "@apollo/client/utilities";
+import { getFragmentDefinitions } from "@apollo/client/utilities/internal";
 
 describe("FragmentRegistry", () => {
   it("can be passed to InMemoryCache", () => {

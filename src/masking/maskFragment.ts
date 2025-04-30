@@ -7,11 +7,11 @@ import type {
   DocumentNode,
   TypedDocumentNode,
 } from "@apollo/client";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   createFragmentMap,
   getFragmentDefinitions,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { maskDefinition } from "./maskDefinition.js";

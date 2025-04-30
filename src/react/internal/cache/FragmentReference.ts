@@ -7,15 +7,15 @@ import type {
   WatchFragmentResult,
 } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { PromiseWithState } from "@apollo/client/utilities";
+import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
   createFulfilledPromise,
-  wrapPromiseWithState,
-} from "@apollo/client/utilities";
+  decoratePromise,
+} from "@apollo/client/utilities/internal";
 
 import type { FragmentKey } from "./types.js";
 
-type FragmentRefPromise<TData> = PromiseWithState<TData>;
+type FragmentRefPromise<TData> = DecoratedPromise<TData>;
 type Listener<TData> = (promise: FragmentRefPromise<TData>) => void;
 
 interface FragmentReferenceOptions {
@@ -164,7 +164,7 @@ export class FragmentReference<
   }
 
   private createPendingPromise() {
-    return wrapPromiseWithState(
+    return decoratePromise(
       new Promise<MaybeMasked<TData>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;

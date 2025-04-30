@@ -9,14 +9,14 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
+import { isReference } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   DeepMerger,
   isNonNullObject,
-  isReference,
   makeReference,
   maybeDeepFreeze,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { Cache } from "../core/types/Cache.js";

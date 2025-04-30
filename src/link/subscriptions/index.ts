@@ -36,7 +36,7 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
-import { isNonNullObject } from "@apollo/client/utilities";
+import { isNonNullObject } from "@apollo/client/utilities/internal";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
 function isLikeCloseEvent(val: unknown): val is CloseEvent {

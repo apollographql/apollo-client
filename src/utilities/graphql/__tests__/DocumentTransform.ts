@@ -6,8 +6,8 @@ import {
   DocumentTransform,
   isMutationOperation,
   isQueryOperation,
-  removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {

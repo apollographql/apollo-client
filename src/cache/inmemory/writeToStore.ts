@@ -1,33 +1,42 @@
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
-import type { FieldNode, SelectionSetNode } from "graphql";
+import type {
+  FieldNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  SelectionSetNode,
+} from "graphql";
 import { Kind } from "graphql";
 
 import type { Cache, OperationVariables } from "@apollo/client";
 import type {
-  FragmentMap,
-  FragmentMapFunction,
   Reference,
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
-  argumentsObjectFromField,
   canonicalStringify,
+  isReference,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type {
+  FragmentMap,
+  FragmentMapFunction,
+} from "@apollo/client/utilities/internal";
+import {
+  argumentsObjectFromField,
   cloneDeep,
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
-  getTypenameFromResult,
+  isArray,
   isField,
   isNonEmptyArray,
-  isReference,
   makeReference,
   resultKeyNameFromField,
   shouldInclude,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -39,7 +48,6 @@ import type { EntityStore } from "./entityStore.js";
 import {
   extractFragmentContext,
   fieldNameFromStoreName,
-  isArray,
   makeProcessedFieldsMerger,
   storeValueIsStoreObject,
 } from "./helpers.js";
@@ -886,4 +894,38 @@ For more information about these options, please refer to the documentation:
     { ...existing },
     { ...incoming }
   );
+}
+
+function getTypenameFromResult(
+  result: Record<string, any>,
+  selectionSet: SelectionSetNode,
+  fragmentMap?: FragmentMap
+): string | undefined {
+  let fragments: undefined | Array<InlineFragmentNode | FragmentSpreadNode>;
+  for (const selection of selectionSet.selections) {
+    if (isField(selection)) {
+      if (selection.name.value === "__typename") {
+        return result[resultKeyNameFromField(selection)];
+      }
+    } else if (fragments) {
+      fragments.push(selection);
+    } else {
+      fragments = [selection];
+    }
+  }
+  if (typeof result.__typename === "string") {
+    return result.__typename;
+  }
+  if (fragments) {
+    for (const selection of fragments) {
+      const typename = getTypenameFromResult(
+        result,
+        getFragmentFromSelection(selection, fragmentMap)!.selectionSet,
+        fragmentMap
+      );
+      if (typeof typename === "string") {
+        return typename;
+      }
+    }
+  }
 }

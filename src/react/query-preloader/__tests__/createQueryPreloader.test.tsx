@@ -46,7 +46,7 @@ import {
   setupVariablesCase,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

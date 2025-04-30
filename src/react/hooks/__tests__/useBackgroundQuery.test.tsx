@@ -56,12 +56,12 @@ import {
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import type { DeepPartial } from "@apollo/client/utilities";
 import {
   concatPagination,
-  getMainDefinition,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
+import { getMainDefinition } from "@apollo/client/utilities/internal";
 
 import type {
   RefetchWritePolicy,

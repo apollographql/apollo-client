@@ -18,10 +18,8 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
-import {
-  relayStylePagination,
-  stringifyForDisplay,
-} from "@apollo/client/utilities";
+import { relayStylePagination } from "@apollo/client/utilities";
+import { stringifyForDisplay } from "@apollo/client/utilities/internal";
 
 import type { FieldPolicy, StorageType } from "../policies.js";
 import type { ReactiveVar } from "../reactiveVars.js";

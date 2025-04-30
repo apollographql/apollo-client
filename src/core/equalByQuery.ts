@@ -10,7 +10,7 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
-import type { FragmentMap } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
   getFragmentDefinitions,
@@ -19,7 +19,7 @@ import {
   isField,
   resultKeyNameFromField,
   shouldInclude,
-} from "@apollo/client/utilities";
+} from "@apollo/client/utilities/internal";
 
 import type { ApolloQueryResult, OperationVariables } from "./types.js";
 

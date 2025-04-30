@@ -14,12 +14,12 @@ import {
   selectURI,
   serializeFetchParameter,
 } from "@apollo/client/link/http";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { maybe } from "@apollo/client/utilities/globals";
 import {
   hasDirectives,
-  maybe,
   removeClientSetsFromDocument,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
+} from "@apollo/client/utilities/internal";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { canUseDOM } from "@apollo/client/utilities";
+import { canUseDOM } from "@apollo/client/utilities/internal";
 
 // use canUseDOM here instead of canUseLayoutEffect because we want to be able
 // to use useLayoutEffect in our jest tests. useLayoutEffect seems to work fine

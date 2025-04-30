@@ -4,7 +4,7 @@ import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import type { IsStrictlyAny } from "@apollo/client/utilities";
+import type { IsAny } from "@apollo/client/utilities/internal";
 
 import type { Resolver } from "./LocalState.js";
 import type { NetworkStatus } from "./networkStatus.js";
@@ -113,7 +113,7 @@ export type RefetchQueriesPromiseResults<TResult> =
   // we get if we don't check for any. I hoped `any extends TResult` would do
   // the trick here, instead of IsStrictlyAny, but you can see for yourself what
   // fails in the refetchQueries tests if you try making that simplification.
-  IsStrictlyAny<TResult> extends true ? any[]
+  IsAny<TResult> extends true ? any[]
   : // If the onQueryUpdated function passed to client.refetchQueries returns true
   // or false, that means either to refetch the query (true) or to skip the
   // query (false). Since refetching produces an ApolloQueryResult<any>, and

@@ -34,8 +34,14 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer, VariablesOption } from "@apollo/client/utilities";
-import { maybeDeepFreeze, mergeOptions } from "@apollo/client/utilities";
+import type {
+  NoInfer,
+  VariablesOption,
+} from "@apollo/client/utilities/internal";
+import {
+  maybeDeepFreeze,
+  mergeOptions,
+} from "@apollo/client/utilities/internal";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 

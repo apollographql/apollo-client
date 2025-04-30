@@ -6,9 +6,10 @@
 
 import type { ApolloCache } from '@apollo/client';
 import type { DocumentNode } from '@apollo/client';
-import type { Prettify } from '@apollo/client/utilities';
-import type { Primitive } from '@apollo/client/utilities';
-import type { RemoveIndexSignature } from '@apollo/client/utilities';
+import type { IsAny } from '@apollo/client/utilities/internal';
+import type { Prettify } from '@apollo/client/utilities/internal';
+import type { Primitive } from '@apollo/client/utilities/internal';
+import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 
@@ -31,7 +32,6 @@ type CombineIntersection<T> = Exclude<T, {
     __typename?: string;
 }>>;
 
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -72,9 +72,6 @@ TData
         [key in TKey]: TData;
     };
 } : never : never;
-
-// @public (undocumented)
-type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
 export type Masked<TData> = TData & {

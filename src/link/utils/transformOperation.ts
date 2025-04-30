@@ -1,5 +1,5 @@
 import type { GraphQLRequest, Operation } from "@apollo/client/link";
-import { getOperationName } from "@apollo/client/utilities";
+import { getOperationName } from "@apollo/client/utilities/internal";
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   const transformedOperation: GraphQLRequest = {

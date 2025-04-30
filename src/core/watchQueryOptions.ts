@@ -8,7 +8,7 @@ import type {
   DeepPartial,
   NoInfer,
   VariablesOption,
-} from "@apollo/client/utilities";
+} from "@apollo/client/utilities/internal";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 

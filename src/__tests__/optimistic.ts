@@ -8,13 +8,14 @@ import type {
   MutationQueryReducersMap,
   TypedDocumentNode,
 } from "@apollo/client";
-import { ApolloClient, ApolloLink, makeReference } from "@apollo/client";
+import { ApolloClient, ApolloLink } from "@apollo/client";
 import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, mockSingleLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
+import { makeReference } from "@apollo/client/utilities/internal";
 
 describe("optimistic mutation results", () => {
   const query = gql`

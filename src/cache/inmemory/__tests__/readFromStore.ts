@@ -2,8 +2,9 @@ import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
 import type { Reference, TypedDocumentNode } from "@apollo/client";
-import { isReference, makeReference } from "@apollo/client";
+import { isReference } from "@apollo/client";
 import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
+import { makeReference } from "@apollo/client/utilities/internal";
 
 import { defaultCacheSizes } from "../../../utilities/caching/sizes.js";
 import type { Cache } from "../../core/types/Cache.js";

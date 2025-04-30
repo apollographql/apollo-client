@@ -10,17 +10,17 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { PromiseWithState } from "@apollo/client/utilities";
+import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
   createFulfilledPromise,
   createRejectedPromise,
-} from "@apollo/client/utilities";
-import { wrapPromiseWithState } from "@apollo/client/utilities";
+  decoratePromise,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { QueryKey } from "./types.js";
 
-type QueryRefPromise<TData> = PromiseWithState<
+type QueryRefPromise<TData> = DecoratedPromise<
   ApolloQueryResult<MaybeMasked<TData>>
 >;
 
@@ -511,7 +511,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private createPendingPromise() {
-    return wrapPromiseWithState(
+    return decoratePromise(
       new Promise<ApolloQueryResult<MaybeMasked<TData>>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;

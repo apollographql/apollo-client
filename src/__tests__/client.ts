@@ -42,8 +42,8 @@ import {
 import {
   DocumentTransform,
   offsetLimitPagination,
-  removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("client", () => {

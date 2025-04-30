@@ -1,6 +1,6 @@
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 
-export { onAnyEvent } from "./observables.js";
+export { onAnyEvent } from "./onAnyEvent.js";
 
 export {
   getApolloCacheMemoryInternals,

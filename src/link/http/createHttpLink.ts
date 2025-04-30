@@ -3,8 +3,9 @@ import { Observable, throwError } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
-import { getMainDefinition, maybe } from "@apollo/client/utilities";
+import { getMainDefinition } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { maybe } from "@apollo/client/utilities/globals";
 import {
   hasDirectives,
   removeClientSetsFromDocument,

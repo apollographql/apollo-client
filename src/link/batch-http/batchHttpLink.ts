@@ -14,8 +14,8 @@ import {
   selectURI,
   serializeFetchParameter,
 } from "@apollo/client/link/http";
-import { maybe } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { maybe } from "@apollo/client/utilities/globals";
 import {
   hasDirectives,
   removeClientSetsFromDocument,

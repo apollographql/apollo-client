@@ -6,7 +6,11 @@ export {
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
-export { hasDirectives, shouldInclude } from "./graphql/directives.js";
+export {
+  hasClientExports,
+  hasDirectives,
+  shouldInclude,
+} from "./graphql/directives.js";
 export {
   addNonReactiveToNamedFragments,
   removeClientSetsFromDocument,

@@ -52,7 +52,6 @@ import {
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
-  hasClientExports,
   isDocumentNode,
   isNonEmptyArray,
   isNonNullObject,
@@ -62,6 +61,7 @@ import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   addNonReactiveToNamedFragments,
+  hasClientExports,
   hasDirectives,
   onAnyEvent,
   removeDirectivesFromDocument,

@@ -2,8 +2,6 @@ export { Observable } from "rxjs";
 
 export { maybe } from "@apollo/client/utilities/globals";
 
-export { hasClientExports } from "./graphql/directives.js";
-
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 

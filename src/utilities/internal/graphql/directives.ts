@@ -3,6 +3,7 @@ import type {
   ASTNode,
   BooleanValueNode,
   DirectiveNode,
+  DocumentNode,
   SelectionNode,
   ValueNode,
   VariableNode,
@@ -27,6 +28,10 @@ export function hasDirectives(names: string[], root: ASTNode, all?: boolean) {
   // If we found all the names, nameSet will be empty. If we only care about
   // finding some of them, the < condition is sufficient.
   return all ? !nameSet.size : nameSet.size < uniqueCount;
+}
+
+export function hasClientExports(document: DocumentNode) {
+  return document && hasDirectives(["client", "export"], document, true);
 }
 
 function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {

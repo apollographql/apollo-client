@@ -72,10 +72,7 @@ export type {
   RemoveFragmentDefinitionConfig,
   RemoveVariableDefinitionConfig,
 } from "./graphql/transform.js";
-export {
-  addTypenameToDocument,
-  removeDirectivesFromDocument,
-} from "./graphql/transform.js";
+export { addTypenameToDocument } from "./graphql/transform.js";
 
 export {
   isMutationOperation,

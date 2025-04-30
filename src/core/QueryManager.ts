@@ -45,7 +45,6 @@ import {
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   isFullyUnmaskedOperation,
-  removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 import {
   DocumentTransform,
@@ -65,6 +64,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   addNonReactiveToNamedFragments,
   onAnyEvent,
+  removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import {

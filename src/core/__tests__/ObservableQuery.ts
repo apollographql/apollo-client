@@ -23,10 +23,8 @@ import {
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
-import {
-  DocumentTransform,
-  removeDirectivesFromDocument,
-} from "@apollo/client/utilities";
+import { DocumentTransform } from "@apollo/client/utilities";
+import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 
 describe("ObservableQuery", () => {
   // Standard data for all these tests

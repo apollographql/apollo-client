@@ -5,9 +5,6 @@ export { maybe } from "@apollo/client/utilities/globals";
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
-export type { FragmentMapFunction } from "./graphql/fragments.js";
-export { getFragmentFromSelection } from "./graphql/fragments.js";
-
 export {
   checkDocument,
   getDefaultValues,

@@ -5,7 +5,6 @@ import { Kind } from "graphql";
 
 import type { Cache, OperationVariables } from "@apollo/client";
 import type {
-  FragmentMapFunction,
   Reference,
   StoreObject,
   StoreValue,
@@ -16,7 +15,6 @@ import {
   canonicalStringify,
   cloneDeep,
   getDefaultValues,
-  getFragmentFromSelection,
   getOperationDefinition,
   getTypenameFromResult,
   isField,
@@ -26,8 +24,14 @@ import {
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { FragmentMap } from "@apollo/client/utilities/internal";
-import { shouldInclude } from "@apollo/client/utilities/internal";
+import type {
+  FragmentMap,
+  FragmentMapFunction,
+} from "@apollo/client/utilities/internal";
+import {
+  getFragmentFromSelection,
+  shouldInclude,
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,

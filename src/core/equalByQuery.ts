@@ -12,7 +12,6 @@ import type {
 
 import {
   getFragmentDefinitions,
-  getFragmentFromSelection,
   getMainDefinition,
   isField,
   resultKeyNameFromField,
@@ -20,6 +19,7 @@ import {
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
+  getFragmentFromSelection,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 

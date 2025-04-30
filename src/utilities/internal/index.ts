@@ -13,9 +13,10 @@ export {
   shouldInclude,
 } from "./graphql/directives.js";
 
-export type { FragmentMap } from "./graphql/fragments.js";
+export type { FragmentMap, FragmentMapFunction } from "./graphql/fragments.js";
 export {
   createFragmentMap,
+  getFragmentFromSelection,
   getFragmentQueryDocument,
 } from "./graphql/fragments.js";
 

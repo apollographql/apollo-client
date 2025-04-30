@@ -1,8 +1,10 @@
 import type {
   DocumentNode,
   FragmentDefinitionNode,
+  InlineFragmentNode,
   Kind,
   OperationTypeNode,
+  SelectionNode,
 } from "graphql";
 
 import {
@@ -119,4 +121,29 @@ export function createFragmentMap(
     symTable[fragment.name.value] = fragment;
   });
   return symTable;
+}
+
+export type FragmentMapFunction = (
+  fragmentName: string
+) => FragmentDefinitionNode | null;
+
+export function getFragmentFromSelection(
+  selection: SelectionNode,
+  fragmentMap?: FragmentMap | FragmentMapFunction
+): InlineFragmentNode | FragmentDefinitionNode | null {
+  switch (selection.kind) {
+    case "InlineFragment":
+      return selection;
+    case "FragmentSpread": {
+      const fragmentName = selection.name.value;
+      if (typeof fragmentMap === "function") {
+        return fragmentMap(fragmentName);
+      }
+      const fragment = fragmentMap && fragmentMap[fragmentName];
+      invariant(fragment, `No fragment named %s`, fragmentName);
+      return fragment || null;
+    }
+    default:
+      return null;
+  }
 }

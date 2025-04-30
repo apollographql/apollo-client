@@ -1,5 +1,6 @@
 import { maybe } from "@apollo/client/utilities/globals";
-import { canUseDOM } from "@apollo/client/utilities/internal";
+
+import { canUseDOM } from "./canUseDOM.js";
 
 const isReactNative = maybe(() => navigator.product) == "ReactNative";
 
@@ -19,5 +20,6 @@ const usingJSDOM: boolean =
 // if we allow useLayoutEffect, then useSyncExternalStore generates many
 // warnings about useLayoutEffect doing nothing on the server. While these
 // warnings are harmless, this !usingJSDOM condition seems to be the best way to
+
 // prevent them (i.e. skipping useLayoutEffect when using jsdom).
 export const canUseLayoutEffect = (canUseDOM || isReactNative) && !usingJSDOM;

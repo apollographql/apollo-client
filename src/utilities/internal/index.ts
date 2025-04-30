@@ -3,6 +3,7 @@ export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";
+export { canUseLayoutEffect } from "./canUseLayoutEffect.js";
 export { checkDocument } from "./checkDocument.js";
 export { cloneDeep } from "./cloneDeep.js";
 export { compact } from "./compact.js";

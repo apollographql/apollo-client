@@ -46,8 +46,6 @@ export {
   // internal
   graphQLResultHasError,
 } from "./common/errorHandling.js";
-// internal
-export { canUseLayoutEffect } from "./common/canUse.js";
 
 export { canonicalStringify } from "./shared/canonicalStringify.js";
 // internal

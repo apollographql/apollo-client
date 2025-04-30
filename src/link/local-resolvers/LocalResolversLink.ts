@@ -14,7 +14,7 @@ import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { defer, from, mergeMap, of } from "rxjs";
 
-import type { ErrorLike, OperationVariables } from "@apollo/client";
+import type { ErrorLike } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
@@ -190,7 +190,7 @@ export class LocalResolversLink<
     const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
 
     if (!clientQuery) {
-      return getServerResult(operation.variables);
+      return getServerResult();
     }
 
     if (__DEV__) {
@@ -199,11 +199,7 @@ export class LocalResolversLink<
       }
     }
 
-    function getServerResult(variables: OperationVariables) {
-      // Modify `variables` early to ensure they are available to other client
-      // resolvers when there is not a server query.
-      operation.variables = variables;
-
+    function getServerResult() {
       if (!serverQuery) {
         // If we don't have a server query, then we have a client-only query.
         // Intentionally use `{}` here as the value to ensure that client-only

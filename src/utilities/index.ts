@@ -52,8 +52,6 @@ export { canUseDOM, canUseLayoutEffect } from "./common/canUse.js";
 export { makeUniqueId } from "./common/makeUniqueId.js";
 // internal
 export { stringifyForDisplay } from "./common/stringifyForDisplay.js";
-// internal
-export { mergeOptions } from "./common/mergeOptions.js";
 export {
   // internal
   isApolloPayloadResult,

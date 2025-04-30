@@ -12,11 +12,11 @@ import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
-import { mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   checkDocument,
   getApolloClientMemoryInternals,
+  mergeOptions,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -149,12 +149,6 @@ export interface ApolloClientOptions {
    */
   dataMasking?: boolean;
 }
-
-// Though mergeOptions now resides in @apollo/client/utilities, it was
-// previously declared and exported from this module, and then reexported from
-// @apollo/client/core. Since we need to preserve that API anyway, the easiest
-// solution is to reexport mergeOptions where it was previously declared (here).
-export { mergeOptions };
 
 /**
  * This is the primary Apollo Client class. It is used to send GraphQL documents (i.e. queries

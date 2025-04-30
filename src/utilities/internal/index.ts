@@ -30,6 +30,7 @@ export { makeReference } from "./makeReference.js";
 export { maybeDeepFreeze } from "./maybeDeepFreeze.js";
 export { mergeDeep } from "./mergeDeep.js";
 export { mergeDeepArray } from "./mergeDeepArray.js";
+export { mergeOptions } from "./mergeOptions.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { preventUnhandledRejection } from "./preventUnhandledRejection.js";
 export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";

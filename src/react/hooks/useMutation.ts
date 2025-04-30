@@ -22,7 +22,7 @@ import type {
   Unmasked,
 } from "@apollo/client";
 import type { NoInfer, Prettify } from "@apollo/client/utilities";
-import { mergeOptions } from "@apollo/client/utilities";
+import { mergeOptions } from "@apollo/client/utilities/internal";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";
 

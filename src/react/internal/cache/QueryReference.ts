@@ -10,7 +10,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { PromiseWithState } from "@apollo/client/utilities";
+import type { DecoratedPromise } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   createRejectedPromise,
@@ -20,7 +20,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { QueryKey } from "./types.js";
 
-type QueryRefPromise<TData> = PromiseWithState<
+type QueryRefPromise<TData> = DecoratedPromise<
   ApolloQueryResult<MaybeMasked<TData>>
 >;
 

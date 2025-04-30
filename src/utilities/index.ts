@@ -28,7 +28,7 @@ export {
 } from "./policies/pagination.js";
 
 // internal
-export type { PromiseWithState } from "./promises/decoration.js";
+export type { DecoratedPromise } from "./promises/decoration.js";
 export {
   // internal
   createFulfilledPromise,

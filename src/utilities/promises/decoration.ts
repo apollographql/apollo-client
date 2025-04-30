@@ -1,18 +1,10 @@
-interface PendingPromise<TValue> extends Promise<TValue> {
-  status: "pending";
-}
+import type {
+  FulfilledPromise,
+  PendingPromise,
+  RejectedPromise,
+} from "@apollo/client/utilities/internal";
 
-interface FulfilledPromise<TValue> extends Promise<TValue> {
-  status: "fulfilled";
-  value: TValue;
-}
-
-interface RejectedPromise<TValue> extends Promise<TValue> {
-  status: "rejected";
-  reason: unknown;
-}
-
-export type PromiseWithState<TValue> =
+export type DecoratedPromise<TValue> =
   | PendingPromise<TValue>
   | FulfilledPromise<TValue>
   | RejectedPromise<TValue>;
@@ -40,13 +32,13 @@ export function createRejectedPromise<TValue = unknown>(reason: unknown) {
 
 export function isStatefulPromise<TValue>(
   promise: Promise<TValue>
-): promise is PromiseWithState<TValue> {
+): promise is DecoratedPromise<TValue> {
   return "status" in promise;
 }
 
 export function wrapPromiseWithState<TValue>(
   promise: Promise<TValue>
-): PromiseWithState<TValue> {
+): DecoratedPromise<TValue> {
   if (isStatefulPromise(promise)) {
     return promise;
   }
@@ -75,5 +67,5 @@ export function wrapPromiseWithState<TValue>(
     }
   );
 
-  return promise as PromiseWithState<TValue>;
+  return promise as DecoratedPromise<TValue>;
 }

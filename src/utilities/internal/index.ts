@@ -1,11 +1,15 @@
+export type { DecoratedPromise } from "./types/DecoratedPromise.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { DeepPartial } from "./types/DeepPartial.js";
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
+export type { FulfilledPromise } from "./types/FulfilledPromise.js";
 export type { IsAny } from "./types/IsAny.js";
 export type { NoInfer } from "./types/NoInfer.js";
+export type { PendingPromise } from "./types/PendingPromise.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { Primitive } from "./types/Primitive.js";
+export type { RejectedPromise } from "./types/RejectedPromise.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 export type { VariablesOption } from "./types/VariablesOption.js";
 

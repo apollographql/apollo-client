@@ -45,7 +45,7 @@ export type {
   TupleToIntersection,
 } from "./common/mergeDeep.js";
 // internal
-export { mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
+export { mergeDeep } from "./common/mergeDeep.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

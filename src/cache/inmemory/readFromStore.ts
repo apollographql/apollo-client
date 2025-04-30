@@ -9,7 +9,6 @@ import {
   cacheSizes,
   canonicalStringify,
   isReference,
-  mergeDeepArray,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -27,6 +26,7 @@ import {
   isNonNullObject,
   makeReference,
   maybeDeepFreeze,
+  mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

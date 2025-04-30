@@ -1,4 +1,4 @@
-import { DeepMerger } from "@apollo/client/utilities/internal";
+import { mergeDeepArray } from "@apollo/client/utilities/internal";
 
 // These mergeDeep and mergeDeepArray utilities merge any number of objects
 // together, sharing as much memory as possible with the source objects, while
@@ -27,22 +27,4 @@ export function mergeDeep<T extends any[]>(
   ...sources: T
 ): TupleToIntersection<T> {
   return mergeDeepArray(sources);
-}
-
-// In almost any situation where you could succeed in getting the
-// TypeScript compiler to infer a tuple type for the sources array, you
-// could just use mergeDeep instead of mergeDeepArray, so instead of
-// trying to convert T[] to an intersection type we just infer the array
-// element type, which works perfectly when the sources array has a
-// consistent element type.
-export function mergeDeepArray<T>(sources: T[]): T {
-  let target = sources[0] || ({} as T);
-  const count = sources.length;
-  if (count > 1) {
-    const merger = new DeepMerger();
-    for (let i = 1; i < count; ++i) {
-      target = merger.merge(target, sources[i]);
-    }
-  }
-  return target;
 }

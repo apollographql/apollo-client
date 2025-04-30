@@ -1,4 +1,4 @@
-import { mergeDeep, mergeDeepArray } from "@apollo/client/utilities";
+import { mergeDeep } from "@apollo/client/utilities";
 
 describe("mergeDeep", function () {
   it("should return an object if first argument falsy", function () {
@@ -131,18 +131,6 @@ describe("mergeDeep", function () {
     expect(abc.a * 2).toBe(6);
     expect(abc.b - 0).toBe(1);
     expect(abc.c / 2).toBe(1);
-  });
-
-  it("mergeDeepArray returns the supertype of its argument types", function () {
-    class F {
-      check() {
-        return "ok";
-      }
-    }
-    const fs: F[] = [new F(), new F(), new F()];
-    // Although mergeDeepArray doesn't have the same tuple type awareness as
-    // mergeDeep, it does infer that F should be the return type here:
-    expect(mergeDeepArray(fs).check()).toBe("ok");
   });
 
   it("returns original object references when possible", function () {

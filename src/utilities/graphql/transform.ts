@@ -15,18 +15,12 @@ import type {
 } from "graphql";
 import { Kind, visit } from "graphql";
 
+import { nullIfDocIsEmpty } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { isArray, isNonEmptyArray } from "../common/arrays.js";
 
-import type { FragmentMap } from "./fragments.js";
-import { createFragmentMap } from "./fragments.js";
-import {
-  checkDocument,
-  getFragmentDefinition,
-  getFragmentDefinitions,
-  getOperationDefinition,
-} from "./getFromAST.js";
+import { checkDocument } from "./getFromAST.js";
 import { isField } from "./storeUtils.js";
 
 // https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23
@@ -50,7 +44,6 @@ export type RemoveDirectiveConfig = RemoveNodeConfig<DirectiveNode>;
 export type GetDirectiveConfig = GetNodeConfig<DirectiveNode>;
 export type RemoveArgumentsConfig = RemoveNodeConfig<ArgumentNode>;
 export type GetFragmentSpreadConfig = GetNodeConfig<FragmentSpreadNode>;
-export type RemoveFragmentSpreadConfig = RemoveNodeConfig<FragmentSpreadNode>;
 export type RemoveFragmentDefinitionConfig =
   RemoveNodeConfig<FragmentDefinitionNode>;
 export type RemoveVariableDefinitionConfig =
@@ -63,31 +56,6 @@ const TYPENAME_FIELD: FieldNode = {
     value: "__typename",
   },
 };
-
-function isEmpty(
-  op: OperationDefinitionNode | FragmentDefinitionNode,
-  fragmentMap: FragmentMap
-): boolean {
-  return (
-    !op ||
-    op.selectionSet.selections.every(
-      (selection) =>
-        selection.kind === Kind.FRAGMENT_SPREAD &&
-        isEmpty(fragmentMap[selection.name.value], fragmentMap)
-    )
-  );
-}
-
-function nullIfDocIsEmpty(doc: DocumentNode) {
-  return (
-      isEmpty(
-        getOperationDefinition(doc) || getFragmentDefinition(doc),
-        createFragmentMap(getFragmentDefinitions(doc))
-      )
-    ) ?
-      null
-    : doc;
-}
 
 function getDirectiveMatcher(
   configs: (RemoveDirectiveConfig | GetDirectiveConfig)[]

@@ -104,7 +104,7 @@ function isEmpty(
   );
 }
 
-function nullIfDocIsEmpty(doc: DocumentNode) {
+export function nullIfDocIsEmpty(doc: DocumentNode) {
   return (
       isEmpty(
         getOperationDefinition(doc) || getFragmentDefinition(doc),

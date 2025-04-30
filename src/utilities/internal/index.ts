@@ -60,3 +60,5 @@ export {
   getInMemoryCacheMemoryInternals,
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
+
+export { AutoCleanedStrongCache, AutoCleanedWeakCache } from "./caches.js";

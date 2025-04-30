@@ -2,13 +2,12 @@ import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { registerGlobalCache } from "@apollo/client/utilities/internal";
-
 import {
   AutoCleanedWeakCache,
-  cacheSizes,
-  defaultCacheSizes,
-} from "../caching/index.js";
+  registerGlobalCache,
+} from "@apollo/client/utilities/internal";
+
+import { cacheSizes, defaultCacheSizes } from "../caching/index.js";
 
 let printCache!: AutoCleanedWeakCache<ASTNode, string>;
 export const print = Object.assign(

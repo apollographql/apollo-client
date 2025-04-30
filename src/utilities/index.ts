@@ -58,11 +58,5 @@ export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 // internal
 export type { VariablesOption } from "./types/VariablesOption.js";
 
-export {
-  // internal
-  AutoCleanedStrongCache,
-  // internal
-  AutoCleanedWeakCache,
-  cacheSizes,
-} from "./caching/index.js";
+export { cacheSizes } from "./caching/index.js";
 export type { CacheSizes } from "./caching/index.js";

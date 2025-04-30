@@ -1,10 +1,8 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
-import {
-  AutoCleanedStrongCache,
-  cacheSizes,
-  defaultCacheSizes,
-} from "../caching/index.js";
+import { cacheSizes, defaultCacheSizes } from "../caching/index.js";
+// eslint-disable-next-line local-rules/import-from-inside-other-export
+import { AutoCleanedStrongCache } from "../internal/caches.js";
 // eslint-disable-next-line local-rules/import-from-inside-other-export
 import { registerGlobalCache } from "../internal/getMemoryInternals.js";
 

@@ -11,6 +11,7 @@ import { BREAK, visit } from "graphql";
 
 import { invariant } from "@apollo/client/utilities/invariant";
 
+/** @internal */
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean) {
   const nameSet = new Set(names);
   const uniqueCount = nameSet.size;
@@ -79,6 +80,7 @@ function getInclusionDirectives(
   return result;
 }
 
+/** @internal */
 export function shouldInclude(
   { directives }: SelectionNode,
   variables?: Record<string, any>

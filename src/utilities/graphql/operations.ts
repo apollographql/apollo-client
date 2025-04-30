@@ -10,6 +10,8 @@ function isOperation(
 
 /**
  * Determines if a document is a mutation document.
+ *
+ * @since 3.8.0
  */
 export function isMutationOperation(document: DocumentNode) {
   return isOperation(document, "mutation");
@@ -17,6 +19,8 @@ export function isMutationOperation(document: DocumentNode) {
 
 /**
  * Determines if a document is a query document.
+ *
+ * @since 3.8.0
  */
 export function isQueryOperation(document: DocumentNode) {
   return isOperation(document, "query");
@@ -24,6 +28,8 @@ export function isQueryOperation(document: DocumentNode) {
 
 /**
  * Determines if a document is a subscription document.
+ *
+ * @since 3.8.0
  */
 export function isSubscriptionOperation(document: DocumentNode) {
   return isOperation(document, "subscription");

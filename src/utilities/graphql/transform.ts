@@ -1,8 +1,6 @@
 import type { ASTNode, FieldNode, OperationDefinitionNode } from "graphql";
 import { Kind, visit } from "graphql";
 
-import { isField } from "@apollo/client/utilities/internal";
-
 const TYPENAME_FIELD: FieldNode = {
   kind: Kind.FIELD,
   name: {
@@ -35,7 +33,7 @@ export const addTypenameToDocument = Object.assign(
           // introspection query, do nothing.
           const skip = selections.some((selection) => {
             return (
-              isField(selection) &&
+              selection.kind === Kind.FIELD &&
               (selection.name.value === "__typename" ||
                 selection.name.value.lastIndexOf("__", 0) === 0)
             );
@@ -48,7 +46,7 @@ export const addTypenameToDocument = Object.assign(
           // not have a __typename field (see issue #4691).
           const field = parent as FieldNode;
           if (
-            isField(field) &&
+            field.kind === Kind.FIELD &&
             field.directives &&
             field.directives.some((d) => d.name.value === "export")
           ) {

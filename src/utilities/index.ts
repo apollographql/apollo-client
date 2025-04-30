@@ -48,8 +48,6 @@ export {
 } from "./common/errorHandling.js";
 // internal
 export { canUseDOM, canUseLayoutEffect } from "./common/canUse.js";
-// internal
-export { stringifyForDisplay } from "./common/stringifyForDisplay.js";
 
 export { canonicalStringify } from "./shared/canonicalStringify.js";
 // internal

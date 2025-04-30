@@ -11,7 +11,7 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import { isReference, stringifyForDisplay } from "@apollo/client/utilities";
+import { isReference } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
@@ -20,6 +20,7 @@ import {
   isArray,
   isNonNullObject,
   storeKeyNameFromField,
+  stringifyForDisplay,
 } from "@apollo/client/utilities/internal";
 import {
   invariant,

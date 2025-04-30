@@ -9,8 +9,11 @@ import {
   MissingFieldError,
 } from "@apollo/client/cache";
 import { spyOnConsole } from "@apollo/client/testing/internal";
-import { isReference, stringifyForDisplay } from "@apollo/client/utilities";
-import { makeReference } from "@apollo/client/utilities/internal";
+import { isReference } from "@apollo/client/utilities";
+import {
+  makeReference,
+  stringifyForDisplay,
+} from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type {

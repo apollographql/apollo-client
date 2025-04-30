@@ -44,6 +44,7 @@ export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js"
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
+export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
 
 export {

@@ -1,9 +1,9 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { global } from "@apollo/client/utilities/globals";
+import { stringifyForDisplay } from "@apollo/client/utilities/internal";
 
 import type { ErrorCodes } from "../../invariantErrorCodes.js";
 import { version } from "../../version.js";
-import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 
 const genericMessage = "Invariant Violation";
 export class InvariantError extends Error {

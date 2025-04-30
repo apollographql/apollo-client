@@ -22,6 +22,7 @@ export { hasDirectives } from "./hasDirectives.js";
 export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncrementalResult.js";
+export { isExecutionPatchInitialResult } from "./isExecutionPatchIninitialResult.js";
 export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";

@@ -12075,6 +12075,103 @@ describe("useQuery Hook", () => {
       }
     });
   });
+
+  // https://github.com/apollographql/apollo-client/issues/12229
+  it('sets data to undefined when changing variables with a "network-only" fetch policy and notifyOnNetworkStatusChange: true', async () => {
+    const query = gql`
+      query ($for: String!) {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { for: "Bob" } },
+        result: { data: { greeting: "Hello, Bob" } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { for: "Sally" } },
+        result: { data: { greeting: "Hello, Sally" } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { for: "Bob" } },
+        result: { data: { greeting: "Hello again, Bob" } },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      (props) =>
+        useQuery(query, {
+          variables: { for: props.for },
+          fetchPolicy: "network-only",
+          notifyOnNetworkStatusChange: true,
+        }),
+      {
+        initialProps: { for: "Bob" },
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: { for: "Bob" },
+    });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { greeting: "Hello, Bob" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { for: "Bob" },
+    });
+
+    await rerender({ for: "Sally" });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: { greeting: "Hello, Bob" },
+      variables: { for: "Sally" },
+    });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { greeting: "Hello, Sally" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { greeting: "Hello, Bob" },
+      variables: { for: "Sally" },
+    });
+
+    await rerender({ for: "Bob" });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: { greeting: "Hello, Sally" },
+      variables: { for: "Bob" },
+    });
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { greeting: "Hello again, Bob" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { greeting: "Hello, Sally" },
+      variables: { for: "Bob" },
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
 });
 
 test("applies `errorPolicy` on next fetch when it changes between renders", async () => {

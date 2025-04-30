@@ -1,15 +1,11 @@
-import { disableFragmentWarnings, gql } from "graphql-tag";
-
+import { gql } from "@apollo/client";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
   getFragmentDefinitions,
 } from "@apollo/client/utilities/internal";
 
-// Turn off warnings for repeated fragment names
-disableFragmentWarnings();
-
-it("should create the fragment map correctly", () => {
+test("should create the fragment map correctly", () => {
   const fragments = getFragmentDefinitions(gql`
     fragment authorDetails on Author {
       firstName
@@ -28,6 +24,6 @@ it("should create the fragment map correctly", () => {
   expect(fragmentMap).toEqual(expectedTable);
 });
 
-it("should return an empty fragment map if passed undefined argument", () => {
+test("should return an empty fragment map if passed undefined argument", () => {
   expect(createFragmentMap(undefined)).toEqual({});
 });

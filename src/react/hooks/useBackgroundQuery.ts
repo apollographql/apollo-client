@@ -26,8 +26,11 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { VariablesOption } from "@apollo/client/utilities";
-import type { DeepPartial, NoInfer } from "@apollo/client/utilities/internal";
+import type {
+  DeepPartial,
+  NoInfer,
+  VariablesOption,
+} from "@apollo/client/utilities/internal";
 
 import type { SkipToken } from "./constants.js";
 import { wrapHook } from "./internal/index.js";

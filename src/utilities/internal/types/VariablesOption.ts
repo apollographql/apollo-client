@@ -1,5 +1,6 @@
 import type { OperationVariables } from "@apollo/client";
 
+/** @internal */
 export type VariablesOption<TVariables extends OperationVariables> =
   {} extends TVariables ?
     {

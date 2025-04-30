@@ -6,6 +6,7 @@ export type { NoInfer } from "./types/NoInfer.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { Primitive } from "./types/Primitive.js";
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
+export type { VariablesOption } from "./types/VariablesOption.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";

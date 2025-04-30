@@ -10,6 +10,15 @@ import {
 import { cacheSizes, defaultCacheSizes } from "../caching/index.js";
 
 let printCache!: AutoCleanedWeakCache<ASTNode, string>;
+
+/**
+ * Converts an AST into a string, using one set of reasonable
+ * formatting rules.
+ *
+ * @remarks This is the same function as the GraphQL.js `print` function but
+ * with an added cache to avoid recomputation when encountering the same
+ * `ASTNode` more than once.
+ */
 export const print = Object.assign(
   (ast: ASTNode) => {
     let result = printCache.get(ast);

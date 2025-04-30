@@ -509,7 +509,7 @@ export class LocalResolversLink<
     parentSelectionSet: SelectionSetNode,
     path: Path
   ) {
-    const { operation, operationDefinition, phase } = execContext;
+    const { operation, operationDefinition } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
 
     const fieldName = field.name.value;
@@ -569,11 +569,7 @@ export class LocalResolversLink<
     }
 
     const resultOrMergeError = (data: unknown) => {
-      if (
-        isRootField &&
-        execContext.phase === "resolve" &&
-        rootValue === null
-      ) {
+      if (isRootField && rootValue === null) {
         this.addError(
           newInvariantError(
             "Could not merge data from '%s' resolver with remote data since data was `null`.",
@@ -593,7 +589,7 @@ export class LocalResolversLink<
     if (result === undefined) {
       // Its ok to return undefined for an exported variable if the variable is
       // optional. We don't want to warn in that case.
-      if (__DEV__ && phase === "resolve") {
+      if (__DEV__) {
         invariant.warn(
           resolver ?
             "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
@@ -620,7 +616,7 @@ export class LocalResolversLink<
       return resultOrMergeError(fieldResult);
     }
 
-    if (execContext.phase === "resolve" && !(result as any).__typename) {
+    if (!(result as any).__typename) {
       this.addError(
         newInvariantError(
           "Could not resolve __typename on object %o returned from resolver '%s'. '__typename' needs to be returned to properly resolve child fields.",

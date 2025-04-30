@@ -143,7 +143,6 @@ interface ExportedVariable {
 
 interface TraverseCacheEntry {
   selectionsToResolve: Set<SelectionNode>;
-  exportsToResolve: Set<SelectionNode>;
   exportedVariableDefs: { [variableName: string]: ExportedVariable };
 }
 
@@ -239,7 +238,7 @@ export class LocalResolversLink<
       const fragments = getFragmentDefinitions(clientQuery);
       const fragmentMap = createFragmentMap(fragments);
 
-      const { selectionsToResolve, exportsToResolve, exportedVariableDefs } =
+      const { selectionsToResolve, exportedVariableDefs } =
         this.traverseAndCollectQueryInfo(mainDefinition, fragmentMap);
 
       const execContext = {
@@ -696,7 +695,6 @@ export class LocalResolversLink<
 
       const cache: TraverseCacheEntry = {
         selectionsToResolve: new Set<SelectionNode>(),
-        exportsToResolve: new Set<SelectionNode>(),
         exportedVariableDefs: {},
       };
       this.traverseCache.set(definitionNode, cache);
@@ -766,7 +764,6 @@ export class LocalResolversLink<
 
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
-                cache.exportsToResolve.add(node);
                 cache.exportedVariableDefs[variableName].ancestors.add(node);
               }
             });

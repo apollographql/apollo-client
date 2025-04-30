@@ -445,7 +445,6 @@ Array [
   "getQueryDefinition",
   "getStoreKeyName",
   "graphQLResultHasError",
-  "hasClientExports",
   "hasDirectives",
   "isApolloPayloadResult",
   "isArray",

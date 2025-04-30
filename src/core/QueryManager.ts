@@ -50,7 +50,6 @@ import {
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
-  hasClientExports,
   hasDirectives,
   isDocumentNode,
   isExecutionPatchIncrementalResult,
@@ -741,7 +740,7 @@ export class QueryManager {
         // of the transformed document. We should consider merging these
         // traversals into a single pass in the future, though the work is
         // cached after the first time.
-        hasClientExports: hasClientExports(document),
+        hasClientExports: hasDirectives(["client", "export"], document, true),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),

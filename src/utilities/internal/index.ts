@@ -12,6 +12,7 @@ export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 export { getMainDefinition } from "./getMainDefinition.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";
+export { getQueryDefinition } from "./getQueryDefinition.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
@@ -26,5 +27,3 @@ export {
   getInMemoryCacheMemoryInternals,
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
-
-export { getQueryDefinition } from "./graphql/getFromAST.js";

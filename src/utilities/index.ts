@@ -1,16 +1,23 @@
 export { Observable } from "rxjs";
 
+// internal
 export { maybe } from "@apollo/client/utilities/globals";
 
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
 export {
+  // internal
   getFragmentDefinition,
+  // internal
   getFragmentDefinitions,
+  // internal
   getMainDefinition,
+  // internal
   getOperationDefinition,
+  // internal
   getOperationName,
+  // internal
   getQueryDefinition,
 } from "./graphql/getFromAST.js";
 
@@ -18,23 +25,33 @@ export { print } from "./graphql/print.js";
 
 export type {
   AsStoreObject,
+  // internal
   Directives,
   Reference,
   StoreObject,
   StoreValue,
-  VariableValue,
 } from "./graphql/storeUtils.js";
 export {
+  // internal
   argumentsObjectFromField,
+  // internal
   getStoreKeyName,
+  // internal
   getTypenameFromResult,
+  // internal
   isDocumentNode,
+  // internal
   isField,
+  // internal
   isInlineFragment,
   isReference,
+  // internal
   makeReference,
+  // internal
   resultKeyNameFromField,
+  // internal
   storeKeyNameFromField,
+  // internal
   valueToObjectRepresentation,
 } from "./graphql/storeUtils.js";
 
@@ -52,58 +69,95 @@ export {
   relayStylePagination,
 } from "./policies/pagination.js";
 
+// internal
 export type { PromiseWithState } from "./promises/decoration.js";
 export {
+  // internal
   createFulfilledPromise,
+  // internal
   createRejectedPromise,
+  // internal
   isStatefulPromise,
+  // internal
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
+// internal
 export { preventUnhandledRejection } from "./promises/preventUnhandledRejection.js";
 
 export type {
+  // internal
   ReconcilerFunction,
+  // internal
   TupleToIntersection,
 } from "./common/mergeDeep.js";
+// internal
 export { DeepMerger, mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
+// internal
 export { cloneDeep } from "./common/cloneDeep.js";
+// internal
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
+// internal
 export { isArray, isNonEmptyArray } from "./common/arrays.js";
+// internal
 export { isNonNullObject, isPlainObject } from "./common/objects.js";
 export {
+  // internal
   getGraphQLErrorsFromResult,
+  // internal
   graphQLResultHasError,
 } from "./common/errorHandling.js";
+// internal
 export { canUseDOM, canUseLayoutEffect } from "./common/canUse.js";
+// internal
 export { compact } from "./common/compact.js";
+// internal
 export { makeUniqueId } from "./common/makeUniqueId.js";
+// internal
 export { stringifyForDisplay } from "./common/stringifyForDisplay.js";
+// internal
 export { mergeOptions } from "./common/mergeOptions.js";
 export {
+  // internal
   isApolloPayloadResult,
+  // internal
   isExecutionPatchIncrementalResult,
+  // internal
   isExecutionPatchInitialResult,
+  // internal
   isExecutionPatchResult,
+  // internal
   mergeIncrementalData,
 } from "./common/incrementalResult.js";
 
 export { canonicalStringify } from "./common/canonicalStringify.js";
+// internal
 export { omitDeep } from "./common/omitDeep.js";
 export { stripTypename } from "./common/stripTypename.js";
 
+// internal
 export type { IsStrictlyAny } from "./types/IsStrictlyAny.js";
+// internal
 export type { DeepOmit } from "./types/DeepOmit.js";
+// internal
 export type { DeepPartial } from "./types/DeepPartial.js";
+// internal
 export type { Prettify } from "./types/Prettify.js";
+// internal
 export type { Primitive } from "./types/Primitive.js";
+// internal
 export type { UnionToIntersection } from "./types/UnionToIntersection.js";
+// internal
 export type { NoInfer } from "./types/NoInfer.js";
+// internal
 export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
+// internal
 export type { VariablesOption } from "./types/VariablesOption.js";
 
 export {
+  // internal
   AutoCleanedStrongCache,
+  // internal
   AutoCleanedWeakCache,
   cacheSizes,
 } from "./caching/index.js";

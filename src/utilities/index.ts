@@ -7,7 +7,6 @@ export type {
   InclusionDirectives,
 } from "./graphql/directives.js";
 export {
-  getDirectiveNames,
   getFragmentMaskMode,
   getInclusionDirectives,
   hasAllDirectives,

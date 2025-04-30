@@ -47,18 +47,6 @@ export function shouldInclude(
   );
 }
 
-export function getDirectiveNames(root: ASTNode) {
-  const names: string[] = [];
-
-  visit(root, {
-    Directive(node: DirectiveNode) {
-      names.push(node.name.value);
-    },
-  });
-
-  return names;
-}
-
 export const hasAnyDirectives = (names: string[], root: ASTNode) =>
   hasDirectives(names, root, false);
 

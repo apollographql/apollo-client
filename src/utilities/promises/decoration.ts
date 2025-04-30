@@ -5,15 +5,6 @@ import type {
   RejectedPromise,
 } from "@apollo/client/utilities/internal";
 
-export function createFulfilledPromise<TValue>(value: TValue) {
-  const promise = Promise.resolve(value) as FulfilledPromise<TValue>;
-
-  promise.status = "fulfilled";
-  promise.value = value;
-
-  return promise;
-}
-
 export function createRejectedPromise<TValue = unknown>(reason: unknown) {
   const promise = Promise.reject(reason) as RejectedPromise<TValue>;
 

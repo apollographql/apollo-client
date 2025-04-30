@@ -20,6 +20,7 @@ export { checkDocument } from "./checkDocument.js";
 export { cloneDeep } from "./cloneDeep.js";
 export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";
+export { createFulfilledPromise } from "./createFulfilledPromise.js";
 export { DeepMerger } from "./DeepMerger.js";
 export { getDefaultValues } from "./getDefaultValues.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";

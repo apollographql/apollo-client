@@ -29,8 +29,6 @@ export {
 
 export {
   // internal
-  createFulfilledPromise,
-  // internal
   createRejectedPromise,
   // internal
   isStatefulPromise,

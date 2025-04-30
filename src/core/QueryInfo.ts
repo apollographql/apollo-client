@@ -4,9 +4,9 @@ import type { DocumentNode } from "graphql";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import { graphQLResultHasError } from "@apollo/client/utilities";
 import {
   DeepMerger,
+  graphQLResultHasError,
   isNonEmptyArray,
   mergeIncrementalData,
 } from "@apollo/client/utilities/internal";

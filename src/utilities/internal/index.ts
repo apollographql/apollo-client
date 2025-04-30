@@ -22,6 +22,7 @@ export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";
 export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
+export { graphQLResultHasError } from "./graphQLResultHasError.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { isApolloPayloadResult } from "./isApolloPayloadResult.js";

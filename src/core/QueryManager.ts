@@ -40,10 +40,7 @@ import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { print } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
-import {
-  DocumentTransform,
-  graphQLResultHasError,
-} from "@apollo/client/utilities";
+import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   checkDocument,
@@ -51,6 +48,7 @@ import {
   getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
+  graphQLResultHasError,
   hasClientExports,
   hasDirectives,
   isDocumentNode,

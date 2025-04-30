@@ -40,11 +40,6 @@ export {
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
-export {
-  // internal
-  graphQLResultHasError,
-} from "./common/errorHandling.js";
-
 export { canonicalStringify } from "./shared/canonicalStringify.js";
 export { stripTypename } from "./common/stripTypename.js";
 

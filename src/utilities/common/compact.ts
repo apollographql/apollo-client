@@ -1,4 +1,4 @@
-import type { TupleToIntersection } from "./mergeDeep.js";
+import type { TupleToIntersection } from "../internal/types/TupleToIntersection.js";
 
 /**
  * Merges the provided objects shallowly and removes

@@ -1,8 +1,7 @@
 import { __rest } from "tslib";
 
 import type { FieldPolicy, Reference } from "@apollo/client/cache";
-
-import { mergeDeep } from "../common/mergeDeep.js";
+import { mergeDeep } from "@apollo/client/utilities/internal";
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 

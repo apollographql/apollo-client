@@ -6,11 +6,10 @@ import type {
   FetchResult,
 } from "@apollo/client/link";
 import {
+  DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
 } from "@apollo/client/utilities/internal";
-
-import { DeepMerger } from "./mergeDeep.js";
 
 export function isExecutionPatchIncrementalResult<T>(
   value: FetchResult<T>

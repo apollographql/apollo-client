@@ -40,12 +40,6 @@ export {
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
-export type {
-  // internal
-  TupleToIntersection,
-} from "./common/mergeDeep.js";
-// internal
-export { mergeDeep } from "./common/mergeDeep.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

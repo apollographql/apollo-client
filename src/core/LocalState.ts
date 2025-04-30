@@ -19,8 +19,6 @@ import type { FetchResult } from "@apollo/client/link";
 import type { StoreObject } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
-  getFragmentDefinitions,
-  getMainDefinition,
   isField,
   isInlineFragment,
   mergeDeep,
@@ -30,6 +28,8 @@ import {
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
+  getFragmentDefinitions,
+  getMainDefinition,
   hasDirectives,
   removeClientSetsFromDocument,
   shouldInclude,

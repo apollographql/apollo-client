@@ -5,10 +5,8 @@ import { disableFragmentWarnings, gql } from "graphql-tag";
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
-import {
-  addTypenameToDocument,
-  getQueryDefinition,
-} from "@apollo/client/utilities";
+import { addTypenameToDocument } from "@apollo/client/utilities";
+import { getQueryDefinition } from "@apollo/client/utilities/internal";
 
 describe("query transforms", () => {
   it("should correctly add typenames", () => {

@@ -1,9 +1,9 @@
 import { disableFragmentWarnings, gql } from "graphql-tag";
 
-import { getFragmentDefinitions } from "@apollo/client/utilities";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   createFragmentMap,
+  getFragmentDefinitions,
   getFragmentQueryDocument,
 } from "@apollo/client/utilities/internal";
 

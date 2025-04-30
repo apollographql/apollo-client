@@ -14,7 +14,6 @@ import {
   argumentsObjectFromField,
   canonicalStringify,
   cloneDeep,
-  getOperationDefinition,
   getTypenameFromResult,
   isField,
   isNonEmptyArray,
@@ -30,6 +29,7 @@ import type {
 import {
   getDefaultValues,
   getFragmentFromSelection,
+  getOperationDefinition,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {

@@ -20,7 +20,16 @@ export {
   getFragmentQueryDocument,
 } from "./graphql/fragments.js";
 
-export { checkDocument, getDefaultValues } from "./graphql/getFromAST.js";
+export {
+  checkDocument,
+  getDefaultValues,
+  getFragmentDefinition,
+  getFragmentDefinitions,
+  getMainDefinition,
+  getOperationDefinition,
+  getOperationName,
+  getQueryDefinition,
+} from "./graphql/getFromAST.js";
 
 export {
   addNonReactiveToNamedFragments,

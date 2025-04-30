@@ -20,10 +20,11 @@ import type {
   Reference,
   StoreObject,
 } from "@apollo/client/utilities";
-import { cacheSizes, getFragmentDefinition } from "@apollo/client/utilities";
+import { cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   getApolloCacheMemoryInternals,
+  getFragmentDefinition,
   getFragmentQueryDocument,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";

@@ -9,8 +9,6 @@ import {
   cacheSizes,
   canonicalStringify,
   DeepMerger,
-  getMainDefinition,
-  getQueryDefinition,
   isField,
   isNonNullObject,
   isReference,
@@ -27,6 +25,8 @@ import type {
 import {
   getDefaultValues,
   getFragmentFromSelection,
+  getMainDefinition,
+  getQueryDefinition,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {

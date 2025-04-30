@@ -47,8 +47,6 @@ import {
 import {
   DocumentTransform,
   getGraphQLErrorsFromResult,
-  getOperationDefinition,
-  getOperationName,
   graphQLResultHasError,
   isDocumentNode,
   isNonEmptyArray,
@@ -61,6 +59,8 @@ import {
   addNonReactiveToNamedFragments,
   checkDocument,
   getDefaultValues,
+  getOperationDefinition,
+  getOperationName,
   hasClientExports,
   hasDirectives,
   onAnyEvent,

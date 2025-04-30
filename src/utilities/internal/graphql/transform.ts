@@ -11,18 +11,17 @@ import type {
 } from "graphql";
 import { Kind, visit } from "graphql";
 
-import {
-  getFragmentDefinition,
-  getFragmentDefinitions,
-  getOperationDefinition,
-  isArray,
-  isNonEmptyArray,
-} from "@apollo/client/utilities";
+import { isArray, isNonEmptyArray } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { FragmentMap } from "./fragments.js";
 import { createFragmentMap } from "./fragments.js";
-import { checkDocument } from "./getFromAST.js";
+import {
+  checkDocument,
+  getFragmentDefinition,
+  getFragmentDefinitions,
+  getOperationDefinition,
+} from "./getFromAST.js";
 
 // https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23
 interface EnterLeaveVisitor<TVisitedNode extends ASTNode> {

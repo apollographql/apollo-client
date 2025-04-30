@@ -3,21 +3,6 @@ export { Observable } from "rxjs";
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
-export {
-  // internal
-  getFragmentDefinition,
-  // internal
-  getFragmentDefinitions,
-  // internal
-  getMainDefinition,
-  // internal
-  getOperationDefinition,
-  // internal
-  getOperationName,
-  // internal
-  getQueryDefinition,
-} from "./graphql/getFromAST.js";
-
 export { print } from "./graphql/print.js";
 
 export type {

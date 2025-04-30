@@ -16,11 +16,11 @@ import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cloneDeep,
-  getMainDefinition,
   isReference,
   makeReference,
   storeKeyNameFromField,
 } from "@apollo/client/utilities";
+import { getMainDefinition } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 // not exported

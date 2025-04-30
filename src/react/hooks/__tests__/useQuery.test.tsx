@@ -1623,8 +1623,6 @@ describe("useQuery Hook", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      // TODO: is this really needed for this test?
-      ssrMode: true,
     });
 
     using _disabledAct = disableActEnvironment();

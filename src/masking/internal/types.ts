@@ -1,5 +1,5 @@
-import type { Prettify, RemoveIndexSignature } from "@apollo/client/utilities";
-import type { Primitive } from "@apollo/client/utilities/internal";
+import type { RemoveIndexSignature } from "@apollo/client/utilities";
+import type { Prettify, Primitive } from "@apollo/client/utilities/internal";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 

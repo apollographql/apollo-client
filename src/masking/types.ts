@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type { Prettify } from "@apollo/client/utilities";
+import type { Prettify } from "@apollo/client/utilities/internal";
 
 import type {
   ContainsFragmentsRefs,

@@ -11,6 +11,7 @@ export {
   hasDirectives,
   shouldInclude,
 } from "./graphql/directives.js";
+export { getFragmentQueryDocument } from "./graphql/fragments.js";
 export {
   addNonReactiveToNamedFragments,
   removeClientSetsFromDocument,

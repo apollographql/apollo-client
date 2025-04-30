@@ -9,7 +9,6 @@ export type { FragmentMap, FragmentMapFunction } from "./graphql/fragments.js";
 export {
   createFragmentMap,
   getFragmentFromSelection,
-  getFragmentQueryDocument,
 } from "./graphql/fragments.js";
 
 export {

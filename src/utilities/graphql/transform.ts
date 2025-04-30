@@ -478,32 +478,6 @@ export const addTypenameToDocument = Object.assign(
   }
 );
 
-const connectionRemoveConfig = {
-  test: (directive: DirectiveNode) => {
-    const willRemove = directive.name.value === "connection";
-    if (willRemove) {
-      if (
-        !directive.arguments ||
-        !directive.arguments.some((arg) => arg.name.value === "key")
-      ) {
-        invariant.warn(
-          "Removing an @connection directive even though it does not have a key. " +
-            "You may want to use the key parameter to specify a store key."
-        );
-      }
-    }
-
-    return willRemove;
-  },
-};
-
-export function removeConnectionDirectiveFromDocument(doc: DocumentNode) {
-  return removeDirectivesFromDocument(
-    [connectionRemoveConfig],
-    checkDocument(doc)
-  );
-}
-
 function hasDirectivesInSelectionSet(
   directives: GetDirectiveConfig[],
   selectionSet: SelectionSetNode | undefined,

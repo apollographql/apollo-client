@@ -880,32 +880,4 @@ describe("query transforms", () => {
     const modifiedQuery = addTypenameToDocument(testQuery);
     expect(print(expectedQuery)).toBe(print(getQueryDefinition(modifiedQuery)));
   });
-
-  it("should correctly remove connections", () => {
-    let testQuery = gql`
-      query {
-        author {
-          name @connection(key: "foo") {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const newQueryDoc = removeConnectionDirectiveFromDocument(testQuery)!;
-
-    const expectedQuery = gql`
-      query {
-        author {
-          name {
-            firstName
-            lastName
-          }
-        }
-      }
-    `;
-    const expectedQueryStr = print(expectedQuery);
-
-    expect(expectedQueryStr).toBe(print(newQueryDoc));
-  });
 });

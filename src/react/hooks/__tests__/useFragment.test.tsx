@@ -2279,16 +2279,6 @@ describe("has the same timing as `useQuery`", () => {
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       snapshotDOM: true,
-      onRender() {
-        const parent = screen.getByTestId("parent");
-        const children = screen.getByTestId("children");
-        // expect(within(parent).queryAllByText(/Item #1/).length).toBe(
-        //   within(children).queryAllByText(/Item #1/).length
-        // );
-        // expect(within(parent).queryAllByText(/Item #2/).length).toBe(
-        //   within(children).queryAllByText(/Item #2/).length
-        // );
-      },
     });
     await renderStream.render(<Parent />, {
       wrapper: ({ children }) => (

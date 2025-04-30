@@ -5,17 +5,14 @@ import { Observable, throwError } from "rxjs";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import {
-  addTypenameToDocument,
-  makeUniqueId,
-  print,
-} from "@apollo/client/utilities";
+import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {
   checkDocument,
   cloneDeep,
   getDefaultValues,
   getOperationDefinition,
   isDocumentNode,
+  makeUniqueId,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities/internal";

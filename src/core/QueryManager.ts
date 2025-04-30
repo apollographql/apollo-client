@@ -44,7 +44,6 @@ import {
   DocumentTransform,
   getGraphQLErrorsFromResult,
   graphQLResultHasError,
-  makeUniqueId,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
@@ -59,6 +58,7 @@ import {
   isExecutionPatchResult,
   isNonEmptyArray,
   isNonNullObject,
+  makeUniqueId,
   mergeIncrementalData,
   onAnyEvent,
   removeDirectivesFromDocument,

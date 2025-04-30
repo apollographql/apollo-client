@@ -9,6 +9,7 @@ export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
 export { getFragmentDefinition } from "./getFragmentDefinition.js";
 export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
+export { getOperationName } from "./getOperationName.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
@@ -27,6 +28,5 @@ export {
 export {
   getDefaultValues,
   getMainDefinition,
-  getOperationName,
   getQueryDefinition,
 } from "./graphql/getFromAST.js";

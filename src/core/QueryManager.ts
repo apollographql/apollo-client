@@ -41,7 +41,6 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import { checkDocument, print } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
-  addNonReactiveToNamedFragments,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -63,7 +62,11 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  addNonReactiveToNamedFragments,
+  onAnyEvent,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,

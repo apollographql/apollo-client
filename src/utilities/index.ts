@@ -75,7 +75,6 @@ export type {
   RemoveVariableDefinitionConfig,
 } from "./graphql/transform.js";
 export {
-  addNonReactiveToNamedFragments,
   addTypenameToDocument,
   buildQueryFromSelectionSet,
   removeArgumentsFromDocument,

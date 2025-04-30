@@ -2,7 +2,6 @@ import type {
   DocumentNode,
   FragmentDefinitionNode,
   OperationDefinitionNode,
-  ValueNode,
 } from "graphql";
 
 import {
@@ -12,26 +11,6 @@ import {
 
 import { checkDocument } from "../checkDocument.js";
 import { getOperationDefinition } from "../getOperationDefinition.js";
-import { valueToObjectRepresentation } from "../valueToObjectRepresentation.js";
-
-export function getDefaultValues(
-  definition: OperationDefinitionNode | undefined
-): Record<string, any> {
-  const defaultValues = {};
-  const defs = definition && definition.variableDefinitions;
-  if (defs && defs.length) {
-    defs.forEach((def) => {
-      if (def.defaultValue) {
-        valueToObjectRepresentation(
-          defaultValues,
-          def.variable.name,
-          def.defaultValue as ValueNode
-        );
-      }
-    });
-  }
-  return defaultValues;
-}
 
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode {
   const queryDef = getOperationDefinition(doc)!;

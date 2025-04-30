@@ -1406,8 +1406,6 @@ export namespace useQuery {
 export namespace useQuery {
     var // (undocumented)
     ssrDisabledResult: ApolloQueryResult_2<any>;
-    var // (undocumented)
-    skipStandbyResult: ApolloQueryResult_2<any>;
 }
 
 // @public

@@ -1,7 +1,7 @@
 import type { ASTNode, FieldNode, OperationDefinitionNode } from "graphql";
 import { Kind, visit } from "graphql";
 
-import { isField } from "./storeUtils.js";
+import { isField } from "@apollo/client/utilities/internal";
 
 const TYPENAME_FIELD: FieldNode = {
   kind: Kind.FIELD,

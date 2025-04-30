@@ -1,6 +1,6 @@
 import { Trie } from "@wry/trie";
-import type { DocumentNode } from "graphql";
-import { BREAK, OperationTypeNode, visit } from "graphql";
+import type { DirectiveNode, DocumentNode } from "graphql";
+import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
 import type { Subscription } from "rxjs";
 import {
   catchError,
@@ -56,7 +56,6 @@ import {
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
-  addNonReactiveToNamedFragments,
   checkDocument,
   getDefaultValues,
   getOperationDefinition,
@@ -1929,4 +1928,31 @@ function isFullyUnmaskedOperation(document: DocumentNode) {
   });
 
   return isUnmasked;
+}
+
+function addNonReactiveToNamedFragments(document: DocumentNode) {
+  checkDocument(document);
+
+  return visit(document, {
+    FragmentSpread: (node) => {
+      // Do not add `@nonreactive` if the fragment is marked with `@unmask`
+      // since we want to react to changes in this fragment.
+      if (
+        node.directives?.some((directive) => directive.name.value === "unmask")
+      ) {
+        return;
+      }
+
+      return {
+        ...node,
+        directives: [
+          ...(node.directives || []),
+          {
+            kind: Kind.DIRECTIVE,
+            name: { kind: Kind.NAME, value: "nonreactive" },
+          } satisfies DirectiveNode,
+        ],
+      };
+    },
+  });
 }

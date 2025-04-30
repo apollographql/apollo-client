@@ -30,7 +30,6 @@ export {
 } from "./graphql/getFromAST.js";
 
 export {
-  addNonReactiveToNamedFragments,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
 } from "./graphql/transform.js";

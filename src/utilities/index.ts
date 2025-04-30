@@ -49,8 +49,6 @@ export {
 // internal
 export { canUseDOM, canUseLayoutEffect } from "./common/canUse.js";
 // internal
-export { compact } from "./common/compact.js";
-// internal
 export { makeUniqueId } from "./common/makeUniqueId.js";
 // internal
 export { stringifyForDisplay } from "./common/stringifyForDisplay.js";

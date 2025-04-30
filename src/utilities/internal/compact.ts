@@ -1,8 +1,10 @@
-import type { TupleToIntersection } from "../internal/types/TupleToIntersection.js";
+import type { TupleToIntersection } from "./types/TupleToIntersection.js";
 
 /**
  * Merges the provided objects shallowly and removes
  * all properties with an `undefined` value
+ *
+ * @internal
  */
 export function compact<TArgs extends any[]>(
   ...objects: TArgs

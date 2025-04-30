@@ -4,8 +4,7 @@ import type {
   QueryOptions,
   WatchQueryOptions,
 } from "@apollo/client";
-
-import { compact } from "./compact.js";
+import { compact } from "@apollo/client/utilities/internal";
 
 type OptionsUnion<TData, TVariables extends OperationVariables> =
   | WatchQueryOptions<TVariables, TData>

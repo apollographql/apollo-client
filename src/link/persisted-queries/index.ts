@@ -10,10 +10,9 @@ import type { ServerError, ServerParseError } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
-import { compact } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { isNonEmptyArray } from "@apollo/client/utilities/internal";
+import { compact, isNonEmptyArray } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";

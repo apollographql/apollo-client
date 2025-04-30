@@ -4,6 +4,7 @@ export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { checkDocument } from "./checkDocument.js";
 export { cloneDeep } from "./cloneDeep.js";
+export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { DeepMerger } from "./DeepMerger.js";
 export { getDefaultValues } from "./getDefaultValues.js";

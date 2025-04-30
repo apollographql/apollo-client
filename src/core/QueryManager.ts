@@ -1,6 +1,6 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
-import { OperationTypeNode } from "graphql";
+import { BREAK, OperationTypeNode, visit } from "graphql";
 import type { Subscription } from "rxjs";
 import {
   catchError,
@@ -43,7 +43,6 @@ import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-  isFullyUnmaskedOperation,
 } from "@apollo/client/utilities";
 import {
   DocumentTransform,
@@ -1911,4 +1910,22 @@ interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
   observable: Observable<ApolloQueryResult<TData>>;
+}
+
+function isFullyUnmaskedOperation(document: DocumentNode) {
+  let isUnmasked = true;
+
+  visit(document, {
+    FragmentSpread: (node) => {
+      isUnmasked =
+        !!node.directives &&
+        node.directives.some((directive) => directive.name.value === "unmask");
+
+      if (!isUnmasked) {
+        return BREAK;
+      }
+    },
+  });
+
+  return isUnmasked;
 }

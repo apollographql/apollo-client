@@ -4,7 +4,6 @@ import type {
   InlineFragmentNode,
   SelectionNode,
 } from "graphql";
-import { BREAK, visit } from "graphql";
 
 import {
   invariant,
@@ -146,22 +145,4 @@ export function getFragmentFromSelection(
     default:
       return null;
   }
-}
-
-export function isFullyUnmaskedOperation(document: DocumentNode) {
-  let isUnmasked = true;
-
-  visit(document, {
-    FragmentSpread: (node) => {
-      isUnmasked =
-        !!node.directives &&
-        node.directives.some((directive) => directive.name.value === "unmask");
-
-      if (!isUnmasked) {
-        return BREAK;
-      }
-    },
-  });
-
-  return isUnmasked;
 }

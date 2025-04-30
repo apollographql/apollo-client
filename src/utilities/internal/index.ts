@@ -8,7 +8,6 @@ export {
 export { toQueryResult } from "./toQueryResult.js";
 export {
   addNonReactiveToNamedFragments,
-  nullIfDocIsEmpty,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
   removeFragmentSpreadFromDocument,

@@ -19,7 +19,6 @@ import type { FetchResult } from "@apollo/client/link";
 import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
-  createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
   isField,
@@ -29,6 +28,7 @@ import {
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
 import {
+  createFragmentMap,
   hasDirectives,
   removeClientSetsFromDocument,
   shouldInclude,

@@ -6,10 +6,7 @@ export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
 export type { FragmentMap, FragmentMapFunction } from "./graphql/fragments.js";
-export {
-  createFragmentMap,
-  getFragmentFromSelection,
-} from "./graphql/fragments.js";
+export { getFragmentFromSelection } from "./graphql/fragments.js";
 
 export {
   checkDocument,

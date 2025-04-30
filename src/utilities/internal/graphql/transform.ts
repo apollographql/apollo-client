@@ -14,7 +14,6 @@ import { Kind, visit } from "graphql";
 import type { FragmentMap } from "@apollo/client/utilities";
 import {
   checkDocument,
-  createFragmentMap,
   getFragmentDefinition,
   getFragmentDefinitions,
   getOperationDefinition,
@@ -22,6 +21,8 @@ import {
   isNonEmptyArray,
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { createFragmentMap } from "./fragments.js";
 
 // https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23
 interface EnterLeaveVisitor<TVisitedNode extends ASTNode> {

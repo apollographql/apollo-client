@@ -12,14 +12,16 @@ import type {
 
 import type { FragmentMap } from "@apollo/client/utilities";
 import {
-  createFragmentMap,
   getFragmentDefinitions,
   getFragmentFromSelection,
   getMainDefinition,
   isField,
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
-import { shouldInclude } from "@apollo/client/utilities/internal";
+import {
+  createFragmentMap,
+  shouldInclude,
+} from "@apollo/client/utilities/internal";
 
 import type { ApolloQueryResult, OperationVariables } from "./types.js";
 

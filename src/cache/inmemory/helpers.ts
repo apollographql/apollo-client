@@ -13,7 +13,6 @@ import type {
 } from "@apollo/client/utilities";
 import {
   compact,
-  createFragmentMap,
   DeepMerger,
   getFragmentDefinitions,
   isArray,
@@ -22,7 +21,10 @@ import {
   isReference,
   resultKeyNameFromField,
 } from "@apollo/client/utilities";
-import { shouldInclude } from "@apollo/client/utilities/internal";
+import {
+  createFragmentMap,
+  shouldInclude,
+} from "@apollo/client/utilities/internal";
 
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 import type { KeyFieldsContext } from "./policies.js";

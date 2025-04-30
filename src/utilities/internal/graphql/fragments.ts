@@ -101,3 +101,22 @@ export function getFragmentQueryDocument(
 
   return query;
 }
+
+/**
+ * This is an interface that describes a map from fragment names to fragment definitions.
+ */
+export interface FragmentMap {
+  [fragmentName: string]: FragmentDefinitionNode;
+}
+
+// Utility function that takes a list of fragment definitions and makes a hash out of them
+// that maps the name of the fragment to the fragment definition.
+export function createFragmentMap(
+  fragments: FragmentDefinitionNode[] = []
+): FragmentMap {
+  const symTable: FragmentMap = {};
+  fragments.forEach((fragment) => {
+    symTable[fragment.name.value] = fragment;
+  });
+  return symTable;
+}

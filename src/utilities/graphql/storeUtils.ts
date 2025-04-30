@@ -1,5 +1,3 @@
-import type { VariableNode } from "graphql";
-
 export interface Reference {
   readonly __ref: string;
 }
@@ -43,5 +41,3 @@ export interface StoreObject {
 export type AsStoreObject<T extends { __typename?: string }> = {
   [K in keyof T]: T[K];
 };
-
-export type VariableValue = (node: VariableNode) => any;

@@ -1,13 +1,24 @@
+/**
+ * Representation of a reference object inside the cache.
+ */
 export interface Reference {
   readonly __ref: string;
 }
 
+/**
+ * Determines if a given object is a reference object.
+ *
+ * @param obj - The object to check if its a reference object
+ */
 export function isReference(obj: any): obj is Reference {
   return Boolean(
     obj && typeof obj === "object" && typeof obj.__ref === "string"
   );
 }
 
+/**
+ * Represents the union of valid values that can be stored in the cache.
+ */
 export type StoreValue =
   | number
   | string
@@ -19,6 +30,9 @@ export type StoreValue =
   | void
   | Object;
 
+/**
+ * Represents an object that is stored in the cache.
+ */
 export interface StoreObject {
   __typename?: string;
   [storeFieldName: string]: StoreValue;

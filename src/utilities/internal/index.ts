@@ -19,6 +19,7 @@ export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
+export { isApolloPayloadResult } from "./isApolloPayloadResult.js";
 export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncrementalResult.js";

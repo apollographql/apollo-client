@@ -7,7 +7,7 @@ import {
   ServerParseError,
 } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link";
-import { isApolloPayloadResult } from "@apollo/client/utilities";
+import { isApolloPayloadResult } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 const { hasOwnProperty } = Object.prototype;

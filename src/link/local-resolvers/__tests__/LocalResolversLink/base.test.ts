@@ -1,6 +1,6 @@
 import { of } from "rxjs";
 
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
 import {

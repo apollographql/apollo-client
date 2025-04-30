@@ -2,7 +2,7 @@ import { of } from "rxjs";
 
 import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
 import { LocalResolversError } from "@apollo/client/errors";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
 import {
@@ -170,6 +170,7 @@ it("matches fragments with fragment conditions", async () => {
         Foo: ["Bar", "Baz"],
       },
     }),
+    link: ApolloLink.empty(),
   });
 
   const link = ApolloLink.from([localResolversLink, mockLink]);
@@ -201,7 +202,10 @@ test("warns when cache does not implement fragmentMatches", async () => {
     }
   `;
 
-  const client = new ApolloClient({ cache: new TestCache() });
+  const client = new ApolloClient({
+    cache: new TestCache(),
+    link: ApolloLink.empty(),
+  });
 
   const link = new LocalResolversLink({
     resolvers: {
@@ -269,6 +273,7 @@ test("can use a fragments on interface types defined by possibleTypes", async ()
 
   const client = new ApolloClient({
     cache: new InMemoryCache({ possibleTypes: { Profile: ["User"] } }),
+    link: ApolloLink.empty(),
   });
 
   const link = new LocalResolversLink({

@@ -2,19 +2,12 @@ import type {
   ArgumentNode,
   BooleanValueNode,
   DirectiveNode,
-  DocumentNode,
   SelectionNode,
   ValueNode,
   VariableNode,
 } from "graphql";
 
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import { hasDirectives } from "../hasDirectives.js";
-
-export function hasClientExports(document: DocumentNode) {
-  return document && hasDirectives(["client", "export"], document, true);
-}
 
 function isInclusionDirective({ name: { value } }: DirectiveNode): boolean {
   return value === "skip" || value === "include";

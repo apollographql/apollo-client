@@ -1,5 +1,5 @@
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
-
+export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 
@@ -11,7 +11,7 @@ export {
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
 
-export { hasClientExports, shouldInclude } from "./graphql/directives.js";
+export { shouldInclude } from "./graphql/directives.js";
 
 export type { FragmentMap, FragmentMapFunction } from "./graphql/fragments.js";
 export {

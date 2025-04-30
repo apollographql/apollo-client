@@ -5,8 +5,13 @@ import { mergeDeep } from "@apollo/client/utilities/internal";
 
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
-// A very basic pagination field policy that always concatenates new
-// results onto the existing array, without examining options.args.
+/**
+ * A basic pagination field policy that always concatenates new
+ * results onto the existing array, without examining options.args.
+ *
+ * @param keyArgs - `keyArgs` that should be applied to the field policy
+ * @returns The field policy that handles concatenating field results.
+ */
 export function concatPagination<T = Reference>(
   keyArgs: KeyArgs = false
 ): FieldPolicy<T[]> {
@@ -18,10 +23,15 @@ export function concatPagination<T = Reference>(
   };
 }
 
-// A basic field policy that uses options.args.{offset,limit} to splice
-// the incoming data into the existing array. If your arguments are called
-// something different (like args.{start,count}), feel free to copy/paste
-// this implementation and make the appropriate changes.
+/**
+ * A basic field policy that uses options.args.{offset,limit} to splice
+ * the incoming data into the existing array. If your arguments are called
+ * something different (like args.{start,count}), feel free to copy/paste
+ * this implementation and make the appropriate changes.
+ *
+ * @param keyArgs - `keyArgs` that should be applied to the field policy
+ * @returns The field policy that handles offset/limit pagination
+ */
 export function offsetLimitPagination<T = Reference>(
   keyArgs: KeyArgs = false
 ): FieldPolicy<T[]> {
@@ -91,6 +101,13 @@ type RelayFieldPolicy<TNode> = FieldPolicy<
 // As proof of the flexibility of field policies, this function generates
 // one that handles Relay-style pagination, without Apollo Client knowing
 // anything about connections, edges, cursors, or pageInfo objects.
+/**
+ * A field policy that attempts to handle pagination for fields that adhere to
+ * the [Relay Connections Spec](https://relay.dev/graphql/connections.htm).
+ *
+ * @param keyArgs - `keyArgs` that should be applied to the field policy
+ * @returns The field policy that handles Relay pagination
+ */
 export function relayStylePagination<TNode extends Reference = Reference>(
   keyArgs: KeyArgs = false
 ): RelayFieldPolicy<TNode> {

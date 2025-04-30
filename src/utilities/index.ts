@@ -10,7 +10,6 @@ export {
   getFragmentMaskMode,
   getInclusionDirectives,
   hasClientExports,
-  hasDirectives,
   shouldInclude,
 } from "./graphql/directives.js";
 

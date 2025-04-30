@@ -1,6 +1,5 @@
 import type {
   ArgumentNode,
-  ASTNode,
   BooleanValueNode,
   DirectiveNode,
   DocumentNode,
@@ -9,9 +8,10 @@ import type {
   ValueNode,
   VariableNode,
 } from "graphql";
-import { BREAK, Kind, visit } from "graphql";
+import { Kind } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { hasDirectives } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 // Provides the methods that allow QueryManager to handle the `skip` and
@@ -45,23 +45,6 @@ export function shouldInclude(
       return directive.name.value === "skip" ? !evaledValue : evaledValue;
     }
   );
-}
-
-export function hasDirectives(names: string[], root: ASTNode, all?: boolean) {
-  const nameSet = new Set(names);
-  const uniqueCount = nameSet.size;
-
-  visit(root, {
-    Directive(node) {
-      if (nameSet.delete(node.name.value) && (!all || !nameSet.size)) {
-        return BREAK;
-      }
-    },
-  });
-
-  // If we found all the names, nameSet will be empty. If we only care about
-  // finding some of them, the < condition is sufficient.
-  return all ? !nameSet.size : nameSet.size < uniqueCount;
 }
 
 export function hasClientExports(document: DocumentNode) {

@@ -11,18 +11,8 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import { checkDocument } from "../checkDocument.js";
+import { getOperationDefinition } from "../getOperationDefinition.js";
 import { valueToObjectRepresentation } from "../valueToObjectRepresentation.js";
-
-/** @internal */
-export function getOperationDefinition(
-  doc: DocumentNode
-): OperationDefinitionNode | undefined {
-  checkDocument(doc);
-  return doc.definitions.filter(
-    (definition): definition is OperationDefinitionNode =>
-      definition.kind === "OperationDefinition"
-  )[0];
-}
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
   name: NonNullable<OperationDefinitionNode["name"]>;

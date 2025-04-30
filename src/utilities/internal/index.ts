@@ -6,6 +6,7 @@ export { checkDocument } from "./checkDocument.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
+export { getOperationDefinition } from "./getOperationDefinition.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { onAnyEvent } from "./onAnyEvent.js";
@@ -24,7 +25,6 @@ export {
   getFragmentDefinition,
   getFragmentDefinitions,
   getMainDefinition,
-  getOperationDefinition,
   getOperationName,
   getQueryDefinition,
 } from "./graphql/getFromAST.js";

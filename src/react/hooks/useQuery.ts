@@ -268,12 +268,22 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       () => client.watchQuery(watchQueryOptions)
     );
 
+    const result = observable.getCurrentResult();
+
+    // TODO: This really should live in `ObservableQuery`, but with the ongoing
+    // work in https://github.com/apollographql/apollo-client/pull/12556 we
+    // should wait to add this.
+    if (observable.options.fetchPolicy === "standby" && result.loading) {
+      result.networkStatus = NetworkStatus.ready;
+      result.loading = false;
+    }
+
     return {
       client,
       query,
       observable,
       resultData: {
-        current: observable.getCurrentResult(),
+        current: result,
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
         previousData: previous?.resultData.current.data,

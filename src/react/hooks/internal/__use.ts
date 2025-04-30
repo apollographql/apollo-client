@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { wrapPromiseWithState } from "@apollo/client/utilities";
+import { decoratePromise } from "@apollo/client/utilities";
 
 type Use = <T>(promise: Promise<T>) => T;
 // Prevent webpack from complaining about our feature detection of the
@@ -14,14 +14,14 @@ const realHook = React[useKey] as Use | undefined;
 export const __use =
   realHook ||
   function __use<TValue>(promise: Promise<TValue>) {
-    const statefulPromise = wrapPromiseWithState(promise);
+    const decoratedPromise = decoratePromise(promise);
 
-    switch (statefulPromise.status) {
+    switch (decoratedPromise.status) {
       case "pending":
-        throw statefulPromise;
+        throw decoratedPromise;
       case "rejected":
-        throw statefulPromise.reason;
+        throw decoratedPromise.reason;
       case "fulfilled":
-        return statefulPromise.value;
+        return decoratedPromise.value;
     }
   };

@@ -11,7 +11,7 @@ function isDecoratedPromise<TValue>(
   return "status" in promise;
 }
 
-export function wrapPromiseWithState<TValue>(
+export function decoratePromise<TValue>(
   promise: Promise<TValue>
 ): DecoratedPromise<TValue> {
   if (isDecoratedPromise(promise)) {

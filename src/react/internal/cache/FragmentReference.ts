@@ -7,7 +7,7 @@ import type {
   WatchFragmentResult,
 } from "@apollo/client/cache";
 import type { MaybeMasked } from "@apollo/client/masking";
-import { wrapPromiseWithState } from "@apollo/client/utilities";
+import { decoratePromise } from "@apollo/client/utilities";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import { createFulfilledPromise } from "@apollo/client/utilities/internal";
 
@@ -162,7 +162,7 @@ export class FragmentReference<
   }
 
   private createPendingPromise() {
-    return wrapPromiseWithState(
+    return decoratePromise(
       new Promise<MaybeMasked<TData>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;

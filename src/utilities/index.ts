@@ -29,7 +29,7 @@ export {
 
 export {
   // internal
-  wrapPromiseWithState,
+  decoratePromise,
 } from "./promises/decoration.js";
 
 export { canonicalStringify } from "./shared/canonicalStringify.js";

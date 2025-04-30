@@ -21,7 +21,7 @@ import {
   spyOnConsole,
   withCleanup,
 } from "@apollo/client/testing/internal";
-import type { DeepPartial} from "@apollo/client/utilities/internal";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 import { makeReference } from "@apollo/client/utilities/internal";
 
 describe("ApolloClient", () => {

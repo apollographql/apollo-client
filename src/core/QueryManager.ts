@@ -49,7 +49,6 @@ import {
   getGraphQLErrorsFromResult,
   graphQLResultHasError,
   isNonEmptyArray,
-  isNonNullObject,
   makeUniqueId,
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
@@ -62,6 +61,7 @@ import {
   hasClientExports,
   hasDirectives,
   isDocumentNode,
+  isNonNullObject,
   onAnyEvent,
   removeDirectivesFromDocument,
   toQueryResult,

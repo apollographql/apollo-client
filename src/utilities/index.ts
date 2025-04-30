@@ -55,7 +55,7 @@ export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
 // internal
 export { isArray, isNonEmptyArray } from "./common/arrays.js";
 // internal
-export { isNonNullObject, isPlainObject } from "./common/objects.js";
+export { isPlainObject } from "./common/objects.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

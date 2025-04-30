@@ -19,6 +19,7 @@ export { hasDirectives } from "./hasDirectives.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";
+export { isNonNullObject } from "./isNonNullObject.js";
 export { makeReference } from "./makeReference.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { preventUnhandledRejection } from "./preventUnhandledRejection.js";

@@ -13,7 +13,6 @@ import {
   compact,
   DeepMerger,
   isArray,
-  isNonNullObject,
   isReference,
 } from "@apollo/client/utilities";
 import type {
@@ -24,6 +23,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isField,
+  isNonNullObject,
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

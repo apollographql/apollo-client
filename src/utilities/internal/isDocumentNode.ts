@@ -1,6 +1,6 @@
 import type { DocumentNode } from "graphql";
 
-import { isNonNullObject } from "@apollo/client/utilities";
+import { isNonNullObject } from "./isNonNullObject.js";
 
 /** @internal */
 export function isDocumentNode(value: unknown): value is DocumentNode {

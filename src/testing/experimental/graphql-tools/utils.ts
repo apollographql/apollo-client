@@ -20,7 +20,7 @@ import {
   isUnionType,
 } from "graphql";
 
-import { isNonNullObject } from "@apollo/client/utilities";
+import { isNonNullObject } from "@apollo/client/utilities/internal";
 
 // Taken from @graphql-tools/mock:
 // https://github.com/ardatan/graphql-tools/blob/4b56b04d69b02919f6c5fa4f97d33da63f36e8c8/packages/mock/src/utils.ts#L20

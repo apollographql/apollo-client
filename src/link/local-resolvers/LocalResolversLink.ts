@@ -56,10 +56,7 @@ type MaybeRequireRootValue<TRootValue> =
   : unknown extends TRootValue ? {}
   : {
       rootValue:
-        | ((options: {
-            phase: "exports" | "resolve";
-            operation: Operation;
-          }) => TRootValue)
+        | ((options: { operation: Operation }) => TRootValue)
         | TRootValue;
     };
 
@@ -72,10 +69,10 @@ export declare namespace LocalResolversLink {
     TRootValue = unknown,
   > = {
     /**
-     * A value or function called with the current `operation` and `phase`
-     * creating the root value passed to any root field resolvers. Providing a
-     * function is useful if you want to use a different root value depending on
-     * the operation details.
+     * A value or function called with the current `operation` creating the root
+     * value passed to any root field resolvers. Providing a function is useful
+     * if you want to use a different root value depending on the operation
+     * details.
      *
      * @example
      * ```ts
@@ -94,10 +91,7 @@ export declare namespace LocalResolversLink {
      * ````
      */
     rootValue?:
-      | ((options: {
-          phase: "exports" | "resolve";
-          operation: Operation;
-        }) => TRootValue)
+      | ((options: { operation: Operation }) => TRootValue)
       | TRootValue;
 
     /**
@@ -274,7 +268,7 @@ export class LocalResolversLink<
           ...execContext,
           rootValue:
             typeof this.rootValue === "function" ?
-              this.rootValue({ phase: "exports", operation })
+              this.rootValue({ operation })
             : this.rootValue,
           selectionsToResolve: exportsToResolve,
           exportedVariables: {},
@@ -290,7 +284,7 @@ export class LocalResolversLink<
                 ...execContext,
                 rootValue:
                   typeof this.rootValue === "function" ?
-                    this.rootValue({ phase: "resolve", operation })
+                    this.rootValue({ operation })
                   : this.rootValue,
                 selectionsToResolve,
                 phase: "resolve",

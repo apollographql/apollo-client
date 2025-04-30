@@ -70,11 +70,9 @@ test("can pass `rootValue` as function that will be used with root client resolv
 
   expect(rootValue).toHaveBeenCalledTimes(2);
   expect(rootValue).toHaveBeenNthCalledWith(1, {
-    phase: "exports",
     operation: expect.objectContaining({ query, operationName: "Test" }),
   });
   expect(rootValue).toHaveBeenNthCalledWith(2, {
-    phase: "resolve",
     operation: expect.objectContaining({ query, operationName: "Test" }),
   });
 });

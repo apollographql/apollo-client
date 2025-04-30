@@ -11,7 +11,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { BREAK, isSelectionNode, visit } from "graphql";
+import { BREAK, isSelectionNode, Kind, visit } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
@@ -25,7 +25,6 @@ import {
   getMainDefinition,
   hasDirectives,
   isField,
-  isInlineFragment,
   mergeDeep,
   mergeDeepArray,
   removeClientSetsFromDocument,
@@ -347,7 +346,7 @@ export class LocalState {
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
-      if (isInlineFragment(selection)) {
+      if (selection.kind === Kind.INLINE_FRAGMENT) {
         fragment = selection;
       } else {
         // This is a named fragment.

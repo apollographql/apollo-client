@@ -42,7 +42,6 @@ export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncremental
 export { isExecutionPatchInitialResult } from "./isExecutionPatchIninitialResult.js";
 export { isExecutionPatchResult } from "./isExecutionPatchResult.js";
 export { isField } from "./isField.js";
-export { isInlineFragment } from "./isInlineFragment.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";

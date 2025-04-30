@@ -132,7 +132,6 @@ export declare namespace LocalResolversLink {
 
   export interface ResolverContext {
     operation: Operation;
-    phase: "exports" | "resolve";
   }
 }
 
@@ -565,7 +564,7 @@ export class LocalResolversLink<
               : dealias(parentSelectionSet, rootValue) ?? {},
               (argumentsObjectFromField(field, operation.variables) ??
                 {}) as Record<string, unknown>,
-              { phase, operation },
+              { operation },
               { field, fragmentMap: execContext.fragmentMap, path },
             ])
           )

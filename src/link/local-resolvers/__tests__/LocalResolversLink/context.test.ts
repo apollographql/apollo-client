@@ -42,7 +42,6 @@ test("passes operation in context to resolvers", async () => {
     { __typename: "Foo" },
     {},
     {
-      phase: "resolve",
       operation: expect.objectContaining({
         query,
         client,

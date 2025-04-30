@@ -7,7 +7,6 @@ import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   addTypenameToDocument,
-  checkDocument,
   cloneDeep,
   getDefaultValues,
   getOperationDefinition,
@@ -16,6 +15,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import {
+  checkDocument,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities/internal";

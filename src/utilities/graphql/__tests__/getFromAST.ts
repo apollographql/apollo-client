@@ -3,7 +3,6 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 
 import {
-  checkDocument,
   getDefaultValues,
   getFragmentDefinitions,
   getOperationName,
@@ -11,42 +10,6 @@ import {
 } from "@apollo/client/utilities";
 
 describe("AST utility functions", () => {
-  it("should correctly check a document for correctness", () => {
-    const multipleQueries = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-
-      query {
-        author {
-          address
-        }
-      }
-    `;
-    expect(() => {
-      checkDocument(multipleQueries);
-    }).toThrow();
-
-    const namedFragment = gql`
-      query {
-        author {
-          ...authorDetails
-        }
-      }
-
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-    `;
-    expect(() => {
-      checkDocument(namedFragment);
-    }).not.toThrow();
-  });
-
   it("should get fragment definitions from a document containing a single fragment", () => {
     const singleFragmentDefinition = gql`
       query {

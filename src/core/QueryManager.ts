@@ -38,7 +38,7 @@ import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { checkDocument, print } from "@apollo/client/utilities";
+import { print } from "@apollo/client/utilities";
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
   isExecutionPatchIncrementalResult,
@@ -60,6 +60,7 @@ import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   addNonReactiveToNamedFragments,
+  checkDocument,
   hasClientExports,
   hasDirectives,
   onAnyEvent,

@@ -20,6 +20,8 @@ export {
   getFragmentQueryDocument,
 } from "./graphql/fragments.js";
 
+export { checkDocument } from "./graphql/getFromAST.js";
+
 export {
   addNonReactiveToNamedFragments,
   removeClientSetsFromDocument,

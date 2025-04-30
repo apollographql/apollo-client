@@ -29,8 +29,6 @@ export {
 
 export {
   // internal
-  createRejectedPromise,
-  // internal
   isStatefulPromise,
   // internal
   wrapPromiseWithState,

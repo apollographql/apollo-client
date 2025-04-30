@@ -703,14 +703,7 @@ export class LocalResolversLink<
           },
         },
         Directive: (directive, _, __, ___, ancestors) => {
-          const fieldInfo = fields.at(-1);
-
           if (directive.name.value === "client") {
-            if (fieldInfo) {
-              fieldInfo.isClientFieldOrDescendent = true;
-              fieldInfo.hasClientRoot ||= fieldInfo.isRoot;
-            }
-
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);

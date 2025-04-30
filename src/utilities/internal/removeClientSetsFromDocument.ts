@@ -4,7 +4,7 @@ import { checkDocument } from "./checkDocument.js";
 import { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
 
 /**
- * Remove fields / selection sets that include an @client directive.
+ * Remove fields / selection sets that include an `@client` directive.
  *
  * @internal
  */

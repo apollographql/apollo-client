@@ -24,9 +24,9 @@ export function concatPagination<T = Reference>(
 }
 
 /**
- * A basic field policy that uses options.args.{offset,limit} to splice
+ * A basic field policy that uses `options.args.{offset,limit}` to splice
  * the incoming data into the existing array. If your arguments are called
- * something different (like args.{start,count}), feel free to copy/paste
+ * something different (like `args.{start,count}`), feel free to copy/paste
  * this implementation and make the appropriate changes.
  *
  * @param keyArgs - `keyArgs` that should be applied to the field policy

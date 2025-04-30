@@ -46,8 +46,6 @@ export { stripTypename } from "./common/stripTypename.js";
 // internal
 export type { IsStrictlyAny } from "./types/IsStrictlyAny.js";
 // internal
-export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
-// internal
 export type { VariablesOption } from "./types/VariablesOption.js";
 
 export { cacheSizes } from "./caching/index.js";

@@ -423,7 +423,6 @@ Array [
   "DeepMerger",
   "argumentsObjectFromField",
   "canUseDOM",
-  "canUseLayoutEffect",
   "checkDocument",
   "cloneDeep",
   "compact",

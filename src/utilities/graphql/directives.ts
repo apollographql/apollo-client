@@ -47,12 +47,6 @@ export function shouldInclude(
   );
 }
 
-export const hasAnyDirectives = (names: string[], root: ASTNode) =>
-  hasDirectives(names, root, false);
-
-export const hasAllDirectives = (names: string[], root: ASTNode) =>
-  hasDirectives(names, root, true);
-
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean) {
   const nameSet = new Set(names);
   const uniqueCount = nameSet.size;

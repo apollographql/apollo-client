@@ -9,8 +9,6 @@ export type {
 export {
   getFragmentMaskMode,
   getInclusionDirectives,
-  hasAllDirectives,
-  hasAnyDirectives,
   hasClientExports,
   hasDirectives,
   shouldInclude,

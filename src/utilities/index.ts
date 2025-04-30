@@ -76,7 +76,6 @@ export type {
 } from "./graphql/transform.js";
 export {
   addTypenameToDocument,
-  buildQueryFromSelectionSet,
   removeArgumentsFromDocument,
   removeConnectionDirectiveFromDocument,
   removeDirectivesFromDocument,

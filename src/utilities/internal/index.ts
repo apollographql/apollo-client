@@ -6,6 +6,7 @@ export { checkDocument } from "./checkDocument.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
+export { getFragmentDefinition } from "./getFragmentDefinition.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
@@ -22,7 +23,6 @@ export {
 
 export {
   getDefaultValues,
-  getFragmentDefinition,
   getFragmentDefinitions,
   getMainDefinition,
   getOperationName,

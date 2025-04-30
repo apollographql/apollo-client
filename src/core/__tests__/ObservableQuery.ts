@@ -22,8 +22,8 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
 import { DocumentTransform } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
 
 describe("ObservableQuery", () => {

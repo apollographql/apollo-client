@@ -8,11 +8,7 @@ import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
 import type { OperationVariables } from "@apollo/client";
-import type {
-  DeepPartial,
-  Reference,
-  StoreObject,
-} from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cacheSizes,
@@ -22,6 +18,7 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 

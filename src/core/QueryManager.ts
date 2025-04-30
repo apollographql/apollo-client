@@ -37,11 +37,11 @@ import type {
 import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
 import { print } from "@apollo/client/utilities";
 import { cacheSizes } from "@apollo/client/utilities";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   checkDocument,

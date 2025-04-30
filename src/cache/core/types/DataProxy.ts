@@ -3,7 +3,8 @@ import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-li
 
 import type { OperationVariables } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
-import type { DeepPartial, Reference } from "@apollo/client/utilities";
+import type { Reference } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 
 import type { MissingFieldError } from "./common.js";
 

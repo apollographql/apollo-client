@@ -40,9 +40,6 @@ export {
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
-// internal
-export { preventUnhandledRejection } from "./promises/preventUnhandledRejection.js";
-
 export type {
   // internal
   ReconcilerFunction,

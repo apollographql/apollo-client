@@ -21,6 +21,7 @@ export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";
 export { makeReference } from "./makeReference.js";
 export { onAnyEvent } from "./onAnyEvent.js";
+export { preventUnhandledRejection } from "./preventUnhandledRejection.js";
 export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";

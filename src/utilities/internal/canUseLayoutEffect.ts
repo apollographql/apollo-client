@@ -22,4 +22,5 @@ const usingJSDOM: boolean =
 // warnings are harmless, this !usingJSDOM condition seems to be the best way to
 
 // prevent them (i.e. skipping useLayoutEffect when using jsdom).
+/** @internal */
 export const canUseLayoutEffect = (canUseDOM || isReactNative) && !usingJSDOM;

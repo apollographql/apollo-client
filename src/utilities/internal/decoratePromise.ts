@@ -9,6 +9,7 @@ function isDecoratedPromise<TValue>(
   return "status" in promise;
 }
 
+/** @internal */
 export function decoratePromise<TValue>(
   promise: Promise<TValue>
 ): DecoratedPromise<TValue> {

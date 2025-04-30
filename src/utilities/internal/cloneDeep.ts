@@ -2,6 +2,8 @@ const { toString } = Object.prototype;
 
 /**
  * Deeply clones a value to create a new instance.
+ *
+ * @internal
  */
 export function cloneDeep<T>(value: T): T {
   return __cloneDeep(value);

@@ -18,6 +18,7 @@ import type { Primitive } from "./Primitive.js";
 
 type DeepPartialPrimitive = Primitive | Date | RegExp;
 
+/** @internal */
 export type DeepPartial<T> =
   T extends DeepPartialPrimitive ? T
   : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue>

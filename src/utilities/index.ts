@@ -14,8 +14,6 @@ export type {
   StoreValue,
 } from "./graphql/storeUtils.js";
 export {
-  // internal
-  isInlineFragment,
   isReference,
   // internal
   makeReference,

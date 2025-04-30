@@ -1,9 +1,4 @@
-import type {
-  FieldNode,
-  InlineFragmentNode,
-  SelectionNode,
-  VariableNode,
-} from "graphql";
+import type { FieldNode, VariableNode } from "graphql";
 
 export interface Reference {
   readonly __ref: string;
@@ -61,12 +56,6 @@ export type Directives = {
 
 export function resultKeyNameFromField(field: FieldNode): string {
   return field.alias ? field.alias.value : field.name.value;
-}
-
-export function isInlineFragment(
-  selection: SelectionNode
-): selection is InlineFragmentNode {
-  return selection.kind === "InlineFragment";
 }
 
 export type VariableValue = (node: VariableNode) => any;

@@ -18,7 +18,6 @@ import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { StoreObject } from "@apollo/client/utilities";
 import {
-  isInlineFragment,
   mergeDeep,
   mergeDeepArray,
   resultKeyNameFromField,
@@ -31,6 +30,7 @@ import {
   getMainDefinition,
   hasDirectives,
   isField,
+  isInlineFragment,
   removeClientSetsFromDocument,
   shouldInclude,
 } from "@apollo/client/utilities/internal";

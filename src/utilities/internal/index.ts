@@ -18,6 +18,7 @@ export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
+export { isInlineFragment } from "./isInlineFragment.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";

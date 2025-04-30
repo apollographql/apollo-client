@@ -14,11 +14,11 @@ import { Kind, visit } from "graphql";
 import { isArray, isNonEmptyArray } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import { checkDocument } from "../checkDocument.js";
 import { createFragmentMap } from "../createFragmentMap.js";
 import type { FragmentMap } from "../types/FragmentMap.js";
 
 import {
-  checkDocument,
   getFragmentDefinition,
   getFragmentDefinitions,
   getOperationDefinition,

@@ -2,6 +2,7 @@ export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
+export { checkDocument } from "./checkDocument.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
@@ -19,7 +20,6 @@ export {
 } from "../internal/getMemoryInternals.js";
 
 export {
-  checkDocument,
   getDefaultValues,
   getFragmentDefinition,
   getFragmentDefinitions,

@@ -3,50 +3,11 @@ import { print } from "graphql";
 
 import { gql } from "@apollo/client";
 import {
-  checkDocument,
   getDefaultValues,
   getFragmentDefinitions,
   getOperationName,
   getQueryDefinition,
 } from "@apollo/client/utilities/internal";
-
-describe("checkDocument", () => {
-  it("should correctly check a document for correctness", () => {
-    const multipleQueries = gql`
-      query {
-        author {
-          firstName
-          lastName
-        }
-      }
-
-      query {
-        author {
-          address
-        }
-      }
-    `;
-    expect(() => {
-      checkDocument(multipleQueries);
-    }).toThrow();
-
-    const namedFragment = gql`
-      query {
-        author {
-          ...authorDetails
-        }
-      }
-
-      fragment authorDetails on Author {
-        firstName
-        lastName
-      }
-    `;
-    expect(() => {
-      checkDocument(namedFragment);
-    }).not.toThrow();
-  });
-});
 
 describe("getDefaultValues", () => {
   test("will create an empty variable object if no default values are provided", () => {

@@ -1,36 +1,7 @@
-import type {
-  ArgumentNode,
-  ASTNode,
-  DirectiveNode,
-  FieldNode,
-  FragmentDefinitionNode,
-  FragmentSpreadNode,
-  OperationDefinitionNode,
-  VariableDefinitionNode,
-} from "graphql";
+import type { ASTNode, FieldNode, OperationDefinitionNode } from "graphql";
 import { Kind, visit } from "graphql";
 
 import { isField } from "./storeUtils.js";
-
-type RemoveNodeConfig<N> = {
-  name?: string;
-  test?: (node: N) => boolean;
-  remove?: boolean;
-};
-
-export type GetNodeConfig<N> = {
-  name?: string;
-  test?: (node: N) => boolean;
-};
-
-export type RemoveDirectiveConfig = RemoveNodeConfig<DirectiveNode>;
-export type GetDirectiveConfig = GetNodeConfig<DirectiveNode>;
-export type RemoveArgumentsConfig = RemoveNodeConfig<ArgumentNode>;
-export type GetFragmentSpreadConfig = GetNodeConfig<FragmentSpreadNode>;
-export type RemoveFragmentDefinitionConfig =
-  RemoveNodeConfig<FragmentDefinitionNode>;
-export type RemoveVariableDefinitionConfig =
-  RemoveNodeConfig<VariableDefinitionNode>;
 
 const TYPENAME_FIELD: FieldNode = {
   kind: Kind.FIELD,

@@ -63,15 +63,6 @@ export {
   valueToObjectRepresentation,
 } from "./graphql/storeUtils.js";
 
-export type {
-  GetDirectiveConfig,
-  GetFragmentSpreadConfig,
-  GetNodeConfig,
-  RemoveArgumentsConfig,
-  RemoveDirectiveConfig,
-  RemoveFragmentDefinitionConfig,
-  RemoveVariableDefinitionConfig,
-} from "./graphql/transform.js";
 export { addTypenameToDocument } from "./graphql/transform.js";
 
 export {

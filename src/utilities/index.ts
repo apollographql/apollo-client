@@ -61,8 +61,6 @@ export type { DeepPartial } from "./types/DeepPartial.js";
 // internal
 export type { Prettify } from "./types/Prettify.js";
 // internal
-export type { Primitive } from "./types/Primitive.js";
-// internal
 export type { UnionToIntersection } from "./types/UnionToIntersection.js";
 // internal
 export type { NoInfer } from "./types/NoInfer.js";

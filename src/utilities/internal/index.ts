@@ -1,5 +1,6 @@
 export type { FragmentMap } from "./types/FragmentMap.js";
 export type { FragmentMapFunction } from "./types/FragmentMapFunction.js";
+export type { Primitive } from "./types/Primitive.js";
 
 export { argumentsObjectFromField } from "./argumentsObjectFromField.js";
 export { canUseDOM } from "./canUseDOM.js";

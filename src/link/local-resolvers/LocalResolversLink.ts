@@ -665,12 +665,6 @@ export class LocalResolversLink<
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
-    const fields: Array<{
-      node: FieldNode;
-      isRoot: boolean;
-      isClientFieldOrDescendent: boolean;
-      hasClientRoot: boolean;
-    }> = [];
 
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
@@ -683,25 +677,6 @@ export class LocalResolversLink<
       this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
-        Field: {
-          enter(field) {
-            const parent = fields.at(-1);
-
-            fields.push({
-              node: field,
-              isRoot: fields.length === 0,
-              isClientFieldOrDescendent:
-                parent?.isClientFieldOrDescendent ?? false,
-              hasClientRoot:
-                parent?.hasClientRoot ||
-                (parent?.isRoot && parent?.isClientFieldOrDescendent) ||
-                false,
-            });
-          },
-          leave() {
-            fields.pop();
-          },
-        },
         Directive: (directive, _, __, ___, ancestors) => {
           if (directive.name.value === "client") {
             ancestors.forEach((node) => {

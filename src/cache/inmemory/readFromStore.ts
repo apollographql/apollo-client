@@ -23,6 +23,7 @@ import {
   getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
+  isArray,
   isField,
   isNonNullObject,
   makeReference,
@@ -46,7 +47,6 @@ import {
 import {
   extractFragmentContext,
   getTypenameFromStoreObject,
-  isArray,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { Policies } from "./policies.js";

@@ -31,6 +31,7 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getOperationDefinition,
+  isArray,
   isField,
   makeReference,
   resultKeyNameFromField,
@@ -47,7 +48,6 @@ import type { EntityStore } from "./entityStore.js";
 import {
   extractFragmentContext,
   fieldNameFromStoreName,
-  isArray,
   makeProcessedFieldsMerger,
   storeValueIsStoreObject,
 } from "./helpers.js";

@@ -53,7 +53,7 @@ export { cloneDeep } from "./common/cloneDeep.js";
 // internal
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
 // internal
-export { isArray, isNonEmptyArray } from "./common/arrays.js";
+export { isNonEmptyArray } from "./common/arrays.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

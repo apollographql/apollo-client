@@ -9,12 +9,7 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
-import {
-  compact,
-  DeepMerger,
-  isArray,
-  isReference,
-} from "@apollo/client/utilities";
+import { compact, DeepMerger, isReference } from "@apollo/client/utilities";
 import type {
   FragmentMap,
   FragmentMapFunction,
@@ -22,6 +17,7 @@ import type {
 import {
   createFragmentMap,
   getFragmentDefinitions,
+  isArray,
   isField,
   isNonNullObject,
   resultKeyNameFromField,
@@ -33,8 +29,6 @@ import type { KeyFieldsContext } from "./policies.js";
 import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
-
-export { isArray };
 
 export function defaultDataIdFromObject(
   { __typename, id, _id }: Readonly<StoreObject>,

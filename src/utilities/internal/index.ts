@@ -16,6 +16,7 @@ export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
 export { hasClientExports } from "./hasClientExports.js";
 export { hasDirectives } from "./hasDirectives.js";
+export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";

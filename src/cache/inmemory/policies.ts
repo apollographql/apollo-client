@@ -17,6 +17,7 @@ import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
   getStoreKeyName,
+  isArray,
   isNonNullObject,
   storeKeyNameFromField,
 } from "@apollo/client/utilities/internal";
@@ -38,7 +39,6 @@ import {
   defaultDataIdFromObject,
   fieldNameFromStoreName,
   hasOwn,
-  isArray,
   selectionSetMatchesResult,
   storeValueIsStoreObject,
   TypeOrFieldNameRegExp,

@@ -1,11 +1,12 @@
 import { DeepMerger, isNonEmptyArray } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
+  isArray,
   isNonNullObject,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { hasOwn, isArray } from "./helpers.js";
+import { hasOwn } from "./helpers.js";
 import type {
   KeyArgsFunction,
   KeyFieldsFunction,

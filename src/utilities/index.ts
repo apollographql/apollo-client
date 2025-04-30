@@ -13,11 +13,7 @@ export type {
   StoreObject,
   StoreValue,
 } from "./graphql/storeUtils.js";
-export {
-  isReference,
-  // internal
-  resultKeyNameFromField,
-} from "./graphql/storeUtils.js";
+export { isReference } from "./graphql/storeUtils.js";
 
 export { addTypenameToDocument } from "./graphql/transform.js";
 

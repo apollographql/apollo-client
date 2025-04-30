@@ -17,11 +17,7 @@ import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { StoreObject } from "@apollo/client/utilities";
-import {
-  mergeDeep,
-  mergeDeepArray,
-  resultKeyNameFromField,
-} from "@apollo/client/utilities";
+import { mergeDeep, mergeDeepArray } from "@apollo/client/utilities";
 import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
@@ -32,6 +28,7 @@ import {
   isField,
   isInlineFragment,
   removeClientSetsFromDocument,
+  resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";

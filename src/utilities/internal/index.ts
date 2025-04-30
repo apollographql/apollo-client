@@ -23,6 +23,7 @@ export { makeReference } from "./makeReference.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
+export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
 export { toQueryResult } from "./toQueryResult.js";

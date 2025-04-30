@@ -20,7 +20,6 @@ import {
   cloneDeep,
   isNonEmptyArray,
   isReference,
-  resultKeyNameFromField,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -34,6 +33,7 @@ import {
   getOperationDefinition,
   isField,
   makeReference,
+  resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {

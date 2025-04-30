@@ -15,7 +15,6 @@ import {
   isArray,
   isNonNullObject,
   isReference,
-  resultKeyNameFromField,
 } from "@apollo/client/utilities";
 import type {
   FragmentMap,
@@ -25,6 +24,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isField,
+  resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 

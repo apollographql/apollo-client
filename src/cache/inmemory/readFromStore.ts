@@ -13,7 +13,6 @@ import {
   isReference,
   maybeDeepFreeze,
   mergeDeepArray,
-  resultKeyNameFromField,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -27,6 +26,7 @@ import {
   getQueryDefinition,
   isField,
   makeReference,
+  resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
 import {

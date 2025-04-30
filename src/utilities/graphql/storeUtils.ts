@@ -1,4 +1,4 @@
-import type { FieldNode, VariableNode } from "graphql";
+import type { VariableNode } from "graphql";
 
 export interface Reference {
   readonly __ref: string;
@@ -49,9 +49,5 @@ export type Directives = {
     [argName: string]: any;
   };
 };
-
-export function resultKeyNameFromField(field: FieldNode): string {
-  return field.alias ? field.alias.value : field.name.value;
-}
 
 export type VariableValue = (node: VariableNode) => any;

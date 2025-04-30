@@ -23,6 +23,7 @@ export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncrementalResult.js";
 export { isExecutionPatchInitialResult } from "./isExecutionPatchIninitialResult.js";
+export { isExecutionPatchResult } from "./isExecutionPatchResult.js";
 export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";
 export { isNonEmptyArray } from "./isNonEmptyArray.js";

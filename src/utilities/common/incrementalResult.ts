@@ -1,24 +1,13 @@
 import type {
   ApolloPayloadResult,
   ExecutionPatchResult,
-  FetchResult,
 } from "@apollo/client/link";
 import {
   DeepMerger,
   isExecutionPatchIncrementalResult,
-  isExecutionPatchInitialResult,
   isNonEmptyArray,
   isNonNullObject,
 } from "@apollo/client/utilities/internal";
-
-export function isExecutionPatchResult<T>(
-  value: FetchResult<T>
-): value is ExecutionPatchResult<T> {
-  return (
-    isExecutionPatchIncrementalResult(value) ||
-    isExecutionPatchInitialResult(value)
-  );
-}
 
 // This function detects an Apollo payload result before it is transformed
 // into a FetchResult via HttpLink; it cannot detect an ApolloPayloadResult

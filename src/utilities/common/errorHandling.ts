@@ -1,7 +1,8 @@
 import type { FetchResult } from "@apollo/client/link";
-import { isNonEmptyArray } from "@apollo/client/utilities/internal";
-
-import { isExecutionPatchIncrementalResult } from "./incrementalResult.js";
+import {
+  isExecutionPatchIncrementalResult,
+  isNonEmptyArray,
+} from "@apollo/client/utilities/internal";
 
 export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
   const errors = getGraphQLErrorsFromResult(result);

@@ -56,8 +56,6 @@ export {
   // internal
   isApolloPayloadResult,
   // internal
-  isExecutionPatchResult,
-  // internal
   mergeIncrementalData,
 } from "./common/incrementalResult.js";
 

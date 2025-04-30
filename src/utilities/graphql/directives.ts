@@ -5,13 +5,6 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { hasDirectives } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-// Provides the methods that allow QueryManager to handle the `skip` and
-// `include` directives within GraphQL.
-
-export type DirectiveInfo = {
-  [fieldName: string]: { [argName: string]: any };
-};
-
 export function hasClientExports(document: DocumentNode) {
   return document && hasDirectives(["client", "export"], document, true);
 }

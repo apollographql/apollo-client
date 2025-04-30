@@ -6,8 +6,6 @@ import type {
   FragmentDefinitionNode,
   FragmentSpreadNode,
   OperationDefinitionNode,
-  SelectionNode,
-  SelectionSetNode,
   VariableDefinitionNode,
 } from "graphql";
 import { Kind, visit } from "graphql";
@@ -41,39 +39,6 @@ const TYPENAME_FIELD: FieldNode = {
     value: "__typename",
   },
 };
-
-function getDirectiveMatcher(
-  configs: (RemoveDirectiveConfig | GetDirectiveConfig)[]
-) {
-  const names = new Map<string, RemoveDirectiveConfig | GetDirectiveConfig>();
-
-  const tests = new Map<
-    (directive: DirectiveNode) => boolean,
-    RemoveDirectiveConfig | GetDirectiveConfig
-  >();
-
-  configs.forEach((directive) => {
-    if (directive) {
-      if (directive.name) {
-        names.set(directive.name, directive);
-      } else if (directive.test) {
-        tests.set(directive.test, directive);
-      }
-    }
-  });
-
-  return (directive: DirectiveNode) => {
-    let config = names.get(directive.name.value);
-    if (!config && tests.size) {
-      tests.forEach((testConfig, test) => {
-        if (test(directive)) {
-          config = testConfig;
-        }
-      });
-    }
-    return config;
-  };
-}
 
 export const addTypenameToDocument = Object.assign(
   function <TNode extends ASTNode>(doc: TNode): TNode {
@@ -134,41 +99,3 @@ export const addTypenameToDocument = Object.assign(
     },
   }
 );
-
-function hasDirectivesInSelectionSet(
-  directives: GetDirectiveConfig[],
-  selectionSet: SelectionSetNode | undefined,
-  nestedCheck = true
-): boolean {
-  return (
-    !!selectionSet &&
-    selectionSet.selections &&
-    selectionSet.selections.some((selection) =>
-      hasDirectivesInSelection(directives, selection, nestedCheck)
-    )
-  );
-}
-
-function hasDirectivesInSelection(
-  directives: GetDirectiveConfig[],
-  selection: SelectionNode,
-  nestedCheck = true
-): boolean {
-  if (!isField(selection)) {
-    return true;
-  }
-
-  if (!selection.directives) {
-    return false;
-  }
-
-  return (
-    selection.directives.some(getDirectiveMatcher(directives)) ||
-    (nestedCheck &&
-      hasDirectivesInSelectionSet(
-        directives,
-        selection.selectionSet,
-        nestedCheck
-      ))
-  );
-}

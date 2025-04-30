@@ -10,11 +10,11 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
-import { decoratePromise } from "@apollo/client/utilities";
 import type { DecoratedPromise } from "@apollo/client/utilities/internal";
 import {
   createFulfilledPromise,
   createRejectedPromise,
+  decoratePromise,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 

@@ -27,11 +27,6 @@ export {
   relayStylePagination,
 } from "./policies/pagination.js";
 
-export {
-  // internal
-  decoratePromise,
-} from "./promises/decoration.js";
-
 export { canonicalStringify } from "./shared/canonicalStringify.js";
 export { stripTypename } from "./common/stripTypename.js";
 

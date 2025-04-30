@@ -1,9 +1,7 @@
-import type {
-  DecoratedPromise,
-  FulfilledPromise,
-  PendingPromise,
-  RejectedPromise,
-} from "@apollo/client/utilities/internal";
+import type { DecoratedPromise } from "./types/DecoratedPromise.js";
+import type { FulfilledPromise } from "./types/FulfilledPromise.js";
+import type { PendingPromise } from "./types/PendingPromise.js";
+import type { RejectedPromise } from "./types/RejectedPromise.js";
 
 function isDecoratedPromise<TValue>(
   promise: Promise<TValue>

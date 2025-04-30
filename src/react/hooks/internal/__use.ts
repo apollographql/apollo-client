@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { decoratePromise } from "@apollo/client/utilities";
+import { decoratePromise } from "@apollo/client/utilities/internal";
 
 type Use = <T>(promise: Promise<T>) => T;
 // Prevent webpack from complaining about our feature detection of the

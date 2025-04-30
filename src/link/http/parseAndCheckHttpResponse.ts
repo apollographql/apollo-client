@@ -6,11 +6,20 @@ import {
   ServerError,
   ServerParseError,
 } from "@apollo/client/errors";
-import type { Operation } from "@apollo/client/link";
-import { isApolloPayloadResult } from "@apollo/client/utilities/internal";
+import type { ApolloPayloadResult, Operation } from "@apollo/client/link";
+import { isNonNullObject } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 const { hasOwnProperty } = Object.prototype;
+
+/**
+ * This function detects an Apollo payload result before it is transformed
+ * into a FetchResult via HttpLink; it cannot detect an ApolloPayloadResult
+ * once it leaves the link chain.
+ */
+function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult {
+  return isNonNullObject(value) && "payload" in value;
+}
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>,

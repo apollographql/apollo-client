@@ -1,5 +1,4 @@
 import type {
-  DocumentNode,
   FieldNode,
   InlineFragmentNode,
   SelectionNode,
@@ -7,7 +6,6 @@ import type {
 } from "graphql";
 
 import { canonicalStringify } from "../common/canonicalStringify.js";
-import { isNonNullObject } from "../common/objects.js";
 import { valueToObjectRepresentation } from "../internal/valueToObjectRepresentation.js";
 
 export interface Reference {
@@ -57,14 +55,6 @@ export interface StoreObject {
 export type AsStoreObject<T extends { __typename?: string }> = {
   [K in keyof T]: T[K];
 };
-
-export function isDocumentNode(value: any): value is DocumentNode {
-  return (
-    isNonNullObject(value) &&
-    (value as DocumentNode).kind === "Document" &&
-    Array.isArray((value as DocumentNode).definitions)
-  );
-}
 
 export function storeKeyNameFromField(
   field: FieldNode,

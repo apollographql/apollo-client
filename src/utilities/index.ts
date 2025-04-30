@@ -17,8 +17,6 @@ export {
   // internal
   getStoreKeyName,
   // internal
-  isDocumentNode,
-  // internal
   isField,
   // internal
   isInlineFragment,

@@ -29,8 +29,6 @@ export {
 
 export {
   // internal
-  isStatefulPromise,
-  // internal
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 

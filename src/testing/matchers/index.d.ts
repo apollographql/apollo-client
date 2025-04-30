@@ -110,6 +110,18 @@ interface ApolloCustomMatchers<R = void, T = {}> {
       >,
       options?: TOptions
     ) => R;
+
+  toRerenderWithSimilarSnapshot: T extends RenderStream<infer Snapshot> ?
+    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
+  : {
+      error: "matcher needs to be called on a `RenderStream` instance";
+    };
+
+  toRerenderWithStrictEqualSnapshot: T extends RenderStream<infer Snapshot> ?
+    (options?: NextRenderOptions) => Promise<R>
+  : {
+      error: "matcher needs to be called on a `RenderStream` instance";
+    };
 }
 
 interface ApolloCustomAsymmetricMatchers {

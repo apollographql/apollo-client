@@ -11,7 +11,6 @@ import type {
 } from "graphql";
 import { Kind, visit } from "graphql";
 
-import { isNonEmptyArray } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { checkDocument } from "./checkDocument.js";
@@ -20,6 +19,7 @@ import { getFragmentDefinition } from "./getFragmentDefinition.js";
 import { getFragmentDefinitions } from "./getFragmentDefinitions.js";
 import { getOperationDefinition } from "./getOperationDefinition.js";
 import { isArray } from "./isArray.js";
+import { isNonEmptyArray } from "./isNonEmptyArray.js";
 import type { FragmentMap } from "./types/FragmentMap.js";
 
 // https://github.com/graphql/graphql-js/blob/8d7c8fccf5a9846a50785de04abda58a7eb13fc0/src/language/visitor.ts#L20-L23

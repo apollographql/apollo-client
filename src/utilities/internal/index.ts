@@ -20,6 +20,7 @@ export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isField } from "./isField.js";
 export { isInlineFragment } from "./isInlineFragment.js";
+export { isNonEmptyArray } from "./isNonEmptyArray.js";
 export { isNonNullObject } from "./isNonNullObject.js";
 export { isPlainObject } from "./isPlainObject.js";
 export { makeReference } from "./makeReference.js";

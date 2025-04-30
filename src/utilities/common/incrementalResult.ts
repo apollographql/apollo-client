@@ -5,9 +5,11 @@ import type {
   ExecutionPatchResult,
   FetchResult,
 } from "@apollo/client/link";
-import { isNonNullObject } from "@apollo/client/utilities/internal";
+import {
+  isNonEmptyArray,
+  isNonNullObject,
+} from "@apollo/client/utilities/internal";
 
-import { isNonEmptyArray } from "./arrays.js";
 import { DeepMerger } from "./mergeDeep.js";
 
 export function isExecutionPatchIncrementalResult<T>(

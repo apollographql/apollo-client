@@ -18,7 +18,6 @@ import {
   addTypenameToDocument,
   canonicalStringify,
   cloneDeep,
-  isNonEmptyArray,
   isReference,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -33,6 +32,7 @@ import {
   getOperationDefinition,
   isArray,
   isField,
+  isNonEmptyArray,
   makeReference,
   resultKeyNameFromField,
   shouldInclude,

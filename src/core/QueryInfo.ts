@@ -4,12 +4,10 @@ import type { DocumentNode } from "graphql";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import {
-  graphQLResultHasError,
-  isNonEmptyArray,
-} from "@apollo/client/utilities";
+import { graphQLResultHasError } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { DeepMerger } from "@apollo/client/utilities";
+import { isNonEmptyArray } from "@apollo/client/utilities/internal";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";

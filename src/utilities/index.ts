@@ -52,8 +52,6 @@ export { DeepMerger, mergeDeep, mergeDeepArray } from "./common/mergeDeep.js";
 export { cloneDeep } from "./common/cloneDeep.js";
 // internal
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
-// internal
-export { isNonEmptyArray } from "./common/arrays.js";
 export {
   // internal
   getGraphQLErrorsFromResult,

@@ -1,6 +1,7 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
-// @ts-ignore todo: determine if we can remove this ignore
-import { createLocalResolversLinkCodegenConfig } from "@apollo/client/link/local-resolvers/codegen";
+
+// @ts-ignore for some reason this allows codegen to load the plugin, otherwise it errors
+await import("@apollo/client/link/local-resolvers/codegen");
 
 const config: CodegenConfig = {
   hooks: {
@@ -26,7 +27,7 @@ const config: CodegenConfig = {
         },
       },
     "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-with-scalar.ts":
-      createLocalResolversLinkCodegenConfig({
+      {
         schema: [
           "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/localSchemaWithScalars.graphql",
         ],
@@ -38,7 +39,7 @@ const config: CodegenConfig = {
         config: {
           nonOptionalTypename: true,
         },
-      }),
+      },
   },
 };
 

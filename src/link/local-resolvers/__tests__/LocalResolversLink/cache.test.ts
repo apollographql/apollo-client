@@ -578,3 +578,112 @@ test("warns on missing resolver if a nested client field is resolved on a non-no
     "User.bestFriend"
   );
 });
+
+test("does not confuse field missing resolver with root field of same name on a normalized record", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      count @client
+      user {
+        id
+        count @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: gql`
+      query {
+        count
+      }
+    `,
+    data: {
+      count: 10,
+    },
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User", id: 1 } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      count: 10,
+      user: {
+        __typename: "User",
+        id: 1,
+        count: null,
+      },
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "User.count"
+  );
+});
+
+// cache.readFragment({ id: undefined }) assumes `id` of `ROOT_QUERY`, so we
+// want to make sure the default resolver doesn't try and read from the root
+// field with the same name.
+test("does not confuse field missing resolver with root field of same name on a non-normalized record", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      count @client
+      user {
+        count @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: gql`
+      query {
+        count
+      }
+    `,
+    data: {
+      count: 10,
+    },
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User" } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      count: 10,
+      user: {
+        __typename: "User",
+        count: null,
+      },
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "User.count"
+  );
+});

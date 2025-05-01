@@ -32,7 +32,6 @@ import type {
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
-  Resolvers,
   SubscribeResult,
 } from "./types.js";
 import type {
@@ -118,7 +117,6 @@ export interface ApolloClientOptions {
    * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
-  resolvers?: Resolvers | Resolvers[];
   fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
@@ -248,7 +246,6 @@ export class ApolloClient implements DataProxy {
       defaultOptions,
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
-      resolvers,
       fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
@@ -282,7 +279,6 @@ export class ApolloClient implements DataProxy {
     this.localState = new LocalState({
       cache,
       client: this,
-      resolvers,
       fragmentMatcher,
     });
 
@@ -827,27 +823,6 @@ export class ApolloClient implements DataProxy {
    */
   public restore(serializedState: unknown) {
     return this.cache.restore(serializedState);
-  }
-
-  /**
-   * Add additional local resolvers.
-   */
-  public addResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.localState.addResolvers(resolvers);
-  }
-
-  /**
-   * Set (override existing) local resolvers.
-   */
-  public setResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.localState.setResolvers(resolvers);
-  }
-
-  /**
-   * Get all registered local resolvers.
-   */
-  public getResolvers() {
-    return this.localState.getResolvers();
   }
 
   /**

@@ -1120,7 +1120,7 @@ describe("Async resolvers", () => {
       sessionCount: 10,
     };
 
-    const link = new ApolloLink(() =>
+    const mockLink = new ApolloLink(() =>
       of({
         data: {
           member: {
@@ -1131,9 +1131,7 @@ describe("Async resolvers", () => {
       })
     );
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Member: {
           isLoggedIn() {
@@ -1144,6 +1142,11 @@ describe("Async resolvers", () => {
           },
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
     const result = await client.query({ query })!;

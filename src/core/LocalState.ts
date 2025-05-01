@@ -37,16 +37,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import type { ApolloClient } from "./ApolloClient.js";
 import type { OperationVariables, Resolvers } from "./types.js";
 
-export type Resolver = (
-  rootValue?: any,
-  args?: any,
-  context?: any,
-  info?: {
-    field: FieldNode;
-    fragmentMap: FragmentMap;
-  }
-) => any;
-
 type VariableMap = { [name: string]: any };
 
 type FragmentMatcher = (

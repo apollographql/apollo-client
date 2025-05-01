@@ -166,7 +166,6 @@ export class QueryManager {
 
   private queryDeduplication: boolean;
   private clientAwareness: ClientAwareness = {};
-  private localState: LocalState;
 
   /**
    * Whether to prioritize cache values over network results when
@@ -206,7 +205,6 @@ export class QueryManager {
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;
-    this.localState = options.localState;
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;

@@ -475,3 +475,52 @@ test("reads from the cache on a nested object field by default if a resolver is 
   });
   await expect(stream).toComplete();
 });
+
+test("reads from the cache with a read function on a nested object field by default if a resolver is not defined", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            bestFriend: {
+              read() {
+                return { __typename: "User", id: 2, name: "Best Friend" };
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User", id: 1 } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: { __typename: "User", id: 2, name: "Best Friend" },
+      },
+    },
+  });
+  await expect(stream).toComplete();
+});

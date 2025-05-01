@@ -111,7 +111,7 @@ describe("Basic resolver capabilities", () => {
 
     const resolvers = {
       Query: {
-        foo: () => ({ bar: true }),
+        foo: () => ({ __typename: "Foo", bar: true }),
       },
     };
 
@@ -119,7 +119,7 @@ describe("Basic resolver capabilities", () => {
       resolvers,
       query,
       serverQuery,
-      serverResult: { data: { bar: { baz: true } } },
+      serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
     });
 
     await expect(stream).toEmitTypedValue({
@@ -131,8 +131,8 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        foo: { bar: true },
-        bar: { baz: true },
+        foo: { __typename: "Foo", bar: true },
+        bar: { __typename: "Bar", baz: true },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,

@@ -726,12 +726,7 @@ export class QueryManager {
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
         serverQuery: removeDirectivesFromDocument(
-          [
-            { name: "client", remove: true },
-            { name: "connection" },
-            { name: "nonreactive" },
-            { name: "unmask" },
-          ],
+          [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
           document
         ),
         defaultVars: getDefaultValues(

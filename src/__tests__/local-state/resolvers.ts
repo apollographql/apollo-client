@@ -448,12 +448,13 @@ describe("Basic resolver capabilities", () => {
 
     const client = new ApolloClient({
       cache,
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          isInCart: () => false,
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            isInCart: () => false,
+          },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query, fetchPolicy: "network-only" });

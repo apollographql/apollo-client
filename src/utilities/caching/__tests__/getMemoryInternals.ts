@@ -43,6 +43,8 @@ const defaultCacheSizesAsObject = {
     defaultCacheSizes["inMemoryCache.executeSelectionSet"],
   "inMemoryCache.executeSubSelectedArray":
     defaultCacheSizes["inMemoryCache.executeSubSelectedArray"],
+  "LocalResolversLink.getTransformedQuery":
+    defaultCacheSizes["LocalResolversLink.getTransformedQuery"],
 };
 
 it("returns information about cache usage (empty caches)", () => {

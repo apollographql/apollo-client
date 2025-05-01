@@ -9,7 +9,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { isSelectionNode, Kind, visit } from "graphql";
+import { isSelectionNode, Kind, print, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
@@ -488,7 +488,7 @@ export class LocalResolversLink<
       const result = cache.readFragment<Record<string, unknown>>({
         fragment: gql`
           fragment ReadField on ${rootValue?.__typename ?? "Query"} {
-            ${fieldName}
+            ${print(field)}
           }
         `,
         id: rootValue ? cache.identify(rootValue) : "ROOT_QUERY",

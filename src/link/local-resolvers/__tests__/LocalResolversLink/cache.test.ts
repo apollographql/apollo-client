@@ -180,3 +180,66 @@ test("does not overwrite __typename when writing to the cache with an id", async
     },
   });
 });
+
+test("reads from the cache on a root scalar field by default if a resolver is not defined", async () => {
+  const query = gql`
+    query {
+      count @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      count: 10,
+    },
+  });
+
+  const link = new LocalResolversLink();
+
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({ data: { count: 10 } });
+  await expect(stream).toComplete();
+});
+
+test("reads from the cache on a root object field by default if a resolver is not defined", async () => {
+  const query = gql`
+    query {
+      user @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    },
+  });
+
+  const link = new LocalResolversLink();
+
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", id: 1, name: "Test User" } },
+  });
+  await expect(stream).toComplete();
+});

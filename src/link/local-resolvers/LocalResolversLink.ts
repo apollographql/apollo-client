@@ -484,15 +484,51 @@ export class LocalResolversLink<
 
     function readFieldFromCache() {
       const { cache } = operation.client;
+      const typename = rootValue?.__typename ?? "Query";
+      const id = rootValue ? cache.identify(rootValue) : "ROOT_QUERY";
 
-      const result = cache.readFragment<Record<string, unknown>>({
-        fragment: gql`
-          fragment ReadField on ${rootValue?.__typename ?? "Query"} {
-            ${print(field)}
-          }
-        `,
-        id: rootValue ? cache.identify(rootValue) : "ROOT_QUERY",
-      });
+      function readFragment() {
+        return cache.readFragment<Record<string, unknown>>({
+          fragment: gql`
+            fragment ReadField on ${typename} {
+              ${print(field)}
+            }
+          `,
+          id,
+        });
+      }
+
+      let result = readFragment();
+
+      // We only execute the following for nested fields since root fields with
+      // read functions are resolved correctly.
+      if (result === null && typename !== "Query") {
+        // If we are trying to read a client field from a remote result, its
+        // possible the result has never been written, which means any `read`
+        // functions defined in field policies won't be run since `rootValue` is
+        // considered a dangling reference. We write a dummy value to the cache
+        // in an optimistic layer (which gets removed immediately) that fixes
+        // the dangling reference before attempting to read the fragment again.
+        cache.batch({
+          optimistic: resolverName,
+          removeOptimistic: resolverName,
+          update(cache) {
+            cache.writeFragment({
+              fragment: gql`fragment Dummy on ${typename} {
+                dummy
+              }`,
+              id,
+              broadcast: false,
+              data: {
+                __typename: typename,
+                dummy: true,
+              },
+            });
+
+            result = readFragment();
+          },
+        });
+      }
 
       return result?.[fieldName];
     }

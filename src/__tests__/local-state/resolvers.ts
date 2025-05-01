@@ -696,31 +696,33 @@ describe("Writing cache data from resolvers", () => {
 
     const client = new ApolloClient({
       cache,
-      link: ApolloLink.empty(),
-      resolvers: {
-        Mutation: {
-          start() {
-            cache.writeQuery({
-              query,
-              data: {
-                obj: { field: 1, id: "uniqueId", __typename: "Object" },
-              },
-            });
-
-            cache.modify({
-              id: "Object:uniqueId",
-              fields: {
-                field(value) {
-                  expect(value).toBe(1);
-                  return 2;
+      link: new LocalResolversLink({
+        resolvers: {
+          Mutation: {
+            start(_, __, { operation }) {
+              const { cache } = operation.client;
+              cache.writeQuery({
+                query,
+                data: {
+                  obj: { field: 1, id: "uniqueId", __typename: "Object" },
                 },
-              },
-            });
+              });
 
-            return { start: true };
+              cache.modify({
+                id: "Object:uniqueId",
+                fields: {
+                  field(value) {
+                    expect(value).toBe(1);
+                    return 2;
+                  },
+                },
+              });
+
+              return { start: true };
+            },
           },
         },
-      },
+      }),
     });
 
     await client.mutate({ mutation });

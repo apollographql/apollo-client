@@ -972,7 +972,7 @@ describe("Resolving field aliases", () => {
       }
     `;
 
-    const link = new ApolloLink(() =>
+    const mockLink = new ApolloLink(() =>
       of({
         data: {
           launch: {
@@ -983,9 +983,7 @@ describe("Resolving field aliases", () => {
       })
     );
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Launch: {
           isInCart() {
@@ -993,6 +991,11 @@ describe("Resolving field aliases", () => {
           },
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
     client.writeQuery({

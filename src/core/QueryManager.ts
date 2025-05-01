@@ -1353,11 +1353,7 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
-    let observable: Observable<ApolloQueryResult<TData>>,
-      containsDataFromLink: boolean;
-    const sourcesWithInfo = fromVariables(normalized.variables);
-    containsDataFromLink = sourcesWithInfo.fromLink;
-    observable = sourcesWithInfo.observable;
+    const { observable, fromLink } = fromVariables(normalized.variables);
 
     return {
       observable: observable.pipe(
@@ -1365,7 +1361,7 @@ export class QueryManager {
         mergeWith(fetchCancelSubject),
         share()
       ),
-      fromLink: containsDataFromLink,
+      fromLink,
     };
   }
 

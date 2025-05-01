@@ -42,23 +42,20 @@ import {
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
-type MaybeRequireRootValue<TRootValue> =
-  true extends IsAny<TRootValue> ? {}
-  : unknown extends TRootValue ? {}
-  : {
-      rootValue:
-        | ((options: { operation: Operation }) => TRootValue)
-        | TRootValue;
-    };
+type IsRootValueRequired<TRootValue> =
+  true extends IsAny<TRootValue> ? false
+  : unknown extends TRootValue ? false
+  : undefined extends TRootValue ? false
+  : true;
 
 export declare namespace LocalResolversLink {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
-  export type Options<
+  export interface Options<
     TResolvers = LocalResolversLink.Resolvers,
     TRootValue = unknown,
-  > = {
+  > {
     /**
      * A value or function called with the current `operation` creating the root
      * value passed to any root field resolvers. Providing a function is useful
@@ -81,15 +78,13 @@ export declare namespace LocalResolversLink {
      * })
      * ```
      */
-    rootValue?:
-      | ((options: { operation: Operation }) => TRootValue)
-      | TRootValue;
+    rootValue?: RootValueOption<TRootValue>;
 
     /**
      * The map of resolvers used to provide values for `@client` fields.
      */
     resolvers?: TResolvers;
-  } & MaybeRequireRootValue<TRootValue>;
+  }
 
   export interface Resolvers {
     [typename: string]: {
@@ -113,6 +108,10 @@ export declare namespace LocalResolversLink {
     context: ResolverContext,
     info: ResolveInfo
   ) => TResult;
+
+  export type RootValueOption<TRootValue> =
+    | TRootValue
+    | ((options: { operation: Operation }) => TRootValue);
 
   export interface ResolverContext {
     operation: Operation;
@@ -164,7 +163,23 @@ export class LocalResolversLink<
 
   constructor(
     ...[options]: {} extends TResolvers ?
-      [options?: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>>]
+      true extends IsRootValueRequired<TRootValue> ?
+        [
+          options: LocalResolversLink.Options<
+            TResolvers,
+            NoInfer<TRootValue>
+          > & {
+            rootValue: LocalResolversLink.RootValueOption<NoInfer<TRootValue>>;
+          },
+        ]
+      : [options?: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>>]
+    : true extends IsRootValueRequired<TRootValue> ?
+      [
+        options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>> & {
+          rootValue: LocalResolversLink.RootValueOption<NoInfer<TRootValue>>;
+          resolvers: TResolvers;
+        },
+      ]
     : [
         options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>> & {
           resolvers: TResolvers;

@@ -12,7 +12,6 @@ import {
   indent,
   normalizeAvoidOptionals,
 } from "@graphql-codegen/visitor-plugin-common";
-import autoBind from "auto-bind";
 import type {
   DirectiveDefinitionNode,
   EnumTypeDefinitionNode,
@@ -64,7 +63,6 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
       } as ParsedTypeScriptResolversConfig,
       schema
     );
-    autoBind(this);
     this.setVariablesTransformer(
       new TypeScriptOperationVariablesToObject(
         this.scalars,

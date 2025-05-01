@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
 import { OperationTypeNode } from "graphql";
-import type { Observable, Subscription } from "rxjs";
+import type { Observable } from "rxjs";
 import {
   catchError,
   concat,

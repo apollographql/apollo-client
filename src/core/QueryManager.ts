@@ -122,7 +122,7 @@ type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 interface TransformCacheEntry {
   hasNonreactiveDirective: boolean;
   nonReactiveQuery: DocumentNode;
-  serverQuery: DocumentNode | null;
+  serverQuery: DocumentNode;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
 }
@@ -728,7 +728,7 @@ export class QueryManager {
         serverQuery: removeDirectivesFromDocument(
           [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
           document
-        ),
+        )!,
         defaultVars: getDefaultValues(
           getOperationDefinition(document)
         ) as OperationVariables,
@@ -1138,57 +1138,49 @@ export class QueryManager {
       client: this.client,
     };
 
-    if (serverQuery) {
-      const { inFlightLinkObservables, link } = this;
+    const { inFlightLinkObservables, link } = this;
 
-      const operation: GraphQLRequest = {
-        query: serverQuery,
-        variables,
-        operationName: getOperationName(serverQuery) || void 0,
-        context: prepareContext(context),
-        extensions,
-      };
+    const operation: GraphQLRequest = {
+      query: serverQuery,
+      variables,
+      operationName: getOperationName(serverQuery) || void 0,
+      context: prepareContext(context),
+      extensions,
+    };
 
-      context = operation.context;
+    context = operation.context;
 
-      if (deduplication) {
-        const printedServerQuery = print(serverQuery);
-        const varJson = canonicalStringify(variables);
+    if (deduplication) {
+      const printedServerQuery = print(serverQuery);
+      const varJson = canonicalStringify(variables);
 
-        const entry = inFlightLinkObservables.lookup(
-          printedServerQuery,
-          varJson
+      const entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
+
+      observable = entry.observable;
+      if (!observable) {
+        observable = entry.observable = execute(
+          link,
+          operation,
+          executeContext
+        ).pipe(
+          onAnyEvent((event) => {
+            if (
+              (event.type !== "next" ||
+                !("hasNext" in event.value) ||
+                !event.value.hasNext) &&
+              inFlightLinkObservables.peek(printedServerQuery, varJson) ===
+                entry
+            ) {
+              inFlightLinkObservables.remove(printedServerQuery, varJson);
+            }
+          }),
+          shareReplay({ refCount: true })
         );
-
-        observable = entry.observable;
-        if (!observable) {
-          observable = entry.observable = execute(
-            link,
-            operation,
-            executeContext
-          ).pipe(
-            onAnyEvent((event) => {
-              if (
-                (event.type !== "next" ||
-                  !("hasNext" in event.value) ||
-                  !event.value.hasNext) &&
-                inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                  entry
-              ) {
-                inFlightLinkObservables.remove(printedServerQuery, varJson);
-              }
-            }),
-            shareReplay({ refCount: true })
-          );
-        }
-      } else {
-        observable = execute(link, operation, executeContext) as Observable<
-          FetchResult<TData>
-        >;
       }
     } else {
-      observable = of({ data: {} } as FetchResult<TData>);
-      context = prepareContext(context);
+      observable = execute(link, operation, executeContext) as Observable<
+        FetchResult<TData>
+      >;
     }
 
     return observable.pipe(

@@ -503,40 +503,41 @@ describe("Basic resolver capabilities", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          async developer(_, { id }) {
-            await randomDelay(50);
-            expect(id).toBe(developerId);
-            return {
-              __typename: "Developer",
-              id,
-              handle: "@benjamn",
-            };
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            async developer(_, { id }) {
+              await randomDelay(50);
+              expect(id).toBe(developerId);
+              return {
+                __typename: "Developer",
+                id,
+                handle: "@benjamn",
+              };
+            },
+          },
+          Developer: {
+            async tickets(developer) {
+              await randomDelay(50);
+              expect(developer.__typename).toBe("Developer");
+              return times(ticketsPerDev, () => ({
+                __typename: "Ticket",
+                id: uuid(),
+              }));
+            },
+          },
+          Ticket: {
+            async comments(ticket) {
+              await randomDelay(50);
+              expect(ticket.__typename).toBe("Ticket");
+              return times(commentsPerTicket, () => ({
+                __typename: "Comment",
+                id: uuid(),
+              }));
+            },
           },
         },
-        Developer: {
-          async tickets(developer) {
-            await randomDelay(50);
-            expect(developer.__typename).toBe("Developer");
-            return times(ticketsPerDev, () => ({
-              __typename: "Ticket",
-              id: uuid(),
-            }));
-          },
-        },
-        Ticket: {
-          async comments(ticket) {
-            await randomDelay(50);
-            expect(ticket.__typename).toBe("Ticket");
-            return times(commentsPerTicket, () => ({
-              __typename: "Comment",
-              id: uuid(),
-            }));
-          },
-        },
-      },
+      }),
     });
 
     function check(result: QueryResult<any>) {

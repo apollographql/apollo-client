@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { AvoidOptionalsConfig } from '@graphql-codegen/visitor-plugin-common';
 import type { PluginFunction } from '@graphql-codegen/plugin-helpers';
 import type { RawConfig } from '@graphql-codegen/visitor-plugin-common';
 import type { RootResolver } from '@graphql-codegen/visitor-plugin-common';
@@ -14,6 +15,7 @@ interface LocalResolversLinkPluginConfig extends RawConfig {
     addUnderscoreToArgsType?: boolean;
     allowParentTypeOverride?: boolean;
     allResolversTypeName?: string;
+    avoidOptionals?: boolean | AvoidOptionalsConfig;
     defaultMapper?: string;
     immutableTypes?: boolean;
     mappers?: {

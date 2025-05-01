@@ -1124,16 +1124,6 @@ export class QueryManager {
 
     const { serverQuery } = this.getDocumentInfo(query);
 
-    const prepareContext = (context = {}): DefaultContext => {
-      const newContext = this.localState.prepareContext(context);
-      return {
-        ...this.defaultContext,
-        ...newContext,
-        queryDeduplication: deduplication,
-        clientAwareness: this.clientAwareness,
-      };
-    };
-
     const executeContext: ExecuteContext = {
       client: this.client,
     };
@@ -1144,7 +1134,12 @@ export class QueryManager {
       query: serverQuery,
       variables,
       operationName: getOperationName(serverQuery) || void 0,
-      context: prepareContext(context),
+      context: {
+        ...this.defaultContext,
+        ...context,
+        queryDeduplication: deduplication,
+        clientAwareness: this.clientAwareness,
+      },
       extensions,
     };
 

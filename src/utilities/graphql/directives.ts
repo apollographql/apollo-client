@@ -3,7 +3,6 @@ import type {
   ASTNode,
   BooleanValueNode,
   DirectiveNode,
-  DocumentNode,
   FragmentSpreadNode,
   SelectionNode,
   ValueNode,

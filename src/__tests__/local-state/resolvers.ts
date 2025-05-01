@@ -245,7 +245,10 @@ describe("Basic resolver capabilities", () => {
       query,
       serverQuery,
       serverResult: {
-        data: { foo: { bar: true, __typename: `Foo` }, bar: { baz: true } },
+        data: {
+          foo: { bar: true, __typename: "Foo" },
+          bar: { baz: true, __typename: "Bar" },
+        },
       },
     });
 
@@ -259,7 +262,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).toEmitTypedValue({
       data: {
         foo: { bar: true, baz: false, __typename: "Foo" },
-        bar: { baz: true },
+        bar: { baz: true, __typename: "Bar" },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -278,20 +281,18 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
-      },
-      Foo: {
-        bar: (_data: any, { id }: { id: number }) => id,
-      },
-    };
-
     const client = new ApolloClient({
-      resolvers,
       cache: new InMemoryCache(),
-      // Local resolvers handle this query
-      link: ApolloLink.empty(),
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            foo: () => ({ __typename: "Foo" }),
+          },
+          Foo: {
+            bar: (_data: any, { id }: { id: number }) => id,
+          },
+        },
+      }),
     });
 
     const stream = new ObservableStream(

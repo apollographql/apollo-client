@@ -125,6 +125,6 @@ export type UserResolvers<
 
 export type Resolvers = {
   Food?: FoodResolvers;
-  Query: QueryResolvers;
+  Query?: QueryResolvers;
   User?: UserResolvers;
 };

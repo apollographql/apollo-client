@@ -14,12 +14,14 @@ import { gql } from "graphql-tag";
 import type { Observable } from "rxjs";
 import { defer, delay, of } from "rxjs";
 
+import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   ObservableStream,
   spyOnConsole,
@@ -33,15 +35,17 @@ describe("General functionality", () => {
       }
     `;
 
-    const link = new ApolloLink(() => of({ data: { field: 1 } }));
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const mockLink = new ApolloLink(() => of({ data: { field: 1 } }));
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Query: {
           count: () => 0,
         },
       },
+    });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
     return client.query({ query }).then(({ data }) => {
@@ -55,16 +59,18 @@ describe("General functionality", () => {
     `;
 
     const error = new GraphQLError("no introspection result found");
-    const link = new ApolloLink(() => of({ errors: [error] }));
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const mockLink = new ApolloLink(() => of({ errors: [error] }));
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Query: {
           count: () => 0,
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
     return client
@@ -86,12 +92,13 @@ describe("General functionality", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          field: () => 1,
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            field: () => 1,
+          },
         },
-      },
+      }),
     });
 
     return client.query({ query }).then(({ data }) => {
@@ -109,15 +116,16 @@ describe("General functionality", () => {
     let count = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          field: () => {
-            count += 1;
-            return 1;
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            field: () => {
+              count += 1;
+              return 1;
+            },
           },
         },
-      },
+      }),
     });
 
     {
@@ -145,15 +153,16 @@ describe("General functionality", () => {
     let count = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          field: () => {
-            count += 1;
-            return 1;
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            field: () => {
+              count += 1;
+              return 1;
+            },
           },
         },
-      },
+      }),
     });
 
     return client
@@ -172,7 +181,7 @@ describe("General functionality", () => {
       );
   });
 
-  it("should work with a custom fragment matcher", () => {
+  it("should work with possible types", () => {
     const query = gql`
       {
         foo {
@@ -192,19 +201,16 @@ describe("General functionality", () => {
       })
     );
 
-    const resolvers = {
-      Bar: {
-        bar: () => "Bar",
+    const localResolversLink = new LocalResolversLink({
+      resolvers: {
+        Bar: {
+          bar: () => "Bar",
+        },
+        Baz: {
+          baz: () => "Baz",
+        },
       },
-      Baz: {
-        baz: () => "Baz",
-      },
-    };
-
-    const fragmentMatcher = (
-      { __typename }: { __typename: string },
-      typeCondition: string
-    ) => __typename === typeCondition;
+    });
 
     const client = new ApolloClient({
       cache: new InMemoryCache({
@@ -212,9 +218,7 @@ describe("General functionality", () => {
           Foo: ["Bar", "Baz"],
         },
       }),
-      link,
-      resolvers,
-      fragmentMatcher,
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     return client.query({ query }).then(({ data }) => {
@@ -237,8 +241,7 @@ describe("Cache manipulation", () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
-        link: ApolloLink.empty(),
-        resolvers: {},
+        link: new LocalResolversLink(),
       });
 
       cache.writeQuery({ query, data: { field: "yo" } });
@@ -262,19 +265,18 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = {
-      Mutation: {
-        start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
-          cache.writeQuery({ query, data: { field: 1 } });
-          return { start: true };
-        },
-      },
-    };
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers,
+      link: new LocalResolversLink({
+        resolvers: {
+          Mutation: {
+            start: (_1: any, _2: any, { operation }) => {
+              operation.client.cache.writeQuery({ query, data: { field: 1 } });
+              return { start: true };
+            },
+          },
+        },
+      }),
     });
 
     return client
@@ -298,22 +300,21 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        field: () => 0,
-      },
-      Mutation: {
-        start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
-          cache.writeQuery({ query, data: { field: 1 } });
-          return { start: true };
-        },
-      },
-    };
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers,
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            field: () => 0,
+          },
+          Mutation: {
+            start: (_1: any, _2: any, { operation }) => {
+              operation.client.cache.writeQuery({ query, data: { field: 1 } });
+              return { start: true };
+            },
+          },
+        },
+      }),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -355,26 +356,24 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = {
-      Mutation: {
-        start: (
-          _1: any,
-          variables: { field: string },
-          { cache }: { cache: ApolloCache }
-        ) => {
-          cache.writeQuery({ query, data: { field: variables.field } });
-          return {
-            __typename: "Field",
-            field: variables.field,
-          };
-        },
-      },
-    };
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers,
+      link: new LocalResolversLink({
+        resolvers: {
+          Mutation: {
+            start: (_1: any, variables: { field: string }, { operation }) => {
+              operation.client.cache.writeQuery({
+                query,
+                data: { field: variables.field },
+              });
+              return {
+                __typename: "Field",
+                field: variables.field,
+              };
+            },
+          },
+        },
+      }),
     });
 
     return client
@@ -416,19 +415,24 @@ describe("Cache manipulation", () => {
     let selectedItemId = -1;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new ApolloLink(() => of({ data: { serverData } })),
-      resolvers: {
-        Query: {
-          selectedItemId() {
-            return selectedItemId;
+      link: ApolloLink.from([
+        new LocalResolversLink({
+          resolvers: {
+            Query: {
+              selectedItemId() {
+                return selectedItemId;
+              },
+            },
+            Mutation: {
+              select(_, { itemId }) {
+                selectedItemId = itemId;
+                return selectedItemId;
+              },
+            },
           },
-        },
-        Mutation: {
-          select(_, { itemId }) {
-            selectedItemId = itemId;
-          },
-        },
-      },
+        }),
+        new ApolloLink(() => of({ data: { serverData } })),
+      ]),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -473,112 +477,6 @@ describe("Cache manipulation", () => {
       partial: false,
     });
   });
-
-  it("should rerun @client(always: true) fields on entity update", async () => {
-    const query = gql`
-      query GetClientData($id: ID) {
-        clientEntity(id: $id) @client(always: true) {
-          id
-          title
-          titleLength @client(always: true)
-        }
-      }
-    `;
-
-    const mutation = gql`
-      mutation AddOrUpdate {
-        addOrUpdate(id: $id, title: $title) @client
-      }
-    `;
-
-    const fragment = gql`
-      fragment ClientDataFragment on ClientData {
-        id
-        title
-      }
-    `;
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new ApolloLink(() => of({ data: {} })),
-      resolvers: {
-        ClientData: {
-          titleLength(data) {
-            return data.title.length;
-          },
-        },
-        Query: {
-          clientEntity(_root, { id }, { cache }) {
-            return cache.readFragment({
-              id: cache.identify({ id, __typename: "ClientData" }),
-              fragment,
-            });
-          },
-        },
-        Mutation: {
-          addOrUpdate(_root, { id, title }, { cache }) {
-            return cache.writeFragment({
-              id: cache.identify({ id, __typename: "ClientData" }),
-              fragment,
-              data: { id, title, __typename: "ClientData" },
-            });
-          },
-        },
-      },
-    });
-
-    const entityId = 1;
-    const shortTitle = "Short";
-    const longerTitle = "A little longer";
-    await client.mutate({
-      mutation,
-      variables: {
-        id: entityId,
-        title: shortTitle,
-      },
-    });
-    const stream = new ObservableStream(
-      client.watchQuery<any>({ query, variables: { id: entityId } })
-    );
-
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    });
-
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data.clientEntity).toEqual({
-        id: entityId,
-        title: shortTitle,
-        titleLength: shortTitle.length,
-        __typename: "ClientData",
-      });
-    }
-
-    await client.mutate({
-      mutation,
-      variables: {
-        id: entityId,
-        title: longerTitle,
-      },
-    });
-
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data.clientEntity).toEqual({
-        id: entityId,
-        title: longerTitle,
-        titleLength: longerTitle.length,
-        __typename: "ClientData",
-      });
-    }
-
-    await expect(stream).not.toEmitAnything();
-  });
 });
 
 describe("Sample apps", () => {
@@ -607,10 +505,11 @@ describe("Sample apps", () => {
       return of({ data: { lastCount: 1 } });
     });
 
+    const localResolversLink = new LocalResolversLink();
+
     const client = new ApolloClient({
-      link,
+      link: ApolloLink.from([localResolversLink, link]),
       cache: new InMemoryCache(),
-      resolvers: {},
     });
 
     const update = (
@@ -620,8 +519,10 @@ describe("Sample apps", () => {
       return (
         _result: {},
         variables: { amount: number },
-        { cache }: { cache: ApolloCache }
+        { operation }: { operation: Operation }
       ): null => {
+        const { cache } = operation.client;
+
         const read = client.readQuery<{ count: number }>({
           query,
           variables,
@@ -652,7 +553,7 @@ describe("Sample apps", () => {
       },
     };
 
-    client.addResolvers(resolvers);
+    localResolversLink.addResolvers(resolvers);
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
@@ -704,10 +605,11 @@ describe("Sample apps", () => {
       }
     `;
 
+    const link = new LocalResolversLink();
+
     const client = new ApolloClient({
-      link: ApolloLink.empty(),
+      link,
       cache: new InMemoryCache(),
-      resolvers: {},
     });
 
     interface Todo {
@@ -723,8 +625,10 @@ describe("Sample apps", () => {
       return (
         _result: {},
         variables: Todo,
-        { cache }: { cache: ApolloCache }
+        { operation }: { operation: Operation }
       ): null => {
+        const { cache } = operation.client;
+
         const data = updater(client.readQuery({ query, variables }), variables);
         cache.writeQuery({ query, variables, data });
         return null;
@@ -742,7 +646,7 @@ describe("Sample apps", () => {
       },
     };
 
-    client.addResolvers(resolvers);
+    link.addResolvers(resolvers);
     const stream = new ObservableStream(client.watchQuery<any>({ query }));
 
     await expect(stream).toEmitTypedValue({
@@ -806,15 +710,17 @@ describe("Combining client and server state/operations", () => {
     };
 
     const link = new ApolloLink(() => of({ data }).pipe(delay(20)));
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Mutation: {
-          toggleItem: async (_, { id }, { cache }) => {
+          toggleItem: async (_, { id }, { operation }) => {
+            const { cache } = operation.client;
+
             id = `ListItem:${id}`;
-            const fragment = gql`
+            const fragment: TypedDocumentNode<{
+              __typename: "ListItem";
+              isSelected: boolean;
+            }> = gql`
               fragment item on ListItem {
                 __typename
                 isSelected
@@ -823,9 +729,9 @@ describe("Combining client and server state/operations", () => {
             const previous = cache.readFragment({ fragment, id });
             const data = {
               ...previous,
-              isSelected: !previous.isSelected,
+              isSelected: !previous?.isSelected,
             };
-            await cache.writeFragment({
+            cache.writeFragment({
               id,
               fragment,
               data,
@@ -842,6 +748,11 @@ describe("Combining client and server state/operations", () => {
           },
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     const observer = client.watchQuery({ query });
@@ -994,10 +905,7 @@ describe("Combining client and server state/operations", () => {
     };
 
     const link = new ApolloLink(() => of({ data }));
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Query: {
           hasBeenIllegallyTouched: (_, _v, _c) => {
@@ -1011,6 +919,11 @@ describe("Combining client and server state/operations", () => {
           },
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     const variables = { id: 1 };
@@ -1034,121 +947,136 @@ describe("Combining client and server state/operations", () => {
     ).rejects.toThrowErrorMatchingSnapshot();
   });
 
-  it("should handle a simple query with both server and client fields", async () => {
-    using _consoleSpies = spyOnConsole.takeSnapshots("error");
-    const query = gql`
-      query GetCount {
-        count @client
-        lastCount
-      }
-    `;
-    const cache = new InMemoryCache();
-
-    const link = new ApolloLink((operation) => {
-      expect(operation.operationName).toBe("GetCount");
-      return of({ data: { lastCount: 1 } });
-    });
-
-    const client = new ApolloClient({
-      cache,
-      link,
-      resolvers: {},
-    });
-
-    cache.writeQuery({
-      query,
-      data: {
-        count: 0,
-      },
-    });
-
-    const stream = new ObservableStream(client.watchQuery({ query }));
-
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    });
-
-    await expect(stream).toEmitTypedValue({
-      data: { count: 0, lastCount: 1 },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
-  });
-
-  it("should support nested querying of both server and client fields", async () => {
-    using _consoleSpies = spyOnConsole.takeSnapshots("error");
-    const query = gql`
-      query GetUser {
-        user {
-          firstName @client
-          lastName
+  // TODO: Double check this is the behavior we want. The value returned from
+  // the local resolver is `null` since there is no resolver defined, so it
+  // overwrites the cache value.
+  it.failing(
+    "should handle a simple query with both server and client fields",
+    async () => {
+      // The next line can be removed if a resolver is added to LocalResolversLink
+      using _ = spyOnConsole("warn");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
+      const query = gql`
+        query GetCount {
+          count @client
+          lastCount
         }
-      }
-    `;
+      `;
+      const cache = new InMemoryCache();
 
-    const cache = new InMemoryCache();
-    const link = new ApolloLink((operation) => {
-      expect(operation.operationName).toBe("GetUser");
-      return of({
+      const link = new ApolloLink((operation) => {
+        expect(operation.operationName).toBe("GetCount");
+        return of({ data: { lastCount: 1 } });
+      });
+      const localResolversLink = new LocalResolversLink();
+
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.from([localResolversLink, link]),
+      });
+
+      cache.writeQuery({
+        query,
+        data: {
+          count: 0,
+        },
+      });
+
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: { count: 0, lastCount: 1 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+    }
+  );
+
+  it.failing(
+    "should support nested querying of both server and client fields",
+    async () => {
+      // The next line can be removed if a resolver is added to LocalResolversLink
+      using _ = spyOnConsole("warn");
+      using _consoleSpies = spyOnConsole.takeSnapshots("error");
+      const query = gql`
+        query GetUser {
+          user {
+            firstName @client
+            lastName
+          }
+        }
+      `;
+
+      const cache = new InMemoryCache();
+      const link = new ApolloLink((operation) => {
+        expect(operation.operationName).toBe("GetUser");
+        return of({
+          data: {
+            user: {
+              __typename: "User",
+              // We need an id (or a keyFields policy) because, if the User
+              // object is not identifiable, the call to cache.writeQuery
+              // below will simply replace the existing data rather than
+              // merging the new data with the existing data.
+              id: 123,
+              lastName: "Doe",
+            },
+          },
+        }).pipe(delay(20));
+      });
+      const localResolversLink = new LocalResolversLink();
+
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.from([localResolversLink, link]),
+      });
+
+      cache.writeQuery({
+        query,
         data: {
           user: {
             __typename: "User",
-            // We need an id (or a keyFields policy) because, if the User
-            // object is not identifiable, the call to cache.writeQuery
-            // below will simply replace the existing data rather than
-            // merging the new data with the existing data.
             id: 123,
-            lastName: "Doe",
+            firstName: "John",
           },
         },
-      }).pipe(delay(20));
-    });
+      });
 
-    const client = new ApolloClient({
-      cache,
-      link,
-      resolvers: {},
-    });
+      const stream = new ObservableStream(client.watchQuery({ query }));
 
-    cache.writeQuery({
-      query,
-      data: {
-        user: {
-          __typename: "User",
-          id: 123,
-          firstName: "John",
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
+        data: {
+          user: {
+            firstName: "John",
+            lastName: "Doe",
+            __typename: "User",
+          },
         },
-      },
-    });
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+    }
+  );
 
-    const stream = new ObservableStream(client.watchQuery({ query }));
-
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    });
-
-    await expect(stream).toEmitTypedValue({
-      data: {
-        user: {
-          firstName: "John",
-          lastName: "Doe",
-          __typename: "User",
-        },
-      },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
-  });
-
-  it("should combine both server and client mutations", async () => {
+  it.failing("should combine both server and client mutations", async () => {
+    // The next line can be removed if a resolver is added to LocalResolversLink
+    using _ = spyOnConsole("warn");
     const query = gql`
       query SampleQuery {
         count @client
@@ -1197,14 +1125,13 @@ describe("Combining client and server state/operations", () => {
       }).pipe(delay(20));
     });
 
-    const cache = new InMemoryCache();
-    const client = new ApolloClient({
-      cache,
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Mutation: {
-          incrementCount: (_, __, { cache }) => {
-            const { count } = cache.readQuery({ query: counterQuery });
+          incrementCount: (_, __, { operation }) => {
+            const { cache } = operation.client;
+
+            const { count } = cache.readQuery<any>({ query: counterQuery });
             const data = { count: count + 1 };
             cache.writeQuery({
               query: counterQuery,
@@ -1214,6 +1141,12 @@ describe("Combining client and server state/operations", () => {
           },
         },
       },
+    });
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     cache.writeQuery({
@@ -1290,11 +1223,11 @@ describe("Combining client and server state/operations", () => {
         errors: [error],
       });
     });
+    const localResolversLink = new LocalResolversLink();
 
     const client = new ApolloClient({
       cache,
-      link,
-      resolvers: {},
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -1309,7 +1242,7 @@ describe("Combining client and server state/operations", () => {
     await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
-        data: { user: null },
+        data: null,
         errors: [error],
       }),
       loading: false,

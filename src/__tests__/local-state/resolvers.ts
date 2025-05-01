@@ -325,20 +325,19 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
-      },
-      Foo: {
-        bar: (_data: any, _args: any, { id }: { id: number }) => id,
-      },
-    };
-
     const client = new ApolloClient({
-      resolvers,
       cache: new InMemoryCache(),
-      // The resolvers will handle the full response
-      link: ApolloLink.empty(),
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            foo: () => ({ __typename: "Foo" }),
+          },
+          Foo: {
+            bar: (_data: any, _args: any, { operation }) =>
+              operation.getContext().id,
+          },
+        },
+      }),
     });
 
     const stream = new ObservableStream(

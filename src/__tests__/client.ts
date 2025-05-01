@@ -4,7 +4,7 @@ import type {
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
-import { GraphQLError, Kind, print, visit } from "graphql";
+import { GraphQLError, Kind, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 import type { Subscription } from "rxjs";
@@ -34,6 +34,7 @@ import {
   UnconventionalError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -1013,7 +1014,7 @@ describe("client", () => {
     expect(actualResult.data).toEqual(transformedResult);
   });
 
-  it("removes @client fields from the query before it reaches the link", async () => {
+  it("does not remove @client fields from the query before it reaches the link", async () => {
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -1033,6 +1034,7 @@ describe("client", () => {
         author {
           firstName
           lastName
+          isInCollection @client
           __typename
         }
       }
@@ -1059,7 +1061,7 @@ describe("client", () => {
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(transformedQuery));
+    expect(result.current!.query).toMatchDocument(transformedQuery);
   });
 
   it("should handle named fragments on mutations", async () => {
@@ -4214,7 +4216,7 @@ describe("custom document transforms", () => {
     });
 
     const client = new ApolloClient({
-      link,
+      link: ApolloLink.from([new LocalResolversLink(), link]),
       documentTransform,
       cache: new InMemoryCache({
         typePolicies: {
@@ -4320,6 +4322,7 @@ describe("custom document transforms", () => {
       query TestQuery {
         currentUser {
           id
+          isLoggedIn @client
           favoriteFlavors {
             flavor
             __typename
@@ -4648,6 +4651,7 @@ describe("custom document transforms", () => {
       mutation TestMutation {
         updateProfile {
           id
+          isLoggedIn @client
           favoriteFlavors {
             flavor
             __typename
@@ -4870,6 +4874,7 @@ describe("custom document transforms", () => {
       subscription TestSubscription {
         profileUpdated {
           id
+          isLoggedIn @client
           favoriteFlavors {
             flavor
             __typename
@@ -4997,6 +5002,7 @@ describe("custom document transforms", () => {
         query TestQuery {
           currentUser {
             id
+            isLoggedIn @client
             favorites {
               id
               __typename

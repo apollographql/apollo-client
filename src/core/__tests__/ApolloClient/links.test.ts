@@ -1,4 +1,3 @@
-import { print } from "graphql";
 import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, of } from "rxjs";

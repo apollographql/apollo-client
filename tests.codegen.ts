@@ -22,7 +22,7 @@ const config: CodegenConfig = {
             field: true,
           },
           nonOptionalTypename: true,
-          rootValueType: "../types.test.js#RootValue",
+          rootValueType: "./rootValue.js#RootValue",
         },
       },
     "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-with-scalar.ts":

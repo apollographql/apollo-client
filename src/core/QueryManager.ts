@@ -1310,12 +1310,7 @@ export class QueryManager {
       context,
     });
 
-    const fromVariables = (variables: TVars) => {
-      // Since normalized is always a fresh copy of options, it's safe to
-      // modify its properties here, rather than creating yet another new
-      // WatchQueryOptions object.
-      normalized.variables = variables;
-
+    const fromVariables = () => {
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
@@ -1353,7 +1348,7 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
-    const { observable, fromLink } = fromVariables(normalized.variables);
+    const { observable, fromLink } = fromVariables();
 
     return {
       observable: observable.pipe(

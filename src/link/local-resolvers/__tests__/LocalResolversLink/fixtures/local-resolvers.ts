@@ -112,7 +112,7 @@ export type QueryResolvers<
   ParentType extends
     ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
 > = {
-  currentUserId: Resolver<Maybe<ResolversTypes["ID"]>, ParentType>;
+  currentUserId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType>;
 };
 
 export type UserResolvers<

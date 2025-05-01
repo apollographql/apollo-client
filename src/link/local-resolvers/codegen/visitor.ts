@@ -11,6 +11,7 @@ import {
   getConfigValue,
   indent,
   normalizeAvoidOptionals,
+  parseMapper,
 } from "@graphql-codegen/visitor-plugin-common";
 import type {
   DirectiveDefinitionNode,
@@ -55,6 +56,10 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
         allowParentTypeOverride: getConfigValue(
           pluginConfig.allowParentTypeOverride,
           false
+        ),
+        rootValueType: parseMapper(
+          pluginConfig.rootValueType || "undefined",
+          "RootValueType"
         ),
       } as ParsedTypeScriptResolversConfig,
       schema

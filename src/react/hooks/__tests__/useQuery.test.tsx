@@ -32,6 +32,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -6919,13 +6920,13 @@ describe("useQuery Hook", () => {
   });
 
   describe("Client Resolvers", () => {
-    it("should receive up to date @client(always: true) fields on entity update", async () => {
+    it("can refetch client fields and receive up to date @client fields on entity update", async () => {
       const query = gql`
         query GetClientData($id: ID) {
-          clientEntity(id: $id) @client(always: true) {
+          clientEntity(id: $id) @client {
             id
             title
-            titleLength @client(always: true)
+            titleLength @client
           }
         }
       `;
@@ -6945,31 +6946,36 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(() => of({ data: {} })),
-        resolvers: {
-          ClientData: {
-            titleLength(data) {
-              return data.title.length;
+        link: new LocalResolversLink({
+          resolvers: {
+            ClientData: {
+              titleLength(data) {
+                return data.title.length;
+              },
+            },
+            Query: {
+              clientEntity(_root, { id }, { operation }) {
+                const { cache } = operation.client;
+
+                return cache.readFragment({
+                  id: cache.identify({ id, __typename: "ClientData" }),
+                  fragment,
+                });
+              },
+            },
+            Mutation: {
+              addOrUpdate(_root, { id, title }, { operation }) {
+                const { cache } = operation.client;
+
+                return cache.writeFragment({
+                  id: cache.identify({ id, __typename: "ClientData" }),
+                  fragment,
+                  data: { id, title, __typename: "ClientData" },
+                });
+              },
             },
           },
-          Query: {
-            clientEntity(_root, { id }, { cache }) {
-              return cache.readFragment({
-                id: cache.identify({ id, __typename: "ClientData" }),
-                fragment,
-              });
-            },
-          },
-          Mutation: {
-            addOrUpdate(_root, { id, title }, { cache }) {
-              return cache.writeFragment({
-                id: cache.identify({ id, __typename: "ClientData" }),
-                fragment,
-                data: { id, title, __typename: "ClientData" },
-              });
-            },
-          },
-        },
+        }),
       });
 
       const entityId = 1;
@@ -7016,12 +7022,37 @@ describe("useQuery Hook", () => {
         variables: { id: entityId },
       });
 
-      void client.mutate({
+      await client.mutate({
         mutation,
         variables: {
           id: entityId,
           title: longerTitle,
         },
+        refetchQueries: ["GetClientData"],
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: {
+          clientEntity: {
+            id: entityId,
+            title: longerTitle,
+            // Since the titleLength wasn't updated in the mutation, we have to
+            // wait for the updated refetch to see the longer length
+            titleLength: shortTitle.length,
+            __typename: "ClientData",
+          },
+        },
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: {
+          clientEntity: {
+            id: entityId,
+            title: shortTitle,
+            titleLength: shortTitle.length,
+            __typename: "ClientData",
+          },
+        },
+        variables: { id: entityId },
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -7038,7 +7069,7 @@ describe("useQuery Hook", () => {
         previousData: {
           clientEntity: {
             id: entityId,
-            title: shortTitle,
+            title: longerTitle,
             titleLength: shortTitle.length,
             __typename: "ClientData",
           },

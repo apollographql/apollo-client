@@ -2,7 +2,7 @@ import type { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
-import type { QueryResult, Resolvers } from "@apollo/client";
+import type { QueryResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";

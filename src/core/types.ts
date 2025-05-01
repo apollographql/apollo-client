@@ -6,7 +6,6 @@ import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { IsStrictlyAny } from "@apollo/client/utilities";
 
-import type { Resolver } from "./LocalState.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryInfo } from "./QueryInfo.js";

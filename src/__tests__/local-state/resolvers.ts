@@ -932,8 +932,7 @@ describe("Resolving field aliases", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
-      link: ApolloLink.empty(),
-      resolvers: {},
+      link: new LocalResolversLink({ resolvers: {} }),
     });
 
     cache.writeQuery({

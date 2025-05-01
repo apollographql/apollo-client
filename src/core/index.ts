@@ -51,7 +51,7 @@ export type {
   SubscribeResult,
   TypedDocumentNode,
 } from "./types.js";
-export type { FragmentMatcher, Resolver } from "./LocalState.js";
+export type { Resolver } from "./LocalState.js";
 export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,

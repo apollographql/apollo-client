@@ -49,7 +49,7 @@ export type Resolver = (
 
 type VariableMap = { [name: string]: any };
 
-export type FragmentMatcher = (
+type FragmentMatcher = (
   rootValue: any,
   typeCondition: string,
   context: any

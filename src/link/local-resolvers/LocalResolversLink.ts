@@ -550,7 +550,15 @@ export class LocalResolversLink<
 
     const defaultResolver =
       isLocalFieldDescendant ?
-        () => rootValue?.[fieldName] || readFieldFromCache()
+        () => {
+          const valueFromField = rootValue?.[fieldName];
+
+          if (valueFromField !== undefined) {
+            return valueFromField;
+          }
+
+          return readFieldFromCache();
+        }
         // We expect a resolver to be defined for all `@local` root fields.
         // Warn if a resolver is not defined.
       : () => {

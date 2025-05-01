@@ -219,14 +219,14 @@ export class LocalResolversLink<
       return forward(operation);
     }
 
-    const mainDefinition = getMainDefinition(
+    const operationDefinition = getMainDefinition(
       clientQuery
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(clientQuery);
     const fragmentMap = createFragmentMap(fragments);
 
     const { selectionsToResolve } = this.traverseAndCollectQueryInfo(
-      mainDefinition,
+      operationDefinition,
       fragmentMap
     );
 
@@ -237,7 +237,7 @@ export class LocalResolversLink<
             remoteResult: result,
             execContext: {
               operation,
-              operationDefinition: mainDefinition,
+              operationDefinition,
               fragmentMap,
               errors: [],
               selectionsToResolve,

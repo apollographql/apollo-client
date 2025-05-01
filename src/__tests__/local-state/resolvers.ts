@@ -659,15 +659,16 @@ describe("Writing cache data from resolvers", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Mutation: {
-          start(_data, _args, { cache }) {
-            cache.writeQuery({ query, data: { field: 1 } });
-            return { start: true };
+      link: new LocalResolversLink({
+        resolvers: {
+          Mutation: {
+            start(_data, _args, { operation }) {
+              operation.client.cache.writeQuery({ query, data: { field: 1 } });
+              return { start: true };
+            },
           },
         },
-      },
+      }),
     });
 
     await client.mutate({ mutation });

@@ -1085,14 +1085,15 @@ describe("Async resolvers", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          isLoggedIn() {
-            return Promise.resolve(true);
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            isLoggedIn() {
+              return Promise.resolve(true);
+            },
           },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query })!;

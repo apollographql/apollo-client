@@ -71,7 +71,6 @@ import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
-import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import {
@@ -148,7 +147,6 @@ interface QueryManagerOptions {
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
   clientAwareness: ClientAwareness;
-  localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;

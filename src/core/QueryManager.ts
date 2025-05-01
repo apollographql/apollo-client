@@ -1018,69 +1018,63 @@ export class QueryManager {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
-    const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<TData>(
-        query,
-        context,
-        variables,
-        extensions
-      ).pipe(
-        map((rawResult): SubscribeResult<TData> => {
-          if (fetchPolicy !== "no-cache") {
-            // the subscription interface should handle not sending us results we no longer subscribe to.
-            // XXX I don't think we ever send in an object with errors, but we might in the future...
-            if (shouldWriteResult(rawResult, errorPolicy)) {
-              this.cache.write({
-                query,
-                result: rawResult.data,
-                dataId: "ROOT_SUBSCRIPTION",
-                variables: variables,
-              });
-            }
-
-            this.broadcastQueries();
+    return this.getObservableFromLink<TData>(
+      query,
+      context,
+      variables,
+      extensions
+    ).pipe(
+      map((rawResult): SubscribeResult<TData> => {
+        if (fetchPolicy !== "no-cache") {
+          // the subscription interface should handle not sending us results we no longer subscribe to.
+          // XXX I don't think we ever send in an object with errors, but we might in the future...
+          if (shouldWriteResult(rawResult, errorPolicy)) {
+            this.cache.write({
+              query,
+              result: rawResult.data,
+              dataId: "ROOT_SUBSCRIPTION",
+              variables: variables,
+            });
           }
 
-          const result: SubscribeResult<TData> = {
-            data: rawResult.data ?? undefined,
-          };
+          this.broadcastQueries();
+        }
 
-          if (graphQLResultHasError(rawResult)) {
-            result.error = new CombinedGraphQLErrors(rawResult);
-          } else if (graphQLResultHasProtocolErrors(rawResult)) {
-            result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
-            // Don't emit protocol errors added by HttpLink
-            delete rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
-          }
+        const result: SubscribeResult<TData> = {
+          data: rawResult.data ?? undefined,
+        };
 
-          if (
-            rawResult.extensions &&
-            Object.keys(rawResult.extensions).length
-          ) {
-            result.extensions = rawResult.extensions;
-          }
+        if (graphQLResultHasError(rawResult)) {
+          result.error = new CombinedGraphQLErrors(rawResult);
+        } else if (graphQLResultHasProtocolErrors(rawResult)) {
+          result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+          // Don't emit protocol errors added by HttpLink
+          delete rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+        }
 
-          if (result.error && errorPolicy === "none") {
-            result.data = undefined;
-          }
+        if (rawResult.extensions && Object.keys(rawResult.extensions).length) {
+          result.extensions = rawResult.extensions;
+        }
 
-          if (errorPolicy === "ignore") {
-            delete result.error;
-          }
+        if (result.error && errorPolicy === "none") {
+          result.data = undefined;
+        }
 
-          return result;
-        }),
-        catchError((error) => {
-          if (errorPolicy === "ignore") {
-            return of({ data: undefined } as SubscribeResult<TData>);
-          }
+        if (errorPolicy === "ignore") {
+          delete result.error;
+        }
 
-          return of({ data: undefined, error });
-        }),
-        filter((result) => !!(result.data || result.error))
-      );
+        return result;
+      }),
+      catchError((error) => {
+        if (errorPolicy === "ignore") {
+          return of({ data: undefined } as SubscribeResult<TData>);
+        }
 
-    return makeObservable(variables);
+        return of({ data: undefined, error });
+      }),
+      filter((result) => !!(result.data || result.error))
+    );
   }
 
   public removeQuery(queryId: string) {

@@ -319,9 +319,6 @@ export const hasAllDirectives: (names: string[], root: ASTNode) => boolean;
 export const hasAnyDirectives: (names: string[], root: ASTNode) => boolean;
 
 // @public (undocumented)
-export function hasClientExports(document: DocumentNode): boolean;
-
-// @public (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
 
 // @public (undocumented)

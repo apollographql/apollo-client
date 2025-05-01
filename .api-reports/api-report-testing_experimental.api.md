@@ -5,7 +5,6 @@
 ```ts
 
 import type { GraphQLSchema } from 'graphql';
-import type { Resolvers } from '@apollo/client';
 
 // @alpha @deprecated
 export const createSchemaFetch: (schema: GraphQLSchema, mockFetchOpts?: {
@@ -32,6 +31,13 @@ export const createTestSchema: (schemaWithTypeDefs: GraphQLSchema, options: Test
 type ProxiedSchema = GraphQLSchema & TestSchemaFns;
 
 // @public (undocumented)
+type Resolvers = {
+    [typename: string]: {
+        [fieldName: string]: (parent: any, args: any, context: any, info?: any) => any;
+    };
+};
+
+// @public (undocumented)
 interface TestSchemaFns {
     // (undocumented)
     add: (addOptions: {
@@ -54,6 +60,10 @@ interface TestSchemaOptions {
         [key: string]: any;
     };
 }
+
+// Warnings were encountered during analysis:
+//
+// src/testing/experimental/createTestSchema.ts:21:23 - (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

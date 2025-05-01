@@ -4216,7 +4216,16 @@ describe("custom document transforms", () => {
     });
 
     const client = new ApolloClient({
-      link: ApolloLink.from([new LocalResolversLink(), link]),
+      link: ApolloLink.from([
+        new LocalResolversLink({
+          resolvers: {
+            User: {
+              isLoggedIn: () => false,
+            },
+          },
+        }),
+        link,
+      ]),
       documentTransform,
       cache: new InMemoryCache({
         typePolicies: {

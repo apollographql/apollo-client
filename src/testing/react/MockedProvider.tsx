@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import type { DefaultOptions } from "@apollo/client";
-import type { Resolvers } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
@@ -14,7 +13,6 @@ export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache;
-  resolvers?: Resolvers;
   childProps?: object;
   children?: any;
   link?: ApolloLink;
@@ -42,7 +40,6 @@ export class MockedProvider extends React.Component<
       mocks,
       defaultOptions,
       cache,
-      resolvers,
       link,
       showWarnings,
       mockLinkDefaultOptions,
@@ -58,7 +55,6 @@ export class MockedProvider extends React.Component<
           showWarnings,
           defaultOptions: mockLinkDefaultOptions,
         }),
-      resolvers,
     });
 
     this.state = {

@@ -15,6 +15,7 @@ import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike } from "@apollo/client";
+import { gql } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
@@ -481,12 +482,33 @@ export class LocalResolversLink<
       fieldName
     );
 
+    function readFieldFromCache() {
+      const { cache } = operation.client;
+
+      const result = cache.readFragment<Record<string, unknown>>({
+        fragment: gql`
+          fragment ReadField on ${rootValue?.__typename ?? "Query"} {
+            ${fieldName}
+          }
+        `,
+        id: rootValue ? cache.identify(rootValue) : "ROOT_QUERY",
+      });
+
+      return result?.[fieldName];
+    }
+
     const defaultResolver =
       isLocalFieldDescendant ?
-        () => rootValue?.[fieldName]
+        () => rootValue?.[fieldName] || readFieldFromCache()
         // We expect a resolver to be defined for all `@local` root fields.
         // Warn if a resolver is not defined.
       : () => {
+          const fieldFromCache = readFieldFromCache();
+
+          if (fieldFromCache !== undefined) {
+            return fieldFromCache;
+          }
+
           if (__DEV__) {
             invariant.warn(
               "Could not find a resolver for the '%s' field. The field value has been set to `null`.",

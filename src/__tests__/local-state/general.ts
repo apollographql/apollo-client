@@ -950,131 +950,125 @@ describe("Combining client and server state/operations", () => {
   // TODO: Double check this is the behavior we want. The value returned from
   // the local resolver is `null` since there is no resolver defined, so it
   // overwrites the cache value.
-  it.failing(
-    "should handle a simple query with both server and client fields",
-    async () => {
-      // The next line can be removed if a resolver is added to LocalResolversLink
-      using _ = spyOnConsole("warn");
-      using _consoleSpies = spyOnConsole.takeSnapshots("error");
-      const query = gql`
-        query GetCount {
-          count @client
-          lastCount
+  it("should handle a simple query with both server and client fields", async () => {
+    // The next line can be removed if a resolver is added to LocalResolversLink
+    // using _ = spyOnConsole("warn");
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    const query = gql`
+      query GetCount {
+        count @client
+        lastCount
+      }
+    `;
+    const cache = new InMemoryCache();
+
+    const link = new ApolloLink((operation) => {
+      expect(operation.operationName).toBe("GetCount");
+      return of({ data: { lastCount: 1 } });
+    });
+    const localResolversLink = new LocalResolversLink();
+
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.from([localResolversLink, link]),
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        count: 0,
+      },
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { count: 0, lastCount: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+  });
+
+  it("should support nested querying of both server and client fields", async () => {
+    // The next line can be removed if a resolver is added to LocalResolversLink
+    using _ = spyOnConsole("warn");
+    using _consoleSpies = spyOnConsole.takeSnapshots("error");
+    const query = gql`
+      query GetUser {
+        user {
+          firstName @client
+          lastName
         }
-      `;
-      const cache = new InMemoryCache();
+      }
+    `;
 
-      const link = new ApolloLink((operation) => {
-        expect(operation.operationName).toBe("GetCount");
-        return of({ data: { lastCount: 1 } });
-      });
-      const localResolversLink = new LocalResolversLink();
-
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.from([localResolversLink, link]),
-      });
-
-      cache.writeQuery({
-        query,
-        data: {
-          count: 0,
-        },
-      });
-
-      const stream = new ObservableStream(client.watchQuery({ query }));
-
-      await expect(stream).toEmitTypedValue({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
-
-      await expect(stream).toEmitTypedValue({
-        data: { count: 0, lastCount: 1 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-    }
-  );
-
-  it.failing(
-    "should support nested querying of both server and client fields",
-    async () => {
-      // The next line can be removed if a resolver is added to LocalResolversLink
-      using _ = spyOnConsole("warn");
-      using _consoleSpies = spyOnConsole.takeSnapshots("error");
-      const query = gql`
-        query GetUser {
-          user {
-            firstName @client
-            lastName
-          }
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      const link = new ApolloLink((operation) => {
-        expect(operation.operationName).toBe("GetUser");
-        return of({
-          data: {
-            user: {
-              __typename: "User",
-              // We need an id (or a keyFields policy) because, if the User
-              // object is not identifiable, the call to cache.writeQuery
-              // below will simply replace the existing data rather than
-              // merging the new data with the existing data.
-              id: 123,
-              lastName: "Doe",
-            },
-          },
-        }).pipe(delay(20));
-      });
-      const localResolversLink = new LocalResolversLink();
-
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.from([localResolversLink, link]),
-      });
-
-      cache.writeQuery({
-        query,
+    const cache = new InMemoryCache();
+    const link = new ApolloLink((operation) => {
+      expect(operation.operationName).toBe("GetUser");
+      return of({
         data: {
           user: {
             __typename: "User",
+            // We need an id (or a keyFields policy) because, if the User
+            // object is not identifiable, the call to cache.writeQuery
+            // below will simply replace the existing data rather than
+            // merging the new data with the existing data.
             id: 123,
-            firstName: "John",
-          },
-        },
-      });
-
-      const stream = new ObservableStream(client.watchQuery({ query }));
-
-      await expect(stream).toEmitTypedValue({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
-
-      await expect(stream).toEmitTypedValue({
-        data: {
-          user: {
-            firstName: "John",
             lastName: "Doe",
-            __typename: "User",
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-    }
-  );
+      }).pipe(delay(20));
+    });
+    const localResolversLink = new LocalResolversLink();
 
-  it.failing("should combine both server and client mutations", async () => {
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.from([localResolversLink, link]),
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        user: {
+          __typename: "User",
+          id: 123,
+          firstName: "John",
+        },
+      },
+    });
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        user: {
+          firstName: "John",
+          lastName: "Doe",
+          __typename: "User",
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+  });
+
+  it("should combine both server and client mutations", async () => {
     // The next line can be removed if a resolver is added to LocalResolversLink
     using _ = spyOnConsole("warn");
     const query = gql`

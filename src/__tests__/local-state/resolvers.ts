@@ -1026,201 +1026,6 @@ describe("Resolving field aliases", () => {
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
     });
   });
-});
-
-describe("Force local resolvers", () => {
-  it("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.query`", async () => {
-    const query = gql`
-      query Author {
-        author {
-          name
-          isLoggedIn @client(always: true)
-        }
-      }
-    `;
-
-    const cache = new InMemoryCache();
-    const client = new ApolloClient({
-      cache,
-      link: ApolloLink.empty(),
-      resolvers: {},
-    });
-
-    cache.writeQuery({
-      query,
-      data: {
-        author: {
-          name: "John Smith",
-          isLoggedIn: false,
-          __typename: "Author",
-        },
-      },
-    });
-
-    // When the resolver isn't defined, there isn't anything to force, so
-    // make sure the query resolves from the cache properly.
-    await expect(client.query({ query })).resolves.toStrictEqualTyped({
-      data: {
-        author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
-      },
-    });
-
-    client.addResolvers({
-      Author: {
-        isLoggedIn() {
-          return true;
-        },
-      },
-    });
-
-    // A resolver is defined, so make sure it's forced, and the result
-    // resolves properly as a combination of cache and local resolver
-    // data.
-    await expect(client.query({ query })).resolves.toStrictEqualTyped({
-      data: {
-        author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
-      },
-    });
-  });
-
-  it("should avoid running forced resolvers a second time when loading results over the network (so not from the cache)", async () => {
-    const query = gql`
-      query Author {
-        author {
-          name
-          isLoggedIn @client(always: true)
-        }
-      }
-    `;
-
-    const link = new ApolloLink(() =>
-      of({
-        data: {
-          author: {
-            name: "John Smith",
-            __typename: "Author",
-          },
-        },
-      })
-    );
-
-    let count = 0;
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
-      resolvers: {
-        Author: {
-          isLoggedIn() {
-            count += 1;
-            return true;
-          },
-        },
-      },
-    });
-
-    await expect(client.query({ query })).resolves.toStrictEqualTyped({
-      data: {
-        author: {
-          __typename: "Author",
-          isLoggedIn: true,
-          name: "John Smith",
-        },
-      },
-    });
-    expect(count).toEqual(1);
-  });
-
-  it("should only force resolvers for fields marked with `@client(always: true)`, not all `@client` fields", async () => {
-    const query = gql`
-      query UserDetails {
-        name @client
-        isLoggedIn @client(always: true)
-      }
-    `;
-
-    let nameCount = 0;
-    let isLoggedInCount = 0;
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          name() {
-            nameCount += 1;
-            return "John Smith";
-          },
-          isLoggedIn() {
-            isLoggedInCount += 1;
-            return true;
-          },
-        },
-      },
-    });
-
-    await client.query({ query });
-    expect(nameCount).toEqual(1);
-    expect(isLoggedInCount).toEqual(1);
-
-    // On the next request, `name` will be loaded from the cache only,
-    // whereas `isLoggedIn` will be loaded from the cache then overwritten
-    // by running its forced local resolver.
-    await client.query({ query });
-    expect(nameCount).toEqual(1);
-    expect(isLoggedInCount).toEqual(2);
-  });
-
-  it("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.watchQuery`", async () => {
-    const query = gql`
-      query IsUserLoggedIn {
-        isUserLoggedIn @client(always: true)
-      }
-    `;
-
-    const queryNoForce = gql`
-      query IsUserLoggedIn {
-        isUserLoggedIn @client
-      }
-    `;
-
-    let callCount = 0;
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          isUserLoggedIn() {
-            callCount += 1;
-            return true;
-          },
-        },
-      },
-    });
-
-    {
-      const stream = new ObservableStream(client.watchQuery({ query }));
-
-      await expect(stream).toEmitNext();
-      expect(callCount).toBe(1);
-    }
-
-    {
-      const stream = new ObservableStream(client.watchQuery({ query }));
-
-      await expect(stream).toEmitNext();
-      expect(callCount).toBe(2);
-    }
-
-    {
-      const stream = new ObservableStream(
-        client.watchQuery({ query: queryNoForce })
-      );
-
-      await expect(stream).toEmitNext();
-      // Result is loaded from the cache since the resolver
-      // isn't being forced.
-      expect(callCount).toBe(2);
-    }
-  });
 
   it("should allow client-only virtual resolvers (#4731)", async () => {
     const query = gql`
@@ -1235,23 +1040,24 @@ describe("Force local resolvers", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          userData() {
-            return {
-              __typename: "User",
-              firstName: "Ben",
-              lastName: "Newman",
-            };
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            userData() {
+              return {
+                __typename: "User",
+                firstName: "Ben",
+                lastName: "Newman",
+              };
+            },
+          },
+          User: {
+            fullName(data) {
+              return data.firstName + " " + data.lastName;
+            },
           },
         },
-        User: {
-          fullName(data) {
-            return data.firstName + " " + data.lastName;
-          },
-        },
-      },
+      }),
     });
 
     const result = await client.query({ query });

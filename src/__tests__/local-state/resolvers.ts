@@ -6,6 +6,7 @@ import type { QueryResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
@@ -19,7 +20,7 @@ const setupTestWithResolvers = ({
   error,
   delay,
 }: {
-  resolvers: Resolvers;
+  resolvers: LocalResolversLink.Resolvers;
   query: DocumentNode;
   serverQuery?: DocumentNode;
   variables?: object;
@@ -30,17 +31,18 @@ const setupTestWithResolvers = ({
 }) => {
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: new MockLink([
-      {
-        request: { query: serverQuery || query, variables },
-        result: serverResult,
-        error,
-        delay,
-      },
+    link: ApolloLink.from([
+      new LocalResolversLink({ resolvers }),
+      new MockLink([
+        {
+          request: { query: serverQuery || query, variables },
+          result: serverResult,
+          error,
+          delay,
+        },
+      ]),
     ]),
   });
-
-  client.addResolvers(resolvers);
 
   return new ObservableStream(
     client.watchQuery<any>({ query, variables, ...queryOptions })
@@ -57,17 +59,15 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ bar: true }),
-      },
-    };
-
     const client = new ApolloClient({
-      resolvers,
       cache: new InMemoryCache(),
-      // Local resolvers handle this query
-      link: ApolloLink.empty(),
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            foo: () => ({ __typename: "Foo", bar: true }),
+          },
+        },
+      }),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -80,7 +80,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitTypedValue({
-      data: { foo: { bar: true } },
+      data: { foo: { __typename: "Foo", bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

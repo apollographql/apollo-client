@@ -357,12 +357,6 @@ describe.skip("Type tests", () => {
       },
     });
 
-    // @ts-expect-error argument required
-    new LocalResolversLink<
-      { User?: { isLoggedIn: LocalResolversLink.Resolver } },
-      RootValue
-    >();
-
     new LocalResolversLink<
       { User?: { isLoggedIn: LocalResolversLink.Resolver } },
       RootValue

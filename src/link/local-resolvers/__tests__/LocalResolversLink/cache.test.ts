@@ -751,7 +751,7 @@ test("warns on undefined value if partial data is written to the cache for an ob
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+    "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver did not include the property in the returned value and there was no resolver defined for the field.",
     "name",
     { __typename: "User", id: 2 }
   );

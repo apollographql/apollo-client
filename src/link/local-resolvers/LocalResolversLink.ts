@@ -627,13 +627,18 @@ export class LocalResolversLink<
       // Its ok to return undefined for an exported variable if the variable is
       // optional. We don't want to warn in that case.
       if (__DEV__) {
-        invariant.warn(
-          resolver ?
-            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
-          : "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
-          fieldName,
-          rootValue
-        );
+        if (resolver) {
+          invariant.warn(
+            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+            resolverName
+          );
+        } else {
+          invariant.warn(
+            "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver did not include the property in the returned value and there was no resolver defined for the field.",
+            fieldName,
+            rootValue
+          );
+        }
       }
       result = null;
     }

@@ -825,13 +825,6 @@ export class ApolloClient implements DataProxy {
   }
 
   /**
-   * Set a custom local state fragment matcher.
-   */
-  public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.localState.setFragmentMatcher(fragmentMatcher);
-  }
-
-  /**
    * Define a new ApolloLink (or link chain) that Apollo Client will use.
    */
   public setLink(newLink: ApolloLink) {

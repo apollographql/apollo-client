@@ -12,7 +12,6 @@ export {
   getInclusionDirectives,
   hasAllDirectives,
   hasAnyDirectives,
-  hasClientExports,
   hasDirectives,
   shouldInclude,
 } from "./graphql/directives.js";

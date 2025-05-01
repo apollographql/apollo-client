@@ -82,10 +82,6 @@ export function hasDirectives(names: string[], root: ASTNode, all?: boolean) {
   return all ? !nameSet.size : nameSet.size < uniqueCount;
 }
 
-export function hasClientExports(document: DocumentNode) {
-  return document && hasDirectives(["client", "export"], document, true);
-}
-
 export type InclusionDirectives = Array<{
   directive: DirectiveNode;
   ifArgument: ArgumentNode;

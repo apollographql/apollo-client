@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
 import { OperationTypeNode } from "graphql";
-import type { Subscription } from "rxjs";
+import type { Observable, Subscription } from "rxjs";
 import {
   catchError,
   concat,
@@ -12,7 +12,6 @@ import {
   map,
   mergeMap,
   mergeWith,
-  Observable,
   of,
   share,
   shareReplay,
@@ -55,7 +54,6 @@ import {
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
-  hasClientExports,
   isDocumentNode,
   isNonEmptyArray,
   isNonNullObject,
@@ -122,7 +120,6 @@ interface MutationStoreValue {
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 interface TransformCacheEntry {
-  hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
   nonReactiveQuery: DocumentNode;
@@ -295,16 +292,7 @@ export class QueryManager {
     const mutationId = this.generateMutationId();
 
     mutation = this.cache.transformForLink(this.transform(mutation));
-    const { hasClientExports } = this.getDocumentInfo(mutation);
-
     variables = this.getVariables(mutation, variables);
-    if (hasClientExports) {
-      variables = (await this.localState.addExportedVariables(
-        mutation,
-        variables,
-        context
-      )) as TVariables;
-    }
 
     const mutationStoreValue =
       this.mutationStore &&
@@ -737,12 +725,11 @@ export class QueryManager {
 
     if (!transformCache.has(document)) {
       const cacheEntry: TransformCacheEntry = {
-        // TODO These three calls (hasClientExports, shouldForceResolvers, and
+        // TODO These two calls (shouldForceResolvers and
         // usesNonreactiveDirective) are performing independent full traversals
         // of the transformed document. We should consider merging these
         // traversals into a single pass in the future, though the work is
         // cached after the first time.
-        hasClientExports: hasClientExports(document),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
@@ -1111,21 +1098,6 @@ export class QueryManager {
         filter((result) => !!(result.data || result.error))
       );
 
-    if (this.getDocumentInfo(query).hasClientExports) {
-      const observablePromise = this.localState
-        .addExportedVariables(query, variables, context)
-        .then(makeObservable);
-
-      return new Observable<SubscribeResult<TData>>((observer) => {
-        let sub: Subscription | null = null;
-        observablePromise.then(
-          (observable) => (sub = observable.subscribe(observer)),
-          observer.error
-        );
-        return () => sub && sub.unsubscribe();
-      });
-    }
-
     return makeObservable(variables);
   }
 
@@ -1439,33 +1411,9 @@ export class QueryManager {
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
     let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
-    // If the query has @export(as: ...) directives, then we need to
-    // process those directives asynchronously. When there are no
-    // @export directives (the common case), we deliberately avoid
-    // wrapping the result of this.fetchQueryByPolicy in a Promise,
-    // since the timing of result delivery is (unfortunately) important
-    // for backwards compatibility. TODO This code could be simpler if
-    // we deprecated and removed LocalState.
-    if (this.getDocumentInfo(normalized.query).hasClientExports) {
-      observable = from(
-        this.localState.addExportedVariables(
-          normalized.query,
-          normalized.variables,
-          normalized.context
-        )
-      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
-
-      // there is just no way we can synchronously get the *right* value here,
-      // so we will assume `true`, which is the behaviour before the bug fix in
-      // #10597. This means that bug is not fixed in that case, and is probably
-      // un-fixable with reasonable effort for the edge case of @export as
-      // directives.
-      containsDataFromLink = true;
-    } else {
-      const sourcesWithInfo = fromVariables(normalized.variables);
-      containsDataFromLink = sourcesWithInfo.fromLink;
-      observable = sourcesWithInfo.observable;
-    }
+    const sourcesWithInfo = fromVariables(normalized.variables);
+    containsDataFromLink = sourcesWithInfo.fromLink;
+    observable = sourcesWithInfo.observable;
 
     return {
       observable: observable.pipe(

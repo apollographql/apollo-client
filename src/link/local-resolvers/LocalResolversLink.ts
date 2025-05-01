@@ -82,7 +82,7 @@ export declare namespace LocalResolversLink {
      *     }
      *   }
      * })
-     * ````
+     * ```
      */
     rootValue?:
       | ((options: { operation: Operation }) => TRootValue)

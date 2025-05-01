@@ -9,10 +9,6 @@ import { ApolloLink } from "@apollo/client/link";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
-// not exported
-// eslint-disable-next-line local-rules/no-relative-imports
-import { LocalState } from "../../core/LocalState.js";
-
 const setupTestWithResolvers = ({
   resolvers,
   query,
@@ -1338,54 +1334,5 @@ describe("Async resolvers", () => {
         },
       },
     });
-  });
-});
-
-describe("LocalState helpers", () => {
-  describe("#shouldForceResolvers", () => {
-    it(
-      "should return true if the document contains any @client directives " +
-        "with an `always` variable of true",
-      () => {
-        const localState = new LocalState({ cache: new InMemoryCache() });
-        const query = gql`
-          query Author {
-            name
-            isLoggedIn @client(always: true)
-          }
-        `;
-        expect(localState.shouldForceResolvers(query)).toBe(true);
-      }
-    );
-
-    it(
-      "should return false if the document contains any @client directives " +
-        "without an `always` variable",
-      () => {
-        const localState = new LocalState({ cache: new InMemoryCache() });
-        const query = gql`
-          query Author {
-            name
-            isLoggedIn @client
-          }
-        `;
-        expect(localState.shouldForceResolvers(query)).toBe(false);
-      }
-    );
-
-    it(
-      "should return false if the document contains any @client directives " +
-        "with an `always` variable of false",
-      () => {
-        const localState = new LocalState({ cache: new InMemoryCache() });
-        const query = gql`
-          query Author {
-            name
-            isLoggedIn @client(always: false)
-          }
-        `;
-        expect(localState.shouldForceResolvers(query)).toBe(false);
-      }
-    );
   });
 });

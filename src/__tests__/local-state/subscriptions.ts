@@ -4,6 +4,7 @@ import { of } from "rxjs";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("Basic functionality", () => {
@@ -17,15 +18,17 @@ describe("Basic functionality", () => {
     const link = new ApolloLink(() =>
       of({ data: { field: 1 } }, { data: { field: 2 } })
     );
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Query: {
           count: () => 0,
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     const stream = new ObservableStream(client.subscribe({ query }));
@@ -46,11 +49,7 @@ describe("Basic functionality", () => {
     const link = new ApolloLink(() =>
       of({ data: { field: 1 } }, { data: { field: 2 } })
     );
-
-    let subCounter = 0;
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Subscription: {
           count: () => {
@@ -59,6 +58,12 @@ describe("Basic functionality", () => {
           },
         },
       },
+    });
+
+    let subCounter = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, link]),
     });
 
     const stream = new ObservableStream(client.subscribe({ query }));

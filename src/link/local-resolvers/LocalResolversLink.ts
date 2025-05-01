@@ -12,7 +12,7 @@ import type {
 import { isSelectionNode, Kind, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
-import { defer, from, mergeMap, of } from "rxjs";
+import { from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
@@ -219,43 +219,41 @@ export class LocalResolversLink<
       return forward(operation);
     }
 
-    return defer(() => {
-      const mainDefinition = getMainDefinition(
-        clientQuery
-      ) as OperationDefinitionNode;
-      const fragments = getFragmentDefinitions(clientQuery);
-      const fragmentMap = createFragmentMap(fragments);
+    const mainDefinition = getMainDefinition(
+      clientQuery
+    ) as OperationDefinitionNode;
+    const fragments = getFragmentDefinitions(clientQuery);
+    const fragmentMap = createFragmentMap(fragments);
 
-      const { selectionsToResolve } = this.traverseAndCollectQueryInfo(
-        mainDefinition,
-        fragmentMap
-      );
+    const { selectionsToResolve } = this.traverseAndCollectQueryInfo(
+      mainDefinition,
+      fragmentMap
+    );
 
-      const execContext = {
-        operation,
-        operationDefinition: mainDefinition,
-        fragmentMap,
-        errors: [],
-        selectionsToResolve,
-      } satisfies Partial<ExecContext>;
+    const execContext = {
+      operation,
+      operationDefinition: mainDefinition,
+      fragmentMap,
+      errors: [],
+      selectionsToResolve,
+    } satisfies Partial<ExecContext>;
 
-      return getServerResult().pipe(
-        mergeMap((result) => {
-          return from(
-            this.runResolvers({
-              remoteResult: result,
-              execContext: {
-                ...execContext,
-                rootValue:
-                  typeof this.rootValue === "function" ?
-                    this.rootValue({ operation })
-                  : this.rootValue,
-              },
-            })
-          );
-        })
-      );
-    });
+    return getServerResult().pipe(
+      mergeMap((result) => {
+        return from(
+          this.runResolvers({
+            remoteResult: result,
+            execContext: {
+              ...execContext,
+              rootValue:
+                typeof this.rootValue === "function" ?
+                  this.rootValue({ operation })
+                : this.rootValue,
+            },
+          })
+        );
+      })
+    );
   }
 
   private async runResolvers({

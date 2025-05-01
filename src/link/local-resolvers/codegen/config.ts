@@ -1,4 +1,7 @@
-import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
+import type {
+  AvoidOptionalsConfig,
+  RawConfig,
+} from "@graphql-codegen/visitor-plugin-common";
 
 /**
  * This plugin generates TypeScript signature for `resolve` functions of your GraphQL API.
@@ -8,6 +11,60 @@ import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
  *
  */
 export interface LocalResolversLinkPluginConfig extends RawConfig {
+  /**
+   * This will cause the generator to avoid using optionals (`?`),
+   * so all field resolvers must be implemented in order to avoid compilation errors.
+   * @defaultValue false
+   *
+   * @example
+   * ## Override all definition types
+   *
+   * ```ts
+   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   *
+   *  const config: CodegenConfig = {
+   *    // ...
+   *    generates: {
+   *      'path/to/file': {
+   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
+   *        config: {
+   *          avoidOptionals: true
+   *        },
+   *      },
+   *    },
+   *  };
+   *  export default config;
+   * ```
+   *
+   * ## Override only specific definition types
+   *
+   * ```ts filename="codegen.ts"
+   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   *
+   *  const config: CodegenConfig = {
+   *    // ...
+   *    generates: {
+   *      'path/to/file': {
+   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
+   *        config: {
+   *          avoidOptionals: {
+   *            field: true,
+   *            inputValue: true,
+   *            object: true,
+   *            defaultValue: true,
+   *            query: true,
+   *            mutation: true,
+   *            subscription: true,
+   *          }
+   *        },
+   *      },
+   *    },
+   *  };
+   *  export default config;
+   * ```
+   */
+  avoidOptionals?: boolean | AvoidOptionalsConfig;
+
   /**
    * Adds `_` to generated `Args` types in order to avoid duplicate identifiers.
    *

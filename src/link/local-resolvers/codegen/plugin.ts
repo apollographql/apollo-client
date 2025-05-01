@@ -102,6 +102,3 @@ ${defsToInclude.join("\n")}
     },
   };
 };
-
-export type { LocalResolversLinkPluginConfig };
-export { LocalResolversLinkVisitor };

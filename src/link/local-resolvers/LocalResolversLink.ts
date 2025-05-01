@@ -42,9 +42,6 @@ import {
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
-type MaybeRequireResolvers<TResolvers> =
-  {} extends TResolvers ? {} : { resolvers: TResolvers };
-
 type MaybeRequireRootValue<TRootValue> =
   true extends IsAny<TRootValue> ? {}
   : unknown extends TRootValue ? {}
@@ -92,8 +89,7 @@ export declare namespace LocalResolversLink {
      * The map of resolvers used to provide values for `@client` fields.
      */
     resolvers?: TResolvers;
-  } & MaybeRequireResolvers<TResolvers> &
-    MaybeRequireRootValue<TRootValue>;
+  } & MaybeRequireRootValue<TRootValue>;
 
   export interface Resolvers {
     [typename: string]: {
@@ -169,7 +165,11 @@ export class LocalResolversLink<
   constructor(
     ...[options]: {} extends TResolvers ?
       [options?: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>>]
-    : [options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>>]
+    : [
+        options: LocalResolversLink.Options<TResolvers, NoInfer<TRootValue>> & {
+          resolvers: TResolvers;
+        },
+      ]
   ) {
     super();
 

@@ -793,7 +793,7 @@ if (__DEV__) {
 }
 
 let issuedWarning = false;
-export function warnOnImproperCacheImplementation() {
+function warnOnImproperCacheImplementation() {
   if (!issuedWarning) {
     issuedWarning = true;
     invariant.warn(

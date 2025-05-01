@@ -1310,29 +1310,6 @@ export class QueryManager {
       context,
     });
 
-    const fromVariables = () => {
-      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
-        queryInfo,
-        normalized,
-        networkStatus,
-        emitLoadingState
-      );
-
-      if (
-        // If we're in standby, postpone advancing options.fetchPolicy using
-        // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby" &&
-        queryInfo.observableQuery
-      ) {
-        queryInfo.observableQuery["applyNextFetchPolicy"](
-          "after-fetch",
-          options as any
-        );
-      }
-
-      return observableWithInfo;
-    };
-
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
@@ -1348,7 +1325,25 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
-    const { observable, fromLink } = fromVariables();
+
+    const { observable, fromLink } = this.fetchQueryByPolicy<TData, TVars>(
+      queryInfo,
+      normalized,
+      networkStatus,
+      emitLoadingState
+    );
+
+    if (
+      // If we're in standby, postpone advancing options.fetchPolicy using
+      // applyNextFetchPolicy.
+      normalized.fetchPolicy !== "standby" &&
+      queryInfo.observableQuery
+    ) {
+      queryInfo.observableQuery["applyNextFetchPolicy"](
+        "after-fetch",
+        options as any
+      );
+    }
 
     return {
       observable: observable.pipe(

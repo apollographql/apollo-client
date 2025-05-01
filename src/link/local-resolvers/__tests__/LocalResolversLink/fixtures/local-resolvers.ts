@@ -41,8 +41,8 @@ export type Scalars = {
 
 export type Food = {
   __typename: "Food";
-  categories: Maybe<Array<FoodCategory>>;
-  name: Maybe<Scalars["String"]["output"]>;
+  categories?: Maybe<Array<FoodCategory>>;
+  name?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type FoodCategoriesArgs = {
@@ -56,12 +56,12 @@ export enum FoodCategory {
 
 export type Query = {
   __typename: "Query";
-  currentUserId: Maybe<Scalars["ID"]["output"]>;
+  currentUserId?: Maybe<Scalars["ID"]["output"]>;
 };
 
 export type User = {
   __typename: "User";
-  favoriteFood: Maybe<Food>;
+  favoriteFood?: Maybe<Food>;
   isLoggedIn: Scalars["Boolean"]["output"];
 };
 

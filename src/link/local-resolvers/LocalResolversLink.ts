@@ -230,21 +230,17 @@ export class LocalResolversLink<
       fragmentMap
     );
 
-    const execContext = {
-      operation,
-      operationDefinition: mainDefinition,
-      fragmentMap,
-      errors: [],
-      selectionsToResolve,
-    } satisfies Partial<ExecContext>;
-
     return getServerResult().pipe(
       mergeMap((result) => {
         return from(
           this.runResolvers({
             remoteResult: result,
             execContext: {
-              ...execContext,
+              operation,
+              operationDefinition: mainDefinition,
+              fragmentMap,
+              errors: [],
+              selectionsToResolve,
               rootValue:
                 typeof this.rootValue === "function" ?
                   this.rootValue({ operation })

@@ -19,7 +19,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
-import type { FragmentMatcher } from "./LocalState.js";
 import { LocalState } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
@@ -117,7 +116,6 @@ export interface ApolloClientOptions {
    * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
-  fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    */
@@ -246,7 +244,6 @@ export class ApolloClient implements DataProxy {
       defaultOptions,
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
-      fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
@@ -279,7 +276,6 @@ export class ApolloClient implements DataProxy {
     this.localState = new LocalState({
       cache,
       client: this,
-      fragmentMatcher,
     });
 
     this.queryManager = new QueryManager({

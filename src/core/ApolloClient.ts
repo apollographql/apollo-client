@@ -19,7 +19,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
-import { LocalState } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
@@ -186,7 +185,6 @@ export class ApolloClient implements DataProxy {
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private localState: LocalState;
 
   /**
    * Constructs an instance of `ApolloClient`.
@@ -272,11 +270,6 @@ export class ApolloClient implements DataProxy {
     this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
     this.version = version;
-
-    this.localState = new LocalState({
-      cache,
-      client: this,
-    });
 
     this.queryManager = new QueryManager({
       client: this,

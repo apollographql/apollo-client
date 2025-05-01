@@ -8,6 +8,7 @@ import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -307,4 +308,30 @@ test("handles read functions for root object field from cache if resolver is not
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });
   await expect(stream).toComplete();
+});
+
+test("warns if resolver is not defined if cache does not have value", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      count @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const link = new LocalResolversLink();
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({ data: { count: null } });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "Query.count"
+  );
 });

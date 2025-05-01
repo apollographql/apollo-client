@@ -1,3 +1,5 @@
+import { of } from "rxjs";
+
 import {
   ApolloClient,
   ApolloLink,
@@ -334,4 +336,102 @@ test("warns if resolver is not defined if cache does not have value", async () =
     "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
     "Query.count"
   );
+});
+
+test("reads from the cache on a nested scalar field by default if a resolver is not defined", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment LocalState on User {
+        isLoggedIn
+      }
+    `,
+    id: client.cache.identify({ __typename: "User", id: 1 }),
+    data: {
+      __typename: "User",
+      isLoggedIn: true,
+    },
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User", id: 1 } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: { user: { __typename: "User", id: 1, isLoggedIn: true } },
+  });
+  await expect(stream).toComplete();
+});
+
+test("reads from the cache on a nested object field by default if a resolver is not defined", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment LocalState on User {
+        bestFriend {
+          id
+          name
+        }
+      }
+    `,
+    id: client.cache.identify({ __typename: "User", id: 1 }),
+    data: {
+      __typename: "User",
+      bestFriend: {
+        __typename: "User",
+        id: 2,
+        name: "Best Friend",
+      },
+    },
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User", id: 1 } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: { __typename: "User", id: 2, name: "Best Friend" },
+      },
+    },
+  });
+  await expect(stream).toComplete();
 });

@@ -120,7 +120,6 @@ interface MutationStoreValue {
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 interface TransformCacheEntry {
-  hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
   nonReactiveQuery: DocumentNode;
   clientQuery: DocumentNode | null;
@@ -725,12 +724,6 @@ export class QueryManager {
 
     if (!transformCache.has(document)) {
       const cacheEntry: TransformCacheEntry = {
-        // TODO These two calls (shouldForceResolvers and
-        // usesNonreactiveDirective) are performing independent full traversals
-        // of the transformed document. We should consider merging these
-        // traversals into a single pass in the future, though the work is
-        // cached after the first time.
-        hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
         clientQuery: this.localState.clientQuery(document),
@@ -1689,27 +1682,6 @@ export class QueryManager {
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
         return of(toResult(data));
       };
-
-      if (this.getDocumentInfo(query).hasForcedResolvers) {
-        return from(
-          this.localState
-            .runResolvers({
-              document: query,
-              // TODO: Update remoteResult to handle `null`. In v3 the `if`
-              // statement contained a check against `data`, but this value was
-              // always `{}` if nothing was in the cache, which meant the check
-              // above always succeeded when there were forced resolvers. Now that
-              // `data` is nullable, this `remoteResult` needs to be an empty
-              // object. Ideally we can pass in `null` here and the resolvers
-              // would be able to handle this the same way.
-              remoteResult: { data: data || ({} as any) },
-              context,
-              variables,
-              onlyRunForcedResolvers: true,
-            })
-            .then((resolved) => toResult(resolved.data || void 0))
-        );
-      }
 
       // Resolves https://github.com/apollographql/apollo-client/issues/10317.
       // If errorPolicy is 'none' and notifyOnNetworkStatusChange is true,

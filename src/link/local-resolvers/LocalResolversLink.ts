@@ -502,6 +502,8 @@ export class LocalResolversLink<
 
       // We only execute the following for nested fields since root fields with
       // read functions are resolved correctly.
+      // TODO: Is there a better way we can detect whether this is a result of a
+      // dangling reference?
       if (result === null && typename !== "Query") {
         // If we are trying to read a client field from a remote result, its
         // possible the result has never been written, which means any `read`

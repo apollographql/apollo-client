@@ -1,8 +1,6 @@
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 
-export interface RootValue {
-  env: "dev" | "prod";
-}
+import type { RootValue } from "./fixtures/rootValue.js";
 
 describe.skip("Type tests", () => {
   test("allows resolvers of anything with no generic", () => {

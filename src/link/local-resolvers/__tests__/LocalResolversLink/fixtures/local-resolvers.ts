@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
-import { RootValue } from "../types.test.js";
+import { RootValue } from "./rootValue.js";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {

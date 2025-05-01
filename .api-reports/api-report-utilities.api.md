@@ -81,6 +81,7 @@ export interface CacheSizes {
     "inMemoryCache.executeSelectionSet": number;
     "inMemoryCache.executeSubSelectedArray": number;
     "inMemoryCache.maybeBroadcastWatch": number;
+    "LocalResolversLink.getTransformedQuery": number;
     "PersistedQueryLink.persistedQueryHashes": number;
     "queryManager.getDocumentInfo": number;
     "removeTypenameFromVariables.getVariableDefinitions": number;
@@ -328,6 +329,9 @@ export type InclusionDirectives = Array<{
     directive: DirectiveNode;
     ifArgument: ArgumentNode;
 }>;
+
+// @public (undocumented)
+export type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public (undocumented)
 export function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult;

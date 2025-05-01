@@ -51,11 +51,7 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
     super(
       pluginConfig,
       {
-        avoidOptionals: normalizeAvoidOptionals({
-          query: true,
-          mutation: true,
-          subscription: true,
-        }),
+        avoidOptionals: normalizeAvoidOptionals(pluginConfig.avoidOptionals),
         allowParentTypeOverride: getConfigValue(
           pluginConfig.allowParentTypeOverride,
           false

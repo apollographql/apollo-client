@@ -890,20 +890,23 @@ describe("Resolving field aliases", () => {
       }
     `;
 
-    const link = new ApolloLink(() =>
+    const mockLink = new ApolloLink(() =>
       of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const fie = jest.fn();
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Query: {
           foo: () => ({ bar: true, __typename: "Foo" }),
           fie,
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
     const result = await client.query({ query: aliasedQuery });

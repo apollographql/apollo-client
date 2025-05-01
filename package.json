@@ -167,7 +167,6 @@
     "@eslint/compat": "1.2.5",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "9.18.0",
-    "@graphql-codegen/add": "^5.0.3",
     "@graphql-codegen/cli": "^5.0.5",
     "@graphql-tools/merge": "9.0.4",
     "@graphql-tools/schema": "10.0.4",

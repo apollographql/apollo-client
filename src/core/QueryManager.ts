@@ -122,7 +122,6 @@ type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 interface TransformCacheEntry {
   hasNonreactiveDirective: boolean;
   nonReactiveQuery: DocumentNode;
-  clientQuery: DocumentNode | null;
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
@@ -726,7 +725,6 @@ export class QueryManager {
       const cacheEntry: TransformCacheEntry = {
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
-        clientQuery: this.localState.clientQuery(document),
         serverQuery: removeDirectivesFromDocument(
           [
             { name: "client", remove: true },
@@ -1129,7 +1127,7 @@ export class QueryManager {
   ): Observable<FetchResult<TData>> {
     let observable: Observable<FetchResult<TData>> | undefined;
 
-    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+    const { serverQuery } = this.getDocumentInfo(query);
 
     const prepareContext = (context = {}): DefaultContext => {
       const newContext = this.localState.prepareContext(context);
@@ -1196,21 +1194,6 @@ export class QueryManager {
     } else {
       observable = of({ data: {} } as FetchResult<TData>);
       context = prepareContext(context);
-    }
-
-    if (clientQuery) {
-      observable = observable.pipe(
-        mergeMap((result) => {
-          return from(
-            this.localState.runResolvers({
-              document: clientQuery,
-              remoteResult: result,
-              context,
-              variables,
-            })
-          );
-        })
-      );
     }
 
     return observable.pipe(

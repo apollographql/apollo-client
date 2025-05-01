@@ -524,3 +524,57 @@ test("reads from the cache with a read function on a nested object field by defa
   });
   await expect(stream).toComplete();
 });
+
+test("warns on missing resolver if a nested client field is resolved on a non-normalized object", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      user {
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            bestFriend: {
+              read() {
+                return { __typename: "User", id: 2, name: "Best Friend" };
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User" } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        bestFriend: null,
+      },
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "User.bestFriend"
+  );
+});

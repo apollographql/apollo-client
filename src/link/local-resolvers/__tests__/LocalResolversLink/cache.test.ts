@@ -687,3 +687,72 @@ test("does not confuse field missing resolver with root field of same name on a 
     "User.count"
   );
 });
+
+test("warns on undefined value if partial data is written to the cache for an object client field", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query {
+      user {
+        id
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: gql`
+      query {
+        user {
+          id
+          bestFriend {
+            id
+          }
+        }
+      }
+    `,
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: { __typename: "User", id: 2 },
+      },
+    },
+  });
+
+  const mockLink = new ApolloLink(() => {
+    return of({ data: { user: { __typename: "User", id: 1 } } });
+  });
+  const localResolversLink = new LocalResolversLink();
+  const link = ApolloLink.from([localResolversLink, mockLink]);
+  const stream = new ObservableStream(execute(link, { query }, { client }));
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: {
+          __typename: "User",
+          id: 2,
+          name: null,
+        },
+      },
+    },
+  });
+  await expect(stream).toComplete();
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+    "name",
+    { __typename: "User", id: 2 }
+  );
+});

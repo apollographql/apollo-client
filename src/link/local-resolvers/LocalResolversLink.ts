@@ -502,6 +502,11 @@ export class LocalResolversLink<
               ${print(field)}
             }
           `,
+          // Ensure we don't get a `null` as a result of partial data so that we
+          // can skip the cache.batch step below. Missing fields on the record
+          // will be caught by iterations of the child selection set if this is
+          // not a scalar value.
+          returnPartialData: true,
           id,
         });
       }
@@ -617,8 +622,9 @@ export class LocalResolversLink<
         invariant.warn(
           resolver ?
             "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
-          : "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
-          resolverName
+          : "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+          fieldName,
+          rootValue
         );
       }
       result = null;

@@ -51,12 +51,6 @@ const config: CodegenConfig = {
 
         // If you use the `rootValue` option, provide the path to it here
         rootValueType: "./path/to/rootValue#RootValue",
-
-        // Ensures you return objects from resolvers that provide values for all
-        // fields in the return type.
-        avoidOptionals: {
-          field: true
-        },
       }
     }
   }

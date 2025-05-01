@@ -275,7 +275,7 @@ describe("Link interactions", () => {
     void client.mutate({ mutation, context: { planet: "Tatooine" } });
   });
 
-  it("includes getCacheKey function on the context for cache resolvers", async () => {
+  it("includes client on the context for cache resolvers", async () => {
     const query = gql`
       {
         books {
@@ -301,9 +301,11 @@ describe("Link interactions", () => {
     };
 
     const link = new ApolloLink((operation, forward) => {
-      const { getCacheKey } = operation.getContext();
-      expect(getCacheKey).toBeDefined();
-      expect(getCacheKey({ id: 1, __typename: "Book" })).toEqual("Book:1");
+      const { client } = operation;
+      expect(client).toBeDefined();
+      expect(client.cache.identify({ id: 1, __typename: "Book" })).toEqual(
+        "Book:1"
+      );
       return of({ data: bookData });
     });
 
@@ -344,7 +346,7 @@ describe("Link interactions", () => {
     });
   });
 
-  it("removes @client fields from the query before it reaches the link", async () => {
+  it("does not remove @client fields from the query before it reaches the link", async () => {
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -364,6 +366,7 @@ describe("Link interactions", () => {
         books {
           id
           title
+          isRead @client
           __typename
         }
       }
@@ -389,6 +392,6 @@ describe("Link interactions", () => {
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(expectedQuery));
+    expect(result.current!.query).toMatchDocument(expectedQuery);
   });
 });

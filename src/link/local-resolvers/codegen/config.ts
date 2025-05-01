@@ -260,7 +260,7 @@ export interface LocalResolversLinkPluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file': {
-   *        plugins: ['typescript', 'typescript-resolver', { add: { content: "import { DeepPartial } from 'utility-types';" } }],
+   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen', { add: { content: "import { DeepPartial } from 'utility-types';" } }],
    *        config: {
    *          defaultMapper: 'DeepPartial<{T}>',
    *          avoidCheckingAbstractTypesRecursively: true // required if you have complex nested abstract types
@@ -285,7 +285,7 @@ export interface LocalResolversLinkPluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file': {
-   *        plugins: ['typescript', 'typescript-resolver'],
+   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
    *        config: {
    *          showUnusedMappers: true,
    *        },

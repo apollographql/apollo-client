@@ -819,20 +819,23 @@ describe("Resolving field aliases", () => {
       }
     `;
 
-    const link = new ApolloLink(() =>
+    const mockLink = new ApolloLink(() =>
       // Each link is responsible for implementing their own aliasing so it
       // returns baz not bar
       of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link,
+    const localResolversLink = new LocalResolversLink({
       resolvers: {
         Query: {
           foo: () => ({ bar: true, __typename: "Foo" }),
         },
       },
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
     const result = await client.query({ query });

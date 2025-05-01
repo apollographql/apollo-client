@@ -756,36 +756,39 @@ describe("Writing cache data from resolvers", () => {
 
     const client = new ApolloClient({
       cache,
-      link: ApolloLink.empty(),
-      resolvers: {
-        Mutation: {
-          start() {
-            cache.writeQuery({
-              query,
-              data: {
-                obj: {
-                  field: { field2: 1, __typename: "Field" },
-                  id: "uniqueId",
-                  __typename: "Object",
+      link: new LocalResolversLink({
+        resolvers: {
+          Mutation: {
+            start(_, __, { operation }) {
+              const { cache } = operation.client;
+
+              cache.writeQuery({
+                query,
+                data: {
+                  obj: {
+                    field: { field2: 1, __typename: "Field" },
+                    id: "uniqueId",
+                    __typename: "Object",
+                  },
                 },
-              },
-            });
-            cache.modify<{ field: { field2: number } }>({
-              id: "Object:uniqueId",
-              fields: {
-                field(value) {
-                  if (isReference(value)) {
-                    fail("Should not be a reference");
-                  }
-                  expect(value.field2).toBe(1);
-                  return { ...value, field2: 2 };
+              });
+              cache.modify<{ field: { field2: number } }>({
+                id: "Object:uniqueId",
+                fields: {
+                  field(value) {
+                    if (isReference(value)) {
+                      fail("Should not be a reference");
+                    }
+                    expect(value.field2).toBe(1);
+                    return { ...value, field2: 2 };
+                  },
                 },
-              },
-            });
-            return { start: true };
+              });
+              return { start: true };
+            },
           },
         },
-      },
+      }),
     });
 
     await client.mutate({ mutation });

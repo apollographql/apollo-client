@@ -1,12 +1,5 @@
 import type { RawConfig } from "@graphql-codegen/visitor-plugin-common";
 
-// TODO: figure out why codegen breaks without this function
-export function createLocalResolversLinkCodegenConfig(
-  baseConfig: import("@graphql-codegen/plugin-helpers").Types.ConfiguredOutput
-) {
-  return baseConfig;
-}
-
 /**
  * @description This plugin generates TypeScript signature for `resolve` functions of your GraphQL API.
  * You can use this plugin to generate simple resolvers signature based on your GraphQL types, or you can change its behavior be providing custom model types (mappers).

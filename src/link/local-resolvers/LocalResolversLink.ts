@@ -485,7 +485,15 @@ export class LocalResolversLink<
     function readFieldFromCache() {
       const { cache } = operation.client;
       const typename = rootValue?.__typename ?? "Query";
-      const id = rootValue ? cache.identify(rootValue) : "ROOT_QUERY";
+      let id = rootValue ? cache.identify(rootValue) : "ROOT_QUERY";
+
+      // There is no point in trying to read from the cache if we can't
+      // identify the object to read from. However, if there isn't a __typename
+      // in `rootValue`, we assume we are trying to read from `ROOT_QUERY` since
+      // `__typename` is not added to that selection set.
+      if (rootValue && "__typename" in rootValue && !id) {
+        return;
+      }
 
       function readFragment() {
         return cache.readFragment<Record<string, unknown>>({

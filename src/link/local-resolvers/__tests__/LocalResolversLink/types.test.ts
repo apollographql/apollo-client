@@ -2,6 +2,11 @@ import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 
 import type { RootValue } from "./fixtures/rootValue.js";
 
+type SetRequired<T, Keys extends keyof T> = { [K in Keys]-?: T[K] } & Omit<
+  T,
+  Keys
+>;
+
 describe.skip("Type tests", () => {
   test("allows resolvers of anything with no generic", () => {
     interface Food {
@@ -46,23 +51,50 @@ describe.skip("Type tests", () => {
   });
 
   test("works with codegen resolver types", async () => {
-    type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
-    const { FoodCategory } = await import("./fixtures/local-resolvers.js");
+    type Resolvers =
+      import("./fixtures/local-resolvers-without-root.js").Resolvers;
+    const { FoodCategory } = await import(
+      "./fixtures/local-resolvers-without-root.js"
+    );
 
-    // @ts-expect-error missing argument
+    type RequiredRootResolver = SetRequired<Resolvers, "Query">;
+
     new LocalResolversLink<Resolvers>();
-    // @ts-expect-error missing resolvers option
-    new LocalResolversLink<Resolvers>({});
+    // @ts-expect-error missing argument
+    new LocalResolversLink<RequiredRootResolver>();
 
-    new LocalResolversLink<Resolvers>({
+    new LocalResolversLink<Resolvers>({});
+    // @ts-expect-error missing resolvers option
+    new LocalResolversLink<RequiredRootResolver>({});
+
+    new LocalResolversLink<Resolvers>({ resolvers: {} });
+    new LocalResolversLink<RequiredRootResolver>({
       // @ts-expect-error missing Query resolver
       resolvers: {},
     });
 
     new LocalResolversLink<Resolvers>({
-      rootValue: {
-        env: "prod",
+      resolvers: {
+        Query: {
+          currentUserId: () => "1",
+        },
+        User: {
+          favoriteFood: () => ({
+            __typename: "Food",
+            name: "Pasta",
+            categories: [FoodCategory.Italian],
+          }),
+        },
+        Food: {
+          name: (food) => food.name?.toUpperCase() ?? null,
+          categories: (food, { limit, offset }) => {
+            limit = limit ?? 5;
+            return food.categories?.slice(offset, offset + limit) ?? [];
+          },
+        },
       },
+    });
+    new LocalResolversLink<RequiredRootResolver>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -86,12 +118,26 @@ describe.skip("Type tests", () => {
 
     new LocalResolversLink<Resolvers>({
       resolvers: {
-        // @ts-expect-error missing currentUserId resolver
+        Query: {},
+      },
+    });
+    new LocalResolversLink<RequiredRootResolver>({
+      resolvers: {
         Query: {},
       },
     });
 
     new LocalResolversLink<Resolvers>({
+      resolvers: {
+        Query: {
+          // @ts-expect-error wrong return type
+          currentUserId: () => {
+            return true;
+          },
+        },
+      },
+    });
+    new LocalResolversLink<RequiredRootResolver>({
       resolvers: {
         Query: {
           // @ts-expect-error wrong return type
@@ -110,9 +156,26 @@ describe.skip("Type tests", () => {
         },
       },
     });
+    new LocalResolversLink<RequiredRootResolver>({
+      resolvers: {
+        User: {
+          // @ts-expect-error missing __typename
+          favoriteFood: () => ({ name: "Pizza" }),
+        },
+      },
+    });
 
     new LocalResolversLink<Resolvers>({
-      rootValue: { env: "dev" },
+      resolvers: {
+        Query: {
+          currentUserId: () => "1",
+        },
+        User: {
+          favoriteFood: () => ({ __typename: "Food" }),
+        },
+      },
+    });
+    new LocalResolversLink<RequiredRootResolver>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -129,8 +192,22 @@ describe.skip("Type tests", () => {
         Invalid: {},
       },
     });
+    new LocalResolversLink<RequiredRootResolver>({
+      resolvers: {
+        // @ts-expect-error unknown typename
+        Invalid: {},
+      },
+    });
 
     new LocalResolversLink<Resolvers>({
+      resolvers: {
+        Query: {
+          // @ts-expect-error unknown field
+          invalid: () => 1,
+        },
+      },
+    });
+    new LocalResolversLink<RequiredRootResolver>({
       resolvers: {
         Query: {
           // @ts-expect-error unknown field

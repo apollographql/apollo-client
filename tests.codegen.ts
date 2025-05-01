@@ -23,6 +23,20 @@ const config: CodegenConfig = {
           rootValueType: "./rootValue.js#RootValue",
         },
       },
+    "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-without-root.ts":
+      {
+        schema: [
+          "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/localSchema.graphql",
+        ],
+        plugins: [
+          { add: { content: "/* eslint-disable */" } },
+          "typescript",
+          "@apollo/client/link/local-resolvers/codegen",
+        ],
+        config: {
+          nonOptionalTypename: true,
+        },
+      },
     "./src/link/local-resolvers/__tests__/LocalResolversLink/fixtures/local-resolvers-with-scalar.ts":
       {
         schema: [

@@ -91,8 +91,7 @@ export class LocalResolversLinkVisitor extends BaseResolversVisitor<
     resolverType: string,
     declarationKind: DeclarationKind
   ): string {
-    const rootTypes = ["Query", "Mutation", "Subscription"];
-    const avoidOptionals = rootTypes.includes(schemaTypeName);
+    const avoidOptionals = this.config.avoidOptionals.resolvers;
 
     return `${schemaTypeName}${
       avoidOptionals ? "" : "?"

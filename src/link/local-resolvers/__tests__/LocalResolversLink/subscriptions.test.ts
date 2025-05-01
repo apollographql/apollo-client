@@ -1,5 +1,3 @@
-import { of } from "rxjs";
-
 import { ApolloLink } from "@apollo/client/link";
 import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockSubscriptionLink } from "@apollo/client/testing";

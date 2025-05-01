@@ -236,6 +236,7 @@ export class LocalResolversLink<
         operationDefinition: mainDefinition,
         fragmentMap,
         errors: [],
+        selectionsToResolve,
       } satisfies Partial<ExecContext>;
 
       return getServerResult().pipe(
@@ -249,7 +250,6 @@ export class LocalResolversLink<
                   typeof this.rootValue === "function" ?
                     this.rootValue({ operation })
                   : this.rootValue,
-                selectionsToResolve,
               },
             })
           );

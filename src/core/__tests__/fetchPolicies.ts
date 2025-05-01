@@ -6,6 +6,7 @@ import type { ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -340,19 +341,20 @@ describe("no-cache", () => {
   describe("when notifyOnNetworkStatusChange is set", () => {
     it("gives appropriate networkStatus for watched queries", async () => {
       const client = new ApolloClient({
-        link: ApolloLink.empty(),
         cache: new InMemoryCache(),
-        resolvers: {
-          Query: {
-            hero(_data, args) {
-              return {
-                __typename: "Hero",
-                ...args,
-                name: "Luke Skywalker",
-              };
+        link: new LocalResolversLink({
+          resolvers: {
+            Query: {
+              hero(_data, args) {
+                return {
+                  __typename: "Hero",
+                  ...args,
+                  name: "Luke Skywalker",
+                };
+              },
             },
           },
-        },
+        }),
       });
 
       const observable = client.watchQuery({
@@ -650,19 +652,20 @@ describe("cache-only", () => {
 describe("cache-and-network", function () {
   it("gives appropriate networkStatus for refetched queries", async () => {
     const client = new ApolloClient({
-      link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: {
-        Query: {
-          hero(_data, args) {
-            return {
-              __typename: "Hero",
-              ...args,
-              name: "Luke Skywalker",
-            };
+      link: new LocalResolversLink({
+        resolvers: {
+          Query: {
+            hero(_data, args) {
+              return {
+                __typename: "Hero",
+                ...args,
+                name: "Luke Skywalker",
+              };
+            },
           },
         },
-      },
+      }),
     });
 
     const observable = client.watchQuery({

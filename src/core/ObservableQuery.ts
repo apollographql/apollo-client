@@ -118,6 +118,8 @@ const empty: ApolloQueryResult<any> = {
   partial: true,
 };
 
+const emitLoadingStateSlot = new Slot<boolean>();
+
 export declare namespace ObservableQuery {
   export type Options<
     TData = unknown,
@@ -393,7 +395,8 @@ export class ObservableQuery<
           // only the case if the query has been reset - we don't want to emit
           // an event for that, this will likely be followed by a refetch
           // immediately
-          result !== uninitialized
+          result !== uninitialized &&
+          (emitLoadingStateSlot.getValue() ?? true)
         );
       })
     );
@@ -723,13 +726,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { finalize, pushNotification } = this.pushOperation(
       NetworkStatus.fetchMore
     );
-    if (this.options.notifyOnNetworkStatusChange !== false) {
-      pushNotification({
-        source: "newNetworkStatus",
-        kind: "N",
-        value: {},
-      });
-    }
+    emitLoadingStateSlot.withValue(
+      !!this.options.notifyOnNetworkStatusChange,
+      () =>
+        pushNotification({
+          source: "newNetworkStatus",
+          kind: "N",
+          value: {},
+        })
+    );
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
@@ -1509,21 +1514,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }))
       )
       .subscribe(this.input);
-    if (
-      emitLoadingState &&
-      !synchronouslyEmitted &&
-      this.activeOperations.has(operation)
-    ) {
+    if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
       operation.override = networkStatus;
-      this.input.next({
-        kind: "N",
-        source: "newNetworkStatus",
-        value: {
-          resetError: true,
-        },
-        query,
-        variables,
-      });
+      emitLoadingStateSlot.withValue(emitLoadingState, () =>
+        this.input.next({
+          kind: "N",
+          source: "newNetworkStatus",
+          value: {
+            resetError: true,
+          },
+          query,
+          variables,
+        })
+      );
     }
     return subscription;
   }

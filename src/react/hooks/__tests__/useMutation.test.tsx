@@ -31,8 +31,8 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
-import type { FetchResult } from "@apollo/client/link/core";
 import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
@@ -926,7 +926,10 @@ describe("useMutation Hook", () => {
   });
 
   it("should return the current client instance in the result object", async () => {
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
       wrapper: ({ children }) => (
@@ -2331,17 +2334,16 @@ describe("useMutation Hook", () => {
 
       let foundContext = false;
       const Component = () => {
-        const [createTodo] = useMutation<
-          Todo,
-          { description: string },
-          { id: number }
-        >(CREATE_TODO_MUTATION, {
-          context,
-          update(_, __, options) {
-            expect(options.context).toEqual(context);
-            foundContext = true;
-          },
-        });
+        const [createTodo] = useMutation<Todo, { description: string }>(
+          CREATE_TODO_MUTATION,
+          {
+            context,
+            update(_, __, options) {
+              expect(options.context).toEqual(context);
+              foundContext = true;
+            },
+          }
+        );
 
         useEffect(() => {
           void createTodo({ variables });

@@ -5,7 +5,7 @@ import { map, Observable } from "rxjs";
 import type { ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link";
 import { mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -758,7 +758,10 @@ describe("cache-and-network", function () {
 
 describe("standby", () => {
   test("is not supported with client.query", async () => {
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     expect(() =>
       client.query({

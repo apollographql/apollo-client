@@ -7,13 +7,13 @@ import type {
 
 import { compact } from "./compact.js";
 
-type OptionsUnion<TData, TVariables extends OperationVariables, TContext> =
+type OptionsUnion<TData, TVariables extends OperationVariables> =
   | WatchQueryOptions<TVariables, TData>
   | QueryOptions<TVariables, TData>
-  | MutationOptions<TData, TVariables, TContext, any>;
+  | MutationOptions<TData, TVariables, any>;
 
 export function mergeOptions<
-  TDefaultOptions extends Partial<OptionsUnion<any, any, any>>,
+  TDefaultOptions extends Partial<OptionsUnion<any, any>>,
   TOptions extends TDefaultOptions,
 >(
   defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined,

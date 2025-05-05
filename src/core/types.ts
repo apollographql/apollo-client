@@ -2,7 +2,7 @@ import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { IsStrictlyAny } from "@apollo/client/utilities";
 
@@ -222,13 +222,12 @@ export type MutationUpdaterFn<T = { [key: string]: any }> = (
 export type MutationUpdaterFunction<
   TData,
   TVariables,
-  TContext,
   TCache extends ApolloCache,
 > = (
   cache: TCache,
   result: Omit<FetchResult<Unmasked<TData>>, "context">,
   options: {
-    context?: TContext;
+    context?: DefaultContext;
     variables?: TVariables;
   }
 ) => void;

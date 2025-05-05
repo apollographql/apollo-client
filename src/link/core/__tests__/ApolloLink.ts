@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { ApolloLink, execute } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
 import type {
@@ -42,7 +42,10 @@ const sampleQuery = gql`
 const setContext = () => ({ add: 1 });
 
 const defaultExecuteContext = {
-  client: new ApolloClient({ cache: new InMemoryCache() }),
+  client: new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  }),
 };
 
 describe("ApolloClient", () => {

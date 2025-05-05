@@ -1,4 +1,4 @@
-import type { FetchResult } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
 
 import { isNonEmptyArray } from "./arrays.js";
 import { isExecutionPatchIncrementalResult } from "./incrementalResult.js";

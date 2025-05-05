@@ -5,11 +5,11 @@
 ```ts
 
 import { ApolloClient } from '@apollo/client';
-import { ApolloLink } from '@apollo/client/link/core';
+import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client/link/core';
+import type { FetchResult } from '@apollo/client/link';
 import { Observable } from 'rxjs';
-import type { Operation } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link';
 import type { Unmasked } from '@apollo/client/masking';
 
 // @internal (undocumented)

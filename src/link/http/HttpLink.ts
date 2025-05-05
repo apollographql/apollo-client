@@ -1,7 +1,7 @@
 import type { ASTNode } from "graphql";
 
-import type { Operation } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import type { print } from "@apollo/client/utilities";
 
 import { createHttpLink } from "./createHttpLink.js";

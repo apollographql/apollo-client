@@ -15,6 +15,7 @@ import {
   ApolloClient,
   CombinedGraphQLErrors,
   gql,
+  HttpLink,
   InMemoryCache,
 } from "@apollo/client";
 import type { UseSuspenseQueryResult } from "@apollo/client/react";
@@ -183,7 +184,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -271,7 +272,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -362,7 +363,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -452,7 +453,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -569,7 +570,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const mutation = gql`
@@ -707,7 +708,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const Fallback = () => {
@@ -785,7 +786,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const Fallback = () => {
@@ -906,7 +907,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -1061,7 +1062,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`
@@ -1178,7 +1179,7 @@ describe("schema proxy", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      uri,
+      link: new HttpLink({ uri }),
     });
 
     const query: TypedDocumentNode<ViewerQueryData> = gql`

@@ -15,8 +15,8 @@ import type {
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -5204,7 +5204,10 @@ describe(".variables", () => {
         greeting
       }
     `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({ query });
 
     expect(observable.variables).toStrictEqualTyped({});
@@ -5219,7 +5222,10 @@ describe(".variables", () => {
           }
         }
       `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({ query, variables: { id: 1 } });
 
     expect(observable.variables).toStrictEqualTyped({ id: 1 });
@@ -5236,7 +5242,10 @@ describe(".variables", () => {
         }
       }
     `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({ query });
 
     expect(observable.variables).toStrictEqualTyped({ id: 1 });
@@ -5253,7 +5262,10 @@ describe(".variables", () => {
         }
       }
     `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({ query, variables: { offset: 0 } });
 
     expect(observable.variables).toStrictEqualTyped({ limit: 10, offset: 0 });
@@ -5270,7 +5282,10 @@ describe(".variables", () => {
         }
       }
     `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { limit: 5, offset: 0 },
@@ -5288,7 +5303,10 @@ describe(".variables", () => {
           }
         }
       `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { id: 1 },
@@ -5310,7 +5328,10 @@ describe(".variables", () => {
           }
         }
       `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { id: 1 },
@@ -5332,7 +5353,10 @@ describe(".variables", () => {
           }
         }
       `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { id: 1 },
@@ -5356,7 +5380,10 @@ describe(".variables", () => {
         }
       }
     `;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { limit: 10, offset: 0 },
@@ -5381,7 +5408,10 @@ describe(".variables", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { limit: undefined, offset: 0 },
@@ -5438,7 +5468,10 @@ describe(".variables", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { limit: undefined, offset: 0 },
@@ -5483,7 +5516,10 @@ describe(".variables", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { limit: null, offset: 0 },
@@ -5526,7 +5562,10 @@ describe(".variables", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { offset: 0 },
@@ -5568,7 +5607,10 @@ describe(".variables", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: { limit: 10, offset: 0 },
@@ -5593,7 +5635,10 @@ describe(".variables", () => {
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
     const observable = client.watchQuery({
       query,
       variables: {},
@@ -5631,7 +5676,10 @@ describe.skip("type tests", () => {
 
   test("variables with DocumentNode", () => {
     const query = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const observable = client.watchQuery({ query });
 
@@ -5659,7 +5707,10 @@ describe.skip("type tests", () => {
 
   test("is invalid with variables as never", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     // @ts-expect-error expecting variables key
     const observable = client.watchQuery({ query });
@@ -5705,7 +5756,10 @@ describe.skip("type tests", () => {
       { greeting: string },
       Record<string, never>
     > = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const observable = client.watchQuery({ query });
 
@@ -5748,7 +5802,10 @@ describe.skip("type tests", () => {
   test("variables with optional variales", () => {
     const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
       gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const observable = client.watchQuery({ query });
 
@@ -5817,7 +5874,10 @@ describe.skip("type tests", () => {
   test("variables with required variales", () => {
     const query: TypedDocumentNode<{ character: string }, { id: string }> =
       gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const observable = client.watchQuery({ query, variables: { id: "1" } });
 
@@ -5892,7 +5952,10 @@ describe.skip("type tests", () => {
       { character: string },
       { id: string; language?: string }
     > = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const observable = client.watchQuery({ query, variables: { id: "1" } });
 

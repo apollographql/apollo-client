@@ -9,8 +9,8 @@ import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { FetchResult, RequestHandler } from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
+import type { FetchResult, RequestHandler } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
 import { MockLink } from "@apollo/client/testing";
 import { wait } from "@apollo/client/testing/core";
 import {
@@ -2184,6 +2184,7 @@ describe("ApolloClient", () => {
   it("warns if you forget the template literal tag", async () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
     expect(() => {
       void client.query({
@@ -7812,7 +7813,10 @@ describe.skip("type tests", () => {
   test("variables are optional and can be anything with an DocumentNode", () => {
     const query = gql``;
     const mutation = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     client.watchQuery({ query });
     client.watchQuery({ query, variables: {} });
@@ -7838,7 +7842,10 @@ describe.skip("type tests", () => {
   test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
     const query: TypedDocumentNode<{ greeting: string }> = gql``;
     const mutation: TypedDocumentNode<{ greeting: string }> = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     client.watchQuery({ query });
     client.watchQuery({ query, variables: {} });
@@ -7874,7 +7881,10 @@ describe.skip("type tests", () => {
       { greeting: string },
       Record<string, never>
     > = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     client.watchQuery({ query });
     client.watchQuery({ query, variables: {} });
@@ -7924,7 +7934,10 @@ describe.skip("type tests", () => {
   test("is invalid when TVariables is never", () => {
     const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
     const mutation: TypedDocumentNode<{ greeting: string }, never> = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     // @ts-expect-error
     client.watchQuery({ query });
@@ -8004,7 +8017,10 @@ describe.skip("type tests", () => {
       gql``;
     const mutation: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
       gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     client.watchQuery({ query });
     client.watchQuery({ query, variables: {} });
@@ -8092,7 +8108,10 @@ describe.skip("type tests", () => {
       gql``;
     const mutation: TypedDocumentNode<{ character: string }, { id: string }> =
       gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     // @ts-expect-error empty variables
     client.watchQuery({ query });
@@ -8220,7 +8239,10 @@ describe.skip("type tests", () => {
       { character: string },
       { id: string; language?: string }
     > = gql``;
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     // @ts-expect-error empty variables
     client.watchQuery({ query });

@@ -1,11 +1,7 @@
 import type { Subscription } from "rxjs";
 import { EMPTY, Observable } from "rxjs";
 
-import type {
-  FetchResult,
-  NextLink,
-  Operation,
-} from "@apollo/client/link/core";
+import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
 
 export type BatchHandler = (
   operations: Operation[],

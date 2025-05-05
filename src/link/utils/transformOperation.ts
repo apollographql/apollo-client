@@ -1,4 +1,4 @@
-import type { GraphQLRequest, Operation } from "@apollo/client/link/core";
+import type { GraphQLRequest, Operation } from "@apollo/client/link";
 import { getOperationName } from "@apollo/client/utilities";
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {

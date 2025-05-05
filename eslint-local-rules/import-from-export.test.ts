@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+
 import {
   importFromExport,
   importFromInsideOtherExport,
@@ -35,7 +36,7 @@ tester.run("import-from-exports", importFromExport, {
       `,
       errors: [{ messageId: "importFromExport" }],
       output: `
-        import { ApolloLink } from "@apollo/client/link/core";
+        import { ApolloLink } from "@apollo/client/link";
       `,
     },
   ],

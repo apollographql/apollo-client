@@ -279,7 +279,10 @@ export declare namespace QueryNotification {
   }
 
   type NewNetworkStatus<TData, TVariables> = NextNotification<{
-    networkStatus: NetworkStatus;
+    networkStatus:
+      | NetworkStatus
+      | /** recalculate to either Finished or Error */ -1;
+    reemitEvenIfEqual?: boolean;
   }> & {
     source: "newNetworkStatus";
   };

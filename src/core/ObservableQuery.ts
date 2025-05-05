@@ -833,7 +833,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           pushNotification({
             kind: "N",
             source: "newNetworkStatus",
-            value: { networkStatus: NetworkStatus.ready },
+            value: {
+              networkStatus: -1,
+              reemitEvenIfEqual: true,
+            },
           });
         }
       });
@@ -1477,7 +1480,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .pipe(
         tap({
           next: (value) => {
-            if (value.kind === "N") {
+            if (value.kind === "N" && value.value.networkStatus !== -1) {
               operation.override = value.value.networkStatus;
             } else {
               delete operation.override;
@@ -1673,14 +1676,26 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               isEqualQuery(previousResult, value) ?
                 previousResult.result
               : this.getInitialResult();
+            const { networkStatus, reemitEvenIfEqual } = value.result;
+            const calculatedNetworkStatus =
+              networkStatus !== -1 ? networkStatus
+              : baseResult.error ? NetworkStatus.error
+              : NetworkStatus.ready;
+            const newResult = {
+              ...baseResult,
+              error:
+                calculatedNetworkStatus === NetworkStatus.error ?
+                  baseResult.error
+                : undefined,
+              networkStatus: calculatedNetworkStatus,
+            };
+            if (reemitEvenIfEqual) {
+              this.reemitEvenIfEqual = newResult;
+            }
             return {
               query: value.query,
               variables: value.variables,
-              result: {
-                ...baseResult,
-                error: undefined,
-                networkStatus: value.result.networkStatus,
-              },
+              result: newResult,
             };
           })
         )

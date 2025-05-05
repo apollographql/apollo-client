@@ -3,6 +3,7 @@ import type { DocumentNode } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Subscription } from "rxjs";
 import {
+  asapScheduler,
   catchError,
   concat,
   dematerialize,
@@ -15,6 +16,7 @@ import {
   mergeMap,
   mergeWith,
   Observable,
+  observeOn,
   of,
   share,
   shareReplay,
@@ -1371,8 +1373,7 @@ export class QueryManager {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    query = options.query,
-    emitLoadingState = false
+    query = options.query
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
 
@@ -1408,11 +1409,20 @@ export class QueryManager {
       // WatchQueryOptions object.
       normalized.variables = variables;
 
+      const cacheWriteBehavior =
+        fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
+          // Watched queries must opt into overwriting existing data on refetch,
+          // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
+        : (
+          networkStatus === NetworkStatus.refetch &&
+          normalized.refetchWritePolicy !== "merge"
+        ) ?
+          CacheWriteBehavior.OVERWRITE
+        : CacheWriteBehavior.MERGE;
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
-        networkStatus,
-        emitLoadingState
+        cacheWriteBehavior
       );
 
       if (
@@ -1445,7 +1455,6 @@ export class QueryManager {
         error,
         source: "network",
         fetchPolicy,
-        reason: networkStatus,
       });
       fetchCancelSubject.complete();
       cleanupCancelFn();
@@ -1723,13 +1732,9 @@ export class QueryManager {
       returnPartialData?: boolean;
       context?: DefaultContext;
     },
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    newNetworkStatus: NetworkStatus,
-    emitLoadingState: boolean
+    cacheWriteBehavior: CacheWriteBehavior
   ): ObservableAndInfo<TData> {
-    console.log("fetchQueryByPolicy", { fetchPolicy, newNetworkStatus });
+    console.log("fetchQueryByPolicy", { fetchPolicy });
     queryInfo.init({
       document: query,
       variables,
@@ -1739,7 +1744,7 @@ export class QueryManager {
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
-      networkStatus = newNetworkStatus
+      networkStatus: NetworkStatus
     ): Observable<QueryNotification.FromCache<TData, TVars>> => {
       const data = diff.result;
 
@@ -1778,7 +1783,6 @@ export class QueryManager {
           query,
           variables,
           fetchPolicy: fetchPolicy || "cache-first",
-          reason: newNetworkStatus,
         } satisfies QueryNotification.FromCache<TData, TVars>);
       };
 
@@ -1806,7 +1810,6 @@ export class QueryManager {
                   value: toResult(resolved.data || void 0),
                   source: "cache",
                   fetchPolicy: fetchPolicy || "cache-first",
-                  reason: newNetworkStatus,
                 }) satisfies QueryNotification.FromCache<TData, TVars>
             )
         );
@@ -1827,26 +1830,6 @@ export class QueryManager {
       return fromData(data || undefined);
     };
 
-    const cacheWriteBehavior =
-      fetchPolicy === "no-cache" ? CacheWriteBehavior.FORBID
-        // Watched queries must opt into overwriting existing data on refetch,
-        // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
-      : (
-        newNetworkStatus === NetworkStatus.refetch &&
-        refetchWritePolicy !== "merge"
-      ) ?
-        CacheWriteBehavior.OVERWRITE
-      : CacheWriteBehavior.MERGE;
-
-    const notifyNetworkStatus = () =>
-      of<QueryNotification.NewNetworkStatus<TData, TVars>>({
-        kind: "N",
-        value: {
-          networkStatus: newNetworkStatus,
-        },
-        source: "newNetworkStatus",
-      });
-
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         query,
@@ -1862,9 +1845,18 @@ export class QueryManager {
             ...result,
             source: "network",
             fetchPolicy: fetchPolicy || "cache-first",
-            reason: newNetworkStatus,
           })
-        )
+        ),
+        /*
+          We rely on network requests being "async" for our loading states:
+          A synchronously returned value will not have a loading state.
+          Generally, this is a good thing, but we have a lot of tests with
+          synchronous links that still expect a loading state to be emitted.
+          Keeping this in for this PR so everything is as "similar" as
+          possible to the previous implementation.
+          TODO: Remove this in a future PR and refactor tests accordingly.
+          */
+        observeOn(asapScheduler, 0)
       );
 
     switch (fetchPolicy) {
@@ -1879,10 +1871,13 @@ export class QueryManager {
           };
         }
 
-        if (returnPartialData || emitLoadingState) {
+        if (returnPartialData) {
           return {
             fromLink: true,
-            observable: concat(resultsFromCache(diff), resultsFromLink()),
+            observable: concat(
+              resultsFromCache(diff, NetworkStatus.loading),
+              resultsFromLink()
+            ),
           };
         }
 
@@ -1892,10 +1887,13 @@ export class QueryManager {
       case "cache-and-network": {
         const diff = readCache();
 
-        if (diff.complete || returnPartialData || emitLoadingState) {
+        if (diff.complete || returnPartialData) {
           return {
             fromLink: true,
-            observable: concat(resultsFromCache(diff), resultsFromLink()),
+            observable: concat(
+              resultsFromCache(diff, NetworkStatus.loading),
+              resultsFromLink()
+            ),
           };
         }
 
@@ -1911,24 +1909,9 @@ export class QueryManager {
         };
 
       case "network-only":
-        if (emitLoadingState) {
-          return {
-            fromLink: true,
-            observable: concat(notifyNetworkStatus(), resultsFromLink()),
-          };
-        }
         return { fromLink: true, observable: resultsFromLink() };
 
       case "no-cache":
-        if (emitLoadingState) {
-          return {
-            fromLink: true,
-            // Note that queryInfo.getDiff() for no-cache queries does not call
-            // cache.diff, but instead returns a { complete: false } stub result
-            // when there is no queryInfo.diff already defined.
-            observable: concat(notifyNetworkStatus(), resultsFromLink()),
-          };
-        }
         return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":

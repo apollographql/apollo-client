@@ -279,10 +279,8 @@ export declare namespace QueryNotification {
   }
 
   type NewNetworkStatus<TData, TVariables> = NextNotification<{
-    networkStatus:
-      | NetworkStatus
-      | /** recalculate to either Finished or Error */ -1;
     reemitEvenIfEqual?: boolean;
+    resetError?: boolean;
   }> & {
     source: "newNetworkStatus";
   };
@@ -298,7 +296,6 @@ export declare namespace QueryNotification {
   > & {
     source: "network";
     fetchPolicy: WatchQueryFetchPolicy;
-    reason: NetworkStatus;
   };
 
   type FromCache<TData, TVariables> = NextNotification<
@@ -307,8 +304,6 @@ export declare namespace QueryNotification {
     source: "cache";
     /** only present if triggered from link */
     fetchPolicy?: WatchQueryFetchPolicy;
-    /** only present if triggered from link */
-    reason?: NetworkStatus;
   };
 
   type ValueWithoutMeta<TData, TVariables> =

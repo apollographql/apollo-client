@@ -727,9 +727,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       pushNotification({
         source: "newNetworkStatus",
         kind: "N",
-        value: {
-          networkStatus: NetworkStatus.fetchMore,
-        },
+        value: {},
       });
     }
     return this.queryManager
@@ -814,7 +812,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             },
             source: "network",
             fetchPolicy: combinedOptions.fetchPolicy || "cache-first",
-            reason: NetworkStatus.fetchMore,
           });
         }
 
@@ -834,7 +831,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             kind: "N",
             source: "newNetworkStatus",
             value: {
-              networkStatus: -1,
               reemitEvenIfEqual: true,
             },
           });
@@ -1046,7 +1042,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private fetch(
     options: ObservableQuery.Options<TData, TVariables>,
     newNetworkStatus: NetworkStatus,
-    emitLoadingState: boolean,
     query?: DocumentNode
   ) {
     // console.log("fetch", options);
@@ -1058,8 +1053,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       queryInfo,
       options,
       newNetworkStatus,
-      query,
-      emitLoadingState
+      query
     );
   }
 
@@ -1262,12 +1256,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const { notifyOnNetworkStatusChange = true } = options;
+
+    const emitLoadingState =
+      notifyOnNetworkStatusChange &&
+      oldNetworkStatus !== newNetworkStatus &&
+      isNetworkRequestInFlight(newNetworkStatus);
     const { observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
-      notifyOnNetworkStatusChange &&
-        oldNetworkStatus !== newNetworkStatus &&
-        isNetworkRequestInFlight(newNetworkStatus),
       query
     );
 
@@ -1276,9 +1272,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.linkSubscription.unsubscribe();
       }
 
-      this.linkSubscription = this.trackOperation(observable, newNetworkStatus);
+      this.linkSubscription = this.trackOperation(
+        observable,
+        newNetworkStatus,
+        emitLoadingState
+      );
     } else {
-      this.trackOperation(observable, newNetworkStatus);
+      this.trackOperation(observable, newNetworkStatus, emitLoadingState);
     }
 
     return preventUnhandledRejection(
@@ -1465,7 +1465,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     observable: Observable<
       QueryNotification.ValueWithoutMeta<TData, TVariables>
     >,
-    networkStatus: NetworkStatus
+    networkStatus: NetworkStatus,
+    emitLoadingState: boolean
   ) {
     // track query and variables from the start of the operation
     const { query, variables } = this;
@@ -1476,13 +1477,26 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       variables,
     };
     this.activeOperations.add(operation);
+
+    // If the operation synchronously emits a value, that will already have set
+    // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
+    // event once the subscription is set up.
+    let synchronouslyEmitted = false;
     const subscription = observable
       .pipe(
         tap({
           next: (value) => {
-            if (value.kind === "N" && value.value.networkStatus !== -1) {
-              operation.override = value.value.networkStatus;
+            synchronouslyEmitted = true;
+
+            if (value.kind === "N" && "networkStatus" in value.value) {
+              if (value.value.networkStatus === NetworkStatus.loading) {
+                operation.override = networkStatus;
+              } else {
+                // ready or error - this operation should no longer override
+                delete operation.override;
+              }
             } else {
+              // TODO may be removed?
               delete operation.override;
             }
           },
@@ -1495,6 +1509,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }))
       )
       .subscribe(this.input);
+    if (
+      emitLoadingState &&
+      !synchronouslyEmitted &&
+      this.activeOperations.has(operation)
+    ) {
+      operation.override = networkStatus;
+      this.input.next({
+        kind: "N",
+        source: "newNetworkStatus",
+        value: {
+          resetError: true,
+        },
+        query,
+        variables,
+      });
+    }
     return subscription;
   }
 
@@ -1676,18 +1706,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               isEqualQuery(previousResult, value) ?
                 previousResult.result
               : this.getInitialResult();
-            const { networkStatus, reemitEvenIfEqual } = value.result;
-            const calculatedNetworkStatus =
-              networkStatus !== -1 ? networkStatus
-              : baseResult.error ? NetworkStatus.error
-              : NetworkStatus.ready;
+            const { reemitEvenIfEqual, resetError } = value.result;
+            const error = resetError ? undefined : baseResult.error;
+            const networkStatus =
+              error ? NetworkStatus.error : NetworkStatus.ready;
             const newResult = {
               ...baseResult,
-              error:
-                calculatedNetworkStatus === NetworkStatus.error ?
-                  baseResult.error
-                : undefined,
-              networkStatus: calculatedNetworkStatus,
+              error,
+              networkStatus,
             };
             if (reemitEvenIfEqual) {
               this.reemitEvenIfEqual = newResult;

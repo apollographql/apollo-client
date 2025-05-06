@@ -389,7 +389,6 @@ export class ObservableQuery<
               return;
             }
           }
-          context.previous = current;
 
           // we only want to reemit if equal once, and if the value changed
           // we also don't want to reemit in the future,
@@ -412,9 +411,9 @@ export class ObservableQuery<
             result !== uninitialized &&
             (emitLoadingStateSlot.getValue() ?? true)
           ) {
+            context.previous = current;
             return result;
           }
-          return;
         },
         () => ({
           previous: undefined,

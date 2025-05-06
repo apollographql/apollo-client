@@ -120,19 +120,15 @@ describe("General functionality", () => {
       }),
     });
 
-    {
-      const { data } = await client.query({ query });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(1);
 
-      expect(data).toMatchObject({ field: 1 });
-      expect(count).toBe(1);
-    }
-
-    {
-      const { data } = await client.query({ query });
-
-      expect(data).toMatchObject({ field: 1 });
-      expect(count).toBe(1);
-    }
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(1);
   });
 
   it("should honour `fetchPolicy` settings", async () => {

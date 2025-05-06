@@ -1014,7 +1014,7 @@ describe("client", () => {
     expect(actualResult.data).toEqual(transformedResult);
   });
 
-  it("does not remove @client fields from the query before it reaches the link", async () => {
+  it("removes @client fields from the query before it reaches the link", async () => {
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -1034,7 +1034,6 @@ describe("client", () => {
         author {
           firstName
           lastName
-          isInCollection @client
           __typename
         }
       }
@@ -4331,7 +4330,6 @@ describe("custom document transforms", () => {
       query TestQuery {
         currentUser {
           id
-          isLoggedIn @client
           favoriteFlavors {
             flavor
             __typename
@@ -4660,7 +4658,6 @@ describe("custom document transforms", () => {
       mutation TestMutation {
         updateProfile {
           id
-          isLoggedIn @client
           favoriteFlavors {
             flavor
             __typename
@@ -4883,7 +4880,6 @@ describe("custom document transforms", () => {
       subscription TestSubscription {
         profileUpdated {
           id
-          isLoggedIn @client
           favoriteFlavors {
             flavor
             __typename
@@ -5011,7 +5007,6 @@ describe("custom document transforms", () => {
         query TestQuery {
           currentUser {
             id
-            isLoggedIn @client
             favorites {
               id
               __typename

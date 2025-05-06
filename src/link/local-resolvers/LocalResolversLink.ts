@@ -9,13 +9,12 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { isSelectionNode, Kind, print, visit } from "graphql";
+import { isSelectionNode, Kind, visit } from "graphql";
 import { wrap } from "optimism";
 import type { Observable } from "rxjs";
 import { from, mergeMap, of } from "rxjs";
 
 import type { ErrorLike } from "@apollo/client";
-import { gql } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
@@ -468,93 +467,12 @@ export class LocalResolversLink<
       fieldName
     );
 
-    function readFieldFromCache() {
-      const { cache } = operation.client;
-      const typename = rootValue?.__typename ?? "Query";
-      let id = rootValue ? cache.identify(rootValue) : "ROOT_QUERY";
-
-      // There is no point in trying to read from the cache if we can't
-      // identify the object to read from. However, if there isn't a __typename
-      // in `rootValue`, we assume we are trying to read from `ROOT_QUERY` since
-      // `__typename` is not added to that selection set.
-      if (rootValue && "__typename" in rootValue && !id) {
-        return;
-      }
-
-      function readFragment() {
-        return cache.readFragment<Record<string, unknown>>({
-          fragment: gql`
-            fragment ReadField on ${typename} {
-              ${print(field)}
-            }
-          `,
-          // Ensure we don't get a `null` as a result of partial data so that we
-          // can skip the cache.batch step below. Missing fields on the record
-          // will be caught by iterations of the child selection set if this is
-          // not a scalar value.
-          returnPartialData: true,
-          id,
-        });
-      }
-
-      let result = readFragment();
-
-      // We only execute the following for nested fields since root fields with
-      // read functions are resolved correctly.
-      // TODO: Is there a better way we can detect whether this is a result of a
-      // dangling reference?
-      if (result === null && typename !== "Query") {
-        // If we are trying to read a client field from a remote result, its
-        // possible the result has never been written, which means any `read`
-        // functions defined in field policies won't be run since `rootValue` is
-        // considered a dangling reference. We write a dummy value to the cache
-        // in an optimistic layer (which gets removed immediately) that fixes
-        // the dangling reference before attempting to read the fragment again.
-        cache.batch({
-          optimistic: resolverName,
-          removeOptimistic: resolverName,
-          update(cache) {
-            cache.writeFragment({
-              fragment: gql`fragment Dummy on ${typename} {
-                dummy
-              }`,
-              id,
-              broadcast: false,
-              data: {
-                __typename: typename,
-                dummy: true,
-              },
-            });
-
-            result = readFragment();
-          },
-        });
-      }
-
-      return result?.[fieldName];
-    }
-
     const defaultResolver =
       isLocalFieldDescendant ?
-        () => {
-          const valueFromField = rootValue?.[fieldName];
-
-          if (valueFromField !== undefined) {
-            return valueFromField;
-          }
-
-          return readFieldFromCache();
-        }
-        // We expect a resolver to be defined for all `@local` root fields if
-        // the data could not be resolved from the cache first. Warn when a
-        // resolver is not defined.
+        () => rootValue?.[fieldName]
+        // We expect a resolver to be defined for all `@local` root fields.
+        // Warn when a resolver is not defined.
       : () => {
-          const fieldFromCache = readFieldFromCache();
-
-          if (fieldFromCache !== undefined) {
-            return fieldFromCache;
-          }
-
           if (__DEV__) {
             invariant.warn(
               "Could not find a resolver for the '%s' field. The field value has been set to `null`.",

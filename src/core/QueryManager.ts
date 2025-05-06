@@ -3,7 +3,6 @@ import type { DocumentNode } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Subscription } from "rxjs";
 import {
-  asapScheduler,
   catchError,
   concat,
   dematerialize,
@@ -16,7 +15,6 @@ import {
   mergeMap,
   mergeWith,
   Observable,
-  observeOn,
   of,
   share,
   shareReplay,
@@ -1846,17 +1844,7 @@ export class QueryManager {
             source: "network",
             fetchPolicy: fetchPolicy || "cache-first",
           })
-        ),
-        /*
-          We rely on network requests being "async" for our loading states:
-          A synchronously returned value will not have a loading state.
-          Generally, this is a good thing, but we have a lot of tests with
-          synchronous links that still expect a loading state to be emitted.
-          Keeping this in for this PR so everything is as "similar" as
-          possible to the previous implementation.
-          TODO: Remove this in a future PR and refactor tests accordingly.
-          */
-        observeOn(asapScheduler, 0)
+        )
       );
 
     switch (fetchPolicy) {

@@ -34,7 +34,6 @@ import {
   UnconventionalError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolversLink } from "@apollo/client/link/local-resolvers";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -4215,16 +4214,7 @@ describe("custom document transforms", () => {
     });
 
     const client = new ApolloClient({
-      link: ApolloLink.from([
-        new LocalResolversLink({
-          resolvers: {
-            User: {
-              isLoggedIn: () => false,
-            },
-          },
-        }),
-        link,
-      ]),
+      link,
       documentTransform,
       cache: new InMemoryCache({
         typePolicies: {

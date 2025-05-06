@@ -247,7 +247,7 @@ describe("Cache manipulation", () => {
 
     const mutation = gql`
       mutation start {
-        start @client
+        start @local
       }
     `;
 

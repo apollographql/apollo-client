@@ -10,7 +10,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { distinctUntilChanged, merge, share } from "rxjs";
+import { merge, share } from "rxjs";
 import {
   BehaviorSubject,
   dematerialize,
@@ -32,7 +32,7 @@ import {
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { toQueryResult } from "@apollo/client/utilities/internal";
+import { filterMap, toQueryResult } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
@@ -207,11 +207,13 @@ export class ObservableQuery<
 
   private unsubscribeFromCache?: () => void;
   private input: Subject<QueryNotification.Value<TData, TVariables>>;
-  private subject: BehaviorSubject<{
-    query: DocumentNode;
-    variables?: TVariables;
-    result: ApolloQueryResult<MaybeMasked<TData>>;
-  }>;
+  private subject: BehaviorSubject<
+    QueryNotification.InternalResult<
+      ApolloQueryResult<MaybeMasked<TData>>,
+      TData,
+      TVariables
+    >
+  >;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
@@ -299,11 +301,13 @@ export class ObservableQuery<
       variables: this.getVariablesWithDefaults(options.variables),
     };
 
-    this.subject = new BehaviorSubject<{
-      query: DocumentNode;
-      variables?: TVariables;
-      result: ApolloQueryResult<MaybeMasked<TData>>;
-    }>({
+    type InternalResult = QueryNotification.InternalResult<
+      ApolloQueryResult<MaybeMasked<TData>>,
+      TData,
+      TVariables
+    >;
+
+    this.subject = new BehaviorSubject<InternalResult>({
       query: this.query,
       variables: this.variables,
       result: uninitialized,
@@ -353,52 +357,67 @@ export class ObservableQuery<
           }
         },
       }),
-      distinctUntilChanged((previous, current) => {
-        const documentInfo = this.queryManager.getDocumentInfo(current.query);
-        const dataMasking = this.queryManager.dataMasking;
-        const query =
-          dataMasking ? documentInfo.nonReactiveQuery : current.query;
+      filterMap(
+        (current: InternalResult, context: { previous?: InternalResult }) => {
+          const previous = context.previous;
+          if (previous) {
+            const documentInfo = this.queryManager.getDocumentInfo(
+              current.query
+            );
+            const dataMasking = this.queryManager.dataMasking;
+            const query =
+              dataMasking ? documentInfo.nonReactiveQuery : current.query;
 
-        const resultIsEqual =
-          dataMasking || documentInfo.hasNonreactiveDirective ?
-            equalByQuery(
-              query,
-              previous.result,
-              current.result,
-              current.variables
-            )
-          : equal(previous.result, current.result);
+            const resultIsEqual =
+              dataMasking || documentInfo.hasNonreactiveDirective ?
+                equalByQuery(
+                  query,
+                  previous.result,
+                  current.result,
+                  current.variables
+                )
+              : equal(previous.result, current.result);
 
-        return (
-          resultIsEqual &&
-          (!current.variables ||
-            equal(previous.variables, current.variables)) &&
-          !equal(previous.result, this.reemitEvenIfEqual)
-        );
-      }),
-      tap(() => {
-        // we only want to reemit if equal once, and if the value changed
-        // we also don't want to reemit in the future,
-        // so no matter what value is emitted here, we can safely
-        // reset `this.reemitEvenIfEqual`
-        this.reemitEvenIfEqual = undefined;
-      }),
-      map((value) => value.result),
-      filter((result) => {
-        return (
-          this.options.fetchPolicy !== "standby" &&
-          (this.options.notifyOnNetworkStatusChange ||
-            !result.loading ||
-            // data could be defined for cache-and-network fetch policies
-            // when emitting the cache result while loading the network result
-            !!result.data) &&
-          // only the case if the query has been reset - we don't want to emit
-          // an event for that, this will likely be followed by a refetch
-          // immediately
-          result !== uninitialized &&
-          (emitLoadingStateSlot.getValue() ?? true)
-        );
-      })
+            if (
+              resultIsEqual &&
+              (!current.variables ||
+                equal(previous.variables, current.variables)) &&
+              !equal(previous.result, this.reemitEvenIfEqual)
+            ) {
+              return;
+            }
+          }
+          context.previous = current;
+
+          // we only want to reemit if equal once, and if the value changed
+          // we also don't want to reemit in the future,
+          // so no matter what value is emitted here, we can safely
+          // reset `this.reemitEvenIfEqual`
+          this.reemitEvenIfEqual = undefined;
+
+          const result = current.result;
+
+          if (
+            this.options.fetchPolicy !== "standby" &&
+            (this.options.notifyOnNetworkStatusChange ||
+              !result.loading ||
+              // data could be defined for cache-and-network fetch policies
+              // when emitting the cache result while loading the network result
+              !!result.data) &&
+            // only the case if the query has been reset - we don't want to emit
+            // an event for that, this will likely be followed by a refetch
+            // immediately
+            result !== uninitialized &&
+            (emitLoadingStateSlot.getValue() ?? true)
+          ) {
+            return result;
+          }
+          return;
+        },
+        () => ({
+          previous: undefined,
+        })
+      )
     );
 
     this["@@observable"] = () => this;

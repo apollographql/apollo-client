@@ -4012,14 +4012,15 @@ describe("ApolloClient", () => {
       const link: ApolloLink = new ApolloLink(
         (op) =>
           new Observable((observer) => {
-            timesFired += 1;
-            if (timesFired > 1) {
-              observer.next({ data: data2 });
-            } else {
-              observer.next({ data });
-            }
-            observer.complete();
-            return;
+            setTimeout(() => {
+              timesFired += 1;
+              if (timesFired > 1) {
+                observer.next({ data: data2 });
+              } else {
+                observer.next({ data });
+              }
+              observer.complete();
+            });
           })
       );
       const client = new ApolloClient({
@@ -4028,6 +4029,12 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,

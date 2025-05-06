@@ -121,7 +121,7 @@ type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 interface TransformCacheEntry {
   hasNonreactiveDirective: boolean;
   nonReactiveQuery: DocumentNode;
-  serverQuery: DocumentNode;
+  serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
 }
@@ -722,9 +722,14 @@ export class QueryManager {
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
         serverQuery: removeDirectivesFromDocument(
-          [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
+          [
+            { name: "client", remove: true },
+            { name: "connection" },
+            { name: "nonreactive" },
+            { name: "unmask" },
+          ],
           document
-        )!,
+        ),
         defaultVars: getDefaultValues(
           getOperationDefinition(document)
         ) as OperationVariables,
@@ -1118,54 +1123,61 @@ export class QueryManager {
       client: this.client,
     };
 
-    const { inFlightLinkObservables, link } = this;
+    if (serverQuery) {
+      const { inFlightLinkObservables, link } = this;
 
-    const operation: GraphQLRequest = {
-      query: serverQuery,
-      variables,
-      operationName: getOperationName(serverQuery) || void 0,
-      context: {
-        ...this.defaultContext,
-        ...context,
-        queryDeduplication: deduplication,
-        clientAwareness: this.clientAwareness,
-      },
-      extensions,
-    };
+      const operation: GraphQLRequest = {
+        query: serverQuery,
+        variables,
+        operationName: getOperationName(serverQuery) || void 0,
+        context: {
+          ...this.defaultContext,
+          ...context,
+          queryDeduplication: deduplication,
+          clientAwareness: this.clientAwareness,
+        },
+        extensions,
+      };
 
-    context = operation.context;
+      context = operation.context;
 
-    if (deduplication) {
-      const printedServerQuery = print(serverQuery);
-      const varJson = canonicalStringify(variables);
+      if (deduplication) {
+        const printedServerQuery = print(serverQuery);
+        const varJson = canonicalStringify(variables);
 
-      const entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
-
-      observable = entry.observable;
-      if (!observable) {
-        observable = entry.observable = execute(
-          link,
-          operation,
-          executeContext
-        ).pipe(
-          onAnyEvent((event) => {
-            if (
-              (event.type !== "next" ||
-                !("hasNext" in event.value) ||
-                !event.value.hasNext) &&
-              inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                entry
-            ) {
-              inFlightLinkObservables.remove(printedServerQuery, varJson);
-            }
-          }),
-          shareReplay({ refCount: true })
+        const entry = inFlightLinkObservables.lookup(
+          printedServerQuery,
+          varJson
         );
+
+        observable = entry.observable;
+        if (!observable) {
+          observable = entry.observable = execute(
+            link,
+            operation,
+            executeContext
+          ).pipe(
+            onAnyEvent((event) => {
+              if (
+                (event.type !== "next" ||
+                  !("hasNext" in event.value) ||
+                  !event.value.hasNext) &&
+                inFlightLinkObservables.peek(printedServerQuery, varJson) ===
+                  entry
+              ) {
+                inFlightLinkObservables.remove(printedServerQuery, varJson);
+              }
+            }),
+            shareReplay({ refCount: true })
+          );
+        }
+      } else {
+        observable = execute(link, operation, executeContext) as Observable<
+          FetchResult<TData>
+        >;
       }
     } else {
-      observable = execute(link, operation, executeContext) as Observable<
-        FetchResult<TData>
-      >;
+      observable = of({ data: {} } as FetchResult<TData>);
     }
 
     return observable.pipe(

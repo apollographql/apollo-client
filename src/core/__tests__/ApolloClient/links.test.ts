@@ -345,7 +345,7 @@ describe("Link interactions", () => {
     });
   });
 
-  it("does not remove @client fields from the query before it reaches the link", async () => {
+  it("removes @client fields from the query before it reaches the link", async () => {
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -365,7 +365,6 @@ describe("Link interactions", () => {
         books {
           id
           title
-          isRead @client
           __typename
         }
       }

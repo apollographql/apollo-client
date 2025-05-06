@@ -134,7 +134,7 @@ describe("General functionality", () => {
   it("should honour `fetchPolicy` settings", async () => {
     const query = gql`
       {
-        field @client
+        field @local
       }
     `;
 

@@ -171,10 +171,10 @@ describe("General functionality", () => {
       {
         foo {
           ... on Bar {
-            bar @client
+            bar @local
           }
           ... on Baz {
-            baz @client
+            baz @local
           }
         }
       }
@@ -207,7 +207,12 @@ describe("General functionality", () => {
     });
 
     await expect(client.query({ query })).resolves.toStrictEqualTyped({
-      data: { foo: [{ bar: "Bar" }, { baz: "Baz" }] },
+      data: {
+        foo: [
+          { __typename: "Bar", bar: "Bar" },
+          { __typename: "Baz", baz: "Baz" },
+        ],
+      },
     });
   });
 });

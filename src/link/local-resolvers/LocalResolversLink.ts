@@ -545,8 +545,9 @@ export class LocalResolversLink<
 
           return readFieldFromCache();
         }
-        // We expect a resolver to be defined for all `@local` root fields.
-        // Warn if a resolver is not defined.
+        // We expect a resolver to be defined for all `@local` root fields if
+        // the data could not be resolved from the cache first. Warn when a
+        // resolver is not defined.
       : () => {
           const fieldFromCache = readFieldFromCache();
 

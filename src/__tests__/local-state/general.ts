@@ -380,20 +380,20 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should read @client fields from cache on refetch (#4741)", async () => {
+  it("should read @local fields on refetch (#4741)", async () => {
     const query = gql`
       query FetchInitialData {
         serverData {
           id
           title
         }
-        selectedItemId @client
+        selectedItemId @local
       }
     `;
 
     const mutation = gql`
       mutation Select {
-        select(itemId: $id) @client
+        select(itemId: $id) @local
       }
     `;
 

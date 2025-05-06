@@ -277,13 +277,13 @@ describe("Cache manipulation", () => {
   it("should be able to write to the cache with a local mutation and have things rerender automatically", async () => {
     const query = gql`
       {
-        field @client
+        field @local
       }
     `;
 
     const mutation = gql`
       mutation start {
-        start @client
+        start @local
       }
     `;
 
@@ -297,7 +297,7 @@ describe("Cache manipulation", () => {
           Mutation: {
             start: (_1: any, _2: any, { operation }) => {
               operation.client.cache.writeQuery({ query, data: { field: 1 } });
-              return { start: true };
+              return true;
             },
           },
         },
@@ -319,7 +319,9 @@ describe("Cache manipulation", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-    await client.mutate({ mutation });
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
     await expect(stream).toEmitTypedValue({
       data: { field: 1 },
       loading: false,

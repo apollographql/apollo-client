@@ -101,7 +101,7 @@ describe("General functionality", () => {
   it("should cache data for future lookups", async () => {
     const query = gql`
       {
-        field @client
+        field @local
       }
     `;
 

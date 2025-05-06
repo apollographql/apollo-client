@@ -339,7 +339,7 @@ describe("Cache manipulation", () => {
 
     const mutation = gql`
       mutation start($id: ID!) {
-        start(field: $id) @client {
+        start(field: $id) @local {
           field
         }
       }

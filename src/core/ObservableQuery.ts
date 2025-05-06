@@ -320,7 +320,9 @@ export class ObservableQuery<
             startedInactive = false;
           }
           if (!this.subject.observed) {
-            if (this.subject.value.result === uninitialized) {
+            if (this.options.fetchPolicy === "standby") {
+              // this could probably move into `reobserve` in some way
+
               // Emitting a value in the `subscribe` callback of `tap` gives
               // the subject a chance to save this initial result without
               // emitting the placeholder value since this callback is executed

@@ -75,10 +75,10 @@ describe("General functionality", () => {
     await expect(client.query({ query })).rejects.toThrow(/no introspection/);
   });
 
-  it("should support returning default values from resolvers", async () => {
+  it("should support returning values from resolvers in LocalResolversLink", async () => {
     const query = gql`
       {
-        field @client
+        field @local
       }
     `;
 

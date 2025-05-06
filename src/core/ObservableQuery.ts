@@ -361,6 +361,10 @@ export class ObservableQuery<
       }),
       filterMap(
         (current: InternalResult, context: { previous?: InternalResult }) => {
+          if (current.result === uninitialized) {
+            // reset internal state after `ObservableQuery.reset()`
+            context.previous = undefined;
+          }
           const previous = context.previous;
           if (previous) {
             const documentInfo = this.queryManager.getDocumentInfo(

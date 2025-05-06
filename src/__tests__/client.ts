@@ -5336,7 +5336,7 @@ describe("custom document transforms", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+        products: [{ __typename: "Product", id: 1 }],
       },
       loading: true,
       networkStatus: NetworkStatus.fetchMore,

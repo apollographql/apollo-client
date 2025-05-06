@@ -31,17 +31,15 @@ type InferRootValueFromResolvers<TResolvers> = TResolvers extends {
 } ? InferRootValueFromFieldResolver<SubscriptionResolvers> : unknown;
 
 // @public (undocumented)
+type IsRootValueRequired<TRootValue> = true extends IsAny<TRootValue> ? false : unknown extends TRootValue ? false : undefined extends TRootValue ? false : true;
+
+// @public (undocumented)
 export namespace LocalResolversLink {
-    // Warning: (ae-forgotten-export) The symbol "MaybeRequireResolvers" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "MaybeRequireRootValue" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    export type Options<TResolvers = LocalResolversLink.Resolvers, TRootValue = unknown> = {
-        rootValue?: ((options: {
-            operation: Operation;
-        }) => TRootValue) | TRootValue;
+    export interface Options<TResolvers = LocalResolversLink.Resolvers, TRootValue = unknown> {
         resolvers?: TResolvers;
-    } & MaybeRequireResolvers<TResolvers> & MaybeRequireRootValue<TRootValue>;
+        rootValue?: RootValueOption<TRootValue>;
+    }
     // (undocumented)
     export interface ResolveInfo {
         // (undocumented)
@@ -67,32 +65,36 @@ export namespace LocalResolversLink {
             [field: string]: Resolver<any, any, any>;
         };
     }
+    // (undocumented)
+    export type RootValueOption<TRootValue> = TRootValue | ((options: {
+        operation: Operation;
+    }) => TRootValue);
 }
 
 // Warning: (ae-forgotten-export) The symbol "InferRootValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 export class LocalResolversLink<TResolvers extends LocalResolversLink.Resolvers = LocalResolversLink.Resolvers, TRootValue = InferRootValueFromResolvers<TResolvers>> extends ApolloLink {
-    constructor(...[options]: {} extends TResolvers ? [
-    options?: LocalResolversLink.Options<TResolvers, NoInfer_2<TRootValue>>
-    ] : [options: LocalResolversLink.Options<TResolvers, NoInfer_2<TRootValue>>]);
+    // Warning: (ae-forgotten-export) The symbol "IsRootValueRequired" needs to be exported by the entry point index.d.ts
+    constructor(...[options]: {} extends TResolvers ? true extends IsRootValueRequired<TRootValue> ? [
+    options: LocalResolversLink.Options<TResolvers, NoInfer_2<TRootValue>> & {
+        rootValue: LocalResolversLink.RootValueOption<NoInfer_2<TRootValue>>;
+    }
+    ] : [options?: LocalResolversLink.Options<TResolvers, NoInfer_2<TRootValue>>] : true extends IsRootValueRequired<TRootValue> ? [
+    options: LocalResolversLink.Options<TResolvers, NoInfer_2<TRootValue>> & {
+        rootValue: LocalResolversLink.RootValueOption<NoInfer_2<TRootValue>>;
+        resolvers: TResolvers;
+    }
+    ] : [
+    options: LocalResolversLink.Options<TResolvers, NoInfer_2<TRootValue>> & {
+        resolvers: TResolvers;
+    }
+    ]);
     // (undocumented)
     addResolvers(resolvers: LocalResolversLink.Resolvers): void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult>;
 }
-
-// @public (undocumented)
-type MaybeRequireResolvers<TResolvers> = {} extends TResolvers ? {} : {
-    resolvers: TResolvers;
-};
-
-// @public (undocumented)
-type MaybeRequireRootValue<TRootValue> = true extends IsAny<TRootValue> ? {} : unknown extends TRootValue ? {} : {
-    rootValue: ((options: {
-        operation: Operation;
-    }) => TRootValue) | TRootValue;
-};
 
 // @public (undocumented)
 type Path = Array<string | number>;

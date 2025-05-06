@@ -81,7 +81,7 @@ export declare namespace LocalResolversLink {
     rootValue?: RootValueOption<TRootValue>;
 
     /**
-     * The map of resolvers used to provide values for `@client` fields.
+     * The map of resolvers used to provide values for `@local` fields.
      */
     resolvers?: TResolvers;
   }
@@ -202,9 +202,9 @@ export class LocalResolversLink<
     operation: Operation,
     forward?: NextLink
   ): Observable<FetchResult> {
-    const { clientQuery, serverQuery } = getTransformedQuery(operation.query);
+    const { localQuery, serverQuery } = getTransformedQuery(operation.query);
 
-    if (!clientQuery) {
+    if (!localQuery) {
       return getServerResult();
     }
 
@@ -226,7 +226,7 @@ export class LocalResolversLink<
 
       invariant(
         !!forward,
-        "`LocalResolversLink` must not be a terminating link when there are non-`@client` fields in the query"
+        "`LocalResolversLink` must not be a terminating link when there are non-`@local` fields in the query"
       );
 
       operation.query = serverQuery;
@@ -235,9 +235,9 @@ export class LocalResolversLink<
     }
 
     const operationDefinition = getMainDefinition(
-      clientQuery
+      localQuery
     ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(clientQuery);
+    const fragments = getFragmentDefinitions(localQuery);
     const fragmentMap = createFragmentMap(fragments);
 
     const { selectionsToResolve } = this.traverseAndCollectQueryInfo(
@@ -298,7 +298,7 @@ export class LocalResolversLink<
 
   private async resolveSelectionSet(
     selectionSet: SelectionSetNode,
-    isClientFieldDescendant: boolean,
+    isLocalFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
     path: Path
@@ -309,10 +309,10 @@ export class LocalResolversLink<
 
     const execute = async (selection: SelectionNode): Promise<void> => {
       if (
-        !isClientFieldDescendant &&
+        !isLocalFieldDescendant &&
         !execContext.selectionsToResolve.has(selection)
       ) {
-        // Skip selections without @client directives
+        // Skip selections without @local directives
         // (still processing if one of the ancestors or one of the child fields has @client directive)
         return;
       }
@@ -323,16 +323,16 @@ export class LocalResolversLink<
 
       if (selection.kind === Kind.FIELD) {
         const isRootField = selectionSet === operationDefinition.selectionSet;
-        const isClientField =
-          isClientFieldDescendant ||
-          (selection.directives?.some((d) => d.name.value === "client") ??
+        const isLocalField =
+          isLocalFieldDescendant ||
+          (selection.directives?.some((d) => d.name.value === "local") ??
             false);
 
         const fieldResult =
-          isClientField ?
-            await this.resolveClientField(
+          isLocalField ?
+            await this.resolveLocalField(
               selection,
-              isClientFieldDescendant,
+              isLocalFieldDescendant,
               rootValue,
               execContext,
               selectionSet,
@@ -362,7 +362,7 @@ export class LocalResolversLink<
         ) {
           const fragmentResult = await this.resolveSelectionSet(
             selection.selectionSet,
-            isClientFieldDescendant,
+            isLocalFieldDescendant,
             rootValue,
             execContext,
             path
@@ -403,7 +403,7 @@ export class LocalResolversLink<
 
         const fragmentResult = await this.resolveSelectionSet(
           fragment.selectionSet,
-          isClientFieldDescendant,
+          isLocalFieldDescendant,
           rootValue,
           execContext,
           path
@@ -457,9 +457,9 @@ export class LocalResolversLink<
     );
   }
 
-  private async resolveClientField(
+  private async resolveLocalField(
     field: FieldNode,
-    isClientFieldDescendant: boolean,
+    isLocalFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
     parentSelectionSet: SelectionSetNode,
@@ -482,9 +482,9 @@ export class LocalResolversLink<
     );
 
     const defaultResolver =
-      isClientFieldDescendant ?
+      isLocalFieldDescendant ?
         () => rootValue?.[fieldName]
-        // We expect a resolver to be defined for all `@client` root fields.
+        // We expect a resolver to be defined for all `@local` root fields.
         // Warn if a resolver is not defined.
       : () => {
           if (__DEV__) {
@@ -623,7 +623,7 @@ export class LocalResolversLink<
 
   private resolveSubSelectedArray(
     field: FieldNode,
-    isClientFieldDescendant: boolean,
+    isLocalFieldDescendant: boolean,
     result: any[],
     execContext: ExecContext,
     path: Path
@@ -638,7 +638,7 @@ export class LocalResolversLink<
         if (Array.isArray(item)) {
           return this.resolveSubSelectedArray(
             field,
-            isClientFieldDescendant,
+            isLocalFieldDescendant,
             item,
             execContext,
             path.concat(idx)
@@ -649,7 +649,7 @@ export class LocalResolversLink<
         if (field.selectionSet) {
           return this.resolveSelectionSet(
             field.selectionSet,
-            isClientFieldDescendant,
+            isLocalFieldDescendant,
             item,
             execContext,
             path.concat(idx)
@@ -659,7 +659,7 @@ export class LocalResolversLink<
     );
   }
 
-  // Collect selection nodes on paths from document root down to all @client directives.
+  // Collect selection nodes on paths from document root down to all @local directives.
   // This function takes into account transitive fragment spreads.
   // Complexity equals to a single `visit` over the full document.
   private traverseAndCollectQueryInfo(
@@ -682,7 +682,7 @@ export class LocalResolversLink<
 
       visit(definitionNode, {
         Directive: (directive, _, __, ___, ancestors) => {
-          if (directive.name.value === "client") {
+          if (directive.name.value === "local") {
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);
@@ -698,8 +698,8 @@ export class LocalResolversLink<
             traverse(fragment);
 
           if (fragmentSelections.size > 0) {
-            // Fragment for this spread contains @client directive (either directly or transitively)
-            // Collect selection nodes on paths from the root down to fields with the @client directive
+            // Fragment for this spread contains @local directive (either directly or transitively)
+            // Collect selection nodes on paths from the root down to fields with the @local directive
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);
@@ -746,9 +746,9 @@ function dealias(
 const getTransformedQuery = wrap(
   (query: DocumentNode) => {
     return {
-      clientQuery: hasDirectives(["client"], query) ? query : null,
+      localQuery: hasDirectives(["local"], query) ? query : null,
       serverQuery: removeDirectivesFromDocument(
-        [{ name: "client", remove: true }],
+        [{ name: "local", remove: true }],
         query
       ),
     };

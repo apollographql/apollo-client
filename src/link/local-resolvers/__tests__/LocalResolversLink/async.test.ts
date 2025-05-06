@@ -10,10 +10,10 @@ import {
 
 import { gql } from "./testUtils.js";
 
-test("supports async @client resolvers", async () => {
+test("supports async @local resolvers", async () => {
   const query = gql`
     query Member {
-      isLoggedIn @client
+      isLoggedIn @local
     }
   `;
 
@@ -35,15 +35,15 @@ test("supports async @client resolvers", async () => {
   await expect(stream).toComplete();
 });
 
-test("handles nested asynchronous @client resolvers", async () => {
+test("handles nested asynchronous @local resolvers", async () => {
   const query = gql`
     query DeveloperTicketComments($id: ID) {
-      developer(id: $id) @client {
+      developer(id: $id) @local {
         id
         handle
-        tickets @client {
+        tickets @local {
           id
-          comments @client {
+          comments @local {
             id
           }
         }
@@ -142,13 +142,13 @@ test("handles nested asynchronous @client resolvers", async () => {
   await expect(stream).toComplete();
 });
 
-test("supports async @client resolvers mixed with remotely resolved data", async () => {
+test("supports async @local resolvers mixed with remotely resolved data", async () => {
   const query = gql`
     query Member {
       member {
         name
-        sessionCount @client
-        isLoggedIn @client
+        sessionCount @local
+        isLoggedIn @local
       }
     }
   `;

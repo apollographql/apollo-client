@@ -9,7 +9,7 @@ import { gql } from "./testUtils.js";
 test("can pass `rootValue` as object that will be used with root client resolvers", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -41,7 +41,7 @@ test("can pass `rootValue` as object that will be used with root client resolver
 test("can pass `rootValue` as function that will be used with root client resolvers", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -83,7 +83,7 @@ test.each([
 ])("can pass `rootValue` as %s", async (_type, rootValue) => {
   const query = gql`
     query Test {
-      rootValue @client
+      rootValue @local
     }
   `;
 

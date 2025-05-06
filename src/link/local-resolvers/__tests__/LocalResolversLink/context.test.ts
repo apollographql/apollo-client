@@ -10,7 +10,7 @@ import { gql } from "./testUtils.js";
 test("passes operation in context to resolvers", async () => {
   const query = gql`
     query WithContext {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -62,7 +62,7 @@ test("passes operation in context to resolvers", async () => {
 test("can access request context through operation.getContext in resolvers", async () => {
   const query = gql`
     query WithContext {
-      foo @client {
+      foo @local {
         bar
       }
     }

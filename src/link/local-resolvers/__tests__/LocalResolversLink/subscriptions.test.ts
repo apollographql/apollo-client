@@ -29,11 +29,11 @@ test("works with subscriptions with no client fields", async () => {
   await expect(stream).toComplete();
 });
 
-test("adds @client fields with subscription results", async () => {
+test("adds @local fields with subscription results", async () => {
   const subscription = gql`
     subscription {
       field
-      count @client
+      count @local
     }
   `;
 

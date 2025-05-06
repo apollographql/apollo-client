@@ -13,7 +13,7 @@ import {
 
 import { gql } from "./testUtils.js";
 
-test("handles @client fields inside fragments", async () => {
+test("handles @local fields inside fragments", async () => {
   const query = gql`
     fragment Foo on Foo {
       bar
@@ -21,7 +21,7 @@ test("handles @client fields inside fragments", async () => {
     }
     fragment Foo2 on Foo {
       __typename
-      baz @client
+      baz @local
     }
     query Mixed {
       foo {
@@ -80,7 +80,7 @@ test("handles @client fields inside fragments", async () => {
   await expect(stream).toComplete();
 });
 
-test("handles a mix of @client fields with fragments and server fields", async () => {
+test("handles a mix of @local fields with fragments and server fields", async () => {
   const query = gql`
     fragment client on ClientData {
       bar
@@ -88,7 +88,7 @@ test("handles a mix of @client fields with fragments and server fields", async (
     }
 
     query Mixed {
-      foo @client {
+      foo @local {
         ...client
       }
       bar {
@@ -138,10 +138,10 @@ it("matches fragments with fragment conditions", async () => {
     {
       foo {
         ... on Bar {
-          bar @client
+          bar @local
         }
         ... on Baz {
-          baz @client
+          baz @local
         }
       }
     }
@@ -196,7 +196,7 @@ test("warns when cache does not implement fragmentMatches", async () => {
       bar
     }
     query {
-      foo @client {
+      foo @local {
         ...Foo
       }
     }
@@ -235,7 +235,7 @@ test("emits error when fragment spread type condition does not match typename", 
       bar
     }
     query {
-      foo @client {
+      foo @local {
         ...FooDetails
       }
     }
@@ -261,7 +261,7 @@ test("emits error when fragment spread type condition does not match typename", 
 test("can use a fragments on interface types defined by possibleTypes", async () => {
   const query = gql`
     query {
-      currentUser @client {
+      currentUser @local {
         ...ProfileDetails
       }
     }

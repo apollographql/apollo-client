@@ -21,7 +21,7 @@ test("can write to the cache with a mutation", async () => {
 
   const mutation = gql`
     mutation start {
-      start @client
+      start @local
     }
   `;
 
@@ -62,7 +62,7 @@ test("can write to the cache with a mutation using an ID", async () => {
 
   const mutation = gql`
     mutation start {
-      start @client
+      start @local
     }
   `;
 
@@ -111,7 +111,7 @@ test("can write to the cache with a mutation using an ID", async () => {
 test("does not overwrite __typename when writing to the cache with an id", async () => {
   const query = gql`
     {
-      obj @client {
+      obj @local {
         field {
           field2
         }
@@ -122,7 +122,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
 
   const mutation = gql`
     mutation start {
-      start @client
+      start @local
     }
   `;
 

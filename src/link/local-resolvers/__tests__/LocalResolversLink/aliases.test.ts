@@ -9,10 +9,10 @@ import {
 
 import { gql } from "./testUtils.js";
 
-test("resolves @client fields mixed with aliased server fields", async () => {
+test("resolves @local fields mixed with aliased server fields", async () => {
   const query = gql`
     query Aliased {
-      foo @client {
+      foo @local {
         bar
       }
       baz: bar {
@@ -47,10 +47,10 @@ test("resolves @client fields mixed with aliased server fields", async () => {
   await expect(stream).toComplete();
 });
 
-test("resolves aliased @client fields", async () => {
+test("resolves aliased @local fields", async () => {
   const aliasedQuery = gql`
     query Test {
-      fie: foo @client {
+      fie: foo @local {
         bar
       }
     }
@@ -75,7 +75,7 @@ test("resolves aliased @client fields", async () => {
   expect(fie).not.toHaveBeenCalled();
 });
 
-test("resolves deeply nested aliased @client fields", async () => {
+test("resolves deeply nested aliased @local fields", async () => {
   const query = gql`
     query Test {
       user {
@@ -83,7 +83,7 @@ test("resolves deeply nested aliased @client fields", async () => {
         bestFriend {
           first: firstName
           last: lastName
-          name: fullName @client
+          name: fullName @local
         }
       }
     }
@@ -134,10 +134,10 @@ test("resolves deeply nested aliased @client fields", async () => {
   await expect(stream).toComplete();
 });
 
-test("respects aliases for *nested fields* on the @client-tagged node", async () => {
+test("respects aliases for *nested fields* on the @local-tagged node", async () => {
   const aliasedQuery = gql`
     query Test {
-      fie: foo @client {
+      fie: foo @local {
         fum: bar
       }
       baz: bar {
@@ -176,7 +176,7 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
 test("does not confuse fields aliased to each other", async () => {
   const query = gql`
     query Test {
-      fie: foo @client {
+      fie: foo @local {
         fum: bar
         bar: fum
       }
@@ -203,7 +203,7 @@ test("does not confuse fields aliased to each other", async () => {
 test("does not confuse fields aliased to each other with boolean values", async () => {
   const query = gql`
     query Test {
-      fie: foo @client {
+      fie: foo @local {
         fum: bar
         bar: fum
       }
@@ -230,7 +230,7 @@ test("does not confuse fields aliased to each other with boolean values", async 
 test("does not confuse aliased __typename", async () => {
   const query = gql`
     query Test {
-      fie: foo @client {
+      fie: foo @local {
         bar: __typename
         typename: bar
       }

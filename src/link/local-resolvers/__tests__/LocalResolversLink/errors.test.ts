@@ -13,7 +13,7 @@ import { gql } from "./testUtils.js";
 test("handles errors thrown in a resolver", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -54,7 +54,7 @@ test("handles errors thrown in a resolver", async () => {
 test("handles errors thrown in a child resolver", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -98,7 +98,7 @@ test("handles errors thrown in a child resolver", async () => {
 test("adds errors for each field that throws errors", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
         baz
         qux
@@ -159,7 +159,7 @@ test("adds errors for each field that throws errors", async () => {
 test("handles errors thrown in a child resolver from parent array", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -219,7 +219,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
 test("handles errors thrown in a child resolver for an array from a single item", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         id
         bar
       }
@@ -276,7 +276,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
 test("serializes a thrown GraphQLError and merges extensions", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -322,7 +322,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
 test("overwrites apollo extension from thrown GraphQLError if provided", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -367,7 +367,7 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
 test("concatenates client errors with server errors", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
       baz {
@@ -420,7 +420,7 @@ test("concatenates client errors with server errors", async () => {
 test("handles errors thrown in async resolvers", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -461,7 +461,7 @@ test("handles errors thrown in async resolvers", async () => {
 test("handles rejected promises returned in async resolvers", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -507,7 +507,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
     }
     fragment Foo2 on Foo {
       __typename
-      baz @client
+      baz @local
     }
     query Mixed {
       foo {
@@ -562,7 +562,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
 test("handles remote errors with no local resolver errors", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
       baz {

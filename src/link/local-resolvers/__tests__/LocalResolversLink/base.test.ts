@@ -11,10 +11,10 @@ import {
 
 import { gql } from "./testUtils.js";
 
-test("runs resolvers for @client queries", async () => {
+test("runs resolvers for @local queries", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -40,7 +40,7 @@ test("runs resolvers for @client queries", async () => {
 test("can add resolvers after the link is instantiated", async () => {
   const query = gql`
     query Test {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -63,10 +63,10 @@ test("can add resolvers after the link is instantiated", async () => {
   await expect(stream).toComplete();
 });
 
-test("handles queries with a mix of @client and server fields", async () => {
+test("handles queries with a mix of @local and server fields", async () => {
   const query = gql`
     query Mixed {
-      foo @client {
+      foo @local {
         bar
       }
       bar {
@@ -111,7 +111,7 @@ test("handles queries with a mix of @client and server fields", async () => {
   await expect(stream).toComplete();
 });
 
-test("runs resolvers for deeply nested @client fields", async () => {
+test("runs resolvers for deeply nested @local fields", async () => {
   const query = gql`
     query Test {
       user {
@@ -119,7 +119,7 @@ test("runs resolvers for deeply nested @client fields", async () => {
         bestFriend {
           firstName
           lastName
-          fullName @client
+          fullName @local
         }
       }
     }
@@ -170,10 +170,10 @@ test("runs resolvers for deeply nested @client fields", async () => {
   await expect(stream).toComplete();
 });
 
-test("has access to query variables in @client resolvers", async () => {
+test("has access to query variables in @local resolvers", async () => {
   const query = gql`
     query WithVariables($id: ID!) {
-      foo @client {
+      foo @local {
         bar(id: $id)
       }
     }
@@ -201,14 +201,14 @@ test("has access to query variables in @client resolvers", async () => {
   await expect(stream).toComplete();
 });
 
-test("combines local @client resolver results with server results, for the same field", async () => {
+test("combines local @local resolver results with server results, for the same field", async () => {
   const query = gql`
     query author {
       author {
         name
         stats {
           totalPosts
-          postsToday @client
+          postsToday @local
         }
       }
     }
@@ -274,7 +274,7 @@ test("combines local @client resolver results with server results, for the same 
 test("handles resolvers that return booleans", async () => {
   const query = gql`
     query CartDetails {
-      isInCart @client
+      isInCart @local
     }
   `;
 
@@ -292,10 +292,10 @@ test("handles resolvers that return booleans", async () => {
   await expect(stream).toComplete();
 });
 
-test("does not run resolvers without @client directive", async () => {
+test("does not run resolvers without @local directive", async () => {
   const query = gql`
     query Mixed {
-      foo @client {
+      foo @local {
         bar
       }
       bar {
@@ -343,12 +343,12 @@ test("does not run resolvers without @client directive", async () => {
   expect(barResolver).not.toHaveBeenCalled();
 });
 
-test("does not run resolvers without @client directive with nested field", async () => {
+test("does not run resolvers without @local directive with nested field", async () => {
   const query = gql`
     query Mixed {
       foo {
         bar
-        baz @client {
+        baz @local {
           qux
         }
       }
@@ -397,7 +397,7 @@ test("does not run resolvers without @client directive with nested field", async
 test("allows child resolvers from a parent resolved field from a local resolver", async () => {
   const query = gql`
     query UserData {
-      userData @client {
+      userData @local {
         firstName
         lastName
         fullName
@@ -439,13 +439,13 @@ test("allows child resolvers from a parent resolved field from a local resolver"
   await expect(stream).toComplete();
 });
 
-test("can use remote result to resolve @client field", async () => {
+test("can use remote result to resolve @local field", async () => {
   const query = gql`
     query Member {
       member {
         firstName
         lastName
-        fullName @client
+        fullName @local
       }
     }
   `;
@@ -529,11 +529,11 @@ test("forwards query to terminating link if there are no client fields", async (
   await expect(stream).toComplete();
 });
 
-test("warns when a resolver is missing for an `@client` field", async () => {
+test("warns when a resolver is missing for an `@local` field", async () => {
   using _ = spyOnConsole("warn");
   const query = gql`
     query {
-      foo @client
+      foo @local
     }
   `;
 
@@ -556,7 +556,7 @@ test("does not warn for fields resolved from the server", async () => {
   const query = gql`
     query {
       foo {
-        bar @client
+        bar @local
       }
     }
   `;
@@ -584,7 +584,7 @@ test("warns when a resolver returns undefined and sets value to null", async () 
   using _ = spyOnConsole("warn");
   const query = gql`
     query {
-      foo @client
+      foo @local
     }
   `;
 
@@ -612,7 +612,7 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
   using _ = spyOnConsole("warn");
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         bar
         baz
       }
@@ -641,13 +641,13 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
   );
 });
 
-test("warns if a parent resolver omits a field and child has @client field", async () => {
+test("warns if a parent resolver omits a field and child has @local field", async () => {
   using _ = spyOnConsole("warn");
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         bar
-        baz @client
+        baz @local
       }
     }
   `;
@@ -681,7 +681,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
   using _ = spyOnConsole("warn");
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -722,7 +722,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
 test("can return more data than needed in resolver which is accessible by child resolver but omitted in output", async () => {
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         bar
       }
     }
@@ -752,7 +752,7 @@ test("does not execute child resolver when parent is null", async () => {
     query {
       currentUser {
         id
-        foo @client
+        foo @local
       }
     }
   `;
@@ -781,7 +781,7 @@ test("does not execute child resolver when parent is null", async () => {
 test("adds error to errors array with scalar resolver data when remote data returns null", async () => {
   const query = gql`
     query {
-      foo @client
+      foo @local
       bar {
         id
       }
@@ -827,7 +827,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
 test("adds error to errors array with scalar resolver that returns null when remote data returns null", async () => {
   const query = gql`
     query {
-      foo @client
+      foo @local
       bar {
         id
       }
@@ -873,7 +873,7 @@ test("adds error to errors array with scalar resolver that returns null when rem
 test("adds error to errors array with object resolver data when remote data returns null", async () => {
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         baz
       }
       bar {
@@ -921,7 +921,7 @@ test("adds error to errors array with object resolver data when remote data retu
 test("adds error to errors array with object resolver with child resolver when remote data returns null", async () => {
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         bar
         baz
       }
@@ -973,7 +973,7 @@ test("adds error to errors array with object resolver with child resolver when r
 test("adds error to errors array with object resolver that returns null when remote data returns null", async () => {
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         baz
       }
       bar {
@@ -1021,10 +1021,10 @@ test("adds error to errors array with object resolver that returns null when rem
 test("adds multiple errors for each client field to errors array when remote data returns null", async () => {
   const query = gql`
     query {
-      foo @client {
+      foo @local {
         baz
       }
-      bar @client {
+      bar @local {
         baz
       }
       baz {
@@ -1088,7 +1088,7 @@ test("does not execute resolver if client field is a child of a server field whe
     query {
       baz {
         id
-        foo @client
+        foo @local
       }
     }
   `;

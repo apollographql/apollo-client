@@ -27,7 +27,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 describe("General functionality", () => {
-  it("should not impact normal non-@client use", () => {
+  it("should not impact normal non-@client use", async () => {
     const query = gql`
       {
         field
@@ -47,12 +47,12 @@ describe("General functionality", () => {
       link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
-    return client.query({ query }).then(({ data }) => {
-      expect(data).toMatchObject({ field: 1 });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
     });
   });
 
-  it("should not interfere with server introspection queries", () => {
+  it("should not interfere with server introspection queries", async () => {
     const query = gql`
       ${getIntrospectionQuery()}
     `;
@@ -72,17 +72,10 @@ describe("General functionality", () => {
       link: ApolloLink.from([localResolversLink, mockLink]),
     });
 
-    return client
-      .query({ query })
-      .then(() => {
-        throw new global.Error("should not call");
-      })
-      .catch((error: GraphQLError) =>
-        expect(error.message).toMatch(/no introspection/)
-      );
+    await expect(client.query({ query })).rejects.toThrow(/no introspection/);
   });
 
-  it("should support returning default values from resolvers", () => {
+  it("should support returning default values from resolvers", async () => {
     const query = gql`
       {
         field @client
@@ -100,8 +93,8 @@ describe("General functionality", () => {
       }),
     });
 
-    return client.query({ query }).then(({ data }) => {
-      expect(data).toMatchObject({ field: 1 });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
     });
   });
 
@@ -142,7 +135,7 @@ describe("General functionality", () => {
     }
   });
 
-  it("should honour `fetchPolicy` settings", () => {
+  it("should honour `fetchPolicy` settings", async () => {
     const query = gql`
       {
         field @client
@@ -164,23 +157,20 @@ describe("General functionality", () => {
       }),
     });
 
-    return client
-      .query({ query })
-      .then(({ data }) => {
-        expect(data).toMatchObject({ field: 1 });
-        expect(count).toBe(1);
-      })
-      .then(() =>
-        client
-          .query({ query, fetchPolicy: "network-only" })
-          .then(({ data }) => {
-            expect(data).toMatchObject({ field: 1 });
-            expect(count).toBe(2);
-          })
-      );
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(1);
+
+    await expect(
+      client.query({ query, fetchPolicy: "network-only" })
+    ).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(2);
   });
 
-  it("should work with possible types", () => {
+  it("should work with possible types", async () => {
     const query = gql`
       {
         foo {
@@ -220,38 +210,34 @@ describe("General functionality", () => {
       link: ApolloLink.from([localResolversLink, link]),
     });
 
-    return client.query({ query }).then(({ data }) => {
-      expect(data).toMatchObject({ foo: [{ bar: "Bar" }, { baz: "Baz" }] });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { foo: [{ bar: "Bar" }, { baz: "Baz" }] },
     });
   });
 });
 
 describe("Cache manipulation", () => {
-  it(
-    "should be able to query @client fields and the cache without defining " +
-      "local resolvers",
-    () => {
-      const query = gql`
-        {
-          field @client
-        }
-      `;
+  it("should be able to query @client fields and the cache without defining local resolvers", async () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
 
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link: new LocalResolversLink(),
-      });
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: new LocalResolversLink(),
+    });
 
-      cache.writeQuery({ query, data: { field: "yo" } });
+    cache.writeQuery({ query, data: { field: "yo" } });
 
-      client
-        .query({ query })
-        .then(({ data }) => expect(data).toMatchObject({ field: "yo" }));
-    }
-  );
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: "yo" },
+    });
+  });
 
-  it("should be able to write to the cache using a local mutation", () => {
+  it("should be able to write to the cache using a local mutation", async () => {
     const query = gql`
       {
         field @client
@@ -271,19 +257,20 @@ describe("Cache manipulation", () => {
           Mutation: {
             start: (_1: any, _2: any, { operation }) => {
               operation.client.cache.writeQuery({ query, data: { field: 1 } });
-              return { start: true };
+              return true;
             },
           },
         },
       }),
     });
 
-    return client
-      .mutate({ mutation })
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect(data).toMatchObject({ field: 1 });
-      });
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
   });
 
   it("should be able to write to the cache with a local mutation and have things rerender automatically", async () => {
@@ -340,7 +327,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should support writing to the cache with a local mutation using variables", () => {
+  it("should support writing to the cache with a local mutation using variables", async () => {
     const query = gql`
       {
         field @client
@@ -375,17 +362,19 @@ describe("Cache manipulation", () => {
       }),
     });
 
-    return client
-      .mutate({ mutation, variables: { id: "1234" } })
-      .then(({ data }) => {
-        expect(data).toEqual({
-          start: { field: "1234", __typename: "Field" },
-        });
-      })
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect(data).toMatchObject({ field: "1234" });
-      });
+    await expect(
+      client.mutate({ mutation, variables: { id: "1234" } })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        start: { field: "1234", __typename: "Field" },
+      },
+    });
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: {
+        field: "1234",
+      },
+    });
   });
 
   it("should read @client fields from cache on refetch (#4741)", async () => {

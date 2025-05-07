@@ -76,18 +76,12 @@ export class LocalState {
   private cache: ApolloCache;
   private client?: ApolloClient;
   private resolvers?: Resolvers;
-  private fragmentMatcher?: FragmentMatcher;
   private selectionsToResolveCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
   >();
 
-  constructor({
-    cache,
-    client,
-    resolvers,
-    fragmentMatcher,
-  }: LocalStateOptions) {
+  constructor({ cache, client, resolvers }: LocalStateOptions) {
     this.cache = cache;
 
     if (client) {
@@ -96,10 +90,6 @@ export class LocalState {
 
     if (resolvers) {
       this.addResolvers(resolvers);
-    }
-
-    if (fragmentMatcher) {
-      this.setFragmentMatcher(fragmentMatcher);
     }
   }
 
@@ -146,7 +136,6 @@ export class LocalState {
         remoteResult.data,
         context,
         variables,
-        this.fragmentMatcher,
         onlyRunForcedResolvers
       ).then((localResult) => ({
         ...remoteResult,
@@ -155,14 +144,6 @@ export class LocalState {
     }
 
     return remoteResult;
-  }
-
-  public setFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.fragmentMatcher = fragmentMatcher;
-  }
-
-  public getFragmentMatcher(): FragmentMatcher | undefined {
-    return this.fragmentMatcher;
   }
 
   // Client queries contain everything in the incoming document (if a @client
@@ -257,9 +238,10 @@ export class LocalState {
     rootValue: TData,
     context: any = {},
     variables: VariableMap = {},
-    fragmentMatcher: FragmentMatcher = () => true,
     onlyRunForcedResolvers: boolean = false
   ) {
+    // TODO: Replace with cache.fragmentMatches
+    const fragmentMatcher = () => true;
     const mainDefinition = getMainDefinition(
       document
     ) as OperationDefinitionNode;

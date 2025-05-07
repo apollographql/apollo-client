@@ -119,7 +119,6 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   resolvers?: Resolvers | Resolvers[];
-  fragmentMatcher?: FragmentMatcher;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    */
@@ -249,7 +248,6 @@ export class ApolloClient implements DataProxy {
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       resolvers,
-      fragmentMatcher,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
@@ -283,7 +281,6 @@ export class ApolloClient implements DataProxy {
       cache,
       client: this,
       resolvers,
-      fragmentMatcher,
     });
 
     this.queryManager = new QueryManager({
@@ -848,13 +845,6 @@ export class ApolloClient implements DataProxy {
    */
   public getResolvers() {
     return this.localState.getResolvers();
-  }
-
-  /**
-   * Set a custom local state fragment matcher.
-   */
-  public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.localState.setFragmentMatcher(fragmentMatcher);
   }
 
   /**

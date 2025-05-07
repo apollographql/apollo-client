@@ -23,12 +23,10 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
-  hasDirectives,
   hasForcedResolvers,
   isField,
   mergeDeep,
   mergeDeepArray,
-  removeClientSetsFromDocument,
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
@@ -145,11 +143,6 @@ export class LocalState {
     }
 
     return remoteResult;
-  }
-
-  // Server queries are stripped of all @client based selection sets.
-  public serverQuery(document: DocumentNode) {
-    return removeClientSetsFromDocument(document);
   }
 
   public prepareContext(context?: Record<string, any>) {

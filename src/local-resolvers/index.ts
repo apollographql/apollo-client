@@ -1,1 +1,1 @@
-export { LocalState as LocalResolvers } from "./LocalResolvers.js";
+export { LocalResolvers } from "./LocalResolvers.js";

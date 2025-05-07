@@ -64,7 +64,11 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  hasForcedResolvers,
+  onAnyEvent,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -746,7 +750,7 @@ export class QueryManager {
         // traversals into a single pass in the future, though the work is
         // cached after the first time.
         hasClientExports: hasClientExports(document),
-        hasForcedResolvers: this.localState.shouldForceResolvers(document),
+        hasForcedResolvers: hasForcedResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
         clientQuery: this.localState.clientQuery(document),

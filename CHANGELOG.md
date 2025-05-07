@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 4.0.0-alpha.13
+
+### Major Changes
+
+- [#12595](https://github.com/apollographql/apollo-client/pull/12595) [`60bb49c`](https://github.com/apollographql/apollo-client/commit/60bb49ccea9aecf3e6a212b5a1f71907e60af886) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `@apollo/client/testing/experimental` test utilities. Use [GraphQL Testing Library](https://github.com/apollographql/graphql-testing-library) instead.
+
 ## 4.0.0-alpha.12
 
 ### Major Changes

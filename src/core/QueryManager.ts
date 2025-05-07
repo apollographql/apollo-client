@@ -748,7 +748,7 @@ export class QueryManager {
         hasForcedResolvers: hasForcedResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
-        clientQuery: this.localState.clientQuery(document),
+        clientQuery: hasDirectives(["client"], document) ? document : null,
         serverQuery: removeDirectivesFromDocument(
           [
             { name: "client", remove: true },

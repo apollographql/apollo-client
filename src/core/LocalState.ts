@@ -147,17 +147,6 @@ export class LocalState {
     return remoteResult;
   }
 
-  // Client queries contain everything in the incoming document (if a @client
-  // directive is found).
-  public clientQuery(document: DocumentNode) {
-    if (hasDirectives(["client"], document)) {
-      if (this.resolvers) {
-        return document;
-      }
-    }
-    return null;
-  }
-
   // Server queries are stripped of all @client based selection sets.
   public serverQuery(document: DocumentNode) {
     return removeClientSetsFromDocument(document);

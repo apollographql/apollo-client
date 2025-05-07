@@ -304,6 +304,7 @@ export class ApolloClient implements DataProxy {
             }
           }
         : void 0,
+      resolvers,
     });
 
     this.prioritizeCacheValues = ssrMode || ssrForceFetchDelay > 0;

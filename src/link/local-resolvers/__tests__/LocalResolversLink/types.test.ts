@@ -112,12 +112,12 @@ describe.skip("Type tests", () => {
     });
 
     new LocalResolversLink<Resolvers>({
+      rootValue: { env: "dev" },
       resolvers: {
         Query: {
           currentUserId: () => "1",
         },
         User: {
-          // @ts-expect-error missing name field
           favoriteFood: () => ({ __typename: "Food" }),
         },
       },

@@ -1,6 +1,6 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import { Observable, throwError } from "rxjs";
+import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
@@ -172,7 +172,9 @@ export class MockLink extends ApolloLink {
         );
       }
 
-      return throwError(() => new Error(message));
+      return throwError(() => new Error(message)).pipe(
+        observeOn(asapScheduler)
+      );
     }
 
     if (matched.maxUsageCount > 1) {

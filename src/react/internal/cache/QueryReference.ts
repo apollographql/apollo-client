@@ -278,7 +278,7 @@ export class InternalQueryReference<TData = unknown> {
       if (avoidNetworkRequests) {
         observable.silentSetOptions({ fetchPolicy: "standby" });
       } else {
-        observable.resetLastResults();
+        observable.reset();
         observable.silentSetOptions({ fetchPolicy: "cache-first" });
       }
 

@@ -2725,12 +2725,6 @@ describe("client", () => {
     expect(lastError).toBeInstanceOf(Error);
     expect(lastError).toEqual(new Error("This is an error!"));
 
-    const lastResult = observable.getLastResult();
-    expect(lastResult).toBeTruthy();
-    expect(lastResult!.loading).toBe(false);
-    expect(lastResult!.networkStatus).toBe(8);
-
-    observable.resetLastResults();
     stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
@@ -3366,18 +3360,6 @@ describe("@connection", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-
-    // Since the ObservableQuery skips results that are the same as the
-    // previous result, and nothing is actually changing about the
-    // ROOT_QUERY.a field, clear previous results to give the invalidated
-    // results a chance to be delivered.
-    obsQueries.forEach((obsQuery) => obsQuery.resetLastResults());
-
-    // Verify that resetting previous results did not trigger the delivery
-    // of any new results, by itself.
-    await expect(aStream).not.toEmitAnything({ timeout: 10 });
-    await expect(bStream).not.toEmitAnything({ timeout: 10 });
-    await expect(abStream).not.toEmitAnything({ timeout: 10 });
 
     // Now invalidate the ROOT_QUERY.a field.
     client.cache.evict({ fieldName: "a" });

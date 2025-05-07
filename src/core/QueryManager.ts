@@ -1025,7 +1025,6 @@ export class QueryManager {
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery, queryId) => {
         const { fetchPolicy } = observableQuery.options;
-        observableQuery.resetLastResults();
         if (
           includeStandby ||
           (fetchPolicy !== "standby" && fetchPolicy !== "cache-only")

@@ -77,12 +77,6 @@ export interface FetchMoreOptions<
   ) => TData;
 }
 
-interface Last<TData, TVariables> {
-  result: ApolloQueryResult<TData>;
-  variables?: TVariables;
-  error?: ErrorLike;
-}
-
 interface TrackedOperation {
   /**
    * The network status that should be caused by this operation.
@@ -225,8 +219,6 @@ export class ObservableQuery<
   private queryManager: QueryManager;
   private subscriptions = new Set<Subscription>();
 
-  //private waitForOwnResult: boolean;
-  private last?: Last<TData, TVariables>;
   private lastError?: {
     query: DocumentNode;
     variables?: TVariables;
@@ -587,27 +579,6 @@ export class ObservableQuery<
     return value !== uninitialized ? value : this.getInitialResult();
   }
 
-  private getLast<K extends keyof Last<TData, TVariables>>(
-    key: K,
-    variablesMustMatch?: boolean
-  ) {
-    const last = this.last;
-    if (
-      last &&
-      last[key] &&
-      (!variablesMustMatch || equal(last.variables, this.variables))
-    ) {
-      return last[key];
-    }
-  }
-
-  // TODO: Consider deprecating this function
-  public getLastResult(
-    variablesMustMatch?: boolean
-  ): ApolloQueryResult<TData> | undefined {
-    return this.getLast("result", variablesMustMatch);
-  }
-
   // TODO: Consider deprecating this function
   public getLastError(variablesMustMatch?: boolean): ErrorLike | undefined {
     if (
@@ -618,14 +589,6 @@ export class ObservableQuery<
     ) {
       return this.lastError.error;
     }
-  }
-
-  // TODO: Consider deprecating this function
-  public resetLastResults(): void {
-    delete this.last;
-    // TODO: This will need to be removed when tearing down an ObservableQuery
-    // since the observable will terminate.
-    this.isTornDown = false;
   }
 
   /**
@@ -1590,6 +1553,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     });
 
     this.activeOperations.forEach((operation) => operation.abort());
+    this.lastError = undefined;
   }
 
   /** @internal */

@@ -53,7 +53,11 @@ const react17TestFileIgnoreList = [
 const tsStandardConfig = {
   ...defaults,
   displayName: "Core Tests",
-  testPathIgnorePatterns: [ignoreDTSFiles, ignoreTSXFiles],
+  testPathIgnorePatterns: [
+    ignoreDTSFiles,
+    ignoreTSXFiles,
+    "src/local-resolvers/__tests__/LocalResolvers/testUtils.ts",
+  ],
 };
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they

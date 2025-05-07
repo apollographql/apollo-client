@@ -3614,12 +3614,14 @@ describe("@connection", () => {
         link: new ApolloLink(
           () =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  count: networkCounter++,
-                },
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    count: networkCounter++,
+                  },
+                });
+                observer.complete();
               });
-              observer.complete();
             })
         ),
         cache: new InMemoryCache(),
@@ -3711,10 +3713,10 @@ describe("@connection", () => {
       client.cache.evict({ fieldName: "count" });
 
       await expect(stream).toEmitTypedValue({
-        data: undefined,
+        data: { count: "secondary" },
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
+        partial: false,
       });
 
       await expect(stream).toEmitTypedValue({
@@ -3736,12 +3738,14 @@ describe("@connection", () => {
         link: new ApolloLink(
           () =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  linkCount: ++linkCount,
-                },
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    linkCount: ++linkCount,
+                  },
+                });
+                observer.complete();
               });
-              observer.complete();
             })
         ),
         defaultOptions: {
@@ -3771,6 +3775,13 @@ describe("@connection", () => {
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },

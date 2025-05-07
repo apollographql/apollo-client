@@ -48,6 +48,7 @@
     "./link/subscriptions": "./src/link/subscriptions/index.ts",
     "./link/utils": "./src/link/utils/index.ts",
     "./link/ws": "./src/link/ws/index.ts",
+    "./local-resolvers": "./src/local-resolvers/index.ts",
     "./masking": "./src/masking/index.ts",
     "./react": {
       "react-server": "./src/react/index.react-server.ts",

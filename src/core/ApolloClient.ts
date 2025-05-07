@@ -277,7 +277,6 @@ export class ApolloClient implements DataProxy {
     this.localState = new LocalState({
       cache,
       client: this,
-      resolvers,
     });
 
     this.queryManager = new QueryManager({

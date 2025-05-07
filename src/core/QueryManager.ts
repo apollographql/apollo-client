@@ -1145,10 +1145,6 @@ export class QueryManager {
     this.queries.forEach((info) => info.observableQuery?.["notify"]());
   }
 
-  public getLocalState() {
-    return this.localState;
-  }
-
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{

@@ -121,7 +121,7 @@ export class LocalResolvers<
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
     context: DefaultContext;
-    remoteResult?: FetchResult<unknown>;
+    remoteResult?: FetchResult<any>;
     variables?: TVariables;
   }): Promise<FetchResult<TData>> {
     if (__DEV__) {
@@ -131,7 +131,15 @@ export class LocalResolvers<
       );
     }
 
-    return new Promise(() => {});
+    return this.resolveDocument<TData>(
+      document,
+      remoteResult ? remoteResult.data : {},
+      { ...context, client },
+      variables
+    ).then((localResult) => ({
+      ...remoteResult,
+      data: localResult.result,
+    }));
   }
 
   // Run local client resolvers against the incoming query and remote data.

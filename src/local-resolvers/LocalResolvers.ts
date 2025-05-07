@@ -16,9 +16,9 @@ import { isSelectionNode, visit } from "graphql";
 import type {
   ApolloClient,
   DefaultContext,
+  OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
-import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
@@ -38,77 +38,66 @@ import {
 import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { OperationVariables, Resolvers } from "./types.js";
-
-export type Resolver = (
-  rootValue?: any,
-  args?: any,
-  context?: any,
-  info?: {
-    field: FieldNode;
-    fragmentMap: FragmentMap;
-  }
-) => any;
-
-type VariableMap = { [name: string]: any };
-
-export type FragmentMatcher = (
-  rootValue: any,
-  typeCondition: string,
-  context: any
-) => boolean;
-
 type ExecContext = {
   fragmentMap: FragmentMap;
   context: any;
-  variables: VariableMap;
-  fragmentMatcher: FragmentMatcher;
+  variables: OperationVariables;
   defaultOperationType: string;
   exportedVariables: Record<string, any>;
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
 };
 
-type LocalStateOptions = {
-  cache: ApolloCache;
-  client?: ApolloClient;
-  resolvers?: Resolvers | Resolvers[];
-  fragmentMatcher?: FragmentMatcher;
-};
+export declare namespace LocalResolvers {
+  export interface Options<TResolvers extends Resolvers> {
+    resolvers?: TResolvers;
+  }
 
-export class LocalResolvers {
-  private cache: ApolloCache;
-  private client?: ApolloClient;
-  private resolvers?: Resolvers;
+  export interface Resolvers {
+    [typename: string]: {
+      [field: string]: Resolver<any, any, any>;
+    };
+  }
+
+  export type Resolver<
+    TResult = unknown,
+    TParent = unknown,
+    TArgs = Record<string, unknown>,
+  > = (
+    rootValue?: TParent,
+    args?: TArgs,
+    context?: DefaultContext & { client: ApolloClient },
+    info?: {
+      field: FieldNode;
+      fragmentMap: FragmentMap;
+    }
+  ) => TResult;
+}
+
+export class LocalResolvers<
+  TResolvers extends LocalResolvers.Resolvers = LocalResolvers.Resolvers,
+> {
+  private resolvers: LocalResolvers.Resolvers = {};
   private selectionsToResolveCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
   >();
 
-  constructor({ cache, client, resolvers }: LocalStateOptions) {
-    this.cache = cache;
-
-    if (client) {
-      this.client = client;
-    }
-
-    if (resolvers) {
-      this.addResolvers(resolvers);
+  constructor(
+    ...[options]: {} extends TResolvers ?
+      [options?: LocalResolvers.Options<TResolvers>]
+    : [options: LocalResolvers.Options<TResolvers> & { resolvers: TResolvers }]
+  ) {
+    if (options?.resolvers) {
+      this.addResolvers(options.resolvers);
     }
   }
 
-  public addResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.resolvers = this.resolvers || {};
-    if (Array.isArray(resolvers)) {
-      resolvers.forEach((resolverGroup) => {
-        this.resolvers = mergeDeep(this.resolvers, resolverGroup);
-      });
-    } else {
-      this.resolvers = mergeDeep(this.resolvers, resolvers);
-    }
+  public addResolvers(resolvers: LocalResolvers.Resolvers) {
+    this.resolvers = mergeDeep(this.resolvers, resolvers);
   }
 
-  public setResolvers(resolvers: Resolvers | Resolvers[]) {
+  public setResolvers(resolvers: LocalResolvers.Resolvers) {
     this.resolvers = {};
     this.addResolvers(resolvers);
   }

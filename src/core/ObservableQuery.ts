@@ -420,7 +420,8 @@ export class ObservableQuery<
           if (
             shouldEmitSlot.getValue() === false ||
             (shouldEmitSlot.getValue() === "notification" &&
-              !this.options.notifyOnNetworkStatusChange)
+              (!this.options.notifyOnNetworkStatusChange ||
+                equal(previous, current)))
           ) {
             console.log("skipping emit");
             return;

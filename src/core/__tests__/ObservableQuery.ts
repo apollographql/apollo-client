@@ -856,9 +856,11 @@ describe("ObservableQuery", () => {
       const link: ApolloLink = ApolloLink.from([
         () => {
           return new Observable((observer) => {
-            timesFired += 1;
-            observer.next({ data });
-            observer.complete();
+            setTimeout(() => {
+              timesFired += 1;
+              observer.next({ data });
+              observer.complete();
+            });
           });
         },
       ]);

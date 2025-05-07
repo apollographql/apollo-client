@@ -36,6 +36,7 @@ export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
 export { graphQLResultHasError } from "./graphQLResultHasError.js";
 export { hasDirectives } from "./hasDirectives.js";
+export { hasForcedResolvers } from "./hasForcedResolvers.js";
 export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncrementalResult.js";

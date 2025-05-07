@@ -1364,7 +1364,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         !this.activeOperations.size
       ) {
         const diff = this.getCacheDiff();
-        if (diff.fromOptimisticTransaction) {
+        if (
+          // `fromOptimisticTransaction` is not avaiable through the `cache.diff`
+          // code path, so we need to check it this way
+          !equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
+        ) {
           // If this diff came from an optimistic transaction, deliver the
           // current cache data to the ObservableQuery, but don't perform a
           // reobservation, since oq.reobserveCacheFirst might make a network

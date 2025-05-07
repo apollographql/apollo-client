@@ -2,6 +2,7 @@ import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalResolvers } from "@apollo/client/local-resolvers";
 import { spyOnConsole } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { gql } from "./testUtils.js";
 
@@ -469,7 +470,7 @@ test("can use remote result to resolve @client field", async () => {
   });
 });
 
-test("returns remote result if there are no client fields", async () => {
+test("throws error when query does not contain client fields", async () => {
   const document = gql`
     query Member {
       member {
@@ -500,7 +501,9 @@ test("returns remote result if there are no client fields", async () => {
 
   await expect(
     localResolvers.execute({ document, client, context: {}, remoteResult })
-  ).resolves.toBe(remoteResult);
+  ).rejects.toThrow(
+    new InvariantError("Expected document to contain `@client` fields.")
+  );
 });
 
 test("warns when a resolver is missing for an `@client` field", async () => {

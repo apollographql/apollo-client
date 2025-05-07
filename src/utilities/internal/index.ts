@@ -7,3 +7,4 @@ export {
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
 export { filterMap } from "./filterMap.js";
+export { SlotAwareBehaviorSubject } from "./SlotAwareBehaviorSubject.js";

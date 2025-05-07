@@ -2,6 +2,7 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import { Slot } from "optimism";
 import type {
+  BehaviorSubject,
   InteropObservable,
   Observable,
   ObservableNotification,
@@ -12,7 +13,6 @@ import type {
 } from "rxjs";
 import { merge, share } from "rxjs";
 import {
-  BehaviorSubject,
   dematerialize,
   filter,
   lastValueFrom,
@@ -32,7 +32,11 @@ import {
   preventUnhandledRejection,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { filterMap, toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  filterMap,
+  SlotAwareBehaviorSubject,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
@@ -307,11 +311,14 @@ export class ObservableQuery<
       TVariables
     >;
 
-    this.subject = new BehaviorSubject<InternalResult>({
-      query: this.query,
-      variables: this.variables,
-      result: uninitialized,
-    });
+    this.subject = new SlotAwareBehaviorSubject<InternalResult>(
+      {
+        query: this.query,
+        variables: this.variables,
+        result: uninitialized,
+      },
+      [emitLoadingStateSlot]
+    );
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -361,6 +368,14 @@ export class ObservableQuery<
       }),
       filterMap(
         (current: InternalResult, context: { previous?: InternalResult }) => {
+          console.log("filterMap", {
+            current,
+            context,
+            emitLoadingStateSlot: emitLoadingStateSlot.getValue(),
+            notifyOnNetworkStatusChange:
+              this.options.notifyOnNetworkStatusChange,
+          });
+
           if (current.result === uninitialized) {
             // reset internal state after `ObservableQuery.reset()`
             context.previous = undefined;
@@ -413,7 +428,7 @@ export class ObservableQuery<
             // an event for that, this will likely be followed by a refetch
             // immediately
             result !== uninitialized &&
-            (emitLoadingStateSlot.getValue() ?? true)
+            emitLoadingStateSlot.getValue() !== false
           ) {
             context.previous = current;
             return result;
@@ -422,7 +437,8 @@ export class ObservableQuery<
         () => ({
           previous: undefined,
         })
-      )
+      ),
+      tap((value) => console.log({ emitted: value }))
     );
 
     this["@@observable"] = () => this;
@@ -1287,9 +1303,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { notifyOnNetworkStatusChange = true } = options;
 
     const emitLoadingState =
-      notifyOnNetworkStatusChange &&
-      oldNetworkStatus !== newNetworkStatus &&
-      isNetworkRequestInFlight(newNetworkStatus);
+      notifyOnNetworkStatusChange && isNetworkRequestInFlight(newNetworkStatus);
     const { observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,

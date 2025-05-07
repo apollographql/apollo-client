@@ -11,7 +11,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { BREAK, isSelectionNode, visit } from "graphql";
+import { isSelectionNode, visit } from "graphql";
 
 import type { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
@@ -33,6 +33,7 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities";
+import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { OperationVariables, Resolvers } from "./types.js";
@@ -199,28 +200,6 @@ export class LocalState {
     };
   }
 
-  public shouldForceResolvers(document: ASTNode) {
-    let forceResolvers = false;
-    visit(document, {
-      Directive: {
-        enter(node) {
-          if (node.name.value === "client" && node.arguments) {
-            forceResolvers = node.arguments.some(
-              (arg) =>
-                arg.name.value === "always" &&
-                arg.value.kind === "BooleanValue" &&
-                arg.value.value === true
-            );
-            if (forceResolvers) {
-              return BREAK;
-            }
-          }
-        },
-      },
-    });
-    return forceResolvers;
-  }
-
   // Query the cache and return matching data.
   private buildRootValueFromCache(
     document: DocumentNode,
@@ -378,10 +357,7 @@ export class LocalState {
     // if we've specifically identified that we only want to run forced
     // resolvers (that is, resolvers for fields marked with
     // `@client(always: true)`), then we'll skip running non-forced resolvers.
-    if (
-      !execContext.onlyRunForcedResolvers ||
-      this.shouldForceResolvers(field)
-    ) {
+    if (!execContext.onlyRunForcedResolvers || hasForcedResolvers(field)) {
       const resolverType =
         rootValue.__typename || execContext.defaultOperationType;
       const resolverMap = this.resolvers && this.resolvers[resolverType];

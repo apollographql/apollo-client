@@ -13,6 +13,7 @@ import type {
 } from "graphql";
 import { BREAK, isSelectionNode, visit } from "graphql";
 
+import type { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
@@ -34,7 +35,6 @@ import {
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { ApolloClient } from "@apollo/client";
 import type { OperationVariables, Resolvers } from "./types.js";
 
 export type Resolver = (

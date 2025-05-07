@@ -158,17 +158,6 @@ export class LocalResolvers<
     return remoteResult;
   }
 
-  public prepareContext(context?: Record<string, any>) {
-    const { cache } = this;
-    return {
-      ...context,
-      // Getting an entry's cache key is useful for local state resolvers.
-      getCacheKey(obj: StoreObject) {
-        return cache.identify(obj);
-      },
-    };
-  }
-
   // To support `@client @export(as: "someVar")` syntax, we'll first resolve
   // @client @export fields locally, then pass the resolved values back to be
   // used alongside the original operation variables.
@@ -181,7 +170,7 @@ export class LocalResolvers<
       return this.resolveDocument(
         document,
         this.buildRootValueFromCache(document, variables) || {},
-        this.prepareContext(context),
+        context,
         variables
       ).then((data) => ({
         ...variables,

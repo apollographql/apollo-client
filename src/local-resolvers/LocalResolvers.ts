@@ -21,13 +21,14 @@ import type {
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
-import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   buildQueryFromSelectionSet,
   createFragmentMap,
   getFragmentDefinitions,
   getMainDefinition,
+  hasDirectives,
   isField,
   isInlineFragment,
   mergeDeep,
@@ -35,6 +36,7 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -122,6 +124,13 @@ export class LocalResolvers<
     remoteResult?: FetchResult<unknown>;
     variables?: TVariables;
   }): Promise<FetchResult<TData>> {
+    if (__DEV__) {
+      invariant(
+        hasDirectives(["client"], document),
+        "Expected document to contain `@client` fields."
+      );
+    }
+
     return new Promise(() => {});
   }
 

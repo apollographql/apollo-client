@@ -120,7 +120,7 @@ const empty: ApolloQueryResult<any> = {
   partial: true,
 };
 
-const emitLoadingStateSlot = new Slot<boolean>();
+const shouldEmitSlot = new Slot<boolean | "notification">();
 const queryMetaSlot = new Slot<{
   readonly query: DocumentNode;
   readonly variables: OperationVariables | undefined;
@@ -305,7 +305,7 @@ export class ObservableQuery<
 
     this.subject = new SlotAwareBehaviorSubject<
       ApolloQueryResult<MaybeMasked<TData>>
-    >(uninitialized, [emitLoadingStateSlot, queryMetaSlot]);
+    >(uninitialized, [shouldEmitSlot, queryMetaSlot]);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -330,13 +330,17 @@ export class ObservableQuery<
               // updated between when the `ObservableQuery` was instantiated and
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
-              queryMetaSlot.withValue(
-                {
-                  query: this.query,
-                  variables: this.variables,
-                },
+              const value = this.getInitialResult({ observed: true });
+              shouldEmitSlot.withValue(
+                value.loading ? "notification" : true,
                 () =>
-                  this.subject.next(this.getInitialResult({ observed: true }))
+                  queryMetaSlot.withValue(
+                    {
+                      query: this.query,
+                      variables: this.variables,
+                    },
+                    () => this.subject.next(value)
+                  )
               );
             }
 
@@ -367,11 +371,12 @@ export class ObservableQuery<
           const value = queryMetaSlot.getValue();
           invariant(value);
           const { query, variables } = value;
+
           console.log("filterMap", {
             current,
             context,
             loading: current.loading,
-            emitLoadingStateSlot: emitLoadingStateSlot.getValue(),
+            shouldEmit: shouldEmitSlot.getValue(),
             notifyOnNetworkStatusChange:
               this.options.notifyOnNetworkStatusChange,
             meta: { query, variables },
@@ -382,6 +387,8 @@ export class ObservableQuery<
             context.previous = undefined;
             context.previousVariables = undefined;
           }
+          if (this.options.fetchPolicy === "standby") return;
+
           const { previous, previousVariables } = context;
 
           if (previous) {
@@ -410,48 +417,17 @@ export class ObservableQuery<
           // reset `this.reemitEvenIfEqual`
           this.reemitEvenIfEqual = undefined;
 
-          console.log(
-            "second check",
-            this.options.fetchPolicy !== "standby",
-            this.options.notifyOnNetworkStatusChange ||
-              !current.loading ||
-              // data could be defined for cache-and-network fetch policies
-              // when emitting the cache result while loading the network result
-              !!current.data,
-            current !== uninitialized,
-            emitLoadingStateSlot.getValue() !== false,
-            {
-              emits:
-                this.options.fetchPolicy !== "standby" &&
-                (this.options.notifyOnNetworkStatusChange ||
-                  !current.loading ||
-                  // data could be defined for cache-and-network fetch policies
-                  // when emitting the cache result while loading the network result
-                  !!current.data) &&
-                // only the case if the query has been reset - we don't want to emit
-                // an event for that, this will likely be followed by a refetch
-                // immediately
-                current !== uninitialized &&
-                emitLoadingStateSlot.getValue() !== false,
-            }
-          );
           if (
-            this.options.fetchPolicy !== "standby" &&
-            (this.options.notifyOnNetworkStatusChange ||
-              !current.loading ||
-              // data could be defined for cache-and-network fetch policies
-              // when emitting the cache result while loading the network result
-              !!current.data) &&
-            // only the case if the query has been reset - we don't want to emit
-            // an event for that, this will likely be followed by a refetch
-            // immediately
-            current !== uninitialized &&
-            emitLoadingStateSlot.getValue() !== false
+            shouldEmitSlot.getValue() === false ||
+            (shouldEmitSlot.getValue() === "notification" &&
+              !this.options.notifyOnNetworkStatusChange)
           ) {
-            context.previous = current;
-            context.previousVariables = variables as TVariables;
-            return current;
+            console.log("skipping emit");
+            return;
           }
+          context.previous = current;
+          context.previousVariables = variables as TVariables;
+          return current;
         },
         () => ({})
       ),
@@ -783,14 +759,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { finalize, pushNotification } = this.pushOperation(
       NetworkStatus.fetchMore
     );
-    emitLoadingStateSlot.withValue(
-      !!this.options.notifyOnNetworkStatusChange,
-      () =>
-        pushNotification({
-          source: "newNetworkStatus",
-          kind: "N",
-          value: {},
-        })
+    shouldEmitSlot.withValue("notification", () =>
+      pushNotification({
+        source: "newNetworkStatus",
+        kind: "N",
+        value: {},
+      })
     );
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
@@ -1574,8 +1548,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       });
     if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
       operation.override = networkStatus;
-      console.log("synchronouslyEmitted", { emitLoadingState });
-      emitLoadingStateSlot.withValue(emitLoadingState, () =>
+      shouldEmitSlot.withValue("notification", () =>
         queryMetaSlot.withValue(meta, () =>
           this.input.next({
             kind: "N",
@@ -1611,10 +1584,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * * cancels all active operations and their subscriptions
    */
   public reset() {
-    this.setResult(
-      // exception for cache-only queries - we reset them into a "ready" state
-      // as we won't trigger a refetch for them
-      this.options.fetchPolicy === "cache-only" ? empty : uninitialized
+    // exception for cache-only queries - we reset them into a "ready" state
+    // as we won't trigger a refetch for them
+    const resetToEmpty = this.options.fetchPolicy === "cache-only";
+    shouldEmitSlot.withValue(resetToEmpty, () =>
+      this.setResult(resetToEmpty ? empty : uninitialized)
     );
     this.activeOperations.forEach((operation) => operation.abort());
   }
@@ -1644,6 +1618,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           console.dir(
             {
               incoming,
+              forCurrentQuery: filterForCurrentQuery({}),
               variables: queryMetaSlot.getValue()?.variables,
               current: {
                 variables: this.variables,
@@ -1671,12 +1646,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         (v): v is typeof v & { source: "setResult" } => v.source === "setResult"
       )
     );
-    // TODO
-    // const fromFetchMore = obs.pipe(
-    //   filter(
-    //     (v): v is FetchMoreTransportValue => v.meta.source === "fetchMore"
-    //   )
-    // );
+
     const fromNetworkStatus = obs.pipe(
       filter(
         (v): v is typeof v & { source: "newNetworkStatus" } =>
@@ -1689,18 +1659,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       b?: { query: DocumentNode; variables?: OperationVariables }
     ) {
       return !!(
-        // TODO: should we allow optionals here or check earlier?
-        (
-          a &&
-          b &&
-          a.query === b.query &&
-          equal(a.variables || {}, b.variables || {})
-        )
+        a &&
+        b &&
+        a.query === b.query &&
+        equal(a.variables || {}, b.variables || {})
       );
     }
 
-    const filterForCurrentQuery = <T>(_: T) =>
-      isEqualQuery(queryMetaSlot.getValue(), this);
+    const filterForCurrentQuery = <T>(_: T) => {
+      return isEqualQuery(queryMetaSlot.getValue(), this);
+    };
 
     return merge(
       setResult.pipe(map((notification) => notification.value)),

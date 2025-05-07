@@ -590,12 +590,14 @@ describe("cache-only", () => {
       link: new ApolloLink(
         () =>
           new Observable((observer) => {
-            observer.next({
-              data: {
-                count: ++counter,
-              },
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  count: ++counter,
+                },
+              });
+              observer.complete();
             });
-            observer.complete();
           })
       ),
     });
@@ -613,6 +615,12 @@ describe("cache-only", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: undefined,
+      partial: true,
+    });
     await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,

@@ -2,15 +2,13 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import { Slot } from "optimism";
 import type {
-  BehaviorSubject,
   InteropObservable,
-  Observable,
-  ObservableNotification,
   Observer,
   OperatorFunction,
   Subscribable,
   Subscription,
 } from "rxjs";
+import type { Observable } from "rxjs";
 import { merge, share } from "rxjs";
 import {
   dematerialize,
@@ -123,6 +121,10 @@ const empty: ApolloQueryResult<any> = {
 };
 
 const emitLoadingStateSlot = new Slot<boolean>();
+const queryMetaSlot = new Slot<{
+  readonly query: DocumentNode;
+  readonly variables: OperationVariables | undefined;
+}>();
 
 export declare namespace ObservableQuery {
   export type Options<
@@ -211,12 +213,8 @@ export class ObservableQuery<
 
   private unsubscribeFromCache?: () => void;
   private input: Subject<QueryNotification.Value<TData, TVariables>>;
-  private subject: BehaviorSubject<
-    QueryNotification.InternalResult<
-      ApolloQueryResult<MaybeMasked<TData>>,
-      TData,
-      TVariables
-    >
+  private subject: SlotAwareBehaviorSubject<
+    ApolloQueryResult<MaybeMasked<TData>>
   >;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
@@ -245,7 +243,7 @@ export class ObservableQuery<
   };
 
   private get networkStatus(): NetworkStatus {
-    return this.subject.getValue().result.networkStatus;
+    return this.subject.getValue().networkStatus;
   }
 
   /**
@@ -305,20 +303,9 @@ export class ObservableQuery<
       variables: this.getVariablesWithDefaults(options.variables),
     };
 
-    type InternalResult = QueryNotification.InternalResult<
-      ApolloQueryResult<MaybeMasked<TData>>,
-      TData,
-      TVariables
-    >;
-
-    this.subject = new SlotAwareBehaviorSubject<InternalResult>(
-      {
-        query: this.query,
-        variables: this.variables,
-        result: uninitialized,
-      },
-      [emitLoadingStateSlot]
-    );
+    this.subject = new SlotAwareBehaviorSubject<
+      ApolloQueryResult<MaybeMasked<TData>>
+    >(uninitialized, [emitLoadingStateSlot, queryMetaSlot]);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -343,11 +330,14 @@ export class ObservableQuery<
               // updated between when the `ObservableQuery` was instantiated and
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
-              this.subject.next({
-                variables: this.variables,
-                query: this.query,
-                result: this.getInitialResult({ observed: true }),
-              });
+              queryMetaSlot.withValue(
+                {
+                  query: this.query,
+                  variables: this.variables,
+                },
+                () =>
+                  this.subject.next(this.getInitialResult({ observed: true }))
+              );
             }
 
             this.reobserve();
@@ -367,43 +357,48 @@ export class ObservableQuery<
         },
       }),
       filterMap(
-        (current: InternalResult, context: { previous?: InternalResult }) => {
+        (
+          current: ApolloQueryResult<TData>,
+          context: {
+            previous?: ApolloQueryResult<TData>;
+            previousVariables?: TVariables;
+          }
+        ) => {
+          const value = queryMetaSlot.getValue();
+          invariant(value);
+          const { query, variables } = value;
           console.log("filterMap", {
             current,
             context,
+            loading: current.loading,
             emitLoadingStateSlot: emitLoadingStateSlot.getValue(),
             notifyOnNetworkStatusChange:
               this.options.notifyOnNetworkStatusChange,
+            meta: { query, variables },
           });
 
-          if (current.result === uninitialized) {
+          if (current === uninitialized) {
             // reset internal state after `ObservableQuery.reset()`
             context.previous = undefined;
+            context.previousVariables = undefined;
           }
-          const previous = context.previous;
+          const { previous, previousVariables } = context;
+
           if (previous) {
-            const documentInfo = this.queryManager.getDocumentInfo(
-              current.query
-            );
+            const documentInfo = this.queryManager.getDocumentInfo(query);
             const dataMasking = this.queryManager.dataMasking;
-            const query =
-              dataMasking ? documentInfo.nonReactiveQuery : current.query;
+            const maskedQuery =
+              dataMasking ? documentInfo.nonReactiveQuery : query;
 
             const resultIsEqual =
               dataMasking || documentInfo.hasNonreactiveDirective ?
-                equalByQuery(
-                  query,
-                  previous.result,
-                  current.result,
-                  current.variables
-                )
-              : equal(previous.result, current.result);
+                equalByQuery(maskedQuery, previous, current, variables)
+              : equal(previous, current);
 
             if (
               resultIsEqual &&
-              (!current.variables ||
-                equal(previous.variables, current.variables)) &&
-              !equal(previous.result, this.reemitEvenIfEqual)
+              (!variables || equal(previousVariables, variables)) &&
+              !equal(previous, this.reemitEvenIfEqual)
             ) {
               return;
             }
@@ -415,28 +410,50 @@ export class ObservableQuery<
           // reset `this.reemitEvenIfEqual`
           this.reemitEvenIfEqual = undefined;
 
-          const result = current.result;
-
+          console.log(
+            "second check",
+            this.options.fetchPolicy !== "standby",
+            this.options.notifyOnNetworkStatusChange ||
+              !current.loading ||
+              // data could be defined for cache-and-network fetch policies
+              // when emitting the cache result while loading the network result
+              !!current.data,
+            current !== uninitialized,
+            emitLoadingStateSlot.getValue() !== false,
+            {
+              emits:
+                this.options.fetchPolicy !== "standby" &&
+                (this.options.notifyOnNetworkStatusChange ||
+                  !current.loading ||
+                  // data could be defined for cache-and-network fetch policies
+                  // when emitting the cache result while loading the network result
+                  !!current.data) &&
+                // only the case if the query has been reset - we don't want to emit
+                // an event for that, this will likely be followed by a refetch
+                // immediately
+                current !== uninitialized &&
+                emitLoadingStateSlot.getValue() !== false,
+            }
+          );
           if (
             this.options.fetchPolicy !== "standby" &&
             (this.options.notifyOnNetworkStatusChange ||
-              !result.loading ||
+              !current.loading ||
               // data could be defined for cache-and-network fetch policies
               // when emitting the cache result while loading the network result
-              !!result.data) &&
+              !!current.data) &&
             // only the case if the query has been reset - we don't want to emit
             // an event for that, this will likely be followed by a refetch
             // immediately
-            result !== uninitialized &&
+            current !== uninitialized &&
             emitLoadingStateSlot.getValue() !== false
           ) {
             context.previous = current;
-            return result;
+            context.previousVariables = variables as TVariables;
+            return current;
           }
         },
-        () => ({
-          previous: undefined,
-        })
+        () => ({})
       ),
       tap((value) => console.log({ emitted: value }))
     );
@@ -573,7 +590,7 @@ export class ObservableQuery<
       optimistic: true,
       watcher: this,
       callback: (diff) => {
-        const previousResult = this.subject.getValue().result;
+        const previousResult = this.subject.getValue();
 
         // If we are trying to deliver an incomplete cache result, we avoid
         // reporting it if the query has errored, otherwise we let the broadcast try
@@ -596,7 +613,7 @@ export class ObservableQuery<
   }
 
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
-    const value = this.subject.getValue().result;
+    const value = this.subject.getValue();
     return value !== uninitialized ? value : this.getInitialResult();
   }
 
@@ -980,14 +997,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return toQueryResult(this.subject.getValue().result);
+      return toQueryResult(this.subject.getValue());
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return toQueryResult(this.subject.getValue().result);
+      // shouldn't this be `getCurrentResult` or this might be outdated?
+      return toQueryResult(this.subject.getValue());
     }
 
     return this.reobserve({
@@ -1286,7 +1304,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       newNetworkStatus == NetworkStatus.refetch ||
       newNetworkStatus == NetworkStatus.setVariables
     ) {
-      this.reemitEvenIfEqual = this.subject.getValue().result;
+      this.reemitEvenIfEqual = this.subject.getValue();
     }
 
     if (options.fetchPolicy === "standby") {
@@ -1435,19 +1453,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // request, and we never want to trigger network requests in the
           // middle of optimistic updates.
           // if (diff.result) {
-          this.input.next({
-            kind: "N",
-            value: {
-              data: diff.result as TData,
-              networkStatus: NetworkStatus.ready,
-              loading: false,
-              error: undefined,
-              partial: !diff.complete,
-            },
-            source: "cache",
-            query: this.query,
-            variables: this.variables,
-          });
+          queryMetaSlot.withValue(
+            // maybe from diff?
+            { query: this.query, variables: this.variables },
+            () =>
+              this.input.next({
+                kind: "N",
+                value: {
+                  data: diff.result as TData,
+                  networkStatus: NetworkStatus.ready,
+                  loading: false,
+                  error: undefined,
+                  partial: !diff.complete,
+                },
+                source: "cache",
+              })
+          );
           // }
         } else {
           // Otherwise, make the ObservableQuery "reobserve" the latest data
@@ -1468,7 +1489,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private pushOperation(networkStatus: NetworkStatus): {
     finalize: () => void;
     pushNotification: (
-      notification: QueryNotification.ValueWithoutMeta<TData, TVariables>
+      notification: QueryNotification.Value<TData, TVariables>
     ) => void;
   } {
     let aborted = false;
@@ -1491,23 +1512,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return {
       finalize,
       pushNotification: (
-        notification: QueryNotification.ValueWithoutMeta<TData, TVariables>
+        notification: QueryNotification.Value<TData, TVariables>
       ) => {
         if (!aborted) {
-          this.input.next({
-            ...notification,
-            query,
-            variables,
-          } as QueryNotification.Value<TData, TVariables>);
+          queryMetaSlot.withValue({ query, variables }, () =>
+            this.input.next({
+              ...notification,
+            } as QueryNotification.Value<TData, TVariables>)
+          );
         }
       },
     };
   }
 
   private trackOperation(
-    observable: Observable<
-      QueryNotification.ValueWithoutMeta<TData, TVariables>
-    >,
+    observable: Observable<QueryNotification.Value<TData, TVariables>>,
     networkStatus: NetworkStatus,
     emitLoadingState: boolean
   ) {
@@ -1525,6 +1544,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
     // event once the subscription is set up.
     let synchronouslyEmitted = false;
+    const meta = { variables, query };
     const subscription = observable
       .pipe(
         tap({
@@ -1544,26 +1564,27 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             }
           },
           finalize: () => this.activeOperations.delete(operation),
-        }),
-        map((valueWithoutMeta) => ({
-          ...valueWithoutMeta,
-          query,
-          variables,
-        }))
+        })
       )
-      .subscribe(this.input);
+      .subscribe({
+        next: (value) =>
+          queryMetaSlot.withValue(meta, () => this.input.next(value)),
+        error: (err) => this.input.error(err),
+        complete: () => this.input.complete(),
+      });
     if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
       operation.override = networkStatus;
+      console.log("synchronouslyEmitted", { emitLoadingState });
       emitLoadingStateSlot.withValue(emitLoadingState, () =>
-        this.input.next({
-          kind: "N",
-          source: "newNetworkStatus",
-          value: {
-            resetError: true,
-          },
-          query,
-          variables,
-        })
+        queryMetaSlot.withValue(meta, () =>
+          this.input.next({
+            kind: "N",
+            source: "newNetworkStatus",
+            value: {
+              resetError: true,
+            },
+          })
+        )
       );
     }
     return subscription;
@@ -1600,29 +1621,30 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   public setResult(result: ApolloQueryResult<TData>) {
-    this.input.next({
-      source: "setResult",
-      kind: "N",
-      value: result,
-      query: this.query,
-      variables: this.variables,
-    });
+    queryMetaSlot.withValue(
+      { query: this.query, variables: this.variables },
+      () =>
+        this.input.next({
+          source: "setResult",
+          kind: "N",
+          value: result,
+        })
+    );
   }
 
   private operator: OperatorFunction<
     QueryNotification.Value<TData, TVariables>,
-    QueryNotification.InternalResult<
-      ApolloQueryResult<TData>,
-      TData,
-      TVariables
-    >
+    ApolloQueryResult<TData>
   > = pipe((obs) => {
     obs = obs.pipe(
+      filter((value) => value.kind !== "C"),
       tap({
-        next: ({ query, ...incoming }) => {
+        next: (incoming) => {
+          invariant(queryMetaSlot.hasValue());
           console.dir(
             {
               incoming,
+              variables: queryMetaSlot.getValue()?.variables,
               current: {
                 variables: this.variables,
                 fetchPolicy: this.options.fetchPolicy,
@@ -1663,36 +1685,31 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
 
     function isEqualQuery(
-      a: { query: DocumentNode; variables?: OperationVariables },
-      b: { query: DocumentNode; variables?: OperationVariables }
+      a?: { query: DocumentNode; variables?: OperationVariables },
+      b?: { query: DocumentNode; variables?: OperationVariables }
     ) {
-      return a.query === b.query && equal(a.variables || {}, b.variables || {});
+      return !!(
+        // TODO: should we allow optionals here or check earlier?
+        (
+          a &&
+          b &&
+          a.query === b.query &&
+          equal(a.variables || {}, b.variables || {})
+        )
+      );
     }
 
-    const filterForCurrentQuery = <
-      T extends QueryNotification.Meta<TData, TVariables>,
-    >(
-      value: T
-    ) => isEqualQuery(value, this);
+    const filterForCurrentQuery = <T>(_: T) =>
+      isEqualQuery(queryMetaSlot.getValue(), this);
 
     return merge(
-      setResult.pipe(
-        map(({ variables, query, value }) => ({
-          variables,
-          query,
-          result: value,
-        }))
-      ),
+      setResult.pipe(map((notification) => notification.value)),
       merge(
         fromCache.pipe(
           filter(filterForCurrentQuery),
-          dematerializeInternalResult<
-            ApolloQueryResult<TData>,
-            TData,
-            TVariables
-          >(),
-          filter(({ result }) => {
-            const previousResult = this.subject.getValue().result;
+          dematerialize(),
+          filter((result) => {
+            const previousResult = this.subject.getValue();
             return (
               result.networkStatus !== NetworkStatus.ready ||
               !result.partial ||
@@ -1705,49 +1722,48 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         fromNetwork.pipe(
           filter(filterForCurrentQuery),
           // convert errors into "errors as values"
-          map(
-            (
-              value
-            ): QueryNotification.FromNetwork<TData, TVariables> &
-              QueryNotification.Meta<TData, TVariables> => {
-              if (value.kind == "E") {
-                const lastValue = this.subject.getValue();
-                return {
-                  ...value,
-                  kind: "N",
-                  value: {
-                    data: undefined,
-                    partial: true,
-                    ...(isEqualQuery(lastValue, value) ? lastValue.result : {}),
-                    error: value.error,
-                    networkStatus: NetworkStatus.error,
-                    loading: false,
-                  },
-                };
-              }
-              // else if (
-              //   value.kind === "N" &&
-              //   value.fetchPolicy !== "no-cache"
-              // ) {
-              //    TODO:
-              //    the value has already been written to the cache at this point
-              //    it might be a good idea to read the value from the cache
-              //    instead of using the value from the network here
-              // }
-              return value;
+          map((value): QueryNotification.FromNetwork<TData, TVariables> => {
+            if (value.kind == "E") {
+              const lastValue = this.subject.getValue();
+              const lastMeta = this.subject.getSlotValue(queryMetaSlot);
+              const currentMeta = queryMetaSlot.getValue();
+              return {
+                ...value,
+                kind: "N",
+                value: {
+                  data: undefined,
+                  partial: true,
+                  ...(isEqualQuery(lastMeta, currentMeta) ? lastValue : {}),
+                  error: value.error,
+                  networkStatus: NetworkStatus.error,
+                  loading: false,
+                },
+              };
             }
-          ),
-          dematerializeInternalResult()
+            // else if (
+            //   value.kind === "N" &&
+            //   value.fetchPolicy !== "no-cache"
+            // ) {
+            //    TODO:
+            //    the value has already been written to the cache at this point
+            //    it might be a good idea to read the value from the cache
+            //    instead of using the value from the network here
+            // }
+            return value;
+          }),
+          dematerialize()
         ),
         fromNetworkStatus.pipe(
-          dematerializeInternalResult(),
-          map((value) => {
+          dematerialize(),
+          map((result) => {
             const previousResult = this.subject.getValue();
+            const previousMeta = this.subject.getSlotValue(queryMetaSlot);
+            const currentMeta = queryMetaSlot.getValue();
             const baseResult =
-              isEqualQuery(previousResult, value) ?
-                previousResult.result
+              previousMeta && isEqualQuery(previousMeta, currentMeta) ?
+                previousResult
               : this.getInitialResult();
-            const { reemitEvenIfEqual, resetError } = value.result;
+            const { reemitEvenIfEqual, resetError } = result;
             const error = resetError ? undefined : baseResult.error;
             const networkStatus =
               error ? NetworkStatus.error : NetworkStatus.ready;
@@ -1759,37 +1775,39 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             if (reemitEvenIfEqual) {
               this.reemitEvenIfEqual = newResult;
             }
-            return {
-              query: value.query,
-              variables: value.variables,
-              result: newResult,
-            };
+            return newResult;
           })
         )
       ).pipe(
         // normalize result shape
-        map(({ query, variables, result }) => {
+        map((result: ApolloQueryResult<TData>) => {
           if ("error" in result && !result.error) delete result.error;
           result.networkStatus = this.caclulateNetworkStatus(
             result.networkStatus
           );
           result.loading = isNetworkRequestInFlight(result.networkStatus);
-          return { query, variables, result: this.maskResult(result) };
+          return this.maskResult(result);
         }),
         tap({
-          next: (value) => {
-            if (value.result.error) {
+          next: (result) => {
+            if (result.error) {
+              const { query, variables } = queryMetaSlot.getValue()!;
               this.lastError = {
-                error: value.result.error,
-                query: value.query,
-                variables: value.variables,
+                error: result.error,
+                query,
+                variables: variables as TVariables,
               };
             }
           },
         })
       )
     ).pipe(
-      tap(({ query, ...outgoing }) => console.dir({ outgoing }, { depth: 5 }))
+      tap(({ ...outgoing }) =>
+        console.dir(
+          { outgoing, variables: queryMetaSlot.getValue()?.variables },
+          { depth: 5 }
+        )
+      )
     );
   });
 
@@ -1852,37 +1870,4 @@ function skipCacheDataFor(
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
   );
-}
-
-function dematerializeInternalResult<T, TData, TVariables>(): OperatorFunction<
-  ObservableNotification<T> & QueryNotification.Meta<TData, TVariables>,
-  QueryNotification.InternalResult<T, TData, TVariables>
-> {
-  return (source) =>
-    source.pipe(
-      // don't dematerialize "completed" notifications
-      // we don't want to accidentally close these streams
-      filter((value) => value.kind !== "C"),
-      map(
-        (
-          value: ObservableNotification<T> &
-            QueryNotification.Meta<TData, TVariables>
-        ): ObservableNotification<
-          QueryNotification.InternalResult<T, TData, TVariables>
-        > => {
-          if (value.kind !== "N") {
-            return value;
-          }
-          return {
-            ...value,
-            value: {
-              result: value.value as T,
-              query: value.query,
-              variables: value.variables,
-            },
-          };
-        }
-      ),
-      dematerialize()
-    );
 }

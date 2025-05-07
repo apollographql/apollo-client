@@ -1459,11 +1459,9 @@ export class QueryManager {
     });
 
     const fetchCancelSubject = new Subject<
-      QueryNotification.ValueWithoutMeta<TData, TVars>
+      QueryNotification.Value<TData, TVars>
     >();
-    let observable: Observable<
-        QueryNotification.ValueWithoutMeta<TData, TVars>
-      >,
+    let observable: Observable<QueryNotification.Value<TData, TVars>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1935,5 +1933,5 @@ function validateDidEmitValue<T>() {
 interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
-  observable: Observable<QueryNotification.ValueWithoutMeta<TData, any>>;
+  observable: Observable<QueryNotification.Value<TData, any>>;
 }

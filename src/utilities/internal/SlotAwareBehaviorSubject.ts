@@ -16,6 +16,12 @@ export class SlotAwareBehaviorSubject<T> extends BehaviorSubject<T> {
     this.slots = slots;
   }
 
+  getSlotValue<T>(slot: { getValue: () => T | undefined }) {
+    return this.currentSlotValues?.find(([s]) => s === slot)?.[1] as
+      | T
+      | undefined;
+  }
+
   next(value: T): void {
     this.currentSlotValues = [];
     for (const slot of this.slots) {

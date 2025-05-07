@@ -306,16 +306,9 @@ export declare namespace QueryNotification {
     fetchPolicy?: WatchQueryFetchPolicy;
   };
 
-  type ValueWithoutMeta<TData, TVariables> =
+  type Value<TData, TVariables> =
     | FromCache<TData, TVariables>
     | FromNetwork<TData, TVariables>
     | NewNetworkStatus<TData, TVariables>
     | SetResult<TData, TVariables>;
-
-  type Value<TData, TVariables> = ValueWithoutMeta<TData, TVariables> &
-    Meta<TData, TVariables>;
-
-  type InternalResult<T, TData, TVariables> = {
-    result: T;
-  } & QueryNotification.Meta<TData, TVariables>;
 }

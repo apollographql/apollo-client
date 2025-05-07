@@ -72,7 +72,7 @@ type LocalStateOptions = {
   fragmentMatcher?: FragmentMatcher;
 };
 
-export class LocalState {
+export class LocalResolvers {
   private cache: ApolloCache;
   private client?: ApolloClient;
   private resolvers?: Resolvers;

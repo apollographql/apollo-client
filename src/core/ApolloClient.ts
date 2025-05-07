@@ -22,7 +22,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
-import type { FragmentMatcher } from "./LocalState.js";
 import { LocalState } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";

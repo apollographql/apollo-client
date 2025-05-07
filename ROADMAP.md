@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-04-23**
+**Last updated: 2025-05-07**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,13 +17,13 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### 3.14.0 - May 20th, 2025
-_Release candidate - May 15th, 2025
+#### 3.14.0 - June 5th, 2025
+_Release candidate - May 29th, 2025
 
 - 4.0 compatibility release/deprecations
 
 #### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - June 10th, 2025
-_Release candidate - May 15th 2025_
+_Release candidate - May 29th 2025_
 
 ### GraphQL Testing Library
 

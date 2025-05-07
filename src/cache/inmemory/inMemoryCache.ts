@@ -519,7 +519,7 @@ export class InMemoryCache extends ApolloCache {
   }
 
   public fragmentMatches(
-    fragment: InlineFragmentNode,
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string
   ): boolean {
     return this.policies.fragmentMatches(fragment, typename);

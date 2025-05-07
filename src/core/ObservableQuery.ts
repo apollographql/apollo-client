@@ -120,11 +120,12 @@ const empty: ApolloQueryResult<any> = {
   partial: true,
 };
 
-const shouldEmitSlot = new Slot<boolean | "notification">();
-const queryMetaSlot = new Slot<{
+interface Meta {
   readonly query: DocumentNode;
   readonly variables: OperationVariables | undefined;
-}>();
+  shouldEmit?: boolean | "notification";
+}
+const queryMetaSlot = new Slot<Meta>();
 
 export declare namespace ObservableQuery {
   export type Options<
@@ -246,13 +247,6 @@ export class ObservableQuery<
     return this.subject.getValue().networkStatus;
   }
 
-  /**
-   * The last known emitted value when `reobserve` is called.
-   * This value will be forced to "re-emit" even if it is the same value as the
-   * previously emitted value.
-   */
-  private reemitEvenIfEqual?: ApolloQueryResult<TData>;
-
   constructor({
     queryManager,
     queryInfo,
@@ -305,7 +299,9 @@ export class ObservableQuery<
 
     this.subject = new SlotAwareBehaviorSubject<
       ApolloQueryResult<MaybeMasked<TData>>
-    >(uninitialized, [shouldEmitSlot, queryMetaSlot]);
+    >(uninitialized, [
+      [queryMetaSlot, { query: this.query, variables: this.variables }],
+    ]);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -331,17 +327,16 @@ export class ObservableQuery<
               // when it is subscribed to. Updating the value here ensures we
               // report the most up-to-date result from the cache.
               const value = this.getInitialResult({ observed: true });
-              shouldEmitSlot.withValue(
-                value.loading ? "notification" : true,
-                () =>
-                  queryMetaSlot.withValue(
-                    {
-                      query: this.query,
-                      variables: this.variables,
-                    },
-                    () => this.subject.next(value)
-                  )
-              );
+
+              () =>
+                queryMetaSlot.withValue(
+                  {
+                    query: this.query,
+                    variables: this.variables,
+                    shouldEmit: value.loading ? "notification" : true,
+                  },
+                  () => this.subject.next(value)
+                );
             }
 
             this.reobserve();
@@ -368,19 +363,18 @@ export class ObservableQuery<
             previousVariables?: TVariables;
           }
         ) => {
-          const value = queryMetaSlot.getValue();
-          invariant(value);
-          const { query, variables } = value;
+          const meta = queryMetaSlot.getValue();
 
           console.log("filterMap", {
             current,
             context,
             loading: current.loading,
-            shouldEmit: shouldEmitSlot.getValue(),
             notifyOnNetworkStatusChange:
               this.options.notifyOnNetworkStatusChange,
-            meta: { query, variables },
+            meta,
           });
+          invariant(meta);
+          const { query, variables, shouldEmit } = meta!;
 
           if (current === uninitialized) {
             // reset internal state after `ObservableQuery.reset()`
@@ -388,6 +382,8 @@ export class ObservableQuery<
             context.previousVariables = undefined;
           }
           if (this.options.fetchPolicy === "standby") return;
+          if (shouldEmit === true) return emit();
+          if (shouldEmit === false) return;
 
           const { previous, previousVariables } = context;
 
@@ -404,31 +400,28 @@ export class ObservableQuery<
 
             if (
               resultIsEqual &&
-              (!variables || equal(previousVariables, variables)) &&
-              !equal(previous, this.reemitEvenIfEqual)
+              (!variables || equal(previousVariables, variables))
+              //!equal(previous, this.reemitEvenIfEqual)
             ) {
               return;
             }
           }
 
-          // we only want to reemit if equal once, and if the value changed
-          // we also don't want to reemit in the future,
-          // so no matter what value is emitted here, we can safely
-          // reset `this.reemitEvenIfEqual`
-          this.reemitEvenIfEqual = undefined;
-
           if (
-            shouldEmitSlot.getValue() === false ||
-            (shouldEmitSlot.getValue() === "notification" &&
-              (!this.options.notifyOnNetworkStatusChange ||
-                equal(previous, current)))
+            shouldEmit === "notification" &&
+            (!this.options.notifyOnNetworkStatusChange ||
+              equal(previous, current))
           ) {
             console.log("skipping emit");
             return;
           }
-          context.previous = current;
-          context.previousVariables = variables as TVariables;
-          return current;
+          return emit();
+
+          function emit() {
+            context.previous = current;
+            context.previousVariables = variables as TVariables;
+            return current;
+          }
         },
         () => ({})
       ),
@@ -760,12 +753,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { finalize, pushNotification } = this.pushOperation(
       NetworkStatus.fetchMore
     );
-    shouldEmitSlot.withValue("notification", () =>
-      pushNotification({
+    pushNotification(
+      {
         source: "newNetworkStatus",
         kind: "N",
         value: {},
-      })
+      },
+      { shouldEmit: "notification" }
     );
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
@@ -864,13 +858,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
         if (isCached && !wasUpdated) {
-          pushNotification({
-            kind: "N",
-            source: "newNetworkStatus",
-            value: {
-              reemitEvenIfEqual: true,
+          pushNotification(
+            {
+              kind: "N",
+              source: "newNetworkStatus",
+              value: {},
             },
-          });
+            { shouldEmit: true }
+          );
         }
       });
   }
@@ -1275,13 +1270,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
-    if (
-      newNetworkStatus == NetworkStatus.refetch ||
-      newNetworkStatus == NetworkStatus.setVariables
-    ) {
-      this.reemitEvenIfEqual = this.subject.getValue();
-    }
-
     if (options.fetchPolicy === "standby") {
       this.cancelPolling();
     }
@@ -1293,10 +1281,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.resubscribeCache();
     }
 
-    const { notifyOnNetworkStatusChange = true } = options;
-
-    const emitLoadingState =
-      notifyOnNetworkStatusChange && isNetworkRequestInFlight(newNetworkStatus);
     const { observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
@@ -1308,13 +1292,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.linkSubscription.unsubscribe();
       }
 
-      this.linkSubscription = this.trackOperation(
-        observable,
-        newNetworkStatus,
-        emitLoadingState
-      );
+      this.linkSubscription = this.trackOperation(observable, newNetworkStatus);
     } else {
-      this.trackOperation(observable, newNetworkStatus, emitLoadingState);
+      this.trackOperation(observable, newNetworkStatus);
     }
 
     return preventUnhandledRejection(
@@ -1464,7 +1444,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private pushOperation(networkStatus: NetworkStatus): {
     finalize: () => void;
     pushNotification: (
-      notification: QueryNotification.Value<TData, TVariables>
+      notification: QueryNotification.Value<TData, TVariables>,
+      additionalMeta?: Omit<Meta, "query" | "variables">
     ) => void;
   } {
     let aborted = false;
@@ -1487,10 +1468,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return {
       finalize,
       pushNotification: (
-        notification: QueryNotification.Value<TData, TVariables>
+        notification: QueryNotification.Value<TData, TVariables>,
+        additionalMeta?: Omit<Meta, "query" | "variables">
       ) => {
         if (!aborted) {
-          queryMetaSlot.withValue({ query, variables }, () =>
+          queryMetaSlot.withValue({ query, variables, ...additionalMeta }, () =>
             this.input.next({
               ...notification,
             } as QueryNotification.Value<TData, TVariables>)
@@ -1502,8 +1484,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private trackOperation(
     observable: Observable<QueryNotification.Value<TData, TVariables>>,
-    networkStatus: NetworkStatus,
-    emitLoadingState: boolean
+    networkStatus: NetworkStatus
   ) {
     // track query and variables from the start of the operation
     const { query, variables } = this;
@@ -1519,7 +1500,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
     // event once the subscription is set up.
     let synchronouslyEmitted = false;
-    const meta = { variables, query };
+
+    let forceFirstValueEmit =
+      networkStatus == NetworkStatus.refetch ||
+      networkStatus == NetworkStatus.setVariables;
     const subscription = observable
       .pipe(
         tap({
@@ -1542,15 +1526,29 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         })
       )
       .subscribe({
-        next: (value) =>
-          queryMetaSlot.withValue(meta, () => this.input.next(value)),
+        next: (value) => {
+          const meta: Meta = { variables, query };
+
+          if (
+            forceFirstValueEmit &&
+            value.kind === "N" &&
+            "loading" in value.value &&
+            !value.value.loading
+          ) {
+            forceFirstValueEmit = false;
+            meta.shouldEmit = true;
+          }
+
+          queryMetaSlot.withValue(meta, () => this.input.next(value));
+        },
         error: (err) => this.input.error(err),
         complete: () => this.input.complete(),
       });
     if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
       operation.override = networkStatus;
-      shouldEmitSlot.withValue("notification", () =>
-        queryMetaSlot.withValue(meta, () =>
+      queryMetaSlot.withValue(
+        { variables, query, shouldEmit: "notification" },
+        () =>
           this.input.next({
             kind: "N",
             source: "newNetworkStatus",
@@ -1558,7 +1556,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               resetError: true,
             },
           })
-        )
       );
     }
     return subscription;
@@ -1588,16 +1585,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // exception for cache-only queries - we reset them into a "ready" state
     // as we won't trigger a refetch for them
     const resetToEmpty = this.options.fetchPolicy === "cache-only";
-    shouldEmitSlot.withValue(resetToEmpty, () =>
-      this.setResult(resetToEmpty ? empty : uninitialized)
-    );
+    this.setResult(resetToEmpty ? empty : uninitialized, {
+      shouldEmit: resetToEmpty,
+    });
+
     this.activeOperations.forEach((operation) => operation.abort());
   }
 
   /** @internal */
-  public setResult(result: ApolloQueryResult<TData>) {
+  public setResult(
+    result: ApolloQueryResult<TData>,
+    additionalMeta?: Omit<Meta, "query" | "variables">
+  ) {
     queryMetaSlot.withValue(
-      { query: this.query, variables: this.variables },
+      { query: this.query, variables: this.variables, ...additionalMeta },
       () =>
         this.input.next({
           source: "setResult",
@@ -1616,6 +1617,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       tap({
         next: (incoming) => {
           invariant(queryMetaSlot.hasValue());
+          const { query, ...meta } = queryMetaSlot.getValue()!;
           console.dir(
             {
               incoming,
@@ -1625,6 +1627,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 variables: this.variables,
                 fetchPolicy: this.options.fetchPolicy,
               },
+              meta,
             },
             { depth: 5 }
           );
@@ -1732,7 +1735,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               previousMeta && isEqualQuery(previousMeta, currentMeta) ?
                 previousResult
               : this.getInitialResult();
-            const { reemitEvenIfEqual, resetError } = result;
+            const { resetError } = result;
             const error = resetError ? undefined : baseResult.error;
             const networkStatus =
               error ? NetworkStatus.error : NetworkStatus.ready;
@@ -1741,9 +1744,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               error,
               networkStatus,
             };
-            if (reemitEvenIfEqual) {
-              this.reemitEvenIfEqual = newResult;
-            }
             return newResult;
           })
         )

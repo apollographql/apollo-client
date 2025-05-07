@@ -8,12 +8,13 @@ type SlotInstance = InstanceType<typeof Slot>;
 
 export class SlotAwareBehaviorSubject<T> extends BehaviorSubject<T> {
   private slots: SlotInstance[];
-  private currentSlotValues?: Array<[SlotInstance, value: unknown]>;
+  private currentSlotValues: Array<[SlotInstance, value: unknown]>;
   callingSynchronusly = false;
 
-  constructor(value: T, slots: SlotInstance[]) {
+  constructor(value: T, initialSlots: Array<[SlotInstance, value: unknown]>) {
     super(value);
-    this.slots = slots;
+    this.slots = initialSlots.map(([slot]) => slot);
+    this.currentSlotValues = initialSlots;
   }
 
   getSlotValue<T>(slot: { getValue: () => T | undefined }) {
@@ -50,7 +51,7 @@ export class SlotAwareBehaviorSubject<T> extends BehaviorSubject<T> {
       const that = this;
       observerOrNext.next = function (...args: [T]) {
         let cb = next;
-        if (!that.callingSynchronusly && that.currentSlotValues) {
+        if (!that.callingSynchronusly) {
           console.log("applying slot values", that.currentSlotValues);
           for (const [slot, value] of that.currentSlotValues) {
             cb = slot.withValue.bind(slot, value, cb, args, this);

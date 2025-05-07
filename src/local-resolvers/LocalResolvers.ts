@@ -95,17 +95,17 @@ export class LocalResolvers<
     }
   }
 
-  public addResolvers(resolvers: LocalResolvers.Resolvers) {
+  public addResolvers(resolvers: TResolvers) {
     this.resolvers = mergeDeep(this.resolvers, resolvers);
   }
 
-  public setResolvers(resolvers: LocalResolvers.Resolvers) {
+  public setResolvers(resolvers: TResolvers) {
     this.resolvers = {};
     this.addResolvers(resolvers);
   }
 
-  public getResolvers() {
-    return this.resolvers || {};
+  public getResolvers(): TResolvers {
+    return this.resolvers as TResolvers;
   }
 
   public async execute<

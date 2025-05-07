@@ -13,7 +13,11 @@ import type {
 } from "graphql";
 import { isSelectionNode, visit } from "graphql";
 
-import type { ApolloClient } from "@apollo/client";
+import type {
+  ApolloClient,
+  DefaultContext,
+  TypedDocumentNode,
+} from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
@@ -111,6 +115,25 @@ export class LocalResolvers {
 
   public getResolvers() {
     return this.resolvers || {};
+  }
+
+  public async execute<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >({
+    document,
+    client,
+    context,
+    remoteResult,
+    variables,
+  }: {
+    document: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    client: ApolloClient;
+    context: DefaultContext;
+    remoteResult?: FetchResult<unknown>;
+    variables?: TVariables;
+  }): Promise<FetchResult<TData>> {
+    return new Promise(() => {});
   }
 
   // Run local client resolvers against the incoming query and remote data.

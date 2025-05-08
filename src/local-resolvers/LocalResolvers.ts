@@ -453,7 +453,7 @@ export class LocalResolvers<
       isClientFieldDescendant ?
         () => rootValue?.[fieldName]
         // We expect a resolver to be defined for all `@client` root fields.
-        // Warn if a resolver is not defined.
+        // Warn when a resolver is not defined.
       : () => {
           if (__DEV__) {
             invariant.warn(

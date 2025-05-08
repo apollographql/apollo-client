@@ -473,13 +473,15 @@ export class LocalResolvers<
     }
 
     if (Array.isArray(result)) {
-      return this.resolveSubSelectedArray(
+      const fieldResult = await this.resolveSubSelectedArray(
         field,
         true,
         result,
         execContext,
         path
       );
+
+      return resultOrMergeError(fieldResult);
     }
 
     if (!(result as any).__typename) {

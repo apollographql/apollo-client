@@ -646,7 +646,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("refetches watched queries if onQueryUpdated not provided", async () => {
-    expect.assertions(7);
+    expect.assertions(10);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 

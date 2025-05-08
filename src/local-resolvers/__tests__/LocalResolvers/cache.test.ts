@@ -337,16 +337,14 @@ test("reads from the cache on a nested scalar field by default if a resolver is 
     link: ApolloLink.empty(),
   });
 
-  client.writeFragment({
-    fragment: gql`
-      fragment LocalState on User {
-        isLoggedIn
-      }
-    `,
-    id: client.cache.identify({ __typename: "User", id: 1 }),
+  client.writeQuery({
+    query: document,
     data: {
-      __typename: "User",
-      isLoggedIn: true,
+      user: {
+        __typename: "User",
+        id: 1,
+        isLoggedIn: true,
+      },
     },
   });
 

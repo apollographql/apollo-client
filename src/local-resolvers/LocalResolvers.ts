@@ -563,16 +563,18 @@ export class LocalResolvers<
         }
       });
 
-      for (const [name, def] of Object.entries(
-        execContext.exportedVariableDefs
-      )) {
-        if (result == null && def.ancestors.has(field) && def.required) {
-          throw new LocalResolversError(
-            `${
-              resolver ? "Resolver" : "Field"
-            } '${resolverName}' returned \`${result}\` which contains exported required variable '${name}'.`,
-            { path }
-          );
+      if (result == null) {
+        for (const [name, def] of Object.entries(
+          execContext.exportedVariableDefs
+        )) {
+          if (def.ancestors.has(field) && def.required) {
+            throw new LocalResolversError(
+              `${
+                resolver ? "Resolver" : "Field"
+              } '${resolverName}' returned \`${result}\` which contains exported required variable '${name}'.`,
+              { path }
+            );
+          }
         }
       }
     }

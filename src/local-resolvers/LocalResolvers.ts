@@ -245,18 +245,18 @@ export class LocalResolvers<
       }
 
       if (selection.kind === Kind.FIELD) {
-        return this.resolveField(
+        const fieldResult = await this.resolveField(
           selection,
           isClientFieldDescendant,
           rootValue,
           execContext
-        ).then((fieldResult) => {
-          if (typeof fieldResult !== "undefined") {
-            resultsToMerge.push({
-              [resultKeyNameFromField(selection)]: fieldResult,
-            } as TData);
-          }
-        });
+        );
+
+        if (typeof fieldResult !== "undefined") {
+          resultsToMerge.push({
+            [resultKeyNameFromField(selection)]: fieldResult,
+          } as TData);
+        }
       }
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
@@ -272,14 +272,14 @@ export class LocalResolvers<
       if (fragment && fragment.typeCondition) {
         const typeCondition = fragment.typeCondition.name.value;
         if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
-          return this.resolveSelectionSet(
+          const fragmentResult = await this.resolveSelectionSet(
             fragment.selectionSet,
             isClientFieldDescendant,
             rootValue,
             execContext
-          ).then((fragmentResult) => {
-            resultsToMerge.push(fragmentResult);
-          });
+          );
+
+          resultsToMerge.push(fragmentResult);
         }
       }
     };

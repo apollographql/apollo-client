@@ -399,13 +399,10 @@ export class LocalResolvers<
         return result;
       }
 
-      const isClientField =
-        field.directives?.some((d) => d.name.value === "client") ?? false;
-
       if (Array.isArray(result)) {
         return this.resolveSubSelectedArray(
           field,
-          isClientFieldDescendant || isClientField,
+          isClientFieldDescendant,
           result,
           execContext
         );
@@ -415,7 +412,7 @@ export class LocalResolvers<
       if (field.selectionSet) {
         return this.resolveSelectionSet(
           field.selectionSet,
-          isClientFieldDescendant || isClientField,
+          isClientFieldDescendant,
           result,
           execContext
         );

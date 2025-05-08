@@ -217,6 +217,7 @@ export class QueryManager {
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
+    this.resolvers = options.resolvers;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?

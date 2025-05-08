@@ -176,7 +176,7 @@ export class LocalResolvers<
     document: DocumentNode,
     rootValue: TData,
     context: any = {},
-    variables: VariableMap = {},
+    variables: OperationVariables = {},
     onlyRunForcedResolvers: boolean = false
   ) {
     // TODO: Replace with cache.fragmentMatches

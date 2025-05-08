@@ -22,7 +22,11 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
-import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
+import {
+  isErrorLike,
+  LocalResolversError,
+  toErrorLike,
+} from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import type { FragmentMap, NoInfer } from "@apollo/client/utilities";
 import {
@@ -55,6 +59,7 @@ interface ExecContext {
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
   phase: "exports" | "resolve";
+  exportedVariableDefs: Record<string, ExportedVariable>;
 }
 
 interface ExportedVariable {
@@ -150,10 +155,8 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const { selectionsToResolve } = this.collectQueryDetail(
-      mainDefinition,
-      fragmentMap
-    );
+    const { selectionsToResolve, exportedVariableDefs } =
+      this.collectQueryDetail(mainDefinition, fragmentMap);
 
     const rootValue = remoteResult ? remoteResult.data : {};
 
@@ -168,6 +171,7 @@ export class LocalResolvers<
       onlyRunForcedResolvers: false,
       errors: [],
       phase: "resolve",
+      exportedVariableDefs,
     };
 
     const localResult = await this.resolveSelectionSet(
@@ -217,7 +221,7 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const { exportsToResolve } = this.collectQueryDetail(
+    const { exportsToResolve, exportedVariableDefs } = this.collectQueryDetail(
       mainDefinition,
       fragmentMap
     );
@@ -233,6 +237,7 @@ export class LocalResolvers<
       onlyRunForcedResolvers: false,
       errors: [],
       phase: "exports",
+      exportedVariableDefs,
     };
 
     await this.resolveSelectionSet(

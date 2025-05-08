@@ -574,7 +574,8 @@ describe("@client @export tests", () => {
 
     const { data } = await client.mutate({ mutation });
 
-    expect(data).toEqual({
+    expect(data).toStrictEqualTyped({
+      topPost: testPostId,
       upvotePost: testPost,
     });
   });

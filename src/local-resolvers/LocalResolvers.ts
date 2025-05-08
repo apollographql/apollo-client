@@ -461,15 +461,7 @@ export class LocalResolvers<
       });
     }
 
-    // Handle all scalar types here.
-    if (!field.selectionSet) {
-      return result;
-    }
-
-    // From here down, the field has a selection set, which means it's trying
-    // to query a GraphQLObjectType.
-    if (result == null) {
-      // Basically any field in a GraphQL response can be null, or missing
+    if (result === null || !field.selectionSet) {
       return result;
     }
 

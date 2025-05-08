@@ -164,7 +164,7 @@ export declare namespace LocalResolvers {
       fragmentMap: FragmentMap;
       path: Path;
     }
-  ) => TResult;
+  ) => TResult | Promise<TResult>;
 
   export type Path = Array<string | number>;
 }

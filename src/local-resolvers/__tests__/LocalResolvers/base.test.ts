@@ -625,8 +625,9 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
-    "Foo.baz"
+    "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver did not include the property in the returned value and there was no resolver defined for the field.",
+    "baz",
+    { __typename: "Foo", bar: true }
   );
 });
 
@@ -665,8 +666,9 @@ test("warns if a parent resolver omits a field and child has @client field", asy
   // another child field.
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
-    "Foo.baz"
+    "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver did not include the property in the returned value and there was no resolver defined for the field.",
+    "baz",
+    { __typename: "Foo", bar: true }
   );
 });
 

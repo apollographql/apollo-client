@@ -1933,7 +1933,7 @@ function validateDidEmitValue<T>() {
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.
-export interface ObservableAndInfo<TData> {
+interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
   observable: Observable<QueryNotification.Value<TData, any>>;

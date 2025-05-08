@@ -245,18 +245,32 @@ export class LocalResolvers<
       }
 
       if (selection.kind === Kind.FIELD) {
-        const fieldResult = await this.resolveField(
-          selection,
-          isClientFieldDescendant,
-          rootValue,
-          execContext
-        );
+        const isClientField =
+          isClientFieldDescendant ||
+          (selection.directives?.some((d) => d.name.value === "client") ??
+            false);
+
+        const fieldResult =
+          isClientField ?
+            await this.resolveField(
+              selection,
+              isClientFieldDescendant,
+              rootValue,
+              execContext
+            )
+          : await this.resolveServerField(
+              selection,
+              rootValue as any,
+              execContext
+            );
 
         if (typeof fieldResult !== "undefined") {
           resultsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
           } as TData);
         }
+
+        return;
       }
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
@@ -287,6 +301,33 @@ export class LocalResolvers<
     await Promise.all(selectionSet.selections.map(execute));
 
     return mergeDeepArray(resultsToMerge);
+  }
+
+  private resolveServerField(
+    field: FieldNode,
+    rootValue: Record<string, any> | null | undefined,
+    execContext: ExecContext
+  ) {
+    const result = rootValue?.[field.name.value];
+
+    if (result === null) {
+      return result;
+    }
+
+    if (!field.selectionSet) {
+      return result;
+    }
+
+    if (Array.isArray(result)) {
+      return this.resolveSubSelectedArray(field, false, result, execContext);
+    }
+
+    return this.resolveSelectionSet(
+      field.selectionSet,
+      false,
+      result,
+      execContext
+    );
   }
 
   private async resolveField(

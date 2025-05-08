@@ -208,7 +208,7 @@ describe("Cache manipulation", () => {
     const resolvers = new LocalResolvers({
       resolvers: {
         Mutation: {
-          start: (_1: any, _2: any, { client }) => {
+          start: (_, __, { client }) => {
             client.cache.writeQuery({ query, data: { field: 1 } });
             return { start: true };
           },
@@ -310,7 +310,7 @@ describe("Cache manipulation", () => {
     const resolvers = new LocalResolvers({
       resolvers: {
         Mutation: {
-          start: (_1: any, variables: { field: string }, { client }) => {
+          start: (_, variables: { field: string }, { client }) => {
             client.cache.writeQuery({
               query,
               data: { field: variables.field },
@@ -566,21 +566,21 @@ describe("Sample apps", () => {
       return of({ data: { lastCount: 1 } });
     });
 
+    const localResolvers = new LocalResolvers();
+
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      resolvers: new LocalResolvers(),
+      resolvers: localResolvers,
     });
 
     const update = (
       query: DocumentNode,
       updater: (data: { count: number }, variables: { amount: number }) => any
-    ) => {
-      return (
-        _result: {},
-        variables: { amount: number },
-        { cache }: { cache: ApolloCache }
-      ): null => {
+    ): LocalResolvers.Resolver<any, any, any> => {
+      return (_result: {}, variables: { amount: number }, { client }): null => {
+        const { cache } = client;
+
         const read = client.readQuery<{ count: number }>({
           query,
           variables,
@@ -588,14 +588,14 @@ describe("Sample apps", () => {
         if (read) {
           const data = updater(read, variables);
           cache.writeQuery({ query, variables, data });
-        } else {
-          throw new Error("readQuery returned a falsy value");
+          return data.count;
         }
-        return null;
+
+        throw new Error("readQuery returned a falsy value");
       };
     };
 
-    const resolvers = {
+    localResolvers.addResolvers({
       Query: {
         count: () => 0,
       },
@@ -609,9 +609,7 @@ describe("Sample apps", () => {
           count: count - amount,
         })),
       },
-    };
-
-    client.addResolvers(resolvers);
+    });
     const stream = new ObservableStream(client.watchQuery({ query }));
 
     await expect(stream).toEmitTypedValue({
@@ -628,7 +626,9 @@ describe("Sample apps", () => {
       partial: false,
     });
 
-    await client.mutate({ mutation: increment, variables: { amount: 2 } });
+    await expect(
+      client.mutate({ mutation: increment, variables: { amount: 2 } })
+    ).resolves.toStrictEqualTyped({ data: { increment: 2 } });
 
     await expect(stream).toEmitTypedValue({
       data: { count: 2, lastCount: 1 },
@@ -663,10 +663,12 @@ describe("Sample apps", () => {
       }
     `;
 
+    const localResolvers = new LocalResolvers();
+
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: new LocalResolvers(),
+      resolvers: localResolvers,
     });
 
     interface Todo {
@@ -678,19 +680,17 @@ describe("Sample apps", () => {
     const update = (
       query: DocumentNode,
       updater: (todos: any, variables: Todo) => any
-    ) => {
-      return (
-        _result: {},
-        variables: Todo,
-        { cache }: { cache: ApolloCache }
-      ): null => {
+    ): LocalResolvers.Resolver<any, any, any> => {
+      return (_result, variables: Todo, { client }): null => {
+        const { cache } = client;
+
         const data = updater(client.readQuery({ query, variables }), variables);
         cache.writeQuery({ query, variables, data });
         return null;
       };
     };
 
-    const resolvers = {
+    localResolvers.addResolvers({
       Query: {
         todos: () => [],
       },
@@ -699,9 +699,8 @@ describe("Sample apps", () => {
           todos: todos.concat([{ message, title, __typename: "Todo" }]),
         })),
       },
-    };
+    });
 
-    client.addResolvers(resolvers);
     const stream = new ObservableStream(client.watchQuery<any>({ query }));
 
     await expect(stream).toEmitTypedValue({
@@ -717,13 +716,15 @@ describe("Sample apps", () => {
       expect(data).toEqual({ todos: [] });
     }
 
-    await client.mutate({
-      mutation,
-      variables: {
-        title: "Apollo Client 2.0",
-        message: "ship it",
-      },
-    });
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          title: "Apollo Client 2.0",
+          message: "ship it",
+        },
+      })
+    ).resolves.toStrictEqualTyped({ data: { addTodo: null } });
 
     {
       const { data } = await stream.takeNext();

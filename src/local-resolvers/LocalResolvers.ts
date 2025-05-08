@@ -549,6 +549,15 @@ export class LocalResolvers<
           return;
         }
 
+        if (execContext.exportedVariableDefs[name].required && result == null) {
+          throw new LocalResolversError(
+            `${
+              resolver ? "Resolver" : "Field"
+            } '${resolverName}' returned \`${result}\` for required variable '${name}'.`,
+            { path }
+          );
+        }
+
         if (result !== undefined) {
           execContext.exportedVariables[name] = result;
         }

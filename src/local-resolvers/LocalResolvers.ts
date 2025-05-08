@@ -60,6 +60,7 @@ interface ExecContext {
   errors: GraphQLFormattedError[];
   phase: "exports" | "resolve";
   exportedVariableDefs: Record<string, ExportedVariable>;
+  rootValue: any;
 }
 
 interface ExportedVariable {
@@ -117,6 +118,7 @@ export declare namespace LocalResolvers {
     client: ApolloClient;
     context: DefaultContext;
     phase: "exports" | "resolve";
+    variables: OperationVariables;
   }
 
   export type RootValueFunction<TRootValue> = (
@@ -229,6 +231,16 @@ export class LocalResolvers<
       errors: [],
       phase: "resolve",
       exportedVariableDefs,
+      rootValue:
+        typeof this.rootValue === "function" ?
+          this.rootValue({
+            document,
+            client,
+            context,
+            phase: "resolve",
+            variables: variables ?? {},
+          })
+        : this.rootValue,
     };
 
     const localResult = await this.resolveSelectionSet(
@@ -295,6 +307,16 @@ export class LocalResolvers<
       errors: [],
       phase: "exports",
       exportedVariableDefs,
+      rootValue:
+        typeof this.rootValue === "function" ?
+          this.rootValue({
+            document,
+            client,
+            context,
+            phase: "resolve",
+            variables,
+          })
+        : this.rootValue,
     };
 
     await this.resolveSelectionSet(
@@ -529,7 +551,9 @@ export class LocalResolvers<
             // In case the resolve function accesses reactive variables,
             // set cacheSlot to the current cache instance.
             cacheSlot.withValue(client.cache, resolver, [
-              dealias(parentSelectionSet, rootValue),
+              isRootField ?
+                execContext.rootValue
+              : dealias(parentSelectionSet, rootValue),
               (argumentsObjectFromField(field, variables) ?? {}) as Record<
                 string,
                 unknown

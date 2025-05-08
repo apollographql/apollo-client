@@ -475,7 +475,7 @@ test("throws error on @client only queries when the @export directive is used on
   );
 });
 
-test("emits error if `@export` variable does not exist in a variable definition when used with server field", async () => {
+test("throws error if `@export` variable does not exist in a variable definition when used with server field", async () => {
   const document = gql`
     query currentAuthorPostCount {
       authorId @client @export(as: "authorId")

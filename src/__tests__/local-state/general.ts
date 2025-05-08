@@ -566,6 +566,14 @@ describe("Cache manipulation", () => {
       },
     });
 
+    await expect(stream).toEmitSimilarValue({
+      expect: (previous) => ({
+        ...previous,
+        networkStatus: NetworkStatus.loading,
+        loading: true,
+      }),
+    });
+
     {
       const result = await stream.takeNext();
 

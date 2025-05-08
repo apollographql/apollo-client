@@ -293,7 +293,6 @@ test("ignores @export directive if it is not a descendant of a client field", as
   });
 });
 
-// TODO: Add a separate test that checks if cache is null and the variable is required
 test("returns variable from nested field when data is written to the cache", async () => {
   const document = gql`
     query postRequiringReview($reviewerId: Int!) {

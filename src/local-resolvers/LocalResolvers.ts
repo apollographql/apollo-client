@@ -295,8 +295,9 @@ export class LocalResolvers<
 
       if (selection.kind === Kind.INLINE_FRAGMENT) {
         fragment = selection;
-      } else {
-        // This is a named fragment.
+      }
+
+      if (selection.kind === Kind.FRAGMENT_SPREAD) {
         fragment = fragmentMap[selection.name.value];
         invariant(fragment, `No fragment named %s`, selection.name.value);
       }

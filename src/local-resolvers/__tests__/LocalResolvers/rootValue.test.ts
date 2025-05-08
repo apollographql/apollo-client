@@ -77,6 +77,7 @@ test("can pass `rootValue` as function that will be used with root client resolv
     client,
     context: {},
     phase: "resolve",
+    variables: {},
   });
 });
 

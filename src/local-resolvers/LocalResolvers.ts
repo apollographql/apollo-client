@@ -513,11 +513,13 @@ export class LocalResolvers<
           return;
         }
 
-        directive.arguments?.forEach((arg) => {
-          if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-            execContext.exportedVariables[arg.value.value] = result;
-          }
-        });
+        const name = getExportedVariableName(directive);
+
+        if (!name) {
+          return;
+        }
+
+        execContext.exportedVariables[name] = result;
       });
     }
 

@@ -975,24 +975,19 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      // Changing variables resets the fetchPolicy to its initial value.
+      // Changing variables resets the fetchPolicy to its initial value - but
+      // it also immediately applies `nextFetchPolicy` again.
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
+    // Changing variables resets the fetchPolicy to its initial value of `network-first`.
+    // That means the loading state will reset to an initial state - and `network-first`
+    // is not allowed to read data from the cache, hence `data` is `undefined`.
     await expect(stream).toEmitTypedValue({
-      data: {
-        echo: {
-          __typename: "Echo",
-          linkCounter: 2,
-          opName: "EchoQuery",
-          opVars: {
-            refetching: true,
-          },
-        },
-      },
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
-      partial: false,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({

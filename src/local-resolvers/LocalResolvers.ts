@@ -145,7 +145,7 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectQueryDetail(
+    const { selectionsToResolve } = this.collectQueryDetail(
       mainDefinition,
       fragmentMap
     );
@@ -211,7 +211,7 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectQueryDetail(
+    const { selectionsToResolve } = this.collectQueryDetail(
       mainDefinition,
       fragmentMap
     );
@@ -621,15 +621,15 @@ export class LocalResolvers<
   private collectQueryDetail(
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
-  ): Set<SelectionNode> {
+  ): TraverseCacheEntry {
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
     const selectionsToResolveCache = this.selectionsToResolveCache;
 
-    function traverse(
+    const traverse = (
       definitionNode: ExecutableDefinitionNode
-    ): Set<SelectionNode> {
+    ): TraverseCacheEntry => {
       if (!selectionsToResolveCache.has(definitionNode)) {
         const matches = new Set<SelectionNode>();
         selectionsToResolveCache.set(definitionNode, matches);
@@ -648,7 +648,9 @@ export class LocalResolvers<
             const fragment = fragmentMap[spread.name.value];
             invariant(fragment, `No fragment named %s`, spread.name.value);
 
-            const fragmentSelections = traverse(fragment);
+            const { selectionsToResolve: fragmentSelections } =
+              traverse(fragment);
+
             if (fragmentSelections.size > 0) {
               // Fragment for this spread contains @client directive (either directly or transitively)
               // Collect selection nodes on paths from the root down to fields with the @client directive
@@ -665,8 +667,10 @@ export class LocalResolvers<
           },
         });
       }
-      return selectionsToResolveCache.get(definitionNode)!;
-    }
+      return {
+        selectionsToResolve: selectionsToResolveCache.get(definitionNode)!,
+      };
+    };
     return traverse(mainDefinition);
   }
 }

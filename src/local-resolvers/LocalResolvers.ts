@@ -472,6 +472,20 @@ export class LocalResolvers<
           )
         : defaultResolver();
     } catch (e) {
+      if (phase === "exports") {
+        for (const [name] of Object.entries(execContext.exportedVariableDefs)) {
+          if (__DEV__) {
+            invariant.error(
+              "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+              name,
+              resolverName,
+              isErrorLike(e) ? e.name : "Error",
+              isErrorLike(e) ? e.message : ""
+            );
+          }
+        }
+      }
+
       this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         cause: e,

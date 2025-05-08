@@ -26,7 +26,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 describe("General functionality", () => {
-  it("should not impact normal non-@client use", async () => {
+  test("should not impact normal non-@client use", async () => {
     const query = gql`
       {
         field
@@ -51,7 +51,7 @@ describe("General functionality", () => {
     });
   });
 
-  it("should not interfere with server introspection queries", async () => {
+  test("should not interfere with server introspection queries", async () => {
     const query = gql`
       ${getIntrospectionQuery()}
     `;
@@ -74,7 +74,7 @@ describe("General functionality", () => {
     await expect(client.query({ query })).rejects.toThrow(/no introspection/);
   });
 
-  it("should support returning default values from resolvers", async () => {
+  test("should support returning default values from resolvers", async () => {
     const query = gql`
       {
         field @client
@@ -98,7 +98,7 @@ describe("General functionality", () => {
     });
   });
 
-  it("should cache data for future lookups", async () => {
+  test("should cache data for future lookups", async () => {
     const query = gql`
       {
         field @client
@@ -132,7 +132,7 @@ describe("General functionality", () => {
     expect(count).toBe(1);
   });
 
-  it("should honour `fetchPolicy` settings", async () => {
+  test("should honour `fetchPolicy` settings", async () => {
     const query = gql`
       {
         field @client
@@ -170,7 +170,7 @@ describe("General functionality", () => {
 });
 
 describe("Cache manipulation", () => {
-  it("should be able to query @client fields and the cache without defining local resolvers", async () => {
+  test("should be able to query @client fields and the cache without defining local resolvers", async () => {
     const query = gql`
       {
         field @client
@@ -191,7 +191,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should be able to write to the cache using a local mutation", async () => {
+  test("should be able to write to the cache using a local mutation", async () => {
     const query = gql`
       {
         field @client
@@ -230,7 +230,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should be able to write to the cache with a local mutation and have things rerender automatically", async () => {
+  test("should be able to write to the cache with a local mutation and have things rerender automatically", async () => {
     const query = gql`
       {
         field @client
@@ -291,7 +291,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should support writing to the cache with a local mutation using variables", async () => {
+  test("should support writing to the cache with a local mutation using variables", async () => {
     const query = gql`
       {
         field @client
@@ -340,7 +340,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should read @client fields from cache on refetch (#4741)", async () => {
+  test("should read @client fields from cache on refetch (#4741)", async () => {
     const query = gql`
       query FetchInitialData {
         serverData {
@@ -426,7 +426,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should rerun @client(always: true) fields on entity update", async () => {
+  test("should rerun @client(always: true) fields on entity update", async () => {
     const query = gql`
       query GetClientData($id: ID) {
         clientEntity(id: $id) @client(always: true) {
@@ -540,7 +540,7 @@ describe("Cache manipulation", () => {
 });
 
 describe("Sample apps", () => {
-  it("should support a simple counter app using local state", async () => {
+  test("should support a simple counter app using local state", async () => {
     const query = gql`
       query GetCount {
         count @client
@@ -646,7 +646,7 @@ describe("Sample apps", () => {
     });
   });
 
-  it("should support a simple todo app using local state", async () => {
+  test("should support a simple todo app using local state", async () => {
     const query = gql`
       query GetTasks {
         todos @client {
@@ -740,7 +740,7 @@ describe("Sample apps", () => {
 });
 
 describe("Combining client and server state/operations", () => {
-  it("should merge remote and local state", async () => {
+  test("should merge remote and local state", async () => {
     const query = gql`
       query list {
         list(name: "my list") {
@@ -846,7 +846,7 @@ describe("Combining client and server state/operations", () => {
     }
   });
 
-  it("query resolves with loading: false if subsequent responses contain the same data", async () => {
+  test("query resolves with loading: false if subsequent responses contain the same data", async () => {
     const request = {
       query: gql`
         query people($id: Int) {
@@ -945,7 +945,7 @@ describe("Combining client and server state/operations", () => {
     });
   });
 
-  it("should correctly propagate an error from a client resolver", async () => {
+  test("should correctly propagate an error from a client resolver", async () => {
     const data = {
       list: {
         __typename: "List",
@@ -999,7 +999,7 @@ describe("Combining client and server state/operations", () => {
     ).rejects.toThrowErrorMatchingSnapshot();
   });
 
-  it("should handle a simple query with both server and client fields", async () => {
+  test("should handle a simple query with both server and client fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query GetCount {
@@ -1044,7 +1044,7 @@ describe("Combining client and server state/operations", () => {
     });
   });
 
-  it("should support nested querying of both server and client fields", async () => {
+  test("should support nested querying of both server and client fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query GetUser {
@@ -1113,7 +1113,7 @@ describe("Combining client and server state/operations", () => {
     });
   });
 
-  it("should combine both server and client mutations", async () => {
+  test("should combine both server and client mutations", async () => {
     const query = gql`
       query SampleQuery {
         count @client
@@ -1234,7 +1234,7 @@ describe("Combining client and server state/operations", () => {
     });
   });
 
-  it("handles server errors when root data property is null", async () => {
+  test("handles server errors when root data property is null", async () => {
     const query = gql`
       query GetUser {
         user {

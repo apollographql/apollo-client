@@ -375,47 +375,46 @@ export class LocalResolvers<
       }
     }
 
-    return resultPromise.then((result = defaultResult) => {
-      // If an @export directive is associated with the current field, store
-      // the `as` export variable name and current result for later use.
-      if (field.directives) {
-        field.directives.forEach((directive) => {
-          if (directive.name.value === "export" && directive.arguments) {
-            directive.arguments.forEach((arg) => {
-              if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-                execContext.exportedVariables[arg.value.value] = result;
-              }
-            });
-          }
-        });
-      }
+    const result = (await resultPromise) ?? defaultResult;
+    // If an @export directive is associated with the current field, store
+    // the `as` export variable name and current result for later use.
+    if (field.directives) {
+      field.directives.forEach((directive) => {
+        if (directive.name.value === "export" && directive.arguments) {
+          directive.arguments.forEach((arg) => {
+            if (arg.name.value === "as" && arg.value.kind === "StringValue") {
+              execContext.exportedVariables[arg.value.value] = result;
+            }
+          });
+        }
+      });
+    }
 
-      // Handle all scalar types here.
-      if (!field.selectionSet) {
-        return result;
-      }
+    // Handle all scalar types here.
+    if (!field.selectionSet) {
+      return result;
+    }
 
-      // From here down, the field has a selection set, which means it's trying
-      // to query a GraphQLObjectType.
-      if (result == null) {
-        // Basically any field in a GraphQL response can be null, or missing
-        return result;
-      }
+    // From here down, the field has a selection set, which means it's trying
+    // to query a GraphQLObjectType.
+    if (result == null) {
+      // Basically any field in a GraphQL response can be null, or missing
+      return result;
+    }
 
-      if (Array.isArray(result)) {
-        return this.resolveSubSelectedArray(field, true, result, execContext);
-      }
+    if (Array.isArray(result)) {
+      return this.resolveSubSelectedArray(field, true, result, execContext);
+    }
 
-      // Returned value is an object, and the query has a sub-selection. Recurse.
-      if (field.selectionSet) {
-        return this.resolveSelectionSet(
-          field.selectionSet,
-          true,
-          result,
-          execContext
-        );
-      }
-    });
+    // Returned value is an object, and the query has a sub-selection. Recurse.
+    if (field.selectionSet) {
+      return this.resolveSelectionSet(
+        field.selectionSet,
+        true,
+        result,
+        execContext
+      );
+    }
   }
 
   private getResolver(

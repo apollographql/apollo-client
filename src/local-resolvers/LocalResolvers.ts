@@ -50,7 +50,6 @@ type ExecContext = {
   fragmentMap: FragmentMap;
   context: DefaultContext;
   variables: OperationVariables;
-  defaultOperationType: string;
   exportedVariables: OperationVariables;
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
@@ -142,14 +141,6 @@ export class LocalResolvers<
       fragmentMap
     );
 
-    const definitionOperation = mainDefinition.operation;
-
-    const defaultOperationType =
-      definitionOperation ?
-        definitionOperation.charAt(0).toUpperCase() +
-        definitionOperation.slice(1)
-      : "Query";
-
     const rootValue = remoteResult ? remoteResult.data : {};
 
     const execContext: ExecContext = {
@@ -158,7 +149,6 @@ export class LocalResolvers<
       fragmentMap,
       context,
       variables,
-      defaultOperationType,
       exportedVariables: {},
       selectionsToResolve,
       onlyRunForcedResolvers: false,
@@ -210,21 +200,12 @@ export class LocalResolvers<
       fragmentMap
     );
 
-    const definitionOperation = mainDefinition.operation;
-
-    const defaultOperationType =
-      definitionOperation ?
-        definitionOperation.charAt(0).toUpperCase() +
-        definitionOperation.slice(1)
-      : "Query";
-
     const execContext: ExecContext = {
       client,
       operationDefinition: mainDefinition,
       fragmentMap,
       context,
       variables,
-      defaultOperationType,
       exportedVariables: {},
       selectionsToResolve,
       onlyRunForcedResolvers: false,
@@ -392,7 +373,7 @@ export class LocalResolvers<
     const fieldName = field.name.value;
     const typename =
       isRootField ?
-        rootValue?.__typename || execContext.defaultOperationType
+        rootValue?.__typename || inferRootTypename(operationDefinition)
       : rootValue?.__typename;
     const resolverName = `${typename}.${fieldName}`;
 
@@ -620,6 +601,10 @@ export class LocalResolvers<
     }
     return collectByDefinition(mainDefinition);
   }
+}
+
+function inferRootTypename({ operation }: OperationDefinitionNode) {
+  return operation.charAt(0).toUpperCase() + operation.slice(1);
 }
 
 // Note: this is a shallow dealias function. We might consider a future

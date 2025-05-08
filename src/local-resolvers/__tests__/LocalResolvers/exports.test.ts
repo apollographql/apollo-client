@@ -1708,7 +1708,7 @@ test("does not warn when gathering variable exports for optional variables", asy
   expect(console.warn).not.toHaveBeenCalled();
 });
 
-test("exported variables overwrite variables passed to link chain", async () => {
+test("exported variables overwrite variables passed to LocalResolvers", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")

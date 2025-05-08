@@ -473,15 +473,19 @@ export class LocalResolvers<
         : defaultResolver();
     } catch (e) {
       if (phase === "exports") {
-        for (const [name] of Object.entries(execContext.exportedVariableDefs)) {
-          if (__DEV__) {
-            invariant.error(
-              "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-              name,
-              resolverName,
-              isErrorLike(e) ? e.name : "Error",
-              isErrorLike(e) ? e.message : ""
-            );
+        for (const [name, def] of Object.entries(
+          execContext.exportedVariableDefs
+        )) {
+          if (def.ancestors.has(field)) {
+            if (__DEV__) {
+              invariant.error(
+                "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
+                name,
+                resolverName,
+                isErrorLike(e) ? e.name : "Error",
+                isErrorLike(e) ? e.message : ""
+              );
+            }
           }
         }
       }
@@ -722,6 +726,7 @@ export class LocalResolvers<
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);
+                cache.exportedVariableDefs[variableName].ancestors.add(node);
               }
             });
           }

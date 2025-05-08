@@ -191,7 +191,7 @@ test("warns when cache does not implement fragmentMatches", async () => {
   );
 });
 
-test("emits error when fragment spread type condition does not match typename", async () => {
+test("throws error when fragment spread type condition does not match typename", async () => {
   const document = gql`
     fragment FooDetails on Bar {
       bar

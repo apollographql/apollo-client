@@ -312,9 +312,12 @@ export class LocalResolvers<
         invariant(fragment, `No fragment named %s`, selection.name.value);
       }
 
+      // TODO: Update to use cache.fragmentMatches
+      const fragmentMatcher = (_: any, __: any, ___: any) => true;
+
       if (fragment && fragment.typeCondition) {
         const typeCondition = fragment.typeCondition.name.value;
-        if (execContext.fragmentMatcher(rootValue, typeCondition, context)) {
+        if (fragmentMatcher(rootValue, typeCondition, context)) {
           const fragmentResult = await this.resolveSelectionSet(
             fragment.selectionSet,
             isClientFieldDescendant,

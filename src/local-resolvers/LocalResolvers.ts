@@ -40,6 +40,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 type ExecContext = {
   client: ApolloClient;
+  operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
   context: DefaultContext;
   variables: OperationVariables;
@@ -148,6 +149,7 @@ export class LocalResolvers<
       remoteResult ? remoteResult.data : {},
       {
         client,
+        operationDefinition: mainDefinition,
         fragmentMap,
         context,
         variables,
@@ -194,6 +196,7 @@ export class LocalResolvers<
 
     const execContext: ExecContext = {
       client,
+      operationDefinition: mainDefinition,
       fragmentMap,
       context,
       variables,

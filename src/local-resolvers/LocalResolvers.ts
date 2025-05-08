@@ -522,19 +522,6 @@ export class LocalResolvers<
       return data;
     };
 
-    if (result === undefined) {
-      if (__DEV__) {
-        invariant.warn(
-          resolver ?
-            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
-          : "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
-          resolverName
-        );
-      }
-
-      result = null;
-    }
-
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.
     if (phase === "exports") {
@@ -575,6 +562,19 @@ export class LocalResolvers<
           );
         }
       }
+    }
+
+    if (result === undefined) {
+      if (__DEV__) {
+        invariant.warn(
+          resolver ?
+            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."
+          : "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+          resolverName
+        );
+      }
+
+      result = null;
     }
 
     if (result === null || !field.selectionSet) {

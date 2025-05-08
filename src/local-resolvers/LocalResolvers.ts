@@ -622,6 +622,7 @@ export class LocalResolvers<
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
+    const fields: Array<{ node: FieldNode }> = [];
 
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
@@ -635,6 +636,14 @@ export class LocalResolvers<
       this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
+        Field: {
+          enter(field) {
+            fields.push({ node: field });
+          },
+          leave() {
+            fields.pop();
+          },
+        },
         Directive(node: DirectiveNode, _, __, ___, ancestors) {
           if (node.name.value === "export") {
             ancestors.forEach((node) => {

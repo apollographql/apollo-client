@@ -497,13 +497,15 @@ export class LocalResolvers<
       return null;
     }
 
-    return this.resolveSelectionSet(
+    const fieldResult = await this.resolveSelectionSet(
       field.selectionSet,
       true,
       result,
       execContext,
       path
     );
+
+    return resultOrMergeError(fieldResult);
   }
 
   private addError(

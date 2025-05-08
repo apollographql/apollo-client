@@ -624,6 +624,10 @@ export class LocalResolvers<
     ): node is ASTNode => !Array.isArray(node);
     const fields: Array<{ node: FieldNode }> = [];
 
+    function getCurrentPath() {
+      return fields.map((field) => field.node.name.value);
+    }
+
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
         return this.traverseCache.get(definitionNode)!;

@@ -16,6 +16,7 @@ import { isSelectionNode, Kind, visit } from "graphql";
 import type {
   ApolloCache,
   ApolloClient,
+  Cache,
   DefaultContext,
   ErrorLike,
   OperationVariables,
@@ -61,6 +62,7 @@ interface ExecContext {
   phase: "exports" | "resolve";
   exportedVariableDefs: Record<string, ExportedVariable>;
   rootValue: any;
+  diff: Cache.DiffResult<any>;
 }
 
 interface ExportedVariable {
@@ -243,6 +245,13 @@ export class LocalResolvers<
 
     const rootValue = remoteResult ? remoteResult.data : {};
 
+    const diff = client.cache.diff<Record<string, any>>({
+      query: buildQueryFromSelectionSet(document),
+      variables,
+      returnPartialData: true,
+      optimistic: false,
+    });
+
     const execContext: ExecContext = {
       client,
       operationDefinition: mainDefinition,
@@ -255,6 +264,7 @@ export class LocalResolvers<
       errors: [],
       phase: "resolve",
       exportedVariableDefs,
+      diff,
       rootValue:
         typeof this.rootValue === "function" ?
           this.rootValue({
@@ -319,6 +329,13 @@ export class LocalResolvers<
       fragmentMap
     );
 
+    const diff = client.cache.diff<Record<string, any>>({
+      query: buildQueryFromSelectionSet(document),
+      variables,
+      returnPartialData: true,
+      optimistic: false,
+    });
+
     const execContext: ExecContext = {
       client,
       operationDefinition: mainDefinition,
@@ -331,6 +348,7 @@ export class LocalResolvers<
       errors: [],
       phase: "exports",
       exportedVariableDefs,
+      diff,
       rootValue:
         typeof this.rootValue === "function" ?
           this.rootValue({
@@ -346,12 +364,7 @@ export class LocalResolvers<
     await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
-      client.cache.diff<Record<string, any>>({
-        query: buildQueryFromSelectionSet(document),
-        variables,
-        returnPartialData: true,
-        optimistic: false,
-      }).result,
+      diff.result,
       execContext,
       []
     );

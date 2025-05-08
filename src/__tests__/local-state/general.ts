@@ -20,6 +20,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolvers } from "@apollo/client/local-resolvers";
 import {
   ObservableStream,
   spyOnConsole,
@@ -37,11 +38,13 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Query: {
-          count: () => 0,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            count: () => 0,
+          },
         },
-      },
+      }),
     });
 
     return client.query({ query }).then(({ data }) => {
@@ -60,11 +63,13 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Query: {
-          count: () => 0,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            count: () => 0,
+          },
         },
-      },
+      }),
     });
 
     return client
@@ -87,11 +92,13 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          field: () => 1,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            field: () => 1,
+          },
         },
-      },
+      }),
     });
 
     return client.query({ query }).then(({ data }) => {
@@ -110,14 +117,16 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          field: () => {
-            count += 1;
-            return 1;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            field: () => {
+              count += 1;
+              return 1;
+            },
           },
         },
-      },
+      }),
     });
 
     {
@@ -146,14 +155,16 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          field: () => {
-            count += 1;
-            return 1;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            field: () => {
+              count += 1;
+              return 1;
+            },
           },
         },
-      },
+      }),
     });
 
     return client
@@ -174,30 +185,26 @@ describe("General functionality", () => {
 });
 
 describe("Cache manipulation", () => {
-  it(
-    "should be able to query @client fields and the cache without defining " +
-      "local resolvers",
-    () => {
-      const query = gql`
-        {
-          field @client
-        }
-      `;
+  it("should be able to query @client fields and the cache without defining local resolvers", () => {
+    const query = gql`
+      {
+        field @client
+      }
+    `;
 
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.empty(),
-        resolvers: {},
-      });
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+      resolvers: new LocalResolvers(),
+    });
 
-      cache.writeQuery({ query, data: { field: "yo" } });
+    cache.writeQuery({ query, data: { field: "yo" } });
 
-      client
-        .query({ query })
-        .then(({ data }) => expect(data).toMatchObject({ field: "yo" }));
-    }
-  );
+    client
+      .query({ query })
+      .then(({ data }) => expect(data).toMatchObject({ field: "yo" }));
+  });
 
   it("should be able to write to the cache using a local mutation", () => {
     const query = gql`
@@ -212,14 +219,16 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = {
-      Mutation: {
-        start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
-          cache.writeQuery({ query, data: { field: 1 } });
-          return { start: true };
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Mutation: {
+          start: (_1: any, _2: any, { client }) => {
+            client.cache.writeQuery({ query, data: { field: 1 } });
+            return { start: true };
+          },
         },
       },
-    };
+    });
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -248,17 +257,19 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        field: () => 0,
-      },
-      Mutation: {
-        start: (_1: any, _2: any, { cache }: { cache: InMemoryCache }) => {
-          cache.writeQuery({ query, data: { field: 1 } });
-          return { start: true };
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          field: () => 0,
+        },
+        Mutation: {
+          start: (_1: any, _2: any, { client }) => {
+            client.cache.writeQuery({ query, data: { field: 1 } });
+            return { start: true };
+          },
         },
       },
-    };
+    });
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -305,21 +316,22 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = {
-      Mutation: {
-        start: (
-          _1: any,
-          variables: { field: string },
-          { cache }: { cache: ApolloCache }
-        ) => {
-          cache.writeQuery({ query, data: { field: variables.field } });
-          return {
-            __typename: "Field",
-            field: variables.field,
-          };
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Mutation: {
+          start: (_1: any, variables: { field: string }, { client }) => {
+            client.cache.writeQuery({
+              query,
+              data: { field: variables.field },
+            });
+            return {
+              __typename: "Field",
+              field: variables.field,
+            };
+          },
         },
       },
-    };
+    });
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -367,18 +379,20 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink(() => of({ data: { serverData } })),
-      resolvers: {
-        Query: {
-          selectedItemId() {
-            return selectedItemId;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            selectedItemId() {
+              return selectedItemId;
+            },
+          },
+          Mutation: {
+            select(_, { itemId }) {
+              selectedItemId = itemId;
+            },
           },
         },
-        Mutation: {
-          select(_, { itemId }) {
-            selectedItemId = itemId;
-          },
-        },
-      },
+      }),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -450,30 +464,36 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink(() => of({ data: {} })),
-      resolvers: {
-        ClientData: {
-          titleLength(data) {
-            return data.title.length;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          ClientData: {
+            titleLength(data) {
+              return data.title.length;
+            },
+          },
+          Query: {
+            clientEntity(_root, { id }, { client }) {
+              const { cache } = client;
+
+              return cache.readFragment({
+                id: cache.identify({ id, __typename: "ClientData" }),
+                fragment,
+              });
+            },
+          },
+          Mutation: {
+            addOrUpdate(_root, { id, title }, { client }) {
+              const { cache } = client;
+
+              return cache.writeFragment({
+                id: cache.identify({ id, __typename: "ClientData" }),
+                fragment,
+                data: { id, title, __typename: "ClientData" },
+              });
+            },
           },
         },
-        Query: {
-          clientEntity(_root, { id }, { cache }) {
-            return cache.readFragment({
-              id: cache.identify({ id, __typename: "ClientData" }),
-              fragment,
-            });
-          },
-        },
-        Mutation: {
-          addOrUpdate(_root, { id, title }, { cache }) {
-            return cache.writeFragment({
-              id: cache.identify({ id, __typename: "ClientData" }),
-              fragment,
-              data: { id, title, __typename: "ClientData" },
-            });
-          },
-        },
-      },
+      }),
     });
 
     const entityId = 1;
@@ -560,7 +580,7 @@ describe("Sample apps", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      resolvers: {},
+      resolvers: new LocalResolvers(),
     });
 
     const update = (
@@ -657,7 +677,7 @@ describe("Sample apps", () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: {},
+      resolvers: new LocalResolvers(),
     });
 
     interface Todo {
@@ -760,38 +780,42 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Mutation: {
-          toggleItem: async (_, { id }, { cache }) => {
-            id = `ListItem:${id}`;
-            const fragment = gql`
-              fragment item on ListItem {
-                __typename
-                isSelected
-              }
-            `;
-            const previous = cache.readFragment({ fragment, id });
-            const data = {
-              ...previous,
-              isSelected: !previous.isSelected,
-            };
-            await cache.writeFragment({
-              id,
-              fragment,
-              data,
-            });
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Mutation: {
+            toggleItem: async (_, { id }, { client }) => {
+              const { cache } = client;
 
-            return data;
+              id = `ListItem:${id}`;
+              const fragment = gql`
+                fragment item on ListItem {
+                  __typename
+                  isSelected
+                }
+              `;
+              const previous = cache.readFragment<any>({ fragment, id });
+              const data = {
+                ...previous,
+                isSelected: !previous.isSelected,
+              };
+              cache.writeFragment({
+                id,
+                fragment,
+                data,
+              });
+
+              return data;
+            },
+          },
+          ListItem: {
+            isSelected(source) {
+              expect(source.name).toBeDefined();
+              // List items default to an unselected state
+              return false;
+            },
           },
         },
-        ListItem: {
-          isSelected(source) {
-            expect(source.name).toBeDefined();
-            // List items default to an unselected state
-            return false;
-          },
-        },
-      },
+      }),
     });
 
     const observer = client.watchQuery({ query });
@@ -948,19 +972,21 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Query: {
-          hasBeenIllegallyTouched: (_, _v, _c) => {
-            throw new Error("Illegal Query Operation Occurred");
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            hasBeenIllegallyTouched: (_, _v, _c) => {
+              throw new Error("Illegal Query Operation Occurred");
+            },
           },
-        },
 
-        Mutation: {
-          touchIllegally: (_, _v, _c) => {
-            throw new Error("Illegal Mutation Operation Occurred");
+          Mutation: {
+            touchIllegally: (_, _v, _c) => {
+              throw new Error("Illegal Mutation Operation Occurred");
+            },
           },
         },
-      },
+      }),
     });
 
     const variables = { id: 1 };
@@ -1002,7 +1028,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      resolvers: new LocalResolvers(),
     });
 
     cache.writeQuery({
@@ -1061,7 +1087,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      resolvers: new LocalResolvers(),
     });
 
     cache.writeQuery({
@@ -1151,19 +1177,23 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {
-        Mutation: {
-          incrementCount: (_, __, { cache }) => {
-            const { count } = cache.readQuery({ query: counterQuery });
-            const data = { count: count + 1 };
-            cache.writeQuery({
-              query: counterQuery,
-              data,
-            });
-            return null;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Mutation: {
+            incrementCount: (_, __, { client }) => {
+              const { cache } = client;
+
+              const { count } = cache.readQuery<any>({ query: counterQuery });
+              const data = { count: count + 1 };
+              cache.writeQuery({
+                query: counterQuery,
+                data,
+              });
+              return null;
+            },
           },
         },
-      },
+      }),
     });
 
     cache.writeQuery({
@@ -1244,7 +1274,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      resolvers: new LocalResolvers(),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));

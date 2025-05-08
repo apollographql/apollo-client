@@ -544,9 +544,7 @@ test("reads from the cache with a read function on a nested object field by defa
   });
 });
 
-// TODO: I think this might be fixable
-test("warns on missing resolver if a nested client field is resolved on a non-normalized object", async () => {
-  using _ = spyOnConsole("warn");
+test("reads from the cache on a nested client field on a non-normalized object", async () => {
   const document = gql`
     query {
       user {
@@ -575,6 +573,21 @@ test("warns on missing resolver if a nested client field is resolved on a non-no
     link: ApolloLink.empty(),
   });
 
+  client.writeQuery({
+    query: gql`
+      query {
+        user {
+          __typename
+        }
+      }
+    `,
+    data: {
+      user: {
+        __typename: "User",
+      },
+    },
+  });
+
   const localResolvers = new LocalResolvers();
 
   await expect(
@@ -590,16 +603,10 @@ test("warns on missing resolver if a nested client field is resolved on a non-no
     data: {
       user: {
         __typename: "User",
-        bestFriend: null,
+        bestFriend: { __typename: "User", id: 2, name: "Best Friend" },
       },
     },
   });
-
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-    "User.bestFriend"
-  );
 });
 
 test("does not confuse field missing resolver with root field of same name on a normalized record", async () => {

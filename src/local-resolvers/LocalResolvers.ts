@@ -256,8 +256,7 @@ export class LocalResolvers<
     execContext: ExecContext,
     path: LocalResolvers.Path
   ) {
-    const { client, fragmentMap, context, variables, operationDefinition } =
-      execContext;
+    const { client, fragmentMap, variables, operationDefinition } = execContext;
     const { cache } = client;
     const resultsToMerge: Array<Record<string, any>> = [];
 

@@ -43,7 +43,7 @@ describe("@client @export tests", () => {
     );
   });
 
-  test("should not break @client only queries when the @export directive is used on nested fields", async () => {
+  test("throws when nested @export does not contain variable definition", async () => {
     const query = gql`
       {
         car @client {
@@ -75,17 +75,12 @@ describe("@client @export tests", () => {
       },
     });
 
-    const { data } = await client.query({ query });
-
-    expect(data).toEqual({
-      car: {
-        __typename: "Car",
-        engine: {
-          __typename: "Engine",
-          torque: 7200,
-        },
-      },
-    });
+    await expect(client.query({ query })).rejects.toEqual(
+      new LocalResolversError(
+        "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
+        { path: ["car", "engine", "torque"] }
+      )
+    );
   });
 
   test("should store the @client field value in the specified @export variable, and make it available to a subsequent resolver", async () => {

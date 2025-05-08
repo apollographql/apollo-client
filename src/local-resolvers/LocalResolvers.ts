@@ -28,7 +28,7 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
-import type { FragmentMap, NoInfer } from "@apollo/client/utilities";
+import type { FragmentMap, IsAny, NoInfer } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   buildQueryFromSelectionSet,
@@ -91,14 +91,22 @@ type InferRootValueFromResolvers<TResolvers> =
     InferRootValueFromFieldResolver<SubscriptionResolvers>
   : unknown;
 
+type MaybeRequireRootValue<TRootValue> =
+  true extends IsAny<TRootValue> ? {}
+  : undefined extends TRootValue ? {}
+  : unknown extends TRootValue ? {}
+  : {
+      rootValue: TRootValue | LocalResolvers.RootValueFunction<TRootValue>;
+    };
+
 export declare namespace LocalResolvers {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
-  export interface Options<
+  export type Options<
     TResolvers extends Resolvers = Resolvers,
     TRootValue = unknown,
-  > {
+  > = {
     /**
      * A value or function called with the request context creating the root
      * value passed to any root field resolvers. Providing a function is useful
@@ -127,7 +135,7 @@ export declare namespace LocalResolvers {
      * The map of resolvers used to provide values for `@local` fields.
      */
     resolvers?: TResolvers;
-  }
+  } & MaybeRequireRootValue<TRootValue>;
 
   export interface RootValueFunctionContext {
     document: DocumentNode;

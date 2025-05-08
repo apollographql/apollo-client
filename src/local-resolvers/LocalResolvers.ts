@@ -39,7 +39,10 @@ import {
   shouldInclude,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 type ExecContext = {
   client: ApolloClient;
@@ -478,6 +481,21 @@ export class LocalResolvers<
         execContext,
         path
       );
+    }
+
+    if (!(result as any).__typename) {
+      this.addError(
+        newInvariantError(
+          "Could not resolve __typename on object %o returned from resolver '%s'. '__typename' needs to be returned to properly resolve child fields.",
+          result,
+          resolverName
+        ),
+        path,
+        execContext,
+        { resolver: resolverName }
+      );
+
+      return null;
     }
 
     return this.resolveSelectionSet(

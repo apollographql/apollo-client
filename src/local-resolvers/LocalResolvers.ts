@@ -16,6 +16,7 @@ import type {
 import { isSelectionNode, Kind, visit } from "graphql";
 
 import type {
+  ApolloCache,
   ApolloClient,
   DefaultContext,
   ErrorLike,
@@ -130,9 +131,7 @@ export class LocalResolvers<
         "Expected document to contain `@client` fields."
       );
 
-      if (!client.cache.fragmentMatches) {
-        warnOnImproperCacheImplementation();
-      }
+      validateCacheImplementation(client.cache);
     }
 
     const mainDefinition = getMainDefinition(
@@ -195,9 +194,7 @@ export class LocalResolvers<
     variables: Partial<NoInfer<TVariables>>;
   }): Promise<TVariables> {
     if (__DEV__) {
-      if (!client.cache.fragmentMatches) {
-        warnOnImproperCacheImplementation();
-      }
+      validateCacheImplementation(client.cache);
     }
     const mainDefinition = getMainDefinition(
       document
@@ -719,12 +716,9 @@ function addApolloExtension(
   };
 }
 
-let issuedWarning = false;
-function warnOnImproperCacheImplementation() {
-  if (!issuedWarning) {
-    issuedWarning = true;
-    invariant.warn(
-      "The configured cache does not support fragment matching which may lead to incorrect results when executing local resolvers. Please use a cache matches fragments to silence this warning."
-    );
-  }
+function validateCacheImplementation(cache: ApolloCache) {
+  invariant(
+    cache.fragmentMatches,
+    "The configured cache does not support fragment matching which will lead to incorrect results when executing local resolvers. Please use a cache that implements `fragmetMatches`."
+  );
 }

@@ -301,11 +301,19 @@ export class QueryManager {
 
     variables = this.getVariables(mutation, variables);
     if (hasClientExports) {
-      variables = (await this.localState.addExportedVariables(
-        mutation,
-        variables,
-        context
-      )) as TVariables;
+      if (this.resolvers) {
+        variables = await this.resolvers.getExportedVariables<TVariables>({
+          client: this.client,
+          document: mutation,
+          variables,
+          context: this.getContext(context),
+        });
+      } else if (__DEV__) {
+        invariant.warn(
+          "Mutation '%s' contains variables provided by `@export` but local resolvers have not been configured.",
+          getOperationName(mutation) ?? "(anonymous)"
+        );
+      }
     }
 
     const mutationStoreValue =

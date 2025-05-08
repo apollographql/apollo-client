@@ -553,7 +553,7 @@ export class LocalResolvers<
     parentSelectionSet: SelectionSetNode,
     path: LocalResolvers.Path
   ): Promise<any> {
-    const { client, variables, operationDefinition, phase } = execContext;
+    const { client, diff, variables, operationDefinition, phase } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
     const typename =
@@ -568,6 +568,12 @@ export class LocalResolvers<
         // We expect a resolver to be defined for all `@client` root fields.
         // Warn when a resolver is not defined.
       : () => {
+          const fieldFromCache = getResultAtPath(diff.result, path);
+
+          if (fieldFromCache !== undefined) {
+            return fieldFromCache;
+          }
+
           if (__DEV__) {
             invariant.warn(
               "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
@@ -1012,4 +1018,25 @@ function validateCacheImplementation(cache: ApolloCache) {
     cache.fragmentMatches,
     "The configured cache does not support fragment matching which will lead to incorrect results when executing local resolvers. Please use a cache that implements `fragmetMatches`."
   );
+}
+
+function getResultAtPath(
+  data: Record<string, any> | null,
+  path: LocalResolvers.Path
+) {
+  if (data == null) {
+    return data;
+  }
+
+  let result: any;
+
+  for (const segment of path) {
+    result = data[segment];
+
+    if (result == null) {
+      break;
+    }
+  }
+
+  return result;
 }

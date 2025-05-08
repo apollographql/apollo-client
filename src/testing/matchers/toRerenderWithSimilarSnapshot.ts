@@ -11,7 +11,7 @@ import { getSerializableProperties } from "./utils/getSerializableProperties.js"
 
 export interface ToRerenderWithSimilarSnapshotOptions<T>
   extends Partial<NextRenderOptions> {
-  expect?(previous: T): T;
+  expected?(previous: T): T;
 }
 
 export type ToEmitSimilarValueOptions<T> =
@@ -26,7 +26,7 @@ export const toEmitSimilarValue = async function toEmitSimilarValue(
   this: MatcherContext,
   actual,
   {
-    expect = (previous) => previous,
+    expected: expect = (previous) => previous,
     ...options
   }: ToEmitSimilarValueOptions<any> = {}
 ) {

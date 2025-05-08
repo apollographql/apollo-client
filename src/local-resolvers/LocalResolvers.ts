@@ -41,11 +41,12 @@ import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 type ExecContext = {
+  client: ApolloClient;
   fragmentMap: FragmentMap;
-  context: any;
+  context: DefaultContext;
   variables: OperationVariables;
   defaultOperationType: string;
-  exportedVariables: Record<string, any>;
+  exportedVariables: OperationVariables;
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
 };
@@ -107,7 +108,7 @@ export class LocalResolvers<
     client,
     context,
     remoteResult,
-    variables,
+    variables = {} as TVariables,
   }: {
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
@@ -122,11 +123,37 @@ export class LocalResolvers<
       );
     }
 
+    const mainDefinition = getMainDefinition(
+      document
+    ) as OperationDefinitionNode;
+    const fragments = getFragmentDefinitions(document);
+    const fragmentMap = createFragmentMap(fragments);
+    const selectionsToResolve = this.collectSelectionsToResolve(
+      mainDefinition,
+      fragmentMap
+    );
+
+    const definitionOperation = mainDefinition.operation;
+
+    const defaultOperationType =
+      definitionOperation ?
+        definitionOperation.charAt(0).toUpperCase() +
+        definitionOperation.slice(1)
+      : "Query";
+
     return this.resolveDocument<TData>(
       document,
       remoteResult ? remoteResult.data : {},
-      { ...context, client },
-      variables
+      {
+        client,
+        fragmentMap,
+        context,
+        variables,
+        defaultOperationType,
+        exportedVariables: {},
+        selectionsToResolve,
+        onlyRunForcedResolvers: false,
+      }
     ).then((localResult) => ({
       ...remoteResult,
       data: localResult.result,
@@ -146,32 +173,6 @@ export class LocalResolvers<
     context: DefaultContext;
     variables: Partial<NoInfer<TVariables>>;
   }): Promise<TVariables> {
-    await this.resolveDocument(
-      document,
-      client.cache.diff({
-        query: buildQueryFromSelectionSet(document),
-        variables,
-        returnPartialData: true,
-        optimistic: false,
-      }).result,
-      { ...context, client },
-      variables
-    );
-
-    return {
-      ...variables,
-    } as TVariables;
-  }
-
-  private async resolveDocument<TData>(
-    document: DocumentNode,
-    rootValue: TData,
-    context: any = {},
-    variables: OperationVariables = {},
-    onlyRunForcedResolvers: boolean = false
-  ) {
-    // TODO: Replace with cache.fragmentMatches
-    const fragmentMatcher = () => true;
     const mainDefinition = getMainDefinition(
       document
     ) as OperationDefinitionNode;
@@ -190,21 +191,40 @@ export class LocalResolvers<
         definitionOperation.slice(1)
       : "Query";
 
-    const { cache, client } = this;
-    const execContext: ExecContext = {
-      fragmentMap,
-      context: {
-        ...context,
-        cache,
+    await this.resolveDocument(
+      document,
+      client.cache.diff({
+        query: buildQueryFromSelectionSet(document),
+        variables,
+        returnPartialData: true,
+        optimistic: false,
+      }).result,
+      {
         client,
-      },
-      variables,
-      fragmentMatcher,
-      defaultOperationType,
-      exportedVariables: {},
-      selectionsToResolve,
-      onlyRunForcedResolvers,
-    };
+        fragmentMap,
+        context,
+        variables,
+        defaultOperationType,
+        exportedVariables: {},
+        selectionsToResolve,
+        onlyRunForcedResolvers: false,
+      }
+    );
+
+    return {
+      ...variables,
+    } as TVariables;
+  }
+
+  private async resolveDocument<TData>(
+    document: DocumentNode,
+    rootValue: TData,
+    execContext: ExecContext
+  ) {
+    const mainDefinition = getMainDefinition(
+      document
+    ) as OperationDefinitionNode;
+
     const isClientFieldDescendant = false;
 
     return this.resolveSelectionSet(

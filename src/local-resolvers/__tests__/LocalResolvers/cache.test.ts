@@ -389,6 +389,22 @@ test("reads from the cache with a read function on a nested scalar field if a re
     link: ApolloLink.empty(),
   });
 
+  client.writeQuery({
+    query: gql`
+      query {
+        user {
+          id
+        }
+      }
+    `,
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+      },
+    },
+  });
+
   const localResolvers = new LocalResolvers();
 
   await expect(

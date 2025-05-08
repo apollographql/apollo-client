@@ -649,7 +649,19 @@ export class LocalResolvers<
           },
         },
         Directive(node: DirectiveNode, _, __, ___, ancestors) {
+          const fieldInfo = fields.at(-1);
+
           if (node.name.value === "export") {
+            const fieldName = fieldInfo?.node.name.value;
+            const variableName = getExportedVariableName(node);
+
+            if (!variableName) {
+              throw new LocalResolversError(
+                `Cannot determine the variable name from the \`@export\` directive used on field '${fieldName}'. Perhaps you forgot the \`as\` argument?`,
+                { path: getCurrentPath() }
+              );
+            }
+
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);
@@ -747,6 +759,16 @@ function addApolloExtension(
       apollo: { source: "LocalResolvers", ...meta },
     },
   };
+}
+
+function getExportedVariableName(directive: DirectiveNode) {
+  if (directive.arguments) {
+    for (const arg of directive.arguments) {
+      if (arg.name.value === "as" && arg.value.kind === Kind.STRING) {
+        return arg.value.value;
+      }
+    }
+  }
 }
 
 function validateCacheImplementation(cache: ApolloCache) {

@@ -23,7 +23,7 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
-import { toErrorLike } from "@apollo/client/errors";
+import { LocalResolversError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import type { FragmentMap, NoInfer } from "@apollo/client/utilities";
 import {
@@ -328,18 +328,23 @@ export class LocalResolvers<
           fragmentMatches = cache.fragmentMatches(fragment, typename ?? "");
         }
 
-        if (fragmentMatches) {
-          const fragmentResult = await this.resolveSelectionSet(
-            fragment.selectionSet,
-            isClientFieldDescendant,
-            rootValue,
-            execContext,
-            path
+        if (!fragmentMatches) {
+          throw new LocalResolversError(
+            `Fragment '${fragment.name.value}' cannot be used with type '${typename}' as objects of type '${typename}' can never be of type '${fragment.typeCondition.name.value}'.`,
+            { path }
           );
+        }
 
-          if (fragmentResult) {
-            resultsToMerge.push(fragmentResult);
-          }
+        const fragmentResult = await this.resolveSelectionSet(
+          fragment.selectionSet,
+          isClientFieldDescendant,
+          rootValue,
+          execContext,
+          path
+        );
+
+        if (fragmentResult) {
+          resultsToMerge.push(fragmentResult);
         }
 
         return;

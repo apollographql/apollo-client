@@ -194,6 +194,10 @@ export class LocalResolvers<
     variables: Partial<NoInfer<TVariables>>;
   }): Promise<TVariables> {
     if (__DEV__) {
+      invariant(
+        hasDirectives(["client"], document),
+        "Expected document to contain `@client` fields."
+      );
       validateCacheImplementation(client.cache);
     }
     const mainDefinition = getMainDefinition(

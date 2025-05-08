@@ -48,7 +48,7 @@ const setupTestWithResolvers = ({
 };
 
 describe("Basic resolver capabilities", () => {
-  it("should run resolvers for @client queries", async () => {
+  test("should run resolvers for @client queries", async () => {
     const query = gql`
       query Test {
         foo @client {
@@ -91,7 +91,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should handle queries with a mix of @client and server fields", async () => {
+  test("should handle queries with a mix of @client and server fields", async () => {
     const query = gql`
       query Mixed {
         foo @client {
@@ -146,7 +146,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should handle a mix of @client fields with fragments and server fields", async () => {
+  test("should handle a mix of @client fields with fragments and server fields", async () => {
     const query = gql`
       fragment client on ClientData {
         bar
@@ -206,7 +206,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should handle @client fields inside fragments", async () => {
+  test("should handle @client fields inside fragments", async () => {
     const query = gql`
       fragment Foo on Foo {
         bar
@@ -277,7 +277,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should have access to query variables when running @client resolvers", async () => {
+  test("should have access to query variables when running @client resolvers", async () => {
     const query = gql`
       query WithVariables($id: ID!) {
         foo @client {
@@ -325,7 +325,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should pass context to @client resolvers", async () => {
+  test("should pass context to @client resolvers", async () => {
     const query = gql`
       query WithContext {
         foo @client {
@@ -373,7 +373,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should combine local @client resolver results with server results, for the same field", async () => {
+  test("should combine local @client resolver results with server results, for the same field", async () => {
     const query = gql`
       query author {
         author {
@@ -450,7 +450,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("should handle resolvers that work with booleans properly", async () => {
+  test("should handle resolvers that work with booleans properly", async () => {
     const query = gql`
       query CartDetails {
         isInCart @client
@@ -477,7 +477,7 @@ describe("Basic resolver capabilities", () => {
     expect(result).toStrictEqualTyped({ data: { isInCart: false } });
   });
 
-  it("should handle nested asynchronous @client resolvers (issue #4841)", () => {
+  test("should handle nested asynchronous @client resolvers (issue #4841)", () => {
     const query = gql`
       query DeveloperTicketComments($id: ID) {
         developer(id: $id) @client {
@@ -603,7 +603,7 @@ describe("Basic resolver capabilities", () => {
     ]);
   });
 
-  it("should not run resolvers without @client directive (issue #9571)", async () => {
+  test("should not run resolvers without @client directive (issue #9571)", async () => {
     const query = gql`
       query Mixed {
         foo @client {
@@ -662,7 +662,7 @@ describe("Basic resolver capabilities", () => {
 });
 
 describe("Writing cache data from resolvers", () => {
-  it("should let you write to the cache with a mutation", async () => {
+  test("should let you write to the cache with a mutation", async () => {
     const query = gql`
       {
         field @client
@@ -696,7 +696,7 @@ describe("Writing cache data from resolvers", () => {
     expect(result).toStrictEqualTyped({ data: { field: 1 } });
   });
 
-  it("should let you write to the cache with a mutation using an ID", async () => {
+  test("should let you write to the cache with a mutation using an ID", async () => {
     const query = gql`
       {
         obj @client {
@@ -753,7 +753,7 @@ describe("Writing cache data from resolvers", () => {
     });
   });
 
-  it("should not overwrite __typename when writing to the cache with an id", async () => {
+  test("should not overwrite __typename when writing to the cache with an id", async () => {
     const query = gql`
       {
         obj @client {
@@ -825,7 +825,7 @@ describe("Writing cache data from resolvers", () => {
 });
 
 describe("Resolving field aliases", () => {
-  it("should run resolvers for missing client queries with aliased field", async () => {
+  test("should run resolvers for missing client queries with aliased field", async () => {
     const query = gql`
       query Aliased {
         foo @client {
@@ -865,7 +865,7 @@ describe("Resolving field aliases", () => {
     });
   });
 
-  it("should run resolvers for client queries when aliases are in use on the @client-tagged node", async () => {
+  test("should run resolvers for client queries when aliases are in use on the @client-tagged node", async () => {
     const aliasedQuery = gql`
       query Test {
         fie: foo @client {
@@ -896,7 +896,7 @@ describe("Resolving field aliases", () => {
     expect(fie).not.toHaveBeenCalled();
   });
 
-  it("should respect aliases for *nested fields* on the @client-tagged node", async () => {
+  test("should respect aliases for *nested fields* on the @client-tagged node", async () => {
     const aliasedQuery = gql`
       query Test {
         fie: foo @client {
@@ -937,7 +937,7 @@ describe("Resolving field aliases", () => {
     expect(fie).not.toHaveBeenCalled();
   });
 
-  it("should pull initialized values for aliased fields tagged with @client from the cache", async () => {
+  test("should pull initialized values for aliased fields tagged with @client from the cache", async () => {
     const query = gql`
       {
         fie: foo @client {
@@ -976,7 +976,7 @@ describe("Resolving field aliases", () => {
     });
   });
 
-  it("should resolve @client fields using local resolvers and not have their value overridden when a fragment is loaded", async () => {
+  test("should resolve @client fields using local resolvers and not have their value overridden when a fragment is loaded", async () => {
     const query = gql`
       fragment LaunchDetails on Launch {
         id
@@ -1046,7 +1046,7 @@ describe("Resolving field aliases", () => {
 });
 
 describe("Force local resolvers", () => {
-  it("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.query`", async () => {
+  test("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.query`", async () => {
     const query = gql`
       query Author {
         author {
@@ -1101,7 +1101,7 @@ describe("Force local resolvers", () => {
     });
   });
 
-  it("should avoid running forced resolvers a second time when loading results over the network (so not from the cache)", async () => {
+  test("should avoid running forced resolvers a second time when loading results over the network (so not from the cache)", async () => {
     const query = gql`
       query Author {
         author {
@@ -1150,7 +1150,7 @@ describe("Force local resolvers", () => {
     expect(count).toEqual(1);
   });
 
-  it("should only force resolvers for fields marked with `@client(always: true)`, not all `@client` fields", async () => {
+  test("should only force resolvers for fields marked with `@client(always: true)`, not all `@client` fields", async () => {
     const query = gql`
       query UserDetails {
         name @client
@@ -1191,7 +1191,7 @@ describe("Force local resolvers", () => {
     expect(isLoggedInCount).toEqual(2);
   });
 
-  it("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.watchQuery`", async () => {
+  test("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.watchQuery`", async () => {
     const query = gql`
       query IsUserLoggedIn {
         isUserLoggedIn @client(always: true)
@@ -1246,7 +1246,7 @@ describe("Force local resolvers", () => {
     }
   });
 
-  it("should allow client-only virtual resolvers (#4731)", async () => {
+  test("should allow client-only virtual resolvers (#4731)", async () => {
     const query = gql`
       query UserData {
         userData @client {
@@ -1296,7 +1296,7 @@ describe("Force local resolvers", () => {
 });
 
 describe("Async resolvers", () => {
-  it("should support async @client resolvers", async () => {
+  test("should support async @client resolvers", async () => {
     const query = gql`
       query Member {
         isLoggedIn @client
@@ -1324,7 +1324,7 @@ describe("Async resolvers", () => {
     });
   });
 
-  it("should support async @client resolvers mixed with remotely resolved data", async () => {
+  test("should support async @client resolvers mixed with remotely resolved data", async () => {
     const query = gql`
       query Member {
         member {

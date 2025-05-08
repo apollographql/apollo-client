@@ -793,8 +793,7 @@ test("warns on undefined value if partial data is written to the cache for an ob
   );
 });
 
-// Maybe remove?
-test.skip("uses a written cache value from a nested client field from parent resolver", async () => {
+test("uses a written cache value from a nested client field from parent resolver", async () => {
   using _ = spyOnConsole("warn");
 
   const document = gql`

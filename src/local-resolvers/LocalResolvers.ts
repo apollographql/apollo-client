@@ -36,6 +36,7 @@ import {
   mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
+  stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
@@ -244,10 +245,10 @@ export class LocalResolvers<
       []
     );
 
-    return {
+    return stripTypename({
       ...variables,
       ...execContext.exportedVariables,
-    } as TVariables;
+    }) as TVariables;
   }
 
   private async resolveSelectionSet(

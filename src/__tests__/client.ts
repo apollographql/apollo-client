@@ -5520,7 +5520,7 @@ describe("custom document transforms", () => {
     await expect(stream).toEmitTypedValue({
       data: {
         currentUser: { id: 1 },
-        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+        products: [{ __typename: "Product", id: 1 }],
       },
       loading: true,
       networkStatus: NetworkStatus.fetchMore,

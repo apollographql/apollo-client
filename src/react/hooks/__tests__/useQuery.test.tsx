@@ -6988,10 +6988,11 @@ describe("useQuery Hook", () => {
       );
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
+      const renderStream = await renderHookToSnapshotStream(
         () => useQuery(query, { variables: { id: entityId } }),
         { wrapper }
       );
+      const { takeSnapshot } = renderStream;
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -7022,6 +7023,15 @@ describe("useQuery Hook", () => {
           id: entityId,
           title: longerTitle,
         },
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: previous.data,
+        }),
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({

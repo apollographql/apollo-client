@@ -66,10 +66,10 @@ export declare namespace LocalResolvers {
     TParent = unknown,
     TArgs = Record<string, unknown>,
   > = (
-    rootValue?: TParent,
-    args?: TArgs,
-    context?: DefaultContext & { client: ApolloClient },
-    info?: {
+    rootValue: TParent,
+    args: TArgs,
+    context: DefaultContext & { client: ApolloClient },
+    info: {
       field: FieldNode;
       fragmentMap: FragmentMap;
     }

@@ -75,9 +75,24 @@ interface TraverseCacheEntry {
 }
 
 export declare namespace LocalResolvers {
-  export interface Options<TResolvers extends Resolvers> {
+  export interface Options<
+    TResolvers extends Resolvers = Resolvers,
+    TRootValue = unknown,
+  > {
+    rootValue?: TRootValue | RootValueFunction<TRootValue>;
     resolvers?: TResolvers;
   }
+
+  export interface RootValueFunctionContext {
+    document: DocumentNode;
+    client: ApolloClient;
+    context: DefaultContext;
+    phase: "exports" | "resolve";
+  }
+
+  export type RootValueFunction<TRootValue> = (
+    context: RootValueFunctionContext
+  ) => TRootValue;
 
   export interface Resolvers {
     [typename: string]: {
@@ -109,7 +124,9 @@ export declare namespace LocalResolvers {
 
 export class LocalResolvers<
   TResolvers extends LocalResolvers.Resolvers = LocalResolvers.Resolvers,
+  TRootValue = unknown,
 > {
+  private rootValue?: LocalResolvers.Options["rootValue"];
   private resolvers: LocalResolvers.Resolvers = {};
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
@@ -118,9 +135,15 @@ export class LocalResolvers<
 
   constructor(
     ...[options]: {} extends TResolvers ?
-      [options?: LocalResolvers.Options<TResolvers>]
-    : [options: LocalResolvers.Options<TResolvers> & { resolvers: TResolvers }]
+      [options?: LocalResolvers.Options<TResolvers, NoInfer<TRootValue>>]
+    : [
+        options: LocalResolvers.Options<TResolvers, NoInfer<TRootValue>> & {
+          resolvers: TResolvers;
+        },
+      ]
   ) {
+    this.rootValue = options?.rootValue;
+
     if (options?.resolvers) {
       this.addResolvers(options.resolvers);
     }

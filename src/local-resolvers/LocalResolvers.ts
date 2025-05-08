@@ -64,6 +64,7 @@ interface ExecContext {
 
 interface ExportedVariable {
   required: boolean;
+  field?: FieldNode;
   ancestors: WeakSet<ASTNode>;
 }
 
@@ -556,16 +557,12 @@ export class LocalResolvers<
         for (const [name, def] of Object.entries(
           execContext.exportedVariableDefs
         )) {
-          const isExportField = field.directives?.some(
-            (d) => d.name.value === "export"
-          );
-
           if (def.ancestors.has(field) && def.required) {
             throw new LocalResolversError(
               `${
                 resolver ? "Resolver" : "Field"
               } '${resolverName}' returned \`${result}\` ${
-                isExportField ? "for" : "which contains exported"
+                def.field === field ? "for" : "which contains exported"
               } required variable '${name}'.`,
               { path }
             );
@@ -770,8 +767,10 @@ export class LocalResolvers<
               );
             }
 
-            cache.exportedVariableDefs[variableName] =
-              allVariableDefinitions[variableName];
+            cache.exportedVariableDefs[variableName] = {
+              ...allVariableDefinitions[variableName],
+              field: fieldInfo.node,
+            };
 
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {

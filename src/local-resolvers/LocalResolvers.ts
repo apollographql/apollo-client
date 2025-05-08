@@ -221,7 +221,7 @@ export class LocalResolvers<
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
     context: DefaultContext;
-    remoteResult?: FetchResult;
+    remoteResult?: FetchResult<any>;
     variables?: TVariables;
   }): Promise<FetchResult<TData>> {
     if (__DEV__) {

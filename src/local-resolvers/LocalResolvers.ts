@@ -421,7 +421,7 @@ export class LocalResolvers<
     parentSelectionSet: SelectionSetNode,
     path: LocalResolvers.Path
   ): Promise<any> {
-    const { client, variables, operationDefinition } = execContext;
+    const { client, variables, operationDefinition, phase } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
     const typename =
@@ -507,15 +507,17 @@ export class LocalResolvers<
 
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.
-    field.directives?.forEach((directive) => {
-      if (directive.name.value === "export" && directive.arguments) {
-        directive.arguments.forEach((arg) => {
-          if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-            execContext.exportedVariables[arg.value.value] = result;
-          }
-        });
-      }
-    });
+    if (phase === "exports") {
+      field.directives?.forEach((directive) => {
+        if (directive.name.value === "export" && directive.arguments) {
+          directive.arguments.forEach((arg) => {
+            if (arg.name.value === "as" && arg.value.kind === "StringValue") {
+              execContext.exportedVariables[arg.value.value] = result;
+            }
+          });
+        }
+      });
+    }
 
     if (result === null || !field.selectionSet) {
       return resultOrMergeError(result);

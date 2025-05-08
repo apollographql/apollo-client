@@ -56,6 +56,7 @@ interface ExecContext {
 }
 
 interface TraverseCacheEntry {
+  exportsToResolve: Set<SelectionNode>;
   selectionsToResolve: Set<SelectionNode>;
 }
 
@@ -207,7 +208,7 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const { selectionsToResolve } = this.collectQueryDetail(
+    const { exportsToResolve } = this.collectQueryDetail(
       mainDefinition,
       fragmentMap
     );
@@ -219,7 +220,7 @@ export class LocalResolvers<
       context,
       variables,
       exportedVariables: {},
-      selectionsToResolve,
+      selectionsToResolve: exportsToResolve,
       onlyRunForcedResolvers: false,
       errors: [],
     };
@@ -628,12 +629,21 @@ export class LocalResolvers<
       }
 
       const cache: TraverseCacheEntry = {
+        exportsToResolve: new Set<SelectionNode>(),
         selectionsToResolve: new Set<SelectionNode>(),
       };
       this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
         Directive(node: DirectiveNode, _, __, ___, ancestors) {
+          if (node.name.value === "export") {
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                cache.exportsToResolve.add(node);
+              }
+            });
+          }
+
           if (node.name.value === "client") {
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {

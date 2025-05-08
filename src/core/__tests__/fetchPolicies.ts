@@ -981,7 +981,7 @@ describe("nextFetchPolicy", () => {
     }
 
     // Changing variables resets the fetchPolicy to its initial value of `network-first`.
-    // That means the loading state will reset to an initial state - and `network-first`
+    // That means the loading state will reset to an initial state, and `network-first`
     // is not allowed to read data from the cache, hence `data` is `undefined`.
     await expect(stream).toEmitTypedValue({
       data: undefined,

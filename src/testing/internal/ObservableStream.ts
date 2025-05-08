@@ -69,7 +69,12 @@ export class ObservableStream<T> {
           new Error("Timeout waiting for next event")
         );
       }),
-    ]);
+    ]).then((value) => {
+      if (value.type === "next") {
+        this.current = value.value;
+      }
+      return value;
+    });
   }
 
   unsubscribe() {
@@ -95,6 +100,11 @@ export class ObservableStream<T> {
 
   private async readNextValue() {
     return this.reader.read().then((result) => result.value!);
+  }
+
+  private current?: T;
+  getCurrent() {
+    return this.current;
   }
 }
 

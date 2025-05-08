@@ -1313,7 +1313,7 @@ describe("Combining client and server state/operations", () => {
     await expect(stream).toEmitTypedValue({
       data: undefined,
       error: new CombinedGraphQLErrors({
-        data: { user: null },
+        data: null,
         errors: [error],
       }),
       loading: false,

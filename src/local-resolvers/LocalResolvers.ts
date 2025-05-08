@@ -54,6 +54,7 @@ interface ExecContext {
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
+  phase: "exports" | "resolve";
 }
 
 interface ExportedVariable {
@@ -166,6 +167,7 @@ export class LocalResolvers<
       selectionsToResolve,
       onlyRunForcedResolvers: false,
       errors: [],
+      phase: "resolve",
     };
 
     const localResult = await this.resolveSelectionSet(
@@ -230,6 +232,7 @@ export class LocalResolvers<
       selectionsToResolve: exportsToResolve,
       onlyRunForcedResolvers: false,
       errors: [],
+      phase: "exports",
     };
 
     await this.resolveSelectionSet(

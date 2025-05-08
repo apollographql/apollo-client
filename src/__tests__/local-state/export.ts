@@ -638,7 +638,7 @@ describe("@client @export tests", () => {
         resolvers: {
           Query: {
             currentFilter() {
-              return currentFilter;
+              return { __typename: "LessonFilter", ...currentFilter };
             },
           },
         },

@@ -209,7 +209,7 @@ describe("Cache manipulation", () => {
         Mutation: {
           start: (_, __, { client }) => {
             client.cache.writeQuery({ query, data: { field: 1 } });
-            return { start: true };
+            return true;
           },
         },
       },
@@ -251,7 +251,7 @@ describe("Cache manipulation", () => {
         Mutation: {
           start: (_1: any, _2: any, { client }) => {
             client.cache.writeQuery({ query, data: { field: 1 } });
-            return { start: true };
+            return true;
           },
         },
       },

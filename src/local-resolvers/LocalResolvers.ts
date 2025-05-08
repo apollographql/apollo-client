@@ -564,7 +564,15 @@ export class LocalResolvers<
 
     const defaultResolver =
       isClientFieldDescendant ?
-        () => rootValue?.[fieldName]
+        () => {
+          const fieldResult = rootValue?.[fieldName];
+
+          if (fieldResult !== undefined) {
+            return fieldResult;
+          }
+
+          return getResultAtPath(diff, path);
+        }
         // We expect a resolver to be defined for all `@client` root fields.
         // Warn when a resolver is not defined.
       : () => {

@@ -287,6 +287,7 @@ export class LocalResolvers<
               isClientFieldDescendant,
               rootValue as any,
               execContext,
+              selectionSet,
               path.concat(selection.name.value)
             )
           : await this.resolveServerField(
@@ -379,6 +380,7 @@ export class LocalResolvers<
     isClientFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
+    parentSelectionSet: SelectionSetNode,
     path: LocalResolvers.Path
   ): Promise<any> {
     if (!rootValue) {
@@ -416,7 +418,7 @@ export class LocalResolvers<
             // In case the resolve function accesses reactive variables,
             // set cacheSlot to the current cache instance.
             cacheSlot.withValue(client.cache, resolver, [
-              rootValue,
+              dealias(parentSelectionSet, rootValue),
               (argumentsObjectFromField(field, variables) ?? {}) as Record<
                 string,
                 unknown
@@ -614,6 +616,29 @@ export class LocalResolvers<
     }
     return collectByDefinition(mainDefinition);
   }
+}
+
+// Note: this is a shallow dealias function. We might consider a future
+// improvement of dealiasing all nested data. Until that need arises, we can
+// keep this simple.
+function dealias(
+  selectionSet: SelectionSetNode,
+  fieldValue: Record<string, any> | null | undefined
+) {
+  if (!fieldValue) {
+    return fieldValue;
+  }
+
+  const data = { ...fieldValue };
+
+  for (const selection of selectionSet.selections) {
+    if (selection.kind === Kind.FIELD && selection.alias) {
+      data[selection.name.value] = fieldValue[selection.alias.value];
+      delete data[selection.alias.value];
+    }
+  }
+
+  return data;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-restricted-types

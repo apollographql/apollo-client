@@ -423,6 +423,24 @@ export class LocalResolvers<
       return null;
     }
 
+    const resultOrMergeError = (data: unknown) => {
+      if (isRootField && rootValue === null) {
+        this.addError(
+          newInvariantError(
+            "Could not merge data from '%s' resolver with remote data since data was `null`.",
+            resolverName
+          ),
+          path,
+          execContext,
+          { resolver: resolverName, data }
+        );
+
+        return null;
+      }
+
+      return data;
+    };
+
     if (result === undefined) {
       if (__DEV__) {
         invariant.warn(
@@ -451,7 +469,7 @@ export class LocalResolvers<
     }
 
     if (result === null || !field.selectionSet) {
-      return result;
+      return resultOrMergeError(result);
     }
 
     if (Array.isArray(result)) {

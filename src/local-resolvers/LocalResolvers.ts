@@ -327,7 +327,7 @@ export class LocalResolvers<
         selection.kind === Kind.INLINE_FRAGMENT &&
         selection.typeCondition &&
         rootValue?.__typename &&
-        cache.fragmentMatches?.(selection, rootValue.__typename)
+        cache.fragmentMatches(selection, rootValue.__typename)
       ) {
         const fragmentResult = await this.resolveSelectionSet(
           selection.selectionSet,
@@ -351,15 +351,13 @@ export class LocalResolvers<
         const typename = rootValue?.__typename;
         const typeCondition = fragment.typeCondition.name.value;
 
-        // Allow exact matches on typename even if the cache doesn't implement
-        // the fragmentMatches API.
-        let fragmentMatches = typename === typeCondition;
+        let matches = typename === typeCondition;
 
-        if (!fragmentMatches && cache.fragmentMatches) {
-          fragmentMatches = cache.fragmentMatches(fragment, typename ?? "");
+        if (!matches) {
+          matches = cache.fragmentMatches(fragment, typename ?? "");
         }
 
-        if (!fragmentMatches) {
+        if (!matches) {
           throw new LocalResolversError(
             `Fragment '${fragment.name.value}' cannot be used with type '${typename}' as objects of type '${typename}' can never be of type '${fragment.typeCondition.name.value}'.`,
             { path }

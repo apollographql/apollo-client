@@ -310,7 +310,7 @@ export class LocalResolvers<
   ) {
     const result = rootValue?.[field.name.value];
 
-    if (result === null) {
+    if (result == null) {
       return result;
     }
 

@@ -398,6 +398,92 @@ test("throws error if `@export` does not include an `as` argument", async () => 
   );
 });
 
+test("does not throw error without `as` arg when `@export` is not a client field", async () => {
+  const document = gql`
+    query currentAuthorPostCount($authorId: Int!) {
+      authorId @client @export(as: "authorId")
+      foo @export
+      author(id: $authorId) @export {
+        id
+        name @export
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const localResolvers = new LocalResolvers({
+    resolvers: {
+      Query: {
+        authorId: () => testAuthor.id,
+      },
+    },
+  });
+
+  await expect(
+    localResolvers.getExportedVariables({
+      document,
+      client,
+      context: {},
+      variables: {},
+    })
+  ).resolves.toStrictEqualTyped({ authorId: testAuthor.id });
+});
+
+test("throws error if `@export` is a client descendent field without an `as` argument", async () => {
+  const document = gql`
+    query ($authorId: Int!) {
+      author(id: $authorId) @client {
+        id @export
+        name
+      }
+      posts(authorId: $authorId) {
+        id
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const testAuthor = {
+    __typename: "Author",
+    id: 100,
+    name: "John Smith",
+  };
+
+  const localResolvers = new LocalResolvers({
+    resolvers: {
+      Query: {
+        author: () => testAuthor,
+      },
+    },
+  });
+
+  await expect(
+    localResolvers.getExportedVariables({
+      document,
+      client,
+      context: {},
+      variables: {},
+    })
+  ).rejects.toThrow(
+    new LocalResolversError(
+      "Cannot determine the variable name from the `@export` directive used on field 'id'. Perhaps you forgot the `as` argument?",
+      { path: ["author", "id"] }
+    )
+  );
+});
+
 test("throws error on @client only queries when the @export directive is used on root field with no associated variable definition", async () => {
   const document = gql`
     {

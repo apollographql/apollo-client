@@ -692,7 +692,8 @@ export class LocalResolvers<
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
-    const fields: Array<{ node: FieldNode }> = [];
+    const fields: Array<{ node: FieldNode; isClientFieldDescendant: boolean }> =
+      [];
 
     function getCurrentPath() {
       return fields.map((field) => field.node.name.value);
@@ -724,7 +725,12 @@ export class LocalResolvers<
         },
         Field: {
           enter(field) {
-            fields.push({ node: field });
+            const parent = fields.at(-1);
+
+            fields.push({
+              node: field,
+              isClientFieldDescendant: parent?.isClientFieldDescendant || false,
+            });
           },
           leave() {
             fields.pop();
@@ -733,7 +739,12 @@ export class LocalResolvers<
         Directive(node: DirectiveNode, _, __, ___, ancestors) {
           const fieldInfo = fields.at(-1);
 
-          if (node.name.value === "export") {
+          if (
+            node.name.value === "export" &&
+            // Ignore export directives that aren't inside client fields.
+            // These will get sent to the server
+            fieldInfo?.isClientFieldDescendant
+          ) {
             const fieldName = fieldInfo?.node.name.value;
             const variableName = getExportedVariableName(node);
 
@@ -763,6 +774,10 @@ export class LocalResolvers<
           }
 
           if (node.name.value === "client") {
+            if (fieldInfo) {
+              fieldInfo.isClientFieldDescendant = true;
+            }
+
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);

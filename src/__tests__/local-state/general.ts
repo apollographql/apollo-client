@@ -27,7 +27,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 describe("General functionality", () => {
-  it("should not impact normal non-@client use", () => {
+  it("should not impact normal non-@client use", async () => {
     const query = gql`
       {
         field
@@ -47,12 +47,12 @@ describe("General functionality", () => {
       }),
     });
 
-    return client.query({ query }).then(({ data }) => {
-      expect(data).toMatchObject({ field: 1 });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
     });
   });
 
-  it("should not interfere with server introspection queries", () => {
+  it("should not interfere with server introspection queries", async () => {
     const query = gql`
       ${getIntrospectionQuery()}
     `;
@@ -72,17 +72,10 @@ describe("General functionality", () => {
       }),
     });
 
-    return client
-      .query({ query })
-      .then(() => {
-        throw new global.Error("should not call");
-      })
-      .catch((error: GraphQLError) =>
-        expect(error.message).toMatch(/no introspection/)
-      );
+    await expect(client.query({ query })).rejects.toThrow(/no introspection/);
   });
 
-  it("should support returning default values from resolvers", () => {
+  it("should support returning default values from resolvers", async () => {
     const query = gql`
       {
         field @client
@@ -101,8 +94,8 @@ describe("General functionality", () => {
       }),
     });
 
-    return client.query({ query }).then(({ data }) => {
-      expect(data).toMatchObject({ field: 1 });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
     });
   });
 
@@ -129,22 +122,18 @@ describe("General functionality", () => {
       }),
     });
 
-    {
-      const { data } = await client.query({ query });
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(1);
 
-      expect(data).toMatchObject({ field: 1 });
-      expect(count).toBe(1);
-    }
-
-    {
-      const { data } = await client.query({ query });
-
-      expect(data).toMatchObject({ field: 1 });
-      expect(count).toBe(1);
-    }
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(1);
   });
 
-  it("should honour `fetchPolicy` settings", () => {
+  it("should honour `fetchPolicy` settings", async () => {
     const query = gql`
       {
         field @client
@@ -167,25 +156,22 @@ describe("General functionality", () => {
       }),
     });
 
-    return client
-      .query({ query })
-      .then(({ data }) => {
-        expect(data).toMatchObject({ field: 1 });
-        expect(count).toBe(1);
-      })
-      .then(() =>
-        client
-          .query({ query, fetchPolicy: "network-only" })
-          .then(({ data }) => {
-            expect(data).toMatchObject({ field: 1 });
-            expect(count).toBe(2);
-          })
-      );
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(1);
+
+    await expect(
+      client.query({ query, fetchPolicy: "network-only" })
+    ).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
+    expect(count).toBe(2);
   });
 });
 
 describe("Cache manipulation", () => {
-  it("should be able to query @client fields and the cache without defining local resolvers", () => {
+  it("should be able to query @client fields and the cache without defining local resolvers", async () => {
     const query = gql`
       {
         field @client
@@ -201,12 +187,12 @@ describe("Cache manipulation", () => {
 
     cache.writeQuery({ query, data: { field: "yo" } });
 
-    client
-      .query({ query })
-      .then(({ data }) => expect(data).toMatchObject({ field: "yo" }));
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: "yo" },
+    });
   });
 
-  it("should be able to write to the cache using a local mutation", () => {
+  it("should be able to write to the cache using a local mutation", async () => {
     const query = gql`
       {
         field @client
@@ -236,12 +222,13 @@ describe("Cache manipulation", () => {
       resolvers,
     });
 
-    return client
-      .mutate({ mutation })
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect(data).toMatchObject({ field: 1 });
-      });
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: 1 },
+    });
   });
 
   it("should be able to write to the cache with a local mutation and have things rerender automatically", async () => {
@@ -292,7 +279,11 @@ describe("Cache manipulation", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-    await client.mutate({ mutation });
+
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
+
     await expect(stream).toEmitTypedValue({
       data: { field: 1 },
       loading: false,
@@ -301,7 +292,7 @@ describe("Cache manipulation", () => {
     });
   });
 
-  it("should support writing to the cache with a local mutation using variables", () => {
+  it("should support writing to the cache with a local mutation using variables", async () => {
     const query = gql`
       {
         field @client
@@ -339,17 +330,15 @@ describe("Cache manipulation", () => {
       resolvers,
     });
 
-    return client
-      .mutate({ mutation, variables: { id: "1234" } })
-      .then(({ data }) => {
-        expect(data).toEqual({
-          start: { field: "1234", __typename: "Field" },
-        });
-      })
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect(data).toMatchObject({ field: "1234" });
-      });
+    await expect(
+      client.mutate({ mutation, variables: { id: "1234" } })
+    ).resolves.toStrictEqualTyped({
+      data: { start: { field: "1234", __typename: "Field" } },
+    });
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { field: "1234" },
+    });
   });
 
   it("should read @client fields from cache on refetch (#4741)", async () => {

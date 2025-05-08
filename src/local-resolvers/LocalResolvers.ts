@@ -477,6 +477,13 @@ export class LocalResolvers<
           execContext.exportedVariableDefs
         )) {
           if (def.ancestors.has(field)) {
+            if (def.required) {
+              throw new LocalResolversError(
+                `An error was thrown from resolver '${resolverName}' while resolving required variable '${name}'.`,
+                { path, sourceError: e }
+              );
+            }
+
             if (__DEV__) {
               invariant.error(
                 "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",

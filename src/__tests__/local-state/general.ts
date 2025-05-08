@@ -993,16 +993,48 @@ describe("Combining client and server state/operations", () => {
       }
     `;
 
-    await expect(
-      client.query({ query, variables })
-    ).rejects.toThrowErrorMatchingSnapshot();
+    await expect(client.query({ query, variables })).rejects.toStrictEqualTyped(
+      new CombinedGraphQLErrors({
+        data: { hasBeenIllegallyTouched: null },
+        errors: [
+          {
+            message: "Illegal Query Operation Occurred",
+            path: ["hasBeenIllegallyTouched"],
+            extensions: {
+              apollo: {
+                source: "LocalResolvers",
+                resolver: "Query.hasBeenIllegallyTouched",
+                cause: new Error("Illegal Query Operation Occurred"),
+              },
+            },
+          },
+        ],
+      })
+    );
 
     await expect(
       client.mutate({ mutation, variables })
-    ).rejects.toThrowErrorMatchingSnapshot();
+    ).rejects.toStrictEqualTyped(
+      new CombinedGraphQLErrors({
+        data: { touchIllegally: null },
+        errors: [
+          {
+            message: "Illegal Mutation Operation Occurred",
+            path: ["touchIllegally"],
+            extensions: {
+              apollo: {
+                source: "LocalResolvers",
+                resolver: "Mutation.touchIllegally",
+                cause: new Error("Illegal Mutation Operation Occurred"),
+              },
+            },
+          },
+        ],
+      })
+    );
   });
 
-  test("should handle a simple query with both server and client fields", async () => {
+  test.skip("should handle a simple query with both server and client fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query GetCount {

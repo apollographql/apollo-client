@@ -6,6 +6,7 @@ import type {
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
+  GraphQLFormattedError,
   InlineFragmentNode,
   OperationDefinitionNode,
   SelectionNode,
@@ -47,6 +48,7 @@ type ExecContext = {
   exportedVariables: OperationVariables;
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
+  errors: GraphQLFormattedError[];
 };
 
 export declare namespace LocalResolvers {
@@ -114,7 +116,7 @@ export class LocalResolvers<
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
     context: DefaultContext;
-    remoteResult?: FetchResult<any>;
+    remoteResult?: FetchResult;
     variables?: TVariables;
   }): Promise<FetchResult<TData>> {
     if (__DEV__) {
@@ -144,27 +146,38 @@ export class LocalResolvers<
 
     const rootValue = remoteResult ? remoteResult.data : {};
 
+    const execContext: ExecContext = {
+      client,
+      operationDefinition: mainDefinition,
+      fragmentMap,
+      context,
+      variables,
+      defaultOperationType,
+      exportedVariables: {},
+      selectionsToResolve,
+      onlyRunForcedResolvers: false,
+      errors: [],
+    };
+
     const localResult = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
       rootValue,
-      {
-        client,
-        operationDefinition: mainDefinition,
-        fragmentMap,
-        context,
-        variables,
-        defaultOperationType,
-        exportedVariables: {},
-        selectionsToResolve,
-        onlyRunForcedResolvers: false,
-      }
+      execContext
     );
 
-    return {
+    const errors = (remoteResult?.errors ?? []).concat(execContext.errors);
+
+    const result: FetchResult<any> = {
       ...remoteResult,
       data: mergeDeep(rootValue, localResult),
     };
+
+    if (errors.length > 0) {
+      result.errors = errors;
+    }
+
+    return result;
   }
 
   public async getExportedVariables<
@@ -208,6 +221,7 @@ export class LocalResolvers<
       exportedVariables: {},
       selectionsToResolve,
       onlyRunForcedResolvers: false,
+      errors: [],
     };
 
     await this.resolveSelectionSet(

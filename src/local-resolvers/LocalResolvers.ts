@@ -317,7 +317,7 @@ export class LocalResolvers<
       return null;
     }
 
-    const { variables } = execContext;
+    const { client, variables } = execContext;
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;
@@ -338,10 +338,10 @@ export class LocalResolvers<
           resultPromise = Promise.resolve(
             // In case the resolve function accesses reactive variables,
             // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(this.cache, resolve, [
+            cacheSlot.withValue(client.cache, resolve, [
               rootValue,
               argumentsObjectFromField(field, variables),
-              execContext.context,
+              { ...execContext.context, client },
               { field, fragmentMap: execContext.fragmentMap },
             ])
           );

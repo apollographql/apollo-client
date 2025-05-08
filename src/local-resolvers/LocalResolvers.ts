@@ -597,7 +597,7 @@ export class LocalResolvers<
       return resultOrMergeError(fieldResult);
     }
 
-    if (!(result as any).__typename) {
+    if (phase === "resolve" && !(result as any).__typename) {
       this.addError(
         newInvariantError(
           "Could not resolve __typename on object %o returned from resolver '%s'. '__typename' needs to be returned to properly resolve child fields.",

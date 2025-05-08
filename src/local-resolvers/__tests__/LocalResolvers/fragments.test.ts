@@ -3,6 +3,7 @@ import { LocalResolversError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalResolvers } from "@apollo/client/local-resolvers";
 import { spyOnConsole } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { gql } from "./testUtils.js";
 
@@ -148,11 +149,10 @@ it("matches fragments with fragment conditions", async () => {
   });
 });
 
-test("warns when cache does not implement fragmentMatches", async () => {
+test("throws when cache does not implement fragmentMatches", async () => {
   // @ts-expect-error we don't care about the cache methods for this test
   class TestCache extends ApolloCache {}
 
-  using _ = spyOnConsole("warn");
   const document = gql`
     fragment Foo on Foo {
       bar
@@ -179,15 +179,10 @@ test("warns when cache does not implement fragmentMatches", async () => {
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
-  ).resolves.toStrictEqualTyped({
-    data: {
-      foo: { __typename: "Foo", bar: true },
-    },
-  });
-
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "The configured cache does not support fragment matching which may lead to incorrect results when executing local resolvers. Please use a cache matches fragments to silence this warning."
+  ).rejects.toThrow(
+    new InvariantError(
+      "The configured cache does not support fragment matching which will lead to incorrect results when executing local resolvers. Please use a cache that implements `fragmetMatches`."
+    )
   );
 });
 

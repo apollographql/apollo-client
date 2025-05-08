@@ -680,6 +680,13 @@ export class LocalResolvers<
               );
             }
 
+            if (!allVariableDefinitions[variableName]) {
+              throw new LocalResolversError(
+                `\`@export\` directive on field '${fieldName}' does not have an associated variable definition for the '${variableName}' variable.`,
+                { path: getCurrentPath() }
+              );
+            }
+
             cache.exportedVariableDefs[variableName] =
               allVariableDefinitions[variableName];
 

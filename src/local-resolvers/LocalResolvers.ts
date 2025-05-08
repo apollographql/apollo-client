@@ -630,43 +630,46 @@ export class LocalResolvers<
     const traverse = (
       definitionNode: ExecutableDefinitionNode
     ): TraverseCacheEntry => {
-      if (!selectionsToResolveCache.has(definitionNode)) {
-        const matches = new Set<SelectionNode>();
-        selectionsToResolveCache.set(definitionNode, matches);
-
-        visit(definitionNode, {
-          Directive(node: DirectiveNode, _, __, ___, ancestors) {
-            if (node.name.value === "client") {
-              ancestors.forEach((node) => {
-                if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  matches.add(node);
-                }
-              });
-            }
-          },
-          FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {
-            const fragment = fragmentMap[spread.name.value];
-            invariant(fragment, `No fragment named %s`, spread.name.value);
-
-            const { selectionsToResolve: fragmentSelections } =
-              traverse(fragment);
-
-            if (fragmentSelections.size > 0) {
-              // Fragment for this spread contains @client directive (either directly or transitively)
-              // Collect selection nodes on paths from the root down to fields with the @client directive
-              ancestors.forEach((node) => {
-                if (isSingleASTNode(node) && isSelectionNode(node)) {
-                  matches.add(node);
-                }
-              });
-              matches.add(spread);
-              fragmentSelections.forEach((selection) => {
-                matches.add(selection);
-              });
-            }
-          },
-        });
+      if (this.traverseCache.has(definitionNode)) {
+        return this.traverseCache.get(definitionNode)!;
       }
+
+      const matches = new Set<SelectionNode>();
+      selectionsToResolveCache.set(definitionNode, matches);
+
+      visit(definitionNode, {
+        Directive(node: DirectiveNode, _, __, ___, ancestors) {
+          if (node.name.value === "client") {
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                matches.add(node);
+              }
+            });
+          }
+        },
+        FragmentSpread(spread: FragmentSpreadNode, _, __, ___, ancestors) {
+          const fragment = fragmentMap[spread.name.value];
+          invariant(fragment, `No fragment named %s`, spread.name.value);
+
+          const { selectionsToResolve: fragmentSelections } =
+            traverse(fragment);
+
+          if (fragmentSelections.size > 0) {
+            // Fragment for this spread contains @client directive (either directly or transitively)
+            // Collect selection nodes on paths from the root down to fields with the @client directive
+            ancestors.forEach((node) => {
+              if (isSingleASTNode(node) && isSelectionNode(node)) {
+                matches.add(node);
+              }
+            });
+            matches.add(spread);
+            fragmentSelections.forEach((selection) => {
+              matches.add(selection);
+            });
+          }
+        },
+      });
+
       return {
         selectionsToResolve: selectionsToResolveCache.get(definitionNode)!,
       };

@@ -2,16 +2,13 @@ import type { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
-import type { QueryResult, Resolvers } from "@apollo/client";
+import type { QueryResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalResolvers } from "@apollo/client/local-resolvers";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
-
-// not exported
-// eslint-disable-next-line local-rules/no-relative-imports
-import { LocalState } from "../../core/LocalState.js";
 
 const setupTestWithResolvers = ({
   resolvers,
@@ -23,7 +20,7 @@ const setupTestWithResolvers = ({
   error,
   delay,
 }: {
-  resolvers: Resolvers;
+  resolvers: LocalResolvers;
   query: DocumentNode;
   serverQuery?: DocumentNode;
   variables?: object;
@@ -42,9 +39,8 @@ const setupTestWithResolvers = ({
         delay,
       },
     ]),
+    resolvers,
   });
-
-  client.addResolvers(resolvers);
 
   return new ObservableStream(
     client.watchQuery<any>({ query, variables, ...queryOptions })
@@ -61,11 +57,13 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ bar: true }),
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true }),
+        },
       },
-    };
+    });
 
     const client = new ApolloClient({
       resolvers,
@@ -113,11 +111,13 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ bar: true }),
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true }),
+        },
       },
-    };
+    });
 
     const stream = setupTestWithResolvers({
       resolvers,
@@ -171,11 +171,13 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ bar: true, __typename: "ClientData" }),
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true, __typename: "ClientData" }),
+        },
       },
-    };
+    });
 
     const stream = setupTestWithResolvers({
       resolvers,
@@ -238,11 +240,13 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Foo: {
-        baz: () => false,
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Foo: {
+          baz: () => false,
+        },
       },
-    };
+    });
 
     const stream = setupTestWithResolvers({
       resolvers,
@@ -282,14 +286,16 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          foo: () => ({ __typename: "Foo" }),
+        },
+        Foo: {
+          bar: (_data: any, { id }: { id: number }) => id,
+        },
       },
-      Foo: {
-        bar: (_data: any, { id }: { id: number }) => id,
-      },
-    };
+    });
 
     const client = new ApolloClient({
       resolvers,
@@ -328,14 +334,16 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          foo: () => ({ __typename: "Foo" }),
+        },
+        Foo: {
+          bar: (_data: any, _args: any, { context }) => context.id,
+        },
       },
-      Foo: {
-        bar: (_data: any, _args: any, { id }: { id: number }) => id,
-      },
-    };
+    });
 
     const client = new ApolloClient({
       resolvers,
@@ -389,11 +397,13 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = {
-      Stats: {
-        postsToday: () => 10,
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Stats: {
+          postsToday: () => 10,
+        },
       },
-    };
+    });
 
     const stream = setupTestWithResolvers({
       resolvers,
@@ -453,11 +463,13 @@ describe("Basic resolver capabilities", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          isInCart: () => false,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            isInCart: () => false,
+          },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query, fetchPolicy: "network-only" });
@@ -507,39 +519,41 @@ describe("Basic resolver capabilities", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          async developer(_, { id }) {
-            await randomDelay(50);
-            expect(id).toBe(developerId);
-            return {
-              __typename: "Developer",
-              id,
-              handle: "@benjamn",
-            };
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            async developer(_, { id }) {
+              await randomDelay(50);
+              expect(id).toBe(developerId);
+              return {
+                __typename: "Developer",
+                id,
+                handle: "@benjamn",
+              };
+            },
+          },
+          Developer: {
+            async tickets(developer) {
+              await randomDelay(50);
+              expect(developer.__typename).toBe("Developer");
+              return times(ticketsPerDev, () => ({
+                __typename: "Ticket",
+                id: uuid(),
+              }));
+            },
+          },
+          Ticket: {
+            async comments(ticket) {
+              await randomDelay(50);
+              expect(ticket.__typename).toBe("Ticket");
+              return times(commentsPerTicket, () => ({
+                __typename: "Comment",
+                id: uuid(),
+              }));
+            },
           },
         },
-        Developer: {
-          async tickets(developer) {
-            await randomDelay(50);
-            expect(developer.__typename).toBe("Developer");
-            return times(ticketsPerDev, () => ({
-              __typename: "Ticket",
-              id: uuid(),
-            }));
-          },
-        },
-        Ticket: {
-          async comments(ticket) {
-            await randomDelay(50);
-            expect(ticket.__typename).toBe("Ticket");
-            return times(commentsPerTicket, () => ({
-              __typename: "Comment",
-              id: uuid(),
-            }));
-          },
-        },
-      },
+      }),
     });
 
     function check(result: QueryResult<any>) {
@@ -611,12 +625,14 @@ describe("Basic resolver capabilities", () => {
 
     const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
 
-    const resolvers = {
-      Query: {
-        foo: () => ({ __typename: `Foo`, bar: true }),
-        bar: barResolver,
+    const resolvers = new LocalResolvers({
+      resolvers: {
+        Query: {
+          foo: () => ({ __typename: `Foo`, bar: true }),
+          bar: barResolver,
+        },
       },
-    };
+    });
 
     const stream = setupTestWithResolvers({
       resolvers,
@@ -662,14 +678,16 @@ describe("Writing cache data from resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Mutation: {
-          start(_data, _args, { cache }) {
-            cache.writeQuery({ query, data: { field: 1 } });
-            return { start: true };
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Mutation: {
+            start(_data, _args, { client }) {
+              client.cache.writeQuery({ query, data: { field: 1 } });
+              return { start: true };
+            },
           },
         },
-      },
+      }),
     });
 
     await client.mutate({ mutation });
@@ -698,30 +716,32 @@ describe("Writing cache data from resolvers", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {
-        Mutation: {
-          start() {
-            cache.writeQuery({
-              query,
-              data: {
-                obj: { field: 1, id: "uniqueId", __typename: "Object" },
-              },
-            });
-
-            cache.modify({
-              id: "Object:uniqueId",
-              fields: {
-                field(value) {
-                  expect(value).toBe(1);
-                  return 2;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Mutation: {
+            start() {
+              cache.writeQuery({
+                query,
+                data: {
+                  obj: { field: 1, id: "uniqueId", __typename: "Object" },
                 },
-              },
-            });
+              });
 
-            return { start: true };
+              cache.modify({
+                id: "Object:uniqueId",
+                fields: {
+                  field(value) {
+                    expect(value).toBe(1);
+                    return 2;
+                  },
+                },
+              });
+
+              return { start: true };
+            },
           },
         },
-      },
+      }),
     });
 
     await client.mutate({ mutation });
@@ -756,35 +776,37 @@ describe("Writing cache data from resolvers", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {
-        Mutation: {
-          start() {
-            cache.writeQuery({
-              query,
-              data: {
-                obj: {
-                  field: { field2: 1, __typename: "Field" },
-                  id: "uniqueId",
-                  __typename: "Object",
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Mutation: {
+            start() {
+              cache.writeQuery({
+                query,
+                data: {
+                  obj: {
+                    field: { field2: 1, __typename: "Field" },
+                    id: "uniqueId",
+                    __typename: "Object",
+                  },
                 },
-              },
-            });
-            cache.modify<{ field: { field2: number } }>({
-              id: "Object:uniqueId",
-              fields: {
-                field(value) {
-                  if (isReference(value)) {
-                    fail("Should not be a reference");
-                  }
-                  expect(value.field2).toBe(1);
-                  return { ...value, field2: 2 };
+              });
+              cache.modify<{ field: { field2: number } }>({
+                id: "Object:uniqueId",
+                fields: {
+                  field(value) {
+                    if (isReference(value)) {
+                      fail("Should not be a reference");
+                    }
+                    expect(value.field2).toBe(1);
+                    return { ...value, field2: 2 };
+                  },
                 },
-              },
-            });
-            return { start: true };
+              });
+              return { start: true };
+            },
           },
         },
-      },
+      }),
     });
 
     await client.mutate({ mutation });
@@ -824,11 +846,13 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Query: {
-          foo: () => ({ bar: true, __typename: "Foo" }),
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            foo: () => ({ bar: true, __typename: "Foo" }),
+          },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query });
@@ -854,12 +878,14 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          foo: () => ({ bar: true, __typename: "Foo" }),
-          fie,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            foo: () => ({ bar: true, __typename: "Foo" }),
+            fie,
+          },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query: aliasedQuery });
@@ -890,12 +916,14 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Query: {
-          foo: () => ({ bar: true, __typename: "Foo" }),
-          fie,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            foo: () => ({ bar: true, __typename: "Foo" }),
+            fie,
+          },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query: aliasedQuery });
@@ -922,7 +950,7 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {},
+      resolvers: new LocalResolvers(),
     });
 
     cache.writeQuery({
@@ -976,13 +1004,15 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Launch: {
-          isInCart() {
-            return true;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Launch: {
+            isInCart() {
+              return true;
+            },
           },
         },
-      },
+      }),
     });
 
     client.writeQuery({
@@ -1027,10 +1057,11 @@ describe("Force local resolvers", () => {
     `;
 
     const cache = new InMemoryCache();
+    const localResolvers = new LocalResolvers();
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {},
+      resolvers: localResolvers,
     });
 
     cache.writeQuery({
@@ -1052,7 +1083,7 @@ describe("Force local resolvers", () => {
       },
     });
 
-    client.addResolvers({
+    localResolvers.addResolvers({
       Author: {
         isLoggedIn() {
           return true;
@@ -1095,14 +1126,16 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Author: {
-          isLoggedIn() {
-            count += 1;
-            return true;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Author: {
+            isLoggedIn() {
+              count += 1;
+              return true;
+            },
           },
         },
-      },
+      }),
     });
 
     await expect(client.query({ query })).resolves.toStrictEqualTyped({
@@ -1130,18 +1163,20 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          name() {
-            nameCount += 1;
-            return "John Smith";
-          },
-          isLoggedIn() {
-            isLoggedInCount += 1;
-            return true;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            name() {
+              nameCount += 1;
+              return "John Smith";
+            },
+            isLoggedIn() {
+              isLoggedInCount += 1;
+              return true;
+            },
           },
         },
-      },
+      }),
     });
 
     await client.query({ query });
@@ -1173,14 +1208,16 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          isUserLoggedIn() {
-            callCount += 1;
-            return true;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            isUserLoggedIn() {
+              callCount += 1;
+              return true;
+            },
           },
         },
-      },
+      }),
     });
 
     {
@@ -1223,22 +1260,24 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          userData() {
-            return {
-              __typename: "User",
-              firstName: "Ben",
-              lastName: "Newman",
-            };
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            userData() {
+              return {
+                __typename: "User",
+                firstName: "Ben",
+                lastName: "Newman",
+              };
+            },
+          },
+          User: {
+            fullName(data) {
+              return data.firstName + " " + data.lastName;
+            },
           },
         },
-        User: {
-          fullName(data) {
-            return data.firstName + " " + data.lastName;
-          },
-        },
-      },
+      }),
     });
 
     const result = await client.query({ query });
@@ -1267,13 +1306,15 @@ describe("Async resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          isLoggedIn() {
-            return Promise.resolve(true);
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            isLoggedIn() {
+              return Promise.resolve(true);
+            },
           },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query })!;
@@ -1314,16 +1355,18 @@ describe("Async resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Member: {
-          isLoggedIn() {
-            return Promise.resolve(testMember.isLoggedIn);
-          },
-          sessionCount() {
-            return testMember.sessionCount;
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Member: {
+            isLoggedIn() {
+              return Promise.resolve(testMember.isLoggedIn);
+            },
+            sessionCount() {
+              return testMember.sessionCount;
+            },
           },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query })!;

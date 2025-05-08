@@ -1709,7 +1709,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             // }
             return value;
           }),
-          dematerialize()
+          dematerialize(),
+          tap((value) => {
+            if (value.error) queryMetaSlot.getValue()!.shouldEmit = true;
+          })
         ),
         fromNetworkStatus.pipe(
           dematerialize(),

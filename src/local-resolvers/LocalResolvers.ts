@@ -370,10 +370,6 @@ export class LocalResolvers<
     parentSelectionSet: SelectionSetNode,
     path: LocalResolvers.Path
   ): Promise<any> {
-    if (!rootValue) {
-      return null;
-    }
-
     const { client, variables, operationDefinition } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;

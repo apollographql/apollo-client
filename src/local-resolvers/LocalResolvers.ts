@@ -142,10 +142,12 @@ export class LocalResolvers<
         definitionOperation.slice(1)
       : "Query";
 
+    const rootValue = remoteResult ? remoteResult.data : {};
+
     const localResult = await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
-      remoteResult ? remoteResult.data : {},
+      rootValue,
       {
         client,
         operationDefinition: mainDefinition,
@@ -159,7 +161,10 @@ export class LocalResolvers<
       }
     );
 
-    return { ...remoteResult, data: localResult };
+    return {
+      ...remoteResult,
+      data: mergeDeep(rootValue, localResult),
+    };
   }
 
   public async getExportedVariables<
@@ -230,7 +235,7 @@ export class LocalResolvers<
     execContext: ExecContext
   ) {
     const { fragmentMap, context, variables } = execContext;
-    const resultsToMerge: TData[] = [rootValue];
+    const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
       if (

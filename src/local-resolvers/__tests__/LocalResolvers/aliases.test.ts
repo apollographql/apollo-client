@@ -36,8 +36,9 @@ test("resolves @client fields mixed with aliased server fields", async () => {
 
   await expect(
     localResolvers.execute({
-      client,
       document,
+      client,
+      context: {},
       remoteResult,
     })
   ).resolves.toStrictEqualTyped({
@@ -74,11 +75,11 @@ test("resolves aliased @client fields", async () => {
 
   await expect(
     localResolvers.execute({
-      document,
       client,
-      remoteResult,
+      document,
+      context: {},
     })
-  ).toStrictEqualTyped({
+  ).resolves.toStrictEqualTyped({
     data: { fie: { bar: true, __typename: "Foo" } },
   });
 
@@ -128,8 +129,9 @@ test("resolves deeply nested aliased @client fields", async () => {
 
   await expect(
     localResolvers.execute({
-      document,
       client,
+      document,
+      context: {},
       remoteResult,
     })
   ).resolves.toStrictEqualTyped({
@@ -179,8 +181,9 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
 
   await expect(
     localResolvers.execute({
-      document,
       client,
+      document,
+      context: {},
       remoteResult,
     })
   ).resolves.toStrictEqualTyped({
@@ -218,9 +221,9 @@ test("does not confuse fields aliased to each other", async () => {
 
   await expect(
     localResolvers.execute({
-      document,
       client,
-      remoteResult,
+      document,
+      context: {},
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -239,6 +242,11 @@ test("does not confuse fields aliased to each other with boolean values", async 
     }
   `;
 
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
   const localResolvers = new LocalResolvers({
     resolvers: {
       Query: {
@@ -249,9 +257,9 @@ test("does not confuse fields aliased to each other with boolean values", async 
 
   await expect(
     localResolvers.execute({
-      document,
       client,
-      remoteResult,
+      document,
+      context: {},
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -270,6 +278,11 @@ test("does not confuse aliased __typename", async () => {
     }
   `;
 
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
   const localResolvers = new LocalResolvers({
     resolvers: {
       Query: {
@@ -280,9 +293,9 @@ test("does not confuse aliased __typename", async () => {
 
   await expect(
     localResolvers.execute({
-      document,
       client,
-      remoteResult,
+      document,
+      context: {},
     })
   ).resolves.toStrictEqualTyped({
     data: {

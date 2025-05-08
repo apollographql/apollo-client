@@ -292,7 +292,7 @@ describe("Basic resolver capabilities", () => {
           foo: () => ({ __typename: "Foo" }),
         },
         Foo: {
-          bar: (_data: any, { id }: { id: number }) => id,
+          bar: (_data, { id }: { id: number }) => id,
         },
       },
     });
@@ -340,7 +340,7 @@ describe("Basic resolver capabilities", () => {
           foo: () => ({ __typename: "Foo" }),
         },
         Foo: {
-          bar: (_data: any, _args: any, { context }) => context.id,
+          bar: (_data, _args, { context }) => context.id,
         },
       },
     });

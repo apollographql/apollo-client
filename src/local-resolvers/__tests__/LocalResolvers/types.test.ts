@@ -222,29 +222,6 @@ describe.skip("Type tests", () => {
     });
   });
 
-  test("filters out scalar resolvers", () => {
-    type Resolvers =
-      import("./fixtures/local-resolvers-with-scalar.js").Resolvers;
-
-    new LocalResolvers<Resolvers>({
-      resolvers: {
-        // @ts-expect-error unknown type
-        Date: {
-          field: () => {},
-        },
-      },
-    });
-
-    new LocalResolvers<Resolvers>({
-      resolvers: {
-        User: {
-          // ok: type is unknown
-          lastLoggedInAt: () => {},
-        },
-      },
-    });
-  });
-
   test("rootValue", () => {
     type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
 

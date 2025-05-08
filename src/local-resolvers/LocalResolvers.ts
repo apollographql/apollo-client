@@ -139,7 +139,7 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectSelectionsToResolve(
+    const selectionsToResolve = this.collectQueryDetail(
       mainDefinition,
       fragmentMap
     );
@@ -205,7 +205,7 @@ export class LocalResolvers<
     ) as OperationDefinitionNode;
     const fragments = getFragmentDefinitions(document);
     const fragmentMap = createFragmentMap(fragments);
-    const selectionsToResolve = this.collectSelectionsToResolve(
+    const selectionsToResolve = this.collectQueryDetail(
       mainDefinition,
       fragmentMap
     );
@@ -613,7 +613,7 @@ export class LocalResolvers<
   // Collect selection nodes on paths from document root down to all @client directives.
   // This function takes into account transitive fragment spreads.
   // Complexity equals to a single `visit` over the full document.
-  private collectSelectionsToResolve(
+  private collectQueryDetail(
     mainDefinition: OperationDefinitionNode,
     fragmentMap: FragmentMap
   ): Set<SelectionNode> {
@@ -622,7 +622,7 @@ export class LocalResolvers<
     ): node is ASTNode => !Array.isArray(node);
     const selectionsToResolveCache = this.selectionsToResolveCache;
 
-    function collectByDefinition(
+    function traverse(
       definitionNode: ExecutableDefinitionNode
     ): Set<SelectionNode> {
       if (!selectionsToResolveCache.has(definitionNode)) {
@@ -643,7 +643,7 @@ export class LocalResolvers<
             const fragment = fragmentMap[spread.name.value];
             invariant(fragment, `No fragment named %s`, spread.name.value);
 
-            const fragmentSelections = collectByDefinition(fragment);
+            const fragmentSelections = traverse(fragment);
             if (fragmentSelections.size > 0) {
               // Fragment for this spread contains @client directive (either directly or transitively)
               // Collect selection nodes on paths from the root down to fields with the @client directive
@@ -662,7 +662,7 @@ export class LocalResolvers<
       }
       return selectionsToResolveCache.get(definitionNode)!;
     }
-    return collectByDefinition(mainDefinition);
+    return traverse(mainDefinition);
   }
 }
 

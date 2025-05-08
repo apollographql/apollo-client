@@ -142,6 +142,31 @@ export class LocalResolvers<
     }));
   }
 
+  public async getExportedVariables<
+    TVariables extends OperationVariables = OperationVariables,
+  >({
+    document,
+    client,
+    context,
+    variables,
+  }: {
+    document: DocumentNode | TypedDocumentNode<any, TVariables>;
+    client: ApolloClient;
+    context: DefaultContext;
+    variables: Partial<NoInfer<TVariables>>;
+  }): Promise<TVariables> {
+    await this.resolveDocument(
+      document,
+      this.buildRootValueFromCache(document, variables),
+      { ...context, client },
+      variables
+    );
+
+    return {
+      ...variables,
+    } as TVariables;
+  }
+
   // Run local client resolvers against the incoming query and remote data.
   // Locally resolved field values are merged with the incoming remote data,
   // and returned. Note that locally resolved fields will overwrite

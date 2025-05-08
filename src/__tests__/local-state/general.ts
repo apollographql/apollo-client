@@ -15,7 +15,6 @@ import type { Observable } from "rxjs";
 import { defer, delay, of } from "rxjs";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
-import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link";

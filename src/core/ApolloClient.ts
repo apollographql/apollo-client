@@ -35,7 +35,6 @@ import type {
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
-  Resolvers,
   SubscribeResult,
 } from "./types.js";
 import type {
@@ -821,27 +820,6 @@ export class ApolloClient implements DataProxy {
    */
   public restore(serializedState: unknown) {
     return this.cache.restore(serializedState);
-  }
-
-  /**
-   * Add additional local resolvers.
-   */
-  public addResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.localState.addResolvers(resolvers);
-  }
-
-  /**
-   * Set (override existing) local resolvers.
-   */
-  public setResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.localState.setResolvers(resolvers);
-  }
-
-  /**
-   * Get all registered local resolvers.
-   */
-  public getResolvers() {
-    return this.localState.getResolvers();
   }
 
   /**

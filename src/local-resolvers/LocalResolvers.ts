@@ -547,15 +547,6 @@ export class LocalResolvers<
           return;
         }
 
-        if (execContext.exportedVariableDefs[name].required && result == null) {
-          throw new LocalResolversError(
-            `${
-              resolver ? "Resolver" : "Field"
-            } '${resolverName}' returned \`${result}\` for required variable '${name}'.`,
-            { path }
-          );
-        }
-
         if (result !== undefined) {
           execContext.exportedVariables[name] = result;
         }
@@ -565,11 +556,17 @@ export class LocalResolvers<
         for (const [name, def] of Object.entries(
           execContext.exportedVariableDefs
         )) {
+          const isExportField = field.directives?.some(
+            (d) => d.name.value === "export"
+          );
+
           if (def.ancestors.has(field) && def.required) {
             throw new LocalResolversError(
               `${
                 resolver ? "Resolver" : "Field"
-              } '${resolverName}' returned \`${result}\` which contains exported required variable '${name}'.`,
+              } '${resolverName}' returned \`${result}\` ${
+                isExportField ? "for" : "which contains exported"
+              } required variable '${name}'.`,
               { path }
             );
           }

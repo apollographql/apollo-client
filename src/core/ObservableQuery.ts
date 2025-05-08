@@ -118,6 +118,8 @@ interface Meta {
   readonly query: DocumentNode;
   readonly variables: OperationVariables | undefined;
   shouldEmit?: boolean | "notification";
+  /** can be used to override `ObservableQuery.options.fetchPolicy` for this notification */
+  fetchPolicy?: WatchQueryFetchPolicy;
 }
 const queryMetaSlot = new Slot<Meta>();
 
@@ -481,10 +483,16 @@ export class ObservableQuery<
     variables = this.variables,
     observed = this.subject.observed,
   } = {}): ApolloQueryResult<MaybeMasked<TData>> {
+    console.log("getInitialResult", {
+      prioritizeCacheValues: this.queryManager.prioritizeCacheValues,
+      queryMetaSlot: queryMetaSlot.getValue()?.fetchPolicy,
+      options_fetchPolicy: this.options.fetchPolicy,
+    });
+
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
-      : this.options.fetchPolicy;
+      : queryMetaSlot.getValue()?.fetchPolicy || this.options.fetchPolicy;
     const defaultResult = {
       data: undefined,
       loading: true,
@@ -1043,6 +1051,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // console.log("fetch", options);
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
+    const initialFetchPolicy = this.options.fetchPolicy;
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
     const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
@@ -1081,7 +1090,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                   ) {
                     operation.override = networkStatus;
                     queryMetaSlot.withValue(
-                      { variables, query, shouldEmit: "notification" },
+                      {
+                        variables,
+                        query,
+                        shouldEmit: "notification",
+                        /*
+                         * The moment this notification is emitted, `nextFetchPolicy`
+                         * might already have switched from a `network-only` to a
+                         * `cache-something` policy, so we want to ensure that the
+                         * loading state emit doesn't accidentally read from the cache
+                         * in those cases.
+                         */
+                        fetchPolicy: initialFetchPolicy,
+                      },
                       () =>
                         this.input.next({
                           kind: "N",

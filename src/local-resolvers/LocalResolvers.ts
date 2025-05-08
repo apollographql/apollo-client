@@ -91,7 +91,10 @@ export declare namespace LocalResolvers {
   > = (
     rootValue: TParent,
     args: TArgs,
-    context: DefaultContext & { client: ApolloClient },
+    context: DefaultContext & {
+      client: ApolloClient;
+      phase: "exports" | "resolve";
+    },
     info: {
       field: FieldNode;
       fragmentMap: FragmentMap;
@@ -466,7 +469,7 @@ export class LocalResolvers<
                 string,
                 unknown
               >,
-              { ...execContext.context, client },
+              { ...execContext.context, client, phase },
               { field, fragmentMap: execContext.fragmentMap, path },
             ])
           )

@@ -1576,7 +1576,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       //  return baseNetworkStatus;
     }
     const operation = Array.from(this.activeOperations.values()).findLast(
-      (operation) => operation.override !== undefined
+      (operation) =>
+        /* TODO: should ensure that on variable change, active operations are reliably cleaned up */
+        isEqualQuery(operation, this) && operation.override !== undefined
     );
     return operation?.override ?? baseNetworkStatus;
   }
@@ -1664,18 +1666,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           v.source === "newNetworkStatus"
       )
     );
-
-    function isEqualQuery(
-      a?: { query: DocumentNode; variables?: OperationVariables },
-      b?: { query: DocumentNode; variables?: OperationVariables }
-    ) {
-      return !!(
-        a &&
-        b &&
-        a.query === b.query &&
-        equal(a.variables || {}, b.variables || {})
-      );
-    }
 
     const filterForCurrentQuery = <T>(_: T) => {
       return isEqualQuery(queryMetaSlot.getValue(), this);
@@ -1848,5 +1838,17 @@ function skipCacheDataFor(
     fetchPolicy === "network-only" ||
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
+  );
+}
+
+function isEqualQuery(
+  a?: { query: DocumentNode; variables?: OperationVariables },
+  b?: { query: DocumentNode; variables?: OperationVariables }
+) {
+  return !!(
+    a &&
+    b &&
+    a.query === b.query &&
+    equal(a.variables || {}, b.variables || {})
   );
 }

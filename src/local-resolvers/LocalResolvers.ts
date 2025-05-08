@@ -509,13 +509,15 @@ export class LocalResolvers<
     // the `as` export variable name and current result for later use.
     if (phase === "exports") {
       field.directives?.forEach((directive) => {
-        if (directive.name.value === "export" && directive.arguments) {
-          directive.arguments.forEach((arg) => {
-            if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-              execContext.exportedVariables[arg.value.value] = result;
-            }
-          });
+        if (directive.name.value !== "export") {
+          return;
         }
+
+        directive.arguments?.forEach((arg) => {
+          if (arg.name.value === "as" && arg.value.kind === "StringValue") {
+            execContext.exportedVariables[arg.value.value] = result;
+          }
+        });
       });
     }
 

@@ -35,7 +35,6 @@ import {
   shouldInclude,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 type ExecContext = {
@@ -352,29 +351,24 @@ export class LocalResolvers<
 
     const resolver = this.getResolver(typename, fieldName);
 
-    // Usually all local resolvers are run when passing through here, but
-    // if we've specifically identified that we only want to run forced
-    // resolvers (that is, resolvers for fields marked with
-    // `@client(always: true)`), then we'll skip running non-forced resolvers.
-    if (!execContext.onlyRunForcedResolvers || hasForcedResolvers(field)) {
-      if (resolver) {
-        resultPromise = Promise.resolve(
-          // In case the resolve function accesses reactive variables,
-          // set cacheSlot to the current cache instance.
-          cacheSlot.withValue(client.cache, resolver, [
-            rootValue,
-            (argumentsObjectFromField(field, variables) ?? {}) as Record<
-              string,
-              unknown
-            >,
-            { ...execContext.context, client },
-            { field, fragmentMap: execContext.fragmentMap },
-          ])
-        );
-      }
+    if (resolver) {
+      resultPromise = Promise.resolve(
+        // In case the resolve function accesses reactive variables,
+        // set cacheSlot to the current cache instance.
+        cacheSlot.withValue(client.cache, resolver, [
+          rootValue,
+          (argumentsObjectFromField(field, variables) ?? {}) as Record<
+            string,
+            unknown
+          >,
+          { ...execContext.context, client },
+          { field, fragmentMap: execContext.fragmentMap },
+        ])
+      );
     }
 
     const result = (await resultPromise) ?? defaultResult;
+
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.
     if (field.directives) {

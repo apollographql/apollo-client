@@ -8,7 +8,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import type { Observable } from "rxjs";
+import { Observable } from "rxjs";
 import { merge, share } from "rxjs";
 import {
   dematerialize,
@@ -1049,7 +1049,55 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       queryInfo,
       options,
       networkStatus,
-      fetchQuery
+      fetchQuery,
+      (forward) => {
+        // If the operation synchronously emits a value, that will already have set
+        // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
+        // event once the subscription is set up.
+        // This has to happen in a "middleware wrapper" around `fetchQuery` call,
+        // since our definition of "synchronously" should start only after
+        // @exports variables have resolved.
+        const result = forward();
+        result.observable = result.observable.pipe(
+          // we cannot use `tap` here, since it allows only for a "before subscription"
+          // hook with `subscribe` and we care for "directly before and after subscription"
+          (source) =>
+            new Observable<QueryNotification.Value<TData, any>>(
+              (subscriber) => {
+                let synchronouslyEmitted = false;
+                try {
+                  return source.subscribe({
+                    next(value) {
+                      synchronouslyEmitted = true;
+                      subscriber.next(value);
+                    },
+                    error: (error) => subscriber.error(error),
+                    complete: () => subscriber.complete(),
+                  });
+                } finally {
+                  if (
+                    !synchronouslyEmitted &&
+                    this.activeOperations.has(operation)
+                  ) {
+                    operation.override = networkStatus;
+                    queryMetaSlot.withValue(
+                      { variables, query, shouldEmit: "notification" },
+                      () =>
+                        this.input.next({
+                          kind: "N",
+                          source: "newNetworkStatus",
+                          value: {
+                            resetError: true,
+                          },
+                        })
+                    );
+                  }
+                }
+              }
+            )
+        );
+        return result;
+      }
     );
 
     // track query and variables from the start of the operation
@@ -1062,29 +1110,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
     this.activeOperations.add(operation);
 
-    // If the operation synchronously emits a value, that will already have set
-    // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
-    // event once the subscription is set up.
-    let synchronouslyEmitted = false;
-
     let forceFirstValueEmit =
       networkStatus == NetworkStatus.refetch ||
       networkStatus == NetworkStatus.setVariables;
     const subscription = observable
       .pipe(
         tap({
-          next: (value) => {
-            synchronouslyEmitted = true;
-
-            if (value.kind === "N" && "networkStatus" in value.value) {
-              if (value.value.networkStatus === NetworkStatus.loading) {
-                operation.override = networkStatus;
-              } else {
-                // ready or error - this operation should no longer override
-                delete operation.override;
-              }
+          next: (notification) => {
+            if (
+              notification.source === "newNetworkStatus" ||
+              (notification.kind === "N" && notification.value.loading)
+            ) {
+              operation.override = networkStatus;
             } else {
-              // TODO may be removed?
               delete operation.override;
             }
           },
@@ -1110,20 +1148,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         error: (err) => this.input.error(err),
         complete: () => this.input.complete(),
       });
-    if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
-      operation.override = networkStatus;
-      queryMetaSlot.withValue(
-        { variables, query, shouldEmit: "notification" },
-        () =>
-          this.input.next({
-            kind: "N",
-            source: "newNetworkStatus",
-            value: {
-              resetError: true,
-            },
-          })
-      );
-    }
+
     return { fromLink, subscription, observable };
   }
 

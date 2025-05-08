@@ -1370,7 +1370,9 @@ export class QueryManager {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    query = options.query
+    query = options.query,
+    fetchQueryMiddleware = (forward: () => ObservableAndInfo<TData>) =>
+      forward()
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
 
@@ -1416,10 +1418,12 @@ export class QueryManager {
         ) ?
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
-      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
-        queryInfo,
-        normalized,
-        cacheWriteBehavior
+      const observableWithInfo = fetchQueryMiddleware(() =>
+        this.fetchQueryByPolicy<TData, TVars>(
+          queryInfo,
+          normalized,
+          cacheWriteBehavior
+        )
       );
 
       if (
@@ -1929,7 +1933,7 @@ function validateDidEmitValue<T>() {
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.
-interface ObservableAndInfo<TData> {
+export interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
   observable: Observable<QueryNotification.Value<TData, any>>;

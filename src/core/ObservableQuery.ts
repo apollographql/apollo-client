@@ -582,9 +582,29 @@ export class ObservableQuery<
     });
   }
 
+  private stableLastResult?: ApolloQueryResult<MaybeMasked<TData>>;
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
-    const value = this.subject.getValue();
-    return value !== uninitialized ? value : this.getInitialResult();
+    let value =
+      (
+        // if we have no observers, and the fetch policy is no-cache,
+        //  this.subject.getValue() could potentially be outdated,
+        // so we recalculate the result
+        !this.hasObservers() &&
+        // unless we are using a `no-cache` fetch policy in which case this
+        // `ObservableQuery` cannot have been updated from the outside - in
+        // that case, we prefer to keep the current value
+        this.options.fetchPolicy === "no-cache"
+      ) ?
+        this.getInitialResult()
+      : this.subject.getValue();
+
+    if (value === uninitialized) {
+      value = this.getInitialResult();
+    }
+    if (!equal(this.stableLastResult, value)) {
+      this.stableLastResult = value;
+    }
+    return this.stableLastResult!;
   }
 
   // TODO: Consider deprecating this function
@@ -1427,7 +1447,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.subscriptions.clear();
     this.queryManager.removeQuery(this.queryId);
     this.isTornDown = true;
-    this.reset();
+    this.abortActiveOperations();
   }
 
   private transformDocument(document: DocumentNode) {
@@ -1583,6 +1603,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return operation?.override ?? baseNetworkStatus;
   }
 
+  private abortActiveOperations() {
+    this.activeOperations.forEach((operation) => operation.abort());
+  }
+
   /**
    * @internal
    * Called from `clearStore`.
@@ -1597,7 +1621,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       shouldEmit: resetToEmpty,
     });
 
-    this.activeOperations.forEach((operation) => operation.abort());
     this.lastError = undefined;
   }
 

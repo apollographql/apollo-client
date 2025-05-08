@@ -845,7 +845,7 @@ function isGraphQLError(error: ErrorLike): error is GraphQLError {
 
 function addApolloExtension(
   error: GraphQLFormattedError,
-  meta: { resolver: string }
+  meta: Record<string, any>
 ) {
   return {
     ...error,

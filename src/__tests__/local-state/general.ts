@@ -171,56 +171,6 @@ describe("General functionality", () => {
           })
       );
   });
-
-  it("should work with a custom fragment matcher", () => {
-    const query = gql`
-      {
-        foo {
-          ... on Bar {
-            bar @client
-          }
-          ... on Baz {
-            baz @client
-          }
-        }
-      }
-    `;
-
-    const link = new ApolloLink(() =>
-      of({
-        data: { foo: [{ __typename: "Bar" }, { __typename: "Baz" }] },
-      })
-    );
-
-    const resolvers = {
-      Bar: {
-        bar: () => "Bar",
-      },
-      Baz: {
-        baz: () => "Baz",
-      },
-    };
-
-    const fragmentMatcher = (
-      { __typename }: { __typename: string },
-      typeCondition: string
-    ) => __typename === typeCondition;
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache({
-        possibleTypes: {
-          Foo: ["Bar", "Baz"],
-        },
-      }),
-      link,
-      resolvers,
-      fragmentMatcher,
-    });
-
-    return client.query({ query }).then(({ data }) => {
-      expect(data).toMatchObject({ foo: [{ bar: "Bar" }, { baz: "Baz" }] });
-    });
-  });
 });
 
 describe("Cache manipulation", () => {

@@ -1472,20 +1472,34 @@ export class QueryManager {
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
     if (this.getDocumentInfo(normalized.query).hasClientExports) {
-      observable = from(
-        this.localState.addExportedVariables(
-          normalized.query,
-          normalized.variables,
-          normalized.context
-        )
-      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
+      if (this.resolvers) {
+        observable = from(
+          this.resolvers.getExportedVariables({
+            client: this.client,
+            document: normalized.query,
+            variables: normalized.variables,
+            context: this.getContext(normalized.context),
+          })
+        ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
-      // there is just no way we can synchronously get the *right* value here,
-      // so we will assume `true`, which is the behaviour before the bug fix in
-      // #10597. This means that bug is not fixed in that case, and is probably
-      // un-fixable with reasonable effort for the edge case of @export as
-      // directives.
-      containsDataFromLink = true;
+        // there is just no way we can synchronously get the *right* value here,
+        // so we will assume `true`, which is the behaviour before the bug fix in
+        // #10597. This means that bug is not fixed in that case, and is probably
+        // un-fixable with reasonable effort for the edge case of @export as
+        // directives.
+        containsDataFromLink = true;
+      } else {
+        const sourcesWithInfo = fromVariables(normalized.variables);
+        containsDataFromLink = sourcesWithInfo.fromLink;
+        observable = sourcesWithInfo.observable;
+
+        if (__DEV__) {
+          invariant.warn(
+            "Query '%s' contains `@client` fields with `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+            getOperationName(normalized.query) ?? "(anonymous)"
+          );
+        }
+      }
     } else {
       const sourcesWithInfo = fromVariables(normalized.variables);
       containsDataFromLink = sourcesWithInfo.fromLink;

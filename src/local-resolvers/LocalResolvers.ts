@@ -92,10 +92,6 @@ export class LocalResolvers<
   TResolvers extends LocalResolvers.Resolvers = LocalResolvers.Resolvers,
 > {
   private resolvers: LocalResolvers.Resolvers = {};
-  private selectionsToResolveCache = new WeakMap<
-    ExecutableDefinitionNode,
-    Set<SelectionNode>
-  >();
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
     TraverseCacheEntry
@@ -625,24 +621,23 @@ export class LocalResolvers<
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
-    const selectionsToResolveCache = this.selectionsToResolveCache;
 
-    const traverse = (
-      definitionNode: ExecutableDefinitionNode
-    ): TraverseCacheEntry => {
+    const traverse = (definitionNode: ExecutableDefinitionNode) => {
       if (this.traverseCache.has(definitionNode)) {
         return this.traverseCache.get(definitionNode)!;
       }
 
-      const matches = new Set<SelectionNode>();
-      selectionsToResolveCache.set(definitionNode, matches);
+      const cache: TraverseCacheEntry = {
+        selectionsToResolve: new Set<SelectionNode>(),
+      };
+      this.traverseCache.set(definitionNode, cache);
 
       visit(definitionNode, {
         Directive(node: DirectiveNode, _, __, ___, ancestors) {
           if (node.name.value === "client") {
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
-                matches.add(node);
+                cache.selectionsToResolve.add(node);
               }
             });
           }
@@ -659,21 +654,20 @@ export class LocalResolvers<
             // Collect selection nodes on paths from the root down to fields with the @client directive
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
-                matches.add(node);
+                cache.selectionsToResolve.add(node);
               }
             });
-            matches.add(spread);
+            cache.selectionsToResolve.add(spread);
             fragmentSelections.forEach((selection) => {
-              matches.add(selection);
+              cache.selectionsToResolve.add(selection);
             });
           }
         },
       });
 
-      return {
-        selectionsToResolve: selectionsToResolveCache.get(definitionNode)!,
-      };
+      return cache;
     };
+
     return traverse(mainDefinition);
   }
 }

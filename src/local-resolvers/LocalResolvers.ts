@@ -75,6 +75,22 @@ interface TraverseCacheEntry {
   selectionsToResolve: Set<SelectionNode>;
 }
 
+type InferRootValueFromFieldResolver<TField> =
+  TField extends { [key: string]: infer TResolver } ?
+    TResolver extends LocalResolvers.Resolver<any, infer TRootValue, any> ?
+      TRootValue
+    : unknown
+  : unknown;
+
+type InferRootValueFromResolvers<TResolvers> =
+  TResolvers extends { Query?: infer QueryResolvers } ?
+    InferRootValueFromFieldResolver<QueryResolvers>
+  : TResolvers extends { Mutation?: infer MutationResolvers } ?
+    InferRootValueFromFieldResolver<MutationResolvers>
+  : TResolvers extends { Subscription?: infer SubscriptionResolvers } ?
+    InferRootValueFromFieldResolver<SubscriptionResolvers>
+  : unknown;
+
 export declare namespace LocalResolvers {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
@@ -155,7 +171,7 @@ export declare namespace LocalResolvers {
 
 export class LocalResolvers<
   TResolvers extends LocalResolvers.Resolvers = LocalResolvers.Resolvers,
-  TRootValue = unknown,
+  TRootValue = InferRootValueFromResolvers<TResolvers>,
 > {
   private rootValue?: LocalResolvers.Options["rootValue"];
   private resolvers: LocalResolvers.Resolvers = {};

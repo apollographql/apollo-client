@@ -288,7 +288,7 @@ export class LocalResolvers<
         if (typeof fieldResult !== "undefined") {
           resultsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
-          } as TData);
+          });
         }
 
         return;

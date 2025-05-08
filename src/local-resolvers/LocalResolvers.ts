@@ -565,7 +565,7 @@ export class LocalResolvers<
     }
 
     if (result === undefined) {
-      if (__DEV__) {
+      if (__DEV__ && phase === "resolve") {
         invariant.warn(
           resolver ?
             "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead."

@@ -45,7 +45,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-type ExecContext = {
+interface ExecContext {
   client: ApolloClient;
   operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
@@ -55,7 +55,7 @@ type ExecContext = {
   onlyRunForcedResolvers: boolean;
   selectionsToResolve: Set<SelectionNode>;
   errors: GraphQLFormattedError[];
-};
+}
 
 interface TraverseCacheEntry {
   selectionsToResolve: Set<SelectionNode>;

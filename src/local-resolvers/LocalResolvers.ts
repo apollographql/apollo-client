@@ -142,8 +142,9 @@ export class LocalResolvers<
         definitionOperation.slice(1)
       : "Query";
 
-    return this.resolveDocument<TData>(
-      document,
+    const localResult = await this.resolveSelectionSet(
+      mainDefinition.selectionSet,
+      false,
       remoteResult ? remoteResult.data : {},
       {
         client,
@@ -155,10 +156,9 @@ export class LocalResolvers<
         selectionsToResolve,
         onlyRunForcedResolvers: false,
       }
-    ).then((localResult) => ({
-      ...remoteResult,
-      data: localResult.result,
-    }));
+    );
+
+    return { ...remoteResult, data: localResult };
   }
 
   public async getExportedVariables<
@@ -192,49 +192,33 @@ export class LocalResolvers<
         definitionOperation.slice(1)
       : "Query";
 
-    await this.resolveDocument(
-      document,
+    const execContext: ExecContext = {
+      client,
+      fragmentMap,
+      context,
+      variables,
+      defaultOperationType,
+      exportedVariables: {},
+      selectionsToResolve,
+      onlyRunForcedResolvers: false,
+    };
+
+    await this.resolveSelectionSet(
+      mainDefinition.selectionSet,
+      false,
       client.cache.diff({
         query: buildQueryFromSelectionSet(document),
         variables,
         returnPartialData: true,
         optimistic: false,
       }).result,
-      {
-        client,
-        fragmentMap,
-        context,
-        variables,
-        defaultOperationType,
-        exportedVariables: {},
-        selectionsToResolve,
-        onlyRunForcedResolvers: false,
-      }
+      execContext
     );
 
     return {
       ...variables,
+      ...execContext.exportedVariables,
     } as TVariables;
-  }
-
-  private async resolveDocument<TData>(
-    document: DocumentNode,
-    rootValue: TData,
-    execContext: ExecContext
-  ) {
-    const mainDefinition = getMainDefinition(
-      document
-    ) as OperationDefinitionNode;
-
-    return this.resolveSelectionSet(
-      mainDefinition.selectionSet,
-      false,
-      rootValue,
-      execContext
-    ).then((result) => ({
-      result,
-      exportedVariables: execContext.exportedVariables,
-    }));
   }
 
   private async resolveSelectionSet<TData>(

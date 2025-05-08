@@ -166,7 +166,8 @@ export class LocalResolvers<
       mainDefinition.selectionSet,
       false,
       rootValue,
-      execContext
+      execContext,
+      []
     );
 
     const errors = (remoteResult?.errors ?? []).concat(execContext.errors);
@@ -236,7 +237,8 @@ export class LocalResolvers<
         returnPartialData: true,
         optimistic: false,
       }).result,
-      execContext
+      execContext,
+      []
     );
 
     return {
@@ -249,7 +251,8 @@ export class LocalResolvers<
     selectionSet: SelectionSetNode,
     isClientFieldDescendant: boolean,
     rootValue: TData,
-    execContext: ExecContext
+    execContext: ExecContext,
+    path: LocalResolvers.Path
   ) {
     const { fragmentMap, context, variables } = execContext;
     const resultsToMerge: Array<Record<string, any>> = [];
@@ -280,12 +283,14 @@ export class LocalResolvers<
               selection,
               isClientFieldDescendant,
               rootValue as any,
-              execContext
+              execContext,
+              path.concat(selection.name.value)
             )
           : await this.resolveServerField(
               selection,
               rootValue as any,
-              execContext
+              execContext,
+              path.concat(selection.name.value)
             );
 
         if (typeof fieldResult !== "undefined") {
@@ -314,7 +319,8 @@ export class LocalResolvers<
             fragment.selectionSet,
             isClientFieldDescendant,
             rootValue,
-            execContext
+            execContext,
+            path
           );
 
           resultsToMerge.push(fragmentResult);
@@ -330,7 +336,8 @@ export class LocalResolvers<
   private resolveServerField(
     field: FieldNode,
     rootValue: Record<string, any> | null | undefined,
-    execContext: ExecContext
+    execContext: ExecContext,
+    path: LocalResolvers.Path
   ) {
     const result = rootValue?.[field.name.value];
 
@@ -343,14 +350,21 @@ export class LocalResolvers<
     }
 
     if (Array.isArray(result)) {
-      return this.resolveSubSelectedArray(field, false, result, execContext);
+      return this.resolveSubSelectedArray(
+        field,
+        false,
+        result,
+        execContext,
+        path
+      );
     }
 
     return this.resolveSelectionSet(
       field.selectionSet,
       false,
       result,
-      execContext
+      execContext,
+      path
     );
   }
 
@@ -358,7 +372,8 @@ export class LocalResolvers<
     field: FieldNode,
     isClientFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,
-    execContext: ExecContext
+    execContext: ExecContext,
+    path: LocalResolvers.Path
   ): Promise<any> {
     if (!rootValue) {
       return null;
@@ -401,12 +416,12 @@ export class LocalResolvers<
                 unknown
               >,
               { ...execContext.context, client },
-              { field, fragmentMap: execContext.fragmentMap },
+              { field, fragmentMap: execContext.fragmentMap, path },
             ])
           )
         : defaultResolver();
     } catch (e) {
-      this.addError(toErrorLike(e), execContext, {
+      this.addError(toErrorLike(e), path, execContext, {
         resolver: resolverName,
         cause: e,
       });
@@ -453,27 +468,35 @@ export class LocalResolvers<
     }
 
     if (Array.isArray(result)) {
-      return this.resolveSubSelectedArray(field, true, result, execContext);
+      return this.resolveSubSelectedArray(
+        field,
+        true,
+        result,
+        execContext,
+        path
+      );
     }
 
     return this.resolveSelectionSet(
       field.selectionSet,
       true,
       result,
-      execContext
+      execContext,
+      path
     );
   }
 
   private addError(
     error: ErrorLike,
+    path: LocalResolvers.Path,
     execContext: ExecContext,
     meta: { [key: string]: any; resolver: string }
   ) {
     execContext.errors.push(
       addApolloExtension(
         isGraphQLError(error) ?
-          { ...error.toJSON() }
-        : { message: error.message },
+          { ...error.toJSON(), path }
+        : { message: error.message, path },
         meta
       )
     );
@@ -490,10 +513,11 @@ export class LocalResolvers<
     field: FieldNode,
     isClientFieldDescendant: boolean,
     result: any[],
-    execContext: ExecContext
+    execContext: ExecContext,
+    path: LocalResolvers.Path
   ): any {
     return Promise.all(
-      result.map((item) => {
+      result.map((item, idx) => {
         if (item === null) {
           return null;
         }
@@ -504,7 +528,8 @@ export class LocalResolvers<
             field,
             isClientFieldDescendant,
             item,
-            execContext
+            execContext,
+            path.concat(idx)
           );
         }
 
@@ -514,7 +539,8 @@ export class LocalResolvers<
             field.selectionSet,
             isClientFieldDescendant,
             item,
-            execContext
+            execContext,
+            path.concat(idx)
           );
         }
       })

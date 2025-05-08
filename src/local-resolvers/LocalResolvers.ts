@@ -258,7 +258,7 @@ export class LocalResolvers<
             await this.resolveClientField(
               selection,
               isClientFieldDescendant,
-              rootValue,
+              rootValue as any,
               execContext
             )
           : await this.resolveServerField(

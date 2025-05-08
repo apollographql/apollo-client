@@ -346,7 +346,6 @@ export class LocalResolvers<
     const { client, variables } = execContext;
     const fieldName = field.name.value;
     const aliasedFieldName = resultKeyNameFromField(field);
-    const aliasUsed = fieldName !== aliasedFieldName;
     const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
     const typename = rootValue?.__typename || execContext.defaultOperationType;
     let resultPromise = Promise.resolve(defaultResult);

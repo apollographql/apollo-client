@@ -302,9 +302,9 @@ export class LocalResolvers<
       }
     };
 
-    return Promise.all(selectionSet.selections.map(execute)).then(function () {
-      return mergeDeepArray(resultsToMerge);
-    });
+    await Promise.all(selectionSet.selections.map(execute));
+
+    return mergeDeepArray(resultsToMerge);
   }
 
   private async resolveField(

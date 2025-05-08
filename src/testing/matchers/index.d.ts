@@ -15,6 +15,10 @@ import type {
   ToEmitSimilarValueOptions,
   ToRerenderWithSimilarSnapshotOptions,
 } from "./toRerenderWithSimilarSnapshot.ts";
+import {
+  RenderStream,
+  SnapshotStream,
+} from "@testing-library/react-render-stream";
 
 // Unfortunately TypeScript does not have a way to determine if a generic
 // argument is a class or not, so we need to manually keep track of known class
@@ -123,6 +127,8 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     };
 
   toRerenderWithSimilarSnapshot: T extends RenderStream<infer Snapshot> ?
+    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
+  : T extends SnapshotStream<infer Snapshot, any> ?
     (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
   : {
       error: "matcher needs to be called on a `RenderStream` instance";

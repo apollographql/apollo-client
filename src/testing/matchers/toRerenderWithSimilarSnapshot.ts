@@ -1,6 +1,7 @@
 import type {
   NextRenderOptions,
   RenderStream,
+  SnapshotStream,
 } from "@testing-library/react-render-stream";
 import { WaitForRenderTimeoutError } from "@testing-library/react-render-stream";
 import type { MatcherContext } from "expect";
@@ -103,12 +104,18 @@ export const toRerenderWithSimilarSnapshot: MatcherFunction<
       isNot: this.isNot,
     }
   );
-  const stream = actual as RenderStream<any>;
-  const common: CommonStream = {
-    getCurrent: () => stream.getCurrentRender()?.snapshot,
-    takeNext: (options) =>
-      stream.takeRender(options).then((result) => result.snapshot),
-  };
+  const stream = actual as RenderStream<any> | SnapshotStream<any, any>;
+  const common: CommonStream =
+    "getCurrentRender" in stream ?
+      {
+        getCurrent: () => stream.getCurrentRender()?.snapshot,
+        takeNext: (options) =>
+          stream.takeRender(options).then((result) => result.snapshot),
+      }
+    : {
+        getCurrent: () => stream.getCurrentSnapshot(),
+        takeNext: () => stream.takeSnapshot(),
+      };
   const { pass, reason } = await toEmitSimilarValue.call(this, common, options);
 
   return {

@@ -365,7 +365,7 @@ export class LocalResolvers<
 
     const resolver = this.getResolver(typename, fieldName);
 
-    const result =
+    let result =
       resolver ?
         await Promise.resolve(
           // In case the resolve function accesses reactive variables,
@@ -381,6 +381,24 @@ export class LocalResolvers<
           ])
         )
       : defaultResolver();
+
+    if (result === undefined) {
+      if (__DEV__) {
+        if (resolver) {
+          invariant.warn(
+            "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+            resolverName
+          );
+        } else {
+          invariant.warn(
+            "The '%s' field returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+            fieldName
+          );
+        }
+      }
+
+      result = null;
+    }
 
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.

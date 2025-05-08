@@ -238,7 +238,8 @@ export class LocalResolvers<
     execContext: ExecContext,
     path: LocalResolvers.Path
   ) {
-    const { fragmentMap, context, variables } = execContext;
+    const { fragmentMap, context, variables, operationDefinition } =
+      execContext;
     const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
@@ -256,6 +257,7 @@ export class LocalResolvers<
       }
 
       if (selection.kind === Kind.FIELD) {
+        const isRootField = selectionSet === operationDefinition.selectionSet;
         const isClientField =
           isClientFieldDescendant ||
           (selection.directives?.some((d) => d.name.value === "client") ??
@@ -278,7 +280,9 @@ export class LocalResolvers<
               path.concat(selection.name.value)
             );
 
-        if (typeof fieldResult !== "undefined") {
+        // Don't attempt to merge the client field result if the server result
+        // was null
+        if (fieldResult !== undefined && (!isRootField || rootValue !== null)) {
           resultsToMerge.push({
             [resultKeyNameFromField(selection)]: fieldResult,
           });
@@ -311,14 +315,16 @@ export class LocalResolvers<
             path
           );
 
-          resultsToMerge.push(fragmentResult);
+          if (fragmentResult) {
+            resultsToMerge.push(fragmentResult);
+          }
         }
       }
     };
 
     await Promise.all(selectionSet.selections.map(execute));
 
-    return mergeDeepArray(resultsToMerge);
+    return resultsToMerge.length > 0 ? mergeDeepArray(resultsToMerge) : null;
   }
 
   private resolveServerField(

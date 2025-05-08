@@ -10175,6 +10175,20 @@ describe("useQuery Hook", () => {
       variables: {},
     });
 
+    if (IS_REACT_17) {
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        error: new CombinedGraphQLErrors({
+          data: { user: { __typename: "User", id: "1", name: null } },
+          errors: [graphQLError],
+        }),
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
       error: new CombinedGraphQLErrors({

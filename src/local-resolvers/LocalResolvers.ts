@@ -292,8 +292,6 @@ export class LocalResolvers<
         return;
       }
 
-      let fragment: InlineFragmentNode | FragmentDefinitionNode;
-
       if (
         selection.kind === Kind.INLINE_FRAGMENT &&
         selection.typeCondition &&
@@ -316,16 +314,12 @@ export class LocalResolvers<
       }
 
       if (selection.kind === Kind.FRAGMENT_SPREAD) {
-        fragment = fragmentMap[selection.name.value];
-        invariant(fragment, `No fragment named %s`, selection.name.value);
-      }
+        const fragment = fragmentMap[selection.name.value];
+        invariant(fragment, "No fragment named %s", selection.name.value);
 
-      // TODO: Update to use cache.fragmentMatches
-      const fragmentMatcher = (_: any, __: any, ___: any) => true;
+        const typename = rootValue?.__typename;
 
-      if (fragment && fragment.typeCondition) {
-        const typeCondition = fragment.typeCondition.name.value;
-        if (fragmentMatcher(rootValue, typeCondition, context)) {
+        if (cache.fragmentMatches?.(fragment, typename ?? "")) {
           const fragmentResult = await this.resolveSelectionSet(
             fragment.selectionSet,
             isClientFieldDescendant,
@@ -338,6 +332,8 @@ export class LocalResolvers<
             resultsToMerge.push(fragmentResult);
           }
         }
+
+        return;
       }
     };
 

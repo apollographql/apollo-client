@@ -387,9 +387,13 @@ export class LocalResolvers<
       return null;
     }
 
-    const { client, variables } = execContext;
+    const { client, variables, operationDefinition } = execContext;
+    const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
-    const typename = rootValue?.__typename || execContext.defaultOperationType;
+    const typename =
+      isRootField ?
+        rootValue?.__typename || execContext.defaultOperationType
+      : rootValue?.__typename;
     const resolverName = `${typename}.${fieldName}`;
 
     const defaultResolver =

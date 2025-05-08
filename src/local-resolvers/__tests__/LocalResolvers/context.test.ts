@@ -36,7 +36,7 @@ test("passes client in context to resolvers", async () => {
   expect(barResolver).toHaveBeenCalledWith(
     { __typename: "Foo" },
     {},
-    { client },
+    { client, phase: "resolve" },
     {
       field: expect.objectContaining({
         name: { kind: "Name", value: "bar" },

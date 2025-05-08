@@ -51,8 +51,11 @@ describe.skip("Type tests", () => {
   });
 
   test("works with codegen resolver types", async () => {
-    type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
-    const { FoodCategory } = await import("./fixtures/local-resolvers.js");
+    type Resolvers =
+      import("./fixtures/local-resolvers-without-root.js").Resolvers;
+    const { FoodCategory } = await import(
+      "./fixtures/local-resolvers-without-root.js"
+    );
 
     type RequiredRootResolver = SetRequired<Resolvers, "Query">;
 
@@ -73,9 +76,6 @@ describe.skip("Type tests", () => {
     });
 
     new LocalResolvers<Resolvers>({
-      rootValue: {
-        env: "prod",
-      },
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -97,9 +97,6 @@ describe.skip("Type tests", () => {
       },
     });
     new LocalResolvers<RequiredRootResolver>({
-      rootValue: {
-        env: "prod",
-      },
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -338,12 +335,6 @@ describe.skip("Type tests", () => {
         },
       },
     });
-
-    // @ts-expect-error argument required
-    new LocalResolvers<
-      { User?: { isLoggedIn: LocalResolvers.Resolver } },
-      RootValue
-    >();
 
     new LocalResolvers<
       { User?: { isLoggedIn: LocalResolvers.Resolver } },

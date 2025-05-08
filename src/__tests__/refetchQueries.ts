@@ -101,8 +101,13 @@ describe("client.refetchQueries", () => {
           obsQuery.subscribe({
             error: reject,
             next(result) {
-              expect(result.loading).toBe(false);
-              resolve(obsQuery);
+              expect(
+                result.networkStatus == NetworkStatus.ready ||
+                  result.networkStatus == NetworkStatus.refetch
+              ).toBeTruthy();
+              if (result.networkStatus == NetworkStatus.ready) {
+                resolve(obsQuery);
+              }
             },
           })
         );
@@ -807,6 +812,8 @@ describe("client.refetchQueries", () => {
     });
 
     await refetchOQU.check([
+      [bObs, { b: "Beetlejuice" }],
+      [abObs, { a: "A", b: "Beetlejuice" }],
       [bObs, { b: "Beetlejuice" }],
       [abObs, { a: "A", b: "Beetlejuice" }],
     ]);

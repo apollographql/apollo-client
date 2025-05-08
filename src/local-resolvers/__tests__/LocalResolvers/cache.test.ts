@@ -439,22 +439,17 @@ test("reads from the cache on a nested object field by default if a resolver is 
     link: ApolloLink.empty(),
   });
 
-  client.writeFragment({
-    fragment: gql`
-      fragment LocalState on User {
-        bestFriend {
-          id
-          name
-        }
-      }
-    `,
-    id: client.cache.identify({ __typename: "User", id: 1 }),
+  client.writeQuery({
+    query: document,
     data: {
-      __typename: "User",
-      bestFriend: {
+      user: {
         __typename: "User",
-        id: 2,
-        name: "Best Friend",
+        id: 1,
+        bestFriend: {
+          __typename: "User",
+          id: 2,
+          name: "Best Friend",
+        },
       },
     },
   });

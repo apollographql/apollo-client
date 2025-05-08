@@ -519,7 +519,9 @@ export class LocalResolvers<
           return;
         }
 
-        execContext.exportedVariables[name] = result;
+        if (result !== undefined) {
+          execContext.exportedVariables[name] = result;
+        }
       });
     }
 

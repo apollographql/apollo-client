@@ -252,7 +252,7 @@ export class LocalResolvers<
 
         const fieldResult =
           isClientField ?
-            await this.resolveField(
+            await this.resolveClientField(
               selection,
               isClientFieldDescendant,
               rootValue,
@@ -330,7 +330,7 @@ export class LocalResolvers<
     );
   }
 
-  private async resolveField(
+  private async resolveClientField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
     rootValue: any,

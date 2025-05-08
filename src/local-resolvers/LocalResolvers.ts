@@ -535,8 +535,6 @@ export class LocalResolvers<
       return data;
     };
 
-    // If an @export directive is associated with the current field, store
-    // the `as` export variable name and current result for later use.
     if (phase === "exports") {
       field.directives?.forEach((directive) => {
         if (directive.name.value !== "export") {

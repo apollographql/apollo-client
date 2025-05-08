@@ -129,6 +129,10 @@ export class LocalResolvers<
         hasDirectives(["client"], document),
         "Expected document to contain `@client` fields."
       );
+
+      if (!client.cache.fragmentMatches) {
+        warnOnImproperCacheImplementation();
+      }
     }
 
     const mainDefinition = getMainDefinition(
@@ -190,6 +194,11 @@ export class LocalResolvers<
     context: DefaultContext;
     variables: Partial<NoInfer<TVariables>>;
   }): Promise<TVariables> {
+    if (__DEV__) {
+      if (!client.cache.fragmentMatches) {
+        warnOnImproperCacheImplementation();
+      }
+    }
     const mainDefinition = getMainDefinition(
       document
     ) as OperationDefinitionNode;
@@ -708,4 +717,14 @@ function addApolloExtension(
       apollo: { source: "LocalResolvers", ...meta },
     },
   };
+}
+
+let issuedWarning = false;
+function warnOnImproperCacheImplementation() {
+  if (!issuedWarning) {
+    issuedWarning = true;
+    invariant.warn(
+      "The configured cache does not support fragment matching which may lead to incorrect results when executing local resolvers. Please use a cache matches fragments to silence this warning."
+    );
+  }
 }

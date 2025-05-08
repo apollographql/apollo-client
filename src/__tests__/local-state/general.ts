@@ -1034,7 +1034,7 @@ describe("Combining client and server state/operations", () => {
     );
   });
 
-  test.skip("should handle a simple query with both server and client fields", async () => {
+  test("should handle a simple query with both server and client fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query GetCount {

@@ -75,11 +75,40 @@ interface TraverseCacheEntry {
 }
 
 export declare namespace LocalResolvers {
+  // `rootValue` can be any value, but using `any` or `unknown` does not allow
+  // the ability to add a function signature to this definition. The generic
+  // allows us to provide the function signature while allowing any value.
   export interface Options<
     TResolvers extends Resolvers = Resolvers,
     TRootValue = unknown,
   > {
+    /**
+     * A value or function called with the request context creating the root
+     * value passed to any root field resolvers. Providing a function is useful
+     * if you want to use a different root value depending on the operation
+     * details.
+     *
+     * @example
+     * ```ts
+     * new LocalResolversLink({
+     *   rootValue: {
+     *     env: "development"
+     *   },
+     *   resolvers: {
+     *     Query: {
+     *       rootField: (parent) => {
+     *         // parent is { env: "development" }
+     *       }
+     *     }
+     *   }
+     * })
+     * ```
+     */
     rootValue?: TRootValue | RootValueFunction<TRootValue>;
+
+    /**
+     * The map of resolvers used to provide values for `@local` fields.
+     */
     resolvers?: TResolvers;
   }
 

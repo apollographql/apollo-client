@@ -568,7 +568,7 @@ export class LocalResolvers<
         // We expect a resolver to be defined for all `@client` root fields.
         // Warn when a resolver is not defined.
       : () => {
-          const fieldFromCache = getResultAtPath(diff.result, path);
+          const fieldFromCache = getResultAtPath(diff, path);
 
           if (fieldFromCache !== undefined) {
             return fieldFromCache;
@@ -1021,23 +1021,13 @@ function validateCacheImplementation(cache: ApolloCache) {
 }
 
 function getResultAtPath(
-  diffResult: Record<string, any> | null,
+  diff: Cache.DiffResult<any>,
   path: LocalResolvers.Path
 ) {
-  if (diffResult === null) {
+  if (diff.result === null) {
     // Intentionally return undefined to signal we have no cache data
     return;
   }
 
-  let result: any;
-
-  for (const segment of path) {
-    result = diffResult[segment];
-
-    if (result == null) {
-      break;
-    }
-  }
-
-  return result;
+  return path.reduce((value, segment) => value?.[segment], diff.result);
 }

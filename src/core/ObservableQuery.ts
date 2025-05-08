@@ -1037,20 +1037,94 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private fetch(
     options: ObservableQuery.Options<TData, TVariables>,
-    newNetworkStatus: NetworkStatus,
-    query?: DocumentNode
+    networkStatus: NetworkStatus,
+    fetchQuery?: DocumentNode
   ) {
     // console.log("fetch", options);
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
-    return this.queryManager.fetchObservableWithInfo(
+    const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
-      newNetworkStatus,
-      query
+      networkStatus,
+      fetchQuery
     );
+
+    // track query and variables from the start of the operation
+    const { query, variables } = this;
+    const operation: TrackedOperation = {
+      networkStatus,
+      abort: () => subscription.unsubscribe(),
+      query,
+      variables,
+    };
+    this.activeOperations.add(operation);
+
+    // If the operation synchronously emits a value, that will already have set
+    // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
+    // event once the subscription is set up.
+    let synchronouslyEmitted = false;
+
+    let forceFirstValueEmit =
+      networkStatus == NetworkStatus.refetch ||
+      networkStatus == NetworkStatus.setVariables;
+    const subscription = observable
+      .pipe(
+        tap({
+          next: (value) => {
+            synchronouslyEmitted = true;
+
+            if (value.kind === "N" && "networkStatus" in value.value) {
+              if (value.value.networkStatus === NetworkStatus.loading) {
+                operation.override = networkStatus;
+              } else {
+                // ready or error - this operation should no longer override
+                delete operation.override;
+              }
+            } else {
+              // TODO may be removed?
+              delete operation.override;
+            }
+          },
+          finalize: () => this.activeOperations.delete(operation),
+        })
+      )
+      .subscribe({
+        next: (value) => {
+          const meta: Meta = { variables, query };
+
+          if (
+            forceFirstValueEmit &&
+            value.kind === "N" &&
+            "loading" in value.value &&
+            !value.value.loading
+          ) {
+            forceFirstValueEmit = false;
+            meta.shouldEmit = true;
+          }
+
+          queryMetaSlot.withValue(meta, () => this.input.next(value));
+        },
+        error: (err) => this.input.error(err),
+        complete: () => this.input.complete(),
+      });
+    if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
+      operation.override = networkStatus;
+      queryMetaSlot.withValue(
+        { variables, query, shouldEmit: "notification" },
+        () =>
+          this.input.next({
+            kind: "N",
+            source: "newNetworkStatus",
+            value: {
+              resetError: true,
+            },
+          })
+      );
+    }
+    return { fromLink, subscription, observable };
   }
 
   // Turns polling on or off based on this.options.pollInterval.
@@ -1244,7 +1318,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.resubscribeCache();
     }
 
-    const { observable, fromLink } = this.fetch(
+    const { subscription, observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
       query
@@ -1255,9 +1329,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.linkSubscription.unsubscribe();
       }
 
-      this.linkSubscription = this.trackOperation(observable, newNetworkStatus);
-    } else {
-      this.trackOperation(observable, newNetworkStatus);
+      this.linkSubscription = subscription;
     }
 
     return preventUnhandledRejection(
@@ -1447,85 +1519,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       },
     };
-  }
-
-  private trackOperation(
-    observable: Observable<QueryNotification.Value<TData, TVariables>>,
-    networkStatus: NetworkStatus
-  ) {
-    // track query and variables from the start of the operation
-    const { query, variables } = this;
-    const operation: TrackedOperation = {
-      networkStatus,
-      abort: () => subscription.unsubscribe(),
-      query,
-      variables,
-    };
-    this.activeOperations.add(operation);
-
-    // If the operation synchronously emits a value, that will already have set
-    // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
-    // event once the subscription is set up.
-    let synchronouslyEmitted = false;
-
-    let forceFirstValueEmit =
-      networkStatus == NetworkStatus.refetch ||
-      networkStatus == NetworkStatus.setVariables;
-    const subscription = observable
-      .pipe(
-        tap({
-          next: (value) => {
-            synchronouslyEmitted = true;
-
-            if (value.kind === "N" && "networkStatus" in value.value) {
-              if (value.value.networkStatus === NetworkStatus.loading) {
-                operation.override = networkStatus;
-              } else {
-                // ready or error - this operation should no longer override
-                delete operation.override;
-              }
-            } else {
-              // TODO may be removed?
-              delete operation.override;
-            }
-          },
-          finalize: () => this.activeOperations.delete(operation),
-        })
-      )
-      .subscribe({
-        next: (value) => {
-          const meta: Meta = { variables, query };
-
-          if (
-            forceFirstValueEmit &&
-            value.kind === "N" &&
-            "loading" in value.value &&
-            !value.value.loading
-          ) {
-            forceFirstValueEmit = false;
-            meta.shouldEmit = true;
-          }
-
-          queryMetaSlot.withValue(meta, () => this.input.next(value));
-        },
-        error: (err) => this.input.error(err),
-        complete: () => this.input.complete(),
-      });
-    if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
-      operation.override = networkStatus;
-      queryMetaSlot.withValue(
-        { variables, query, shouldEmit: "notification" },
-        () =>
-          this.input.next({
-            kind: "N",
-            source: "newNetworkStatus",
-            value: {
-              resetError: true,
-            },
-          })
-      );
-    }
-    return subscription;
   }
 
   private caclulateNetworkStatus(baseNetworkStatus: NetworkStatus) {

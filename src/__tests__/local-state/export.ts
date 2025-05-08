@@ -11,7 +11,7 @@ import {
 } from "@apollo/client/testing/internal";
 
 describe("@client @export tests", () => {
-  it("should not break @client only queries when the @export directive is used", async () => {
+  test("throws when exported variable has no definition", async () => {
     const query = gql`
       {
         field @client @export(as: "someVar")
@@ -35,7 +35,7 @@ describe("@client @export tests", () => {
     expect(data).toEqual({ field: 1 });
   });
 
-  it("should not break @client only queries when the @export directive is used on nested fields", async () => {
+  test("should not break @client only queries when the @export directive is used on nested fields", async () => {
     const query = gql`
       {
         car @client {
@@ -80,7 +80,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should store the @client field value in the specified @export variable, and make it available to a subsequent resolver", async () => {
+  test("should store the @client field value in the specified @export variable, and make it available to a subsequent resolver", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthorId @client @export(as: "authorId")
@@ -119,7 +119,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should store the @client nested field value in the specified @export variable, and make it avilable to a subsequent resolver", async () => {
+  test("should store the @client nested field value in the specified @export variable, and make it avilable to a subsequent resolver", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor @client {
@@ -166,7 +166,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should allow @client @export variables to be used with remote queries", async () => {
+  test("should allow @client @export variables to be used with remote queries", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     await new Promise<void>((resolve, reject) => {
       const query = gql`
@@ -219,7 +219,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support @client @export variables that are nested multiple levels deep", async () => {
+  test("should support @client @export variables that are nested multiple levels deep", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         appContainer @client {
@@ -281,7 +281,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should ignore @export directives if not used with @client", async () => {
+  test("should ignore @export directives if not used with @client", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor {
@@ -322,7 +322,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support setting an @client @export variable, loaded from the cache, on a virtual field that is combined into a remote query.", async () => {
+  test("should support setting an @client @export variable, loaded from the cache, on a virtual field that is combined into a remote query.", async () => {
     const query = gql`
       query postRequiringReview($reviewerId: Int!) {
         postRequiringReview {
@@ -392,7 +392,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.", async () => {
+  test("should support setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.", async () => {
     const query = gql`
       query postRequiringReview($reviewerId: Int!) {
         postRequiringReview {
@@ -469,7 +469,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {
+  test("should support combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {
     const mutation = gql`
       mutation upvotePost($postId: Int!) {
         topPost @client @export(as: "postId")
@@ -516,7 +516,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support combining @client @export variables, calculated by reading from the cache, with remote mutations", async () => {
+  test("should support combining @client @export variables, calculated by reading from the cache, with remote mutations", async () => {
     const mutation = gql`
       mutation upvotePost($postId: Int!) {
         topPost @client @export(as: "postId")
@@ -568,7 +568,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should not add __typename to @export-ed objects (#4691)", async () => {
+  test("should not add __typename to @export-ed objects (#4691)", async () => {
     const query = gql`
       query GetListItems($where: LessonFilter) {
         currentFilter @client @export(as: "where") {
@@ -639,7 +639,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should use the value of the last @export variable defined, if multiple variables are defined with the same name", async () => {
+  test("should use the value of the last @export variable defined, if multiple variables are defined with the same name", async () => {
     const query = gql`
       query reviewerPost($reviewerId: Int!) {
         primaryReviewerId @client @export(as: "reviewerId")
@@ -693,7 +693,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should refetch if an @export variable changes, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
+  test("should refetch if an @export variable changes, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
@@ -775,7 +775,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should NOT refetch if an @export variable has not changed, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
+  test("should NOT refetch if an @export variable has not changed, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
@@ -842,7 +842,7 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(1);
   });
 
-  it("should NOT attempt to refetch over the network if an @export variable has changed, the current fetch policy is cache-first, and the remote part of the query (that leverages the @export variable) can be fully found in the cache.", async () => {
+  test("should NOT attempt to refetch over the network if an @export variable has changed, the current fetch policy is cache-first, and the remote part of the query (that leverages the @export variable) can be fully found in the cache.", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthorId @client @export(as: "authorId")
@@ -932,7 +932,7 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(1);
   });
 
-  it("should update @client @export variables on each broadcast if they've changed", async () => {
+  test("should update @client @export variables on each broadcast if they've changed", async () => {
     const cache = new InMemoryCache();
 
     const widgetCountQuery = gql`

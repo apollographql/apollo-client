@@ -353,6 +353,97 @@ test("returns variable from nested field when data is written to the cache", asy
   });
 });
 
+test("throws error when cache data is not available for parent when exporting required variable from nested field", async () => {
+  const document = gql`
+    query postRequiringReview($reviewerId: Int!) {
+      postRequiringReview {
+        id
+        title
+        currentReviewer @client {
+          id @export(as: "reviewerId")
+        }
+      }
+      reviewerDetails(reviewerId: $reviewerId) {
+        name
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const currentReviewer = {
+    id: 100,
+    __typename: "CurrentReviewer",
+  };
+
+  const localResolvers = new LocalResolvers({
+    resolvers: {
+      Post: {
+        currentReviewer: () => currentReviewer,
+      },
+    },
+  });
+
+  await expect(
+    localResolvers.getExportedVariables({
+      document,
+      client,
+      context: {},
+      variables: {},
+    })
+  ).rejects.toThrow(
+    new LocalResolversError(
+      "Field 'postRequiringReview' is `undefined` which contains exported required variable 'reviewerId'. Ensure this value is in the cache or make the variable optional.",
+      { path: ["postRequiringReview"] }
+    )
+  );
+});
+
+test("allows optional variable when cache data is not available for parent when exporting variable from nested field", async () => {
+  const document = gql`
+    query postRequiringReview($reviewerId: Int) {
+      postRequiringReview {
+        id
+        title
+        currentReviewer @client {
+          id @export(as: "reviewerId")
+        }
+      }
+      reviewerDetails(reviewerId: $reviewerId) {
+        name
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const currentReviewer = {
+    id: 100,
+    __typename: "CurrentReviewer",
+  };
+
+  const localResolvers = new LocalResolvers({
+    resolvers: {
+      Post: {
+        currentReviewer: () => currentReviewer,
+      },
+    },
+  });
+
+  await expect(
+    localResolvers.getExportedVariables({
+      document,
+      client,
+      context: {},
+      variables: {},
+    })
+  ).resolves.toStrictEqualTyped({});
+});
+
 test("throws error if `@export` does not include an `as` argument", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int!) {

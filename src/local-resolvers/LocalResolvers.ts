@@ -215,7 +215,7 @@ export class LocalResolvers<
     await this.resolveSelectionSet(
       mainDefinition.selectionSet,
       false,
-      client.cache.diff({
+      client.cache.diff<Record<string, any>>({
         query: buildQueryFromSelectionSet(document),
         variables,
         returnPartialData: true,
@@ -231,10 +231,10 @@ export class LocalResolvers<
     } as TVariables;
   }
 
-  private async resolveSelectionSet<TData>(
+  private async resolveSelectionSet(
     selectionSet: SelectionSetNode,
     isClientFieldDescendant: boolean,
-    rootValue: TData,
+    rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
     path: LocalResolvers.Path
   ) {

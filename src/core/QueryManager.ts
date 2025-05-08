@@ -1155,6 +1155,15 @@ export class QueryManager {
     observable?: Observable<FetchResult<any>>;
   }>(false);
 
+  private getContext(
+    requestContext: DefaultContext | undefined
+  ): DefaultContext {
+    return {
+      ...this.defaultContext,
+      ...requestContext,
+    };
+  }
+
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
     context: DefaultContext | undefined,

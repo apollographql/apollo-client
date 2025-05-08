@@ -395,14 +395,16 @@ export class LocalResolvers<
     const result = rootValue?.[field.name.value];
 
     if (result == null) {
-      for (const [name, def] of Object.entries(
-        execContext.exportedVariableDefs
-      )) {
-        if (def.ancestors.has(field) && def.required) {
-          throw new LocalResolversError(
-            `${"Field"} '${field.name.value}' is \`${result}\` which contains exported required variable '${name}'. Ensure this value is in the cache or make the variable optional.`,
-            { path }
-          );
+      if (execContext.phase === "exports") {
+        for (const [name, def] of Object.entries(
+          execContext.exportedVariableDefs
+        )) {
+          if (def.ancestors.has(field) && def.required) {
+            throw new LocalResolversError(
+              `${"Field"} '${field.name.value}' is \`${result}\` which contains exported required variable '${name}'. Ensure this value is in the cache or make the variable optional.`,
+              { path }
+            );
+          }
         }
       }
 

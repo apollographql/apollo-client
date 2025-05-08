@@ -238,8 +238,9 @@ export class LocalResolvers<
     execContext: ExecContext,
     path: LocalResolvers.Path
   ) {
-    const { fragmentMap, context, variables, operationDefinition } =
+    const { client, fragmentMap, context, variables, operationDefinition } =
       execContext;
+    const { cache } = client;
     const resultsToMerge: Array<Record<string, any>> = [];
 
     const execute = async (selection: SelectionNode): Promise<void> => {
@@ -293,8 +294,25 @@ export class LocalResolvers<
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
-      if (selection.kind === Kind.INLINE_FRAGMENT) {
-        fragment = selection;
+      if (
+        selection.kind === Kind.INLINE_FRAGMENT &&
+        selection.typeCondition &&
+        rootValue?.__typename &&
+        cache.fragmentMatches?.(selection, rootValue.__typename)
+      ) {
+        const fragmentResult = await this.resolveSelectionSet(
+          selection.selectionSet,
+          isClientFieldDescendant,
+          rootValue,
+          execContext,
+          path
+        );
+
+        if (fragmentResult) {
+          resultsToMerge.push(fragmentResult);
+        }
+
+        return;
       }
 
       if (selection.kind === Kind.FRAGMENT_SPREAD) {

@@ -507,17 +507,15 @@ export class LocalResolvers<
 
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.
-    if (field.directives) {
-      field.directives.forEach((directive) => {
-        if (directive.name.value === "export" && directive.arguments) {
-          directive.arguments.forEach((arg) => {
-            if (arg.name.value === "as" && arg.value.kind === "StringValue") {
-              execContext.exportedVariables[arg.value.value] = result;
-            }
-          });
-        }
-      });
-    }
+    field.directives?.forEach((directive) => {
+      if (directive.name.value === "export" && directive.arguments) {
+        directive.arguments.forEach((arg) => {
+          if (arg.name.value === "as" && arg.value.kind === "StringValue") {
+            execContext.exportedVariables[arg.value.value] = result;
+          }
+        });
+      }
+    });
 
     if (result === null || !field.selectionSet) {
       return resultOrMergeError(result);

@@ -348,30 +348,30 @@ export class LocalResolvers<
     const aliasedFieldName = resultKeyNameFromField(field);
     const aliasUsed = fieldName !== aliasedFieldName;
     const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
+    const typename = rootValue?.__typename || execContext.defaultOperationType;
     let resultPromise = Promise.resolve(defaultResult);
+
+    const resolver = this.getResolver(typename, fieldName);
 
     // Usually all local resolvers are run when passing through here, but
     // if we've specifically identified that we only want to run forced
     // resolvers (that is, resolvers for fields marked with
     // `@client(always: true)`), then we'll skip running non-forced resolvers.
     if (!execContext.onlyRunForcedResolvers || hasForcedResolvers(field)) {
-      const resolverType =
-        rootValue.__typename || execContext.defaultOperationType;
-      const resolverMap = this.resolvers && this.resolvers[resolverType];
-      if (resolverMap) {
-        const resolve = resolverMap[aliasUsed ? fieldName : aliasedFieldName];
-        if (resolve) {
-          resultPromise = Promise.resolve(
-            // In case the resolve function accesses reactive variables,
-            // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(client.cache, resolve, [
-              rootValue,
-              argumentsObjectFromField(field, variables),
-              { ...execContext.context, client },
-              { field, fragmentMap: execContext.fragmentMap },
-            ])
-          );
-        }
+      if (resolver) {
+        resultPromise = Promise.resolve(
+          // In case the resolve function accesses reactive variables,
+          // set cacheSlot to the current cache instance.
+          cacheSlot.withValue(client.cache, resolver, [
+            rootValue,
+            (argumentsObjectFromField(field, variables) ?? {}) as Record<
+              string,
+              unknown
+            >,
+            { ...execContext.context, client },
+            { field, fragmentMap: execContext.fragmentMap },
+          ])
+        );
       }
     }
 
@@ -416,6 +416,13 @@ export class LocalResolvers<
         );
       }
     });
+  }
+
+  private getResolver(
+    typename: string,
+    fieldName: string
+  ): LocalResolvers.Resolver | undefined {
+    return this.resolvers[typename]?.[fieldName];
   }
 
   private resolveSubSelectedArray(

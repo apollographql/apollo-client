@@ -57,6 +57,10 @@ type ExecContext = {
   errors: GraphQLFormattedError[];
 };
 
+interface TraverseCacheEntry {
+  selectionsToResolve: Set<SelectionNode>;
+}
+
 export declare namespace LocalResolvers {
   export interface Options<TResolvers extends Resolvers> {
     resolvers?: TResolvers;
@@ -93,6 +97,10 @@ export class LocalResolvers<
   private selectionsToResolveCache = new WeakMap<
     ExecutableDefinitionNode,
     Set<SelectionNode>
+  >();
+  private traverseCache = new WeakMap<
+    ExecutableDefinitionNode,
+    TraverseCacheEntry
   >();
 
   constructor(

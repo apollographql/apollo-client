@@ -226,11 +226,9 @@ export class LocalResolvers<
       document
     ) as OperationDefinitionNode;
 
-    const isClientFieldDescendant = false;
-
     return this.resolveSelectionSet(
       mainDefinition.selectionSet,
-      isClientFieldDescendant,
+      false,
       rootValue,
       execContext
     ).then((result) => ({

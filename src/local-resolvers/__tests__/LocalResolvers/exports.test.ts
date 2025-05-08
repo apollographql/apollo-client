@@ -319,16 +319,19 @@ test("returns variable from nested field when data is written to the cache", asy
     title: "The Local State Conundrum",
     __typename: "Post",
   };
-
-  client.writeQuery({
-    query: document,
-    data: { postRequiringReview },
-  });
-
   const currentReviewer = {
     id: 100,
     __typename: "CurrentReviewer",
   };
+  const reviewerDetails = {
+    name: "John Smith",
+    __typename: "Reviewer",
+  };
+
+  client.writeQuery({
+    query: document,
+    data: { postRequiringReview, reviewerDetails },
+  });
 
   const localResolvers = new LocalResolvers({
     resolvers: {

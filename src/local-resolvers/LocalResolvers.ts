@@ -333,7 +333,7 @@ export class LocalResolvers<
   private async resolveClientField(
     field: FieldNode,
     isClientFieldDescendant: boolean,
-    rootValue: any,
+    rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext
   ): Promise<any> {
     if (!rootValue) {

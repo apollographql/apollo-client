@@ -1200,6 +1200,7 @@ export class QueryManager {
       };
     };
 
+    const operationName = getOperationName(query) || void 0;
     const executeContext: ExecuteContext = {
       client: this.client,
     };
@@ -1210,7 +1211,7 @@ export class QueryManager {
       const operation: GraphQLRequest = {
         query: serverQuery,
         variables,
-        operationName: getOperationName(serverQuery) || void 0,
+        operationName,
         context: prepareContext(context),
         extensions,
       };
@@ -1258,18 +1259,26 @@ export class QueryManager {
     }
 
     if (clientQuery) {
-      observable = observable.pipe(
-        mergeMap((result) => {
-          return from(
-            this.localState.runResolvers({
-              document: clientQuery,
-              remoteResult: result,
-              context,
-              variables,
-            })
-          );
-        })
-      );
+      if (this.resolvers) {
+        observable = observable.pipe(
+          mergeMap((result) => {
+            return from(
+              this.resolvers!.execute<TData>({
+                client: this.client,
+                document: clientQuery,
+                remoteResult: result,
+                context: this.getContext(context),
+                variables,
+              })
+            );
+          })
+        );
+      } else if (__DEV__) {
+        invariant.warn(
+          "Query '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+          operationName ?? "(anonymous)"
+        );
+      }
     }
 
     return observable.pipe(

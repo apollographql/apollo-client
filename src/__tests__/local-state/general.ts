@@ -377,6 +377,7 @@ describe("Cache manipulation", () => {
           Mutation: {
             select(_, { itemId }) {
               selectedItemId = itemId;
+              return itemId;
             },
           },
         },
@@ -402,11 +403,13 @@ describe("Cache manipulation", () => {
       partial: false,
     });
 
-    await client.mutate({
-      mutation,
-      variables: { id: 123 },
-      refetchQueries: ["FetchInitialData"],
-    });
+    await expect(
+      client.mutate({
+        mutation,
+        variables: { id: 123 },
+        refetchQueries: ["FetchInitialData"],
+      })
+    ).resolves.toStrictEqualTyped({ data: { select: 123 } });
 
     await expect(stream).toEmitTypedValue({
       data: { serverData, selectedItemId: -1 },

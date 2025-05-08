@@ -157,7 +157,12 @@ export class LocalResolvers<
   }): Promise<TVariables> {
     await this.resolveDocument(
       document,
-      this.buildRootValueFromCache(document, variables),
+      client.cache.diff({
+        query: buildQueryFromSelectionSet(document),
+        variables,
+        returnPartialData: true,
+        optimistic: false,
+      }).result,
       { ...context, client },
       variables
     );
@@ -165,19 +170,6 @@ export class LocalResolvers<
     return {
       ...variables,
     } as TVariables;
-  }
-
-  // Query the cache and return matching data.
-  private buildRootValueFromCache(
-    document: DocumentNode,
-    variables?: Record<string, any>
-  ) {
-    return this.cache.diff({
-      query: buildQueryFromSelectionSet(document),
-      variables,
-      returnPartialData: true,
-      optimistic: false,
-    }).result;
   }
 
   private async resolveDocument<TData>(

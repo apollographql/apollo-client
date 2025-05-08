@@ -2,6 +2,11 @@ import { LocalResolvers } from "@apollo/client/local-resolvers";
 
 import type { RootValue } from "./fixtures/rootValue.js";
 
+type SetRequired<T, Keys extends keyof T> = { [K in Keys]-?: T[K] } & Omit<
+  T,
+  Keys
+>;
+
 describe.skip("Type tests", () => {
   test("allows resolvers of anything with no generic", () => {
     interface Food {
@@ -49,12 +54,20 @@ describe.skip("Type tests", () => {
     type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
     const { FoodCategory } = await import("./fixtures/local-resolvers.js");
 
-    // @ts-expect-error missing argument
+    type RequiredRootResolver = SetRequired<Resolvers, "Query">;
+
     new LocalResolvers<Resolvers>();
-    // @ts-expect-error missing resolvers option
+    // @ts-expect-error missing argument
+    new LocalResolvers<RequiredRootResolver>();
+
     new LocalResolvers<Resolvers>({});
+    // @ts-expect-error missing resolvers option
+    new LocalResolvers<RequiredRootResolver>({});
 
     new LocalResolvers<Resolvers>({
+      resolvers: {},
+    });
+    new LocalResolvers<RequiredRootResolver>({
       // @ts-expect-error missing Query resolver
       resolvers: {},
     });
@@ -83,15 +96,53 @@ describe.skip("Type tests", () => {
         },
       },
     });
+    new LocalResolvers<RequiredRootResolver>({
+      rootValue: {
+        env: "prod",
+      },
+      resolvers: {
+        Query: {
+          currentUserId: () => "1",
+        },
+        User: {
+          favoriteFood: () => ({
+            __typename: "Food",
+            name: "Pasta",
+            categories: [FoodCategory.Italian],
+          }),
+        },
+        Food: {
+          name: (food) => food.name?.toUpperCase() ?? null,
+          categories: (food, { limit, offset }) => {
+            limit = limit ?? 5;
+            return food.categories?.slice(offset, offset + limit) ?? [];
+          },
+        },
+      },
+    });
 
     new LocalResolvers<Resolvers>({
       resolvers: {
-        // @ts-expect-error missing currentUserId resolver
+        Query: {},
+      },
+    });
+    new LocalResolvers<RequiredRootResolver>({
+      resolvers: {
         Query: {},
       },
     });
 
     new LocalResolvers<Resolvers>({
+      resolvers: {
+        Query: {
+          // @ts-expect-error wrong return type
+          currentUserId: () => {
+            return true;
+          },
+        },
+      },
+    });
+    new LocalResolvers<RequiredRootResolver>({
       resolvers: {
         Query: {
           // @ts-expect-error wrong return type
@@ -110,9 +161,26 @@ describe.skip("Type tests", () => {
         },
       },
     });
+    new LocalResolvers<RequiredRootResolver>({
+      resolvers: {
+        User: {
+          // @ts-expect-error missing __typename
+          favoriteFood: () => ({ name: "Pizza" }),
+        },
+      },
+    });
 
     new LocalResolvers<Resolvers>({
-      rootValue: { env: "dev" },
+      resolvers: {
+        Query: {
+          currentUserId: () => "1",
+        },
+        User: {
+          favoriteFood: () => ({ __typename: "Food" }),
+        },
+      },
+    });
+    new LocalResolvers<RequiredRootResolver>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -129,8 +197,22 @@ describe.skip("Type tests", () => {
         Invalid: {},
       },
     });
+    new LocalResolvers<RequiredRootResolver>({
+      resolvers: {
+        // @ts-expect-error unknown typename
+        Invalid: {},
+      },
+    });
 
     new LocalResolvers<Resolvers>({
+      resolvers: {
+        Query: {
+          // @ts-expect-error unknown field
+          invalid: () => 1,
+        },
+      },
+    });
+    new LocalResolvers<RequiredRootResolver>({
       resolvers: {
         Query: {
           // @ts-expect-error unknown field

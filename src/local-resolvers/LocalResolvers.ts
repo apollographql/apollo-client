@@ -21,7 +21,7 @@ import type {
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
-import type { FragmentMap } from "@apollo/client/utilities";
+import type { FragmentMap, NoInfer } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   buildQueryFromSelectionSet,
@@ -165,64 +165,6 @@ export class LocalResolvers<
     return {
       ...variables,
     } as TVariables;
-  }
-
-  // Run local client resolvers against the incoming query and remote data.
-  // Locally resolved field values are merged with the incoming remote data,
-  // and returned. Note that locally resolved fields will overwrite
-  // remote data using the same field name.
-  public async runResolvers<TData>({
-    document,
-    remoteResult,
-    context,
-    variables,
-    onlyRunForcedResolvers = false,
-  }: {
-    document: DocumentNode | null;
-    remoteResult: FetchResult<TData>;
-    context?: Record<string, any>;
-    variables?: Record<string, any>;
-    onlyRunForcedResolvers?: boolean;
-  }): Promise<FetchResult<TData>> {
-    if (document) {
-      return this.resolveDocument(
-        document,
-        remoteResult.data,
-        context,
-        variables,
-        onlyRunForcedResolvers
-      ).then((localResult) => ({
-        ...remoteResult,
-        data: localResult.result,
-      }));
-    }
-
-    return remoteResult;
-  }
-
-  // To support `@client @export(as: "someVar")` syntax, we'll first resolve
-  // @client @export fields locally, then pass the resolved values back to be
-  // used alongside the original operation variables.
-  public async addExportedVariables<TVars extends OperationVariables>(
-    document: DocumentNode,
-    variables: TVars = {} as TVars,
-    context = {}
-  ): /* returns at least the variables that were passed in */ Promise<TVars> {
-    if (document) {
-      return this.resolveDocument(
-        document,
-        this.buildRootValueFromCache(document, variables) || {},
-        context,
-        variables
-      ).then((data) => ({
-        ...variables,
-        ...data.exportedVariables,
-      }));
-    }
-
-    return {
-      ...variables,
-    };
   }
 
   // Query the cache and return matching data.

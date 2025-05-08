@@ -5,6 +5,7 @@ import {
   isReference,
 } from "@apollo/client";
 import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
 
@@ -165,4 +166,643 @@ test("does not overwrite __typename when writing to the cache with an id", async
       id: "uniqueId",
     },
   });
+});
+
+test("reads from the cache on a root scalar field by default if a resolver is not defined", async () => {
+  const document = gql`
+    query {
+      count @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: document,
+    data: {
+      count: 10,
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({ document, client, context: {} })
+  ).resolves.toStrictEqualTyped({ data: { count: 10 } });
+});
+
+test("reads from the cache on a root object field by default if a resolver is not defined", async () => {
+  const document = gql`
+    query {
+      user @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: document,
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({ document, client, context: {} })
+  ).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", id: 1, name: "Test User" } },
+  });
+});
+
+test("handles read functions for root scalar field from cache if resolver is not defined", async () => {
+  const document = gql`
+    query {
+      count @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            count: {
+              read() {
+                return 10;
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({ document, client, context: {} })
+  ).resolves.toStrictEqualTyped({ data: { count: 10 } });
+});
+
+test("handles read functions for root object field from cache if resolver is not defined", async () => {
+  const document = gql`
+    query {
+      user @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            user: {
+              read() {
+                return { __typename: "User", id: 1, name: "Test User" };
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({ document, client, context: {} })
+  ).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", id: 1, name: "Test User" } },
+  });
+});
+
+test("warns if resolver is not defined if cache does not have value", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      count @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({ document, client, context: {} })
+  ).resolves.toStrictEqualTyped({ data: { count: null } });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "Query.count"
+  );
+});
+
+test("reads from the cache on a nested scalar field by default if a resolver is not defined", async () => {
+  const document = gql`
+    query {
+      user {
+        id
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment LocalState on User {
+        isLoggedIn
+      }
+    `,
+    id: client.cache.identify({ __typename: "User", id: 1 }),
+    data: {
+      __typename: "User",
+      isLoggedIn: true,
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: { data: { user: { __typename: "User", id: 1 } } },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", id: 1, isLoggedIn: true } },
+  });
+});
+
+test("reads from the cache with a read function on a nested scalar field if a resolver is not defined", async () => {
+  const document = gql`
+    query {
+      user {
+        id
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            isLoggedIn: {
+              read() {
+                return true;
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User", id: 1 } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", id: 1, isLoggedIn: true } },
+  });
+});
+
+test("reads from the cache on a nested object field by default if a resolver is not defined", async () => {
+  const document = gql`
+    query {
+      user {
+        id
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeFragment({
+    fragment: gql`
+      fragment LocalState on User {
+        bestFriend {
+          id
+          name
+        }
+      }
+    `,
+    id: client.cache.identify({ __typename: "User", id: 1 }),
+    data: {
+      __typename: "User",
+      bestFriend: {
+        __typename: "User",
+        id: 2,
+        name: "Best Friend",
+      },
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User", id: 1 } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: { __typename: "User", id: 2, name: "Best Friend" },
+      },
+    },
+  });
+});
+
+test("reads from the cache with a read function on a nested object field by default if a resolver is not defined", async () => {
+  const document = gql`
+    query {
+      user {
+        id
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            bestFriend: {
+              read() {
+                return { __typename: "User", id: 2, name: "Best Friend" };
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User", id: 1 } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: { __typename: "User", id: 2, name: "Best Friend" },
+      },
+    },
+  });
+});
+
+// TODO: I think this might be fixable
+test("warns on missing resolver if a nested client field is resolved on a non-normalized object", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      user {
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      typePolicies: {
+        User: {
+          fields: {
+            bestFriend: {
+              read() {
+                return { __typename: "User", id: 2, name: "Best Friend" };
+              },
+            },
+          },
+        },
+      },
+    }),
+    link: ApolloLink.empty(),
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User" } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        bestFriend: null,
+      },
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "User.bestFriend"
+  );
+});
+
+test("does not confuse field missing resolver with root field of same name on a normalized record", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      count @client
+      user {
+        id
+        count @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: gql`
+      query {
+        count
+      }
+    `,
+    data: {
+      count: 10,
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User", id: 1 } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      count: 10,
+      user: {
+        __typename: "User",
+        id: 1,
+        count: null,
+      },
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "User.count"
+  );
+});
+
+test("does not confuse field missing resolver with root field of same name on a non-normalized record", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      count @client
+      user {
+        count @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: gql`
+      query {
+        count
+      }
+    `,
+    data: {
+      count: 10,
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User" } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      count: 10,
+      user: {
+        __typename: "User",
+        count: null,
+      },
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+    "User.count"
+  );
+});
+
+test("warns on undefined value if partial data is written to the cache for an object client field", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      user {
+        id
+        bestFriend @client {
+          id
+          name
+        }
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: gql`
+      query {
+        user {
+          id
+          bestFriend {
+            id
+          }
+        }
+      }
+    `,
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: { __typename: "User", id: 2 },
+      },
+    },
+  });
+
+  const localResolvers = new LocalResolvers();
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: {
+        data: { user: { __typename: "User", id: 1 } },
+      },
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        bestFriend: {
+          __typename: "User",
+          id: 2,
+          name: null,
+        },
+      },
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field on object %o returned `undefined` instead of a value. The parent resolver forgot to include the property in the returned value and there was no resolver defined for the field.",
+    "name",
+    { __typename: "User", id: 2 }
+  );
+});
+
+// Maybe remove?
+test.skip("uses a written cache value from a nested client field from parent resolver", async () => {
+  using _ = spyOnConsole("warn");
+
+  const document = gql`
+    {
+      user @client {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  client.writeQuery({
+    query: document,
+    data: {
+      user: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    },
+  });
+
+  const localResolvers = new LocalResolvers({
+    resolvers: {
+      Query: {
+        user: () => ({ __typename: "User", id: 1 }),
+      },
+    },
+  });
+
+  await expect(
+    localResolvers.execute({ document, client, context: {} })
+  ).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", id: 1, name: "Test User" } },
+  });
+
+  expect(console.warn).not.toHaveBeenCalled();
 });

@@ -6,6 +6,7 @@ import type {
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
+  GraphQLError,
   GraphQLFormattedError,
   InlineFragmentNode,
   OperationDefinitionNode,
@@ -17,10 +18,12 @@ import { isSelectionNode, Kind, visit } from "graphql";
 import type {
   ApolloClient,
   DefaultContext,
+  ErrorLike,
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
+import { toErrorLike } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import type { FragmentMap, NoInfer } from "@apollo/client/utilities";
 import {
@@ -383,23 +386,32 @@ export class LocalResolvers<
         };
 
     const resolver = this.getResolver(typename, fieldName);
+    let result: unknown;
 
-    let result =
-      resolver ?
-        await Promise.resolve(
-          // In case the resolve function accesses reactive variables,
-          // set cacheSlot to the current cache instance.
-          cacheSlot.withValue(client.cache, resolver, [
-            rootValue,
-            (argumentsObjectFromField(field, variables) ?? {}) as Record<
-              string,
-              unknown
-            >,
-            { ...execContext.context, client },
-            { field, fragmentMap: execContext.fragmentMap },
-          ])
-        )
-      : defaultResolver();
+    try {
+      result =
+        resolver ?
+          await Promise.resolve(
+            // In case the resolve function accesses reactive variables,
+            // set cacheSlot to the current cache instance.
+            cacheSlot.withValue(client.cache, resolver, [
+              rootValue,
+              (argumentsObjectFromField(field, variables) ?? {}) as Record<
+                string,
+                unknown
+              >,
+              { ...execContext.context, client },
+              { field, fragmentMap: execContext.fragmentMap },
+            ])
+          )
+        : defaultResolver();
+    } catch (e) {
+      this.addError(toErrorLike(e), execContext, {
+        resolver: resolverName,
+        cause: e,
+      });
+      return null;
+    }
 
     if (result === undefined) {
       if (__DEV__) {
@@ -449,6 +461,21 @@ export class LocalResolvers<
       true,
       result,
       execContext
+    );
+  }
+
+  private addError(
+    error: ErrorLike,
+    execContext: ExecContext,
+    meta: { [key: string]: any; resolver: string }
+  ) {
+    execContext.errors.push(
+      addApolloExtension(
+        isGraphQLError(error) ?
+          { ...error.toJSON() }
+        : { message: error.message },
+        meta
+      )
     );
   }
 
@@ -548,4 +575,31 @@ export class LocalResolvers<
     }
     return collectByDefinition(mainDefinition);
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-restricted-types
+function isGraphQLError(error: ErrorLike): error is GraphQLError {
+  return (
+    error.name === "GraphQLError" &&
+    // Check to see if the error contains keys returned in toJSON. The values
+    // might be `undefined` if not set, but we don't care about those as we
+    // can be reasonably sure this is a GraphQLError if all of these properties
+    // exist on the error
+    "path" in error &&
+    "locations" in error &&
+    "extensions" in error
+  );
+}
+
+function addApolloExtension(
+  error: GraphQLFormattedError,
+  meta: { resolver: string }
+) {
+  return {
+    ...error,
+    extensions: {
+      ...error.extensions,
+      apollo: { source: "LocalResolvers", ...meta },
+    },
+  };
 }

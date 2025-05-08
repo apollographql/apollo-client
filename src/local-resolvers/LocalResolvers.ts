@@ -425,15 +425,12 @@ export class LocalResolvers<
       return this.resolveSubSelectedArray(field, true, result, execContext);
     }
 
-    // Returned value is an object, and the query has a sub-selection. Recurse.
-    if (field.selectionSet) {
-      return this.resolveSelectionSet(
-        field.selectionSet,
-        true,
-        result,
-        execContext
-      );
-    }
+    return this.resolveSelectionSet(
+      field.selectionSet,
+      true,
+      result,
+      execContext
+    );
   }
 
   private getResolver(

@@ -344,30 +344,43 @@ export class LocalResolvers<
 
     const { client, variables } = execContext;
     const fieldName = field.name.value;
-    const aliasedFieldName = resultKeyNameFromField(field);
-    const defaultResult = rootValue[aliasedFieldName] || rootValue[fieldName];
     const typename = rootValue?.__typename || execContext.defaultOperationType;
-    let resultPromise = Promise.resolve(defaultResult);
+    const resolverName = `${typename}.${fieldName}`;
+
+    const defaultResolver =
+      isClientFieldDescendant ?
+        () => rootValue?.[fieldName]
+        // We expect a resolver to be defined for all `@client` root fields.
+        // Warn if a resolver is not defined.
+      : () => {
+          if (__DEV__) {
+            invariant.warn(
+              "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+              resolverName
+            );
+          }
+
+          return null;
+        };
 
     const resolver = this.getResolver(typename, fieldName);
 
-    if (resolver) {
-      resultPromise = Promise.resolve(
-        // In case the resolve function accesses reactive variables,
-        // set cacheSlot to the current cache instance.
-        cacheSlot.withValue(client.cache, resolver, [
-          rootValue,
-          (argumentsObjectFromField(field, variables) ?? {}) as Record<
-            string,
-            unknown
-          >,
-          { ...execContext.context, client },
-          { field, fragmentMap: execContext.fragmentMap },
-        ])
-      );
-    }
-
-    const result = (await resultPromise) ?? defaultResult;
+    const result =
+      resolver ?
+        await Promise.resolve(
+          // In case the resolve function accesses reactive variables,
+          // set cacheSlot to the current cache instance.
+          cacheSlot.withValue(client.cache, resolver, [
+            rootValue,
+            (argumentsObjectFromField(field, variables) ?? {}) as Record<
+              string,
+              unknown
+            >,
+            { ...execContext.context, client },
+            { field, fragmentMap: execContext.fragmentMap },
+          ])
+        )
+      : defaultResolver();
 
     // If an @export directive is associated with the current field, store
     // the `as` export variable name and current result for later use.

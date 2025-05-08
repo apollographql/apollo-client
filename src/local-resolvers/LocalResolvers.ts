@@ -11,7 +11,7 @@ import type {
   SelectionNode,
   SelectionSetNode,
 } from "graphql";
-import { isSelectionNode, visit } from "graphql";
+import { isSelectionNode, Kind, visit } from "graphql";
 
 import type {
   ApolloClient,
@@ -29,8 +29,6 @@ import {
   getFragmentDefinitions,
   getMainDefinition,
   hasDirectives,
-  isField,
-  isInlineFragment,
   mergeDeep,
   mergeDeepArray,
   resultKeyNameFromField,
@@ -264,7 +262,7 @@ export class LocalResolvers<
         return;
       }
 
-      if (isField(selection)) {
+      if (selection.kind === Kind.FIELD) {
         return this.resolveField(
           selection,
           isClientFieldDescendant,
@@ -281,7 +279,7 @@ export class LocalResolvers<
 
       let fragment: InlineFragmentNode | FragmentDefinitionNode;
 
-      if (isInlineFragment(selection)) {
+      if (selection.kind === Kind.INLINE_FRAGMENT) {
         fragment = selection;
       } else {
         // This is a named fragment.

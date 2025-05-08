@@ -5937,7 +5937,18 @@ describe("useQuery Hook", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult!).toStrictEqualTyped({
-        data: undefined,
+        data: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee",
+            post: {
+              __typename: "Post",
+              id: 1,
+              title: "Title",
+            },
+          },
+        },
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: {

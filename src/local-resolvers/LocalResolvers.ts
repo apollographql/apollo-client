@@ -73,8 +73,11 @@ export declare namespace LocalResolvers {
     info: {
       field: FieldNode;
       fragmentMap: FragmentMap;
+      path: Path;
     }
   ) => TResult;
+
+  export type Path = Array<string | number>;
 }
 
 export class LocalResolvers<

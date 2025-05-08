@@ -1021,17 +1021,18 @@ function validateCacheImplementation(cache: ApolloCache) {
 }
 
 function getResultAtPath(
-  data: Record<string, any> | null,
+  diffResult: Record<string, any> | null,
   path: LocalResolvers.Path
 ) {
-  if (data == null) {
-    return data;
+  if (diffResult === null) {
+    // Intentionally return undefined to signal we have no cache data
+    return;
   }
 
   let result: any;
 
   for (const segment of path) {
-    result = data[segment];
+    result = diffResult[segment];
 
     if (result == null) {
       break;

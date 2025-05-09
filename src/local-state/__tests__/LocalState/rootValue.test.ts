@@ -17,7 +17,7 @@ test("can pass `rootValue` as object that will be used with root client resolver
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     rootValue: {
       isBarEnabled: true,
     },
@@ -32,7 +32,7 @@ test("can pass `rootValue` as object that will be used with root client resolver
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
   });
@@ -53,7 +53,7 @@ test("can pass `rootValue` as function that will be used with root client resolv
   });
 
   const rootValue = jest.fn(() => ({ isBarEnabled: true }));
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     rootValue,
     resolvers: {
       Query: {
@@ -66,7 +66,7 @@ test("can pass `rootValue` as function that will be used with root client resolv
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
   });
@@ -99,7 +99,7 @@ test.each([
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     rootValue,
     resolvers: {
       Query: {
@@ -109,7 +109,7 @@ test.each([
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { rootValue },
   });

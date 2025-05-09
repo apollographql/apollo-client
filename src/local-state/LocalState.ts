@@ -118,7 +118,7 @@ export declare namespace LocalState {
      *
      * @example
      * ```ts
-     * new LocalResolversLink({
+     * new LocalState({
      *   rootValue: {
      *     env: "development"
      *   },
@@ -1040,7 +1040,7 @@ function addApolloExtension(
     ...error,
     extensions: {
       ...error.extensions,
-      apollo: { source: "LocalResolvers", ...meta },
+      apollo: { source: "LocalState", ...meta },
     },
   };
 }

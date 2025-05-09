@@ -16,7 +16,7 @@ test("supports async @client resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         async isLoggedIn() {
@@ -27,7 +27,7 @@ test("supports async @client resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { isLoggedIn: true },
   });
@@ -75,7 +75,7 @@ test("handles nested asynchronous @client resolvers", async () => {
   const ticketsPerDev = 5;
   const commentsPerTicket = 5;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         async developer(_, { id }) {
@@ -118,7 +118,7 @@ test("handles nested asynchronous @client resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -174,7 +174,7 @@ test("supports async @client resolvers mixed with remotely resolved data", async
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Member: {
         async isLoggedIn() {
@@ -188,7 +188,7 @@ test("supports async @client resolvers mixed with remotely resolved data", async
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       member: {

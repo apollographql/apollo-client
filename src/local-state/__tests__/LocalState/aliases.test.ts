@@ -26,7 +26,7 @@ test("resolves @client fields mixed with aliased server fields", async () => {
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true, __typename: "Foo" }),
@@ -35,7 +35,7 @@ test("resolves @client fields mixed with aliased server fields", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -64,7 +64,7 @@ test("resolves aliased @client fields", async () => {
   });
 
   const fie = jest.fn();
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true, __typename: "Foo" }),
@@ -74,7 +74,7 @@ test("resolves aliased @client fields", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       client,
       document,
       context: {},
@@ -119,7 +119,7 @@ test("resolves deeply nested aliased @client fields", async () => {
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       User: {
         fullName: (user) => `${user.firstName} ${user.lastName}`,
@@ -128,7 +128,7 @@ test("resolves deeply nested aliased @client fields", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       client,
       document,
       context: {},
@@ -170,7 +170,7 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
   const remoteResult = { data: { baz: { foo: true, __typename: "Baz" } } };
 
   const fie = jest.fn();
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true, __typename: "Foo" }),
@@ -180,7 +180,7 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       client,
       document,
       context: {},
@@ -211,7 +211,7 @@ test("does not confuse fields aliased to each other", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: "fum", fum: "bar", __typename: "Foo" }),
@@ -220,7 +220,7 @@ test("does not confuse fields aliased to each other", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       client,
       document,
       context: {},
@@ -247,7 +247,7 @@ test("does not confuse fields aliased to each other with boolean values", async 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true, fum: false, __typename: "Foo" }),
@@ -256,7 +256,7 @@ test("does not confuse fields aliased to each other with boolean values", async 
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       client,
       document,
       context: {},
@@ -283,7 +283,7 @@ test("does not confuse aliased __typename", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true, __typename: "Foo" }),
@@ -292,7 +292,7 @@ test("does not confuse aliased __typename", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       client,
       document,
       context: {},

@@ -29,12 +29,12 @@ test("runs resolvers marked with @client(always: true)", async () => {
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   // When the resolver isn't defined, there isn't anything to force, so
   // make sure the query resolves from the cache properly.
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -46,7 +46,7 @@ test("runs resolvers marked with @client(always: true)", async () => {
     },
   });
 
-  localResolvers.addResolvers({
+  localState.addResolvers({
     Author: {
       isLoggedIn() {
         return true;
@@ -58,7 +58,7 @@ test("runs resolvers marked with @client(always: true)", async () => {
   // resolves properly as a combination of cache and local resolver
   // data.
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -87,7 +87,7 @@ test("only runs forced resolvers for fields marked with `@client(always: true)`,
   let nameCount = 0;
   let isLoggedInCount = 0;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         name() {
@@ -111,7 +111,7 @@ test("only runs forced resolvers for fields marked with `@client(always: true)`,
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -144,7 +144,7 @@ test("runs nested forced resolvers from non-forced client descendant field", asy
   let userCount = 0;
   let isLoggedInCount = 0;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         user() {
@@ -174,7 +174,7 @@ test("runs nested forced resolvers from non-forced client descendant field", asy
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -209,7 +209,7 @@ test("warns for client fields without cached data and resolvers when running for
 
   let nameCount = 0;
   let isLoggedInCount = 0;
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       User: {
         name: () => {
@@ -225,7 +225,7 @@ test("warns for client fields without cached data and resolvers when running for
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},

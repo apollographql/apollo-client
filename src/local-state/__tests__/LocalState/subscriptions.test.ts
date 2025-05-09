@@ -17,10 +17,10 @@ test("throws when given a subscription with no client fields", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document: subscription,
       client,
       context: {},
@@ -45,7 +45,7 @@ test("adds @client fields with subscription results", async () => {
   });
 
   let subCounter = 0;
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Subscription: {
         count: () => {
@@ -57,7 +57,7 @@ test("adds @client fields with subscription results", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document: subscription,
       client,
       context: {},
@@ -68,7 +68,7 @@ test("adds @client fields with subscription results", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document: subscription,
       client,
       context: {},

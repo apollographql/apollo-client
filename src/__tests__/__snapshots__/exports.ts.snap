@@ -11,6 +11,7 @@ Array [
   "HttpLink",
   "InMemoryCache",
   "LinkError",
+  "LocalResolversError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
@@ -76,6 +77,7 @@ Array [
   "HttpLink",
   "InMemoryCache",
   "LinkError",
+  "LocalResolversError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
@@ -127,11 +129,13 @@ Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
   "LinkError",
+  "LocalResolversError",
   "PROTOCOL_ERRORS_SYMBOL",
   "ServerError",
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "isErrorLike",
   "registerLinkError",
   "toErrorLike",
 ]
@@ -235,6 +239,12 @@ Array [
 exports[`exports of public entry points @apollo/client/link/ws 1`] = `
 Array [
   "WebSocketLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/local-resolvers 1`] = `
+Array [
+  "LocalResolvers",
 ]
 `;
 
@@ -435,6 +445,7 @@ Array [
   "getStoreKeyName",
   "graphQLResultHasError",
   "hasDirectives",
+  "hasForcedResolvers",
   "isArray",
   "isDocumentNode",
   "isExecutionPatchIncrementalResult",

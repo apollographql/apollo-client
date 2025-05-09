@@ -202,7 +202,8 @@ export class ObservableQuery<
   private unsubscribeFromCache?: () => void;
   private input: Subject<QueryNotification.Value<TData, TVariables>>;
   private subject: SlotAwareBehaviorSubject<
-    ApolloQueryResult<MaybeMasked<TData>>
+    ApolloQueryResult<MaybeMasked<TData>>,
+    Meta
   >;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
@@ -283,10 +284,12 @@ export class ObservableQuery<
     };
 
     this.subject = new SlotAwareBehaviorSubject<
-      ApolloQueryResult<MaybeMasked<TData>>
-    >(uninitialized, [
-      [queryMetaSlot, { query: this.query, variables: this.variables }],
-    ]);
+      ApolloQueryResult<MaybeMasked<TData>>,
+      Meta
+    >(uninitialized, queryMetaSlot, {
+      query: this.query,
+      variables: this.variables,
+    });
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -1681,7 +1684,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
       let result: ApolloQueryResult<TData>;
       const previousResult = this.subject.getValue();
-      const previousMeta = this.subject.getSlotValue(queryMetaSlot);
+      const previousMeta = this.subject.getSlotValue();
 
       if (notification.source === "cache") {
         result = notification.value;

@@ -4,32 +4,25 @@ import { BehaviorSubject } from "rxjs";
 
 import { invariant } from "@apollo/client/utilities/invariant";
 
-type SlotInstance = InstanceType<typeof Slot>;
+type SlotInstance<S> = InstanceType<typeof Slot<S>>;
 
-export class SlotAwareBehaviorSubject<T> extends BehaviorSubject<T> {
-  private slots: SlotInstance[];
-  private currentSlotValues: Array<[SlotInstance, value: unknown]>;
+export class SlotAwareBehaviorSubject<T, S> extends BehaviorSubject<T> {
+  private slot: SlotInstance<S>;
+  private currentSlotValue?: S;
   callingSynchronusly = false;
 
-  constructor(value: T, initialSlots: Array<[SlotInstance, value: unknown]>) {
-    super(value);
-    this.slots = initialSlots.map(([slot]) => slot);
-    this.currentSlotValues = initialSlots;
+  constructor(initialValue: T, slot: SlotInstance<S>, initialSlotValue?: S) {
+    super(initialValue);
+    this.slot = slot;
+    this.currentSlotValue = initialSlotValue;
   }
 
-  getSlotValue<T>(slot: { getValue: () => T | undefined }) {
-    return this.currentSlotValues?.find(([s]) => s === slot)?.[1] as
-      | T
-      | undefined;
+  getSlotValue() {
+    return this.currentSlotValue;
   }
 
   next(value: T): void {
-    this.currentSlotValues = [];
-    for (const slot of this.slots) {
-      if (slot.hasValue()) {
-        this.currentSlotValues.push([slot, slot.getValue()]);
-      }
-    }
+    this.currentSlotValue = this.slot.getValue();
     try {
       this.callingSynchronusly = true;
       return super.next(value);
@@ -50,14 +43,10 @@ export class SlotAwareBehaviorSubject<T> extends BehaviorSubject<T> {
     if (next) {
       const that = this;
       observerOrNext.next = function (...args: [T]) {
-        let cb = next;
         if (!that.callingSynchronusly) {
-          console.log("applying slot values", that.currentSlotValues);
-          for (const [slot, value] of that.currentSlotValues) {
-            cb = slot.withValue.bind(slot, value, cb, args, this);
-          }
+          return that.slot.withValue(that.currentSlotValue!, next, args, this);
         }
-        return cb.apply(this, args);
+        return next.apply(this, args);
       };
     }
 

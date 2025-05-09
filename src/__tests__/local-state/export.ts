@@ -1098,12 +1098,12 @@ describe("@client @export tests", () => {
     expect(console.warn).toHaveBeenCalledTimes(2);
     expect(console.warn).toHaveBeenNthCalledWith(
       1,
-      "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+      "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
       "currentAuthorPostCount"
     );
     expect(console.warn).toHaveBeenNthCalledWith(
       2,
-      "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+      "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
       "Query",
       "currentAuthorPostCount"
     );
@@ -1140,12 +1140,12 @@ describe("@client @export tests", () => {
     expect(console.warn).toHaveBeenCalledTimes(2);
     expect(console.warn).toHaveBeenNthCalledWith(
       1,
-      "Mutation '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+      "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
       "UpdatePostCount"
     );
     expect(console.warn).toHaveBeenNthCalledWith(
       2,
-      "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+      "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
       "Mutation",
       "UpdatePostCount"
     );

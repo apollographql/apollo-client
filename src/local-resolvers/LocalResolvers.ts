@@ -576,7 +576,7 @@ export class LocalResolvers<
     }
 
     const defaultResolver =
-      isClientFieldDescendant ? readField()
+      isClientFieldDescendant ? readField
         // We expect a resolver to be defined for all `@client` root fields.
         // Warn when a resolver is not defined.
       : (

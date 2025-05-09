@@ -44,7 +44,6 @@ import {
   stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -605,7 +604,7 @@ export class LocalResolvers<
       // Avoid running the resolver if we are only trying to run forced
       // resolvers. Fallback to read the value from the root field or the cache
       // value
-      if (!execContext.onlyRunForcedResolvers || hasForcedResolvers(field)) {
+      if (!execContext.onlyRunForcedResolvers || isForcedResolver(field)) {
         result =
           resolver ?
             await Promise.resolve(
@@ -1051,4 +1050,21 @@ function getResultAtPath(
   }
 
   return path.reduce((value, segment) => value?.[segment], diff.result);
+}
+
+function isForcedResolver(field: FieldNode) {
+  return (
+    field.directives?.some((directive) => {
+      if (directive.name.value !== "client" || !directive.arguments) {
+        return false;
+      }
+
+      return directive.arguments.some(
+        (arg) =>
+          arg.name.value === "always" &&
+          arg.value.kind === "BooleanValue" &&
+          arg.value.value === true
+      );
+    }) ?? false
+  );
 }

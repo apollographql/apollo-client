@@ -62,10 +62,31 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 // @public (undocumented)
 export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
 
+// @public (undocumented)
+export function isErrorLike(error: unknown): error is ErrorLike;
+
 // @public
 export const LinkError: {
     is: (error: unknown) => boolean;
 };
+
+// @public (undocumented)
+export namespace LocalResolversError {
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        path?: Array<string | number>;
+        // (undocumented)
+        sourceError?: unknown;
+    }
+}
+
+// @public
+export class LocalResolversError extends Error {
+    constructor(message: string, options?: LocalResolversError.Options);
+    static is(error: unknown): error is LocalResolversError;
+    readonly path?: Array<string | number>;
+}
 
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;

@@ -562,16 +562,25 @@ export class ObservableQuery<
       callback: (diff) => {
         const previousResult = this.subject.getValue();
 
-        // If we are trying to deliver an incomplete cache result, we avoid
-        // reporting it if the query has errored, otherwise we let the broadcast try
-        // and repair the partial result by refetching the query. This check avoids
-        // a situation where a query that errors and another succeeds with
-        // overlapping data does not report the partial data result to the errored
-        // query.
-        //
-        // See https://github.com/apollographql/apollo-client/issues/11400 for more
-        // information on this issue.
-        if (diff && !diff.complete && previousResult.error) {
+        if (
+          diff &&
+          !diff.complete &&
+          // If we are trying to deliver an incomplete cache result, we avoid
+          // reporting it if the query has errored, otherwise we let the broadcast try
+          // and repair the partial result by refetching the query. This check avoids
+          // a situation where a query that errors and another succeeds with
+          // overlapping data does not report the partial data result to the errored
+          // query.
+          //
+          // See https://github.com/apollographql/apollo-client/issues/11400 for more
+          // information on this issue.
+          (previousResult.error ||
+            // we also want to prevent to schedule reads directly after the `ObservableQuery`
+            // has been `reset` (which will set the `previousResult` to `uninitialized` or `empty`)
+            // as in those cases, `resetCache` will manually call `refetch` more intentional timing.
+            previousResult === uninitialized ||
+            previousResult === empty)
+        ) {
           return;
         }
 

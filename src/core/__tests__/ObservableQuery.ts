@@ -2118,7 +2118,7 @@ describe("ObservableQuery", () => {
         const client = new ApolloClient({
           link: new ApolloLink(() => linkObservable),
           cache: new InMemoryCache(),
-          resolvers: new LocalState({
+          localState: new LocalState({
             resolvers: {
               Query: {
                 counter() {

@@ -11,7 +11,7 @@ import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
 const setupTestWithResolvers = ({
-  resolvers,
+  localState,
   query,
   serverQuery,
   variables = {},
@@ -20,7 +20,7 @@ const setupTestWithResolvers = ({
   error,
   delay,
 }: {
-  resolvers: LocalState;
+  localState: LocalState;
   query: DocumentNode;
   serverQuery?: DocumentNode;
   variables?: object;
@@ -39,7 +39,7 @@ const setupTestWithResolvers = ({
         delay,
       },
     ]),
-    resolvers,
+    localState,
   });
 
   return new ObservableStream(
@@ -57,7 +57,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           foo: () => ({ __typename: "Foo", bar: true }),
@@ -66,7 +66,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const client = new ApolloClient({
-      resolvers,
+      localState,
       cache: new InMemoryCache(),
       // Local resolvers handle this query
       link: ApolloLink.empty(),
@@ -111,7 +111,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           foo: () => ({ __typename: "Foo", bar: true }),
@@ -120,7 +120,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const stream = setupTestWithResolvers({
-      resolvers,
+      localState,
       query,
       serverQuery,
       serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
@@ -171,7 +171,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           foo: () => ({ bar: true, __typename: "ClientData" }),
@@ -180,7 +180,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const stream = setupTestWithResolvers({
-      resolvers,
+      localState,
       query,
       serverQuery,
       serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
@@ -240,7 +240,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Foo: {
           baz: () => false,
@@ -249,7 +249,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const stream = setupTestWithResolvers({
-      resolvers,
+      localState,
       query,
       serverQuery,
       serverResult: {
@@ -286,7 +286,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           foo: () => ({ __typename: "Foo" }),
@@ -298,7 +298,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const client = new ApolloClient({
-      resolvers,
+      localState,
       cache: new InMemoryCache(),
       // Local resolvers handle this query
       link: ApolloLink.empty(),
@@ -334,7 +334,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           foo: () => ({ __typename: "Foo" }),
@@ -346,7 +346,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const client = new ApolloClient({
-      resolvers,
+      localState,
       cache: new InMemoryCache(),
       // The resolvers will handle the full response
       link: ApolloLink.empty(),
@@ -397,7 +397,7 @@ describe("Basic resolver capabilities", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Stats: {
           postsToday: () => 10,
@@ -406,7 +406,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const stream = setupTestWithResolvers({
-      resolvers,
+      localState,
       query,
       serverQuery,
       serverResult: {
@@ -463,7 +463,7 @@ describe("Basic resolver capabilities", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             isInCart: () => false,
@@ -519,7 +519,7 @@ describe("Basic resolver capabilities", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             async developer(_, { id }) {
@@ -625,7 +625,7 @@ describe("Basic resolver capabilities", () => {
 
     const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           foo: () => ({ __typename: `Foo`, bar: true }),
@@ -635,7 +635,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     const stream = setupTestWithResolvers({
-      resolvers,
+      localState,
       query,
       serverQuery,
       serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
@@ -678,7 +678,7 @@ describe("Writing cache data from resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Mutation: {
             start(_data, _args, { client }) {
@@ -716,7 +716,7 @@ describe("Writing cache data from resolvers", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Mutation: {
             start() {
@@ -776,7 +776,7 @@ describe("Writing cache data from resolvers", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Mutation: {
             start() {
@@ -846,7 +846,7 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             foo: () => ({ bar: true, __typename: "Foo" }),
@@ -878,7 +878,7 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             foo: () => ({ bar: true, __typename: "Foo" }),
@@ -916,7 +916,7 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             foo: () => ({ bar: true, __typename: "Foo" }),
@@ -950,7 +950,7 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalState(),
+      localState: new LocalState(),
     });
 
     cache.writeQuery({
@@ -1004,7 +1004,7 @@ describe("Resolving field aliases", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Launch: {
             isInCart() {
@@ -1057,11 +1057,11 @@ describe("Force local resolvers", () => {
     `;
 
     const cache = new InMemoryCache();
-    const localResolvers = new LocalState();
+    const localState = new LocalState();
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: localResolvers,
+      localState,
     });
 
     cache.writeQuery({
@@ -1083,7 +1083,7 @@ describe("Force local resolvers", () => {
       },
     });
 
-    localResolvers.addResolvers({
+    localState.addResolvers({
       Author: {
         isLoggedIn() {
           return true;
@@ -1126,7 +1126,7 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Author: {
             isLoggedIn() {
@@ -1163,7 +1163,7 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             name() {
@@ -1208,7 +1208,7 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             isUserLoggedIn() {
@@ -1260,7 +1260,7 @@ describe("Force local resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             userData() {
@@ -1313,7 +1313,7 @@ describe("Force local resolvers", () => {
           data: { user: { __typename: "User", id: 1, name: "Test User" } },
         }).pipe(delay(10));
       }),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             isLoggedIn: () => {
@@ -1375,7 +1375,7 @@ describe("Async resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             isLoggedIn() {
@@ -1424,7 +1424,7 @@ describe("Async resolvers", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Member: {
             isLoggedIn() {

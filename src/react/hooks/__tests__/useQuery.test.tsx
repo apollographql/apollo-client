@@ -6947,7 +6947,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink(() => of({ data: {} })),
-        resolvers: new LocalState({
+        localState: new LocalState({
           resolvers: {
             ClientData: {
               titleLength(data) {

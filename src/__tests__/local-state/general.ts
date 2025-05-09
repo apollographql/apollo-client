@@ -38,7 +38,7 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             count: () => 0,
@@ -63,7 +63,7 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             count: () => 0,
@@ -85,7 +85,7 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             field: () => 1,
@@ -110,7 +110,7 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             field: () => {
@@ -144,7 +144,7 @@ describe("General functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             field: () => {
@@ -182,7 +182,7 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalState(),
+      localState: new LocalState(),
     });
 
     cache.writeQuery({ query, data: { field: "yo" } });
@@ -205,7 +205,7 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Mutation: {
           start: (_, __, { client }) => {
@@ -219,7 +219,7 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers,
+      localState,
     });
 
     await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
@@ -244,7 +244,7 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Query: {
           field: () => 0,
@@ -261,7 +261,7 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers,
+      localState,
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));
@@ -307,7 +307,7 @@ describe("Cache manipulation", () => {
       }
     `;
 
-    const resolvers = new LocalState({
+    const localState = new LocalState({
       resolvers: {
         Mutation: {
           start: (_, variables: { field: string }, { client }) => {
@@ -327,7 +327,7 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
-      resolvers,
+      localState,
     });
 
     await expect(
@@ -368,7 +368,7 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink(() => of({ data: { serverData } })),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             selectedItemId() {
@@ -456,7 +456,7 @@ describe("Cache manipulation", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new ApolloLink(() => of({ data: {} })),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           ClientData: {
             titleLength(data) {
@@ -569,12 +569,12 @@ describe("Sample apps", () => {
       return of({ data: { lastCount: 1 } });
     });
 
-    const localResolvers = new LocalState();
+    const localState = new LocalState();
 
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
-      resolvers: localResolvers,
+      localState,
     });
 
     const update = (
@@ -598,7 +598,7 @@ describe("Sample apps", () => {
       };
     };
 
-    localResolvers.addResolvers({
+    localState.addResolvers({
       Query: {
         count: () => 0,
       },
@@ -666,12 +666,12 @@ describe("Sample apps", () => {
       }
     `;
 
-    const localResolvers = new LocalState();
+    const localState = new LocalState();
 
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: localResolvers,
+      localState,
     });
 
     interface Todo {
@@ -693,7 +693,7 @@ describe("Sample apps", () => {
       };
     };
 
-    localResolvers.addResolvers({
+    localState.addResolvers({
       Query: {
         todos: () => [],
       },
@@ -773,7 +773,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Mutation: {
             toggleItem: async (_, { id }, { client }) => {
@@ -965,7 +965,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             hasBeenIllegallyTouched: (_, _v, _c) => {
@@ -1053,7 +1053,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalState(),
+      localState: new LocalState(),
     });
 
     cache.writeQuery({
@@ -1112,7 +1112,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalState(),
+      localState: new LocalState(),
     });
 
     cache.writeQuery({
@@ -1202,7 +1202,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Mutation: {
             incrementCount: (_, __, { client }) => {
@@ -1299,7 +1299,7 @@ describe("Combining client and server state/operations", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalState(),
+      localState: new LocalState(),
     });
 
     const stream = new ObservableStream(client.watchQuery({ query }));

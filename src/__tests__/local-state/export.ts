@@ -757,11 +757,12 @@ describe("@client @export tests", () => {
       data: { currentAuthorId },
     });
 
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
       loading: true,
       networkStatus: NetworkStatus.loading,
-      partial: true,
+      }),
     });
 
     await expect(stream).toEmitTypedValue({
@@ -993,11 +994,12 @@ describe("@client @export tests", () => {
       },
     });
 
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
       loading: true,
       networkStatus: NetworkStatus.loading,
-      partial: true,
+      }),
     });
 
     await expect(stream).toEmitTypedValue({

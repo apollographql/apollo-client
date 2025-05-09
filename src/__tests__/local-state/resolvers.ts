@@ -1,6 +1,6 @@
 import type { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
-import { of } from "rxjs";
+import { delay, of } from "rxjs";
 
 import type { QueryResult } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
@@ -1292,6 +1292,75 @@ describe("Force local resolvers", () => {
         },
       },
     });
+  });
+
+  test("runs forced resolvers and returns result when returnPartialData is true", async () => {
+    const query = gql`
+      query {
+        user {
+          id
+          name
+        }
+        isLoggedIn @client(always: true)
+      }
+    `;
+
+    let isLoggedInCount = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(() => {
+        return of({
+          data: { user: { __typename: "User", id: 1, name: "Test User" } },
+        }).pipe(delay(10));
+      }),
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Query: {
+            isLoggedIn: () => {
+              isLoggedInCount++;
+              return true;
+            },
+          },
+        },
+      }),
+    });
+
+    const stream = new ObservableStream(
+      client.watchQuery({ query, returnPartialData: true })
+    );
+
+    // Discuss in PR: This value is emitted from `ObservableQuery` since
+    // resolvers run asynchronously. Should we prevent this emit if we detect
+    // client fields with forced resolvers and returnPartialData: true?
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        isLoggedIn: true,
+      },
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        user: { __typename: "User", id: 1, name: "Test User" },
+        isLoggedIn: true,
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+
+    expect(isLoggedInCount).toBe(2);
   });
 });
 

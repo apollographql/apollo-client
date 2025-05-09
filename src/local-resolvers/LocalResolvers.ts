@@ -496,7 +496,9 @@ export class LocalResolvers<
 
     await Promise.all(selectionSet.selections.map(execute));
 
-    return resultsToMerge.length > 0 ? mergeDeepArray(resultsToMerge) : null;
+    return resultsToMerge.length > 0 ?
+        mergeDeepArray(resultsToMerge)
+      : rootValue;
   }
 
   private resolveServerField(

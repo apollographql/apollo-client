@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 
 import { gql } from "./testUtils.js";
 
@@ -13,7 +13,7 @@ test("passes client in context to resolvers", async () => {
   `;
 
   const barResolver = jest.fn(() => 1);
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -61,7 +61,7 @@ test("can access request context in resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -93,7 +93,7 @@ test("can access phase in resolver context", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),

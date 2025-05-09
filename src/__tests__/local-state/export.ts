@@ -10,7 +10,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import {
   ObservableStream,
   spyOnConsole,
@@ -28,7 +28,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     cache.writeQuery({
@@ -59,7 +59,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     cache.writeQuery({
@@ -99,7 +99,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Query: {
             postCount(_, { authorId }) {
@@ -148,7 +148,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Query: {
             postCount(_, { authorId }) {
@@ -207,7 +207,7 @@ describe("@client @export tests", () => {
       const client = new ApolloClient({
         cache,
         link,
-        resolvers: new LocalResolvers(),
+        resolvers: new LocalState(),
       });
 
       cache.writeQuery({
@@ -268,7 +268,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     {
@@ -319,7 +319,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     const { data } = await client.query({ query });
@@ -370,7 +370,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     {
@@ -444,7 +444,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Post: {
             currentReviewer() {
@@ -509,7 +509,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Mutation: {
             topPost() {
@@ -559,7 +559,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     cache.writeQuery({
@@ -635,7 +635,7 @@ describe("@client @export tests", () => {
         return of({ data });
       }),
       cache: new InMemoryCache(),
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Query: {
             currentFilter() {
@@ -685,7 +685,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     {
@@ -738,7 +738,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     client.writeQuery({
@@ -818,7 +818,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     client.writeQuery({
@@ -885,7 +885,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: new LocalResolvers(),
+      resolvers: new LocalState(),
     });
 
     client.writeQuery({
@@ -965,7 +965,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Query: {
             doubleWidgets(_, { widgetCount }) {
@@ -1045,7 +1045,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Subscription: {
             currentUserId: () => 1,

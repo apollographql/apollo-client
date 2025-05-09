@@ -56,8 +56,8 @@ const tsStandardConfig = {
   testPathIgnorePatterns: [
     ignoreDTSFiles,
     ignoreTSXFiles,
-    "src/local-resolvers/__tests__/LocalResolvers/testUtils.ts",
-    "src/local-resolvers/__tests__/LocalResolvers/fixtures/.*.ts$",
+    "src/local-state/__tests__/LocalState/testUtils.ts",
+    "src/local-state/__tests__/LocalState/fixtures/.*.ts$",
   ],
 };
 

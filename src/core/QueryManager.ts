@@ -35,7 +35,7 @@ import type {
   GraphQLRequest,
 } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
-import type { LocalResolvers } from "@apollo/client/local-resolvers";
+import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
@@ -160,7 +160,7 @@ interface QueryManagerOptions {
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
-  resolvers: LocalResolvers | undefined;
+  resolvers: LocalState | undefined;
 }
 
 export class QueryManager {
@@ -172,7 +172,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly resolvers: LocalResolvers | undefined;
+  public readonly resolvers: LocalState | undefined;
 
   private queryDeduplication: boolean;
   private clientAwareness: ClientAwareness = {};

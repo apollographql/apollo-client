@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
@@ -19,7 +19,7 @@ test("runs resolvers for @client queries", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -48,7 +48,7 @@ test("can add resolvers after LocalResolvers is instantiated", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   localResolvers.addResolvers({
     Query: {
@@ -81,7 +81,7 @@ test("handles queries with a mix of @client and server fields", async () => {
   });
   const remoteResult = { data: { bar: { __typename: "Bar", baz: true } } };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -132,7 +132,7 @@ test("runs resolvers for deeply nested @client fields", async () => {
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       User: {
         fullName: (user) => `${user.firstName} ${user.lastName}`,
@@ -172,7 +172,7 @@ test("has access to query variables in @client resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -226,7 +226,7 @@ test("combines local @client resolver results with server results, for the same 
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Stats: {
         postsToday: () => 10,
@@ -263,7 +263,7 @@ test("handles resolvers that return booleans", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         isInCart: () => false,
@@ -298,7 +298,7 @@ test("does not run resolvers without @client directive", async () => {
   const remoteResult = { data: { bar: { __typename: "Bar", baz: true } } };
 
   const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: `Foo`, bar: true }),
@@ -343,7 +343,7 @@ test("does not run resolvers without @client directive with nested field", async
     __typename: "Foo",
     bar: false,
   }));
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: fooResolver,
@@ -387,7 +387,7 @@ test("allows child resolvers from a parent resolved field from a local resolver"
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         userData() {
@@ -446,7 +446,7 @@ test("can use remote result to resolve @client field", async () => {
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Member: {
         fullName(member) {
@@ -495,7 +495,7 @@ test("throws error when query does not contain client fields", async () => {
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {},
   });
 
@@ -519,7 +519,7 @@ test("warns when a resolver is missing for an `@client` field", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
@@ -547,7 +547,7 @@ test("does not warn for fields resolved from the server", async () => {
   });
 
   const remoteResult = { data: { foo: { __typename: "Foo" } } };
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {}, remoteResult })
@@ -575,7 +575,7 @@ test("warns when a resolver returns undefined and sets value to null", async () 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => {},
@@ -609,7 +609,7 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -647,7 +647,7 @@ test("warns if a parent resolver omits a field and child has @client field", asy
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -687,7 +687,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true }),
@@ -732,7 +732,7 @@ test("can return more data than needed in resolver which is accessible by child 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true, random: true }),
@@ -767,7 +767,7 @@ test("does not execute child resolver when parent is null", async () => {
 
   const foo = jest.fn(() => true);
   const remoteResult = { data: { currentUser: null } };
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       User: {
         foo,
@@ -804,7 +804,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => true,
@@ -854,7 +854,7 @@ test("adds error to errors array with scalar resolver that returns null when rem
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => null,
@@ -906,7 +906,7 @@ test("adds error to errors array with object resolver data when remote data retu
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", baz: true }),
@@ -959,7 +959,7 @@ test("adds error to errors array with object resolver with child resolver when r
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -1014,7 +1014,7 @@ test("adds error to errors array with object resolver that returns null when rem
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => null,
@@ -1069,7 +1069,7 @@ test("adds multiple errors for each client field to errors array when remote dat
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", baz: true }),
@@ -1134,7 +1134,7 @@ test("does not execute resolver if client field is a child of a server field whe
   };
 
   const foo = jest.fn(() => true);
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Baz: {
         foo,

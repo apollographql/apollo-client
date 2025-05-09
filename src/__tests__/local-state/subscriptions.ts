@@ -4,7 +4,7 @@ import { of } from "rxjs";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { ObservableStream } from "@apollo/client/testing/internal";
 
 describe("Basic functionality", () => {
@@ -22,7 +22,7 @@ describe("Basic functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Query: {
             count: () => 0,
@@ -54,7 +54,7 @@ describe("Basic functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Subscription: {
             count: () => {

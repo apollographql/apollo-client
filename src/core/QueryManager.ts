@@ -1804,6 +1804,7 @@ export class QueryManager {
               context: this.getContext(context),
               variables,
               onlyRunForcedResolvers: true,
+              returnPartialData,
             })
             .then((resolved) => toResult(resolved.data || void 0))
         );

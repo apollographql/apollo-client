@@ -1,4 +1,8 @@
-import type { FragmentSpreadNode } from "graphql";
+import type {
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+} from "graphql";
 import { Kind, visit } from "graphql";
 import { of } from "rxjs";
 
@@ -6173,6 +6177,13 @@ describe("client.mutate", () => {
 class TestCache extends ApolloCache {
   public diff<T>(query: Cache.DiffOptions<T>): DataProxy.DiffResult<T> {
     return { result: null, complete: false };
+  }
+
+  public fragmentMatches(
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
+    typename: string
+  ): boolean {
+    return true;
   }
 
   public evict(): boolean {

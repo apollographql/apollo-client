@@ -1,4 +1,5 @@
 import { expectTypeOf } from "expect-type";
+import type { FragmentDefinitionNode, InlineFragmentNode } from "graphql";
 import { gql } from "graphql-tag";
 
 import type { OperationVariables, Unmasked } from "@apollo/client";
@@ -22,6 +23,13 @@ class TestCache extends ApolloCache {
 
   public extract(optimistic?: boolean): unknown {
     return undefined;
+  }
+
+  public fragmentMatches(
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
+    typename: string
+  ): boolean {
+    return true;
   }
 
   public performTransaction(transaction: (c: ApolloCache) => void): void {

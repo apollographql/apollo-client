@@ -9,7 +9,7 @@ import type {
   Subscription,
 } from "rxjs";
 import { Observable } from "rxjs";
-import { dematerialize, filter, lastValueFrom, pipe, Subject, tap } from "rxjs";
+import { dematerialize, filter, lastValueFrom, Subject, tap } from "rxjs";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -378,7 +378,6 @@ export class ObservableQuery<
             if (
               resultIsEqual &&
               (!variables || equal(previousVariables, variables))
-              //!equal(previous, this.reemitEvenIfEqual)
             ) {
               return;
             }

@@ -575,9 +575,9 @@ export class ObservableQuery<
           return;
         }
 
-        //if (!equal(previousResult, diff && diff.result)) {
-        this.scheduleNotify();
-        //}
+        if (!equal(previousResult.data, diff && diff.result)) {
+          this.scheduleNotify();
+        }
       },
     });
   }
@@ -1483,6 +1483,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   private scheduleNotify() {
+    console.log("scheduleNotify");
     if (this.dirty) return;
     this.dirty = true;
     if (!this.notifyTimeout) {
@@ -1492,6 +1493,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   public notify() {
+    console.log("notify");
     const { dirty } = this;
     this.resetNotifications();
 

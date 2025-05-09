@@ -290,7 +290,6 @@ export class ApolloClient implements DataProxy {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,
       },
-      localState: this.localState,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?

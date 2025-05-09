@@ -1122,9 +1122,25 @@ export class QueryManager {
         filter((result) => !!(result.data || result.error))
       );
 
-    if (this.getDocumentInfo(query).hasClientExports) {
-      const observablePromise = this.localState
-        .addExportedVariables(query, variables, context)
+    const { hasClientExports } = this.getDocumentInfo(query);
+
+    if (__DEV__) {
+      if (hasClientExports && !this.resolvers) {
+        invariant.warn(
+          "Subscription '%s' contains `@client` fields with `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+          getOperationName(query) ?? "(anonymous)"
+        );
+      }
+    }
+
+    if (hasClientExports && this.resolvers) {
+      const observablePromise = this.resolvers
+        .getExportedVariables({
+          client: this.client,
+          document: query,
+          variables,
+          context: this.getContext(context),
+        })
         .then(makeObservable);
 
       return new Observable<SubscribeResult<TData>>((observer) => {

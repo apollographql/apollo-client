@@ -297,6 +297,7 @@ export class QueryManager {
     const { hasClientExports } = this.getDocumentInfo(mutation);
 
     variables = this.getVariables(mutation, variables);
+
     if (hasClientExports) {
       if (this.resolvers) {
         variables = await this.resolvers.getExportedVariables<TVariables>({
@@ -307,7 +308,7 @@ export class QueryManager {
         });
       } else if (__DEV__) {
         invariant.warn(
-          "Mutation '%s' contains variables provided by `@export` but local resolvers have not been configured.",
+          "Mutation '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
           getOperationName(mutation) ?? "(anonymous)"
         );
       }
@@ -1496,16 +1497,16 @@ export class QueryManager {
         // directives.
         containsDataFromLink = true;
       } else {
-        const sourcesWithInfo = fromVariables(normalized.variables);
-        containsDataFromLink = sourcesWithInfo.fromLink;
-        observable = sourcesWithInfo.observable;
-
         if (__DEV__) {
           invariant.warn(
-            "Query '%s' contains `@client` fields with `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+            "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
             getOperationName(normalized.query) ?? "(anonymous)"
           );
         }
+
+        const sourcesWithInfo = fromVariables(normalized.variables);
+        containsDataFromLink = sourcesWithInfo.fromLink;
+        observable = sourcesWithInfo.observable;
       }
     } else {
       const sourcesWithInfo = fromVariables(normalized.variables);

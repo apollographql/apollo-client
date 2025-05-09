@@ -4,6 +4,7 @@ import { of } from "rxjs";
 
 import {
   ApolloClient,
+  CombinedGraphQLErrors,
   LocalResolversError,
   NetworkStatus,
 } from "@apollo/client";
@@ -1064,5 +1065,89 @@ describe("@client @export tests", () => {
       data: { currentUserId: 1, count: 2 },
     });
     await expect(stream).toComplete();
+  });
+
+  test("warns if local state is not configured and export fields are detected when running a query", async () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query currentAuthorPostCount($authorId: Int!) {
+        currentAuthorId @client @export(as: "authorId")
+        postCount(authorId: $authorId)
+      }
+    `;
+
+    const testPostCount = 200;
+
+    const link = new ApolloLink((operation) => {
+      return operation.variables.authorId === undefined ?
+          of({ errors: [{ message: "Did not export author ID" }] })
+        : of({ data: { postCount: testPostCount } });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    await expect(client.query({ query })).rejects.toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Did not export author ID" }],
+      })
+    );
+
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenNthCalledWith(
+      1,
+      "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+      "currentAuthorPostCount"
+    );
+    expect(console.warn).toHaveBeenNthCalledWith(
+      2,
+      "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+      "Query",
+      "currentAuthorPostCount"
+    );
+  });
+
+  test("warns if local state is not configured and export fields are detected when running a mutation", async () => {
+    using _ = spyOnConsole("warn");
+    const mutation = gql`
+      mutation UpdatePostCount($authorId: Int!) {
+        currentAuthorId @client @export(as: "authorId")
+        updatePostCount(authorId: $authorId)
+      }
+    `;
+
+    const testPostCount = 200;
+
+    const link = new ApolloLink((operation) => {
+      return operation.variables.authorId === undefined ?
+          of({ errors: [{ message: "Did not export author ID" }] })
+        : of({ data: { updatePostCount: testPostCount } });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    await expect(client.mutate({ mutation })).rejects.toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Did not export author ID" }],
+      })
+    );
+
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenNthCalledWith(
+      1,
+      "Mutation '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+      "UpdatePostCount"
+    );
+    expect(console.warn).toHaveBeenNthCalledWith(
+      2,
+      "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+      "Mutation",
+      "UpdatePostCount"
+    );
   });
 });

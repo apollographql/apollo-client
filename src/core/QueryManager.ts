@@ -1472,6 +1472,18 @@ export class QueryManager {
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
     let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
+
+    const { hasClientExports } = this.getDocumentInfo(normalized.query);
+
+    if (__DEV__) {
+      if (hasClientExports && !this.resolvers) {
+        invariant.warn(
+          "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+          getOperationName(normalized.query) ?? "(anonymous)"
+        );
+      }
+    }
+
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
     // @export directives (the common case), we deliberately avoid
@@ -1479,35 +1491,22 @@ export class QueryManager {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (this.getDocumentInfo(normalized.query).hasClientExports) {
-      if (this.resolvers) {
-        observable = from(
-          this.resolvers.getExportedVariables({
-            client: this.client,
-            document: normalized.query,
-            variables: normalized.variables,
-            context: this.getContext(normalized.context),
-          })
-        ).pipe(mergeMap((variables) => fromVariables(variables).observable));
+    if (hasClientExports && this.resolvers) {
+      observable = from(
+        this.resolvers.getExportedVariables({
+          client: this.client,
+          document: normalized.query,
+          variables: normalized.variables,
+          context: this.getContext(normalized.context),
+        })
+      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
-        // there is just no way we can synchronously get the *right* value here,
-        // so we will assume `true`, which is the behaviour before the bug fix in
-        // #10597. This means that bug is not fixed in that case, and is probably
-        // un-fixable with reasonable effort for the edge case of @export as
-        // directives.
-        containsDataFromLink = true;
-      } else {
-        if (__DEV__) {
-          invariant.warn(
-            "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
-            getOperationName(normalized.query) ?? "(anonymous)"
-          );
-        }
-
-        const sourcesWithInfo = fromVariables(normalized.variables);
-        containsDataFromLink = sourcesWithInfo.fromLink;
-        observable = sourcesWithInfo.observable;
-      }
+      // there is just no way we can synchronously get the *right* value here,
+      // so we will assume `true`, which is the behaviour before the bug fix in
+      // #10597. This means that bug is not fixed in that case, and is probably
+      // un-fixable with reasonable effort for the edge case of @export as
+      // directives.
+      containsDataFromLink = true;
     } else {
       const sourcesWithInfo = fromVariables(normalized.variables);
       containsDataFromLink = sourcesWithInfo.fromLink;

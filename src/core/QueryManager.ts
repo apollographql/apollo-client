@@ -1796,7 +1796,10 @@ export class QueryManager {
       };
 
       if (
-        data &&
+        // Don't attempt to run forced resolvers if we have incomplete cache
+        // data and partial isn't allowed since this result would get set to
+        // `undefined` anyways in `toResult`.
+        (diff.complete || returnPartialData) &&
         this.getDocumentInfo(query).hasForcedResolvers &&
         this.resolvers
       ) {
@@ -1809,7 +1812,7 @@ export class QueryManager {
               context: this.getContext(context),
               variables,
               onlyRunForcedResolvers: true,
-              returnPartialData,
+              returnPartialData: true,
             })
             .then((resolved) => toResult(resolved.data || void 0))
         );

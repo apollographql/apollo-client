@@ -167,7 +167,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly localState: LocalState | undefined;
+  public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
   private clientAwareness: ClientAwareness = {};

@@ -372,6 +372,18 @@ export class ApolloClient implements DataProxy {
   }
 
   /**
+   * The configured `LocalState` instance used to enable the use of `@client`
+   * fields.
+   */
+  get localState(): LocalState | undefined {
+    return this.queryManager.localState;
+  }
+
+  set localState(localState: LocalState) {
+    this.queryManager.localState = localState;
+  }
+
+  /**
    * Call this method to terminate any active client processes, making it safe
    * to dispose of this `ApolloClient` instance.
    */

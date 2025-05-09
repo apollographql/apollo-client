@@ -56,8 +56,8 @@ import type { InteropObservable } from 'rxjs';
 import { isReference } from '@apollo/client/utilities';
 import type { IsStrictlyAny } from '@apollo/client/utilities';
 import { LinkError } from '@apollo/client/errors';
-import { LocalResolversError } from '@apollo/client/errors';
 import type { LocalState } from '@apollo/client/local-state';
+import { LocalStateError } from '@apollo/client/errors';
 import { makeReference } from '@apollo/client/utilities';
 import { makeVar } from '@apollo/client/cache';
 import { Masked } from '@apollo/client/masking';
@@ -400,7 +400,7 @@ export { isReference }
 
 export { LinkError }
 
-export { LocalResolversError }
+export { LocalStateError }
 
 export { makeReference }
 

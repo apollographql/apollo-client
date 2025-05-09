@@ -54,7 +54,7 @@ export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
   LinkError,
-  LocalResolversError,
+  LocalStateError,
   ServerError,
   ServerParseError,
   UnconventionalError,

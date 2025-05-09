@@ -1,5 +1,5 @@
 import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
-import { LocalResolversError } from "@apollo/client/errors";
+import { LocalStateError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { InvariantError } from "@apollo/client/utilities/invariant";
@@ -213,7 +213,7 @@ test("throws error when fragment spread type condition does not match typename",
   await expect(
     localResolvers.execute({ document, client, context: {} })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Fragment 'FooDetails' cannot be used with type 'Foo' as objects of type 'Foo' can never be of type 'Bar'.",
       { path: ["foo"] }
     )

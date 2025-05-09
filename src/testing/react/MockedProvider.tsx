@@ -14,7 +14,7 @@ export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache;
-  resolvers?: LocalState;
+  localState?: LocalState;
   childProps?: object;
   children?: any;
   link?: ApolloLink;
@@ -42,7 +42,7 @@ export class MockedProvider extends React.Component<
       mocks,
       defaultOptions,
       cache,
-      resolvers,
+      localState,
       link,
       showWarnings,
       mockLinkDefaultOptions,
@@ -58,7 +58,7 @@ export class MockedProvider extends React.Component<
           showWarnings,
           defaultOptions: mockLinkDefaultOptions,
         }),
-      resolvers,
+      localState,
     });
 
     this.state = {

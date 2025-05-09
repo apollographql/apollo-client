@@ -22,7 +22,7 @@ describe("Basic functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             count: () => 0,
@@ -54,7 +54,7 @@ describe("Basic functionality", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Subscription: {
             count: () => {

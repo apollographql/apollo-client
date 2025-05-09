@@ -155,7 +155,7 @@ interface QueryManagerOptions {
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
-  resolvers: LocalState | undefined;
+  localState: LocalState | undefined;
 }
 
 export class QueryManager {
@@ -167,7 +167,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly resolvers: LocalState | undefined;
+  public readonly localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
   private clientAwareness: ClientAwareness = {};
@@ -213,7 +213,7 @@ export class QueryManager {
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
-    this.resolvers = options.resolvers;
+    this.localState = options.localState;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
@@ -299,8 +299,8 @@ export class QueryManager {
     variables = this.getVariables(mutation, variables);
 
     if (hasClientExports) {
-      if (this.resolvers) {
-        variables = await this.resolvers.getExportedVariables<TVariables>({
+      if (this.localState) {
+        variables = await this.localState.getExportedVariables<TVariables>({
           client: this.client,
           document: mutation,
           variables,
@@ -1122,7 +1122,7 @@ export class QueryManager {
     const { hasClientExports } = this.getDocumentInfo(query);
 
     if (__DEV__) {
-      if (hasClientExports && !this.resolvers) {
+      if (hasClientExports && !this.localState) {
         invariant.warn(
           "Subscription '%s' contains `@client` fields with `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
           getOperationName(query) ?? "(anonymous)"
@@ -1130,8 +1130,8 @@ export class QueryManager {
       }
     }
 
-    if (hasClientExports && this.resolvers) {
-      const observablePromise = this.resolvers
+    if (hasClientExports && this.localState) {
+      const observablePromise = this.localState
         .getExportedVariables({
           client: this.client,
           document: query,
@@ -1261,11 +1261,11 @@ export class QueryManager {
     }
 
     if (clientQuery) {
-      if (this.resolvers) {
+      if (this.localState) {
         observable = observable.pipe(
           mergeMap((result) => {
             return from(
-              this.resolvers!.execute<TData>({
+              this.localState!.execute<TData>({
                 client: this.client,
                 document: clientQuery,
                 remoteResult: result,
@@ -1476,7 +1476,7 @@ export class QueryManager {
     const { hasClientExports } = this.getDocumentInfo(normalized.query);
 
     if (__DEV__) {
-      if (hasClientExports && !this.resolvers) {
+      if (hasClientExports && !this.localState) {
         invariant.warn(
           "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
           getOperationName(normalized.query) ?? "(anonymous)"
@@ -1491,9 +1491,9 @@ export class QueryManager {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (hasClientExports && this.resolvers) {
+    if (hasClientExports && this.localState) {
       observable = from(
-        this.resolvers.getExportedVariables({
+        this.localState.getExportedVariables({
           client: this.client,
           document: normalized.query,
           variables: normalized.variables,
@@ -1798,10 +1798,10 @@ export class QueryManager {
         // `undefined` anyways in `toResult`.
         (diff.complete || returnPartialData) &&
         this.getDocumentInfo(query).hasForcedResolvers &&
-        this.resolvers
+        this.localState
       ) {
         return from(
-          this.resolvers
+          this.localState
             .execute<TData>({
               client: this.client,
               document: query,

@@ -119,7 +119,7 @@ export interface ApolloClientOptions {
    * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
-  resolvers?: LocalState;
+  localState?: LocalState;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    */
@@ -241,7 +241,7 @@ export class ApolloClient implements DataProxy {
       defaultOptions,
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
-      resolvers,
+      localState,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
@@ -292,7 +292,7 @@ export class ApolloClient implements DataProxy {
             }
           }
         : void 0,
-      resolvers,
+      localState,
     });
 
     this.prioritizeCacheValues = ssrMode || ssrForceFetchDelay > 0;

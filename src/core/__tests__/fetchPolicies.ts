@@ -343,7 +343,7 @@ describe("no-cache", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
-        resolvers: new LocalState({
+        localState: new LocalState({
           resolvers: {
             Query: {
               hero(_data, args) {
@@ -655,7 +655,7 @@ describe("cache-and-network", function () {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: new LocalState({
+      localState: new LocalState({
         resolvers: {
           Query: {
             hero(_data, args) {

@@ -1,4 +1,3 @@
-import { print } from "graphql";
 import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, of } from "rxjs";
@@ -8,6 +7,7 @@ import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 
 describe("Link interactions", () => {
   it("includes the client on the operation for eviction links", (done) => {
@@ -275,7 +275,7 @@ describe("Link interactions", () => {
     void client.mutate({ mutation, context: { planet: "Tatooine" } });
   });
 
-  it("includes getCacheKey function on the context for cache resolvers", async () => {
+  it("includes client on operation for cache resolvers", async () => {
     const query = gql`
       {
         books {
@@ -301,9 +301,11 @@ describe("Link interactions", () => {
     };
 
     const link = new ApolloLink((operation, forward) => {
-      const { getCacheKey } = operation.getContext();
-      expect(getCacheKey).toBeDefined();
-      expect(getCacheKey({ id: 1, __typename: "Book" })).toEqual("Book:1");
+      const { client } = operation;
+      expect(client).toBeDefined();
+      expect(client.cache.identify({ id: 1, __typename: "Book" })).toEqual(
+        "Book:1"
+      );
       return of({ data: bookData });
     });
 
@@ -345,6 +347,8 @@ describe("Link interactions", () => {
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {
+    // Disable console warnings for local resolvers not configured
+    using _ = spyOnConsole("warn");
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -389,6 +393,6 @@ describe("Link interactions", () => {
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(expectedQuery));
+    expect(result.current!.query).toMatchDocument(expectedQuery);
   });
 });

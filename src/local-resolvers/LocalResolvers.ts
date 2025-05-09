@@ -44,6 +44,7 @@ import {
   stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { hasForcedResolvers } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -219,6 +220,7 @@ export class LocalResolvers<
     context,
     remoteResult,
     variables = {} as TVariables,
+    onlyRunForcedResolvers = false,
   }: {
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
@@ -261,7 +263,7 @@ export class LocalResolvers<
       variables,
       exportedVariables: {},
       selectionsToResolve,
-      onlyRunForcedResolvers: false,
+      onlyRunForcedResolvers,
       errors: [],
       phase: "resolve",
       exportedVariableDefs,
@@ -563,20 +565,22 @@ export class LocalResolvers<
       : rootValue?.__typename;
     const resolverName = `${typename}.${fieldName}`;
 
+    function readField() {
+      const fieldResult = rootValue?.[fieldName];
+
+      if (fieldResult !== undefined) {
+        return fieldResult;
+      }
+
+      return getResultAtPath(diff, path);
+    }
+
     const defaultResolver =
-      isClientFieldDescendant ?
-        () => {
-          const fieldResult = rootValue?.[fieldName];
-
-          if (fieldResult !== undefined) {
-            return fieldResult;
-          }
-
-          return getResultAtPath(diff, path);
-        }
+      isClientFieldDescendant ? readField()
         // We expect a resolver to be defined for all `@client` root fields.
         // Warn when a resolver is not defined.
-      : () => {
+      : (
+        () => {
           const fieldFromCache = getResultAtPath(diff, path);
 
           if (fieldFromCache !== undefined) {
@@ -591,30 +595,38 @@ export class LocalResolvers<
           }
 
           return null;
-        };
+        }
+      );
 
     const resolver = this.getResolver(typename, fieldName);
     let result: unknown;
 
     try {
-      result =
-        resolver ?
-          await Promise.resolve(
-            // In case the resolve function accesses reactive variables,
-            // set cacheSlot to the current cache instance.
-            cacheSlot.withValue(client.cache, resolver, [
-              isRootField ?
-                execContext.rootValue
-              : dealias(parentSelectionSet, rootValue),
-              (argumentsObjectFromField(field, variables) ?? {}) as Record<
-                string,
-                unknown
-              >,
-              { context: execContext.context, client, phase },
-              { field, fragmentMap: execContext.fragmentMap, path },
-            ])
-          )
-        : defaultResolver();
+      // Avoid running the resolver if we are only trying to run forced
+      // resolvers. Fallback to read the value from the root field or the cache
+      // value
+      if (!execContext.onlyRunForcedResolvers || hasForcedResolvers(field)) {
+        result =
+          resolver ?
+            await Promise.resolve(
+              // In case the resolve function accesses reactive variables,
+              // set cacheSlot to the current cache instance.
+              cacheSlot.withValue(client.cache, resolver, [
+                isRootField ?
+                  execContext.rootValue
+                : dealias(parentSelectionSet, rootValue),
+                (argumentsObjectFromField(field, variables) ?? {}) as Record<
+                  string,
+                  unknown
+                >,
+                { context: execContext.context, client, phase },
+                { field, fragmentMap: execContext.fragmentMap, path },
+              ])
+            )
+          : defaultResolver();
+      } else {
+        result = readField();
+      }
     } catch (e) {
       if (phase === "exports") {
         for (const [name, def] of Object.entries(

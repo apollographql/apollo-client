@@ -6174,16 +6174,11 @@ describe("client.mutate", () => {
   });
 });
 
+// @ts-ignore intentionally don't implement fragmentMatches until we remove the
+// check for it
 class TestCache extends ApolloCache {
   public diff<T>(query: Cache.DiffOptions<T>): DataProxy.DiffResult<T> {
     return { result: null, complete: false };
-  }
-
-  public fragmentMatches(
-    fragment: InlineFragmentNode | FragmentDefinitionNode,
-    typename: string
-  ): boolean {
-    return true;
   }
 
   public evict(): boolean {

@@ -1275,8 +1275,10 @@ export class QueryManager {
           })
         );
       } else if (__DEV__) {
+        const { operation } = getOperationDefinition(query)!;
         invariant.warn(
-          "Query '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+          "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+          operation[0].toUpperCase() + operation.slice(1),
           operationName ?? "(anonymous)"
         );
       }

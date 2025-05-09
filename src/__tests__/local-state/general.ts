@@ -20,6 +20,7 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -1321,4 +1322,105 @@ describe("Combining client and server state/operations", () => {
       partial: true,
     });
   });
+});
+
+test("omits client fields and warns when executing query when local state is not setup", async () => {
+  using _ = spyOnConsole("warn");
+  const query = gql`
+    query GetUser {
+      user {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink(() => {
+      return of({ data: { user: { __typename: "User", lastName: "Smith" } } });
+    }),
+  });
+
+  await expect(client.query({ query })).resolves.toStrictEqualTyped({
+    data: { user: { __typename: "User", lastName: "Smith" } },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+    "Query",
+    "GetUser"
+  );
+});
+
+test("omits client fields and warns when executing mutation when local state is not setup", async () => {
+  using _ = spyOnConsole("warn");
+  const mutation = gql`
+    mutation UpdateUser {
+      updateUser {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink(() => {
+      return of({
+        data: { updateUser: { __typename: "User", lastName: "Smith" } },
+      });
+    }),
+  });
+
+  await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+    data: { updateUser: { __typename: "User", lastName: "Smith" } },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+    "Mutation",
+    "UpdateUser"
+  );
+});
+
+test("omits client fields and warns when executing subscription when local state is not setup", async () => {
+  using _ = spyOnConsole("warn");
+  const subscription = gql`
+    subscription OnUserUpdate {
+      onUpdateUser {
+        firstName @client
+        lastName
+      }
+    }
+  `;
+
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+
+  const stream = new ObservableStream(
+    client.subscribe({ query: subscription })
+  );
+
+  link.simulateResult({
+    result: {
+      data: { onUpdateUser: { __typename: "User", lastName: "Smith" } },
+    },
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: { onUpdateUser: { __typename: "User", lastName: "Smith" } },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+    "Subscription",
+    "OnUserUpdate"
+  );
 });

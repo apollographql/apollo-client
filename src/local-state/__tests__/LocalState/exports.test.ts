@@ -23,7 +23,7 @@ test("returns variables from @client fields with @export", async () => {
 
   const testAuthorId = 100;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => testAuthorId,
@@ -32,7 +32,7 @@ test("returns variables from @client fields with @export", async () => {
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -64,7 +64,7 @@ test("stores the @client nested field value in the specified @export variable", 
     __typename: "Author",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => testAuthor,
@@ -73,7 +73,7 @@ test("stores the @client nested field value in the specified @export variable", 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -115,7 +115,7 @@ test("supports @client @export variables that are nested multiple levels deep", 
     __typename: "AppContainer",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         appContainer: () => appContainer,
@@ -124,7 +124,7 @@ test("supports @client @export variables that are nested multiple levels deep", 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -151,7 +151,7 @@ test("throws when passing document with no `@client` fields", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Author: {
         authorId: () => 200,
@@ -160,7 +160,7 @@ test("throws when passing document with no `@client` fields", async () => {
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -187,7 +187,7 @@ test("throws when passing document with `@export` but no `@client` field", async
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Author: {
         authorId: () => 200,
@@ -196,7 +196,7 @@ test("throws when passing document with `@export` but no `@client` field", async
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -224,7 +224,7 @@ test("ignores @export directives if not used with @client", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         authorId: () => 200,
@@ -236,7 +236,7 @@ test("ignores @export directives if not used with @client", async () => {
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -272,7 +272,7 @@ test("ignores @export directive if it is not a descendant of a client field", as
     __typename: "Author",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         authorId: () => 1000,
@@ -282,7 +282,7 @@ test("ignores @export directive if it is not a descendant of a client field", as
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -332,7 +332,7 @@ test("returns variable from nested field when data is written to the cache", asy
     data: { postRequiringReview, reviewerDetails },
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Post: {
         currentReviewer: () => currentReviewer,
@@ -341,7 +341,7 @@ test("returns variable from nested field when data is written to the cache", asy
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -377,7 +377,7 @@ test("throws error when cache data is not available for parent when exporting re
     __typename: "CurrentReviewer",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Post: {
         currentReviewer: () => currentReviewer,
@@ -386,7 +386,7 @@ test("throws error when cache data is not available for parent when exporting re
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -425,7 +425,7 @@ test("allows optional variable when cache data is not available for parent when 
     __typename: "CurrentReviewer",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Post: {
         currentReviewer: () => currentReviewer,
@@ -434,7 +434,7 @@ test("allows optional variable when cache data is not available for parent when 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -464,7 +464,7 @@ test("throws error if `@export` does not include an `as` argument", async () => 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         author: () => testAuthor,
@@ -474,7 +474,7 @@ test("throws error if `@export` does not include an `as` argument", async () => 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -510,7 +510,7 @@ test("does not throw error without `as` arg when `@export` is not a client field
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         authorId: () => testAuthor.id,
@@ -519,7 +519,7 @@ test("does not throw error without `as` arg when `@export` is not a client field
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -551,7 +551,7 @@ test("throws error if `@export` is a client descendent field without an `as` arg
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         author: () => testAuthor,
@@ -560,7 +560,7 @@ test("throws error if `@export` is a client descendent field without an `as` arg
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -586,7 +586,7 @@ test("throws error on @client only queries when the @export directive is used on
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         field: () => true,
@@ -595,7 +595,7 @@ test("throws error on @client only queries when the @export directive is used on
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -625,7 +625,7 @@ test("throws error on @client only queries when the @export directive is used on
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         car: () => ({
@@ -640,7 +640,7 @@ test("throws error on @client only queries when the @export directive is used on
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -676,7 +676,7 @@ test("throws error if `@export` variable does not exist in a variable definition
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         author: () => testAuthor,
@@ -686,7 +686,7 @@ test("throws error if `@export` variable does not exist in a variable definition
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -718,7 +718,7 @@ test("supports combining @client @export variables, calculated by a local resolv
 
   const testPostId = 100;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Mutation: {
         topPost: () => testPostId,
@@ -727,7 +727,7 @@ test("supports combining @client @export variables, calculated by a local resolv
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document: mutation,
       client,
       context: {},
@@ -764,7 +764,7 @@ test("removes __typename from @export-ed objects", async () => {
     enabled: true,
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentFilter: () => ({ ...currentFilter, __typename: "LessonFilter" }),
@@ -773,7 +773,7 @@ test("removes __typename from @export-ed objects", async () => {
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -803,7 +803,7 @@ test("uses the value of the last @export variable defined, if multiple variables
   const primaryReviewerId = 100;
   const secondaryReviewerId = 200;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         primaryReviewerId: () => primaryReviewerId,
@@ -813,7 +813,7 @@ test("uses the value of the last @export variable defined, if multiple variables
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -848,7 +848,7 @@ test("supports reading a value from the cache in a resolver for an @client @expo
 
   const loggedInReviewerId = 100;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         loggedInReviewerId: (_, __, { client }) => {
@@ -873,7 +873,7 @@ test("supports reading a value from the cache in a resolver for an @client @expo
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -913,7 +913,7 @@ test("does not execute client resolvers for client subtrees without an export di
     id: testAuthor.id,
   }));
   const author = jest.fn(() => testAuthor);
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         author,
@@ -923,7 +923,7 @@ test("does not execute client resolvers for client subtrees without an export di
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -960,7 +960,7 @@ test("warns and does not set optional exported variable for client-only query wh
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {
@@ -974,7 +974,7 @@ test("warns and does not set optional exported variable for client-only query wh
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1017,7 +1017,7 @@ test("warns and does not set variable for client-only query when parent resolver
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {
@@ -1031,7 +1031,7 @@ test("warns and does not set variable for client-only query when parent resolver
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1075,7 +1075,7 @@ test("warns and does not set variable for multiple nested exported variables on 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {
@@ -1089,7 +1089,7 @@ test("warns and does not set variable for multiple nested exported variables on 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1154,7 +1154,7 @@ test("handles multiple exported fields across different client fields when resol
     name: "Denver Broncos",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentUser: () => {
@@ -1174,7 +1174,7 @@ test("handles multiple exported fields across different client fields when resol
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1226,7 +1226,7 @@ test("warns and does not set optional variable for client-only query when child 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author" }),
@@ -1243,7 +1243,7 @@ test("warns and does not set optional variable for client-only query when child 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1283,7 +1283,7 @@ test("throws error when a resolver throws while gathering exported variables for
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {
@@ -1297,7 +1297,7 @@ test("throws error when a resolver throws while gathering exported variables for
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1338,7 +1338,7 @@ test("throws error when a parent resolver throws while gathering exported variab
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {
@@ -1352,7 +1352,7 @@ test("throws error when a parent resolver throws while gathering exported variab
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1393,7 +1393,7 @@ test("throws error when a child resolver throws while gathering exported variabl
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author" }),
@@ -1410,7 +1410,7 @@ test("throws error when a child resolver throws while gathering exported variabl
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1449,7 +1449,7 @@ test("errors when resolver returns null for a required variable on client-only q
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => null,
@@ -1461,7 +1461,7 @@ test("errors when resolver returns null for a required variable on client-only q
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1499,7 +1499,7 @@ test("errors when nested field is null for a required variable on client-only qu
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author", id: null }),
@@ -1511,7 +1511,7 @@ test("errors when nested field is null for a required variable on client-only qu
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1549,7 +1549,7 @@ test("errors when nested field is null for a required variable on client-only qu
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author" }),
@@ -1564,7 +1564,7 @@ test("errors when nested field is null for a required variable on client-only qu
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1602,7 +1602,7 @@ test("throws error when top-level resolver returns null with nested export for r
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => null,
@@ -1614,7 +1614,7 @@ test("throws error when top-level resolver returns null with nested export for r
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1652,7 +1652,7 @@ test("throws error when top-level resolver returns undefined with nested export 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {},
@@ -1664,7 +1664,7 @@ test("throws error when top-level resolver returns undefined with nested export 
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1700,7 +1700,7 @@ test("errors when resolver returns undefined for a required variable on client-o
     name: "John Smith",
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {},
@@ -1712,7 +1712,7 @@ test("errors when resolver returns undefined for a required variable on client-o
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1742,7 +1742,7 @@ test("errors when resolver returns null for a required variable on non-client qu
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => null,
@@ -1751,7 +1751,7 @@ test("errors when resolver returns null for a required variable on non-client qu
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1781,7 +1781,7 @@ test("errors when resolver returns undefined for a required variable on non-clie
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {},
@@ -1790,7 +1790,7 @@ test("errors when resolver returns undefined for a required variable on non-clie
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1824,7 +1824,7 @@ test("errors when resolver returns object with null field for a required variabl
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author", profile: null }),
@@ -1833,7 +1833,7 @@ test("errors when resolver returns object with null field for a required variabl
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1864,7 +1864,7 @@ test("does not warn when gathering variable exports for optional variables", asy
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {},
@@ -1873,7 +1873,7 @@ test("does not warn when gathering variable exports for optional variables", asy
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1884,7 +1884,7 @@ test("does not warn when gathering variable exports for optional variables", asy
   expect(console.warn).not.toHaveBeenCalled();
 });
 
-test("exported variables overwrite variables passed to LocalResolvers", async () => {
+test("exported variables overwrite variables passed to LocalState", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int!) {
       currentAuthorId @client @export(as: "authorId")
@@ -1897,7 +1897,7 @@ test("exported variables overwrite variables passed to LocalResolvers", async ()
 
   const testAuthorId = 100;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => testAuthorId,
@@ -1906,7 +1906,7 @@ test("exported variables overwrite variables passed to LocalResolvers", async ()
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -1934,7 +1934,7 @@ test("combines exported variables with user-defined variables", async () => {
 
   const testAuthorId = 100;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => testAuthorId,
@@ -1943,7 +1943,7 @@ test("combines exported variables with user-defined variables", async () => {
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},

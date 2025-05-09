@@ -19,7 +19,7 @@ test("handles errors thrown in a resolver", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -30,7 +30,7 @@ test("handles errors thrown in a resolver", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -39,7 +39,7 @@ test("handles errors thrown in a resolver", async () => {
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             cause: new Error("Something went wrong"),
           },
@@ -63,7 +63,7 @@ test("handles errors thrown in a child resolver", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -77,7 +77,7 @@ test("handles errors thrown in a child resolver", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
     errors: [
@@ -86,7 +86,7 @@ test("handles errors thrown in a child resolver", async () => {
         path: ["foo", "bar"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.bar",
             cause: new Error("Something went wrong"),
           },
@@ -112,7 +112,7 @@ test("adds errors for each field that throws errors", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -130,7 +130,7 @@ test("adds errors for each field that throws errors", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null, baz: null, qux: true } },
     errors: [
@@ -139,7 +139,7 @@ test("adds errors for each field that throws errors", async () => {
         path: ["foo", "bar"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.bar",
             cause: new Error("Bar error"),
           },
@@ -150,7 +150,7 @@ test("adds errors for each field that throws errors", async () => {
         path: ["foo", "baz"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.baz",
             cause: new Error("Baz error"),
           },
@@ -174,7 +174,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => [{ __typename: "Foo" }, { __typename: "Foo" }],
@@ -188,7 +188,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: [
@@ -202,7 +202,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
         path: ["foo", 0, "bar"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.bar",
             cause: new Error("Something went wrong"),
           },
@@ -213,7 +213,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
         path: ["foo", 1, "bar"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.bar",
             cause: new Error("Something went wrong"),
           },
@@ -238,7 +238,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => [
@@ -259,7 +259,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: [
@@ -273,7 +273,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
         path: ["foo", 1, "bar"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.bar",
             cause: new Error("Something went wrong"),
           },
@@ -297,7 +297,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -310,7 +310,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -320,7 +320,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
         extensions: {
           custom: true,
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             cause: new GraphQLError("Something went wrong", {
               extensions: { custom: true },
@@ -346,7 +346,7 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -359,7 +359,7 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -368,7 +368,7 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             cause: new GraphQLError("Something went wrong", {
               extensions: { apollo: { shouldNotBeSeen: true } },
@@ -402,7 +402,7 @@ test("concatenates client errors with server errors", async () => {
     errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -413,7 +413,7 @@ test("concatenates client errors with server errors", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: { foo: null, baz: { __typename: "Baz", qux: null } },
     errors: [
@@ -423,7 +423,7 @@ test("concatenates client errors with server errors", async () => {
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             cause: new Error("Something went wrong"),
           },
@@ -447,7 +447,7 @@ test("handles errors thrown in async resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: async () => {
@@ -458,7 +458,7 @@ test("handles errors thrown in async resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -467,7 +467,7 @@ test("handles errors thrown in async resolvers", async () => {
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             cause: new Error("Something went wrong"),
           },
@@ -491,7 +491,7 @@ test("handles rejected promises returned in async resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: async () => {
@@ -502,7 +502,7 @@ test("handles rejected promises returned in async resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -511,7 +511,7 @@ test("handles rejected promises returned in async resolvers", async () => {
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             cause: new Error("Something went wrong"),
           },
@@ -549,7 +549,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Foo: {
         baz: () => {
@@ -560,7 +560,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { bar: true, baz: null, __typename: "Foo" },
@@ -571,7 +571,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
         path: ["foo", "baz"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Foo.baz",
             cause: new Error("Could not get baz"),
           },
@@ -603,7 +603,7 @@ test("handles remote errors with no local resolver errors", async () => {
     errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -612,7 +612,7 @@ test("handles remote errors with no local resolver errors", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { __typename: "Foo", bar: true },

@@ -22,7 +22,7 @@ test("can write to the cache with a mutation", async () => {
     }
   `;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Mutation: {
         start(_data, _args, { client }) {
@@ -39,7 +39,7 @@ test("can write to the cache with a mutation", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document: mutation, client, context: {} })
+    localState.execute({ document: mutation, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
   expect(client.readQuery({ query })).toStrictEqualTyped({ field: 1 });
@@ -60,7 +60,7 @@ test("can write to the cache with a mutation using an ID", async () => {
     }
   `;
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Mutation: {
         start(_, __, { client }) {
@@ -92,7 +92,7 @@ test("can write to the cache with a mutation using an ID", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document: mutation, client, context: {} })
+    localState.execute({ document: mutation, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
   expect(client.readQuery({ query })).toStrictEqualTyped({
@@ -123,7 +123,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Mutation: {
         start(_, __, { client }) {
@@ -156,7 +156,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
   });
 
   await expect(
-    localResolvers.execute({ document: mutation, client, context: {} })
+    localState.execute({ document: mutation, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
   expect(client.readQuery({ query })).toStrictEqualTyped({
@@ -187,10 +187,10 @@ test("reads from the cache on a root scalar field by default if a resolver is no
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { count: 10 } });
 });
 
@@ -220,10 +220,10 @@ test("reads from the cache on a root object field by default if a resolver is no
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });
@@ -253,10 +253,10 @@ test("handles read functions for root scalar field from cache if resolver is not
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { count: 10 } });
 });
 
@@ -287,10 +287,10 @@ test("handles read functions for root object field from cache if resolver is not
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });
@@ -309,10 +309,10 @@ test("warns if resolver is not defined if cache does not have value", async () =
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { count: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -348,10 +348,10 @@ test("reads from the cache on a nested scalar field by default if a resolver is 
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -405,10 +405,10 @@ test("reads from the cache with a read function on a nested scalar field if a re
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -454,10 +454,10 @@ test("reads from the cache on a nested object field by default if a resolver is 
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -522,10 +522,10 @@ test("reads from the cache with a read function on a nested object field by defa
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -588,10 +588,10 @@ test("reads from the cache on a nested client field on a non-normalized object",
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -637,10 +637,10 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -693,10 +693,10 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -760,10 +760,10 @@ test("warns on undefined value if partial data is written to the cache for an ob
     },
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -821,7 +821,7 @@ test("uses a written cache value from a nested client field from parent resolver
     },
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         user: () => ({ __typename: "User", id: 1 }),
@@ -830,7 +830,7 @@ test("uses a written cache value from a nested client field from parent resolver
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });

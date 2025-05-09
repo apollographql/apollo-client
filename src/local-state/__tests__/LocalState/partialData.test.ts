@@ -20,10 +20,10 @@ test("omits field and does not warn if resolver not defined when returnPartialDa
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -56,7 +56,7 @@ test("omits client fields without cached values when running forced resolvers wi
 
   let nameCount = 0;
   let isLoggedInCount = 0;
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       User: {
         name: () => {
@@ -72,7 +72,7 @@ test("omits client fields without cached values when running forced resolvers wi
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},

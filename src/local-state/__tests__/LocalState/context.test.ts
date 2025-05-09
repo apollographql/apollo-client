@@ -13,7 +13,7 @@ test("passes client in context to resolvers", async () => {
   `;
 
   const barResolver = jest.fn(() => 1);
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -28,7 +28,7 @@ test("passes client in context to resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: 1 } },
   });
@@ -61,7 +61,7 @@ test("can access request context in resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -73,7 +73,7 @@ test("can access request context in resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: { id: 1 } })
+    localState.execute({ document, client, context: { id: 1 } })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: 1 } },
   });
@@ -93,7 +93,7 @@ test("can access phase in resolver context", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -105,7 +105,7 @@ test("can access phase in resolver context", async () => {
   });
 
   await expect(
-    localResolvers.getExportedVariables({
+    localState.getExportedVariables({
       document,
       client,
       context: {},
@@ -116,7 +116,7 @@ test("can access phase in resolver context", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: "resolve" } },
   });

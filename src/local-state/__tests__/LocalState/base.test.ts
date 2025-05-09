@@ -19,7 +19,7 @@ test("runs resolvers for @client queries", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -28,13 +28,13 @@ test("runs resolvers for @client queries", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
   });
 });
 
-test("can add resolvers after LocalResolvers is instantiated", async () => {
+test("can add resolvers after LocalState is instantiated", async () => {
   const document = gql`
     query Test {
       foo @client {
@@ -48,16 +48,16 @@ test("can add resolvers after LocalResolvers is instantiated", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
-  localResolvers.addResolvers({
+  localState.addResolvers({
     Query: {
       foo: () => ({ __typename: "Foo", bar: true }),
     },
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
   });
@@ -81,7 +81,7 @@ test("handles queries with a mix of @client and server fields", async () => {
   });
   const remoteResult = { data: { bar: { __typename: "Bar", baz: true } } };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -90,7 +90,7 @@ test("handles queries with a mix of @client and server fields", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { __typename: "Foo", bar: true },
@@ -132,7 +132,7 @@ test("runs resolvers for deeply nested @client fields", async () => {
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       User: {
         fullName: (user) => `${user.firstName} ${user.lastName}`,
@@ -141,7 +141,7 @@ test("runs resolvers for deeply nested @client fields", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       user: {
@@ -172,7 +172,7 @@ test("has access to query variables in @client resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -184,7 +184,7 @@ test("has access to query variables in @client resolvers", async () => {
   });
 
   await expect(
-    localResolvers.execute({
+    localState.execute({
       document,
       client,
       context: {},
@@ -226,7 +226,7 @@ test("combines local @client resolver results with server results, for the same 
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Stats: {
         postsToday: () => 10,
@@ -235,7 +235,7 @@ test("combines local @client resolver results with server results, for the same 
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       author: {
@@ -263,7 +263,7 @@ test("handles resolvers that return booleans", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         isInCart: () => false,
@@ -272,7 +272,7 @@ test("handles resolvers that return booleans", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { isInCart: false },
   });
@@ -298,7 +298,7 @@ test("does not run resolvers without @client directive", async () => {
   const remoteResult = { data: { bar: { __typename: "Bar", baz: true } } };
 
   const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: `Foo`, bar: true }),
@@ -308,7 +308,7 @@ test("does not run resolvers without @client directive", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { __typename: "Foo", bar: true },
@@ -343,7 +343,7 @@ test("does not run resolvers without @client directive with nested field", async
     __typename: "Foo",
     bar: false,
   }));
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: fooResolver,
@@ -356,7 +356,7 @@ test("does not run resolvers without @client directive with nested field", async
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: {
@@ -387,7 +387,7 @@ test("allows child resolvers from a parent resolved field from a local resolver"
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         userData() {
@@ -407,7 +407,7 @@ test("allows child resolvers from a parent resolved field from a local resolver"
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: {
       userData: {
@@ -446,7 +446,7 @@ test("can use remote result to resolve @client field", async () => {
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Member: {
         fullName(member) {
@@ -457,7 +457,7 @@ test("can use remote result to resolve @client field", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: {
       member: {
@@ -495,12 +495,12 @@ test("throws error when query does not contain client fields", async () => {
     },
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {},
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).rejects.toThrow(
     new InvariantError("Expected document to contain `@client` fields.")
   );
@@ -519,10 +519,10 @@ test("warns when a resolver is missing for an `@client` field", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -547,10 +547,10 @@ test("does not warn for fields resolved from the server", async () => {
   });
 
   const remoteResult = { data: { foo: { __typename: "Foo" } } };
-  const localResolvers = new LocalState();
+  const localState = new LocalState();
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
   });
@@ -575,7 +575,7 @@ test("warns when a resolver returns undefined and sets value to null", async () 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => {},
@@ -584,7 +584,7 @@ test("warns when a resolver returns undefined and sets value to null", async () 
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -609,7 +609,7 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -618,7 +618,7 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true, baz: null } },
   });
@@ -647,7 +647,7 @@ test("warns if a parent resolver omits a field and child has @client field", asy
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -656,7 +656,7 @@ test("warns if a parent resolver omits a field and child has @client field", asy
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true, baz: null } },
   });
@@ -687,7 +687,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true }),
@@ -696,7 +696,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -709,7 +709,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
           },
         },
@@ -732,7 +732,7 @@ test("can return more data than needed in resolver which is accessible by child 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true, random: true }),
@@ -744,7 +744,7 @@ test("can return more data than needed in resolver which is accessible by child 
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {} })
+    localState.execute({ document, client, context: {} })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: "random" } },
   });
@@ -767,7 +767,7 @@ test("does not execute child resolver when parent is null", async () => {
 
   const foo = jest.fn(() => true);
   const remoteResult = { data: { currentUser: null } };
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       User: {
         foo,
@@ -776,7 +776,7 @@ test("does not execute child resolver when parent is null", async () => {
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: { currentUser: null },
   });
@@ -804,7 +804,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => true,
@@ -813,7 +813,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -824,7 +824,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             data: true,
           },
@@ -854,7 +854,7 @@ test("adds error to errors array with scalar resolver that returns null when rem
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => null,
@@ -863,7 +863,7 @@ test("adds error to errors array with scalar resolver that returns null when rem
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -874,7 +874,7 @@ test("adds error to errors array with scalar resolver that returns null when rem
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             data: null,
           },
@@ -906,7 +906,7 @@ test("adds error to errors array with object resolver data when remote data retu
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", baz: true }),
@@ -915,7 +915,7 @@ test("adds error to errors array with object resolver data when remote data retu
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -926,7 +926,7 @@ test("adds error to errors array with object resolver data when remote data retu
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             data: { __typename: "Foo", baz: true },
           },
@@ -959,7 +959,7 @@ test("adds error to errors array with object resolver with child resolver when r
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -971,7 +971,7 @@ test("adds error to errors array with object resolver with child resolver when r
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -982,7 +982,7 @@ test("adds error to errors array with object resolver with child resolver when r
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             data: { __typename: "Foo", bar: true, baz: false },
           },
@@ -1014,7 +1014,7 @@ test("adds error to errors array with object resolver that returns null when rem
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => null,
@@ -1023,7 +1023,7 @@ test("adds error to errors array with object resolver that returns null when rem
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -1034,7 +1034,7 @@ test("adds error to errors array with object resolver that returns null when rem
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             data: null,
           },
@@ -1069,7 +1069,7 @@ test("adds multiple errors for each client field to errors array when remote dat
     errors: [{ message: "Something went wrong" }],
   };
 
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", baz: true }),
@@ -1079,7 +1079,7 @@ test("adds multiple errors for each client field to errors array when remote dat
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -1090,7 +1090,7 @@ test("adds multiple errors for each client field to errors array when remote dat
         path: ["foo"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.foo",
             data: { __typename: "Foo", baz: true },
           },
@@ -1102,7 +1102,7 @@ test("adds multiple errors for each client field to errors array when remote dat
         path: ["bar"],
         extensions: {
           apollo: {
-            source: "LocalResolvers",
+            source: "LocalState",
             resolver: "Query.bar",
             data: { __typename: "Bar", baz: false },
           },
@@ -1134,7 +1134,7 @@ test("does not execute resolver if client field is a child of a server field whe
   };
 
   const foo = jest.fn(() => true);
-  const localResolvers = new LocalState({
+  const localState = new LocalState({
     resolvers: {
       Baz: {
         foo,
@@ -1143,7 +1143,7 @@ test("does not execute resolver if client field is a child of a server field whe
   });
 
   await expect(
-    localResolvers.execute({ document, client, context: {}, remoteResult })
+    localState.execute({ document, client, context: {}, remoteResult })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [{ message: "Something went wrong" }],

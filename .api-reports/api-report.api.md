@@ -1330,24 +1330,6 @@ export const LinkError: {
 };
 
 // @public (undocumented)
-export namespace LocalResolversError {
-    // (undocumented)
-    export interface Options {
-        // (undocumented)
-        path?: Array<string | number>;
-        // (undocumented)
-        sourceError?: unknown;
-    }
-}
-
-// @public
-export class LocalResolversError extends Error {
-    constructor(message: string, options?: LocalResolversError.Options);
-    static is(error: unknown): error is LocalResolversError;
-    readonly path?: Array<string | number>;
-}
-
-// @public (undocumented)
 namespace LocalState {
     // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MaybeRequireRootValue" needs to be exported by the entry point index.d.ts
@@ -1425,6 +1407,24 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers,
         context: DefaultContext;
         variables: Partial<NoInfer_2<TVariables>>;
     }): Promise<TVariables>;
+}
+
+// @public (undocumented)
+export namespace LocalStateError {
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        path?: Array<string | number>;
+        // (undocumented)
+        sourceError?: unknown;
+    }
+}
+
+// @public
+export class LocalStateError extends Error {
+    constructor(message: string, options?: LocalStateError.Options);
+    static is(error: unknown): error is LocalStateError;
+    readonly path?: Array<string | number>;
 }
 
 // @public (undocumented)

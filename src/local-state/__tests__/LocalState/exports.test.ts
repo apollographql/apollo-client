@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
-import { LocalResolversError } from "@apollo/client/errors";
+import { LocalStateError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
@@ -393,7 +393,7 @@ test("throws error when cache data is not available for parent when exporting re
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Field 'postRequiringReview' is `undefined` which contains exported required variable 'reviewerId'. Ensure this value is in the cache or make the variable optional.",
       { path: ["postRequiringReview"] }
     )
@@ -481,7 +481,7 @@ test("throws error if `@export` does not include an `as` argument", async () => 
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Cannot determine the variable name from the `@export` directive used on field 'authorId'. Perhaps you forgot the `as` argument?",
       { path: ["authorId"] }
     )
@@ -567,7 +567,7 @@ test("throws error if `@export` is a client descendent field without an `as` arg
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Cannot determine the variable name from the `@export` directive used on field 'id'. Perhaps you forgot the `as` argument?",
       { path: ["author", "id"] }
     )
@@ -602,7 +602,7 @@ test("throws error on @client only queries when the @export directive is used on
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
       { path: ["field"] }
     )
@@ -647,7 +647,7 @@ test("throws error on @client only queries when the @export directive is used on
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
       { path: ["car", "engine", "torque"] }
     )
@@ -693,7 +693,7 @@ test("throws error if `@export` variable does not exist in a variable definition
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "`@export` directive on field 'authorId' does not have an associated variable definition for the 'authorId' variable.",
       { path: ["authorId"] }
     )
@@ -1304,7 +1304,7 @@ test("throws error when a resolver throws while gathering exported variables for
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "An error was thrown from resolver 'Query.currentAuthorId' while resolving required variable 'authorId'.",
       {
         path: ["currentAuthorId"],
@@ -1359,7 +1359,7 @@ test("throws error when a parent resolver throws while gathering exported variab
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "An error was thrown from resolver 'Query.currentAuthor' while resolving required variable 'authorId'.",
       {
         path: ["currentAuthor"],
@@ -1417,7 +1417,7 @@ test("throws error when a child resolver throws while gathering exported variabl
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "An error was thrown from resolver 'Author.id' while resolving required variable 'authorId'.",
       {
         path: ["currentAuthor", "id"],
@@ -1468,7 +1468,7 @@ test("errors when resolver returns null for a required variable on client-only q
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
     )
@@ -1518,7 +1518,7 @@ test("errors when nested field is null for a required variable on client-only qu
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Field 'Author.id' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthor", "id"] }
     )
@@ -1571,7 +1571,7 @@ test("errors when nested field is null for a required variable on client-only qu
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Author.id' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthor", "id"] }
     )
@@ -1621,7 +1621,7 @@ test("throws error when top-level resolver returns null with nested export for r
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Query.currentAuthor' returned `null` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor"] }
     )
@@ -1671,7 +1671,7 @@ test("throws error when top-level resolver returns undefined with nested export 
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Query.currentAuthor' returned `undefined` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor"] }
     )
@@ -1719,7 +1719,7 @@ test("errors when resolver returns undefined for a required variable on client-o
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
     )
@@ -1758,7 +1758,7 @@ test("errors when resolver returns null for a required variable on non-client qu
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
     )
@@ -1797,7 +1797,7 @@ test("errors when resolver returns undefined for a required variable on non-clie
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
     )
@@ -1840,7 +1840,7 @@ test("errors when resolver returns object with null field for a required variabl
       variables: {},
     })
   ).rejects.toThrow(
-    new LocalResolversError(
+    new LocalStateError(
       "Field 'Author.profile' returned `null` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor", "profile"] }
     )

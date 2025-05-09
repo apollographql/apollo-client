@@ -71,7 +71,7 @@ export const LinkError: {
 };
 
 // @public (undocumented)
-export namespace LocalResolversError {
+export namespace LocalStateError {
     // (undocumented)
     export interface Options {
         // (undocumented)
@@ -82,9 +82,9 @@ export namespace LocalResolversError {
 }
 
 // @public
-export class LocalResolversError extends Error {
-    constructor(message: string, options?: LocalResolversError.Options);
-    static is(error: unknown): error is LocalResolversError;
+export class LocalStateError extends Error {
+    constructor(message: string, options?: LocalStateError.Options);
+    static is(error: unknown): error is LocalStateError;
     readonly path?: Array<string | number>;
 }
 

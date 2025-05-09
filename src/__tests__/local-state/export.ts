@@ -5,7 +5,7 @@ import { of } from "rxjs";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
-  LocalResolversError,
+  LocalStateError,
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
@@ -37,7 +37,7 @@ describe("@client @export tests", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new LocalResolversError(
+      new LocalStateError(
         "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
         { path: ["field"] }
       )
@@ -77,7 +77,7 @@ describe("@client @export tests", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new LocalResolversError(
+      new LocalStateError(
         "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
         { path: ["car", "engine", "torque"] }
       )

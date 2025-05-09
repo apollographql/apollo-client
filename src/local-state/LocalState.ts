@@ -25,7 +25,7 @@ import type {
 import { cacheSlot } from "@apollo/client/cache";
 import {
   isErrorLike,
-  LocalResolversError,
+  LocalStateError,
   toErrorLike,
 } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
@@ -477,7 +477,7 @@ export class LocalState<
         }
 
         if (!matches) {
-          throw new LocalResolversError(
+          throw new LocalStateError(
             `Fragment '${fragment.name.value}' cannot be used with type '${typename}' as objects of type '${typename}' can never be of type '${fragment.typeCondition.name.value}'.`,
             { path }
           );
@@ -520,7 +520,7 @@ export class LocalState<
           execContext.exportedVariableDefs
         )) {
           if (def.ancestors.has(field) && def.required) {
-            throw new LocalResolversError(
+            throw new LocalStateError(
               `${"Field"} '${field.name.value}' is \`${result}\` which contains exported required variable '${name}'. Ensure this value is in the cache or make the variable optional.`,
               { path }
             );
@@ -650,7 +650,7 @@ export class LocalState<
         )) {
           if (def.ancestors.has(field)) {
             if (def.required) {
-              throw new LocalResolversError(
+              throw new LocalStateError(
                 `An error was thrown from resolver '${resolverName}' while resolving required variable '${name}'.`,
                 { path, sourceError: e }
               );
@@ -716,7 +716,7 @@ export class LocalState<
           execContext.exportedVariableDefs
         )) {
           if (def.ancestors.has(field) && def.required) {
-            throw new LocalResolversError(
+            throw new LocalStateError(
               `${
                 resolver ? "Resolver" : "Field"
               } '${resolverName}' returned \`${result}\` ${
@@ -923,14 +923,14 @@ export class LocalState<
             const variableName = getExportedVariableName(node);
 
             if (!variableName) {
-              throw new LocalResolversError(
+              throw new LocalStateError(
                 `Cannot determine the variable name from the \`@export\` directive used on field '${fieldName}'. Perhaps you forgot the \`as\` argument?`,
                 { path: getCurrentPath() }
               );
             }
 
             if (!allVariableDefinitions[variableName]) {
-              throw new LocalResolversError(
+              throw new LocalStateError(
                 `\`@export\` directive on field '${fieldName}' does not have an associated variable definition for the '${variableName}' variable.`,
                 { path: getCurrentPath() }
               );

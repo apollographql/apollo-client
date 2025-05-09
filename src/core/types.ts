@@ -231,11 +231,6 @@ export type MutationUpdaterFunction<
     variables?: TVariables;
   }
 ) => void;
-export interface Resolvers {
-  [key: string]: {
-    [field: string]: Resolver;
-  };
-}
 
 export interface MutateResult<TData = unknown> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */

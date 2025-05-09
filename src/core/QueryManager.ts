@@ -1790,13 +1790,17 @@ export class QueryManager {
         return of(toResult(data));
       };
 
-      if (this.getDocumentInfo(query).hasForcedResolvers && this.resolvers) {
+      if (
+        data &&
+        this.getDocumentInfo(query).hasForcedResolvers &&
+        this.resolvers
+      ) {
         return from(
           this.resolvers
             .execute<TData>({
               client: this.client,
               document: query,
-              remoteResult: data ? { data } : undefined,
+              remoteResult: { data },
               context: this.getContext(context),
               variables,
               onlyRunForcedResolvers: true,

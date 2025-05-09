@@ -3093,16 +3093,16 @@ describe("useMutation Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
-        () => ({
-          query: useQuery(GET_TODOS_QUERY),
-          mutation: useMutation(CREATE_TODO_MUTATION),
-        }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+          () => ({
+            query: useQuery(GET_TODOS_QUERY),
+            mutation: useMutation(CREATE_TODO_MUTATION),
+          }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
       {
         const {

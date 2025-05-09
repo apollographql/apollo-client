@@ -2,7 +2,6 @@ import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
 import { LocalResolversError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalResolvers } from "@apollo/client/local-resolvers";
-import { spyOnConsole } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { gql } from "./testUtils.js";

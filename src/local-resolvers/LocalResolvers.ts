@@ -569,6 +569,7 @@ export class LocalResolvers<
       operationDefinition,
       phase,
       returnPartialData,
+      onlyRunForcedResolvers,
     } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
@@ -620,7 +621,7 @@ export class LocalResolvers<
       // Avoid running the resolver if we are only trying to run forced
       // resolvers. Fallback to read the value from the root field or the cache
       // value
-      if (!execContext.onlyRunForcedResolvers || isForcedResolver(field)) {
+      if (!onlyRunForcedResolvers || isForcedResolver(field)) {
         result =
           resolver ?
             await Promise.resolve(
@@ -730,9 +731,14 @@ export class LocalResolvers<
 
     if (result === undefined && !returnPartialData) {
       if (__DEV__ && phase === "resolve") {
-        if (resolver) {
+        if (resolver && !onlyRunForcedResolvers) {
           invariant.warn(
             "The '%s' resolver returned `undefined` instead of a value. This is likely a bug in the resolver. If you didn't mean to return a value, return `null` instead.",
+            resolverName
+          );
+        } else if (onlyRunForcedResolvers) {
+          invariant.warn(
+            "The '%s' field had no cached value and only forced resolvers were run. The value was set to `null`.",
             resolverName
           );
         } else {

@@ -1,5 +1,6 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { spyOnConsole } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
 
@@ -187,4 +188,63 @@ test("runs nested forced resolvers from non-forced client descendant field", asy
 
   expect(userCount).toEqual(0);
   expect(isLoggedInCount).toEqual(1);
+});
+
+test("warns for client fields without cached data and resolvers when running forced resolvers and returnPartialData: false", async () => {
+  using _ = spyOnConsole("warn");
+  const document = gql`
+    query {
+      user {
+        id
+        name @client
+        isLoggedIn @client(always: true)
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  let nameCount = 0;
+  let isLoggedInCount = 0;
+  const localResolvers = new LocalResolvers({
+    resolvers: {
+      User: {
+        name: () => {
+          nameCount++;
+          return "John Smith";
+        },
+        isLoggedIn: () => {
+          isLoggedInCount++;
+          return true;
+        },
+      },
+    },
+  });
+
+  await expect(
+    localResolvers.execute({
+      document,
+      client,
+      context: {},
+      remoteResult: { data: { user: { __typename: "User", id: 1 } } },
+      onlyRunForcedResolvers: true,
+    })
+  ).resolves.toStrictEqualTyped({
+    // Note: name is null because we are only running forced resolvers and
+    // there is no cached value, but we aren't asking for partial data
+    data: {
+      user: { __typename: "User", id: 1, name: null, isLoggedIn: true },
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "The '%s' field had no cached value and only forced resolvers were run. The value was set to `null`.",
+    "User.name"
+  );
+  expect(nameCount).toBe(0);
+  expect(isLoggedInCount).toBe(1);
 });

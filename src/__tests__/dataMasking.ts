@@ -1,8 +1,4 @@
-import type {
-  FragmentDefinitionNode,
-  FragmentSpreadNode,
-  InlineFragmentNode,
-} from "graphql";
+import type { FragmentSpreadNode } from "graphql";
 import { Kind, visit } from "graphql";
 import { of } from "rxjs";
 

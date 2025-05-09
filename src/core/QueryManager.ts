@@ -1805,7 +1805,7 @@ export class QueryManager {
             .execute<TData>({
               client: this.client,
               document: query,
-              remoteResult: { data },
+              remoteResult: data ? { data } : undefined,
               context: this.getContext(context),
               variables,
               onlyRunForcedResolvers: true,

@@ -225,6 +225,7 @@ export class LocalResolvers<
     context: DefaultContext;
     remoteResult?: FetchResult<any>;
     variables?: TVariables;
+    onlyRunForcedResolvers?: boolean;
   }): Promise<FetchResult<TData>> {
     if (__DEV__) {
       invariant(

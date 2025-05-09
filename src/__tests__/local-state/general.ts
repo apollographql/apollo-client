@@ -168,6 +168,33 @@ describe("General functionality", () => {
     });
     expect(count).toBe(2);
   });
+
+  test("can configure local state after client is initialized", async () => {
+    const query = gql`
+      query {
+        count @client
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    const localState = new LocalState({
+      resolvers: {
+        Query: {
+          count: () => 0,
+        },
+      },
+    });
+
+    client.localState = localState;
+
+    await expect(client.query({ query })).resolves.toStrictEqualTyped({
+      data: { count: 0 },
+    });
+  });
 });
 
 describe("Cache manipulation", () => {

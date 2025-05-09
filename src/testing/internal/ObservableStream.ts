@@ -77,6 +77,10 @@ export class ObservableStream<T> {
     });
   }
 
+  [Symbol.dispose]() {
+    this.unsubscribe();
+  }
+
   unsubscribe() {
     this.subscription.unsubscribe();
   }

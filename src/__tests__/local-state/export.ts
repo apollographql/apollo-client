@@ -1026,4 +1026,43 @@ describe("@client @export tests", () => {
       partial: false,
     });
   });
+
+  test("adds exported variables to subscriptions", async () => {
+    const subscription = gql`
+      subscription ($userId: ID!) {
+        currentUserId @client @export(as: "userId")
+        count(for: $userId)
+      }
+    `;
+
+    const link = new ApolloLink((operation) =>
+      operation.variables.userId === 1 ?
+        of({ data: { count: 1 } }, { data: { count: 2 } })
+      : of({ errors: [{ message: "Wrong user id" }] })
+    );
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: new LocalResolvers({
+        resolvers: {
+          Subscription: {
+            currentUserId: () => 1,
+          },
+        },
+      }),
+    });
+
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { currentUserId: 1, count: 1 },
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { currentUserId: 1, count: 2 },
+    });
+    await expect(stream).toComplete();
+  });
 });

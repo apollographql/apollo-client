@@ -7,12 +7,22 @@ function isKnownClassInstance(value: unknown) {
 
 export function getSerializableProperties(
   obj: unknown,
+
   {
     includeKnownClassInstances = false,
-  }: { includeKnownClassInstances?: boolean } = {}
+    skipUnknownInstances = false,
+  }: {
+    includeKnownClassInstances?: boolean;
+    skipUnknownInstances?: boolean;
+  } = {}
 ): any {
   if (Array.isArray(obj)) {
-    return obj.map((item) => getSerializableProperties(item));
+    return obj.map((item) =>
+      getSerializableProperties(item, {
+        includeKnownClassInstances,
+        skipUnknownInstances,
+      })
+    );
   }
 
   if (isPlainObject(obj)) {
@@ -25,10 +35,29 @@ export function getSerializableProperties(
           return memo;
         }
 
+        if (skipUnknownInstances) {
+          return {
+            ...memo,
+            [key]: getSerializableProperties(value, {
+              includeKnownClassInstances,
+              skipUnknownInstances,
+            }),
+          };
+        }
+
         return { ...memo, [key]: value };
       },
       {} as Record<string, any>
     );
+  }
+
+  if (
+    skipUnknownInstances &&
+    typeof obj === "object" &&
+    obj !== null &&
+    !(obj instanceof Error)
+  ) {
+    return "<skipped unknown instance>";
   }
 
   return obj;

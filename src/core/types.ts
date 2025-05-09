@@ -1,4 +1,6 @@
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
+import type { NextNotification, ObservableNotification } from "rxjs";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
@@ -10,7 +12,10 @@ import type { Resolver } from "./LocalState.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryInfo } from "./QueryInfo.js";
-import type { QueryOptions } from "./watchQueryOptions.js";
+import type {
+  QueryOptions,
+  WatchQueryFetchPolicy,
+} from "./watchQueryOptions.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -265,4 +270,44 @@ export interface QueryResult<TData = unknown> {
 
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ErrorLike;
+}
+
+export declare namespace QueryNotification {
+  interface Meta<TData, TVariables> {
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    variables: TVariables | undefined;
+  }
+
+  type NewNetworkStatus<TData, TVariables> = NextNotification<{
+    resetError?: boolean;
+  }> & {
+    source: "newNetworkStatus";
+  };
+
+  type SetResult<TData, TVariables> = NextNotification<
+    ApolloQueryResult<TData>
+  > & {
+    source: "setResult";
+  };
+
+  type FromNetwork<TData, TVariables> = ObservableNotification<
+    ApolloQueryResult<TData>
+  > & {
+    source: "network";
+    fetchPolicy: WatchQueryFetchPolicy;
+  };
+
+  type FromCache<TData, TVariables> = NextNotification<
+    ApolloQueryResult<TData>
+  > & {
+    source: "cache";
+    /** only present if triggered from link */
+    fetchPolicy?: WatchQueryFetchPolicy;
+  };
+
+  type Value<TData, TVariables> =
+    | FromCache<TData, TVariables>
+    | FromNetwork<TData, TVariables>
+    | NewNetworkStatus<TData, TVariables>
+    | SetResult<TData, TVariables>;
 }

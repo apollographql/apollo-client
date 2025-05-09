@@ -5,8 +5,19 @@
 ```ts
 
 import type { ApolloQueryResult } from '@apollo/client';
+import { BehaviorSubject } from 'rxjs';
 import { Observable } from 'rxjs';
+import type { Observer } from 'rxjs';
+import type { OperatorFunction } from 'rxjs';
 import type { QueryResult } from '@apollo/client';
+import type { Slot } from 'optimism';
+import type { Subscription } from 'rxjs';
+
+// @public (undocumented)
+export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
+
+// @public (undocumented)
+export function filterMap<T, R, Context>(fn: (value: T, context: Context) => R | undefined, makeContext: () => NoInfer<Context>): OperatorFunction<T, R>;
 
 // @internal
 export const getApolloCacheMemoryInternals: (() => {
@@ -96,6 +107,23 @@ export function onAnyEvent<T>(handleEvent: (event: ObservableEvent<T>) => void):
 //
 // @public (undocumented)
 export function registerGlobalCache(name: keyof typeof globalCaches, getSize: () => number): void;
+
+// @public (undocumented)
+export class SlotAwareBehaviorSubject<T, S> extends BehaviorSubject<T> {
+    // Warning: (ae-forgotten-export) The symbol "SlotInstance" needs to be exported by the entry point index.d.ts
+    constructor(initialValue: T, slot: SlotInstance<S>, initialSlotValue?: S);
+    // (undocumented)
+    callingSynchronusly: boolean;
+    // (undocumented)
+    getSlotValue(): S | undefined;
+    // (undocumented)
+    next(value: T): void;
+    // (undocumented)
+    subscribe(observerOrNext?: Partial<Observer<T>> | ((value: T) => void) | null): Subscription;
+}
+
+// @public (undocumented)
+type SlotInstance<S> = InstanceType<typeof Slot<S>>;
 
 // @public (undocumented)
 export function toQueryResult<TData = unknown>(value: ApolloQueryResult<TData>): QueryResult<TData>;

@@ -530,7 +530,7 @@ describe("ApolloClient", () => {
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 20);
+        }, 30);
 
         return () => {
           onRequestUnsubscribe();
@@ -580,7 +580,7 @@ describe("ApolloClient", () => {
     stream.unsubscribe();
 
     // Now validate that both requests unsubscribe
-    await wait(20);
+    await wait(30);
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });
@@ -4012,14 +4012,15 @@ describe("ApolloClient", () => {
       const link: ApolloLink = new ApolloLink(
         (op) =>
           new Observable((observer) => {
-            timesFired += 1;
-            if (timesFired > 1) {
-              observer.next({ data: data2 });
-            } else {
-              observer.next({ data });
-            }
-            observer.complete();
-            return;
+            setTimeout(() => {
+              timesFired += 1;
+              if (timesFired > 1) {
+                observer.next({ data: data2 });
+              } else {
+                observer.next({ data });
+              }
+              observer.complete();
+            });
           })
       );
       const client = new ApolloClient({
@@ -4028,6 +4029,12 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4529,7 +4536,7 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      await client.reFetchObservableQueries();
+      await client.refetchObservableQueries();
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataChanged,
@@ -4572,14 +4579,15 @@ describe("ApolloClient", () => {
       const link = new ApolloLink(
         (op) =>
           new Observable((observer) => {
-            timesFired += 1;
-            if (timesFired > 1) {
-              observer.next({ data: data2 });
-            } else {
-              observer.next({ data });
-            }
-            observer.complete();
-            return;
+            setTimeout(() => {
+              timesFired += 1;
+              if (timesFired > 1) {
+                observer.next({ data: data2 });
+              } else {
+                observer.next({ data });
+              }
+              observer.complete();
+            });
           })
       );
       const client = new ApolloClient({
@@ -4590,6 +4598,13 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitTypedValue({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -4598,7 +4613,7 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(1);
 
       // refetch the observed queries after data has returned
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4658,14 +4673,14 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(1);
 
       stream.unsubscribe();
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await wait(50);
 
       expect(timesFired).toBe(1);
     });
 
-    it("should not error after reFetchObservableQueries", async () => {
+    it("should not error after refetchObservableQueries", async () => {
       const query = gql`
         query {
           author {
@@ -4710,7 +4725,7 @@ describe("ApolloClient", () => {
       });
       expect(timesFired).toBe(1);
 
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4752,7 +4767,7 @@ describe("ApolloClient", () => {
       const promise = client["queryManager"].fetchQuery("made up id", {
         query,
       });
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await expect(promise).resolves.toBeTruthy();
     });
@@ -4786,7 +4801,7 @@ describe("ApolloClient", () => {
       obs.subscribe({});
       obs.refetch = jest.fn();
 
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await wait(0);
 
@@ -4822,7 +4837,7 @@ describe("ApolloClient", () => {
         return null as never;
       };
 
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await wait(50);
 
@@ -4858,7 +4873,7 @@ describe("ApolloClient", () => {
         return null as never;
       };
 
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await wait(50);
 
@@ -4895,7 +4910,7 @@ describe("ApolloClient", () => {
       };
 
       const includeStandBy = true;
-      void client.reFetchObservableQueries(includeStandBy);
+      void client.refetchObservableQueries(includeStandBy);
 
       await wait(50);
 
@@ -4929,7 +4944,7 @@ describe("ApolloClient", () => {
         return null as never;
       };
 
-      void client.reFetchObservableQueries();
+      void client.refetchObservableQueries();
 
       await wait(50);
 
@@ -4956,7 +4971,7 @@ describe("ApolloClient", () => {
         () =>
           new Observable((observer) => {
             // refetch observed queries as soon as we hear about the query
-            void client.reFetchObservableQueries();
+            void client.refetchObservableQueries();
             observer.next({ data });
             observer.complete();
           })
@@ -6516,6 +6531,16 @@ describe("ApolloClient", () => {
       });
 
       expect(finishedRefetch).toBe(true);
+      // `onQueryUpdated` is executed twice, so `refetch` is called twice above,
+      // which means we are already getting the result of the first call,
+      // but the second call is not done yet
+      // as a result, we have an additional emit of a `loading/refetch` state
+      await expect(stream).toEmitTypedValue({
+        data: secondReqData,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
       await expect(stream).toEmitTypedValue({
         data: secondReqData,
         loading: false,
@@ -6571,6 +6596,17 @@ describe("ApolloClient", () => {
           expect(obsQuery.options.query).toBe(query);
           return obsQuery.refetch();
         },
+      });
+
+      // `onQueryUpdated` is executed twice, so `refetch` is called twice above,
+      // which means we are already getting the result of the first call,
+      // but the second call is not done yet
+      // as a result, we have an additional emit of a `loading/refetch` state
+      await expect(stream).toEmitTypedValue({
+        data: secondReqData,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
 
       await expect(stream).toEmitTypedValue({

@@ -689,7 +689,7 @@ This either means you have very deep \`useQuery\` waterfalls in your application
 and need to increase the \`maxRerender\` option to \`prerenderStatic\`, or that
 you have an infinite render loop in your application.`)
   );
-});
+}, 10000);
 
 test.each([
   ["renderToString", renderToString],

@@ -2027,12 +2027,13 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toStrictEqualTyped({
-        // TODO: Is this correct or should it be the previous partial result?
-        data: undefined,
+        data: {
+          currentUser: null,
+        },
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        previousData: { currentUser: null },
+        previousData: undefined,
         variables: {},
       });
     }
@@ -2045,7 +2046,7 @@ describe("useLazyQuery Hook", () => {
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
-        previousData: { currentUser: null },
+        previousData: undefined,
         error: new CombinedGraphQLErrors({
           data: { currentUser: null },
           errors: [{ message: "Not logged in 2" }],

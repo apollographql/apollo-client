@@ -2861,7 +2861,9 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
-  const renderStream = createDefaultProfiler<VariablesCaseData>();
+  const renderStream = createDefaultProfiler<
+    VariablesCaseData | DeepPartial<VariablesCaseData>
+  >();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 
@@ -2913,7 +2915,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
       error: undefined,
       networkStatus: NetworkStatus.loading,
@@ -2935,6 +2937,8 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
       networkStatus: NetworkStatus.ready,
     });
   }
+
+  await expect(renderStream).not.toRerender();
 });
 
 it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {

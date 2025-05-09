@@ -971,7 +971,12 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await firstValueFrom(from(obsQuery));
+      // firstValueFrom immediately unsubscribed from the observable, which
+      // stops the observable from watching the query.
+      // As `updateQueries` only updates actively watched queries,
+      // we need to subscribe in a way that keeps the observable alive.
+      using stream = new ObservableStream(obsQuery);
+      await stream.takeNext();
       await firstValueFrom(from(client.watchQuery({ query })));
 
       await expect(

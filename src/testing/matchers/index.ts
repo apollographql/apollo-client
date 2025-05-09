@@ -10,11 +10,11 @@ import { toEmitNext } from "./toEmitNext.js";
 import { toEmitTypedValue } from "./toEmitTypedValue.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
-import { toStrictEqualTyped } from "./toStrictEqualTyped.js";
 import {
+  toEmitSimilarValue,
   toRerenderWithSimilarSnapshot,
-  toRerenderWithStrictEqualSnapshot,
 } from "./toRerenderWithSimilarSnapshot.js";
+import { toStrictEqualTyped } from "./toStrictEqualTyped.js";
 
 expect.extend({
   arrayWithLength,
@@ -29,5 +29,5 @@ expect.extend({
   toBeGarbageCollected,
   toStrictEqualTyped,
   toRerenderWithSimilarSnapshot,
-  toRerenderWithStrictEqualSnapshot,
+  toEmitSimilarValue,
 });

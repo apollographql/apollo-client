@@ -63,6 +63,7 @@ interface ExecContext {
   exportedVariableDefs: Record<string, ExportedVariable>;
   rootValue: any;
   diff: Cache.DiffResult<any>;
+  returnPartialData: boolean;
 }
 
 interface ExportedVariable {
@@ -220,6 +221,7 @@ export class LocalResolvers<
     remoteResult,
     variables = {} as TVariables,
     onlyRunForcedResolvers = false,
+    returnPartialData = false,
   }: {
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
@@ -227,6 +229,7 @@ export class LocalResolvers<
     remoteResult?: FetchResult<any>;
     variables?: TVariables;
     onlyRunForcedResolvers?: boolean;
+    returnPartialData?: boolean;
   }): Promise<FetchResult<TData>> {
     if (__DEV__) {
       invariant(
@@ -277,6 +280,7 @@ export class LocalResolvers<
             variables: variables ?? {},
           })
         : this.rootValue,
+      returnPartialData,
     };
 
     const localResult = await this.resolveSelectionSet(
@@ -351,6 +355,7 @@ export class LocalResolvers<
       phase: "exports",
       exportedVariableDefs,
       diff,
+      returnPartialData: false,
       rootValue:
         typeof this.rootValue === "function" ?
           this.rootValue({
@@ -557,7 +562,14 @@ export class LocalResolvers<
     parentSelectionSet: SelectionSetNode,
     path: LocalResolvers.Path
   ): Promise<any> {
-    const { client, diff, variables, operationDefinition, phase } = execContext;
+    const {
+      client,
+      diff,
+      variables,
+      operationDefinition,
+      phase,
+      returnPartialData,
+    } = execContext;
     const isRootField = parentSelectionSet === operationDefinition.selectionSet;
     const fieldName = field.name.value;
     const typename =
@@ -588,14 +600,16 @@ export class LocalResolvers<
             return fieldFromCache;
           }
 
-          if (__DEV__) {
-            invariant.warn(
-              "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
-              resolverName
-            );
-          }
+          if (!returnPartialData) {
+            if (__DEV__) {
+              invariant.warn(
+                "Could not find a resolver for the '%s' field. The field value has been set to `null`.",
+                resolverName
+              );
+            }
 
-          return null;
+            return null;
+          }
         }
       );
 
@@ -714,7 +728,7 @@ export class LocalResolvers<
       }
     }
 
-    if (result === undefined) {
+    if (result === undefined && !returnPartialData) {
       if (__DEV__ && phase === "resolve") {
         if (resolver) {
           invariant.warn(
@@ -733,7 +747,7 @@ export class LocalResolvers<
       result = null;
     }
 
-    if (result === null || !field.selectionSet) {
+    if (result == null || !field.selectionSet) {
       return resultOrMergeError(result);
     }
 

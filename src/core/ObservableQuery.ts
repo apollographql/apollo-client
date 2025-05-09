@@ -1627,6 +1627,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     });
 
     this.lastError = undefined;
+
+    this.abortActiveOperations();
   }
 
   /** @internal */

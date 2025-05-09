@@ -47,7 +47,6 @@ export type {
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
-  Resolvers,
   SubscribeResult,
   TypedDocumentNode,
 } from "./types.js";

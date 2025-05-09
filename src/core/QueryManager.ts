@@ -1207,16 +1207,6 @@ export class QueryManager {
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
 
-    const prepareContext = (context = {}): DefaultContext => {
-      const newContext = this.localState.prepareContext(context);
-      return {
-        ...this.defaultContext,
-        ...newContext,
-        queryDeduplication: deduplication,
-        clientAwareness: this.clientAwareness,
-      };
-    };
-
     const operationName = getOperationName(query) || void 0;
     const executeContext: ExecuteContext = {
       client: this.client,
@@ -1229,7 +1219,11 @@ export class QueryManager {
         query: serverQuery,
         variables,
         operationName,
-        context: prepareContext(context),
+        context: {
+          ...this.getContext(context),
+          queryDeduplication: deduplication,
+          clientAwareness: this.clientAwareness,
+        },
         extensions,
       };
 
@@ -1272,7 +1266,6 @@ export class QueryManager {
       }
     } else {
       observable = of({ data: {} } as FetchResult<TData>);
-      context = prepareContext(context);
     }
 
     if (clientQuery) {

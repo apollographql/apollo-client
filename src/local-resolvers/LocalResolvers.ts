@@ -585,7 +585,7 @@ export class LocalResolvers<
         return fieldResult;
       }
 
-      return getResultAtPath(diff, path);
+      return getCacheResultAtPath(diff, path);
     }
 
     const defaultResolver =
@@ -594,7 +594,7 @@ export class LocalResolvers<
         // Warn when a resolver is not defined.
       : (
         () => {
-          const fieldFromCache = getResultAtPath(diff, path);
+          const fieldFromCache = getCacheResultAtPath(diff, path);
 
           if (fieldFromCache !== undefined) {
             return fieldFromCache;
@@ -1056,7 +1056,7 @@ function validateCacheImplementation(cache: ApolloCache) {
   );
 }
 
-function getResultAtPath(
+function getCacheResultAtPath(
   diff: Cache.DiffResult<any>,
   path: LocalResolvers.Path
 ) {

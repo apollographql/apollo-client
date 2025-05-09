@@ -17,12 +17,10 @@ export function filterMap<T, R>(
       let context = makeContext();
       return source.subscribe({
         next(value) {
-          console.log("handling next");
           const result = fn(value, context);
           if (result === undefined) {
             return;
           }
-          console.log("not skipped, forwarding value", result);
           subscriber.next(result);
         },
         error(err) {

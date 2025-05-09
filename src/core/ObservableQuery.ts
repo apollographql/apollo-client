@@ -351,18 +351,7 @@ export class ObservableQuery<
             previousVariables?: TVariables;
           }
         ) => {
-          const meta = queryMetaSlot.getValue();
-
-          console.log("filterMap", {
-            current,
-            context,
-            loading: current.loading,
-            notifyOnNetworkStatusChange:
-              this.options.notifyOnNetworkStatusChange,
-            meta,
-          });
-          invariant(meta);
-          const { query, variables, shouldEmit } = meta!;
+          const { query, variables, shouldEmit } = queryMetaSlot.getValue()!;
 
           if (current === uninitialized) {
             // reset internal state after `ObservableQuery.reset()`
@@ -400,7 +389,6 @@ export class ObservableQuery<
             (!this.options.notifyOnNetworkStatusChange ||
               equal(previous, current))
           ) {
-            console.log("skipping emit");
             return;
           }
           return emit();
@@ -412,8 +400,8 @@ export class ObservableQuery<
           }
         },
         () => ({})
-      ),
-      tap((value) => console.log({ emitted: value }))
+      )
+      // tap((value) => console.log({ emitted: value }))
     );
 
     this["@@observable"] = () => this;
@@ -477,12 +465,6 @@ export class ObservableQuery<
     variables = this.variables,
     observed = this.subject.observed,
   } = {}): ApolloQueryResult<MaybeMasked<TData>> {
-    console.log("getInitialResult", {
-      prioritizeCacheValues: this.queryManager.prioritizeCacheValues,
-      queryMetaSlot: queryMetaSlot.getValue()?.fetchPolicy,
-      options_fetchPolicy: this.options.fetchPolicy,
-    });
-
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
@@ -1071,7 +1053,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     networkStatus: NetworkStatus,
     fetchQuery?: DocumentNode
   ) {
-    // console.log("fetch", options);
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     const initialFetchPolicy = this.options.fetchPolicy;
@@ -1231,7 +1212,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          console.log("maybeFetch");
           this.reobserve({
             // Most fetchPolicy options don't make sense to use in a polling context, as
             // users wouldn't want to be polling the cache directly. However, network-only and
@@ -1275,8 +1255,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
-    console.log(`ObservableQuery.reobserve(%o)`, newOptions);
-
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
 
@@ -1417,12 +1395,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // omit the extra fields from ApolloQueryResult in the default value.
           defaultValue: { data: undefined } as ApolloQueryResult<TData>,
         }
-      )
-        .then((result) => toQueryResult(this.maskResult(result)))
-        .then((v) => {
-          console.log("reobserve finished", v);
-          return v;
-        })
+      ).then((result) => toQueryResult(this.maskResult(result)))
     );
   }
 
@@ -1486,7 +1459,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   private scheduleNotify() {
-    console.log("scheduleNotify");
     if (this.dirty) return;
     this.dirty = true;
     if (!this.notifyTimeout) {
@@ -1496,7 +1468,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   /** @internal */
   public notify() {
-    console.log("notify");
     const { dirty } = this;
     this.resetNotifications();
 
@@ -1650,121 +1621,88 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private operator: OperatorFunction<
     QueryNotification.Value<TData, TVariables>,
     ApolloQueryResult<TData>
-  > = pipe(
-    tap({
-      next: (incoming) => {
-        invariant(queryMetaSlot.hasValue());
-        const { query, ...meta } = queryMetaSlot.getValue()!;
-        console.dir(
-          {
-            incoming,
-            forCurrentQuery: isEqualQuery(queryMetaSlot.getValue(), this),
-            variables: queryMetaSlot.getValue()?.variables,
-            current: {
-              variables: this.variables,
-              fetchPolicy: this.options.fetchPolicy,
-            },
-            meta,
-          },
-          { depth: 5 }
-        );
-      },
-    }),
-    filterMap<
-      QueryNotification.Value<TData, TVariables>,
-      ApolloQueryResult<TData>
-    >((notification) => {
-      if (notification.source === "setResult") {
-        return notification.value;
-      }
-      const meta = queryMetaSlot.getValue();
-      invariant(meta);
+  > = filterMap<
+    QueryNotification.Value<TData, TVariables>,
+    ApolloQueryResult<TData>
+  >((notification) => {
+    if (notification.source === "setResult") {
+      return notification.value;
+    }
+    const meta = queryMetaSlot.getValue();
+    invariant(meta);
 
-      if (notification.kind === "C" || !isEqualQuery(meta, this)) {
+    if (notification.kind === "C" || !isEqualQuery(meta, this)) {
+      return;
+    }
+
+    let result: ApolloQueryResult<TData>;
+    const previousResult = this.subject.getValue();
+    const previousMeta = this.subject.getSlotValue();
+
+    if (notification.source === "cache") {
+      result = notification.value;
+      if (
+        !(
+          result.networkStatus !== NetworkStatus.ready ||
+          !result.partial ||
+          (!!this.options.returnPartialData &&
+            previousResult.networkStatus !== NetworkStatus.error) ||
+          this.options.fetchPolicy === "cache-only"
+        )
+      ) {
         return;
       }
-
-      let result: ApolloQueryResult<TData>;
-      const previousResult = this.subject.getValue();
-      const previousMeta = this.subject.getSlotValue();
-
-      if (notification.source === "cache") {
-        result = notification.value;
-        if (
-          !(
-            result.networkStatus !== NetworkStatus.ready ||
-            !result.partial ||
-            (!!this.options.returnPartialData &&
-              previousResult.networkStatus !== NetworkStatus.error) ||
-            this.options.fetchPolicy === "cache-only"
-          )
-        ) {
-          return;
-        }
-      } else if (notification.source === "network") {
-        result =
-          notification.kind === "E" ?
-            {
-              data: undefined,
-              partial: true,
-              ...(isEqualQuery(previousMeta, meta) ? previousResult : {}),
-              error: notification.error,
-              networkStatus: NetworkStatus.error,
-              loading: false,
-            }
-          : notification.value;
-
-        if (result.error) {
-          meta.shouldEmit = true;
-        }
-      } else if (notification.source === "newNetworkStatus") {
-        const baseResult =
-          previousMeta && isEqualQuery(previousMeta, meta) ? previousResult : (
-            this.getInitialResult()
-          );
-        const { resetError } = notification.value;
-        const error = resetError ? undefined : baseResult.error;
-        const networkStatus = error ? NetworkStatus.error : NetworkStatus.ready;
-        result = {
-          ...baseResult,
-          error,
-          networkStatus,
-        };
-      }
-      // every code path until here should have either returned or set a result,
-      // but typescript needs a little help
-      invariant(result!);
-
-      // normalize result shape
-      if ("error" in result && !result.error) delete result.error;
-      result.networkStatus = this.caclulateNetworkStatus(result.networkStatus);
-      result.loading = isNetworkRequestInFlight(result.networkStatus);
-      result = this.maskResult(result);
+    } else if (notification.source === "network") {
+      result =
+        notification.kind === "E" ?
+          {
+            data: undefined,
+            partial: true,
+            ...(isEqualQuery(previousMeta, meta) ? previousResult : {}),
+            error: notification.error,
+            networkStatus: NetworkStatus.error,
+            loading: false,
+          }
+        : notification.value;
 
       if (result.error) {
-        const { query, variables } = queryMetaSlot.getValue()!;
-        this.lastError = {
-          error: result.error,
-          query,
-          variables: variables as TVariables,
-        };
+        meta.shouldEmit = true;
       }
+    } else if (notification.source === "newNetworkStatus") {
+      const baseResult =
+        previousMeta && isEqualQuery(previousMeta, meta) ? previousResult : (
+          this.getInitialResult()
+        );
+      const { resetError } = notification.value;
+      const error = resetError ? undefined : baseResult.error;
+      const networkStatus = error ? NetworkStatus.error : NetworkStatus.ready;
+      result = {
+        ...baseResult,
+        error,
+        networkStatus,
+      };
+    }
+    // every code path until here should have either returned or set a result,
+    // but typescript needs a little help
+    invariant(result!);
 
-      return result;
-    }),
-    tap({
-      next: (result) => {
-        if (result.error) {
-          const { query, variables } = queryMetaSlot.getValue()!;
-          this.lastError = {
-            error: result.error,
-            query,
-            variables: variables as TVariables,
-          };
-        }
-      },
-    })
-  );
+    // normalize result shape
+    if ("error" in result && !result.error) delete result.error;
+    result.networkStatus = this.caclulateNetworkStatus(result.networkStatus);
+    result.loading = isNetworkRequestInFlight(result.networkStatus);
+    result = this.maskResult(result);
+
+    if (result.error) {
+      const { query, variables } = queryMetaSlot.getValue()!;
+      this.lastError = {
+        error: result.error,
+        query,
+        variables: variables as TVariables,
+      };
+    }
+
+    return result;
+  });
 
   // Reobserve with fetchPolicy effectively set to "cache-first", triggering
   // delivery of any new data from the cache, possibly falling back to the network

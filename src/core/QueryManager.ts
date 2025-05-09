@@ -1733,7 +1733,6 @@ export class QueryManager {
     },
     cacheWriteBehavior: CacheWriteBehavior
   ): ObservableAndInfo<TData> {
-    console.log("fetchQueryByPolicy", { fetchPolicy });
     queryInfo.init({
       document: query,
       variables,
@@ -1771,7 +1770,6 @@ export class QueryManager {
         };
       };
 
-      console.log("resultsToCache", { networkStatus });
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
         return of({
           kind: "N",

@@ -1,4 +1,4 @@
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 
 import type { RootValue } from "./fixtures/rootValue.js";
 
@@ -13,10 +13,10 @@ describe.skip("Type tests", () => {
       __typename: "Food";
       name: string;
     }
-    new LocalResolvers();
-    new LocalResolvers({ resolvers: {} });
+    new LocalState();
+    new LocalState({ resolvers: {} });
 
-    new LocalResolvers({
+    new LocalState({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -31,7 +31,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers({
+    new LocalState({
       rootValue: {
         env: "development",
       },
@@ -59,23 +59,23 @@ describe.skip("Type tests", () => {
 
     type RequiredRootResolver = SetRequired<Resolvers, "Query">;
 
-    new LocalResolvers<Resolvers>();
+    new LocalState<Resolvers>();
     // @ts-expect-error missing argument
-    new LocalResolvers<RequiredRootResolver>();
+    new LocalState<RequiredRootResolver>();
 
-    new LocalResolvers<Resolvers>({});
+    new LocalState<Resolvers>({});
     // @ts-expect-error missing resolvers option
-    new LocalResolvers<RequiredRootResolver>({});
+    new LocalState<RequiredRootResolver>({});
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {},
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       // @ts-expect-error missing Query resolver
       resolvers: {},
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -96,7 +96,7 @@ describe.skip("Type tests", () => {
         },
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -118,18 +118,18 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         Query: {},
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         Query: {},
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         Query: {
           // @ts-expect-error wrong return type
@@ -139,7 +139,7 @@ describe.skip("Type tests", () => {
         },
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         Query: {
           // @ts-expect-error wrong return type
@@ -150,7 +150,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         User: {
           // @ts-expect-error missing __typename
@@ -158,7 +158,7 @@ describe.skip("Type tests", () => {
         },
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         User: {
           // @ts-expect-error missing __typename
@@ -167,7 +167,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -177,7 +177,7 @@ describe.skip("Type tests", () => {
         },
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -188,20 +188,20 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         // @ts-expect-error unknown typename
         Invalid: {},
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         // @ts-expect-error unknown typename
         Invalid: {},
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       resolvers: {
         Query: {
           // @ts-expect-error unknown field
@@ -209,7 +209,7 @@ describe.skip("Type tests", () => {
         },
       },
     });
-    new LocalResolvers<RequiredRootResolver>({
+    new LocalState<RequiredRootResolver>({
       resolvers: {
         Query: {
           // @ts-expect-error unknown field
@@ -222,7 +222,7 @@ describe.skip("Type tests", () => {
   test("rootValue", () => {
     type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
 
-    new LocalResolvers<Resolvers, RootValue>({
+    new LocalState<Resolvers, RootValue>({
       rootValue: {
         env: "dev",
       },
@@ -233,7 +233,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers, RootValue>({
+    new LocalState<Resolvers, RootValue>({
       rootValue: {
         // @ts-expect-error invalid value
         env: "staging",
@@ -245,7 +245,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers, RootValue>({
+    new LocalState<Resolvers, RootValue>({
       rootValue: () => ({
         env: "prod",
       }),
@@ -256,7 +256,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers, RootValue>({
+    new LocalState<Resolvers, RootValue>({
       // @ts-expect-error incorrect value
       rootValue: () => ({
         env: "staging",
@@ -268,7 +268,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers, RootValue>({
+    new LocalState<Resolvers, RootValue>({
       rootValue: {
         env: "prod",
       },
@@ -279,7 +279,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers, RootValue>({
+    new LocalState<Resolvers, RootValue>({
       rootValue: {
         env: "prod",
       },
@@ -291,7 +291,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<Resolvers>({
+    new LocalState<Resolvers>({
       rootValue: {
         // @ts-expect-error invalid value for env
         env: "staging",
@@ -303,7 +303,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers({
+    new LocalState({
       rootValue: {
         // @ts-expect-error invalid value for env
         env: "staging",
@@ -315,7 +315,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers({
+    new LocalState({
       // @ts-expect-error invalid value for env
       rootValue: () => ({
         env: "staging",
@@ -328,7 +328,7 @@ describe.skip("Type tests", () => {
     });
 
     // @ts-expect-error rootValue is not provided
-    new LocalResolvers({
+    new LocalState({
       resolvers: {
         Query: {
           currentUserId: (_rootValue: RootValue) => 1,
@@ -336,18 +336,12 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalResolvers<
-      { User?: { isLoggedIn: LocalResolvers.Resolver } },
-      RootValue
-    >(
+    new LocalState<{ User?: { isLoggedIn: LocalState.Resolver } }, RootValue>(
       // @ts-expect-error rootValue is required
       {}
     );
 
-    new LocalResolvers<
-      { User?: { isLoggedIn: LocalResolvers.Resolver } },
-      RootValue
-    >(
+    new LocalState<{ User?: { isLoggedIn: LocalState.Resolver } }, RootValue>(
       // @ts-expect-error rootValue is required
       {
         resolvers: {},

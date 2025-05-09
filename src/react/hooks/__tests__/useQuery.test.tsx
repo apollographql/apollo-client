@@ -32,7 +32,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -6947,7 +6947,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink(() => of({ data: {} })),
-        resolvers: new LocalResolvers({
+        resolvers: new LocalState({
           resolvers: {
             ClientData: {
               titleLength(data) {

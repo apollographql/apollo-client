@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { wait } from "@apollo/client/testing";
 
 import { gql } from "./testUtils.js";
@@ -16,7 +16,7 @@ test("supports async @client resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         async isLoggedIn() {
@@ -75,7 +75,7 @@ test("handles nested asynchronous @client resolvers", async () => {
   const ticketsPerDev = 5;
   const commentsPerTicket = 5;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         async developer(_, { id }) {
@@ -174,7 +174,7 @@ test("supports async @client resolvers mixed with remotely resolved data", async
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Member: {
         async isLoggedIn() {

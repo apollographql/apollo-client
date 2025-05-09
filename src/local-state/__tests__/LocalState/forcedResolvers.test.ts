@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -29,7 +29,7 @@ test("runs resolvers marked with @client(always: true)", async () => {
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   // When the resolver isn't defined, there isn't anything to force, so
   // make sure the query resolves from the cache properly.
@@ -87,7 +87,7 @@ test("only runs forced resolvers for fields marked with `@client(always: true)`,
   let nameCount = 0;
   let isLoggedInCount = 0;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         name() {
@@ -144,7 +144,7 @@ test("runs nested forced resolvers from non-forced client descendant field", asy
   let userCount = 0;
   let isLoggedInCount = 0;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         user() {
@@ -209,7 +209,7 @@ test("warns for client fields without cached data and resolvers when running for
 
   let nameCount = 0;
   let isLoggedInCount = 0;
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       User: {
         name: () => {

@@ -1,7 +1,7 @@
 import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
 import { LocalResolversError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { gql } from "./testUtils.js";
@@ -38,7 +38,7 @@ test("handles @client fields inside fragments", async () => {
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Foo: {
         baz: () => false,
@@ -80,7 +80,7 @@ test("handles a mix of @client fields with fragments and server fields", async (
 
   const remoteResult = { data: { bar: { baz: true, __typename: "Bar" } } };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ bar: true, __typename: "ClientData" }),
@@ -116,7 +116,7 @@ it("matches fragments with fragment conditions", async () => {
     data: { foo: [{ __typename: "Bar" }, { __typename: "Baz" }] },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Bar: {
         bar: () => "Bar",
@@ -168,7 +168,7 @@ test("throws when cache does not implement fragmentMatches", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -202,7 +202,7 @@ test("throws error when fragment spread type condition does not match typename",
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),
@@ -238,7 +238,7 @@ test("can use a fragments on interface types defined by possibleTypes", async ()
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentUser: () => ({ __typename: "User", id: 1 }),

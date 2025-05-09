@@ -1,6 +1,6 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { gql } from "./testUtils.js";
@@ -17,7 +17,7 @@ test("throws when given a subscription with no client fields", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -45,7 +45,7 @@ test("adds @client fields with subscription results", async () => {
   });
 
   let subCounter = 0;
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Subscription: {
         count: () => {

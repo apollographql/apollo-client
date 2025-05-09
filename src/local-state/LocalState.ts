@@ -80,7 +80,7 @@ interface TraverseCacheEntry {
 
 type InferRootValueFromFieldResolver<TField> =
   TField extends { [key: string]: infer TResolver } ?
-    TResolver extends LocalResolvers.Resolver<any, infer TRootValue, any> ?
+    TResolver extends LocalState.Resolver<any, infer TRootValue, any> ?
       TRootValue
     : unknown
   : unknown;
@@ -99,10 +99,10 @@ type MaybeRequireRootValue<TRootValue> =
   : undefined extends TRootValue ? {}
   : unknown extends TRootValue ? {}
   : {
-      rootValue: TRootValue | LocalResolvers.RootValueFunction<TRootValue>;
+      rootValue: TRootValue | LocalState.RootValueFunction<TRootValue>;
     };
 
-export declare namespace LocalResolvers {
+export declare namespace LocalState {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
   // allows us to provide the function signature while allowing any value.
@@ -180,12 +180,12 @@ export declare namespace LocalResolvers {
   export type Path = Array<string | number>;
 }
 
-export class LocalResolvers<
-  TResolvers extends LocalResolvers.Resolvers = LocalResolvers.Resolvers,
+export class LocalState<
+  TResolvers extends LocalState.Resolvers = LocalState.Resolvers,
   TRootValue = InferRootValueFromResolvers<TResolvers>,
 > {
-  private rootValue?: LocalResolvers.Options["rootValue"];
-  private resolvers: LocalResolvers.Resolvers = {};
+  private rootValue?: LocalState.Options["rootValue"];
+  private resolvers: LocalState.Resolvers = {};
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
     TraverseCacheEntry
@@ -193,9 +193,9 @@ export class LocalResolvers<
 
   constructor(
     ...[options]: {} extends TResolvers ?
-      [options?: LocalResolvers.Options<TResolvers, NoInfer<TRootValue>>]
+      [options?: LocalState.Options<TResolvers, NoInfer<TRootValue>>]
     : [
-        options: LocalResolvers.Options<TResolvers, NoInfer<TRootValue>> & {
+        options: LocalState.Options<TResolvers, NoInfer<TRootValue>> & {
           resolvers: TResolvers;
         },
       ]
@@ -387,7 +387,7 @@ export class LocalResolvers<
     isClientFieldDescendant: boolean,
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
-    path: LocalResolvers.Path
+    path: LocalState.Path
   ) {
     const { client, fragmentMap, variables, operationDefinition } = execContext;
     const { cache } = client;
@@ -510,7 +510,7 @@ export class LocalResolvers<
     field: FieldNode,
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
-    path: LocalResolvers.Path
+    path: LocalState.Path
   ) {
     const result = rootValue?.[field.name.value];
 
@@ -560,7 +560,7 @@ export class LocalResolvers<
     rootValue: Record<string, any> | null | undefined,
     execContext: ExecContext,
     parentSelectionSet: SelectionSetNode,
-    path: LocalResolvers.Path
+    path: LocalState.Path
   ): Promise<any> {
     const {
       client,
@@ -797,7 +797,7 @@ export class LocalResolvers<
 
   private addError(
     error: ErrorLike,
-    path: LocalResolvers.Path,
+    path: LocalState.Path,
     execContext: ExecContext,
     meta: { [key: string]: any; resolver: string }
   ) {
@@ -814,7 +814,7 @@ export class LocalResolvers<
   private getResolver(
     typename: string,
     fieldName: string
-  ): LocalResolvers.Resolver | undefined {
+  ): LocalState.Resolver | undefined {
     return this.resolvers[typename]?.[fieldName];
   }
 
@@ -823,7 +823,7 @@ export class LocalResolvers<
     isClientFieldDescendant: boolean,
     result: any[],
     execContext: ExecContext,
-    path: LocalResolvers.Path
+    path: LocalState.Path
   ): any {
     return Promise.all(
       result.map((item, idx) => {
@@ -1064,7 +1064,7 @@ function validateCacheImplementation(cache: ApolloCache) {
 
 function getCacheResultAtPath(
   diff: Cache.DiffResult<any>,
-  path: LocalResolvers.Path
+  path: LocalState.Path
 ) {
   if (diff.result === null) {
     // Intentionally return undefined to signal we have no cache data

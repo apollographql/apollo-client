@@ -17,7 +17,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -2116,7 +2116,7 @@ describe("ObservableQuery", () => {
         const client = new ApolloClient({
           link: new ApolloLink(() => linkObservable),
           cache: new InMemoryCache(),
-          resolvers: new LocalResolvers({
+          resolvers: new LocalState({
             resolvers: {
               Query: {
                 counter() {

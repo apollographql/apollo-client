@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql";
 
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 
 import { gql } from "./testUtils.js";
 
@@ -19,7 +19,7 @@ test("handles errors thrown in a resolver", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -63,7 +63,7 @@ test("handles errors thrown in a child resolver", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -112,7 +112,7 @@ test("adds errors for each field that throws errors", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo" }),
@@ -174,7 +174,7 @@ test("handles errors thrown in a child resolver from parent array", async () => 
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => [{ __typename: "Foo" }, { __typename: "Foo" }],
@@ -238,7 +238,7 @@ test("handles errors thrown in a child resolver for an array from a single item"
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => [
@@ -297,7 +297,7 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -346,7 +346,7 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -402,7 +402,7 @@ test("concatenates client errors with server errors", async () => {
     errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => {
@@ -447,7 +447,7 @@ test("handles errors thrown in async resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: async () => {
@@ -491,7 +491,7 @@ test("handles rejected promises returned in async resolvers", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: async () => {
@@ -549,7 +549,7 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
     },
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Foo: {
         baz: () => {
@@ -603,7 +603,7 @@ test("handles remote errors with no local resolver errors", async () => {
     errors: [{ message: "Could not get qux", path: ["baz", "qux"] }],
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         foo: () => ({ __typename: "Foo", bar: true }),

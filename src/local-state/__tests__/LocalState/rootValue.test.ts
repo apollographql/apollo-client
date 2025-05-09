@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 
 import { gql } from "./testUtils.js";
 
@@ -17,7 +17,7 @@ test("can pass `rootValue` as object that will be used with root client resolver
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     rootValue: {
       isBarEnabled: true,
     },
@@ -53,7 +53,7 @@ test("can pass `rootValue` as function that will be used with root client resolv
   });
 
   const rootValue = jest.fn(() => ({ isBarEnabled: true }));
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     rootValue,
     resolvers: {
       Query: {
@@ -99,7 +99,7 @@ test.each([
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     rootValue,
     resolvers: {
       Query: {

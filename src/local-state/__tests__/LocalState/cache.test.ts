@@ -4,7 +4,7 @@ import {
   InMemoryCache,
   isReference,
 } from "@apollo/client";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -22,7 +22,7 @@ test("can write to the cache with a mutation", async () => {
     }
   `;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Mutation: {
         start(_data, _args, { client }) {
@@ -60,7 +60,7 @@ test("can write to the cache with a mutation using an ID", async () => {
     }
   `;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Mutation: {
         start(_, __, { client }) {
@@ -123,7 +123,7 @@ test("does not overwrite __typename when writing to the cache with an id", async
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Mutation: {
         start(_, __, { client }) {
@@ -187,7 +187,7 @@ test("reads from the cache on a root scalar field by default if a resolver is no
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
@@ -220,7 +220,7 @@ test("reads from the cache on a root object field by default if a resolver is no
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
@@ -253,7 +253,7 @@ test("handles read functions for root scalar field from cache if resolver is not
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
@@ -287,7 +287,7 @@ test("handles read functions for root object field from cache if resolver is not
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
@@ -309,7 +309,7 @@ test("warns if resolver is not defined if cache does not have value", async () =
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({ document, client, context: {} })
@@ -348,7 +348,7 @@ test("reads from the cache on a nested scalar field by default if a resolver is 
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -405,7 +405,7 @@ test("reads from the cache with a read function on a nested scalar field if a re
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -454,7 +454,7 @@ test("reads from the cache on a nested object field by default if a resolver is 
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -522,7 +522,7 @@ test("reads from the cache with a read function on a nested object field by defa
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -588,7 +588,7 @@ test("reads from the cache on a nested client field on a non-normalized object",
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -637,7 +637,7 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -693,7 +693,7 @@ test("does not confuse field missing resolver with root field of same name on a 
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -760,7 +760,7 @@ test("warns on undefined value if partial data is written to the cache for an ob
     },
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -821,7 +821,7 @@ test("uses a written cache value from a nested client field from parent resolver
     },
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         user: () => ({ __typename: "User", id: 1 }),

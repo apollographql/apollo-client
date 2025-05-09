@@ -10,7 +10,7 @@ import type {
 } from "@apollo/client/cache";
 import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
-import type { LocalResolvers } from "@apollo/client/local-resolvers";
+import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
@@ -119,7 +119,7 @@ export interface ApolloClientOptions {
    * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
-  resolvers?: LocalResolvers;
+  resolvers?: LocalState;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    */

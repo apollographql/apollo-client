@@ -242,9 +242,9 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/local-resolvers 1`] = `
+exports[`exports of public entry points @apollo/client/local-state 1`] = `
 Array [
-  "LocalResolvers",
+  "LocalState",
 ]
 `;
 

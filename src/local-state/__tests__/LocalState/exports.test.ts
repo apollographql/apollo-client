@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { LocalResolversError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
@@ -23,7 +23,7 @@ test("returns variables from @client fields with @export", async () => {
 
   const testAuthorId = 100;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => testAuthorId,
@@ -64,7 +64,7 @@ test("stores the @client nested field value in the specified @export variable", 
     __typename: "Author",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => testAuthor,
@@ -115,7 +115,7 @@ test("supports @client @export variables that are nested multiple levels deep", 
     __typename: "AppContainer",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         appContainer: () => appContainer,
@@ -151,7 +151,7 @@ test("throws when passing document with no `@client` fields", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Author: {
         authorId: () => 200,
@@ -187,7 +187,7 @@ test("throws when passing document with `@export` but no `@client` field", async
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Author: {
         authorId: () => 200,
@@ -224,7 +224,7 @@ test("ignores @export directives if not used with @client", async () => {
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         authorId: () => 200,
@@ -272,7 +272,7 @@ test("ignores @export directive if it is not a descendant of a client field", as
     __typename: "Author",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         authorId: () => 1000,
@@ -332,7 +332,7 @@ test("returns variable from nested field when data is written to the cache", asy
     data: { postRequiringReview, reviewerDetails },
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Post: {
         currentReviewer: () => currentReviewer,
@@ -377,7 +377,7 @@ test("throws error when cache data is not available for parent when exporting re
     __typename: "CurrentReviewer",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Post: {
         currentReviewer: () => currentReviewer,
@@ -425,7 +425,7 @@ test("allows optional variable when cache data is not available for parent when 
     __typename: "CurrentReviewer",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Post: {
         currentReviewer: () => currentReviewer,
@@ -464,7 +464,7 @@ test("throws error if `@export` does not include an `as` argument", async () => 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         author: () => testAuthor,
@@ -510,7 +510,7 @@ test("does not throw error without `as` arg when `@export` is not a client field
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         authorId: () => testAuthor.id,
@@ -551,7 +551,7 @@ test("throws error if `@export` is a client descendent field without an `as` arg
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         author: () => testAuthor,
@@ -586,7 +586,7 @@ test("throws error on @client only queries when the @export directive is used on
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         field: () => true,
@@ -625,7 +625,7 @@ test("throws error on @client only queries when the @export directive is used on
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         car: () => ({
@@ -676,7 +676,7 @@ test("throws error if `@export` variable does not exist in a variable definition
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         author: () => testAuthor,
@@ -718,7 +718,7 @@ test("supports combining @client @export variables, calculated by a local resolv
 
   const testPostId = 100;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Mutation: {
         topPost: () => testPostId,
@@ -764,7 +764,7 @@ test("removes __typename from @export-ed objects", async () => {
     enabled: true,
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentFilter: () => ({ ...currentFilter, __typename: "LessonFilter" }),
@@ -803,7 +803,7 @@ test("uses the value of the last @export variable defined, if multiple variables
   const primaryReviewerId = 100;
   const secondaryReviewerId = 200;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         primaryReviewerId: () => primaryReviewerId,
@@ -848,7 +848,7 @@ test("supports reading a value from the cache in a resolver for an @client @expo
 
   const loggedInReviewerId = 100;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         loggedInReviewerId: (_, __, { client }) => {
@@ -913,7 +913,7 @@ test("does not execute client resolvers for client subtrees without an export di
     id: testAuthor.id,
   }));
   const author = jest.fn(() => testAuthor);
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         author,
@@ -960,7 +960,7 @@ test("warns and does not set optional exported variable for client-only query wh
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {
@@ -1017,7 +1017,7 @@ test("warns and does not set variable for client-only query when parent resolver
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {
@@ -1075,7 +1075,7 @@ test("warns and does not set variable for multiple nested exported variables on 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {
@@ -1154,7 +1154,7 @@ test("handles multiple exported fields across different client fields when resol
     name: "Denver Broncos",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentUser: () => {
@@ -1226,7 +1226,7 @@ test("warns and does not set optional variable for client-only query when child 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author" }),
@@ -1283,7 +1283,7 @@ test("throws error when a resolver throws while gathering exported variables for
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {
@@ -1338,7 +1338,7 @@ test("throws error when a parent resolver throws while gathering exported variab
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {
@@ -1393,7 +1393,7 @@ test("throws error when a child resolver throws while gathering exported variabl
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author" }),
@@ -1449,7 +1449,7 @@ test("errors when resolver returns null for a required variable on client-only q
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => null,
@@ -1499,7 +1499,7 @@ test("errors when nested field is null for a required variable on client-only qu
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author", id: null }),
@@ -1549,7 +1549,7 @@ test("errors when nested field is null for a required variable on client-only qu
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author" }),
@@ -1602,7 +1602,7 @@ test("throws error when top-level resolver returns null with nested export for r
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => null,
@@ -1652,7 +1652,7 @@ test("throws error when top-level resolver returns undefined with nested export 
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => {},
@@ -1700,7 +1700,7 @@ test("errors when resolver returns undefined for a required variable on client-o
     name: "John Smith",
   };
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {},
@@ -1742,7 +1742,7 @@ test("errors when resolver returns null for a required variable on non-client qu
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => null,
@@ -1781,7 +1781,7 @@ test("errors when resolver returns undefined for a required variable on non-clie
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {},
@@ -1824,7 +1824,7 @@ test("errors when resolver returns object with null field for a required variabl
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthor: () => ({ __typename: "Author", profile: null }),
@@ -1864,7 +1864,7 @@ test("does not warn when gathering variable exports for optional variables", asy
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => {},
@@ -1897,7 +1897,7 @@ test("exported variables overwrite variables passed to LocalResolvers", async ()
 
   const testAuthorId = 100;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => testAuthorId,
@@ -1934,7 +1934,7 @@ test("combines exported variables with user-defined variables", async () => {
 
   const testAuthorId = 100;
 
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       Query: {
         currentAuthorId: () => testAuthorId,

@@ -6,7 +6,7 @@ import type { ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -343,7 +343,7 @@ describe("no-cache", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
-        resolvers: new LocalResolvers({
+        resolvers: new LocalState({
           resolvers: {
             Query: {
               hero(_data, args) {
@@ -655,7 +655,7 @@ describe("cache-and-network", function () {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: new LocalResolvers({
+      resolvers: new LocalState({
         resolvers: {
           Query: {
             hero(_data, args) {

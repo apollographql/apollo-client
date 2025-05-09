@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
-import { LocalResolvers } from "@apollo/client/local-resolvers";
+import { LocalState } from "@apollo/client/local-state";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
@@ -20,7 +20,7 @@ test("omits field and does not warn if resolver not defined when returnPartialDa
     link: ApolloLink.empty(),
   });
 
-  const localResolvers = new LocalResolvers();
+  const localResolvers = new LocalState();
 
   await expect(
     localResolvers.execute({
@@ -56,7 +56,7 @@ test("omits client fields without cached values when running forced resolvers wi
 
   let nameCount = 0;
   let isLoggedInCount = 0;
-  const localResolvers = new LocalResolvers({
+  const localResolvers = new LocalState({
     resolvers: {
       User: {
         name: () => {

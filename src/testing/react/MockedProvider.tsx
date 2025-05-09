@@ -1,11 +1,11 @@
 import * as React from "react";
 
 import type { DefaultOptions } from "@apollo/client";
-import type { Resolvers } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import type { ApolloCache } from "@apollo/client/cache";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import type { ApolloLink } from "@apollo/client/link";
+import type { LocalResolvers } from "@apollo/client/local-resolvers";
 import { ApolloProvider } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing/core";
 import { MockLink } from "@apollo/client/testing/core";
@@ -14,7 +14,7 @@ export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache;
-  resolvers?: Resolvers;
+  resolvers?: LocalResolvers;
   childProps?: object;
   children?: any;
   link?: ApolloLink;

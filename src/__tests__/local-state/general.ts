@@ -198,7 +198,7 @@ describe("General functionality", () => {
 });
 
 describe("Cache manipulation", () => {
-  test("should be able to query @client fields and the cache without defining local resolvers", async () => {
+  test("should be able to query @client fields and the cache without defining resolvers in local state", async () => {
     const query = gql`
       {
         field @client
@@ -1375,7 +1375,7 @@ test("omits client fields and warns when executing query when local state is not
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+    "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
     "Query",
     "GetUser"
   );
@@ -1407,7 +1407,7 @@ test("omits client fields and warns when executing mutation when local state is 
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+    "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
     "Mutation",
     "UpdateUser"
   );
@@ -1446,7 +1446,7 @@ test("omits client fields and warns when executing subscription when local state
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+    "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
     "Subscription",
     "OnUserUpdate"
   );

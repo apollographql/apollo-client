@@ -308,7 +308,7 @@ export class QueryManager {
         });
       } else if (__DEV__) {
         invariant.warn(
-          "Mutation '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+          "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
           getOperationName(mutation) ?? "(anonymous)"
         );
       }
@@ -1124,7 +1124,7 @@ export class QueryManager {
     if (__DEV__) {
       if (hasClientExports && !this.localState) {
         invariant.warn(
-          "Subscription '%s' contains `@client` fields with `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+          "Subscription '%s' contains `@client` fields with `@export` but local state has not been configured. Variables will not be exported correctly.",
           getOperationName(query) ?? "(anonymous)"
         );
       }
@@ -1278,7 +1278,7 @@ export class QueryManager {
       } else if (__DEV__) {
         const { operation } = getOperationDefinition(query)!;
         invariant.warn(
-          "%s '%s' contains `@client` fields but local resolvers have not been configured. `@client` fields will be omitted in the result.",
+          "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
           operation[0].toUpperCase() + operation.slice(1),
           operationName ?? "(anonymous)"
         );
@@ -1478,7 +1478,7 @@ export class QueryManager {
     if (__DEV__) {
       if (hasClientExports && !this.localState) {
         invariant.warn(
-          "Query '%s' contains `@client` fields with variables provided by `@export` but local resolvers have not been configured. Variables will not be exported correctly.",
+          "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
           getOperationName(normalized.query) ?? "(anonymous)"
         );
       }

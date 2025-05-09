@@ -4,7 +4,7 @@ import type {
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
-import { GraphQLError, Kind, print, visit } from "graphql";
+import { GraphQLError, Kind, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 import type { Subscription } from "rxjs";
@@ -1059,7 +1059,7 @@ describe("client", () => {
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(transformedQuery));
+    expect(result.current!.query).toMatchDocument(transformedQuery);
   });
 
   it("should handle named fragments on mutations", async () => {

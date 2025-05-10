@@ -27,6 +27,7 @@ test("omits field and does not warn if resolver not defined when returnPartialDa
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
       returnPartialData: true,
     })
@@ -76,6 +77,7 @@ test("omits client fields without cached values when running forced resolvers wi
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
       returnPartialData: true,
       onlyRunForcedResolvers: true,

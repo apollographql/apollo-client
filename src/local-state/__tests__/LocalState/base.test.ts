@@ -28,7 +28,13 @@ test("runs resolvers for @client queries", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
   });
@@ -57,7 +63,13 @@ test("can add resolvers after LocalState is instantiated", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true } },
   });
@@ -90,7 +102,13 @@ test("handles queries with a mix of @client and server fields", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { __typename: "Foo", bar: true },
@@ -141,7 +159,13 @@ test("runs resolvers for deeply nested @client fields", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       user: {
@@ -189,6 +213,7 @@ test("has access to query variables in @client resolvers", async () => {
       client,
       context: {},
       variables: { id: 1 },
+      remoteResult: undefined,
     })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: 1 } },
@@ -235,7 +260,13 @@ test("combines local @client resolver results with server results, for the same 
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       author: {
@@ -272,7 +303,13 @@ test("handles resolvers that return booleans", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { isInCart: false },
   });
@@ -308,7 +345,13 @@ test("does not run resolvers without @client directive", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { __typename: "Foo", bar: true },
@@ -356,7 +399,13 @@ test("does not run resolvers without @client directive with nested field", async
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: {
@@ -407,7 +456,13 @@ test("allows child resolvers from a parent resolved field from a local resolver"
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       userData: {
@@ -457,7 +512,13 @@ test("can use remote result to resolve @client field", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       member: {
@@ -500,7 +561,13 @@ test("throws error when query does not contain client fields", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
   );
@@ -522,7 +589,13 @@ test("warns when a resolver is missing for an `@client` field", async () => {
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -550,7 +623,13 @@ test("does not warn for fields resolved from the server", async () => {
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
   });
@@ -584,7 +663,13 @@ test("warns when a resolver returns undefined and sets value to null", async () 
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { foo: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -618,7 +703,13 @@ test("warns if a parent resolver omits a field with no child resolver", async ()
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true, baz: null } },
   });
@@ -656,7 +747,13 @@ test("warns if a parent resolver omits a field and child has @client field", asy
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: true, baz: null } },
   });
@@ -696,7 +793,13 @@ test("adds an error when the __typename cannot be resolved", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -744,7 +847,13 @@ test("can return more data than needed in resolver which is accessible by child 
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: "random" } },
   });
@@ -776,7 +885,13 @@ test("does not execute child resolver when parent is null", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: { currentUser: null },
   });
@@ -813,7 +928,13 @@ test("adds error to errors array with scalar resolver data when remote data retu
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -863,7 +984,13 @@ test("adds error to errors array with scalar resolver that returns null when rem
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -915,7 +1042,13 @@ test("adds error to errors array with object resolver data when remote data retu
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -971,7 +1104,13 @@ test("adds error to errors array with object resolver with child resolver when r
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -1023,7 +1162,13 @@ test("adds error to errors array with object resolver that returns null when rem
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -1079,7 +1224,13 @@ test("adds multiple errors for each client field to errors array when remote dat
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [
@@ -1143,7 +1294,13 @@ test("does not execute resolver if client field is a child of a server field whe
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: null,
     errors: [{ message: "Something went wrong" }],

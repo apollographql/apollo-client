@@ -226,8 +226,9 @@ export class LocalState<
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
     context: DefaultContext;
-    remoteResult?: FetchResult<any>;
-    variables?: TVariables;
+    // undefined is meant for client-only queries where there is no remote result
+    remoteResult: FetchResult<any> | undefined;
+    variables: TVariables | undefined;
     onlyRunForcedResolvers?: boolean;
     returnPartialData?: boolean;
   }): Promise<FetchResult<TData>> {

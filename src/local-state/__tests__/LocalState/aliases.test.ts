@@ -40,6 +40,7 @@ test("resolves @client fields mixed with aliased server fields", async () => {
       client,
       context: {},
       remoteResult,
+      variables: {},
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -78,6 +79,8 @@ test("resolves aliased @client fields", async () => {
       client,
       document,
       context: {},
+      variables: {},
+      remoteResult: undefined,
     })
   ).resolves.toStrictEqualTyped({
     data: { fie: { bar: true, __typename: "Foo" } },
@@ -133,6 +136,7 @@ test("resolves deeply nested aliased @client fields", async () => {
       document,
       context: {},
       remoteResult,
+      variables: {},
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -185,6 +189,7 @@ test("respects aliases for *nested fields* on the @client-tagged node", async ()
       document,
       context: {},
       remoteResult,
+      variables: {},
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -224,6 +229,8 @@ test("does not confuse fields aliased to each other", async () => {
       client,
       document,
       context: {},
+      variables: {},
+      remoteResult: undefined,
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -260,6 +267,8 @@ test("does not confuse fields aliased to each other with boolean values", async 
       client,
       document,
       context: {},
+      variables: {},
+      remoteResult: undefined,
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -296,6 +305,8 @@ test("does not confuse aliased __typename", async () => {
       client,
       document,
       context: {},
+      variables: {},
+      remoteResult: undefined,
     })
   ).resolves.toStrictEqualTyped({
     data: {

@@ -38,6 +38,7 @@ test("runs resolvers marked with @client(always: true)", async () => {
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: client.readQuery({ query: document }) },
     })
   ).resolves.toStrictEqualTyped({
@@ -62,6 +63,7 @@ test("runs resolvers marked with @client(always: true)", async () => {
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: client.readQuery({ query: document }) },
     })
   ).resolves.toStrictEqualTyped({
@@ -115,6 +117,8 @@ test("only runs forced resolvers for fields marked with `@client(always: true)`,
       document,
       client,
       context: {},
+      variables: {},
+      remoteResult: undefined,
       onlyRunForcedResolvers: true,
     })
   ).resolves.toStrictEqualTyped({
@@ -178,6 +182,8 @@ test("runs nested forced resolvers from non-forced client descendant field", asy
       document,
       client,
       context: {},
+      variables: {},
+      remoteResult: undefined,
       onlyRunForcedResolvers: true,
     })
   ).resolves.toStrictEqualTyped({
@@ -229,6 +235,7 @@ test("warns for client fields without cached data and resolvers when running for
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
       onlyRunForcedResolvers: true,
     })

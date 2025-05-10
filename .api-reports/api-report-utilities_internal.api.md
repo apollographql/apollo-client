@@ -5,6 +5,7 @@
 ```ts
 
 import type { ApolloQueryResult } from '@apollo/client';
+import type { ASTNode } from 'graphql';
 import { Observable } from 'rxjs';
 import type { QueryResult } from '@apollo/client';
 
@@ -75,6 +76,9 @@ const globalCaches: {
     parser?: () => number;
     canonicalStringify?: () => number;
 };
+
+// @public (undocumented)
+export function hasForcedResolvers(document: ASTNode): boolean;
 
 // @public (undocumented)
 type ObservableEvent<T> = {

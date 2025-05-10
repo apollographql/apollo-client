@@ -6,3 +6,4 @@ export {
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
 export { toQueryResult } from "./toQueryResult.js";
+export { hasForcedResolvers } from "./hasForcedResolvers.js";

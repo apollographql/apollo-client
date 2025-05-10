@@ -10,6 +10,7 @@ import type {
 } from "@apollo/client/cache";
 import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
+import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { checkDocument, mergeOptions } from "@apollo/client/utilities";
@@ -19,8 +20,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { version } from "../version.js";
 
-import type { FragmentMatcher } from "./LocalState.js";
-import { LocalState } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
@@ -32,7 +31,6 @@ import type {
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
-  Resolvers,
   SubscribeResult,
 } from "./types.js";
 import type {
@@ -118,8 +116,7 @@ export interface ApolloClientOptions {
    * @defaultValue `false`
    */
   assumeImmutableResults?: boolean;
-  resolvers?: Resolvers | Resolvers[];
-  fragmentMatcher?: FragmentMatcher;
+  localState?: LocalState;
   /**
    * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
    */
@@ -190,7 +187,6 @@ export class ApolloClient implements DataProxy {
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private localState: LocalState;
 
   /**
    * Constructs an instance of `ApolloClient`.
@@ -248,8 +244,7 @@ export class ApolloClient implements DataProxy {
       defaultOptions,
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
-      resolvers,
-      fragmentMatcher,
+      localState,
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
@@ -279,13 +274,6 @@ export class ApolloClient implements DataProxy {
 
     this.version = version;
 
-    this.localState = new LocalState({
-      cache,
-      client: this,
-      resolvers,
-      fragmentMatcher,
-    });
-
     this.queryManager = new QueryManager({
       client: this,
       defaultOptions: this.defaultOptions,
@@ -298,7 +286,6 @@ export class ApolloClient implements DataProxy {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,
       },
-      localState: this.localState,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?
@@ -308,6 +295,7 @@ export class ApolloClient implements DataProxy {
             }
           }
         : void 0,
+      localState,
     });
 
     this.prioritizeCacheValues = ssrMode || ssrForceFetchDelay > 0;
@@ -384,6 +372,18 @@ export class ApolloClient implements DataProxy {
    */
   get documentTransform() {
     return this.queryManager.documentTransform;
+  }
+
+  /**
+   * The configured `LocalState` instance used to enable the use of `@client`
+   * fields.
+   */
+  get localState(): LocalState | undefined {
+    return this.queryManager.localState;
+  }
+
+  set localState(localState: LocalState) {
+    this.queryManager.localState = localState;
   }
 
   /**
@@ -827,34 +827,6 @@ export class ApolloClient implements DataProxy {
    */
   public restore(serializedState: unknown) {
     return this.cache.restore(serializedState);
-  }
-
-  /**
-   * Add additional local resolvers.
-   */
-  public addResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.localState.addResolvers(resolvers);
-  }
-
-  /**
-   * Set (override existing) local resolvers.
-   */
-  public setResolvers(resolvers: Resolvers | Resolvers[]) {
-    this.localState.setResolvers(resolvers);
-  }
-
-  /**
-   * Get all registered local resolvers.
-   */
-  public getResolvers() {
-    return this.localState.getResolvers();
-  }
-
-  /**
-   * Set a custom local state fragment matcher.
-   */
-  public setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher) {
-    this.localState.setFragmentMatcher(fragmentMatcher);
   }
 
   /**

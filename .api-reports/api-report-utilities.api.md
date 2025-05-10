@@ -330,6 +330,9 @@ export type InclusionDirectives = Array<{
 }>;
 
 // @public (undocumented)
+export type IsAny<T> = 0 extends 1 & T ? true : false;
+
+// @public (undocumented)
 export function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult;
 
 // @public (undocumented)

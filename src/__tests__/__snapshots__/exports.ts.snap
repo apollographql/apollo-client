@@ -11,6 +11,7 @@ Array [
   "HttpLink",
   "InMemoryCache",
   "LinkError",
+  "LocalStateError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
@@ -79,6 +80,7 @@ Array [
   "HttpLink",
   "InMemoryCache",
   "LinkError",
+  "LocalStateError",
   "MissingFieldError",
   "NetworkStatus",
   "Observable",
@@ -132,11 +134,13 @@ Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
   "LinkError",
+  "LocalStateError",
   "PROTOCOL_ERRORS_SYMBOL",
   "ServerError",
   "ServerParseError",
   "UnconventionalError",
   "graphQLResultHasProtocolErrors",
+  "isErrorLike",
   "registerLinkError",
   "toErrorLike",
 ]
@@ -240,6 +244,12 @@ Array [
 exports[`exports of public entry points @apollo/client/link/ws 1`] = `
 Array [
   "WebSocketLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/local-state 1`] = `
+Array [
+  "LocalState",
 ]
 `;
 
@@ -487,6 +497,7 @@ Array [
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",
   "getInMemoryCacheMemoryInternals",
+  "hasForcedResolvers",
   "onAnyEvent",
   "registerGlobalCache",
   "toQueryResult",

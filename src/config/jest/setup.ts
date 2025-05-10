@@ -20,6 +20,7 @@ import {
 import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.js";
 import { areCombinedProtocolErrorsEqual } from "./areCombinedProtocolErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
+import { areLocalStateErrorsEqual } from "./areLocalStateErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 import { areServerErrorsEqual } from "./areServerErrorsEqual.js";
 
@@ -64,6 +65,7 @@ expect.addEqualityTesters([
   areCombinedGraphQLErrorsEqual,
   areCombinedProtocolErrorsEqual,
   areGraphQLErrorsEqual,
+  areLocalStateErrorsEqual,
   areMissingFieldErrorsEqual,
 ]);
 

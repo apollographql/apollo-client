@@ -2,16 +2,22 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
-import { ApolloClient, NetworkStatus } from "@apollo/client";
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  LocalStateError,
+  NetworkStatus,
+} from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
 
 describe("@client @export tests", () => {
-  it("should not break @client only queries when the @export directive is used", async () => {
+  test("throws when exported variable has no definition", async () => {
     const query = gql`
       {
         field @client @export(as: "someVar")
@@ -22,7 +28,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     cache.writeQuery({
@@ -30,12 +36,15 @@ describe("@client @export tests", () => {
       data: { field: 1 },
     });
 
-    const { data } = await client.query({ query });
-
-    expect(data).toEqual({ field: 1 });
+    await expect(client.query({ query })).rejects.toEqual(
+      new LocalStateError(
+        "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
+        { path: ["field"] }
+      )
+    );
   });
 
-  it("should not break @client only queries when the @export directive is used on nested fields", async () => {
+  test("throws when nested @export does not contain variable definition", async () => {
     const query = gql`
       {
         car @client {
@@ -50,7 +59,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     cache.writeQuery({
@@ -67,20 +76,15 @@ describe("@client @export tests", () => {
       },
     });
 
-    const { data } = await client.query({ query });
-
-    expect(data).toEqual({
-      car: {
-        __typename: "Car",
-        engine: {
-          __typename: "Engine",
-          torque: 7200,
-        },
-      },
-    });
+    await expect(client.query({ query })).rejects.toEqual(
+      new LocalStateError(
+        "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
+        { path: ["car", "engine", "torque"] }
+      )
+    );
   });
 
-  it("should store the @client field value in the specified @export variable, and make it available to a subsequent resolver", async () => {
+  test("should store the @client field value in the specified @export variable, and make it available to a subsequent resolver", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthorId @client @export(as: "authorId")
@@ -95,13 +99,15 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          postCount(_, { authorId }) {
-            return authorId === testAuthorId ? testPostCount : 0;
+      localState: new LocalState({
+        resolvers: {
+          Query: {
+            postCount(_, { authorId }) {
+              return authorId === testAuthorId ? testPostCount : 0;
+            },
           },
         },
-      },
+      }),
     });
 
     cache.writeQuery({
@@ -119,7 +125,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should store the @client nested field value in the specified @export variable, and make it avilable to a subsequent resolver", async () => {
+  test("should store the @client nested field value in the specified @export variable, and make it avilable to a subsequent resolver", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor @client {
@@ -142,13 +148,15 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          postCount(_, { authorId }) {
-            return authorId === testAuthor.authorId ? testPostCount : 0;
+      localState: new LocalState({
+        resolvers: {
+          Query: {
+            postCount(_, { authorId }) {
+              return authorId === testAuthor.authorId ? testPostCount : 0;
+            },
           },
         },
-      },
+      }),
     });
 
     cache.writeQuery({
@@ -166,7 +174,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should allow @client @export variables to be used with remote queries", async () => {
+  test("should allow @client @export variables to be used with remote queries", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     await new Promise<void>((resolve, reject) => {
       const query = gql`
@@ -199,7 +207,7 @@ describe("@client @export tests", () => {
       const client = new ApolloClient({
         cache,
         link,
-        resolvers: {},
+        localState: new LocalState(),
       });
 
       cache.writeQuery({
@@ -219,7 +227,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support @client @export variables that are nested multiple levels deep", async () => {
+  test("should support @client @export variables that are nested multiple levels deep", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         appContainer @client {
@@ -260,7 +268,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     {
@@ -281,7 +289,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should ignore @export directives if not used with @client", async () => {
+  test("should ignore @export directives if not used with @client", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthor {
@@ -311,7 +319,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     const { data } = await client.query({ query });
@@ -322,7 +330,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support setting an @client @export variable, loaded from the cache, on a virtual field that is combined into a remote query.", async () => {
+  test("should support setting an @client @export variable, loaded from the cache, on a virtual field that is combined into a remote query.", async () => {
     const query = gql`
       query postRequiringReview($reviewerId: Int!) {
         postRequiringReview {
@@ -362,7 +370,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     {
@@ -392,7 +400,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.", async () => {
+  test("should support setting a @client @export variable, loaded via a local resolver, on a virtual field that is combined into a remote query.", async () => {
     const query = gql`
       query postRequiringReview($reviewerId: Int!) {
         postRequiringReview {
@@ -436,13 +444,15 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {
-        Post: {
-          currentReviewer() {
-            return currentReviewer;
+      localState: new LocalState({
+        resolvers: {
+          Post: {
+            currentReviewer() {
+              return currentReviewer;
+            },
           },
         },
-      },
+      }),
     });
 
     {
@@ -469,7 +479,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {
+  test("should support combining @client @export variables, calculated by a local resolver, with remote mutations", async () => {
     const mutation = gql`
       mutation upvotePost($postId: Int!) {
         topPost @client @export(as: "postId")
@@ -499,13 +509,15 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      resolvers: {
-        Mutation: {
-          topPost() {
-            return testPostId;
+      localState: new LocalState({
+        resolvers: {
+          Mutation: {
+            topPost() {
+              return testPostId;
+            },
           },
         },
-      },
+      }),
     });
 
     const { data } = await client.mutate({ mutation });
@@ -516,7 +528,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should support combining @client @export variables, calculated by reading from the cache, with remote mutations", async () => {
+  test("should support combining @client @export variables, calculated by reading from the cache, with remote mutations", async () => {
     const mutation = gql`
       mutation upvotePost($postId: Int!) {
         topPost @client @export(as: "postId")
@@ -547,7 +559,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     cache.writeQuery({
@@ -563,12 +575,13 @@ describe("@client @export tests", () => {
 
     const { data } = await client.mutate({ mutation });
 
-    expect(data).toEqual({
+    expect(data).toStrictEqualTyped({
+      topPost: testPostId,
       upvotePost: testPost,
     });
   });
 
-  it("should not add __typename to @export-ed objects (#4691)", async () => {
+  test("should not add __typename to @export-ed objects (#4691)", async () => {
     const query = gql`
       query GetListItems($where: LessonFilter) {
         currentFilter @client @export(as: "where") {
@@ -622,13 +635,15 @@ describe("@client @export tests", () => {
         return of({ data });
       }),
       cache: new InMemoryCache(),
-      resolvers: {
-        Query: {
-          currentFilter() {
-            return currentFilter;
+      localState: new LocalState({
+        resolvers: {
+          Query: {
+            currentFilter() {
+              return { __typename: "LessonFilter", ...currentFilter };
+            },
           },
         },
-      },
+      }),
     });
 
     const result = await client.query({ query });
@@ -639,7 +654,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should use the value of the last @export variable defined, if multiple variables are defined with the same name", async () => {
+  test("should use the value of the last @export variable defined, if multiple variables are defined with the same name", async () => {
     const query = gql`
       query reviewerPost($reviewerId: Int!) {
         primaryReviewerId @client @export(as: "reviewerId")
@@ -670,7 +685,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     {
@@ -693,7 +708,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should refetch if an @export variable changes, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
+  test("should refetch if an @export variable changes, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
@@ -723,7 +738,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     client.writeQuery({
@@ -775,7 +790,7 @@ describe("@client @export tests", () => {
     });
   });
 
-  it("should NOT refetch if an @export variable has not changed, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
+  test("should NOT refetch if an @export variable has not changed, the current fetch policy is not cache-only, and the query includes fields that need to be resolved remotely", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
@@ -803,7 +818,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     client.writeQuery({
@@ -842,7 +857,7 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(1);
   });
 
-  it("should NOT attempt to refetch over the network if an @export variable has changed, the current fetch policy is cache-first, and the remote part of the query (that leverages the @export variable) can be fully found in the cache.", async () => {
+  test("should NOT attempt to refetch over the network if an @export variable has changed, the current fetch policy is cache-first, and the remote part of the query (that leverages the @export variable) can be fully found in the cache.", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthorId @client @export(as: "authorId")
@@ -870,7 +885,7 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link,
-      resolvers: {},
+      localState: new LocalState(),
     });
 
     client.writeQuery({
@@ -932,7 +947,7 @@ describe("@client @export tests", () => {
     expect(fetchCount).toBe(1);
   });
 
-  it("should update @client @export variables on each broadcast if they've changed", async () => {
+  test("should update @client @export variables on each broadcast if they've changed", async () => {
     const cache = new InMemoryCache();
 
     const widgetCountQuery = gql`
@@ -950,13 +965,15 @@ describe("@client @export tests", () => {
     const client = new ApolloClient({
       cache,
       link: ApolloLink.empty(),
-      resolvers: {
-        Query: {
-          doubleWidgets(_, { widgetCount }) {
-            return widgetCount ? widgetCount * 2 : 0;
+      localState: new LocalState({
+        resolvers: {
+          Query: {
+            doubleWidgets(_, { widgetCount }) {
+              return widgetCount ? widgetCount * 2 : 0;
+            },
           },
         },
-      },
+      }),
     });
 
     const doubleWidgetsQuery = gql`
@@ -1009,5 +1026,128 @@ describe("@client @export tests", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+  });
+
+  test("adds exported variables to subscriptions", async () => {
+    const subscription = gql`
+      subscription ($userId: ID!) {
+        currentUserId @client @export(as: "userId")
+        count(for: $userId)
+      }
+    `;
+
+    const link = new ApolloLink((operation) =>
+      operation.variables.userId === 1 ?
+        of({ data: { count: 1 } }, { data: { count: 2 } })
+      : of({ errors: [{ message: "Wrong user id" }] })
+    );
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      localState: new LocalState({
+        resolvers: {
+          Subscription: {
+            currentUserId: () => 1,
+          },
+        },
+      }),
+    });
+
+    const stream = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+
+    await expect(stream).toEmitTypedValue({
+      data: { currentUserId: 1, count: 1 },
+    });
+    await expect(stream).toEmitTypedValue({
+      data: { currentUserId: 1, count: 2 },
+    });
+    await expect(stream).toComplete();
+  });
+
+  test("warns if local state is not configured and export fields are detected when running a query", async () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query currentAuthorPostCount($authorId: Int!) {
+        currentAuthorId @client @export(as: "authorId")
+        postCount(authorId: $authorId)
+      }
+    `;
+
+    const testPostCount = 200;
+
+    const link = new ApolloLink((operation) => {
+      return operation.variables.authorId === undefined ?
+          of({ errors: [{ message: "Did not export author ID" }] })
+        : of({ data: { postCount: testPostCount } });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    await expect(client.query({ query })).rejects.toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Did not export author ID" }],
+      })
+    );
+
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenNthCalledWith(
+      1,
+      "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
+      "currentAuthorPostCount"
+    );
+    expect(console.warn).toHaveBeenNthCalledWith(
+      2,
+      "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
+      "Query",
+      "currentAuthorPostCount"
+    );
+  });
+
+  test("warns if local state is not configured and export fields are detected when running a mutation", async () => {
+    using _ = spyOnConsole("warn");
+    const mutation = gql`
+      mutation UpdatePostCount($authorId: Int!) {
+        currentAuthorId @client @export(as: "authorId")
+        updatePostCount(authorId: $authorId)
+      }
+    `;
+
+    const testPostCount = 200;
+
+    const link = new ApolloLink((operation) => {
+      return operation.variables.authorId === undefined ?
+          of({ errors: [{ message: "Did not export author ID" }] })
+        : of({ data: { updatePostCount: testPostCount } });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    await expect(client.mutate({ mutation })).rejects.toEqual(
+      new CombinedGraphQLErrors({
+        errors: [{ message: "Did not export author ID" }],
+      })
+    );
+
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenNthCalledWith(
+      1,
+      "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
+      "UpdatePostCount"
+    );
+    expect(console.warn).toHaveBeenNthCalledWith(
+      2,
+      "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
+      "Mutation",
+      "UpdatePostCount"
+    );
   });
 });

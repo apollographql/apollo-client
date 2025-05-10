@@ -501,7 +501,7 @@ test("throws error when query does not contain client fields", async () => {
 
   await expect(
     localState.execute({ document, client, context: {}, remoteResult })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
   );
 });

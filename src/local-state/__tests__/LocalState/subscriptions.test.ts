@@ -26,7 +26,7 @@ test("throws when given a subscription with no client fields", async () => {
       context: {},
       remoteResult: { data: { field: 1 } },
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
   );
 });

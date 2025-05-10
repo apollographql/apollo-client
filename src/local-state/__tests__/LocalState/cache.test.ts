@@ -39,7 +39,13 @@ test("can write to the cache with a mutation", async () => {
   });
 
   await expect(
-    localState.execute({ document: mutation, client, context: {} })
+    localState.execute({
+      document: mutation,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
   expect(client.readQuery({ query })).toStrictEqualTyped({ field: 1 });
@@ -92,7 +98,13 @@ test("can write to the cache with a mutation using an ID", async () => {
   });
 
   await expect(
-    localState.execute({ document: mutation, client, context: {} })
+    localState.execute({
+      document: mutation,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
   expect(client.readQuery({ query })).toStrictEqualTyped({
@@ -156,7 +168,13 @@ test("does not overwrite __typename when writing to the cache with an id", async
   });
 
   await expect(
-    localState.execute({ document: mutation, client, context: {} })
+    localState.execute({
+      document: mutation,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { start: true } });
 
   expect(client.readQuery({ query })).toStrictEqualTyped({
@@ -190,7 +208,13 @@ test("reads from the cache on a root scalar field by default if a resolver is no
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { count: 10 } });
 });
 
@@ -223,7 +247,13 @@ test("reads from the cache on a root object field by default if a resolver is no
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });
@@ -256,7 +286,13 @@ test("handles read functions for root scalar field from cache if resolver is not
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { count: 10 } });
 });
 
@@ -290,7 +326,13 @@ test("handles read functions for root object field from cache if resolver is not
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });
@@ -312,7 +354,13 @@ test("warns if resolver is not defined if cache does not have value", async () =
   const localState = new LocalState();
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({ data: { count: null } });
 
   expect(console.warn).toHaveBeenCalledTimes(1);
@@ -355,6 +403,7 @@ test("reads from the cache on a nested scalar field by default if a resolver is 
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { user: { __typename: "User", id: 1 } } },
     })
   ).resolves.toStrictEqualTyped({
@@ -412,6 +461,7 @@ test("reads from the cache with a read function on a nested scalar field if a re
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
@@ -461,6 +511,7 @@ test("reads from the cache on a nested object field by default if a resolver is 
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
@@ -529,6 +580,7 @@ test("reads from the cache with a read function on a nested object field by defa
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
@@ -595,6 +647,7 @@ test("reads from the cache on a nested client field on a non-normalized object",
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User" } },
       },
@@ -644,6 +697,7 @@ test("does not confuse field missing resolver with root field of same name on a 
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
@@ -700,6 +754,7 @@ test("does not confuse field missing resolver with root field of same name on a 
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User" } },
       },
@@ -767,6 +822,7 @@ test("warns on undefined value if partial data is written to the cache for an ob
       document,
       client,
       context: {},
+      variables: {},
       remoteResult: {
         data: { user: { __typename: "User", id: 1 } },
       },
@@ -830,7 +886,13 @@ test("uses a written cache value from a nested client field from parent resolver
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { user: { __typename: "User", id: 1, name: "Test User" } },
   });

@@ -24,6 +24,7 @@ test("throws when given a subscription with no client fields", async () => {
       document: subscription,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { field: 1 } },
     })
   ).rejects.toEqual(
@@ -61,6 +62,7 @@ test("adds @client fields with subscription results", async () => {
       document: subscription,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { field: 1 } },
     })
   ).resolves.toStrictEqualTyped({
@@ -72,6 +74,7 @@ test("adds @client fields with subscription results", async () => {
       document: subscription,
       client,
       context: {},
+      variables: {},
       remoteResult: { data: { field: 2 } },
     })
   ).resolves.toStrictEqualTyped({

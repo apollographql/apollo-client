@@ -47,7 +47,13 @@ test("handles @client fields inside fragments", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { bar: true, baz: false, __typename: "Foo" },
@@ -89,7 +95,13 @@ test("handles a mix of @client fields with fragments and server fields", async (
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { bar: true, __typename: "ClientData" },
@@ -137,7 +149,13 @@ it("matches fragments with fragment conditions", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: [
@@ -177,7 +195,13 @@ test("throws when cache does not implement fragmentMatches", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).rejects.toEqual(
     new InvariantError(
       "The configured cache does not support fragment matching which will lead to incorrect results when executing local resolvers. Please use a cache that implements `fragmetMatches`."
@@ -211,7 +235,13 @@ test("throws error when fragment spread type condition does not match typename",
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).rejects.toEqual(
     new LocalStateError(
       "Fragment 'FooDetails' cannot be used with type 'Foo' as objects of type 'Foo' can never be of type 'Bar'.",
@@ -247,7 +277,13 @@ test("can use a fragments on interface types defined by possibleTypes", async ()
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       currentUser: { __typename: "User", id: 1 },

@@ -30,7 +30,13 @@ test("handles errors thrown in a resolver", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -77,7 +83,13 @@ test("handles errors thrown in a child resolver", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null } },
     errors: [
@@ -130,7 +142,13 @@ test("adds errors for each field that throws errors", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: null, baz: null, qux: true } },
     errors: [
@@ -188,7 +206,13 @@ test("handles errors thrown in a child resolver from parent array", async () => 
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: [
@@ -259,7 +283,13 @@ test("handles errors thrown in a child resolver for an array from a single item"
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: [
@@ -310,7 +340,13 @@ test("serializes a thrown GraphQLError and merges extensions", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -359,7 +395,13 @@ test("overwrites apollo extension from thrown GraphQLError if provided", async (
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -413,7 +455,13 @@ test("concatenates client errors with server errors", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null, baz: { __typename: "Baz", qux: null } },
     errors: [
@@ -458,7 +506,13 @@ test("handles errors thrown in async resolvers", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -502,7 +556,13 @@ test("handles rejected promises returned in async resolvers", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: null },
     errors: [
@@ -560,7 +620,13 @@ test("handles errors thrown for resolvers on fields inside fragments", async () 
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { bar: true, baz: null, __typename: "Foo" },
@@ -612,7 +678,13 @@ test("handles remote errors with no local resolver errors", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       foo: { __typename: "Foo", bar: true },

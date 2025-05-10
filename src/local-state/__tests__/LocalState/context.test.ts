@@ -28,7 +28,13 @@ test("passes client in context to resolvers", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: 1 } },
   });
@@ -73,7 +79,13 @@ test("can access request context in resolvers", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: { id: 1 } })
+    localState.execute({
+      document,
+      client,
+      context: { id: 1 },
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: 1 } },
   });
@@ -116,7 +128,13 @@ test("can access phase in resolver context", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { foo: { __typename: "Foo", bar: "resolve" } },
   });

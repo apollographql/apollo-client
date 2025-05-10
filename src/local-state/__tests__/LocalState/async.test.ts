@@ -27,7 +27,13 @@ test("supports async @client resolvers", async () => {
   });
 
   await expect(
-    localState.execute({ document, client, context: {} })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
   ).resolves.toStrictEqualTyped({
     data: { isLoggedIn: true },
   });
@@ -123,6 +129,7 @@ test("handles nested asynchronous @client resolvers", async () => {
       client,
       context: {},
       variables: { id: developerId },
+      remoteResult: undefined,
     })
   ).resolves.toStrictEqualTyped({
     data: {
@@ -188,7 +195,13 @@ test("supports async @client resolvers mixed with remotely resolved data", async
   });
 
   await expect(
-    localState.execute({ document, client, context: {}, remoteResult })
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult,
+    })
   ).resolves.toStrictEqualTyped({
     data: {
       member: {

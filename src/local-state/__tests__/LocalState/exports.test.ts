@@ -166,7 +166,7 @@ test("throws when passing document with no `@client` fields", async () => {
       context: {},
       variables: { authorId: 100 },
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
   );
 });
@@ -202,7 +202,7 @@ test("throws when passing document with `@export` but no `@client` field", async
       context: {},
       variables: { authorId: 100 },
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new InvariantError("Expected document to contain `@client` fields.")
   );
 });
@@ -392,7 +392,7 @@ test("throws error when cache data is not available for parent when exporting re
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Field 'postRequiringReview' is `undefined` which contains exported required variable 'reviewerId'. Ensure this value is in the cache or make the variable optional.",
       { path: ["postRequiringReview"] }
@@ -480,7 +480,7 @@ test("throws error if `@export` does not include an `as` argument", async () => 
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Cannot determine the variable name from the `@export` directive used on field 'authorId'. Perhaps you forgot the `as` argument?",
       { path: ["authorId"] }
@@ -566,7 +566,7 @@ test("throws error if `@export` is a client descendent field without an `as` arg
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Cannot determine the variable name from the `@export` directive used on field 'id'. Perhaps you forgot the `as` argument?",
       { path: ["author", "id"] }
@@ -601,7 +601,7 @@ test("throws error on @client only queries when the @export directive is used on
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
       { path: ["field"] }
@@ -646,7 +646,7 @@ test("throws error on @client only queries when the @export directive is used on
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
       { path: ["car", "engine", "torque"] }
@@ -692,7 +692,7 @@ test("throws error if `@export` variable does not exist in a variable definition
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "`@export` directive on field 'authorId' does not have an associated variable definition for the 'authorId' variable.",
       { path: ["authorId"] }
@@ -1303,7 +1303,7 @@ test("throws error when a resolver throws while gathering exported variables for
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "An error was thrown from resolver 'Query.currentAuthorId' while resolving required variable 'authorId'.",
       {
@@ -1358,7 +1358,7 @@ test("throws error when a parent resolver throws while gathering exported variab
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "An error was thrown from resolver 'Query.currentAuthor' while resolving required variable 'authorId'.",
       {
@@ -1416,7 +1416,7 @@ test("throws error when a child resolver throws while gathering exported variabl
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "An error was thrown from resolver 'Author.id' while resolving required variable 'authorId'.",
       {
@@ -1467,7 +1467,7 @@ test("errors when resolver returns null for a required variable on client-only q
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
@@ -1517,7 +1517,7 @@ test("errors when nested field is null for a required variable on client-only qu
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Field 'Author.id' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthor", "id"] }
@@ -1570,7 +1570,7 @@ test("errors when nested field is null for a required variable on client-only qu
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Author.id' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthor", "id"] }
@@ -1620,7 +1620,7 @@ test("throws error when top-level resolver returns null with nested export for r
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Query.currentAuthor' returned `null` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor"] }
@@ -1670,7 +1670,7 @@ test("throws error when top-level resolver returns undefined with nested export 
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Query.currentAuthor' returned `undefined` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor"] }
@@ -1718,7 +1718,7 @@ test("errors when resolver returns undefined for a required variable on client-o
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
@@ -1757,7 +1757,7 @@ test("errors when resolver returns null for a required variable on non-client qu
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `null` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
@@ -1796,7 +1796,7 @@ test("errors when resolver returns undefined for a required variable on non-clie
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Resolver 'Query.currentAuthorId' returned `undefined` for required variable 'authorId'.",
       { path: ["currentAuthorId"] }
@@ -1839,7 +1839,7 @@ test("errors when resolver returns object with null field for a required variabl
       context: {},
       variables: {},
     })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Field 'Author.profile' returned `null` which contains exported required variable 'authorId'.",
       { path: ["currentAuthor", "profile"] }

@@ -178,7 +178,7 @@ test("throws when cache does not implement fragmentMatches", async () => {
 
   await expect(
     localState.execute({ document, client, context: {} })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new InvariantError(
       "The configured cache does not support fragment matching which will lead to incorrect results when executing local resolvers. Please use a cache that implements `fragmetMatches`."
     )
@@ -212,7 +212,7 @@ test("throws error when fragment spread type condition does not match typename",
 
   await expect(
     localState.execute({ document, client, context: {} })
-  ).rejects.toThrow(
+  ).rejects.toEqual(
     new LocalStateError(
       "Fragment 'FooDetails' cannot be used with type 'Foo' as objects of type 'Foo' can never be of type 'Bar'.",
       { path: ["foo"] }

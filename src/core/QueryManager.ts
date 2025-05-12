@@ -311,7 +311,7 @@ export class QueryManager {
         client: this.client,
         document: mutation,
         variables,
-        context: this.getContext(context),
+        context,
       });
     }
 
@@ -1136,7 +1136,7 @@ export class QueryManager {
         client: this.client,
         document: query,
         variables,
-        context: this.getContext(context),
+        context,
       }).then(makeObservable);
 
       return new Observable<SubscribeResult<TData>>((observer) => {
@@ -1176,15 +1176,6 @@ export class QueryManager {
     observable?: Observable<FetchResult<any>>;
   }>(false);
 
-  private getContext(
-    requestContext: DefaultContext | undefined
-  ): DefaultContext {
-    return {
-      ...this.defaultContext,
-      ...requestContext,
-    };
-  }
-
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
     context: DefaultContext | undefined,
@@ -1211,7 +1202,8 @@ export class QueryManager {
         variables,
         operationName,
         context: {
-          ...this.getContext(context),
+          ...this.defaultContext,
+          ...context,
           queryDeduplication: deduplication,
           clientAwareness: this.clientAwareness,
         },
@@ -1278,7 +1270,7 @@ export class QueryManager {
               client: this.client,
               document: clientQuery,
               remoteResult: result,
-              context: this.getContext(context),
+              context,
               variables,
             })
           );
@@ -1495,7 +1487,7 @@ export class QueryManager {
           client: this.client,
           document: normalized.query,
           variables: normalized.variables,
-          context: this.getContext(normalized.context),
+          context: normalized.context,
         })
       ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
@@ -1810,7 +1802,7 @@ export class QueryManager {
             client: this.client,
             document: query,
             remoteResult: data ? { data } : undefined,
-            context: this.getContext(context),
+            context,
             variables,
             onlyRunForcedResolvers: true,
             returnPartialData: true,

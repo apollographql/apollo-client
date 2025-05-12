@@ -226,7 +226,7 @@ export class LocalState<
   }: {
     document: DocumentNode | TypedDocumentNode<TData, TVariables>;
     client: ApolloClient;
-    context: DefaultContext;
+    context: DefaultContext | undefined;
     // undefined is meant for client-only queries where there is no remote result
     remoteResult: FetchResult<any> | undefined;
     variables: TVariables | undefined;
@@ -271,7 +271,7 @@ export class LocalState<
       client,
       operationDefinition: mainDefinition,
       fragmentMap,
-      context,
+      context: { ...client.defaultContext, ...context },
       variables,
       exportedVariables: {},
       selectionsToResolve,
@@ -325,7 +325,7 @@ export class LocalState<
   }: {
     document: DocumentNode | TypedDocumentNode<any, TVariables>;
     client: ApolloClient;
-    context: DefaultContext;
+    context: DefaultContext | undefined;
     variables: Partial<NoInfer<TVariables>>;
   }): Promise<TVariables> {
     if (__DEV__) {
@@ -356,7 +356,7 @@ export class LocalState<
       client,
       operationDefinition: mainDefinition,
       fragmentMap,
-      context,
+      context: { ...client.defaultContext, ...context },
       variables,
       exportedVariables: {},
       selectionsToResolve: exportsToResolve,

@@ -44,6 +44,7 @@ import {
   stripTypename,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { dealias } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -631,7 +632,7 @@ export class LocalState<
               cacheSlot.withValue(client.cache, resolver, [
                 isRootField ?
                   execContext.rootValue
-                : dealias(parentSelectionSet, rootValue),
+                : dealias(rootValue, parentSelectionSet),
                 (argumentsObjectFromField(field, variables) ?? {}) as Record<
                   string,
                   unknown
@@ -994,29 +995,6 @@ export class LocalState<
 
 function inferRootTypename({ operation }: OperationDefinitionNode) {
   return operation.charAt(0).toUpperCase() + operation.slice(1);
-}
-
-// Note: this is a shallow dealias function. We might consider a future
-// improvement of dealiasing all nested data. Until that need arises, we can
-// keep this simple.
-function dealias(
-  selectionSet: SelectionSetNode,
-  fieldValue: Record<string, any> | null | undefined
-) {
-  if (!fieldValue) {
-    return fieldValue;
-  }
-
-  const data = { ...fieldValue };
-
-  for (const selection of selectionSet.selections) {
-    if (selection.kind === Kind.FIELD && selection.alias) {
-      data[selection.name.value] = fieldValue[selection.alias.value];
-      delete data[selection.alias.value];
-    }
-  }
-
-  return data;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-restricted-types

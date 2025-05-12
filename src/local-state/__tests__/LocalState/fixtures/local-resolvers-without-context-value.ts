@@ -98,27 +98,27 @@ export type FoodResolvers<
   ParentType extends
     ResolversParentTypes["Food"] = ResolversParentTypes["Food"],
 > = {
-  categories?: Resolver<
+  categories?: LocalState.Resolver<
     Maybe<Array<ResolversTypes["FoodCategory"]>>,
     ParentType,
     RequireFields<FoodCategoriesArgs, "offset">
   >;
-  name?: Resolver<Maybe<ResolversTypes["String"]>, ParentType>;
+  name?: LocalState.Resolver<Maybe<ResolversTypes["String"]>, ParentType>;
 };
 
 export type QueryResolvers<
   ParentType extends
     ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
 > = {
-  currentUserId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType>;
+  currentUserId?: LocalState.Resolver<Maybe<ResolversTypes["ID"]>, ParentType>;
 };
 
 export type UserResolvers<
   ParentType extends
     ResolversParentTypes["User"] = ResolversParentTypes["User"],
 > = {
-  favoriteFood?: Resolver<Maybe<ResolversTypes["Food"]>, ParentType>;
-  isLoggedIn?: Resolver<ResolversTypes["Boolean"], ParentType>;
+  favoriteFood?: LocalState.Resolver<Maybe<ResolversTypes["Food"]>, ParentType>;
+  isLoggedIn?: LocalState.Resolver<ResolversTypes["Boolean"], ParentType>;
 };
 
 export type Resolvers = {

@@ -287,7 +287,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
 
         return {
           mappedTypeKey: mappedType,
-          resolverType: "Resolver",
+          resolverType: "LocalState.Resolver",
         };
       })();
 

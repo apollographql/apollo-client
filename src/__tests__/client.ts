@@ -34,6 +34,7 @@ import {
   UnconventionalError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -1057,6 +1058,7 @@ describe("client", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.query({ query });
@@ -4233,6 +4235,7 @@ describe("custom document transforms", () => {
           },
         },
       }),
+      localState: new LocalState(),
     });
 
     const { data } = await client.query({ query });
@@ -4317,6 +4320,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     // Pass no-cache to silence cache write warnings
@@ -4648,6 +4652,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.mutate({ mutation });
@@ -4870,6 +4875,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     const subscription = client.subscribe({ query }).subscribe(jest.fn());
@@ -4998,6 +5004,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     const observable = client.watchQuery({ query });

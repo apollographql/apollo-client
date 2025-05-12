@@ -366,7 +366,6 @@ export class ObservableQuery<
         },
         () => ({})
       )
-      // tap((value) => console.log({ emitted: value }))
     );
 
     this["@@observable"] = () => this;
@@ -536,14 +535,14 @@ export class ObservableQuery<
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
     let value =
       (
-        // if we have no observers, and the fetch policy is no-cache,
-        //  this.subject.getValue() could potentially be outdated,
+        // if we have no observers, we are not watching the cache and
+        // this.subject.getValue() could potentially be outdated,
         // so we recalculate the result
         !this.hasObservers() &&
         // unless we are using a `no-cache` fetch policy in which case this
         // `ObservableQuery` cannot have been updated from the outside - in
         // that case, we prefer to keep the current value
-        this.options.fetchPolicy === "no-cache"
+        this.options.fetchPolicy !== "no-cache"
       ) ?
         this.getInitialResult()
       : this.subject.getValue();

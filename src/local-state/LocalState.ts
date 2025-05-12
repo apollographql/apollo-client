@@ -242,6 +242,14 @@ export class LocalState<
       validateCacheImplementation(client.cache);
     }
 
+    // note: if `remoteResult` is `undefined`, we will execute resolvers since
+    // undefined remote data reflects a client-only query. We specifically want
+    // to avoid trying to run local resolvers if the server returned `data` as
+    // `null`.
+    if (remoteResult?.data === null) {
+      return remoteResult;
+    }
+
     const mainDefinition = getMainDefinition(
       document
     ) as OperationDefinitionNode;

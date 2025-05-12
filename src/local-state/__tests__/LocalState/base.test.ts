@@ -898,7 +898,7 @@ test("does not execute child resolver when parent is null", async () => {
   expect(foo).not.toHaveBeenCalled();
 });
 
-test("adds error to errors array with scalar resolver data when remote data returns null", async () => {
+test("does not execute root scalar resolver data when remote data returns null", async () => {
   const document = gql`
     query {
       foo @client
@@ -918,10 +918,14 @@ test("adds error to errors array with scalar resolver data when remote data retu
     errors: [{ message: "Something went wrong" }],
   };
 
+  let fooCount = 0;
   const localState = new LocalState({
     resolvers: {
       Query: {
-        foo: () => true,
+        foo: () => {
+          fooCount++;
+          return true;
+        },
       },
     },
   });
@@ -935,80 +939,14 @@ test("adds error to errors array with scalar resolver data when remote data retu
       remoteResult,
     })
   ).resolves.toStrictEqualTyped({
-    data: null,
-    errors: [
-      { message: "Something went wrong" },
-      {
-        message:
-          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
-        path: ["foo"],
-        extensions: {
-          localState: {
-            resolver: "Query.foo",
-            data: true,
-          },
-        },
-      },
-    ],
-  });
-});
-
-test("adds error to errors array with scalar resolver that returns null when remote data returns null", async () => {
-  const document = gql`
-    query {
-      foo @client
-      bar {
-        id
-      }
-    }
-  `;
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
-  });
-
-  const remoteResult = {
     data: null,
     errors: [{ message: "Something went wrong" }],
-  };
-
-  const localState = new LocalState({
-    resolvers: {
-      Query: {
-        foo: () => null,
-      },
-    },
   });
 
-  await expect(
-    localState.execute({
-      document,
-      client,
-      context: {},
-      variables: {},
-      remoteResult,
-    })
-  ).resolves.toStrictEqualTyped({
-    data: null,
-    errors: [
-      { message: "Something went wrong" },
-      {
-        message:
-          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
-        path: ["foo"],
-        extensions: {
-          localState: {
-            resolver: "Query.foo",
-            data: null,
-          },
-        },
-      },
-    ],
-  });
+  expect(fooCount).toBe(0);
 });
 
-test("adds error to errors array with object resolver data when remote data returns null", async () => {
+test("does not run object resolver when remote data returns null", async () => {
   const document = gql`
     query {
       foo @client {
@@ -1030,10 +968,14 @@ test("adds error to errors array with object resolver data when remote data retu
     errors: [{ message: "Something went wrong" }],
   };
 
+  let fooCount = 0;
   const localState = new LocalState({
     resolvers: {
       Query: {
-        foo: () => ({ __typename: "Foo", baz: true }),
+        foo: () => {
+          fooCount++;
+          return { __typename: "Foo", baz: true };
+        },
       },
     },
   });
@@ -1047,143 +989,14 @@ test("adds error to errors array with object resolver data when remote data retu
       remoteResult,
     })
   ).resolves.toStrictEqualTyped({
-    data: null,
-    errors: [
-      { message: "Something went wrong" },
-      {
-        message:
-          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
-        path: ["foo"],
-        extensions: {
-          localState: {
-            resolver: "Query.foo",
-            data: { __typename: "Foo", baz: true },
-          },
-        },
-      },
-    ],
-  });
-});
-
-test("adds error to errors array with object resolver with child resolver when remote data returns null", async () => {
-  const document = gql`
-    query {
-      foo @client {
-        bar
-        baz
-      }
-      bar {
-        id
-      }
-    }
-  `;
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
-  });
-
-  const remoteResult = {
     data: null,
     errors: [{ message: "Something went wrong" }],
-  };
-
-  const localState = new LocalState({
-    resolvers: {
-      Query: {
-        foo: () => ({ __typename: "Foo", bar: true }),
-      },
-      Foo: {
-        baz: () => false,
-      },
-    },
   });
 
-  await expect(
-    localState.execute({
-      document,
-      client,
-      context: {},
-      variables: {},
-      remoteResult,
-    })
-  ).resolves.toStrictEqualTyped({
-    data: null,
-    errors: [
-      { message: "Something went wrong" },
-      {
-        message:
-          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
-        path: ["foo"],
-        extensions: {
-          localState: {
-            resolver: "Query.foo",
-            data: { __typename: "Foo", bar: true, baz: false },
-          },
-        },
-      },
-    ],
-  });
+  expect(fooCount).toBe(0);
 });
 
-test("adds error to errors array with object resolver that returns null when remote data returns null", async () => {
-  const document = gql`
-    query {
-      foo @client {
-        baz
-      }
-      bar {
-        id
-      }
-    }
-  `;
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
-  });
-
-  const remoteResult = {
-    data: null,
-    errors: [{ message: "Something went wrong" }],
-  };
-
-  const localState = new LocalState({
-    resolvers: {
-      Query: {
-        foo: () => null,
-      },
-    },
-  });
-
-  await expect(
-    localState.execute({
-      document,
-      client,
-      context: {},
-      variables: {},
-      remoteResult,
-    })
-  ).resolves.toStrictEqualTyped({
-    data: null,
-    errors: [
-      { message: "Something went wrong" },
-      {
-        message:
-          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
-        path: ["foo"],
-        extensions: {
-          localState: {
-            resolver: "Query.foo",
-            data: null,
-          },
-        },
-      },
-    ],
-  });
-});
-
-test("adds multiple errors for each client field to errors array when remote data returns null", async () => {
+test("does not run root resolvers when multiple client fields are defined when remote data returns null", async () => {
   const document = gql`
     query {
       foo @client {
@@ -1208,11 +1021,19 @@ test("adds multiple errors for each client field to errors array when remote dat
     errors: [{ message: "Something went wrong" }],
   };
 
+  let fooCount = 0;
+  let barCount = 0;
   const localState = new LocalState({
     resolvers: {
       Query: {
-        foo: () => ({ __typename: "Foo", baz: true }),
-        bar: () => ({ __typename: "Bar", baz: false }),
+        foo: () => {
+          fooCount++;
+          return { __typename: "Foo", baz: true };
+        },
+        bar: () => {
+          barCount++;
+          return { __typename: "Bar", baz: false };
+        },
       },
     },
   });
@@ -1227,32 +1048,11 @@ test("adds multiple errors for each client field to errors array when remote dat
     })
   ).resolves.toStrictEqualTyped({
     data: null,
-    errors: [
-      { message: "Something went wrong" },
-      {
-        message:
-          "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
-        path: ["foo"],
-        extensions: {
-          localState: {
-            resolver: "Query.foo",
-            data: { __typename: "Foo", baz: true },
-          },
-        },
-      },
-      {
-        message:
-          "Could not merge data from 'Query.bar' resolver with remote data since data was `null`.",
-        path: ["bar"],
-        extensions: {
-          localState: {
-            resolver: "Query.bar",
-            data: { __typename: "Bar", baz: false },
-          },
-        },
-      },
-    ],
+    errors: [{ message: "Something went wrong" }],
   });
+
+  expect(fooCount).toBe(0);
+  expect(barCount).toBe(0);
 });
 
 test("does not execute resolver if client field is a child of a server field when data returns `null`", async () => {

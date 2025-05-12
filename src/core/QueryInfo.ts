@@ -61,7 +61,6 @@ export class QueryInfo {
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
-  stopped = false;
 
   private cache: ApolloCache;
 

@@ -1150,6 +1150,12 @@ export class QueryManager {
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
     if (this.queries.has(queryId)) {
+      const oq = this.queries.get(queryId)!.observableQuery;
+      if (oq) {
+        oq["resetNotifications"]();
+        oq["unsubscribeFromCache"]?.();
+        oq.stopPolling();
+      }
       this.queries.get(queryId)!.observableQuery?.reset();
       this.queries.delete(queryId);
     }

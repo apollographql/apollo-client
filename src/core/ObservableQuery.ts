@@ -70,11 +70,6 @@ export interface FetchMoreOptions<
 
 interface TrackedOperation {
   /**
-   * The network status that should be caused by this operation.
-   * Currently not used, might get removed
-   */
-  networkStatus: NetworkStatus;
-  /**
    * This NetworkStatus will be used to override the current networkStatus
    */
   override?: NetworkStatus;
@@ -1119,7 +1114,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // track query and variables from the start of the operation
     const { query, variables } = this;
     const operation: TrackedOperation = {
-      networkStatus,
       abort: () => subscription.unsubscribe(),
       query,
       variables,
@@ -1529,7 +1523,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.activeOperations.delete(operation);
     };
     const operation: TrackedOperation = {
-      networkStatus,
       override: networkStatus,
       abort: () => {
         aborted = true;
@@ -1547,9 +1540,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) => {
         if (!aborted) {
           queryMetaSlot.withValue({ query, variables, ...additionalMeta }, () =>
-            this.input.next({
-              ...notification,
-            } as QueryNotification.Value<TData, TVariables>)
+            this.input.next(notification)
           );
         }
       },

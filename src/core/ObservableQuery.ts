@@ -1402,6 +1402,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
+
+    this.resetNotifications();
     this.unsubscribeFromCache?.();
     if (this.linkSubscription) {
       this.linkSubscription.unsubscribe();

@@ -118,21 +118,6 @@ export class QueryInfo {
     }
   }
 
-  public stop() {
-    if (!this.stopped) {
-      this.stopped = true;
-
-      // Cancel the pending notify timeout
-      // TODO: move this over into `ObservableQuery` and track `ObservableQuery` instances
-      // instead of `QueryInfo` instances in `QueryManager`.
-      this.observableQuery?.["resetNotifications"]();
-      this.observableQuery?.["unsubscribeFromCache"]?.();
-
-      const oq = this.observableQuery;
-      if (oq) oq.stopPolling();
-    }
-  }
-
   private lastWrite?: {
     result: FetchResult<any>;
     variables: WatchQueryOptions["variables"];

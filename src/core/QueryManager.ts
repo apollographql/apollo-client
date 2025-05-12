@@ -912,8 +912,6 @@ export class QueryManager {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
         observableQuery.reset();
-      } else {
-        queryInfo.stop();
       }
     });
 
@@ -1152,7 +1150,7 @@ export class QueryManager {
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
     if (this.queries.has(queryId)) {
-      this.queries.get(queryId)?.stop();
+      this.queries.get(queryId)!.observableQuery?.["tearDownQuery"]();
       this.queries.delete(queryId);
     }
   }
@@ -1643,7 +1641,7 @@ export class QueryManager {
         // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
-            diff = this.cache.diff(oq["queryInfo"]["getDiffOptions"]());
+            diff = this.cache.diff(oq["queryInfo"].getDiffOptions());
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }

@@ -9,7 +9,7 @@ import type {
   Subscription,
 } from "rxjs";
 import { Observable } from "rxjs";
-import { dematerialize, filter, lastValueFrom, Subject, tap } from "rxjs";
+import { lastValueFrom, Subject, tap } from "rxjs";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -1376,8 +1376,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // cancel the request from the link chain.
       lastValueFrom(
         observable.pipe(
-          filter((value) => value.source !== "newNetworkStatus"),
-          dematerialize()
+          filterMap((value) => {
+            switch (value.kind) {
+              case "E":
+                throw value.error;
+              case "N":
+                if (value.source !== "newNetworkStatus") return value.value;
+            }
+          })
         ),
         {
           // This default value should only be used when using a `fetchPolicy` of

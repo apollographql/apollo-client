@@ -5,7 +5,6 @@ import type { Subscription } from "rxjs";
 import {
   catchError,
   concat,
-  dematerialize,
   EMPTY,
   filter,
   from,
@@ -65,7 +64,11 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
+import {
+  filterMap,
+  onAnyEvent,
+  toQueryResult,
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -715,11 +718,16 @@ export class QueryManager {
         options,
         networkStatus
       ).observable.pipe(
-        filter(
-          (value) => value.source === "cache" || value.source === "network"
-        ),
-        dematerialize(),
-        map(toQueryResult)
+        filterMap((value) => {
+          switch (value.kind) {
+            case "E":
+              throw value.error;
+            case "N": {
+              if (value.source !== "newNetworkStatus")
+                return toQueryResult(value.value);
+            }
+          }
+        })
       ),
       {
         // This default is needed when a `standby` fetch policy is used to avoid

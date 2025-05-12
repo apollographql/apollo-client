@@ -17,7 +17,12 @@ export function filterMap<T, R>(
       let context = makeContext();
       return source.subscribe({
         next(value) {
-          const result = fn(value, context);
+          let result: R | undefined;
+          try {
+            result = fn(value, context);
+          } catch (e) {
+            subscriber.error(e);
+          }
           if (result === undefined) {
             return;
           }

@@ -844,7 +844,10 @@ export class QueryManager {
     return observable;
   }
 
-  public query<TData, TVars extends OperationVariables = OperationVariables>(
+  public async query<
+    TData,
+    TVars extends OperationVariables = OperationVariables,
+  >(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {

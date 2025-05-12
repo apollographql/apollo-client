@@ -1150,7 +1150,7 @@ export class QueryManager {
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
     if (this.queries.has(queryId)) {
-      this.queries.get(queryId)!.observableQuery?.["tearDownQuery"]();
+      this.queries.get(queryId)!.observableQuery?.reset();
       this.queries.delete(queryId);
     }
   }

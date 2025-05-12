@@ -28,6 +28,7 @@ import * as linkSubscriptions from "@apollo/client/link/subscriptions";
 import * as linkUtils from "@apollo/client/link/utils";
 import * as linkWS from "@apollo/client/link/ws";
 import * as localState from "@apollo/client/local-state";
+import * as localStateCodegen from "@apollo/client/local-state/codegen";
 import * as masking from "@apollo/client/masking";
 import * as react from "@apollo/client/react";
 import * as reactInternal from "@apollo/client/react/internal";
@@ -87,6 +88,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/link/utils", linkUtils);
   check("@apollo/client/link/ws", linkWS);
   check("@apollo/client/local-state", localState);
+  check("@apollo/client/local-state/codegen", localStateCodegen);
   check("@apollo/client/masking", masking);
   check("@apollo/client/react", react);
   check("@apollo/client/react/internal", reactInternal);

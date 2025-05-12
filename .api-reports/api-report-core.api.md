@@ -155,7 +155,7 @@ export class ApolloClient implements DataProxy {
     queryDeduplication: boolean;
     readFragment<T = unknown, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     readQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
-    refetchObservableQueries(includeStandby?: boolean): Promise<QueryResult<any>[]>;
+    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult<any>[]>;
     refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<QueryResult<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
     resetStore(): Promise<QueryResult<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;
@@ -738,10 +738,6 @@ class QueryInfo {
     // (undocumented)
     setObservableQuery(oq: ObservableQuery<any, any> | null): void;
     // (undocumented)
-    stop(): void;
-    // (undocumented)
-    stopped: boolean;
-    // (undocumented)
     variables?: Record<string, any>;
 }
 
@@ -898,19 +894,17 @@ namespace QueryNotification {
     // (undocumented)
     type FromCache<TData, TVariables> = NextNotification<ApolloQueryResult<TData>> & {
         source: "cache";
-        fetchPolicy?: WatchQueryFetchPolicy;
     };
     // (undocumented)
     type FromNetwork<TData, TVariables> = ObservableNotification<ApolloQueryResult<TData>> & {
         source: "network";
-        fetchPolicy: WatchQueryFetchPolicy;
     };
     // (undocumented)
     interface Meta<TData, TVariables> {
         // (undocumented)
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         // (undocumented)
-        variables: TVariables | undefined;
+        variables: TVariables;
     }
     // (undocumented)
     type NewNetworkStatus<TData, TVariables> = NextNotification<{
@@ -1156,11 +1150,11 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:126:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:241:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:242:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:193:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:466:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:121:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:236:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:237:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:468:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

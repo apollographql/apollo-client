@@ -117,9 +117,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     _key: string | number,
     _parent: any
   ): string {
-    throw new Error(
-      "Custom directives are not supported with `LocalResolversLink`"
-    );
+    return "";
   }
 
   EnumTypeDefinition(node: EnumTypeDefinitionNode): string {
@@ -215,7 +213,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     _key: string | number,
     _parent: any
   ): string {
-    throw new Error("Unions are not supported with `LocalResolversLink`");
+    return "";
   }
 
   FieldDefinition(
@@ -320,7 +318,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
   }
 
   InterfaceTypeDefinition(_node: InterfaceTypeDefinitionNode): string {
-    throw new Error("Interfaces are not supported by `LocalResolversLink`");
+    return "";
   }
 
   public getRootResolver(): RootResolver {

@@ -93,7 +93,7 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
     execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, }: {
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
-        context: DefaultContext;
+        context: DefaultContext | undefined;
         remoteResult: FetchResult<any> | undefined;
         variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
@@ -103,7 +103,7 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
     getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
         document: DocumentNode | TypedDocumentNode<any, TVariables>;
         client: ApolloClient;
-        context: DefaultContext;
+        context: DefaultContext | undefined;
         variables: Partial<NoInfer_2<TVariables>>;
     }): Promise<TVariables>;
 }

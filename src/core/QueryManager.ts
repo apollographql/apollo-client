@@ -1155,7 +1155,6 @@ export class QueryManager {
         oq["unsubscribeFromCache"]?.();
         oq.stopPolling();
       }
-      this.queries.get(queryId)!.observableQuery?.reset();
       this.queries.delete(queryId);
     }
   }

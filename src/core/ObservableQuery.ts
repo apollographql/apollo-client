@@ -1254,9 +1254,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // options, without permanently altering the options of the
       // original ObservableQuery.
       newNetworkStatus === NetworkStatus.refetch ||
-      // The fetchMore method does not actually call the reobserve method, but,
-      // if it did, it would definitely use a disposable Observable.
-      newNetworkStatus === NetworkStatus.fetchMore ||
       // Polling uses a disposable Observable so the polling options (which force
       // fetchPolicy to be "network-only" or "no-cache") won't override the original options.
       newNetworkStatus === NetworkStatus.poll;
@@ -1342,13 +1339,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (options.fetchPolicy === "standby") {
       this.cancelPolling();
     }
-    if (
-      !useDisposableObservable ||
-      // TODO: investigate - should `refetch` actually be a disposable Query?
-      newNetworkStatus === NetworkStatus.refetch
-    ) {
-      this.resubscribeCache();
-    }
+
+    this.resubscribeCache();
 
     const { subscription, observable, fromLink } = this.fetch(
       options,

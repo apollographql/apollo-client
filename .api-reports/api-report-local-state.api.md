@@ -94,8 +94,8 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext;
-        remoteResult?: FetchResult<any>;
-        variables?: TVariables;
+        remoteResult: FetchResult<any> | undefined;
+        variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
         returnPartialData?: boolean;
     }): Promise<FetchResult<TData>>;

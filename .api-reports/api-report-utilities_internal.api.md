@@ -8,6 +8,12 @@ import type { ApolloQueryResult } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import { Observable } from 'rxjs';
 import type { QueryResult } from '@apollo/client';
+import type { SelectionSetNode } from 'graphql';
+
+// @public (undocumented)
+export function dealias(fieldValue: Record<string, any> | null | undefined, selectionSet: SelectionSetNode): {
+    [x: string]: any;
+} | null | undefined;
 
 // @internal
 export const getApolloCacheMemoryInternals: (() => {

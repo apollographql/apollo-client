@@ -1777,17 +1777,14 @@ export class QueryManager {
         };
       };
 
-      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
+      const fromData = (
+        data: TData | DeepPartial<TData> | undefined
+      ): Observable<QueryNotification.FromCache<TData, TVars>> => {
         return of({
           kind: "N",
           value: toResult(data),
           source: "cache",
-          // @ts-ignore
-          __meta: "fetchQueryByPolicy",
-          query,
-          variables,
-          fetchPolicy: fetchPolicy || "cache-first",
-        } satisfies QueryNotification.FromCache<TData, TVars>);
+        });
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
@@ -1808,12 +1805,11 @@ export class QueryManager {
               onlyRunForcedResolvers: true,
             })
             .then(
-              (resolved) =>
-                ({
-                  kind: "N",
-                  value: toResult(resolved.data || void 0),
-                  source: "cache",
-                }) satisfies QueryNotification.FromCache<TData, TVars>
+              (resolved): QueryNotification.FromCache<TData, TVars> => ({
+                kind: "N" as const,
+                value: toResult(resolved.data || void 0),
+                source: "cache" as const,
+              })
             )
         );
       }

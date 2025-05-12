@@ -48,6 +48,7 @@ export default [
         rules: localRules,
       },
     },
+    ignores: ["tests.codegen.ts"],
 
     languageOptions: {
       globals: {

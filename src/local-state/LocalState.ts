@@ -804,7 +804,7 @@ export class LocalState<
     meta: { [key: string]: any; resolver: string }
   ) {
     execContext.errors.push(
-      addApolloExtension(
+      addExtension(
         isGraphQLError(error) ?
           { ...error.toJSON(), path }
         : { message: error.message, path },
@@ -1011,15 +1011,12 @@ function isGraphQLError(error: ErrorLike): error is GraphQLError {
   );
 }
 
-function addApolloExtension(
-  error: GraphQLFormattedError,
-  meta: Record<string, any>
-) {
+function addExtension(error: GraphQLFormattedError, meta: Record<string, any>) {
   return {
     ...error,
     extensions: {
       ...error.extensions,
-      apollo: { source: "LocalState", ...meta },
+      localState: meta,
     },
   };
 }

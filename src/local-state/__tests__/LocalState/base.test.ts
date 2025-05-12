@@ -811,8 +811,7 @@ test("adds an error when the __typename cannot be resolved", async () => {
         )} returned from resolver 'Query.foo'. '__typename' needs to be returned to properly resolve child fields.`,
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
           },
         },
@@ -944,8 +943,7 @@ test("adds error to errors array with scalar resolver data when remote data retu
           "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
             data: true,
           },
@@ -1000,8 +998,7 @@ test("adds error to errors array with scalar resolver that returns null when rem
           "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
             data: null,
           },
@@ -1058,8 +1055,7 @@ test("adds error to errors array with object resolver data when remote data retu
           "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
             data: { __typename: "Foo", baz: true },
           },
@@ -1120,8 +1116,7 @@ test("adds error to errors array with object resolver with child resolver when r
           "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
             data: { __typename: "Foo", bar: true, baz: false },
           },
@@ -1178,8 +1173,7 @@ test("adds error to errors array with object resolver that returns null when rem
           "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
             data: null,
           },
@@ -1240,8 +1234,7 @@ test("adds multiple errors for each client field to errors array when remote dat
           "Could not merge data from 'Query.foo' resolver with remote data since data was `null`.",
         path: ["foo"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.foo",
             data: { __typename: "Foo", baz: true },
           },
@@ -1252,8 +1245,7 @@ test("adds multiple errors for each client field to errors array when remote dat
           "Could not merge data from 'Query.bar' resolver with remote data since data was `null`.",
         path: ["bar"],
         extensions: {
-          apollo: {
-            source: "LocalState",
+          localState: {
             resolver: "Query.bar",
             data: { __typename: "Bar", baz: false },
           },

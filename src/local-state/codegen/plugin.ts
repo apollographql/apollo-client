@@ -27,27 +27,14 @@ export const plugin: PluginFunction<
 
   const importType = config.useTypeImports ? "import type" : "import";
   const prepend: string[] = [];
-  const defsToInclude: string[] = [];
 
   let transformedSchema = schema;
 
   const visitor = new LocalStateVisitor(config, transformedSchema);
-
   const astNode = getCachedDocumentNodeFromSchema(transformedSchema);
 
   // runs visitor
   const visitorResult = oldVisit(astNode, { leave: visitor as any });
-
-  const resolverType = `export type Resolver<TResult, TParent = Record<string, unknown>, TArgs = Record<string, unknown>> =`;
-  const resolverFnUsage = `ResolverFn<TResult, TParent, TArgs>`;
-
-  const defs = `${resolverType} ${resolverFnUsage};`;
-  defsToInclude.push(defs);
-
-  const header = `
-
-${defsToInclude.join("\n")}
-`;
 
   const resolversTypeMapping = visitor.buildResolversTypes();
   const resolversParentTypeMapping = visitor.buildResolversParentTypes();
@@ -71,9 +58,6 @@ ${defsToInclude.join("\n")}
   prepend.push(
     `${importType} { LocalState } from '@apollo/client/local-state'`
   );
-  prepend.push(
-    `type ResolverFn<TResult, TParent = unknown, TArgs = Record<string, unknown>> = LocalState.Resolver<TResult, TParent, TArgs>`
-  );
 
   prepend.push(...mappersImports, ...visitor.globalDeclarations);
 
@@ -82,7 +66,6 @@ ${defsToInclude.join("\n")}
   return {
     prepend,
     content: [
-      header,
       resolversUnionTypesMapping,
       resolversInterfaceTypesMapping,
       resolversTypeMapping,

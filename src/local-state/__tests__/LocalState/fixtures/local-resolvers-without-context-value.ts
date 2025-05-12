@@ -20,11 +20,6 @@ export type Incremental<T> =
   | {
       [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never;
     };
-type ResolverFn<
-  TResult,
-  TParent = unknown,
-  TArgs = Record<string, unknown>,
-> = LocalState.Resolver<TResult, TParent, TArgs>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & {
   [P in K]-?: NonNullable<T[P]>;
 };
@@ -62,12 +57,6 @@ export type User = {
   favoriteFood?: Maybe<Food>;
   isLoggedIn: Scalars["Boolean"]["output"];
 };
-
-export type Resolver<
-  TResult,
-  TParent = Record<string, unknown>,
-  TArgs = Record<string, unknown>,
-> = ResolverFn<TResult, TParent, TArgs>;
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {

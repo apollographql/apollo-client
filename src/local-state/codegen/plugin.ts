@@ -28,10 +28,8 @@ export const plugin: PluginFunction<
   const importType = config.useTypeImports ? "import type" : "import";
   const prepend: string[] = [];
 
-  let transformedSchema = schema;
-
-  const visitor = new LocalStateVisitor(config, transformedSchema);
-  const astNode = getCachedDocumentNodeFromSchema(transformedSchema);
+  const visitor = new LocalStateVisitor(config, schema);
+  const astNode = getCachedDocumentNodeFromSchema(schema);
 
   // runs visitor
   const visitorResult = oldVisit(astNode, { leave: visitor as any });

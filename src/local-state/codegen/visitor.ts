@@ -27,7 +27,7 @@ import type {
   UnionTypeDefinitionNode,
 } from "graphql";
 
-import type { LocalResolversLinkPluginConfig } from "./config.js";
+import type { LocalStatePluginConfig } from "./config.js";
 
 type FieldDefinitionPrintFn = (
   parentName: string,
@@ -41,14 +41,11 @@ interface ParsedTypeScriptResolversConfig extends ParsedResolversConfig {
   allowParentTypeOverride: boolean;
 }
 
-export class LocalResolversLinkVisitor extends BaseResolversVisitor<
-  LocalResolversLinkPluginConfig,
+export class LocalStateVisitor extends BaseResolversVisitor<
+  LocalStatePluginConfig,
   ParsedTypeScriptResolversConfig
 > {
-  constructor(
-    pluginConfig: LocalResolversLinkPluginConfig,
-    schema: GraphQLSchema
-  ) {
+  constructor(pluginConfig: LocalStatePluginConfig, schema: GraphQLSchema) {
     super(
       pluginConfig,
       {

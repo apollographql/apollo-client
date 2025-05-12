@@ -6,18 +6,18 @@ import {
 import type { RootResolver } from "@graphql-codegen/visitor-plugin-common";
 import type { GraphQLSchema } from "graphql";
 
-import type { LocalResolversLinkPluginConfig } from "./config.js";
-import { LocalResolversLinkVisitor } from "./visitor.js";
+import type { LocalStatePluginConfig } from "./config.js";
+import { LocalStateVisitor } from "./visitor.js";
 
 export const plugin: PluginFunction<
-  LocalResolversLinkPluginConfig,
+  LocalStatePluginConfig,
   Types.ComplexPluginOutput<{
     generatedResolverTypes: RootResolver["generatedResolverTypes"];
   }>
 > = async (
   schema: GraphQLSchema,
   _documents: Types.DocumentFile[],
-  config: LocalResolversLinkPluginConfig
+  config: LocalStatePluginConfig
 ) => {
   const imports: string[] = [];
   const showUnusedMappers =
@@ -31,7 +31,7 @@ export const plugin: PluginFunction<
 
   let transformedSchema = schema;
 
-  const visitor = new LocalResolversLinkVisitor(config, transformedSchema);
+  const visitor = new LocalStateVisitor(config, transformedSchema);
 
   const astNode = getCachedDocumentNodeFromSchema(transformedSchema);
 

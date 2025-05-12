@@ -10,7 +10,7 @@ import type {
  * You can find a blog post explaining the usage of this plugin here: https://the-guild.dev/blog/better-type-safety-for-resolvers-with-graphql-codegen
  *
  */
-export interface LocalResolversLinkPluginConfig extends RawConfig {
+export interface LocalStatePluginConfig extends RawConfig {
   /**
    * This will cause the generator to avoid using optionals (`?`),
    * so all field resolvers must be implemented in order to avoid compilation errors.

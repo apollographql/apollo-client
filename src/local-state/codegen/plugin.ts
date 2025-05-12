@@ -73,10 +73,10 @@ ${defsToInclude.join("\n")}
   }
 
   prepend.push(
-    `${importType} { LocalResolversLink } from '@apollo/client/link/local-resolvers'`
+    `${importType} { LocalState } from '@apollo/client/local-state'`
   );
   prepend.push(
-    `type ResolverFn<TResult, TParent = unknown, TArgs = Record<string, unknown>> = LocalResolversLink.Resolver<TResult, TParent, TArgs>`
+    `type ResolverFn<TResult, TParent = unknown, TArgs = Record<string, unknown>> = LocalState.Resolver<TResult, TParent, TArgs>`
   );
 
   prepend.push(...mappersImports, ...visitor.globalDeclarations);

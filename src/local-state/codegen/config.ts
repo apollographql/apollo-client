@@ -12,6 +12,31 @@ import type {
  */
 export interface LocalStatePluginConfig extends RawConfig {
   /**
+   * Path to base schema types used to import schema type definitions for
+   * extended types in your local schema. This is required if your schema type
+   * definitions defines an extended type (i.e. `extend type User {...}`).
+   *
+   * @example
+   * ```ts
+   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   *
+   *  const config: CodegenConfig = {
+   *    // ...
+   *    generates: {
+   *      'path/to/file': {
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
+   *        config: {
+   *          baseTypesPath: "./relative/path/to/schema/types"
+   *        },
+   *      },
+   *    },
+   *  };
+   *  export default config;
+   * ```
+   */
+  baseTypesPath?: string;
+
+  /**
    * This will cause the generator to avoid using optionals (`?`),
    * so all field resolvers must be implemented in order to avoid compilation errors.
    * @defaultValue false

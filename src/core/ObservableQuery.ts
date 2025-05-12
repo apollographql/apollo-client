@@ -706,13 +706,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.transformDocument(this.options.query)
       : combinedOptions.query;
 
-    // Simulate a loading result for the original query with
-    // result.networkStatus === NetworkStatus.fetchMore.
-    const originalNetworkStatus = this.networkStatus;
-    if (combinedOptions.notifyOnNetworkStatusChange) {
-      this.observe();
-    }
-
     let wasUpdated = false;
 
     const updateQuery = fetchMoreOptions?.updateQuery;
@@ -811,7 +804,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             kind: "N",
             value: {
               ...lastResult,
-              networkStatus: originalNetworkStatus,
+              networkStatus: NetworkStatus.ready,
               // will be overwritten anyways, just here for types sake
               loading: false,
               data: data as TData,
@@ -1396,12 +1389,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         }
       ).then((result) => toQueryResult(this.maskResult(result)))
     );
-  }
-
-  // (Re)deliver the current result to this.observers without applying fetch
-  // policies or making network requests.
-  private observe() {
-    // TODO  - is this method even called now?
   }
 
   public hasObservers() {

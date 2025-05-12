@@ -810,7 +810,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               data: data as TData,
             },
             source: "network",
-            fetchPolicy: combinedOptions.fetchPolicy || "cache-first",
           });
         }
 

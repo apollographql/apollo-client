@@ -1455,7 +1455,6 @@ export class QueryManager {
         kind: "E",
         error,
         source: "network",
-        fetchPolicy,
       });
       fetchCancelSubject.complete();
       cleanupCancelFn();
@@ -1806,7 +1805,6 @@ export class QueryManager {
                   kind: "N",
                   value: toResult(resolved.data || void 0),
                   source: "cache",
-                  fetchPolicy: fetchPolicy || "cache-first",
                 }) satisfies QueryNotification.FromCache<TData, TVars>
             )
         );
@@ -1841,7 +1839,6 @@ export class QueryManager {
           (result): QueryNotification.FromNetwork<TData, TVars> => ({
             ...result,
             source: "network",
-            fetchPolicy: fetchPolicy || "cache-first",
           })
         )
       );

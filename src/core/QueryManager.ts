@@ -299,19 +299,20 @@ export class QueryManager {
     variables = this.getVariables(mutation, variables);
 
     if (hasClientExports) {
-      if (this.localState) {
-        variables = await this.localState.getExportedVariables<TVariables>({
-          client: this.client,
-          document: mutation,
-          variables,
-          context: this.getContext(context),
-        });
-      } else if (__DEV__) {
-        invariant.warn(
-          "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
+      if (__DEV__) {
+        invariant(
+          this.localState,
+          "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
           getOperationName(mutation) ?? "(anonymous)"
         );
       }
+
+      variables = await this.localState!.getExportedVariables<TVariables>({
+        client: this.client,
+        document: mutation,
+        variables,
+        context: this.getContext(context),
+      });
     }
 
     const mutationStoreValue =
@@ -1122,26 +1123,21 @@ export class QueryManager {
         filter((result) => !!(result.data || result.error))
       );
 
-    const { hasClientExports } = this.getDocumentInfo(query);
-
-    if (__DEV__) {
-      if (hasClientExports && !this.localState) {
-        invariant.warn(
-          "Subscription '%s' contains `@client` fields with `@export` but local state has not been configured. Variables will not be exported correctly.",
+    if (this.getDocumentInfo(query).hasClientExports) {
+      if (__DEV__) {
+        invariant(
+          this.localState,
+          "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
           getOperationName(query) ?? "(anonymous)"
         );
       }
-    }
 
-    if (hasClientExports && this.localState) {
-      const observablePromise = this.localState
-        .getExportedVariables({
-          client: this.client,
-          document: query,
-          variables,
-          context: this.getContext(context),
-        })
-        .then(makeObservable);
+      const observablePromise = this.localState!.getExportedVariables({
+        client: this.client,
+        document: query,
+        variables,
+        context: this.getContext(context),
+      }).then(makeObservable);
 
       return new Observable<SubscribeResult<TData>>((observer) => {
         let sub: Subscription | null = null;
@@ -1264,28 +1260,30 @@ export class QueryManager {
     }
 
     if (clientQuery) {
-      if (this.localState) {
-        observable = observable.pipe(
-          mergeMap((result) => {
-            return from(
-              this.localState!.execute<TData>({
-                client: this.client,
-                document: clientQuery,
-                remoteResult: result,
-                context: this.getContext(context),
-                variables,
-              })
-            );
-          })
-        );
-      } else if (__DEV__) {
+      if (__DEV__) {
         const { operation } = getOperationDefinition(query)!;
-        invariant.warn(
-          "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
+
+        invariant(
+          this.localState,
+          "%s '%s' contains `@client` fields but local state has not been configured.",
           operation[0].toUpperCase() + operation.slice(1),
           operationName ?? "(anonymous)"
         );
       }
+
+      observable = observable.pipe(
+        mergeMap((result) => {
+          return from(
+            this.localState!.execute<TData>({
+              client: this.client,
+              document: clientQuery,
+              remoteResult: result,
+              context: this.getContext(context),
+              variables,
+            })
+          );
+        })
+      );
     }
 
     return observable.pipe(
@@ -1476,17 +1474,6 @@ export class QueryManager {
     let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
 
-    const { hasClientExports } = this.getDocumentInfo(normalized.query);
-
-    if (__DEV__) {
-      if (hasClientExports && !this.localState) {
-        invariant.warn(
-          "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
-          getOperationName(normalized.query) ?? "(anonymous)"
-        );
-      }
-    }
-
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
     // @export directives (the common case), we deliberately avoid
@@ -1494,9 +1481,17 @@ export class QueryManager {
     // since the timing of result delivery is (unfortunately) important
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
-    if (hasClientExports && this.localState) {
+    if (this.getDocumentInfo(normalized.query).hasClientExports) {
+      if (__DEV__) {
+        invariant(
+          this.localState,
+          "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+          getOperationName(normalized.query) ?? "(anonymous)"
+        );
+      }
+
       observable = from(
-        this.localState.getExportedVariables({
+        this.localState!.getExportedVariables({
           client: this.client,
           document: normalized.query,
           variables: normalized.variables,
@@ -1800,21 +1795,26 @@ export class QueryManager {
         // data and partial isn't allowed since this result would get set to
         // `undefined` anyways in `toResult`.
         (diff.complete || returnPartialData) &&
-        this.getDocumentInfo(query).hasForcedResolvers &&
-        this.localState
+        this.getDocumentInfo(query).hasForcedResolvers
       ) {
+        if (__DEV__) {
+          invariant(
+            this.localState,
+            "Query '%s' contains `@client` fields but local state has not been configured.",
+            getOperationName(query) ?? "(anonymous)"
+          );
+        }
+
         return from(
-          this.localState
-            .execute<TData>({
-              client: this.client,
-              document: query,
-              remoteResult: data ? { data } : undefined,
-              context: this.getContext(context),
-              variables,
-              onlyRunForcedResolvers: true,
-              returnPartialData: true,
-            })
-            .then((resolved) => toResult(resolved.data || void 0))
+          this.localState!.execute<TData>({
+            client: this.client,
+            document: query,
+            remoteResult: data ? { data } : undefined,
+            context: this.getContext(context),
+            variables,
+            onlyRunForcedResolvers: true,
+            returnPartialData: true,
+          }).then((resolved) => toResult(resolved.data || void 0))
         );
       }
 

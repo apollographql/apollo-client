@@ -25,6 +25,7 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("General functionality", () => {
   test("should not impact normal non-@client use", async () => {
@@ -1349,8 +1350,7 @@ describe("Combining client and server state/operations", () => {
   });
 });
 
-test("omits client fields and warns when executing query when local state is not setup", async () => {
-  using _ = spyOnConsole("warn");
+test("throws when executing queries with client fields when local state is not configured", async () => {
   const query = gql`
     query GetUser {
       user {
@@ -1367,20 +1367,14 @@ test("omits client fields and warns when executing query when local state is not
     }),
   });
 
-  await expect(client.query({ query })).resolves.toStrictEqualTyped({
-    data: { user: { __typename: "User", lastName: "Smith" } },
-  });
-
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
-    "Query",
-    "GetUser"
+  await expect(client.query({ query })).rejects.toEqual(
+    new InvariantError(
+      "Query 'GetUser' contains `@client` fields but local state has not been configured."
+    )
   );
 });
 
-test("omits client fields and warns when executing mutation when local state is not setup", async () => {
-  using _ = spyOnConsole("warn");
+test("throws when executing mutations with client fields when local state is not configured", async () => {
   const mutation = gql`
     mutation UpdateUser {
       updateUser {
@@ -1399,20 +1393,14 @@ test("omits client fields and warns when executing mutation when local state is 
     }),
   });
 
-  await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
-    data: { updateUser: { __typename: "User", lastName: "Smith" } },
-  });
-
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
-    "Mutation",
-    "UpdateUser"
+  await expect(client.mutate({ mutation })).rejects.toEqual(
+    new InvariantError(
+      "Mutation 'UpdateUser' contains `@client` fields but local state has not been configured."
+    )
   );
 });
 
-test("omits client fields and warns when executing subscription when local state is not setup", async () => {
-  using _ = spyOnConsole("warn");
+test("throws when executing subscriptions with client fields when local state is not configured", async () => {
   const subscription = gql`
     subscription OnUserUpdate {
       onUpdateUser {
@@ -1428,24 +1416,9 @@ test("omits client fields and warns when executing subscription when local state
     link,
   });
 
-  const stream = new ObservableStream(
-    client.subscribe({ query: subscription })
-  );
-
-  link.simulateResult({
-    result: {
-      data: { onUpdateUser: { __typename: "User", lastName: "Smith" } },
-    },
-  });
-
-  await expect(stream).toEmitTypedValue({
-    data: { onUpdateUser: { __typename: "User", lastName: "Smith" } },
-  });
-
-  expect(console.warn).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
-    "Subscription",
-    "OnUserUpdate"
+  expect(() => client.subscribe({ query: subscription })).toThrow(
+    new InvariantError(
+      "Subscription 'OnUserUpdate' contains `@client` fields but local state has not been configured."
+    )
   );
 });

@@ -2,19 +2,16 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { of } from "rxjs";
 
-import {
-  ApolloClient,
-  CombinedGraphQLErrors,
-  LocalStateError,
-  NetworkStatus,
-} from "@apollo/client";
+import { ApolloClient, LocalStateError, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("@client @export tests", () => {
   test("throws when exported variable has no definition", async () => {
@@ -1067,8 +1064,7 @@ describe("@client @export tests", () => {
     await expect(stream).toComplete();
   });
 
-  test("warns if local state is not configured and export fields are detected when running a query", async () => {
-    using _ = spyOnConsole("warn");
+  test("throws when running a query with exported client fields when local state is not configured", async () => {
     const query = gql`
       query currentAuthorPostCount($authorId: Int!) {
         currentAuthorId @client @export(as: "authorId")
@@ -1090,27 +1086,13 @@ describe("@client @export tests", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      new CombinedGraphQLErrors({
-        errors: [{ message: "Did not export author ID" }],
-      })
-    );
-
-    expect(console.warn).toHaveBeenCalledTimes(2);
-    expect(console.warn).toHaveBeenNthCalledWith(
-      1,
-      "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
-      "currentAuthorPostCount"
-    );
-    expect(console.warn).toHaveBeenNthCalledWith(
-      2,
-      "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
-      "Query",
-      "currentAuthorPostCount"
+      new InvariantError(
+        "Query 'currentAuthorPostCount' contains `@client` fields with variables provided by `@export` but local state has not been configured."
+      )
     );
   });
 
-  test("warns if local state is not configured and export fields are detected when running a mutation", async () => {
-    using _ = spyOnConsole("warn");
+  test("throws when running a mutation with exported client fields when local state is not configured", async () => {
     const mutation = gql`
       mutation UpdatePostCount($authorId: Int!) {
         currentAuthorId @client @export(as: "authorId")
@@ -1132,22 +1114,31 @@ describe("@client @export tests", () => {
     });
 
     await expect(client.mutate({ mutation })).rejects.toEqual(
-      new CombinedGraphQLErrors({
-        errors: [{ message: "Did not export author ID" }],
-      })
+      new InvariantError(
+        "Mutation 'UpdatePostCount' contains `@client` fields with variables provided by `@export` but local state has not been configured."
+      )
     );
+  });
 
-    expect(console.warn).toHaveBeenCalledTimes(2);
-    expect(console.warn).toHaveBeenNthCalledWith(
-      1,
-      "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured. Variables will not be exported correctly.",
-      "UpdatePostCount"
-    );
-    expect(console.warn).toHaveBeenNthCalledWith(
-      2,
-      "%s '%s' contains `@client` fields but local state has not been configured. `@client` fields will be omitted in the result.",
-      "Mutation",
-      "UpdatePostCount"
+  test("throws when running a subscription with exported client fields when local state is not configured", async () => {
+    const subscription = gql`
+      subscription OnPostCountUpdated($authorId: Int!) {
+        currentAuthorId @client @export(as: "authorId")
+        postCount(authorId: $authorId)
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    expect(() => client.subscribe({ query: subscription })).toThrow(
+      new InvariantError(
+        "Subscription 'OnPostCountUpdated' contains `@client` fields with variables provided by `@export` but local state has not been configured."
+      )
     );
   });
 });

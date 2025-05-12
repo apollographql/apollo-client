@@ -1527,7 +1527,6 @@ export class QueryManager {
       string,
       {
         oq: ObservableQuery<any>;
-        // TODO remove?
         lastDiff?: Cache.DiffResult<any>;
         diff?: Cache.DiffResult<any>;
       }
@@ -1535,9 +1534,13 @@ export class QueryManager {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq, queryId) => {
+        const current = oq.getCurrentResult();
         includedQueriesById.set(queryId, {
           oq,
-          // TODO lastDiff has been removed - we're not really tracking that anymore
+          lastDiff: {
+            result: current?.data,
+            complete: !current?.partial,
+          },
         });
       });
     }

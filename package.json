@@ -172,6 +172,7 @@
     "@eslint/compat": "1.2.5",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "9.18.0",
+    "@graphql-codegen/cli": "^5.0.6",
     "@graphql-tools/schema": "10.0.4",
     "@jest/expect-utils": "29.7.0",
     "@jest/globals": "29.7.0",

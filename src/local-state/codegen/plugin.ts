@@ -44,8 +44,6 @@ export const plugin: PluginFunction<
   const defs = `${resolverType} ${resolverFnUsage};`;
   defsToInclude.push(defs);
 
-  prepend.push("export type { ResolverFn };");
-
   const header = `
 
 ${visitor.getResolverTypeWrapperSignature()}

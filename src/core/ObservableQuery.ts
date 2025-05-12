@@ -293,35 +293,6 @@ export class ObservableQuery<
             startedInactive = false;
           }
           if (!this.subject.observed) {
-            if (this.options.fetchPolicy === "standby") {
-              // this could probably move into `reobserve` in some way
-
-              // Emitting a value in the `subscribe` callback of `tap` gives
-              // the subject a chance to save this initial result without
-              // emitting the placeholder value since this callback is executed
-              // before `tap` subscribes to the source observable (the subject).
-              // `reobserve` also has the chance to update this value if it
-              // synchronously emits one (usually due to reporting a cache
-              // value).
-              //
-              // We don't initialize the `BehaviorSubject` with
-              // `getInitialResult` because its possible the cache might have
-              // updated between when the `ObservableQuery` was instantiated and
-              // when it is subscribed to. Updating the value here ensures we
-              // report the most up-to-date result from the cache.
-              const value = this.getInitialResult({ observed: true });
-
-              () =>
-                queryMetaSlot.withValue(
-                  {
-                    query: this.query,
-                    variables: this.variables,
-                    shouldEmit: value.loading ? "notification" : true,
-                  },
-                  () => this.subject.next(value)
-                );
-            }
-
             this.reobserve();
 
             // TODO: See if we can rework updatePolling to better handle this.

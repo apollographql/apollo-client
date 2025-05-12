@@ -51,7 +51,7 @@ export interface LocalStatePluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
    *        config: {
    *          avoidOptionals: true
    *        },
@@ -70,7 +70,7 @@ export interface LocalStatePluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
    *        config: {
    *          avoidOptionals: {
    *            field: true,
@@ -285,7 +285,7 @@ export interface LocalStatePluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen', { add: { content: "import { DeepPartial } from 'utility-types';" } }],
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen', { add: { content: "import { DeepPartial } from 'utility-types';" } }],
    *        config: {
    *          defaultMapper: 'DeepPartial<{T}>',
    *          avoidCheckingAbstractTypesRecursively: true // required if you have complex nested abstract types
@@ -310,7 +310,7 @@ export interface LocalStatePluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file': {
-   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
    *        config: {
    *          showUnusedMappers: true,
    *        },
@@ -359,7 +359,7 @@ export interface LocalStatePluginConfig extends RawConfig {
    *    // ...
    *    generates: {
    *      'path/to/file.ts': {
-   *        plugins: ['typescript', '@apollo/client/link/local-resolvers/codegen'],
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
    *        config: {
    *          allowParentTypeOverride: true
    *        },

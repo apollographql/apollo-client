@@ -6661,7 +6661,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       {
         const result = await takeSnapshot();

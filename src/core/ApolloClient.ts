@@ -275,7 +275,7 @@ export class ApolloClient implements DataProxy {
     this.mutate = this.mutate.bind(this);
     this.watchFragment = this.watchFragment.bind(this);
     this.resetStore = this.resetStore.bind(this);
-    this.refetchObservableQueries = this.refetchObservableQueries.bind(this);
+    this.reFetchObservableQueries = this.reFetchObservableQueries.bind(this);
 
     this.version = version;
 
@@ -681,7 +681,7 @@ export class ApolloClient implements DataProxy {
         })
       )
       .then(() => Promise.all(this.resetStoreCallbacks.map((fn) => fn())))
-      .then(() => this.refetchObservableQueries());
+      .then(() => this.reFetchObservableQueries());
   }
 
   /**
@@ -729,16 +729,16 @@ export class ApolloClient implements DataProxy {
   /**
    * Refetches all of your active queries.
    *
-   * `refetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
+   * `reFetchObservableQueries()` is useful if you want to bring the client back to proper state in case of a network outage
    *
-   * It is important to remember that `refetchObservableQueries()` *will* refetch any active
+   * It is important to remember that `reFetchObservableQueries()` *will* refetch any active
    * queries. This means that any components that might be mounted will execute
    * their queries again using your network interface. If you do not want to
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    * Takes optional parameter `includeStandby` which will include queries in standby-mode when refetching.
    */
-  public refetchObservableQueries(
+  public reFetchObservableQueries(
     includeStandby?: boolean
   ): Promise<QueryResult<any>[]> {
     return this.queryManager.refetchObservableQueries(includeStandby);

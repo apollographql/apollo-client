@@ -4536,7 +4536,7 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      await client.refetchObservableQueries();
+      await client.reFetchObservableQueries();
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataChanged,
@@ -4613,7 +4613,7 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(1);
 
       // refetch the observed queries after data has returned
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4673,7 +4673,7 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(1);
 
       stream.unsubscribe();
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await wait(50);
 
@@ -4725,7 +4725,7 @@ describe("ApolloClient", () => {
       });
       expect(timesFired).toBe(1);
 
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4767,7 +4767,7 @@ describe("ApolloClient", () => {
       const promise = client["queryManager"].fetchQuery("made up id", {
         query,
       });
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await expect(promise).resolves.toBeTruthy();
     });
@@ -4801,7 +4801,7 @@ describe("ApolloClient", () => {
       obs.subscribe({});
       obs.refetch = jest.fn();
 
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await wait(0);
 
@@ -4837,7 +4837,7 @@ describe("ApolloClient", () => {
         return null as never;
       };
 
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await wait(50);
 
@@ -4873,7 +4873,7 @@ describe("ApolloClient", () => {
         return null as never;
       };
 
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await wait(50);
 
@@ -4910,7 +4910,7 @@ describe("ApolloClient", () => {
       };
 
       const includeStandBy = true;
-      void client.refetchObservableQueries(includeStandBy);
+      void client.reFetchObservableQueries(includeStandBy);
 
       await wait(50);
 
@@ -4944,7 +4944,7 @@ describe("ApolloClient", () => {
         return null as never;
       };
 
-      void client.refetchObservableQueries();
+      void client.reFetchObservableQueries();
 
       await wait(50);
 
@@ -4971,7 +4971,7 @@ describe("ApolloClient", () => {
         () =>
           new Observable((observer) => {
             // refetch observed queries as soon as we hear about the query
-            void client.refetchObservableQueries();
+            void client.reFetchObservableQueries();
             observer.next({ data });
             observer.complete();
           })

@@ -745,7 +745,7 @@ export class ApolloClient implements DataProxy {
   }
 
   /**
-   * Refetches specified active queries. Similar to "refetchObservableQueries()" but with a specific list of queries.
+   * Refetches specified active queries. Similar to "reFetchObservableQueries()" but with a specific list of queries.
    *
    * `refetchQueries()` is useful for use cases to imperatively refresh a selection of queries.
    *

@@ -428,6 +428,7 @@ Array [
   "createFragmentMap",
   "createFulfilledPromise",
   "createRejectedPromise",
+  "dealias",
   "decoratePromise",
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",

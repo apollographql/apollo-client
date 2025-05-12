@@ -250,13 +250,12 @@ export class LocalState<
       return remoteResult;
     }
 
-    const mainDefinition = getMainDefinition(
-      document
-    ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(document);
-    const fragmentMap = createFragmentMap(fragments);
-    const { selectionsToResolve, exportedVariableDefs } =
-      this.collectQueryDetail(mainDefinition, fragmentMap);
+    const {
+      selectionsToResolve,
+      exportedVariableDefs,
+      operationDefinition,
+      fragmentMap,
+    } = this.collectQueryDetail(document);
 
     const rootValue = remoteResult ? remoteResult.data : {};
 
@@ -269,7 +268,7 @@ export class LocalState<
 
     const execContext: ExecContext = {
       client,
-      operationDefinition: mainDefinition,
+      operationDefinition,
       fragmentMap,
       context: { ...client.defaultContext, ...context },
       variables,
@@ -294,7 +293,7 @@ export class LocalState<
     };
 
     const localResult = await this.resolveSelectionSet(
-      mainDefinition.selectionSet,
+      operationDefinition.selectionSet,
       false,
       rootValue,
       execContext,
@@ -335,15 +334,12 @@ export class LocalState<
       );
       validateCacheImplementation(client.cache);
     }
-    const mainDefinition = getMainDefinition(
-      document
-    ) as OperationDefinitionNode;
-    const fragments = getFragmentDefinitions(document);
-    const fragmentMap = createFragmentMap(fragments);
-    const { exportsToResolve, exportedVariableDefs } = this.collectQueryDetail(
-      mainDefinition,
-      fragmentMap
-    );
+    const {
+      exportsToResolve,
+      exportedVariableDefs,
+      fragmentMap,
+      operationDefinition,
+    } = this.collectQueryDetail(document);
 
     const diff = client.cache.diff<Record<string, any>>({
       query: buildQueryFromSelectionSet(document),
@@ -354,7 +350,7 @@ export class LocalState<
 
     const execContext: ExecContext = {
       client,
-      operationDefinition: mainDefinition,
+      operationDefinition,
       fragmentMap,
       context: { ...client.defaultContext, ...context },
       variables,
@@ -379,7 +375,7 @@ export class LocalState<
     };
 
     await this.resolveSelectionSet(
-      mainDefinition.selectionSet,
+      operationDefinition.selectionSet,
       false,
       diff.result,
       execContext,
@@ -869,10 +865,16 @@ export class LocalState<
   // Collect selection nodes on paths from document root down to all @client directives.
   // This function takes into account transitive fragment spreads.
   // Complexity equals to a single `visit` over the full document.
-  private collectQueryDetail(
-    mainDefinition: OperationDefinitionNode,
-    fragmentMap: FragmentMap
-  ): TraverseCacheEntry {
+  private collectQueryDetail(document: DocumentNode): TraverseCacheEntry & {
+    operationDefinition: OperationDefinitionNode;
+    fragmentMap: FragmentMap;
+  } {
+    const operationDefinition = getMainDefinition(
+      document
+    ) as OperationDefinitionNode;
+    const fragments = getFragmentDefinitions(document);
+    const fragmentMap = createFragmentMap(fragments);
+
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
@@ -997,7 +999,11 @@ export class LocalState<
       return cache;
     };
 
-    return traverse(mainDefinition);
+    return {
+      ...traverse(operationDefinition),
+      operationDefinition,
+      fragmentMap,
+    };
   }
 }
 

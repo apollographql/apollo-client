@@ -1029,8 +1029,7 @@ describe("Combining client and server state/operations", () => {
             message: "Illegal Query Operation Occurred",
             path: ["hasBeenIllegallyTouched"],
             extensions: {
-              apollo: {
-                source: "LocalState",
+              localState: {
                 resolver: "Query.hasBeenIllegallyTouched",
                 cause: new Error("Illegal Query Operation Occurred"),
               },
@@ -1050,8 +1049,7 @@ describe("Combining client and server state/operations", () => {
             message: "Illegal Mutation Operation Occurred",
             path: ["touchIllegally"],
             extensions: {
-              apollo: {
-                source: "LocalState",
+              localState: {
                 resolver: "Mutation.touchIllegally",
                 cause: new Error("Illegal Mutation Operation Occurred"),
               },

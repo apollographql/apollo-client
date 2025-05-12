@@ -1436,9 +1436,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // reobservation, since oq.reobserveCacheFirst might make a network
           // request, and we never want to trigger network requests in the
           // middle of optimistic updates.
-          // if (diff.result) {
           queryMetaSlot.withValue(
-            // maybe from diff?
             { query: this.query, variables: this.variables },
             () =>
               this.input.next({
@@ -1453,7 +1451,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 source: "cache",
               })
           );
-          // }
         } else {
           // Otherwise, make the ObservableQuery "reobserve" the latest data
           // using a temporary fetch policy of "cache-first", so complete cache
@@ -1513,12 +1510,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // "fetchMore" having priority over "polling" or "loading" network statuses
     // as for now we just take the "latest" operation that is still active,
     // as that lines up best with previous behavior[]
-    if (baseNetworkStatus === NetworkStatus.error) {
-      //  return baseNetworkStatus;
-    }
+
     const operation = Array.from(this.activeOperations.values()).findLast(
       (operation) =>
-        /* TODO: should ensure that on variable change, active operations are reliably cleaned up */
         isEqualQuery(operation, this) && operation.override !== undefined
     );
     return operation?.override ?? baseNetworkStatus;
@@ -1697,17 +1691,6 @@ export function logMissingFieldErrors(
   if (__DEV__ && missing) {
     invariant.debug(`Missing cache result fields: %o`, missing);
   }
-}
-
-// @ts-ignore not used right now, might come in handy again
-function skipCacheDataFor(
-  fetchPolicy?: WatchQueryFetchPolicy /* `undefined` would mean `"cache-first"` */
-) {
-  return (
-    fetchPolicy === "network-only" ||
-    fetchPolicy === "no-cache" ||
-    fetchPolicy === "standby"
-  );
 }
 
 function isEqualQuery(

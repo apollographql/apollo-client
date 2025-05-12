@@ -814,6 +814,8 @@ describe("client.refetchQueries", () => {
     await refetchOQU.check([
       [bObs, { b: "Beetlejuice" }],
       [abObs, { a: "A", b: "Beetlejuice" }],
+      [bObs, { b: "Beetlejuice" }],
+      [abObs, { a: "A", b: "Beetlejuice" }],
     ]);
 
     expect(refetchResult.results.length).toBe(2);

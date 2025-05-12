@@ -38,12 +38,7 @@ export const plugin: PluginFunction<
   const resolversParentTypeMapping = visitor.buildResolversParentTypes();
   const resolversUnionTypesMapping = visitor.buildResolversUnionTypes();
   const resolversInterfaceTypesMapping = visitor.buildResolversInterfaceTypes();
-  const {
-    getRootResolver,
-    getAllDirectiveResolvers,
-    mappersImports,
-    unusedMappers,
-  } = visitor;
+  const { getRootResolver, mappersImports, unusedMappers } = visitor;
 
   if (showUnusedMappers && unusedMappers.length) {
     console.warn(`Unused mappers: ${unusedMappers.join(",")}`);
@@ -72,7 +67,6 @@ export const plugin: PluginFunction<
         (d: unknown) => typeof d === "string"
       ),
       rootResolver.content,
-      getAllDirectiveResolvers(),
     ].join("\n"),
     meta: {
       generatedResolverTypes: rootResolver.generatedResolverTypes,

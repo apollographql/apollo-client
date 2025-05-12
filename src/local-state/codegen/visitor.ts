@@ -276,17 +276,6 @@ export class LocalStateVisitor extends BaseResolversVisitor<
           original.type
         );
 
-        const subscriptionType = this.schema.getSubscriptionType();
-        const isSubscriptionType =
-          subscriptionType && subscriptionType.name === parentName;
-
-        if (isSubscriptionType) {
-          return {
-            mappedTypeKey: `${mappedType}, "${node.name}"`,
-            resolverType: "SubscriptionResolver",
-          };
-        }
-
         return {
           mappedTypeKey: mappedType,
           resolverType: "LocalState.Resolver",

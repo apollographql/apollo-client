@@ -46,8 +46,6 @@ export const plugin: PluginFunction<
 
   const header = `
 
-${visitor.getResolverTypeWrapperSignature()}
-
 ${defsToInclude.join("\n")}
 `;
 

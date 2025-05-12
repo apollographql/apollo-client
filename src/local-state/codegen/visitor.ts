@@ -76,6 +76,10 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     );
   }
 
+  protected applyResolverTypeWrapper(str: string): string {
+    return str;
+  }
+
   protected transformParentGenericType(parentType: string): string {
     if (this.config.allowParentTypeOverride) {
       return `ParentType = ${parentType}`;

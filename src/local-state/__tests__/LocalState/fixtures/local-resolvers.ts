@@ -64,8 +64,6 @@ export type User = {
   isLoggedIn: Scalars["Boolean"]["output"];
 };
 
-export type ResolverTypeWrapper<T> = Promise<T> | T;
-
 export type Resolver<
   TResult,
   TParent = Record<string, unknown>,
@@ -74,14 +72,14 @@ export type Resolver<
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
-  Food: ResolverTypeWrapper<Food>;
+  Boolean: Scalars["Boolean"]["output"];
+  Food: Food;
   FoodCategory: FoodCategory;
-  ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
-  Int: ResolverTypeWrapper<Scalars["Int"]["output"]>;
-  Query: ResolverTypeWrapper<RootValue>;
-  String: ResolverTypeWrapper<Scalars["String"]["output"]>;
-  User: ResolverTypeWrapper<User>;
+  ID: Scalars["ID"]["output"];
+  Int: Scalars["Int"]["output"];
+  Query: RootValue;
+  String: Scalars["String"]["output"];
+  User: User;
 };
 
 /** Mapping between all available schema types and the resolvers parents */

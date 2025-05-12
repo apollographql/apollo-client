@@ -49,6 +49,7 @@
     "./link/utils": "./src/link/utils/index.ts",
     "./link/ws": "./src/link/ws/index.ts",
     "./local-state": "./src/local-state/index.ts",
+    "./local-state/codegen": "./src/local-state/codegen/index.ts",
     "./masking": "./src/masking/index.ts",
     "./react": {
       "react-server": "./src/react/index.react-server.ts",

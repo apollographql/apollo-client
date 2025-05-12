@@ -272,7 +272,7 @@ export interface QueryResult<TData = unknown> {
 export declare namespace QueryNotification {
   interface Meta<TData, TVariables> {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    variables: TVariables | undefined;
+    variables: TVariables;
   }
 
   type NewNetworkStatus<TData, TVariables> = NextNotification<{

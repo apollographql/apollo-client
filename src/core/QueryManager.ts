@@ -108,7 +108,6 @@ import type {
   MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
-  RefetchWritePolicy,
   SubscriptionOptions,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -1729,7 +1728,6 @@ export class QueryManager {
       query,
       variables,
       fetchPolicy,
-      refetchWritePolicy,
       errorPolicy,
       returnPartialData,
       context,
@@ -1737,7 +1735,6 @@ export class QueryManager {
       query: DocumentNode | TypedDocumentNode<TData, TVars>;
       variables: TVars;
       fetchPolicy?: WatchQueryFetchPolicy;
-      refetchWritePolicy?: RefetchWritePolicy;
       errorPolicy?: ErrorPolicy;
       returnPartialData?: boolean;
       context?: DefaultContext;

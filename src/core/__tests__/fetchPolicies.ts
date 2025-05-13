@@ -980,8 +980,8 @@ describe("nextFetchPolicy", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
-    // Changing variables resets the fetchPolicy to its initial value of `network-first`.
-    // That means the loading state will reset to an initial state, and `network-first`
+    // Changing variables resets the fetchPolicy to its initial value of `network-only`.
+    // That means the loading state will reset to an initial state, and `network-only`
     // is not allowed to read data from the cache, hence `data` is `undefined`.
     await expect(stream).toEmitTypedValue({
       data: undefined,

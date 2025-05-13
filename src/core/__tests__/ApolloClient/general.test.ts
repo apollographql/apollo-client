@@ -6531,12 +6531,7 @@ describe("ApolloClient", () => {
       });
 
       expect(finishedRefetch).toBe(true);
-      await expect(stream).toEmitTypedValue({
-        data: secondReqData,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-        partial: false,
-      });
+
       await expect(stream).toEmitTypedValue({
         data: secondReqData,
         loading: false,
@@ -6592,13 +6587,6 @@ describe("ApolloClient", () => {
           expect(obsQuery.options.query).toBe(query);
           return obsQuery.refetch();
         },
-      });
-
-      await expect(stream).toEmitTypedValue({
-        data: secondReqData,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-        partial: false,
       });
 
       await expect(stream).toEmitTypedValue({

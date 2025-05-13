@@ -217,7 +217,11 @@ export class ObservableQuery<
     return this.options.variables;
   }
 
-  private unsubscribeFromCache?: () => void;
+  private unsubscribeFromCache?: {
+    (): void;
+    query: TypedDocumentNode<TData, TVariables>;
+    variables: TVariables;
+  };
   private input: Subject<QueryNotification.Value<TData, TVariables>>;
   private subject: SlotAwareBehaviorSubject<
     ApolloQueryResult<MaybeMasked<TData>>,
@@ -512,13 +516,21 @@ export class ObservableQuery<
     const { variables, fetchPolicy } = this.options;
     const query = this.query;
 
-    this.unsubscribeFromCache?.();
-
-    if (
+    const shouldUnsubscribe =
       fetchPolicy === "standby" ||
       fetchPolicy === "no-cache" ||
-      this.waitForOwnResult
-    ) {
+      this.waitForOwnResult;
+
+    const shouldResubscribe = !isEqualQuery(
+      { query, variables },
+      this.unsubscribeFromCache
+    );
+
+    if (shouldUnsubscribe || shouldResubscribe) {
+      this.unsubscribeFromCache?.();
+    }
+
+    if (shouldUnsubscribe || !shouldResubscribe) {
       return;
     }
 
@@ -575,7 +587,15 @@ export class ObservableQuery<
         }
       },
     };
-    this.unsubscribeFromCache = this.queryManager.cache.watch(watch);
+    const nextUnsubscribe = this.queryManager.cache.watch(watch);
+
+    this.unsubscribeFromCache = Object.assign(
+      () => {
+        this.unsubscribeFromCache = undefined;
+        nextUnsubscribe();
+      },
+      { query, variables }
+    );
   }
 
   private stableLastResult?: ApolloQueryResult<MaybeMasked<TData>>;

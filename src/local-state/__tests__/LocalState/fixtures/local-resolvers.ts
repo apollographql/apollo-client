@@ -80,7 +80,7 @@ export type ResolversParentTypes = {
   Int: Scalars["Int"]["output"];
   Query: RootValue;
   String: Scalars["String"]["output"];
-  User: User & BaseSchemaTypes.User;
+  User: BaseSchemaTypes.User;
 };
 
 export type FoodResolvers<

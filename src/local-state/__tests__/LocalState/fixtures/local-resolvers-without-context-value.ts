@@ -79,7 +79,7 @@ export type ResolversParentTypes = {
   Int: Scalars["Int"]["output"];
   Query: undefined;
   String: Scalars["String"]["output"];
-  User: User & BaseSchemaTypes.User;
+  User: BaseSchemaTypes.User;
 };
 
 export type FoodResolvers<

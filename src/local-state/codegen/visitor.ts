@@ -234,8 +234,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
 
           if (this.config.extendedTypes.has(typeName)) {
             prev[typeName] =
-              applyWrapper(internalType) +
-              `& ${this.config.baseSchemaTypesImportName}.${typeName}`;
+              `${this.config.baseSchemaTypesImportName}.${typeName}`;
           } else {
             prev[typeName] = applyWrapper(internalType);
           }

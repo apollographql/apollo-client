@@ -6531,10 +6531,6 @@ describe("ApolloClient", () => {
       });
 
       expect(finishedRefetch).toBe(true);
-      // `onQueryUpdated` is executed twice, so `refetch` is called twice above,
-      // which means we are already getting the result of the first call,
-      // but the second call is not done yet
-      // as a result, we have an additional emit of a `loading/refetch` state
       await expect(stream).toEmitTypedValue({
         data: secondReqData,
         loading: true,
@@ -6598,10 +6594,6 @@ describe("ApolloClient", () => {
         },
       });
 
-      // `onQueryUpdated` is executed twice, so `refetch` is called twice above,
-      // which means we are already getting the result of the first call,
-      // but the second call is not done yet
-      // as a result, we have an additional emit of a `loading/refetch` state
       await expect(stream).toEmitTypedValue({
         data: secondReqData,
         loading: true,

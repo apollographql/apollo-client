@@ -213,8 +213,17 @@ export class QueryInfo {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.batch({
-          onWatchUpdated: (watch) =>
-            !watch.watcher || watch.watcher !== this.observableQuery,
+          onWatchUpdated: (
+            // all additional options on ObservableQuery.CacheWatchOptions are
+            // optional so we can use the type here
+            watch: ObservableQuery.CacheWatchOptions,
+            diff
+          ) => {
+            if (watch.watcher === this.observableQuery) {
+              // see comment on `lastOwnDiff` for explanation
+              watch.lastOwnDiff = diff;
+            }
+          },
           update: (cache) => {
             if (this.shouldWrite(result, options.variables)) {
               cache.writeQuery({

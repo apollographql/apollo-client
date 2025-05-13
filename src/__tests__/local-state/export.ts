@@ -914,7 +914,6 @@ describe("@client @export tests", () => {
       query,
       variables: { authorId: testAuthorId2 },
       data: { postCount: testPostCount2 },
-      broadcast: false,
     });
     client.writeQuery({
       query: gql`
@@ -938,115 +937,6 @@ describe("@client @export tests", () => {
     // network, as it can be found in the cache.
     expect(fetchCount).toBe(1);
   });
-
-  /**
-   *  This test is identical to the test aboive, but without the `broadcast: false` option.
-   */
-  it.failing(
-    "should NOT attempt to refetch over the network if an @export variable has changed, the current fetch policy is cache-first, and the remote part of the query (that leverages the @export variable) can be fully found in the cache. (non-batched writes)",
-    async () => {
-      const query = gql`
-        query currentAuthorPostCount($authorId: Int!) {
-          currentAuthorId @client @export(as: "authorId")
-          postCount(authorId: $authorId)
-        }
-      `;
-
-      const testAuthorId1 = 1;
-      const testPostCount1 = 100;
-
-      const testAuthorId2 = 2;
-      const testPostCount2 = 200;
-
-      let fetchCount = 0;
-      const link = new ApolloLink(() => {
-        fetchCount += 1;
-        return of({
-          data: {
-            postCount: testPostCount1,
-          },
-        });
-      });
-
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link,
-        resolvers: {},
-      });
-
-      client.writeQuery({
-        query: gql`
-          {
-            currentAuthorId
-          }
-        `,
-        data: { currentAuthorId: testAuthorId1 },
-      });
-
-      const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
-      const stream = new ObservableStream(obs);
-
-      await expect(stream).toEmitTypedValue({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
-
-      await expect(stream).toEmitTypedValue({
-        data: {
-          currentAuthorId: testAuthorId1,
-          postCount: testPostCount1,
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-      // The initial result is fetched over the network.
-      expect(fetchCount).toBe(1);
-
-      /*
-       * This cache write will already trigger the `ObservableQuery` `cache.watch`
-       * as it has the same underlying variables.
-       * The `cache.writeQuery` will also trigger trigger a `broadcast`, immediately
-       * calling `ObservableQuery.notify()` which will immediately call `ObservableQuery.refetch()`.
-       * This will now
-       * * synchronously start to read `variables` from the local state
-       * * continue asynchronously,
-       * * so the second `client.writeQuery` call will update the cache again
-       * * the fetch will continue with the old variables (they were read before the second write)
-       * * the result will be inconsistent with our expectations
-       *
-       */
-      client.writeQuery({
-        query,
-        variables: { authorId: testAuthorId2 },
-        data: { postCount: testPostCount2 },
-      });
-      client.writeQuery({
-        query: gql`
-          {
-            currentAuthorId
-          }
-        `,
-        data: { currentAuthorId: testAuthorId2 },
-      });
-
-      await expect(stream).toEmitTypedValue({
-        data: {
-          currentAuthorId: testAuthorId2,
-          postCount: testPostCount2,
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-      // The updated result should not have been fetched over the
-      // network, as it can be found in the cache.
-      expect(fetchCount).toBe(1);
-    }
-  );
 
   it("should update @client @export variables on each broadcast if they've changed", async () => {
     const cache = new InMemoryCache();

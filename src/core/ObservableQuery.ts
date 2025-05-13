@@ -11,7 +11,7 @@ import type {
 import { Observable } from "rxjs";
 import { lastValueFrom, Subject, tap } from "rxjs";
 
-import type { MissingFieldError } from "@apollo/client/cache";
+import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import {
@@ -155,6 +155,30 @@ export declare namespace ObservableQuery {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
     variables: TVariables;
   };
+
+  /**
+   * @internal
+   * This describes the `WatchOptions` used by `ObservableQuery` to
+   * subscribe to the cache.
+   */
+  interface CacheWatchOptions<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > extends Cache.WatchOptions<TData, TVariables> {
+    /**
+     * @internal
+     * We cannot suppress the broadcast completely, since that would
+     * result in external updates to be lost if we go from
+     * (external A) -> (own B) -> (external C) when A and C have the same
+     * value.
+     * Without the `own B` being broadcast, the `cache.watch` would swallow
+     * C.
+     * So instead we track the last "own diff" and suppress further processing
+     * in the callback.
+     */
+
+    lastOwnDiff?: Cache.DiffResult<TData>;
+  }
 }
 
 export class ObservableQuery<
@@ -498,12 +522,30 @@ export class ObservableQuery<
       return;
     }
 
-    this.unsubscribeFromCache = this.queryManager.cache.watch({
+    const watch: ObservableQuery.CacheWatchOptions<TData, TVariables> = {
       query,
       variables,
       optimistic: true,
       watcher: this,
       callback: (diff) => {
+        const info = this.queryManager.getDocumentInfo(query);
+        if (info.hasClientExports || info.hasForcedResolvers) {
+          // If this is not set to something different than `diff`, we will
+          // not be notified about future cache changes with an equal `diff`.
+          // That would be the case if we are working with client-only fields
+          // that are forced or with `exports` fields that might change, causing
+          // local resovlers to return a new result.
+          // This is based on an implementation detail of `InMemoryCache`, which
+          // is not optimal - but the only alternative to this would be to
+          // resubscribe to the cache asynchonouly, which would bear the risk of
+          // missing further synchronous updates.
+          watch.lastDiff = undefined;
+        }
+        if (watch.lastOwnDiff === diff) {
+          // skip cache updates that were caused by our own writes
+          return;
+        }
+
         const previousResult = this.subject.getValue();
 
         if (
@@ -532,7 +574,8 @@ export class ObservableQuery<
           this.scheduleNotify();
         }
       },
-    });
+    };
+    this.unsubscribeFromCache = this.queryManager.cache.watch(watch);
   }
 
   private stableLastResult?: ApolloQueryResult<MaybeMasked<TData>>;
@@ -1406,12 +1449,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (this.dirty) return;
     this.dirty = true;
     if (!this.notifyTimeout) {
-      this.notifyTimeout = setTimeout(() => this.notify(), 0);
+      this.notifyTimeout = setTimeout(() => this.notify(true), 0);
     }
   }
 
   /** @internal */
-  public notify() {
+  public notify(scheduled = false) {
+    if (!scheduled) {
+      // For queries with client exports or forced resolvers, we don't want to
+      // synchronously reobserve the cache on broadcast,
+      // but actually wait for the `scheduleNotify` timeout.
+      const info = this.queryManager.getDocumentInfo(this.query);
+      if (info.hasClientExports || info.hasForcedResolvers) {
+        return;
+      }
+    }
+
     const { dirty } = this;
     this.resetNotifications();
 

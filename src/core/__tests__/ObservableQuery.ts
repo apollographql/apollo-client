@@ -2939,7 +2939,7 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      expect(observable.getLastError()).toEqual(wrappedError);
+      expect(observable.getCurrentResult().error).toEqual(wrappedError);
     });
 
     it("errors out if errorPolicy is none and the observable has completed", async () => {
@@ -2990,8 +2990,6 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.error,
         partial: true,
       });
-
-      expect(observable.getLastError()).toEqual(wrappedError);
     });
 
     it("ignores errors with data if errorPolicy is ignore", async () => {

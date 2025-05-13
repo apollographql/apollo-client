@@ -2,4 +2,4 @@
 "@apollo/client": major
 ---
 
-Removed `getLastResult` and `resetLastResults` from `ObservableQuery`
+Removed `getLastResult`, `getLastError` and `resetLastResults` from `ObservableQuery`

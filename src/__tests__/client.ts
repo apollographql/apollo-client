@@ -2721,7 +2721,7 @@ describe("client", () => {
 
     stream.unsubscribe();
 
-    const lastError = observable.getLastError();
+    const lastError = observable.getCurrentResult().error;
     expect(lastError).toBeInstanceOf(Error);
     expect(lastError).toEqual(new Error("This is an error!"));
 

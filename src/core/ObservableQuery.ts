@@ -35,7 +35,6 @@ import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
   DefaultContext,
-  ErrorLike,
   OperationVariables,
   QueryNotification,
   QueryResult,
@@ -208,11 +207,6 @@ export class ObservableQuery<
   private queryManager: QueryManager;
   private subscriptions = new Set<Subscription>();
 
-  private lastError?: {
-    query: DocumentNode;
-    variables?: TVariables;
-    error: ErrorLike;
-  };
   private lastQuery: DocumentNode;
 
   private queryInfo: QueryInfo;
@@ -533,8 +527,12 @@ export class ObservableQuery<
 
   private stableLastResult?: ApolloQueryResult<MaybeMasked<TData>>;
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
+    const current = this.subject.getValue();
     let value =
       (
+        // if the `current` result is in an error state, we will always return that
+        // error state, even if we have no observers
+        current.networkStatus !== NetworkStatus.error &&
         // if we have no observers, we are not watching the cache and
         // this.subject.getValue() could potentially be outdated,
         // so we recalculate the result
@@ -545,7 +543,7 @@ export class ObservableQuery<
         this.options.fetchPolicy !== "no-cache"
       ) ?
         this.getInitialResult()
-      : this.subject.getValue();
+      : current;
 
     if (value === uninitialized) {
       value = this.getInitialResult();
@@ -554,18 +552,6 @@ export class ObservableQuery<
       this.stableLastResult = value;
     }
     return this.stableLastResult!;
-  }
-
-  // TODO: Consider deprecating this function
-  public getLastError(variablesMustMatch?: boolean): ErrorLike | undefined {
-    if (
-      this.lastError &&
-      (!variablesMustMatch ||
-        (this.lastError.query == this.query &&
-          equal(this.lastError.variables, this.variables)))
-    ) {
-      return this.lastError.error;
-    }
   }
 
   /**
@@ -1505,7 +1491,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
   }
 
-  private caclulateNetworkStatus(baseNetworkStatus: NetworkStatus) {
+  private calculateNetworkStatus(baseNetworkStatus: NetworkStatus) {
     // in the future, this could be more complex logic, e.g. "refetch" and
     // "fetchMore" having priority over "polling" or "loading" network statuses
     // as for now we just take the "latest" operation that is still active,
@@ -1535,8 +1521,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.setResult(resetToEmpty ? empty : uninitialized, {
       shouldEmit: resetToEmpty,
     });
-
-    this.lastError = undefined;
 
     this.abortActiveOperations();
   }
@@ -1627,18 +1611,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     // normalize result shape
     if ("error" in result && !result.error) delete result.error;
-    result.networkStatus = this.caclulateNetworkStatus(result.networkStatus);
+    result.networkStatus = this.calculateNetworkStatus(result.networkStatus);
     result.loading = isNetworkRequestInFlight(result.networkStatus);
     result = this.maskResult(result);
-
-    if (result.error) {
-      const { query, variables } = queryMetaSlot.getValue()!;
-      this.lastError = {
-        error: result.error,
-        query,
-        variables: variables as TVariables,
-      };
-    }
 
     return result;
   });

@@ -49,6 +49,9 @@ const config: CodegenConfig = {
         // return object or array types
         nonOptionalTypename: true,
 
+        // Required if your localSchema extends existing schema types.
+        baseTypesPath: "./relative/path/to/base/schema/types",
+
         // If you use the `rootValue` option, provide the path to it here
         rootValueType: "./path/to/rootValue#RootValue",
       }
@@ -56,3 +59,5 @@ const config: CodegenConfig = {
   }
 }
 ```
+
+NOTE: It is recommended that the schema file passed to the `schema` option is your local schema, not your entire app schema in order to only generate resolver types for your local fields, otherwise the plugin will generate resolver types for your entire remote schema as well.

@@ -371,29 +371,4 @@ export interface LocalStatePluginConfig extends RawConfig {
    * @defaultValue Resolvers
    */
   allResolversTypeName?: string;
-  /**
-   * Allow you to override the `ParentType` generic in each resolver, by avoid enforcing the base type of the generated generic type.
-   *
-   * This will generate `ParentType = Type` instead of `ParentType extends Type = Type` in each resolver.
-   *
-   * @example
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
-   *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file.ts': {
-   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
-   *        config: {
-   *          allowParentTypeOverride: true
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
-   * ```
-   *
-   */
-  allowParentTypeOverride?: boolean;
 }

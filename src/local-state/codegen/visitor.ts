@@ -64,10 +64,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       pluginConfig,
       {
         avoidOptionals: normalizeAvoidOptionals(pluginConfig.avoidOptionals),
-        allowParentTypeOverride: getConfigValue(
-          pluginConfig.allowParentTypeOverride,
-          false
-        ),
+        allowParentTypeOverride: false,
         rootValueType: parseMapper(
           pluginConfig.rootValueType || "undefined",
           "RootValueType"
@@ -270,10 +267,6 @@ export class LocalStateVisitor extends BaseResolversVisitor<
   }
 
   protected transformParentGenericType(parentType: string): string {
-    if (this.config.allowParentTypeOverride) {
-      return `ParentType = ${parentType}`;
-    }
-
     return `ParentType extends ${parentType} = ${parentType}`;
   }
 

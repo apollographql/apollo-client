@@ -839,7 +839,12 @@ describe("@client @export tests", () => {
       data: { postCount: testPostCount2 },
     });
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        data: { ...previous.data!, postCount: testPostCount2 },
+      }),
+    });
     expect(fetchCount).toBe(1);
   });
 

@@ -207,6 +207,12 @@ export class ObservableQuery<
   private queryManager: QueryManager;
   private subscriptions = new Set<Subscription>();
 
+  /**
+   * If an `ObservableQuery` is created with a `network-only` fetch policy,
+   * it should actually start receiving cache updates, but not before it has
+   * received the first result from the network.
+   */
+  private waitForOwnResult: boolean;
   private lastQuery: DocumentNode;
 
   private queryInfo: QueryInfo;
@@ -238,7 +244,7 @@ export class ObservableQuery<
     this.queryManager = queryManager;
 
     // active state
-    //this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
+    this.waitForOwnResult = options.fetchPolicy === "network-only";
     this.isTornDown = false;
 
     this.subscribeToMore = this.subscribeToMore.bind(this);
@@ -484,7 +490,11 @@ export class ObservableQuery<
 
     this.unsubscribeFromCache?.();
 
-    if (fetchPolicy === "standby" || fetchPolicy === "no-cache") {
+    if (
+      fetchPolicy === "standby" ||
+      fetchPolicy === "no-cache" ||
+      this.waitForOwnResult
+    ) {
       return;
     }
 
@@ -1576,6 +1586,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         return;
       }
     } else if (notification.source === "network") {
+      if (this.waitForOwnResult) {
+        this.waitForOwnResult = false;
+        this.resubscribeCache();
+      }
       result =
         notification.kind === "E" ?
           {

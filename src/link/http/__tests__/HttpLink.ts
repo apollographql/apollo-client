@@ -94,10 +94,6 @@ function convertBatchedBody(body: BodyInit | null | undefined) {
   return JSON.parse(body as string);
 }
 
-function makePromise(res: any) {
-  return new Promise((resolve) => setTimeout(() => resolve(res)));
-}
-
 describe("HttpLink", () => {
   describe("General", () => {
     const data = { data: { hello: "world" } };
@@ -108,13 +104,13 @@ describe("HttpLink", () => {
 
     beforeEach(() => {
       fetchMock.restore();
-      fetchMock.post("begin:/data2", makePromise(data2));
-      fetchMock.post("begin:/data", makePromise(data));
+      fetchMock.post("begin:/data2", Promise.resolve(data2));
+      fetchMock.post("begin:/data", Promise.resolve(data));
       fetchMock.post("begin:/error", mockError);
-      fetchMock.post("begin:/apollo", makePromise(data));
+      fetchMock.post("begin:/apollo", Promise.resolve(data));
 
-      fetchMock.get("begin:/data", makePromise(data));
-      fetchMock.get("begin:/data2", makePromise(data2));
+      fetchMock.get("begin:/data", Promise.resolve(data));
+      fetchMock.get("begin:/data2", Promise.resolve(data2));
 
       const next = jest.fn();
       const error = jest.fn();

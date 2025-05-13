@@ -37,6 +37,31 @@ export interface LocalStatePluginConfig extends RawConfig {
   baseTypesPath?: string;
 
   /**
+   * The import name for the base schema types.
+   *
+   * @defaultValue BaseSchemaTypes
+   *
+   * @example
+   * ```ts
+   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   *
+   *  const config: CodegenConfig = {
+   *    // ...
+   *    generates: {
+   *      'path/to/file': {
+   *        plugins: ['typescript', '@apollo/client/local-state/codegen'],
+   *        config: {
+   *          baseSchemaTypesImportName: "MyBaseSchemaTypes"
+   *        },
+   *      },
+   *    },
+   *  };
+   *  export default config;
+   * ```
+   */
+  baseSchemaTypesImportName?: string;
+
+  /**
    * This will cause the generator to avoid using optionals (`?`),
    * so all field resolvers must be implemented in order to avoid compilation errors.
    * @defaultValue false

@@ -20,6 +20,7 @@ const config: CodegenConfig = {
       config: {
         nonOptionalTypename: true,
         rootValueType: "./rootValue.js#RootValue",
+        baseTypesPath: "./base-types.js",
       },
     },
     "./src/local-state/__tests__/LocalState/fixtures/local-resolvers-without-context-value.ts":
@@ -34,6 +35,7 @@ const config: CodegenConfig = {
         ],
         config: {
           nonOptionalTypename: true,
+          baseTypesPath: "./base-types.js",
         },
       },
   },

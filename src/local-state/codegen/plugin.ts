@@ -28,7 +28,31 @@ export const plugin: PluginFunction<
   const importType = config.useTypeImports ? "import type" : "import";
   const prepend: string[] = [];
 
-  const visitor = new LocalStateVisitor(config, schema);
+  // Extended types are types that extend existing schema types (i.e. `extend type User {...}`)
+  const extendedTypes = Object.entries(schema.getTypeMap()).reduce(
+    (memo, [typename, type]) => {
+      return type.astNode?.loc?.startToken.value === "extend" ?
+          memo.add(typename)
+        : memo;
+    },
+    new Set<string>()
+  );
+
+  if (extendedTypes.size > 0) {
+    if (!config.baseTypesPath) {
+      throw new Error(
+        "`baseTypesPath` must be defined when your local schema extends existing schema types."
+      );
+    }
+
+    prepend.push(
+      `import * as ${
+        config.baseSchemaTypesImportName ?? "BaseSchemaTypes"
+      } from '${config.baseTypesPath}';`
+    );
+  }
+
+  const visitor = new LocalStateVisitor(config, schema, extendedTypes);
   const astNode = getCachedDocumentNodeFromSchema(schema);
 
   // runs visitor

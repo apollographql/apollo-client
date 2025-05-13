@@ -1,4 +1,5 @@
 /* eslint-disable */
+import * as BaseSchemaTypes from "./base-types.js";
 import { LocalState } from "@apollo/client/local-state";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -78,7 +79,7 @@ export type ResolversParentTypes = {
   Int: Scalars["Int"]["output"];
   Query: undefined;
   String: Scalars["String"]["output"];
-  User: User;
+  User: User & BaseSchemaTypes.User;
 };
 
 export type FoodResolvers<

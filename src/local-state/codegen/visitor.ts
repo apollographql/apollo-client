@@ -2,6 +2,7 @@ import { TypeScriptOperationVariablesToObject } from "@graphql-codegen/typescrip
 import type {
   DeclarationKind,
   ParsedResolversConfig,
+  ResolverTypes,
   RootResolver,
 } from "@graphql-codegen/visitor-plugin-common";
 import {
@@ -17,6 +18,7 @@ import type {
   DirectiveDefinitionNode,
   EnumTypeDefinitionNode,
   FieldDefinitionNode,
+  GraphQLNamedType,
   GraphQLSchema,
   InterfaceTypeDefinitionNode,
   ListTypeNode,
@@ -25,6 +27,12 @@ import type {
   ObjectTypeDefinitionNode,
   ScalarTypeDefinitionNode,
   UnionTypeDefinitionNode,
+} from "graphql";
+import {
+  isEnumType,
+  isInterfaceType,
+  isObjectType,
+  isUnionType,
 } from "graphql";
 
 import type { LocalStatePluginConfig } from "./config.js";
@@ -39,13 +47,19 @@ const ENUM_RESOLVERS_SIGNATURE =
 
 interface ParsedTypeScriptResolversConfig extends ParsedResolversConfig {
   allowParentTypeOverride: boolean;
+  extendedTypes: Set<string>;
+  baseSchemaTypesImportName: string;
 }
 
 export class LocalStateVisitor extends BaseResolversVisitor<
   LocalStatePluginConfig,
   ParsedTypeScriptResolversConfig
 > {
-  constructor(pluginConfig: LocalStatePluginConfig, schema: GraphQLSchema) {
+  constructor(
+    pluginConfig: LocalStatePluginConfig,
+    schema: GraphQLSchema,
+    extendedTypes: Set<string>
+  ) {
     super(
       pluginConfig,
       {
@@ -58,6 +72,11 @@ export class LocalStateVisitor extends BaseResolversVisitor<
           pluginConfig.rootValueType || "undefined",
           "RootValueType"
         ),
+        baseSchemaTypesImportName: getConfigValue(
+          pluginConfig.baseSchemaTypesImportName,
+          "BaseSchemaTypes"
+        ),
+        extendedTypes,
       } as ParsedTypeScriptResolversConfig,
       schema
     );
@@ -78,6 +97,177 @@ export class LocalStateVisitor extends BaseResolversVisitor<
 
   protected applyResolverTypeWrapper(str: string): string {
     return str;
+  }
+
+  protected createResolversFields({
+    applyWrapper,
+    clearWrapper,
+    getTypeToUse,
+    currentType,
+    shouldInclude,
+  }: {
+    applyWrapper: (str: string) => string;
+    clearWrapper: (str: string) => string;
+    getTypeToUse: (str: string) => string;
+    currentType: "ResolversTypes" | "ResolversParentTypes";
+    shouldInclude?: (type: GraphQLNamedType) => boolean;
+  }): ResolverTypes {
+    if (currentType === "ResolversTypes") {
+      return super.createResolversFields({
+        applyWrapper,
+        clearWrapper,
+        getTypeToUse,
+        currentType,
+        shouldInclude,
+      });
+    }
+
+    const allSchemaTypes = this.schema.getTypeMap();
+    const typeNames = this._federation.filterTypeNames(
+      Object.keys(allSchemaTypes)
+    );
+
+    // avoid checking all types recursively if we have no `mappers` defined
+    if (Object.keys(this.config.mappers).length > 0) {
+      for (const typeName of typeNames) {
+        if (this["_shouldMapType"][typeName] === undefined) {
+          const schemaType = allSchemaTypes[typeName];
+          this["_shouldMapType"][typeName] = this.shouldMapType(schemaType);
+        }
+      }
+    }
+
+    return typeNames.reduce((prev: ResolverTypes, typeName: string) => {
+      const schemaType = allSchemaTypes[typeName];
+
+      if (
+        typeName.startsWith("__") ||
+        (shouldInclude && !shouldInclude(schemaType))
+      ) {
+        return prev;
+      }
+
+      const isRootType = this._rootTypeNames.has(typeName);
+      const isMapped = this.config.mappers[typeName];
+      const isScalar = this.config.scalars[typeName];
+      const hasDefaultMapper = !!this.config.defaultMapper?.type;
+
+      if (isRootType) {
+        prev[typeName] = applyWrapper(this.config.rootValueType.type);
+
+        return prev;
+      }
+      if (
+        isMapped &&
+        this.config.mappers[typeName].type &&
+        !hasPlaceholder(this.config.mappers[typeName].type)
+      ) {
+        this.markMapperAsUsed(typeName);
+        prev[typeName] = applyWrapper(this.config.mappers[typeName].type);
+      } else if (isEnumType(schemaType) && this.config.enumValues[typeName]) {
+        const isExternalFile = !!this.config.enumValues[typeName].sourceFile;
+        prev[typeName] =
+          isExternalFile ?
+            this.convertName(this.config.enumValues[typeName].typeIdentifier, {
+              useTypesPrefix: false,
+              useTypesSuffix: false,
+            })
+          : this.config.enumValues[typeName].sourceIdentifier!;
+      } else if (
+        hasDefaultMapper &&
+        !hasPlaceholder(this.config.defaultMapper!.type)
+      ) {
+        prev[typeName] = applyWrapper(this.config.defaultMapper!.type);
+      } else if (isScalar) {
+        prev[typeName] = applyWrapper(this._getScalar(typeName));
+      } else if (isInterfaceType(schemaType)) {
+        this._hasReferencedResolversInterfaceTypes = true;
+        const type = this.convertName("ResolversInterfaceTypes");
+        const generic = this.convertName(currentType);
+        prev[typeName] = applyWrapper(`${type}<${generic}>['${typeName}']`);
+        return prev;
+      } else if (isUnionType(schemaType)) {
+        this._hasReferencedResolversUnionTypes = true;
+        const type = this.convertName("ResolversUnionTypes");
+        const generic = this.convertName(currentType);
+        prev[typeName] = applyWrapper(`${type}<${generic}>['${typeName}']`);
+      } else if (isEnumType(schemaType)) {
+        prev[typeName] = this.convertName(
+          typeName,
+          {
+            useTypesPrefix: this.config.enumPrefix,
+            useTypesSuffix: this.config.enumSuffix,
+          },
+          true
+        );
+      } else {
+        prev[typeName] = this.convertName(typeName, {}, true);
+
+        if (prev[typeName] !== "any" && isObjectType(schemaType)) {
+          const relevantFields = this["getRelevantFieldsToOmit"]({
+            schemaType,
+            getTypeToUse,
+            shouldInclude,
+          });
+
+          // If relevantFields, puts ResolverTypeWrapper on top of an entire type
+          let internalType =
+            relevantFields.length > 0 ?
+              this.replaceFieldsInType(prev[typeName], relevantFields)
+            : prev[typeName];
+
+          if (isMapped) {
+            // replace the placeholder with the actual type
+            if (hasPlaceholder(internalType)) {
+              internalType = replacePlaceholder(internalType, typeName);
+            }
+            if (
+              this.config.mappers[typeName].type &&
+              hasPlaceholder(this.config.mappers[typeName].type)
+            ) {
+              internalType = replacePlaceholder(
+                this.config.mappers[typeName].type,
+                internalType
+              );
+            }
+          }
+
+          if (this.config.extendedTypes.has(typeName)) {
+            prev[typeName] =
+              applyWrapper(internalType) +
+              `& ${this.config.baseSchemaTypesImportName}.${typeName}`;
+          } else {
+            prev[typeName] = applyWrapper(internalType);
+          }
+        }
+      }
+
+      if (
+        !isMapped &&
+        hasDefaultMapper &&
+        hasPlaceholder(this.config.defaultMapper!.type)
+      ) {
+        const originalTypeName =
+          isScalar ? this._getScalar(typeName) : prev[typeName];
+
+        if (isUnionType(schemaType)) {
+          // Don't clear ResolverTypeWrapper from Unions
+          prev[typeName] = replacePlaceholder(
+            this.config.defaultMapper!.type,
+            originalTypeName
+          );
+        } else {
+          const name = clearWrapper(originalTypeName);
+          const replaced = replacePlaceholder(
+            this.config.defaultMapper!.type,
+            name
+          );
+          prev[typeName] = applyWrapper(replaced);
+        }
+      }
+
+      return prev;
+    }, {} as ResolverTypes);
   }
 
   protected transformParentGenericType(parentType: string): string {
@@ -416,4 +606,12 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       })
       .join(", ")} }`;
   }
+}
+
+function replacePlaceholder(pattern: string, typename: string): string {
+  return pattern.replace(/\{T\}/g, typename);
+}
+
+function hasPlaceholder(pattern: string): boolean {
+  return pattern.includes("{T}");
 }

@@ -13,9 +13,10 @@ import type { Types } from '@graphql-codegen/plugin-helpers';
 // @public
 export interface LocalStatePluginConfig extends RawConfig {
     addUnderscoreToArgsType?: boolean;
-    allowParentTypeOverride?: boolean;
     allResolversTypeName?: string;
     avoidOptionals?: boolean | AvoidOptionalsConfig;
+    baseSchemaTypesImportName?: string;
+    baseTypesPath?: string;
     defaultMapper?: string;
     immutableTypes?: boolean;
     mappers?: {

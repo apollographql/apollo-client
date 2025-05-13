@@ -39,6 +39,7 @@ const localState = new LocalState<Resolvers>({
 It is also recommended to add the following config:
 ```ts
 // codegen.ts
+import type { LocalStatePluginConfig } from "@apollo/client/local-state/codegen";
 
 const config: CodegenConfig = {
   // ...
@@ -54,7 +55,7 @@ const config: CodegenConfig = {
 
         // If you use the `rootValue` option, provide the path to it here
         rootValueType: "./path/to/rootValue#RootValue",
-      }
+      } satisfies LocalStatePluginConfig
     }
   }
 }

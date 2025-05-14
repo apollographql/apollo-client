@@ -11,6 +11,10 @@ import { toEmitTypedValue } from "./toEmitTypedValue.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
 import { toStrictEqualTyped } from "./toStrictEqualTyped.js";
+import {
+  toRerenderWithSimilarSnapshot,
+  toRerenderWithStrictEqualSnapshot,
+} from "./toRerenderWithSimilarSnapshot.js";
 
 expect.extend({
   arrayWithLength,
@@ -24,4 +28,6 @@ expect.extend({
   toMatchDocument,
   toBeGarbageCollected,
   toStrictEqualTyped,
+  toRerenderWithSimilarSnapshot,
+  toRerenderWithStrictEqualSnapshot,
 });

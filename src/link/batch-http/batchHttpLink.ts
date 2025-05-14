@@ -15,10 +15,6 @@ import {
   serializeFetchParameter,
 } from "@apollo/client/link/http";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  hasDirectives,
-  removeClientSetsFromDocument,
-} from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
@@ -106,29 +102,10 @@ export class BatchHttpLink extends ApolloLink {
         headers: { ...clientAwarenessHeaders, ...context.headers },
       };
 
-      const queries = operations.map(({ query }) => {
-        if (hasDirectives(["client"], query)) {
-          return removeClientSetsFromDocument(query);
-        }
-
-        return query;
-      });
-
-      // If we have a query that returned `null` after removing client-only
-      // fields, it indicates a query that is using all client-only fields.
-      if (queries.some((query) => !query)) {
-        return throwError(
-          () =>
-            new Error(
-              "BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option."
-            )
-        );
-      }
-
       //uses fallback, link, and then context to build options
-      const optsAndBody = operations.map((operation, index) => {
+      const optsAndBody = operations.map((operation) => {
         const result = selectHttpOptionsAndBodyInternal(
-          { ...operation, query: queries[index]! },
+          operation,
           print,
           fallbackHttpConfig,
           linkConfig,

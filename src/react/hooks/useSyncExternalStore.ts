@@ -1,8 +1,8 @@
 import * as React from "react";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { maybe } from "@apollo/client/utilities/globals";
 import { canUseDOM } from "@apollo/client/utilities/internal";
+import { maybe } from "@apollo/client/utilities/internal/globals";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 let didWarnUncachedGetSnapshot = false;

@@ -1,4 +1,4 @@
-import { maybe } from "@apollo/client/utilities/globals";
+import { maybe } from "@apollo/client/utilities/internal/globals";
 
 /** @internal */
 export const canUseDOM =

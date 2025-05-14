@@ -4,7 +4,7 @@ import { Observable } from "relay-runtime";
 import type { OperationVariables } from "@apollo/client";
 import { serializeFetchParameter } from "@apollo/client";
 import type { HttpLink } from "@apollo/client/link/http";
-import { maybe } from "@apollo/client/utilities/globals";
+import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import {
   handleError,

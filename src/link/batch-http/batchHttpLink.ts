@@ -15,11 +15,11 @@ import {
   serializeFetchParameter,
 } from "@apollo/client/link/http";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { maybe } from "@apollo/client/utilities/globals";
 import {
   hasDirectives,
   removeClientSetsFromDocument,
 } from "@apollo/client/utilities/internal";
+import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 

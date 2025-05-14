@@ -1,5 +1,5 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { global } from "@apollo/client/utilities/globals";
+import { global } from "@apollo/client/utilities/internal/globals";
 
 import type { ErrorCodes } from "../../invariantErrorCodes.js";
 import { version } from "../../version.js";

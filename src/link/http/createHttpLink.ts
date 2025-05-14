@@ -4,7 +4,7 @@ import { Observable, throwError } from "rxjs";
 import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { maybe } from "@apollo/client/utilities/globals";
+import { maybe } from "@apollo/client/utilities/internal/globals";
 import {
   getMainDefinition,
   hasDirectives,

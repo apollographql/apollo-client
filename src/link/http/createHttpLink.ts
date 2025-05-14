@@ -1,14 +1,10 @@
 import type { DefinitionNode } from "graphql";
-import { Observable, throwError } from "rxjs";
+import { Observable } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import { hasDirectives } from "@apollo/client/utilities";
-import {
-  getMainDefinition,
-  maybe,
-  removeClientSetsFromDocument,
-} from "@apollo/client/utilities";
+import { getMainDefinition, maybe } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -90,21 +86,6 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
       credentials: context.credentials,
       headers: contextHeaders,
     };
-
-    if (hasDirectives(["client"], operation.query)) {
-      const transformedQuery = removeClientSetsFromDocument(operation.query);
-
-      if (!transformedQuery) {
-        return throwError(
-          () =>
-            new Error(
-              "HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`."
-            )
-        );
-      }
-
-      operation.query = transformedQuery;
-    }
 
     //uses fallback, link, and then context to build options
     const { options, body } = selectHttpOptionsAndBodyInternal(

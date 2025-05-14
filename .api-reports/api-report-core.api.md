@@ -19,7 +19,7 @@ import { createHttpLink } from '@apollo/client/link/http';
 import { createSignalIfSupported } from '@apollo/client/link/http';
 import { DataMasking } from '@apollo/client/masking';
 import { DataProxy } from '@apollo/client/cache';
-import type { DeepPartial } from '@apollo/client/utilities';
+import type { DeepPartial } from '@apollo/client/utilities/internal';
 import { defaultDataIdFromObject } from '@apollo/client/cache';
 import { defaultPrinter } from '@apollo/client/link/http';
 import { DiffQueryAgainstStoreOptions } from '@apollo/client/cache';
@@ -43,7 +43,7 @@ import type { FieldNode } from 'graphql';
 import { FieldPolicy } from '@apollo/client/cache';
 import { FieldReadFunction } from '@apollo/client/cache';
 import type { FormattedExecutionResult } from 'graphql';
-import type { FragmentMap } from '@apollo/client/utilities';
+import type { FragmentMap } from '@apollo/client/utilities/internal';
 import { FragmentType } from '@apollo/client/masking';
 import { from } from '@apollo/client/link';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
@@ -56,20 +56,18 @@ import { IncrementalPayload } from '@apollo/client/link';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
 import type { InteropObservable } from 'rxjs';
+import type { IsAny } from '@apollo/client/utilities/internal';
 import { isReference } from '@apollo/client/utilities';
-import type { IsStrictlyAny } from '@apollo/client/utilities';
 import { LinkError } from '@apollo/client/errors';
-import { makeReference } from '@apollo/client/utilities';
 import { makeVar } from '@apollo/client/cache';
 import { Masked } from '@apollo/client/masking';
 import { MaskedDocumentNode } from '@apollo/client/masking';
 import { MaybeMasked } from '@apollo/client/masking';
 import { MergeInfo } from '@apollo/client/cache';
-import { mergeOptions } from '@apollo/client/utilities';
 import { MergeTree } from '@apollo/client/cache';
 import { MissingFieldError } from '@apollo/client/cache';
 import { NextLink } from '@apollo/client/link';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
+import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { NormalizedCache } from '@apollo/client/cache';
 import { NormalizedCacheObject } from '@apollo/client/cache';
 import { Observable } from '@apollo/client/utilities';
@@ -109,7 +107,7 @@ import { TypePolicies } from '@apollo/client/cache';
 import { TypePolicy } from '@apollo/client/cache';
 import { UnconventionalError } from '@apollo/client/errors';
 import { Unmasked } from '@apollo/client/masking';
-import type { VariablesOption } from '@apollo/client/utilities';
+import type { VariablesOption } from '@apollo/client/utilities/internal';
 import { WatchFragmentOptions } from '@apollo/client/cache';
 import { WatchFragmentResult } from '@apollo/client/cache';
 
@@ -452,8 +450,6 @@ type LocalStateOptions = {
     fragmentMatcher?: FragmentMatcher;
 };
 
-export { makeReference }
-
 export { makeVar }
 
 export { Masked }
@@ -485,8 +481,6 @@ interface MaskOperationOptions<TData> {
 export { MaybeMasked }
 
 export { MergeInfo }
-
-export { mergeOptions }
 
 export { MergeTree }
 
@@ -925,7 +919,7 @@ export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
 }
 
 // @public (undocumented)
-export type RefetchQueriesPromiseResults<TResult> = IsStrictlyAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
+export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
 // @public (undocumented)
 export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPromiseResults<TResult>> {
@@ -1112,8 +1106,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:463:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:461:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

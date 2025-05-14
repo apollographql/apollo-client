@@ -4,7 +4,7 @@ import { expectTypeOf } from "expect-type";
 
 import type { TypedDocumentNode } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 
 import type { ContainsFragmentsRefs } from "../internal/types.js";
 

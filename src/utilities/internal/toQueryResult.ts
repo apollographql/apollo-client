@@ -1,5 +1,6 @@
 import type { ApolloQueryResult, QueryResult } from "@apollo/client";
 
+/** @internal */
 export function toQueryResult<TData = unknown>(
   value: ApolloQueryResult<TData>
 ) {

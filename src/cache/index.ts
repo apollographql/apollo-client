@@ -16,11 +16,7 @@ export type {
 export { MissingFieldError } from "./core/types/common.js";
 
 export type { Reference } from "@apollo/client/utilities";
-export {
-  canonicalStringify,
-  isReference,
-  makeReference,
-} from "@apollo/client/utilities";
+export { canonicalStringify, isReference } from "@apollo/client/utilities";
 
 export { EntityStore } from "./inmemory/entityStore.js";
 export {

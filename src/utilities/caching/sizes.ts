@@ -1,4 +1,4 @@
-import { global } from "@apollo/client/utilities/globals";
+import { global } from "@apollo/client/utilities/internal/globals";
 
 declare global {
   interface Window {

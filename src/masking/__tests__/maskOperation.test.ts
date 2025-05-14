@@ -6,7 +6,7 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports
-import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
+import { deepFreeze } from "../../utilities/internal/deepFreeze.js";
 
 test("throws when passing document with no operation to maskOperation", () => {
   const document = gql`

@@ -1637,11 +1637,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const meta = queryMetaSlot.getValue();
     invariant(meta);
 
-    if (
-      notification.kind === "C" ||
-      !isEqualQuery(meta, this) ||
-      this.options.fetchPolicy === "standby"
-    ) {
+    if (notification.kind === "C" || !isEqualQuery(meta, this)) {
       return;
     }
 

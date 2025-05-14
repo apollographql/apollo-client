@@ -4052,9 +4052,22 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4081,9 +4094,22 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4110,9 +4136,22 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4139,9 +4178,22 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],

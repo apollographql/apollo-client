@@ -4,7 +4,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import type { ObservedValueOf, Observer } from "rxjs";
-import { delay, from, Observable, of, Subject } from "rxjs";
+import { delay, from, lastValueFrom, Observable, of, Subject } from "rxjs";
 
 import type {
   ApolloQueryResult,
@@ -4061,7 +4061,13 @@ describe("ObservableQuery", () => {
               },
             },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4097,7 +4103,13 @@ describe("ObservableQuery", () => {
               },
             },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4133,7 +4145,13 @@ describe("ObservableQuery", () => {
               },
             },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4169,7 +4187,13 @@ describe("ObservableQuery", () => {
               },
             },
             resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: undefined,
+            resultAfterRefetchNext: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate4: undefined,
           },
         ],
@@ -4523,13 +4547,14 @@ describe("ObservableQuery", () => {
           setTimeout(() => {
             subject.next({ data: cacheValues.link });
             subject.complete();
-            subject = new Subject();
           });
           await check(resultAfterLinkNext, "resultAfterLinkNext");
 
           cache.writeQuery({ query, data: cacheValues.update2 });
           await check(resultAfterCacheUpdate2, "resultAfterCacheUpdate2");
 
+          await lastValueFrom(subject, { defaultValue: undefined });
+          subject = new Subject();
           void observableQuery.refetch();
           cache.writeQuery({ query, data: cacheValues.update3 });
           await check(resultAfterRefetchCall, "resultAfterRefetchCall");

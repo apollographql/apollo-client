@@ -19,6 +19,7 @@ import {
   compact,
   getOperationDefinition,
   getQueryDefinition,
+  preventUnhandledRejection,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -1436,10 +1437,4 @@ function skipCacheDataFor(
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
   );
-}
-
-function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T> {
-  promise.catch(() => {});
-
-  return promise;
 }

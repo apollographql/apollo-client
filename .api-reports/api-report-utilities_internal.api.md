@@ -372,6 +372,9 @@ export type Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
 
+// @public (undocumented)
+export function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T>;
+
 // @internal (undocumented)
 export type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 

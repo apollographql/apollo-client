@@ -1,5 +1,5 @@
 import type { ErrorCodes } from "../invariantErrorCodes.js";
-import global from "../utilities/globals/global.js";
+import { global } from "@apollo/client/utilities/internal/globals";
 
 import { ApolloErrorMessageHandler } from "./symbol.js";
 

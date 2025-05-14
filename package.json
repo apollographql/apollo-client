@@ -67,7 +67,6 @@
     },
     "./utilities/internal/globals": "./src/utilities/internal/globals/index.ts",
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
-    "./utilities/globals": "./src/utilities/globals/index.ts",
     "./utilities/invariant": {
       "development": "./src/utilities/invariant/index.development.ts",
       "default": "./src/utilities/invariant/index.ts"

@@ -409,13 +409,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
-Array [
-  "global",
-  "maybe",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/utilities/internal 1`] = `
 Array [
   "AutoCleanedStrongCache",
@@ -464,6 +457,7 @@ Array [
   "mergeOptions",
   "omitDeep",
   "onAnyEvent",
+  "preventUnhandledRejection",
   "registerGlobalCache",
   "removeClientSetsFromDocument",
   "removeDirectivesFromDocument",
@@ -472,6 +466,13 @@ Array [
   "storeKeyNameFromField",
   "stringifyForDisplay",
   "toQueryResult",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/internal/globals 1`] = `
+Array [
+  "global",
+  "maybe",
 ]
 `;
 

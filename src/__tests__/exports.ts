@@ -38,8 +38,8 @@ import * as testingInternal from "@apollo/client/testing/internal";
 import * as testingReact from "@apollo/client/testing/react";
 import * as utilities from "@apollo/client/utilities";
 import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
-import * as utilitiesGlobals from "@apollo/client/utilities/globals";
 import * as utilitiesInternal from "@apollo/client/utilities/internal";
+import * as utilitiesInternalGlobals from "@apollo/client/utilities/internal/globals";
 import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
 
 // eslint-disable-next-line local-rules/no-relative-imports
@@ -98,7 +98,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/testing/react", testingReact);
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/internal", utilitiesInternal);
-  check("@apollo/client/utilities/globals", utilitiesGlobals);
+  check("@apollo/client/utilities/internal/globals", utilitiesInternalGlobals);
   check("@apollo/client/utilities/invariant", utilitiesInvariant);
   check("@apollo/client/utilities/environment", utilitiesEnvironment);
 

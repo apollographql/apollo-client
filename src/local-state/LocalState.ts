@@ -263,7 +263,7 @@ export class LocalState<
     const rootValue = remoteResult ? remoteResult.data : {};
 
     const diff = client.cache.diff<Record<string, any>>({
-      query: buildQueryFromSelectionSet(document),
+      query: toQueryOperation(document),
       variables,
       returnPartialData: true,
       optimistic: false,
@@ -345,7 +345,7 @@ export class LocalState<
     } = this.collectQueryDetail(document);
 
     const diff = client.cache.diff<Record<string, any>>({
-      query: buildQueryFromSelectionSet(document),
+      query: toQueryOperation(document),
       variables,
       returnPartialData: true,
       optimistic: false,
@@ -1087,7 +1087,7 @@ function isForcedResolver(field: FieldNode) {
 // If the incoming document is a query, return it as is. Otherwise, build a
 // new document containing a query operation based on the selection set
 // of the previous main operation.
-function buildQueryFromSelectionSet(document: DocumentNode): DocumentNode {
+function toQueryOperation(document: DocumentNode): DocumentNode {
   const definition = getMainDefinition(document);
   const definitionOperation = (<OperationDefinitionNode>definition).operation;
 

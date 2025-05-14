@@ -6,10 +6,10 @@
 
 import type { ApolloCache } from '@apollo/client';
 import type { DocumentNode } from '@apollo/client';
-import type { IsAny } from '@apollo/client/utilities';
-import type { Prettify } from '@apollo/client/utilities';
-import type { Primitive } from '@apollo/client/utilities';
-import type { RemoveIndexSignature } from '@apollo/client/utilities';
+import type { IsAny } from '@apollo/client/utilities/internal';
+import type { Prettify } from '@apollo/client/utilities/internal';
+import type { Primitive } from '@apollo/client/utilities/internal';
+import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 

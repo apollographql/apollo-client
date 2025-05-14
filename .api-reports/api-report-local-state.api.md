@@ -9,9 +9,9 @@ import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
-import type { FragmentMap } from '@apollo/client/utilities';
-import type { IsAny } from '@apollo/client/utilities';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
+import type { FragmentMap } from '@apollo/client/utilities/internal';
+import type { IsAny } from '@apollo/client/utilities/internal';
+import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import type { OperationVariables } from '@apollo/client';
 import type { TypedDocumentNode } from '@apollo/client';
 

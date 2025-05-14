@@ -3456,7 +3456,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate1: {
               emit: {
-                ...loadingStates.loading,
+                ...loadingStates.done,
                 data: cacheValues.update1,
                 partial: false,
               },
@@ -3484,7 +3484,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -3526,7 +3526,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate1: {
               emit: {
-                ...loadingStates.loading,
+                ...loadingStates.done,
                 data: cacheValues.update1,
                 partial: false,
               },
@@ -3554,7 +3554,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -3616,7 +3616,13 @@ describe("ObservableQuery", () => {
                 partial: false,
               },
             },
-            resultAfterCacheUpdate3: undefined,
+            resultAfterCacheUpdate3: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
             resultAfterRefetchNext: {
               emit: {
                 ...loadingStates.done,
@@ -3674,7 +3680,13 @@ describe("ObservableQuery", () => {
                 partial: false,
               },
             },
-            resultAfterCacheUpdate3: undefined,
+            resultAfterCacheUpdate3: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
             resultAfterRefetchNext: {
               emit: {
                 ...loadingStates.done,
@@ -3734,7 +3746,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -3798,7 +3810,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -3849,52 +3861,6 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate2: undefined,
             resultAfterRefetchCall: {
               emit: {
-                ...loadingStates.refetching,
-                data: cacheValues.link,
-                partial: false,
-              },
-            },
-            resultAfterCacheUpdate3: undefined,
-            resultAfterRefetchNext: {
-              emit: {
-                ...loadingStates.done,
-                data: cacheValues.refetch,
-                partial: false,
-              },
-            },
-            resultAfterCacheUpdate4: undefined,
-          },
-        ],
-        [
-          "no-cache",
-          "no-cache",
-          false,
-          {
-            resultBeforeSubscribe: {
-              currentResult: {
-                ...loadingStates.loading,
-                data: undefined,
-                partial: true,
-              },
-            },
-            resultAfterSubscribe: {
-              currentResult: {
-                ...loadingStates.loading,
-                data: undefined,
-                partial: true,
-              },
-            },
-            resultAfterCacheUpdate1: undefined,
-            resultAfterLinkNext: {
-              emit: {
-                ...loadingStates.done,
-                data: cacheValues.link,
-                partial: false,
-              },
-            },
-            resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: {
-              currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.link,
                 partial: false,
@@ -3913,6 +3879,52 @@ describe("ObservableQuery", () => {
         ],
         [
           "no-cache",
+          "no-cache",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "no-cache",
           "cache-and-network",
           true,
           {
@@ -3930,7 +3942,13 @@ describe("ObservableQuery", () => {
                 partial: true,
               },
             },
-            resultAfterCacheUpdate1: undefined,
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
             resultAfterLinkNext: {
               emit: {
                 ...loadingStates.done,
@@ -3938,17 +3956,23 @@ describe("ObservableQuery", () => {
                 partial: false,
               },
             },
-            resultAfterCacheUpdate2: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
             resultAfterRefetchCall: {
               emit: {
                 ...loadingStates.refetching,
-                data: cacheValues.link,
+                data: cacheValues.update2,
                 partial: false,
               },
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -3988,7 +4012,13 @@ describe("ObservableQuery", () => {
                 partial: true,
               },
             },
-            resultAfterCacheUpdate1: undefined,
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
             resultAfterLinkNext: {
               emit: {
                 ...loadingStates.done,
@@ -3996,17 +4026,23 @@ describe("ObservableQuery", () => {
                 partial: false,
               },
             },
-            resultAfterCacheUpdate2: undefined,
+            resultAfterCacheUpdate2: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
             resultAfterRefetchCall: {
               currentResult: {
                 ...loadingStates.refetching,
-                data: cacheValues.link,
+                data: cacheValues.update2,
                 partial: false,
               },
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -4050,7 +4086,13 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
             resultAfterRefetchNext: undefined,
             resultAfterCacheUpdate4: undefined,
@@ -4079,7 +4121,13 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
             resultAfterRefetchNext: undefined,
             resultAfterCacheUpdate4: undefined,
@@ -4108,7 +4156,13 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
             resultAfterRefetchNext: undefined,
             resultAfterCacheUpdate4: undefined,
@@ -4137,7 +4191,13 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1: undefined,
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
-            resultAfterRefetchCall: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
             resultAfterCacheUpdate3: undefined,
             resultAfterRefetchNext: undefined,
             resultAfterCacheUpdate4: undefined,
@@ -4186,7 +4246,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -4250,7 +4310,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -4314,7 +4374,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },
@@ -4378,7 +4438,7 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 partial: false,
               },

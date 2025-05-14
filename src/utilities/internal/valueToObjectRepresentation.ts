@@ -2,7 +2,7 @@ import type { EnumValueNode, NameNode, ValueNode } from "graphql";
 import { Kind } from "graphql";
 
 import { newInvariantError } from "@apollo/client/utilities/invariant";
-
+/** @internal */
 export function valueToObjectRepresentation(
   argObj: any,
   name: NameNode,

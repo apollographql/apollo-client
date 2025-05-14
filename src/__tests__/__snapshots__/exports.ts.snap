@@ -455,7 +455,6 @@ Array [
   "onAnyEvent",
   "preventUnhandledRejection",
   "registerGlobalCache",
-  "removeClientSetsFromDocument",
   "removeDirectivesFromDocument",
   "resultKeyNameFromField",
   "shouldInclude",

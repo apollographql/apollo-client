@@ -55,7 +55,6 @@ export { mergeOptions } from "./mergeOptions.js";
 export { omitDeep } from "./omitDeep.js";
 export { onAnyEvent } from "./onAnyEvent.js";
 export { preventUnhandledRejection } from "./preventUnhandledRejection.js";
-export { removeClientSetsFromDocument } from "./removeClientSetsFromDocument.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";
 export { shouldInclude } from "./shouldInclude.js";

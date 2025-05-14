@@ -27,7 +27,7 @@ import {
   isField,
   mergeDeep,
   mergeDeepArray,
-  removeClientSetsFromDocument,
+  removeDirectivesFromDocument,
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities/internal";
@@ -178,7 +178,10 @@ export class LocalState {
 
   // Server queries are stripped of all @client based selection sets.
   public serverQuery(document: DocumentNode) {
-    return removeClientSetsFromDocument(document);
+    return removeDirectivesFromDocument(
+      [{ name: "client", remove: true }],
+      document
+    );
   }
 
   public prepareContext(context?: Record<string, any>) {

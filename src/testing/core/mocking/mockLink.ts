@@ -13,7 +13,6 @@ import {
   getOperationDefinition,
   isDocumentNode,
   makeUniqueId,
-  removeClientSetsFromDocument,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -283,7 +282,8 @@ function getServerQuery(query: DocumentNode) {
 
   invariant(queryWithoutClientOnlyDirectives, "query is required");
 
-  const serverQuery = removeClientSetsFromDocument(
+  const serverQuery = removeDirectivesFromDocument(
+    [{ name: "client", remove: true }],
     queryWithoutClientOnlyDirectives
   );
 

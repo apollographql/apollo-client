@@ -3508,6 +3508,76 @@ describe("ObservableQuery", () => {
           },
         ],
         [
+          "cache-and-network",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.loading,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.loading,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
           "cache-first",
           "cache-first",
           true,
@@ -3567,6 +3637,64 @@ describe("ObservableQuery", () => {
         ],
         [
           "cache-first",
+          "cache-first",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-first",
           "cache-and-network",
           true,
           {
@@ -3601,6 +3729,70 @@ describe("ObservableQuery", () => {
             },
             resultAfterRefetchCall: {
               emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-first",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
                 partial: false,
@@ -3677,6 +3869,52 @@ describe("ObservableQuery", () => {
         ],
         [
           "no-cache",
+          "no-cache",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "no-cache",
           "cache-and-network",
           true,
           {
@@ -3734,6 +3972,64 @@ describe("ObservableQuery", () => {
           },
         ],
         [
+          "no-cache",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
           "standby",
           "standby",
           true,
@@ -3771,8 +4067,80 @@ describe("ObservableQuery", () => {
         ],
         [
           "standby",
+          "standby",
+          false,
+          {
+            resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: undefined,
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "standby",
           "cache-and-network",
           true,
+          {
+            resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: undefined,
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "standby",
+          "cache-and-network",
+          false,
           {
             resultBeforeSubscribe: {
               // TODO: should this be done from the start?
@@ -3871,6 +4239,70 @@ describe("ObservableQuery", () => {
         ],
         [
           "cache-only",
+          "cache-only",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-only",
           "cache-and-network",
           true,
           {
@@ -3905,6 +4337,70 @@ describe("ObservableQuery", () => {
             },
             resultAfterRefetchCall: {
               emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-only",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
                 partial: false,
@@ -3934,7 +4430,7 @@ describe("ObservableQuery", () => {
           },
         ],
       ])(
-        "fetchPolicy %s -> %s",
+        "fetchPolicy %s -> %s (notifyOnNetworkStatusChange %s)",
         async (
           fetchPolicy,
           nextFetchPolicy,

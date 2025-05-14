@@ -29,11 +29,17 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
-import type { FragmentMap, IsAny, NoInfer } from "@apollo/client/utilities";
+import { stripTypename } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type {
+  FragmentMap,
+  IsAny,
+  NoInfer,
+} from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
-  buildQueryFromSelectionSet,
   createFragmentMap,
+  dealias,
   getFragmentDefinitions,
   getMainDefinition,
   hasDirectives,
@@ -41,10 +47,7 @@ import {
   mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
-  stripTypename,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { dealias } from "@apollo/client/utilities/internal";
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -1079,4 +1082,30 @@ function isForcedResolver(field: FieldNode) {
       );
     }) ?? false
   );
+}
+
+// If the incoming document is a query, return it as is. Otherwise, build a
+// new document containing a query operation based on the selection set
+// of the previous main operation.
+function buildQueryFromSelectionSet(document: DocumentNode): DocumentNode {
+  const definition = getMainDefinition(document);
+  const definitionOperation = (<OperationDefinitionNode>definition).operation;
+
+  if (definitionOperation === "query") {
+    // Already a query, so return the existing document.
+    return document;
+  }
+
+  // Build a new query using the selection set of the main operation.
+  const modifiedDoc = visit(document, {
+    OperationDefinition: {
+      enter(node) {
+        return {
+          ...node,
+          operation: "query",
+        };
+      },
+    },
+  });
+  return modifiedDoc;
 }

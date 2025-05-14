@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 4.0.0-alpha.13
+
+### Major Changes
+
+- [#12600](https://github.com/apollographql/apollo-client/pull/12600) [`34ff6aa`](https://github.com/apollographql/apollo-client/commit/34ff6aa25b47c3e84d0b18e2c69bc995814bf2f2) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Move most of the utilities in `@apollo/client/utilities` to `@apollo/client/utilities/internal`. Many of the utilities exported from the `@apollo/client/utilities` endpoint were not considered stable.
+
+  As a result of this change, utilities or types exported from `@apollo/client/utilities` are now documented and considered stable and will not undergo breaking changes.
+
+- [#12595](https://github.com/apollographql/apollo-client/pull/12595) [`60bb49c`](https://github.com/apollographql/apollo-client/commit/60bb49ccea9aecf3e6a212b5a1f71907e60af886) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `@apollo/client/testing/experimental` test utilities. Use [GraphQL Testing Library](https://github.com/apollographql/graphql-testing-library) instead.
+
+### Patch Changes
+
+- [#12618](https://github.com/apollographql/apollo-client/pull/12618) [`e4a3ecf`](https://github.com/apollographql/apollo-client/commit/e4a3ecfe50bc5b462067574a0ffb1951549fb60f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove code that strips `@client` fields in `HttpLink` and `BatchHttpLink`. This was unused code since core handles removing `@client` fields and should have no observable change.
+
 ## 4.0.0-alpha.12
 
 ### Major Changes

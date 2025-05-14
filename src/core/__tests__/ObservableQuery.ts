@@ -3739,6 +3739,7 @@ describe("ObservableQuery", () => {
           true,
           {
             resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
@@ -3756,6 +3757,7 @@ describe("ObservableQuery", () => {
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
             resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
               currentResult: {
                 ...loadingStates.refetching,
                 data: undefined,
@@ -3773,6 +3775,7 @@ describe("ObservableQuery", () => {
           true,
           {
             resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
@@ -3790,6 +3793,7 @@ describe("ObservableQuery", () => {
             resultAfterLinkNext: undefined,
             resultAfterCacheUpdate2: undefined,
             resultAfterRefetchCall: {
+              // TODO: this seems to be wrong behavior
               currentResult: {
                 ...loadingStates.refetching,
                 data: undefined,

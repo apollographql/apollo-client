@@ -9,7 +9,7 @@ type SlotInstance<S> = InstanceType<typeof Slot<S>>;
 export class SlotAwareBehaviorSubject<T, S> extends BehaviorSubject<T> {
   private slot: SlotInstance<S>;
   private currentSlotValue?: S;
-  callingSynchronusly = false;
+  private callingSynchronusly = false;
 
   constructor(initialValue: T, slot: SlotInstance<S>, initialSlotValue?: S) {
     super(initialValue);

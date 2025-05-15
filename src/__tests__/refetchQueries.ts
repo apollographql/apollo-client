@@ -101,13 +101,8 @@ describe("client.refetchQueries", () => {
           obsQuery.subscribe({
             error: reject,
             next(result) {
-              expect(
-                result.networkStatus == NetworkStatus.ready ||
-                  result.networkStatus == NetworkStatus.refetch
-              ).toBeTruthy();
-              if (result.networkStatus == NetworkStatus.ready) {
-                resolve(obsQuery);
-              }
+              expect(result.loading).toBe(false);
+              resolve(obsQuery);
             },
           })
         );

@@ -6435,7 +6435,9 @@ describe("useSuspenseQuery", () => {
 
     function Component({ returnPartialData }: { returnPartialData: boolean }) {
       useTrackRenders();
-      renderStream.replaceSnapshot(useSuspenseQuery(fullQuery, {}));
+      renderStream.replaceSnapshot(
+        useSuspenseQuery(fullQuery, { returnPartialData })
+      );
       return <div />;
     }
     function SuspenseFallback() {
@@ -6498,6 +6500,16 @@ describe("useSuspenseQuery", () => {
         name: (_, { DELETE }) => DELETE,
       },
     });
+
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toStrictEqualTyped({
+        data: { character: { __typename: "Character", id: "1" } },
+        networkStatus: NetworkStatus.loading,
+        error: undefined,
+      });
+    }
 
     {
       const { renderedComponents, snapshot } = await renderStream.takeRender();

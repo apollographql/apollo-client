@@ -97,10 +97,30 @@ const empty: ApolloQueryResult<any> = {
   partial: true,
 };
 
+const enum EmitBehavior {
+  /**
+   * Emit will be calculated by the normal rules. (`undefined` will be treated the same as this)
+   */
+  default = 0,
+  /**
+   * This result should always be emitted, even if the result is equal to the
+   * previous result. (e.g. the first value after a `refetch`)
+   */
+  force = 1,
+  /**
+   * Never emit this result, it is only used to update `currentResult`.
+   */
+  never = 2,
+  /**
+   * This is a result carrying only a "network status change"/loading state update,
+   * emit according to the `notifyOnNetworkStatusChange` option.
+   */
+  networkStatusChange = 3,
+}
 interface Meta {
   readonly query: DocumentNode;
   readonly variables: OperationVariables | undefined;
-  shouldEmit?: boolean | "notification";
+  shouldEmit?: EmitBehavior;
   /** can be used to override `ObservableQuery.options.fetchPolicy` for this notification */
   fetchPolicy?: WatchQueryFetchPolicy;
 }
@@ -351,8 +371,8 @@ export class ObservableQuery<
             context.previousVariables = undefined;
           }
           if (this.options.fetchPolicy === "standby") return;
-          if (shouldEmit === true) return emit();
-          if (shouldEmit === false) return;
+          if (shouldEmit === EmitBehavior.force) return emit();
+          if (shouldEmit === EmitBehavior.never) return;
 
           const { previous, previousVariables } = context;
 
@@ -376,7 +396,7 @@ export class ObservableQuery<
           }
 
           if (
-            shouldEmit === "notification" &&
+            shouldEmit === EmitBehavior.networkStatusChange &&
             (!this.options.notifyOnNetworkStatusChange ||
               equal(previous, current))
           ) {
@@ -749,7 +769,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         kind: "N",
         value: {},
       },
-      { shouldEmit: "notification" }
+      { shouldEmit: EmitBehavior.networkStatusChange }
     );
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
@@ -853,7 +873,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               source: "newNetworkStatus",
               value: {},
             },
-            { shouldEmit: true }
+            { shouldEmit: EmitBehavior.force }
           );
         }
       });
@@ -1109,7 +1129,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                       {
                         variables,
                         query,
-                        shouldEmit: "notification",
+                        shouldEmit: EmitBehavior.networkStatusChange,
                         /*
                          * The moment this notification is emitted, `nextFetchPolicy`
                          * might already have switched from a `network-only` to a
@@ -1176,7 +1196,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             !value.value.loading
           ) {
             forceFirstValueEmit = false;
-            meta.shouldEmit = true;
+            meta.shouldEmit = EmitBehavior.force;
           }
 
           queryMetaSlot.withValue(meta, () => this.input.next(value));
@@ -1600,7 +1620,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // as we won't trigger a refetch for them
     const resetToEmpty = this.options.fetchPolicy === "cache-only";
     this.setResult(resetToEmpty ? empty : uninitialized, {
-      shouldEmit: resetToEmpty,
+      shouldEmit: resetToEmpty ? EmitBehavior.force : EmitBehavior.never,
     });
 
     this.abortActiveOperations();
@@ -1674,7 +1694,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         : notification.value;
 
       if (result.error) {
-        meta.shouldEmit = true;
+        meta.shouldEmit = EmitBehavior.force;
       }
     } else if (notification.source === "newNetworkStatus") {
       const baseResult =

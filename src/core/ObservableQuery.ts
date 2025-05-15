@@ -453,16 +453,11 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
-  private getCacheDiff({
-    query = this.query,
-    variables = this.variables,
-    returnPartialData = true,
-    optimistic = true,
-  } = {}) {
+  private getCacheDiff({ optimistic = true } = {}) {
     return this.queryManager.cache.diff<TData>({
-      query,
-      variables,
-      returnPartialData,
+      query: this.query,
+      variables: this.variables,
+      returnPartialData: true,
       optimistic,
     });
   }

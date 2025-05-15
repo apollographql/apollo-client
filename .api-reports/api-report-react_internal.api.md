@@ -7,6 +7,7 @@
 import type { ApolloClient } from '@apollo/client';
 import type { ApolloQueryResult } from '@apollo/client';
 import type { createQueryPreloader } from '@apollo/client/react';
+import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { FetchMoreQueryOptions } from '@apollo/client';
 import type { MaybeMasked } from '@apollo/client/masking';
@@ -14,7 +15,6 @@ import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
-import type { PromiseWithState } from '@apollo/client/utilities';
 import type { QueryResult } from '@apollo/client';
 import type { Unmasked } from '@apollo/client';
 import type { useBackgroundQuery } from '@apollo/client/react';
@@ -101,7 +101,7 @@ interface FragmentReferenceOptions {
 }
 
 // @public (undocumented)
-type FragmentRefPromise<TData> = PromiseWithState<TData>;
+type FragmentRefPromise<TData> = DecoratedPromise<TData>;
 
 // @public (undocumented)
 type FunctionSignature<T> = T extends (...args: infer A) => infer R ? (...args: A) => R : never;
@@ -220,7 +220,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown> extends Q
 }
 
 // @public (undocumented)
-type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<MaybeMasked<TData>>>;
+type QueryRefPromise<TData> = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>>>;
 
 // @public (undocumented)
 export type RefetchFunction<TData, TVariables extends OperationVariables> = ObservableQuery<TData, TVariables>["refetch"];

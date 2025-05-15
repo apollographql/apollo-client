@@ -1,5 +1,5 @@
 import { ApolloClient, ObservableQuery } from "@apollo/client";
-import { isPlainObject } from "@apollo/client/utilities";
+import { isPlainObject } from "@apollo/client/utilities/internal";
 
 function isKnownClassInstance(value: unknown) {
   return [ApolloClient, ObservableQuery].some((c) => value instanceof c);

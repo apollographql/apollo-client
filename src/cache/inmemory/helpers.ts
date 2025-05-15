@@ -5,12 +5,15 @@ import type {
 } from "graphql";
 
 import type {
-  FragmentMap,
-  FragmentMapFunction,
   Reference,
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
+import { isReference } from "@apollo/client/utilities";
+import type {
+  FragmentMap,
+  FragmentMapFunction,
+} from "@apollo/client/utilities/internal";
 import {
   compact,
   createFragmentMap,
@@ -19,18 +22,15 @@ import {
   isArray,
   isField,
   isNonNullObject,
-  isReference,
   resultKeyNameFromField,
   shouldInclude,
-} from "@apollo/client/utilities";
+} from "@apollo/client/utilities/internal";
 
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 import type { KeyFieldsContext } from "./policies.js";
 import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
-
-export { isArray };
 
 export function defaultDataIdFromObject(
   { __typename, id, _id }: Readonly<StoreObject>,

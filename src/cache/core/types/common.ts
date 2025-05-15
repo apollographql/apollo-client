@@ -2,12 +2,12 @@ import type { DocumentNode, FieldNode } from "graphql";
 
 import type {
   AsStoreObject,
-  DeepPartial,
   isReference,
   Reference,
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 
 import type { StorageType } from "../../inmemory/policies.js";
 

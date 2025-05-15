@@ -12,7 +12,7 @@ import type { ApolloQueryResult as ApolloQueryResult_2 } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { DataProxy } from '@apollo/client/cache';
-import type { DeepPartial } from '@apollo/client/utilities';
+import type { DeepPartial } from '@apollo/client/utilities/internal';
 import type { DefaultContext as DefaultContext_2 } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
@@ -26,7 +26,7 @@ import type { FetchResult } from '@apollo/client/link';
 import type { FetchResult as FetchResult_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
-import type { FragmentMap } from '@apollo/client/utilities';
+import type { FragmentMap } from '@apollo/client/utilities/internal';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import { gql } from '@apollo/client';
@@ -34,7 +34,7 @@ import type { GraphQLRequest } from '@apollo/client/link';
 import type { HookWrappers } from '@apollo/client/react/internal';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
-import type { IsStrictlyAny } from '@apollo/client/utilities';
+import type { IsAny } from '@apollo/client/utilities/internal';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { MissingTree } from '@apollo/client/cache';
@@ -43,14 +43,14 @@ import type { MutationFetchPolicy as MutationFetchPolicy_2 } from '@apollo/clien
 import type { MutationQueryReducersMap as MutationQueryReducersMap_2 } from '@apollo/client';
 import type { MutationUpdaterFunction as MutationUpdaterFunction_2 } from '@apollo/client';
 import { NetworkStatus as NetworkStatus_2 } from '@apollo/client';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
+import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import { ObservableQuery as ObservableQuery_2 } from '@apollo/client';
 import type { Observer } from 'rxjs';
 import type { OnQueryUpdated as OnQueryUpdated_2 } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
 import { PreloadedQueryRef } from '@apollo/client/react/internal';
-import type { Prettify } from '@apollo/client/utilities';
+import type { Prettify } from '@apollo/client/utilities/internal';
 import { QueryRef } from '@apollo/client/react/internal';
 import { QueryReference } from '@apollo/client/react/internal';
 import type { QueryResult as QueryResult_3 } from '@apollo/client';
@@ -72,7 +72,7 @@ import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
 import type { Unmasked } from '@apollo/client/masking';
 import type { Unmasked as Unmasked_2 } from '@apollo/client';
 import type { UpdateQueryMapFn as UpdateQueryMapFn_2 } from '@apollo/client';
-import type { VariablesOption } from '@apollo/client/utilities';
+import type { VariablesOption } from '@apollo/client/utilities/internal';
 import type { WatchFragmentOptions } from '@apollo/client/cache';
 import type { WatchFragmentResult } from '@apollo/client/cache';
 import type { WatchQueryFetchPolicy } from '@apollo/client';
@@ -915,7 +915,7 @@ interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
 }
 
 // @public (undocumented)
-type RefetchQueriesPromiseResults<TResult> = IsStrictlyAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult_2<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
+type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult_2<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesPromiseResults" needs to be exported by the entry point index.d.ts
 //
@@ -1627,13 +1627,13 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 
 // Warnings were encountered during analysis:
 //
-// src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
+// src/core/LocalState.ts:70:3 - (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:96:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:463:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:461:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:208:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:236:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
@@ -1644,7 +1644,7 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/watchQueryOptions.ts:286:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:292:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:69:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useSuspenseFragment.ts:72:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:75:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

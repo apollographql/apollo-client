@@ -5,12 +5,9 @@ import { wrap } from "optimism";
 
 import type { OperationVariables } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
-import {
-  cacheSizes,
-  isPlainObject,
-  stripTypename,
-} from "@apollo/client/utilities";
+import { cacheSizes, stripTypename } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { isPlainObject } from "@apollo/client/utilities/internal";
 
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 

@@ -7,20 +7,19 @@
 import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
-import type { DeepPartial } from '@apollo/client/utilities';
+import type { DeepPartial } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
-import type { FragmentMap } from '@apollo/client/utilities';
-import type { FragmentMapFunction } from '@apollo/client/utilities';
+import type { FragmentMap } from '@apollo/client/utilities/internal';
+import type { FragmentMapFunction } from '@apollo/client/utilities/internal';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import { getInMemoryCacheMemoryInternals } from '@apollo/client/utilities/internal';
 import type { InlineFragmentNode } from 'graphql';
 import { isReference } from '@apollo/client/utilities';
-import { makeReference } from '@apollo/client/utilities';
 import type { MaybeMasked } from '@apollo/client/masking';
-import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities';
+import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { OperationVariables } from '@apollo/client';
 import { Reference } from '@apollo/client/utilities';
@@ -630,8 +629,6 @@ class Layer extends EntityStore {
     // (undocumented)
     toObject(): NormalizedCacheObject;
 }
-
-export { makeReference }
 
 // @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;

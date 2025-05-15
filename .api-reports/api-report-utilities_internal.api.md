@@ -5,19 +5,182 @@
 ```ts
 
 import type { ApolloQueryResult } from '@apollo/client';
+import type { ASTNode } from 'graphql';
 import { BehaviorSubject } from 'rxjs';
+import type { DirectiveNode } from 'graphql';
+import type { DocumentNode } from 'graphql';
+import type { ExecutionPatchIncrementalResult } from '@apollo/client/link';
+import type { ExecutionPatchInitialResult } from '@apollo/client/link';
+import type { ExecutionPatchResult } from '@apollo/client/link';
+import type { FetchResult } from '@apollo/client/link';
+import type { FieldNode } from 'graphql';
+import type { FragmentDefinitionNode } from 'graphql';
+import { GraphQLFormattedError } from 'graphql';
+import type { InlineFragmentNode } from 'graphql';
+import type { MutationOptions } from '@apollo/client';
 import { Observable } from 'rxjs';
 import type { Observer } from 'rxjs';
+import type { OperationDefinitionNode } from 'graphql';
+import type { OperationTypeNode } from 'graphql';
+import type { OperationVariables } from '@apollo/client';
 import type { OperatorFunction } from 'rxjs';
+import type { QueryOptions } from '@apollo/client';
 import type { QueryResult } from '@apollo/client';
+import type { Reference } from '@apollo/client/utilities';
+import type { SelectionNode } from 'graphql';
 import type { Slot } from 'optimism';
+import { StrongCache } from '@wry/caches';
 import type { Subscription } from 'rxjs';
+import type { WatchQueryOptions } from '@apollo/client';
+import { WeakCache } from '@wry/caches';
+
+// @internal (undocumented)
+export function argumentsObjectFromField(field: FieldNode | DirectiveNode, variables?: Record<string, any>): Object | null;
+
+// @internal
+export const AutoCleanedStrongCache: typeof StrongCache;
+
+// @internal (undocumented)
+export type AutoCleanedStrongCache<K, V> = StrongCache<K, V>;
+
+// @internal
+export const AutoCleanedWeakCache: typeof WeakCache;
+
+// @internal (undocumented)
+export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
+
+// @internal (undocumented)
+export const canUseDOM: boolean;
+
+// @internal
+export function checkDocument(doc: DocumentNode, expectedType?: OperationTypeNode): DocumentNode;
+
+// @internal
+export function cloneDeep<T>(value: T): T;
+
+// Warning: (ae-forgotten-export) The symbol "TupleToIntersection" needs to be exported by the entry point index.d.ts
+//
+// @internal
+export function compact<TArgs extends any[]>(...objects: TArgs): TupleToIntersection<TArgs>;
+
+// @internal
+export function createFragmentMap(fragments?: FragmentDefinitionNode[]): FragmentMap;
+
+// @internal (undocumented)
+export function createFulfilledPromise<TValue>(value: TValue): FulfilledPromise<TValue>;
+
+// @internal (undocumented)
+export function createRejectedPromise<TValue = unknown>(reason: unknown): RejectedPromise<TValue>;
+
+// @internal (undocumented)
+export type DecoratedPromise<TValue> = PendingPromise<TValue> | FulfilledPromise<TValue> | RejectedPromise<TValue>;
+
+// @internal (undocumented)
+export function decoratePromise<TValue>(promise: Promise<TValue>): DecoratedPromise<TValue>;
+
+// @internal (undocumented)
+export class DeepMerger<TContextArgs extends any[]> {
+    // Warning: (ae-forgotten-export) The symbol "ReconcilerFunction" needs to be exported by the entry point index.d.ts
+    constructor(reconciler?: ReconcilerFunction<TContextArgs>);
+    // (undocumented)
+    isObject: typeof isNonNullObject;
+    // (undocumented)
+    merge(target: any, source: any, ...context: TContextArgs): any;
+    // (undocumented)
+    shallowCopyForMerge<T>(value: T): T;
+}
+
+// Warning: (ae-forgotten-export) The symbol "DeepOmitPrimitive" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepOmitArray" needs to be exported by the entry point index.d.ts
+//
+// @internal (undocumented)
+export type DeepOmit<T, K> = T extends DeepOmitPrimitive ? T : {
+    [P in keyof T as P extends K ? never : P]: T[P] extends infer TP ? TP extends DeepOmitPrimitive ? TP : TP extends any[] ? DeepOmitArray<TP, K> : DeepOmit<TP, K> : never;
+};
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepOmitArray" is marked as @public, but its signature references "DeepOmit" which is marked as @internal
+//
+// @public (undocumented)
+type DeepOmitArray<T extends any[], K> = {
+    [P in keyof T]: DeepOmit<T[P], K>;
+};
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepOmitPrimitive" is marked as @public, but its signature references "Primitive" which is marked as @internal
+//
+// @public (undocumented)
+type DeepOmitPrimitive = Primitive | Function;
+
+// Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlyMap" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialSet" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
+//
+// @internal (undocumented)
+export type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialMap" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
+//
+// @public (undocumented)
+type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialObject" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
+//
+// @public (undocumented)
+type DeepPartialObject<T extends object> = {
+    [K in keyof T]?: DeepPartial<T[K]>;
+};
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialPrimitive" is marked as @public, but its signature references "Primitive" which is marked as @internal
+//
+// @public (undocumented)
+type DeepPartialPrimitive = Primitive | Date | RegExp;
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialReadonlyMap" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
+//
+// @public (undocumented)
+type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<DeepPartial<TKey>, DeepPartial<TValue>>;
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialReadonlySet" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
+//
+// @public (undocumented)
+type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
+
+// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialSet" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
+//
+// @public (undocumented)
+type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
+
+// @public (undocumented)
+type Directives = {
+    [directiveName: string]: {
+        [argName: string]: any;
+    };
+};
 
 // @public (undocumented)
 export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
 
 // @public (undocumented)
 export function filterMap<T, R, Context>(fn: (value: T, context: Context) => R | undefined, makeContext: () => NoInfer<Context>): OperatorFunction<T, R>;
+
+// @internal
+export interface FragmentMap {
+    // (undocumented)
+    [fragmentName: string]: FragmentDefinitionNode;
+}
+
+// @internal (undocumented)
+export type FragmentMapFunction = (fragmentName: string) => FragmentDefinitionNode | null;
+
+// @internal (undocumented)
+export interface FulfilledPromise<TValue> extends Promise<TValue> {
+    // (undocumented)
+    status: "fulfilled";
+    // (undocumented)
+    value: TValue;
+}
 
 // @internal
 export const getApolloCacheMemoryInternals: (() => {
@@ -60,6 +223,24 @@ export const getApolloClientMemoryInternals: (() => {
     };
 }) | undefined;
 
+// @internal (undocumented)
+export function getDefaultValues(definition: OperationDefinitionNode | undefined): Record<string, any>;
+
+// @internal (undocumented)
+export function getFragmentDefinition(doc: DocumentNode): FragmentDefinitionNode;
+
+// @internal (undocumented)
+export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNode[];
+
+// @internal (undocumented)
+export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?: FragmentMap | FragmentMapFunction): InlineFragmentNode | FragmentDefinitionNode | null;
+
+// @internal
+export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
+
+// @internal (undocumented)
+export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>): GraphQLFormattedError[];
+
 // @internal
 export const getInMemoryCacheMemoryInternals: (() => {
     addTypenameDocumentTransform: {
@@ -80,12 +261,94 @@ export const getInMemoryCacheMemoryInternals: (() => {
     };
 }) | undefined;
 
+// @internal
+export function getMainDefinition(queryDoc: DocumentNode): OperationDefinitionNode | FragmentDefinitionNode;
+
+// @internal (undocumented)
+export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode | undefined;
+
+// @internal (undocumented)
+export function getOperationName(doc: DocumentNode): string | null;
+
+// @internal (undocumented)
+export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
+
+// Warning: (ae-forgotten-export) The symbol "Directives" needs to be exported by the entry point index.d.ts
+//
+// @internal (undocumented)
+export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | null, directives?: Directives) => string) & {
+    setStringify(s: typeof storeKeyNameStringify): (value: any) => string;
+};
+
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;
     parser?: () => number;
     canonicalStringify?: () => number;
 };
+
+// @internal (undocumented)
+export function graphQLResultHasError(result: FetchResult<any>): boolean;
+
+// @internal (undocumented)
+export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
+
+// @internal (undocumented)
+export type IsAny<T> = 0 extends 1 & T ? true : false;
+
+// @internal
+export const isArray: (a: any) => a is any[] | readonly any[];
+
+// @internal (undocumented)
+export function isDocumentNode(value: unknown): value is DocumentNode;
+
+// @internal (undocumented)
+export function isExecutionPatchIncrementalResult<T>(value: FetchResult<T>): value is ExecutionPatchIncrementalResult;
+
+// @internal (undocumented)
+export function isExecutionPatchInitialResult<T>(value: FetchResult<T>): value is ExecutionPatchInitialResult<T>;
+
+// @internal (undocumented)
+export function isExecutionPatchResult<T>(value: FetchResult<T>): value is ExecutionPatchResult<T>;
+
+// @internal (undocumented)
+export function isField(selection: SelectionNode): selection is FieldNode;
+
+// @internal (undocumented)
+export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
+
+// @internal (undocumented)
+export function isNonNullObject(obj: unknown): obj is Record<string | number, any>;
+
+// @internal (undocumented)
+export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
+
+// @internal (undocumented)
+export function makeReference(id: string): Reference;
+
+// @internal
+export function makeUniqueId(prefix: string): string;
+
+// @internal (undocumented)
+export function maybeDeepFreeze<T>(obj: T): T;
+
+// @internal (undocumented)
+export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;
+
+// @internal (undocumented)
+export function mergeDeepArray<T>(sources: T[]): T;
+
+// @internal (undocumented)
+export function mergeIncrementalData<TData extends object>(prevResult: TData, result: ExecutionPatchResult<TData>): TData;
+
+// Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
+//
+// @internal (undocumented)
+export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
+
+// @public @deprecated
+type NoInfer_2<T> = [T][T extends any ? 0 : never];
+export { NoInfer_2 as NoInfer }
 
 // @public (undocumented)
 type ObservableEvent<T> = {
@@ -98,15 +361,77 @@ type ObservableEvent<T> = {
     value: T;
 };
 
+// @internal (undocumented)
+export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
+
 // Warning: (ae-forgotten-export) The symbol "ObservableEvent" needs to be exported by the entry point index.d.ts
 //
 // @internal (undocumented)
 export function onAnyEvent<T>(handleEvent: (event: ObservableEvent<T>) => void): (observable: Observable<T>) => Observable<T>;
 
+// @public (undocumented)
+type OptionsUnion<TData, TVariables extends OperationVariables> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, any>;
+
+// @internal (undocumented)
+export interface PendingPromise<TValue> extends Promise<TValue> {
+    // (undocumented)
+    status: "pending";
+}
+
+// @internal (undocumented)
+export type Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+
+// @public (undocumented)
+export function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T>;
+
+// @internal (undocumented)
+export type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+
+// Warning: (ae-incompatible-release-tags) The symbol "ReconcilerFunction" is marked as @public, but its signature references "DeepMerger" which is marked as @internal
+//
+// @public (undocumented)
+type ReconcilerFunction<TContextArgs extends any[]> = (this: DeepMerger<TContextArgs>, target: Record<string | number, any>, source: Record<string | number, any>, property: string | number, ...context: TContextArgs) => any;
+
 // Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 export function registerGlobalCache(name: keyof typeof globalCaches, getSize: () => number): void;
+
+// @internal (undocumented)
+export interface RejectedPromise<TValue> extends Promise<TValue> {
+    // (undocumented)
+    reason: unknown;
+    // (undocumented)
+    status: "rejected";
+}
+
+// @internal
+export function removeClientSetsFromDocument(document: DocumentNode): DocumentNode | null;
+
+// @public (undocumented)
+type RemoveDirectiveConfig = {
+    name?: string;
+    test?: (node: DirectiveNode) => boolean;
+    remove?: boolean;
+};
+
+// Warning: (ae-forgotten-export) The symbol "RemoveDirectiveConfig" needs to be exported by the entry point index.d.ts
+//
+// @internal (undocumented)
+export function removeDirectivesFromDocument(directives: RemoveDirectiveConfig[], doc: DocumentNode): DocumentNode | null;
+
+// @internal (undocumented)
+export type RemoveIndexSignature<T> = {
+    [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
+};
+
+// @internal (undocumented)
+export function resultKeyNameFromField(field: FieldNode): string;
+
+// @internal (undocumented)
+export function shouldInclude({ directives }: SelectionNode, variables?: Record<string, any>): boolean;
 
 // @public (undocumented)
 export class SlotAwareBehaviorSubject<T, S> extends BehaviorSubject<T> {
@@ -125,8 +450,31 @@ export class SlotAwareBehaviorSubject<T, S> extends BehaviorSubject<T> {
 // @public (undocumented)
 type SlotInstance<S> = InstanceType<typeof Slot<S>>;
 
+// @internal (undocumented)
+export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;
+
 // @public (undocumented)
+let storeKeyNameStringify: (value: any) => string;
+
+// @internal (undocumented)
+export function stringifyForDisplay(value: any, space?: number): string;
+
+// @internal (undocumented)
 export function toQueryResult<TData = unknown>(value: ApolloQueryResult<TData>): QueryResult<TData>;
+
+// @public (undocumented)
+type TupleToIntersection<T extends any[]> = T extends [infer A] ? A : T extends [infer A, infer B] ? A & B : T extends [infer A, infer B, infer C] ? A & B & C : T extends [infer A, infer B, infer C, infer D] ? A & B & C & D : T extends [infer A, infer B, infer C, infer D, infer E] ? A & B & C & D & E : T extends (infer U)[] ? U : any;
+
+// @internal (undocumented)
+export type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {
+    variables?: TVariables;
+} : {
+    variables: TVariables;
+};
+
+// Warnings were encountered during analysis:
+//
+// src/utilities/internal/getStoreKeyName.ts:87:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

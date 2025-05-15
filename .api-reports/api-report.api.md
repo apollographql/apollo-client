@@ -532,7 +532,7 @@ export interface DataProxy {
 // Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @internal (undocumented)
 type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
 
 // @public (undocumented)
@@ -919,13 +919,13 @@ type FieldValueGetter = EntityStore["getFieldValue"];
 // @public (undocumented)
 type FlavorableWriteContext = Pick<WriteContext, "clientOnly" | "deferred" | "flavors">;
 
-// @public
+// @internal
 interface FragmentMap {
     // (undocumented)
     [fragmentName: string]: FragmentDefinitionNode;
 }
 
-// @public (undocumented)
+// @internal (undocumented)
 type FragmentMapFunction = (fragmentName: string) => FragmentDefinitionNode | null;
 
 // @public (undocumented)
@@ -1254,20 +1254,14 @@ class InvariantError extends Error {
     constructor(message?: string);
 }
 
-// @public (undocumented)
+// @internal (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
-// @public (undocumented)
+// @public
 export function isReference(obj: any): obj is Reference;
-
-// Warning: (ae-forgotten-export) The symbol "UnionToIntersection" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "UnionForAny" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never ? true : false;
 
 // @public (undocumented)
 type KeyArgsFunction = (args: Record<string, any> | null, context: {
@@ -1366,9 +1360,6 @@ type LocalStateOptions = {
 };
 
 // @public (undocumented)
-export function makeReference(id: string): Reference;
-
-// @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
 // @public
@@ -1441,11 +1432,6 @@ type MergeObjects<T, U> = Prettify<{
 
 // @public (undocumented)
 type MergeObjectsFunction = <T extends StoreObject | Reference>(existing: T, incoming: T) => T;
-
-// Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, any>>, TOptions extends TDefaultOptions>(defaults: TDefaultOptions | Partial<TDefaultOptions> | undefined, options: TOptions | Partial<TOptions>): TOptions & TDefaultOptions;
 
 // @public (undocumented)
 export interface MergeTree {
@@ -1626,7 +1612,7 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
 // @public (undocumented)
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 
-// @public
+// @public @deprecated
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 
 // @public
@@ -1804,9 +1790,6 @@ export type OptimisticStoreItem = {
 };
 
 // @public (undocumented)
-type OptionsUnion<TData, TVariables extends OperationVariables> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, any>;
-
-// @public (undocumented)
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]): (response: Response) => Promise<any>;
 
 // @public (undocumented)
@@ -1859,15 +1842,15 @@ export type PossibleTypesMap = {
     [supertype: string]: string[];
 };
 
-// @public (undocumented)
+// @internal (undocumented)
 type Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
 
-// @public (undocumented)
+// @internal (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
-// @public (undocumented)
+// @public
 const print_2: ((ast: ASTNode) => string) & {
     reset(): void;
 };
@@ -2153,7 +2136,7 @@ export type ReadQueryOptions = {
     config?: ApolloReducerConfig;
 };
 
-// @public (undocumented)
+// @public
 export interface Reference {
     // (undocumented)
     readonly __ref: string;
@@ -2177,10 +2160,8 @@ export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
     updateCache?: (cache: TCache) => void;
 }
 
-// Warning: (ae-forgotten-export) The symbol "IsStrictlyAny" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export type RefetchQueriesPromiseResults<TResult> = IsStrictlyAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
+export type RefetchQueriesPromiseResults<TResult> = IsAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
 // @public (undocumented)
 export interface RefetchQueriesResult<TResult> extends Promise<RefetchQueriesPromiseResults<TResult>> {
@@ -2199,7 +2180,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 // @public (undocumented)
 type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
 
-// @public (undocumented)
+// @internal (undocumented)
 type RemoveIndexSignature<T> = {
     [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
 };
@@ -2317,7 +2298,7 @@ export const split: typeof ApolloLink.split;
 // @public (undocumented)
 type StorageType = Record<string, any>;
 
-// @public (undocumented)
+// @public
 export interface StoreObject {
     // (undocumented)
     [storeFieldName: string]: StoreValue;
@@ -2332,7 +2313,7 @@ type StoreObjectValueMaybeReference<StoreVal> = StoreVal extends Array<Record<st
 Item
 ] extends [Record<string, any>] ? ReadonlyArray<AsStoreObject<Item> | Reference> : never : never : StoreVal extends Record<string, any> ? AsStoreObject<StoreVal> | Reference : StoreVal;
 
-// @public (undocumented)
+// @public
 export type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
 // @public (undocumented)
@@ -2450,12 +2431,6 @@ export class UnconventionalError extends Error {
 }
 
 // @public (undocumented)
-type UnionForAny<T> = T extends never ? "a" : 1;
-
-// @public (undocumented)
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
-
-// @public (undocumented)
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
 
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
@@ -2493,7 +2468,7 @@ export type UpdateQueryOptions<TData, TVariables> = {
     previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
-// @public (undocumented)
+// @internal (undocumented)
 type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {
     variables?: TVariables;
 } : {
@@ -2583,16 +2558,16 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:137:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:138:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:97:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:264:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:265:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:468:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:262:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:263:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:463:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

@@ -14,19 +14,15 @@ import type {
   Unmasked,
 } from "@apollo/client/masking";
 import { maskFragment } from "@apollo/client/masking";
-import type {
-  DeepPartial,
-  NoInfer,
-  Reference,
-  StoreObject,
-} from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
+import { cacheSizes } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities/internal";
 import {
-  cacheSizes,
+  getApolloCacheMemoryInternals,
   getFragmentDefinition,
   getFragmentQueryDocument,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { getApolloCacheMemoryInternals } from "@apollo/client/utilities/internal";
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "../../core/equalByQuery.js";

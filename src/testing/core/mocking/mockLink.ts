@@ -5,18 +5,17 @@ import { asapScheduler, Observable, observeOn, throwError } from "rxjs";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
+import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {
-  addTypenameToDocument,
   checkDocument,
   cloneDeep,
   getDefaultValues,
   getOperationDefinition,
   isDocumentNode,
   makeUniqueId,
-  print,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
-} from "@apollo/client/utilities";
+} from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */

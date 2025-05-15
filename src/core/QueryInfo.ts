@@ -5,11 +5,11 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
+  DeepMerger,
   graphQLResultHasError,
   isNonEmptyArray,
-} from "@apollo/client/utilities";
-import { mergeIncrementalData } from "@apollo/client/utilities";
-import { DeepMerger } from "@apollo/client/utilities";
+  mergeIncrementalData,
+} from "@apollo/client/utilities/internal";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";

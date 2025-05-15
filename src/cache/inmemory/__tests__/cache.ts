@@ -6,11 +6,11 @@ import type {
   Reference,
   TypedDocumentNode,
 } from "@apollo/client";
-import { isReference, makeReference, makeVar } from "@apollo/client";
+import { isReference, makeVar } from "@apollo/client";
 import type { Cache, InMemoryCacheConfig } from "@apollo/client/cache";
 import { InMemoryCache, MissingFieldError } from "@apollo/client/cache";
 import { spyOnConsole } from "@apollo/client/testing/internal";
-import { cloneDeep } from "@apollo/client/utilities";
+import { cloneDeep, makeReference } from "@apollo/client/utilities/internal";
 
 import { defaultCacheSizes } from "../../../utilities/caching/sizes.js";
 

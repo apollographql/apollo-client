@@ -1,6 +1,6 @@
 import { Trie } from "@wry/trie";
-import type { DocumentNode } from "graphql";
-import { OperationTypeNode } from "graphql";
+import type { DirectiveNode, DocumentNode } from "graphql";
+import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
 import type { Subscription } from "rxjs";
 import {
   catchError,
@@ -38,35 +38,30 @@ import type {
 import { execute } from "@apollo/client/link";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
-import { checkDocument, print } from "@apollo/client/utilities";
-import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
+import { print } from "@apollo/client/utilities";
+import { cacheSizes } from "@apollo/client/utilities";
+import { DocumentTransform } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 import {
-  addNonReactiveToNamedFragments,
-  hasDirectives,
-  isExecutionPatchIncrementalResult,
-  isExecutionPatchResult,
-  isFullyUnmaskedOperation,
-  removeDirectivesFromDocument,
-} from "@apollo/client/utilities";
-import {
-  DocumentTransform,
+  AutoCleanedWeakCache,
+  checkDocument,
+  filterMap,
   getDefaultValues,
   getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
-  hasClientExports,
+  hasDirectives,
   isDocumentNode,
+  isExecutionPatchIncrementalResult,
+  isExecutionPatchResult,
   isNonEmptyArray,
   isNonNullObject,
   makeUniqueId,
-} from "@apollo/client/utilities";
-import { mergeIncrementalData } from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  filterMap,
+  mergeIncrementalData,
   onAnyEvent,
+  removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import {
@@ -758,7 +753,7 @@ export class QueryManager {
         // of the transformed document. We should consider merging these
         // traversals into a single pass in the future, though the work is
         // cached after the first time.
-        hasClientExports: hasClientExports(document),
+        hasClientExports: hasDirectives(["client", "export"], document, true),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
@@ -1936,4 +1931,49 @@ interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
   observable: Observable<QueryNotification.Value<TData, any>>;
+}
+
+function isFullyUnmaskedOperation(document: DocumentNode) {
+  let isUnmasked = true;
+
+  visit(document, {
+    FragmentSpread: (node) => {
+      isUnmasked =
+        !!node.directives &&
+        node.directives.some((directive) => directive.name.value === "unmask");
+
+      if (!isUnmasked) {
+        return BREAK;
+      }
+    },
+  });
+
+  return isUnmasked;
+}
+
+function addNonReactiveToNamedFragments(document: DocumentNode) {
+  checkDocument(document);
+
+  return visit(document, {
+    FragmentSpread: (node) => {
+      // Do not add `@nonreactive` if the fragment is marked with `@unmask`
+      // since we want to react to changes in this fragment.
+      if (
+        node.directives?.some((directive) => directive.name.value === "unmask")
+      ) {
+        return;
+      }
+
+      return {
+        ...node,
+        directives: [
+          ...(node.directives || []),
+          {
+            kind: Kind.DIRECTIVE,
+            name: { kind: Kind.NAME, value: "nonreactive" },
+          } satisfies DirectiveNode,
+        ],
+      };
+    },
+  });
 }

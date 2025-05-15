@@ -14,15 +14,13 @@ import { lastValueFrom, Subject, tap } from "rxjs";
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   compact,
+  filterMap,
   getOperationDefinition,
   getQueryDefinition,
   preventUnhandledRejection,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  filterMap,
   SlotAwareBehaviorSubject,
   toQueryResult,
 } from "@apollo/client/utilities/internal";

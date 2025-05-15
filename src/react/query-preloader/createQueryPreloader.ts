@@ -18,7 +18,7 @@ import type {
   DeepPartial,
   NoInfer,
   VariablesOption,
-} from "@apollo/client/utilities";
+} from "@apollo/client/utilities/internal";
 
 import { wrapHook } from "../hooks/internal/index.js";
 

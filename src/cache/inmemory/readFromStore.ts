@@ -3,31 +3,33 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type {
-  FragmentMap,
-  FragmentMapFunction,
-  Reference,
-  StoreObject,
-} from "@apollo/client/utilities";
+import type { Reference, StoreObject } from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   cacheSizes,
   canonicalStringify,
+  isReference,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type {
+  FragmentMap,
+  FragmentMapFunction,
+} from "@apollo/client/utilities/internal";
+import {
   DeepMerger,
   getDefaultValues,
   getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
+  isArray,
   isField,
   isNonNullObject,
-  isReference,
   makeReference,
   maybeDeepFreeze,
   mergeDeepArray,
   resultKeyNameFromField,
   shouldInclude,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
+} from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -45,7 +47,6 @@ import {
 import {
   extractFragmentContext,
   getTypenameFromStoreObject,
-  isArray,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { Policies } from "./policies.js";

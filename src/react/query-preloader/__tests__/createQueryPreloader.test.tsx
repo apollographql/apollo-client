@@ -694,20 +694,14 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   expect(fetchCount).toBe(3);
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-    expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
-      data: {
-        character: { __typename: "Character", id: "1", name: "Spider-Man" },
-      },
-      error: undefined,
-      networkStatus: NetworkStatus.loading,
-    });
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await renderStream.takeRender();
-    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    const { snapshot } = await renderStream.takeRender();
+
     expect(snapshot.result).toEqual({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },

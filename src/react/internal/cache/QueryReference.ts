@@ -282,14 +282,11 @@ export class InternalQueryReference<TData = unknown> {
         observable.silentSetOptions({ fetchPolicy: "cache-first" });
       }
 
-      this.subscribeToQuery();
-
-      if (avoidNetworkRequests) {
-        return;
+      if (!avoidNetworkRequests) {
+        observable.resetDiff();
+        this.setResult();
       }
-
-      observable.resetDiff();
-      this.setResult();
+      this.subscribeToQuery();
     } finally {
       observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
     }

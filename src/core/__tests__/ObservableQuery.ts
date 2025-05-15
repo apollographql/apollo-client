@@ -4,7 +4,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import type { ObservedValueOf, Observer } from "rxjs";
-import { delay, from, Observable, of, Subject } from "rxjs";
+import { delay, from, lastValueFrom, Observable, of, Subject } from "rxjs";
 
 import type {
   ApolloQueryResult,
@@ -3371,7 +3371,13 @@ describe("ObservableQuery", () => {
     });
 
     {
-      type Result = ApolloQueryResult<{ hello: string }>;
+      type Result =
+        // wait for the emit of a new value
+        | { emit: ApolloQueryResult<{ hello: string }> }
+        // don't expect an emit, but `currentResult` should change
+        | { currentResult: ApolloQueryResult<{ hello: string }> }
+        // `currentResult` should stay the same
+        | undefined;
 
       const cacheValues = {
         initial: { hello: "world (initial)" },
@@ -3400,7 +3406,7 @@ describe("ObservableQuery", () => {
 
       type TestDetails = {
         // writeCache: cacheValues.initial
-        resultBeforeSubscribe: Result;
+        resultBeforeSubscribe: Exclude<Result, { emit: any }>;
         // observableQuery.subscribe
         resultAfterSubscribe: Result;
         // writeCache:  cacheValues.update1
@@ -3410,6 +3416,7 @@ describe("ObservableQuery", () => {
         // writeCache:  cacheValues.update2
         resultAfterCacheUpdate2: Result;
         // observableQuery.refetch
+        resultAfterRefetchCall: Result;
         // writeCache:  cacheValues.update3
         resultAfterCacheUpdate3: Result;
         // incoming result:  cacheValues.refetch
@@ -3418,210 +3425,1051 @@ describe("ObservableQuery", () => {
         resultAfterCacheUpdate4: Result;
       };
 
-      const cacheAndLink: TestDetails = {
-        resultBeforeSubscribe: {
-          ...loadingStates.loading,
-          data: cacheValues.initial,
-          partial: false,
-        },
-        resultAfterSubscribe: {
-          ...loadingStates.loading,
-          data: cacheValues.initial,
-          partial: false,
-        },
-        resultAfterCacheUpdate1: {
-          ...loadingStates.loading,
-          data: cacheValues.update1,
-          partial: false,
-        },
-        resultAfterLinkNext: {
-          ...loadingStates.done,
-          data: cacheValues.link,
-          partial: false,
-        },
-        resultAfterCacheUpdate2: {
-          ...loadingStates.done,
-          data: cacheValues.update2,
-          partial: false,
-        },
-        resultAfterCacheUpdate3: {
-          ...loadingStates.refetching,
-          data: cacheValues.update3,
-          partial: false,
-        },
-        resultAfterRefetchNext: {
-          ...loadingStates.done,
-          data: cacheValues.refetch,
-          partial: false,
-        },
-        resultAfterCacheUpdate4: {
-          ...loadingStates.done,
-          data: cacheValues.update4,
-          partial: false,
-        },
-      };
-
-      const linkOnly: TestDetails = {
-        resultBeforeSubscribe: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterSubscribe: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterCacheUpdate1: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterLinkNext: {
-          ...loadingStates.done,
-          data: cacheValues.link,
-          partial: false,
-        },
-        resultAfterCacheUpdate2: {
-          ...loadingStates.done,
-          data: cacheValues.link,
-          partial: false,
-        },
-        resultAfterCacheUpdate3: {
-          ...loadingStates.refetching,
-          data: cacheValues.link,
-          partial: false,
-        },
-        resultAfterRefetchNext: {
-          ...loadingStates.done,
-          data: cacheValues.refetch,
-          partial: false,
-        },
-        resultAfterCacheUpdate4: {
-          ...loadingStates.done,
-          data: cacheValues.refetch,
-          partial: false,
-        },
-      };
-
-      const standbyOnly: TestDetails = {
-        ...linkOnly,
-        resultBeforeSubscribe: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterSubscribe: {
-          ...loadingStates.done,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterCacheUpdate1: {
-          ...loadingStates.done,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterLinkNext: {
-          ...loadingStates.done,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterCacheUpdate2: {
-          ...loadingStates.done,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterCacheUpdate3: {
-          ...loadingStates.refetching,
-          data: undefined,
-          partial: true,
-        },
-        // like linkOnly:
-        // resultAfterRefetchNext
-        // resultAfterCacheUpdate4
-      };
-
-      const linkOnlyThenCacheAndLink: TestDetails = {
-        ...cacheAndLink,
-        resultBeforeSubscribe: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterSubscribe: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        resultAfterCacheUpdate1: {
-          ...loadingStates.loading,
-          data: undefined,
-          partial: true,
-        },
-        // like cacheAndLink:
-        // resultAfterLinkNext
-        // resultAfterCacheUpdate2
-        // resultAfterCacheUpdate3
-        // resultAfterRefetchNext
-        // resultAfterCacheUpdate4
-      };
-
-      const cacheOnlyThenCacheAndLink: TestDetails = {
-        ...cacheAndLink,
-        resultBeforeSubscribe: {
-          ...loadingStates.done,
-          data: cacheValues.initial,
-          partial: false,
-        },
-        resultAfterSubscribe: {
-          ...loadingStates.done,
-          data: cacheValues.initial,
-          partial: false,
-        },
-        resultAfterCacheUpdate1: {
-          ...loadingStates.done,
-          data: cacheValues.update1,
-          partial: false,
-        },
-        resultAfterLinkNext: {
-          ...loadingStates.done,
-          data: cacheValues.update1,
-          partial: false,
-        },
-        // like cacheAndLink:
-        // resultAfterCacheUpdate2
-        // resultAfterCacheUpdate3
-        // resultAfterRefetchNext
-        // resultAfterCacheUpdate4
-      };
-
       it.each<
         [
           initialFetchPolicy: WatchQueryFetchPolicy,
           nextFetchPolicy: WatchQueryFetchPolicy,
+          notifyOnNetworkStatusChange: boolean,
           testDetails: TestDetails,
         ]
       >([
-        ["cache-and-network", "cache-and-network", cacheAndLink],
-        ["cache-first", "cache-first", cacheOnlyThenCacheAndLink],
-        ["cache-first", "cache-and-network", cacheOnlyThenCacheAndLink],
-        ["no-cache", "no-cache", linkOnly],
-        ["no-cache", "cache-and-network", linkOnlyThenCacheAndLink],
-        ["standby", "standby", standbyOnly],
-        ["standby", "cache-and-network", standbyOnly],
-        ["cache-only", "cache-only", cacheOnlyThenCacheAndLink],
-        ["cache-only", "cache-and-network", cacheOnlyThenCacheAndLink],
+        [
+          "cache-and-network",
+          "cache-and-network",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.loading,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-and-network",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.loading,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-first",
+          "cache-first",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-first",
+          "cache-first",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-first",
+          "cache-and-network",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-first",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "no-cache",
+          "no-cache",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "no-cache",
+          "no-cache",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "no-cache",
+          "cache-and-network",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "no-cache",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.link,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate2: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "standby",
+          "standby",
+          true,
+          {
+            resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: undefined,
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "standby",
+          "standby",
+          false,
+          {
+            resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: undefined,
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "standby",
+          "cache-and-network",
+          true,
+          {
+            resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: undefined,
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "standby",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              // TODO: should this be done from the start?
+              currentResult: {
+                ...loadingStates.loading,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate1: undefined,
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: undefined,
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: undefined,
+                partial: true,
+              },
+            },
+            resultAfterCacheUpdate3: undefined,
+            resultAfterRefetchNext: undefined,
+            resultAfterCacheUpdate4: undefined,
+          },
+        ],
+        [
+          "cache-only",
+          "cache-only",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-only",
+          "cache-only",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-only",
+          "cache-and-network",
+          true,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              emit: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
+        [
+          "cache-only",
+          "cache-and-network",
+          false,
+          {
+            resultBeforeSubscribe: {
+              currentResult: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterSubscribe: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.initial,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate1: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update1,
+                partial: false,
+              },
+            },
+            resultAfterLinkNext: undefined,
+            resultAfterCacheUpdate2: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterRefetchCall: {
+              currentResult: {
+                ...loadingStates.refetching,
+                data: cacheValues.update2,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate3: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update3,
+                partial: false,
+              },
+            },
+            resultAfterRefetchNext: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.refetch,
+                partial: false,
+              },
+            },
+            resultAfterCacheUpdate4: {
+              emit: {
+                ...loadingStates.done,
+                data: cacheValues.update4,
+                partial: false,
+              },
+            },
+          },
+        ],
       ])(
-        "fetchPolicy %s -> %s",
+        "fetchPolicy %s -> %s (notifyOnNetworkStatusChange %s)",
         async (
           fetchPolicy,
           nextFetchPolicy,
+          notifyOnNetworkStatusChange,
           {
             resultBeforeSubscribe,
             resultAfterSubscribe,
             resultAfterCacheUpdate1,
             resultAfterLinkNext,
             resultAfterCacheUpdate2,
+            resultAfterRefetchCall,
             resultAfterCacheUpdate3,
             resultAfterRefetchNext,
             resultAfterCacheUpdate4,
@@ -3642,66 +4490,92 @@ describe("ObservableQuery", () => {
             query,
             fetchPolicy,
             nextFetchPolicy,
-            notifyOnNetworkStatusChange: false,
+            notifyOnNetworkStatusChange,
           });
 
-          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
-            resultBeforeSubscribe
-          );
+          let lastCurrentResult = observableQuery.getCurrentResult();
+          async function check(result: Result, expectedName: string) {
+            if (!result) {
+              expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
+                lastCurrentResult,
+                {
+                  received: "observableQuery.getCurrentResult()",
+                  expected: expectedName,
+                  hintOptions: {
+                    comment: "should not change from previous comparison",
+                  },
+                }
+              );
+            } else if ("emit" in result) {
+              await expect(stream).toEmitTypedValue(result.emit, {
+                expected: expectedName,
+              });
+              expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
+                result.emit,
+                {
+                  expected: expectedName,
+                  received: "observableQuery.getCurrentResult()",
+                  hintOptions: {
+                    comment:
+                      "observableQuery.getCurrentResult() should equal emitted value immediately after emit",
+                  },
+                }
+              );
+            } else {
+              await waitFor(() => {
+                expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
+                  result.currentResult,
+                  {
+                    expected: expectedName,
+                    received: "observableQuery.getCurrentResult()",
+                    hintOptions: {
+                      comment:
+                        "waiting for `getCurrentResult` to change to expected value",
+                    },
+                  }
+                );
+              });
+            }
+            lastCurrentResult = observableQuery.getCurrentResult();
+          }
 
-          observableQuery.subscribe({});
-          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
-            resultAfterSubscribe
-          );
+          await check(resultBeforeSubscribe, "resultBeforeSubscribe");
+
+          const stream = new ObservableStream(observableQuery);
+          await check(resultAfterSubscribe, "resultAfterSubscribe");
 
           cache.writeQuery({ query, data: cacheValues.update1 });
-          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
-            resultAfterCacheUpdate1
-          );
+
+          await check(resultAfterCacheUpdate1, "resultAfterCacheUpdate1");
 
           setTimeout(() => {
             subject.next({ data: cacheValues.link });
             subject.complete();
-            subject = new Subject();
           });
-
-          await waitFor(
-            () =>
-              void expect(
-                observableQuery.getCurrentResult()
-              ).toStrictEqualTyped(resultAfterLinkNext),
-            { interval: 1 }
-          );
+          await check(resultAfterLinkNext, "resultAfterLinkNext");
 
           cache.writeQuery({ query, data: cacheValues.update2 });
-          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
-            resultAfterCacheUpdate2
-          );
+          await check(resultAfterCacheUpdate2, "resultAfterCacheUpdate2");
 
+          await lastValueFrom(subject, { defaultValue: undefined });
+          subject = new Subject();
           void observableQuery.refetch();
+          await check(resultAfterRefetchCall, "resultAfterRefetchCall");
 
           cache.writeQuery({ query, data: cacheValues.update3 });
-          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
-            resultAfterCacheUpdate3
-          );
+
+          await check(resultAfterCacheUpdate3, "resultAfterCacheUpdate3");
 
           setTimeout(() => {
             subject.next({ data: cacheValues.refetch });
             subject.complete();
           });
-
-          await waitFor(
-            () =>
-              void expect(
-                observableQuery.getCurrentResult()
-              ).toStrictEqualTyped(resultAfterRefetchNext),
-            { interval: 1 }
-          );
+          await check(resultAfterRefetchNext, "resultAfterRefetchNext");
 
           cache.writeQuery({ query, data: cacheValues.update4 });
-          expect(observableQuery.getCurrentResult()).toStrictEqualTyped(
-            resultAfterCacheUpdate4
-          );
+          await check(resultAfterCacheUpdate4, "resultAfterCacheUpdate4");
+
+          expect(stream).not.toEmitAnything();
         }
       );
     }

@@ -1,5 +1,6 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
+import type { MatcherHintOptions } from "jest-matcher-utils";
 
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
@@ -8,14 +9,21 @@ import type { TakeOptions } from "../internal/ObservableStream.js";
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 
 export const toEmitTypedValue: MatcherFunction<
-  [value: any, options?: TakeOptions]
+  [
+    value: any,
+    options?: TakeOptions & {
+      received?: string;
+      expected?: string;
+      hintOptions?: MatcherHintOptions;
+    },
+  ]
 > = async function (actual, expected, options) {
   const stream = actual as ObservableStream<any>;
   const hint = this.utils.matcherHint(
     this.isNot ? ".not.toEmitTypedValue" : "toEmitTypedValue",
-    "stream",
-    "expected",
-    { isNot: this.isNot }
+    options?.received || "stream",
+    options?.expected || "expected",
+    { ...options?.hintOptions, isNot: this.isNot }
   );
 
   try {

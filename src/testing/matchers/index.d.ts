@@ -10,6 +10,7 @@ import type { QueryRef } from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
+import { MatcherHintOptions } from "jest-matcher-utils";
 
 // Unfortunately TypeScript does not have a way to determine if a generic
 // argument is a class or not, so we need to manually keep track of known class
@@ -83,14 +84,27 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toEmitTypedValue: T extends ObservableStream<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,
-      options?: TakeOptions
+
+      options?: TakeOptions & {
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
+      }
     ) => Promise<R>
   : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
 
   toStrictEqualTyped: [T] extends [Promise<infer TResult>] ?
     <
-      TOptions extends { includeKnownClassInstances: boolean } = {
-        includeKnownClassInstances: false;
+      TOptions extends {
+        includeKnownClassInstances?: boolean;
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
+      } = {
+        includeKnownClassInstances?: false;
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
       },
     >(
       expected: FilterUnserializableProperties<
@@ -100,8 +114,16 @@ interface ApolloCustomMatchers<R = void, T = {}> {
       options?: TOptions
     ) => R
   : <
-      TOptions extends { includeKnownClassInstances: boolean } = {
-        includeKnownClassInstances: false;
+      TOptions extends {
+        includeKnownClassInstances?: boolean;
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
+      } = {
+        includeKnownClassInstances?: false;
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
       },
     >(
       expected: FilterUnserializableProperties<

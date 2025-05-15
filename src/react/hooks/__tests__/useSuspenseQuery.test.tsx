@@ -195,7 +195,7 @@ declare namespace usePaginatedCase {
     offset?: number;
   }
 }
-function usePaginatedCase({ responseTimeout = 10 } = {}) {
+function usePaginatedCase({ delay = 10 } = {}) {
   const query: TypedDocumentNode<
     usePaginatedCase.QueryData,
     usePaginatedCase.Variables
@@ -222,7 +222,7 @@ function usePaginatedCase({ responseTimeout = 10 } = {}) {
       setTimeout(() => {
         observer.next({ data: { letters } });
         observer.complete();
-      }, responseTimeout);
+      }, delay);
     });
   });
 
@@ -4834,7 +4834,7 @@ describe("useSuspenseQuery", () => {
   });
 
   it("re-suspends when calling `fetchMore` with different variables", async () => {
-    const { data, query, link } = usePaginatedCase({ responseTimeout: 150 });
+    const { data, query, link } = usePaginatedCase({ delay: 150 });
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),

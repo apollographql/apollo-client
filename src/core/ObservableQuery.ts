@@ -119,7 +119,7 @@ const enum EmitBehavior {
 }
 interface Meta {
   readonly query: DocumentNode;
-  readonly variables: OperationVariables | undefined;
+  readonly variables: OperationVariables;
   shouldEmit?: EmitBehavior;
   /** can be used to override `ObservableQuery.options.fetchPolicy` for this notification */
   fetchPolicy?: WatchQueryFetchPolicy;
@@ -258,7 +258,7 @@ export class ObservableQuery<
    * it should actually start receiving cache updates, but not before it has
    * received the first result from the network.
    */
-  private waitForOwnResult: boolean;
+  private waitForNetworkResult: boolean;
   private lastQuery: DocumentNode;
 
   private queryInfo: QueryInfo;
@@ -290,7 +290,7 @@ export class ObservableQuery<
     this.queryManager = queryManager;
 
     // active state
-    this.waitForOwnResult = options.fetchPolicy === "network-only";
+    this.waitForNetworkResult = options.fetchPolicy === "network-only";
     this.isTornDown = false;
 
     this.subscribeToMore = this.subscribeToMore.bind(this);
@@ -387,10 +387,7 @@ export class ObservableQuery<
                 equalByQuery(maskedQuery, previous, current, variables)
               : equal(previous, current);
 
-            if (
-              resultIsEqual &&
-              (!variables || equal(previousVariables, variables))
-            ) {
+            if (resultIsEqual && equal(previousVariables, variables)) {
               return;
             }
           }
@@ -470,11 +467,7 @@ export class ObservableQuery<
     });
   }
 
-  private getInitialResult({
-    query = this.query,
-    variables = this.variables,
-    observed = this.subject.observed,
-  } = {}): ApolloQueryResult<MaybeMasked<TData>> {
+  private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
@@ -488,8 +481,8 @@ export class ObservableQuery<
 
     const cacheResult = () => {
       const diff = this.getCacheDiff({
-        query,
-        variables,
+        query: this.query,
+        variables: this.variables,
       });
 
       return this.maskResult({
@@ -516,14 +509,6 @@ export class ObservableQuery<
           loading: true,
           networkStatus: NetworkStatus.loading,
         };
-      case "standby":
-        return observed ?
-            {
-              ...defaultResult,
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-            }
-          : defaultResult;
 
       default:
         return defaultResult;
@@ -537,7 +522,7 @@ export class ObservableQuery<
     const shouldUnsubscribe =
       fetchPolicy === "standby" ||
       fetchPolicy === "no-cache" ||
-      this.waitForOwnResult;
+      this.waitForNetworkResult;
 
     const shouldResubscribe = !isEqualQuery(
       { query, variables },
@@ -1677,8 +1662,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         return;
       }
     } else if (notification.source === "network") {
-      if (this.waitForOwnResult) {
-        this.waitForOwnResult = false;
+      if (this.waitForNetworkResult) {
+        this.waitForNetworkResult = false;
         this.resubscribeCache();
       }
       result =

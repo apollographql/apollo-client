@@ -524,10 +524,9 @@ export class ObservableQuery<
       fetchPolicy === "no-cache" ||
       this.waitForNetworkResult;
 
-    const shouldResubscribe = !isEqualQuery(
-      { query, variables },
-      this.unsubscribeFromCache
-    );
+    const shouldResubscribe =
+      !isEqualQuery({ query, variables }, this.unsubscribeFromCache) &&
+      !this.waitForNetworkResult;
 
     if (shouldUnsubscribe || shouldResubscribe) {
       this.unsubscribeFromCache?.();

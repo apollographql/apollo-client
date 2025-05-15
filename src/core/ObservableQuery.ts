@@ -475,10 +475,7 @@ export class ObservableQuery<
     };
 
     const cacheResult = () => {
-      const diff = this.getCacheDiff({
-        query: this.query,
-        variables: this.variables,
-      });
+      const diff = this.getCacheDiff();
 
       return this.maskResult({
         data:

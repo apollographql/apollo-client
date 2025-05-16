@@ -7,7 +7,7 @@ The resolver function's `context` argument (the 3rd argument) has changed to pro
 ```ts
 {
   // the request context
-  context: DefaultContext,
+  requestContext: DefaultContext,
   // The client instance making the request
   client: ApolloClient,
   // Whether the resolver is run as a result of gathering exported variables

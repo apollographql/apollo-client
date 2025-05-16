@@ -203,7 +203,7 @@ export declare namespace LocalState {
     rootValue: TParent,
     args: TArgs,
     context: {
-      context: DefaultContext;
+      requestContext: DefaultContext;
       client: ApolloClient;
       phase: "exports" | "resolve";
     },
@@ -677,7 +677,7 @@ export class LocalState<
                   string,
                   unknown
                 >,
-                { context: execContext.context, client, phase },
+                { requestContext: execContext.context, client, phase },
                 { field, fragmentMap: execContext.fragmentMap, path },
               ])
             )

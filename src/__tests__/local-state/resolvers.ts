@@ -340,7 +340,7 @@ describe("Basic resolver capabilities", () => {
           foo: () => ({ __typename: "Foo" }),
         },
         Foo: {
-          bar: (_data, _args, { context }) => context.id,
+          bar: (_data, _args, { requestContext }) => requestContext.id,
         },
       },
     });

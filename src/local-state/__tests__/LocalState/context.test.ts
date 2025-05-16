@@ -42,7 +42,7 @@ test("passes client in context to resolvers", async () => {
   expect(barResolver).toHaveBeenCalledWith(
     { __typename: "Foo" },
     {},
-    { context: {}, client, phase: "resolve" },
+    { requestContext: {}, client, phase: "resolve" },
     {
       field: expect.objectContaining({
         name: { kind: "Name", value: "bar" },
@@ -73,7 +73,7 @@ test("can access request context in resolvers", async () => {
         foo: () => ({ __typename: "Foo" }),
       },
       Foo: {
-        bar: (_data, _args, { context: { id } }) => id,
+        bar: (_data, _args, { requestContext: { id } }) => id,
       },
     },
   });

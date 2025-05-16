@@ -1066,7 +1066,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const initialFetchPolicy = this.options.fetchPolicy;
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
-    const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
+    const { observable } = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
       networkStatus,
@@ -1181,7 +1181,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         complete: () => this.input.complete(),
       });
 
-    return { fromLink, subscription, observable };
+    return { subscription, observable };
   }
 
   // Turns polling on or off based on this.options.pollInterval.

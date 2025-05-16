@@ -139,3 +139,89 @@ test("can access phase in resolver context", async () => {
     data: { foo: { __typename: "Foo", bar: "resolve" } },
   });
 });
+
+test("can use custom context function used as request context", async () => {
+  const document = gql`
+    query WithContext {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const localState = new LocalState({
+    context: () => ({ isBarEnabled: true }),
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo" }),
+      },
+      Foo: {
+        bar: (_data, _args, { requestContext: { isBarEnabled } }) =>
+          isBarEnabled,
+      },
+    },
+  });
+
+  await expect(
+    localState.execute({
+      document,
+      client,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { foo: { __typename: "Foo", bar: true } },
+  });
+});
+
+test("context function can merge request context and custom context", async () => {
+  const document = gql`
+    query WithContext {
+      foo @client {
+        bar
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const localState = new LocalState({
+    context: ({ requestContext }) => ({
+      ...requestContext,
+      isBarEnabled: true,
+    }),
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo" }),
+      },
+      Foo: {
+        bar: (
+          _data,
+          _args,
+          { requestContext: { isRequestBarEnabled, isBarEnabled } }
+        ) => isRequestBarEnabled && isBarEnabled,
+      },
+    },
+  });
+
+  await expect(
+    localState.execute({
+      document,
+      client,
+      context: { isRequestBarEnabled: true },
+      variables: {},
+      remoteResult: undefined,
+    })
+  ).resolves.toStrictEqualTyped({
+    data: { foo: { __typename: "Foo", bar: true } },
+  });
+});

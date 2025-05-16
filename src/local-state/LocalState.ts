@@ -54,7 +54,7 @@ interface ExecContext {
   client: ApolloClient;
   operationDefinition: OperationDefinitionNode;
   fragmentMap: FragmentMap;
-  context: DefaultContext;
+  context: unknown;
   variables: OperationVariables;
   exportedVariables: OperationVariables;
   onlyRunForcedResolvers: boolean;
@@ -253,6 +253,7 @@ export class LocalState<
   TContext = InferContextValueFromResolvers<TResolvers>,
 > {
   private rootValue?: LocalState.Options["rootValue"];
+  private context?: LocalState.ContextFunction<TContext>;
   private resolvers: LocalState.Resolvers = {};
   private traverseCache = new WeakMap<
     ExecutableDefinitionNode,
@@ -279,6 +280,7 @@ export class LocalState<
       ]
   ) {
     this.rootValue = options?.rootValue;
+    this.context = options?.context;
 
     if (options?.resolvers) {
       this.addResolvers(options.resolvers);
@@ -343,11 +345,20 @@ export class LocalState<
       optimistic: false,
     });
 
+    const requestContext = { ...client.defaultContext, ...context };
+
     const execContext: ExecContext = {
       client,
       operationDefinition,
       fragmentMap,
-      context: { ...client.defaultContext, ...context },
+      context:
+        this.context?.({
+          requestContext,
+          document,
+          client,
+          phase: "resolve",
+          variables: variables ?? {},
+        }) ?? (requestContext as TContext),
       variables,
       exportedVariables: {},
       selectionsToResolve,
@@ -727,7 +738,7 @@ export class LocalState<
                   string,
                   unknown
                 >,
-                { requestContext: execContext.context, client, phase },
+                { requestContext: execContext.context as any, client, phase },
                 { field, fragmentMap: execContext.fragmentMap, path },
               ])
             )

@@ -937,8 +937,7 @@ test("does not execute client resolvers for client subtrees without an export di
   expect(author).toHaveBeenCalledTimes(0);
 });
 
-test("warns and does not set optional exported variable for client-only query when resolver throws error", async () => {
-  using _ = spyOnConsole("error");
+test("throws error for client-only query when resolver throws error", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int) {
       currentAuthorId @client @export(as: "authorId")
@@ -980,20 +979,18 @@ test("warns and does not set optional exported variable for client-only query wh
       context: {},
       variables: {},
     })
-  ).resolves.toStrictEqualTyped({});
-
-  expect(console.error).toHaveBeenCalledTimes(1);
-  expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "authorId",
-    "Query.currentAuthorId",
-    "Error",
-    "Something went wrong"
+  ).rejects.toEqual(
+    new LocalStateError(
+      "An error was thrown from resolver 'Query.currentAuthorId' while resolving optional variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
+      {
+        path: ["currentAuthorId"],
+        sourceError: new Error("Something went wrong"),
+      }
+    )
   );
 });
 
-test("warns and does not set variable for client-only query when parent resolver throws with nested export", async () => {
-  using _ = spyOnConsole("error");
+test("throws error from client-only query when parent resolver throws with nested export", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int) {
       currentAuthor @client {
@@ -1037,20 +1034,18 @@ test("warns and does not set variable for client-only query when parent resolver
       context: {},
       variables: {},
     })
-  ).resolves.toStrictEqualTyped({});
-
-  expect(console.error).toHaveBeenCalledTimes(1);
-  expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "authorId",
-    "Query.currentAuthor",
-    "Error",
-    "Something went wrong"
+  ).rejects.toEqual(
+    new LocalStateError(
+      "An error was thrown from resolver 'Query.currentAuthor' while resolving optional variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
+      {
+        path: ["currentAuthor"],
+        sourceError: new Error("Something went wrong"),
+      }
+    )
   );
 });
 
-test("warns and does not set variable for multiple nested exported variables on client-only query", async () => {
-  using _ = spyOnConsole("error");
+test("throws error for first variable when parent resolver throws resolving multiple nested exported variables on client-only query", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int, $authorName: String) {
       currentAuthor @client {
@@ -1095,28 +1090,18 @@ test("warns and does not set variable for multiple nested exported variables on 
       context: {},
       variables: {},
     })
-  ).resolves.toStrictEqualTyped({});
-
-  expect(console.error).toHaveBeenCalledTimes(2);
-  expect(console.error).toHaveBeenNthCalledWith(
-    1,
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "authorId",
-    "Query.currentAuthor",
-    "Error",
-    "Something went wrong"
-  );
-  expect(console.error).toHaveBeenNthCalledWith(
-    2,
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "authorName",
-    "Query.currentAuthor",
-    "Error",
-    "Something went wrong"
+  ).rejects.toStrictEqualTyped(
+    new LocalStateError(
+      "An error was thrown from resolver 'Query.currentAuthor' while resolving optional variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
+      {
+        path: ["currentAuthor"],
+        sourceError: new Error("Something went wrong"),
+      }
+    )
   );
 });
 
-test("handles multiple exported fields across different client fields when resolvers throw", async () => {
+test("throws error from first resolver across different client fields when multiple resolvers throw", async () => {
   using _ = spyOnConsole("error");
   const document = gql`
     query currentAuthorPostCount($userId: ID, $teamId: ID) {
@@ -1180,29 +1165,18 @@ test("handles multiple exported fields across different client fields when resol
       context: {},
       variables: {},
     })
-  ).resolves.toStrictEqualTyped({});
-
-  expect(console.error).toHaveBeenCalledTimes(2);
-  expect(console.error).toHaveBeenNthCalledWith(
-    1,
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "userId",
-    "Query.currentUser",
-    "Error",
-    "Could not get current user"
-  );
-  expect(console.error).toHaveBeenNthCalledWith(
-    2,
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "teamId",
-    "Query.favoriteTeam",
-    "Error",
-    "Could not get favorite team"
+  ).rejects.toStrictEqualTyped(
+    new LocalStateError(
+      "An error was thrown from resolver 'Query.currentUser' while resolving optional variable 'userId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
+      {
+        path: ["currentUser"],
+        sourceError: new Error("Could not get current user"),
+      }
+    )
   );
 });
 
-test("warns and does not set optional variable for client-only query when child resolver throws", async () => {
-  using _ = spyOnConsole("error");
+test("throws error for client-only query when child resolver throws", async () => {
   const document = gql`
     query currentAuthorPostCount($authorId: Int) {
       currentAuthor @client {
@@ -1249,15 +1223,14 @@ test("warns and does not set optional variable for client-only query when child 
       context: {},
       variables: {},
     })
-  ).resolves.toStrictEqualTyped({});
-
-  expect(console.error).toHaveBeenCalledTimes(1);
-  expect(console.error).toHaveBeenCalledWith(
-    "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-    "authorId",
-    "Author.id",
-    "Error",
-    "Something went wrong"
+  ).rejects.toEqual(
+    new LocalStateError(
+      "An error was thrown from resolver 'Author.id' while resolving optional variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
+      {
+        path: ["currentAuthor", "id"],
+        sourceError: new Error("Something went wrong"),
+      }
+    )
   );
 });
 
@@ -1305,7 +1278,7 @@ test("throws error when a resolver throws while gathering exported variables for
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "An error was thrown from resolver 'Query.currentAuthorId' while resolving required variable 'authorId'.",
+      "An error was thrown from resolver 'Query.currentAuthorId' while resolving required variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
       {
         path: ["currentAuthorId"],
         sourceError: new Error("Something went wrong"),
@@ -1360,7 +1333,7 @@ test("throws error when a parent resolver throws while gathering exported variab
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "An error was thrown from resolver 'Query.currentAuthor' while resolving required variable 'authorId'.",
+      "An error was thrown from resolver 'Query.currentAuthor' while resolving required variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
       {
         path: ["currentAuthor"],
         sourceError: new Error("Something went wrong"),
@@ -1418,7 +1391,7 @@ test("throws error when a child resolver throws while gathering exported variabl
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "An error was thrown from resolver 'Author.id' while resolving required variable 'authorId'.",
+      "An error was thrown from resolver 'Author.id' while resolving required variable 'authorId'. Use a try/catch and return `undefined` to suppress this error and omit the variable from the request.",
       {
         path: ["currentAuthor", "id"],
         sourceError: new Error("Could not get id"),

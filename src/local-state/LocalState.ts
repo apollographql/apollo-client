@@ -658,22 +658,12 @@ export class LocalState<
           execContext.exportedVariableDefs
         )) {
           if (def.ancestors.has(field)) {
-            if (def.required) {
-              throw new LocalStateError(
-                `An error was thrown from resolver '${resolverName}' while resolving required variable '${name}'.`,
-                { path, sourceError: e }
-              );
-            }
-
-            if (__DEV__) {
-              invariant.error(
-                "An error was thrown when resolving the optional exported variable '%s' from resolver '%s':\n[%s]: %s",
-                name,
-                resolverName,
-                isErrorLike(e) ? e.name : "Error",
-                isErrorLike(e) ? e.message : ""
-              );
-            }
+            throw new LocalStateError(
+              `An error was thrown from resolver '${resolverName}' while resolving ${
+                def.required ? "required" : "optional"
+              } variable '${name}'. Use a try/catch and return \`undefined\` to suppress this error and omit the variable from the request.`,
+              { path, sourceError: e }
+            );
           }
         }
       }

@@ -1130,20 +1130,11 @@ export interface IncrementalPayload<TData, TExtensions> {
 }
 
 // @public (undocumented)
-type InferRootValueFromFieldResolver<TField> = TField extends {
-    [key: string]: infer TResolver;
-} ? TResolver extends LocalState.Resolver<any, infer TRootValue, any> ? TRootValue : unknown : unknown;
-
-// Warning: (ae-forgotten-export) The symbol "InferRootValueFromFieldResolver" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type InferRootValueFromResolvers<TResolvers> = TResolvers extends {
-    Query?: infer QueryResolvers;
-} ? InferRootValueFromFieldResolver<QueryResolvers> : TResolvers extends {
-    Mutation?: infer MutationResolvers;
-} ? InferRootValueFromFieldResolver<MutationResolvers> : TResolvers extends {
-    Subscription?: infer SubscriptionResolvers;
-} ? InferRootValueFromFieldResolver<SubscriptionResolvers> : unknown;
+type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
+    [typename: string]: infer TFieldResolvers;
+} ? TFieldResolvers extends ({
+    [field: string]: LocalState.Resolver<any, any, infer TContext, any>;
+}) ? TContext : DefaultContext : DefaultContext;
 
 // @public (undocumented)
 export class InMemoryCache extends ApolloCache {
@@ -1326,18 +1317,35 @@ export const LinkError: {
 // @public (undocumented)
 namespace LocalState {
     // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "MaybeRequireRootValue" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    type Options<TResolvers extends Resolvers = Resolvers, TRootValue = unknown> = {
-        rootValue?: TRootValue | RootValueFunction<TRootValue>;
+    type ContextFunction<TContext> = (options: ContextFunctionOptions) => TContext;
+    // (undocumented)
+    interface ContextFunctionOptions {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        document: DocumentNode;
+        // (undocumented)
+        phase: "exports" | "resolve";
+        // (undocumented)
+        requestContext: DefaultContext;
+        // (undocumented)
+        variables: OperationVariables;
+    }
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "MaybeRequireContextFunction" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    type Options<TResolvers extends Resolvers = Resolvers, TContext = DefaultContext> = {
+        context?: ContextFunction<TContext>;
         resolvers?: TResolvers;
-    } & MaybeRequireRootValue<TRootValue>;
+    } & MaybeRequireContextFunction<TContext>;
     // (undocumented)
     type Path = Array<string | number>;
     // (undocumented)
-    type Resolver<TResult = unknown, TParent = unknown, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
-        context: DefaultContext;
+    type Resolver<TResult = unknown, TParent = unknown, TContext = DefaultContext, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
+        requestContext: TContext;
         client: ApolloClient;
         phase: "exports" | "resolve";
     }, info: {
@@ -1349,7 +1357,7 @@ namespace LocalState {
     interface Resolvers {
         // (undocumented)
         [typename: string]: {
-            [field: string]: Resolver<any, any, any>;
+            [field: string]: Resolver<any, any, any, any>;
         };
     }
     // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
@@ -1371,14 +1379,14 @@ namespace LocalState {
     }
 }
 
-// Warning: (ae-forgotten-export) The symbol "InferRootValueFromResolvers" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers, TRootValue = InferRootValueFromResolvers<TResolvers>> {
+class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...[options]: {} extends TResolvers ? [
-    options?: LocalState.Options<TResolvers, NoInfer_2<TRootValue>>
+    options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [
-    options: LocalState.Options<TResolvers, NoInfer_2<TRootValue>> & {
+    options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
         resolvers: TResolvers;
     }
     ]);
@@ -1470,8 +1478,8 @@ export type MaybeMasked<TData> = DataMasking extends {
 } ? TData : TData;
 
 // @public (undocumented)
-type MaybeRequireRootValue<TRootValue> = true extends IsAny<TRootValue> ? {} : undefined extends TRootValue ? {} : unknown extends TRootValue ? {} : {
-    rootValue: TRootValue | LocalState.RootValueFunction<TRootValue>;
+type MaybeRequireContextFunction<TContext> = {} extends RemoveIndexSignature<TContext> ? {} : {
+    context: LocalState.ContextFunction<TContext>;
 };
 
 // @public (undocumented)
@@ -2579,9 +2587,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:139:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:161:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:180:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:138:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:172:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:192:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

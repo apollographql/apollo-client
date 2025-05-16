@@ -263,7 +263,7 @@ export function getMainDefinition(queryDoc: DocumentNode): OperationDefinitionNo
 export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode | undefined;
 
 // @internal (undocumented)
-export function getOperationName(doc: DocumentNode): string | null;
+export function getOperationName<TFallback extends string | null | undefined = undefined>(doc: DocumentNode, fallback?: TFallback): string | TFallback;
 
 // @internal (undocumented)
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;

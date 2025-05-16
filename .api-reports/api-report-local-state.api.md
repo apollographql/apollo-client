@@ -10,41 +10,47 @@ import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
-import type { IsAny } from '@apollo/client/utilities/internal';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import type { OperationVariables } from '@apollo/client';
+import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { TypedDocumentNode } from '@apollo/client';
 
 // @public (undocumented)
-type InferRootValueFromFieldResolver<TField> = TField extends {
-    [key: string]: infer TResolver;
-} ? TResolver extends LocalState.Resolver<any, infer TRootValue, any> ? TRootValue : unknown : unknown;
-
-// Warning: (ae-forgotten-export) The symbol "InferRootValueFromFieldResolver" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type InferRootValueFromResolvers<TResolvers> = TResolvers extends {
-    Query?: infer QueryResolvers;
-} ? InferRootValueFromFieldResolver<QueryResolvers> : TResolvers extends {
-    Mutation?: infer MutationResolvers;
-} ? InferRootValueFromFieldResolver<MutationResolvers> : TResolvers extends {
-    Subscription?: infer SubscriptionResolvers;
-} ? InferRootValueFromFieldResolver<SubscriptionResolvers> : unknown;
+type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
+    [typename: string]: infer TFieldResolvers;
+} ? TFieldResolvers extends ({
+    [field: string]: LocalState.Resolver<any, any, infer TContext, any>;
+}) ? TContext : DefaultContext : DefaultContext;
 
 // @public (undocumented)
 export namespace LocalState {
-    // Warning: (ae-forgotten-export) The symbol "MaybeRequireRootValue" needs to be exported by the entry point index.d.ts
+    // (undocumented)
+    export type ContextFunction<TContext> = (options: ContextFunctionOptions) => TContext;
+    // (undocumented)
+    export interface ContextFunctionOptions {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        document: DocumentNode;
+        // (undocumented)
+        phase: "exports" | "resolve";
+        // (undocumented)
+        requestContext: DefaultContext;
+        // (undocumented)
+        variables: OperationVariables;
+    }
+    // Warning: (ae-forgotten-export) The symbol "MaybeRequireContextFunction" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    export type Options<TResolvers extends Resolvers = Resolvers, TRootValue = unknown> = {
-        rootValue?: TRootValue | RootValueFunction<TRootValue>;
+    export type Options<TResolvers extends Resolvers = Resolvers, TContext = DefaultContext> = {
+        context?: ContextFunction<TContext>;
         resolvers?: TResolvers;
-    } & MaybeRequireRootValue<TRootValue>;
+    } & MaybeRequireContextFunction<TContext>;
     // (undocumented)
     export type Path = Array<string | number>;
     // (undocumented)
-    export type Resolver<TResult = unknown, TParent = unknown, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
-        context: DefaultContext;
+    export type Resolver<TResult = unknown, TParent = unknown, TContext = DefaultContext, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
+        requestContext: TContext;
         client: ApolloClient;
         phase: "exports" | "resolve";
     }, info: {
@@ -56,7 +62,7 @@ export namespace LocalState {
     export interface Resolvers {
         // (undocumented)
         [typename: string]: {
-            [field: string]: Resolver<any, any, any>;
+            [field: string]: Resolver<any, any, any, any>;
         };
     }
     // (undocumented)
@@ -76,14 +82,14 @@ export namespace LocalState {
     }
 }
 
-// Warning: (ae-forgotten-export) The symbol "InferRootValueFromResolvers" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers, TRootValue = InferRootValueFromResolvers<TResolvers>> {
+export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...[options]: {} extends TResolvers ? [
-    options?: LocalState.Options<TResolvers, NoInfer_2<TRootValue>>
+    options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [
-    options: LocalState.Options<TResolvers, NoInfer_2<TRootValue>> & {
+    options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
         resolvers: TResolvers;
     }
     ]);
@@ -109,8 +115,8 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
 }
 
 // @public (undocumented)
-type MaybeRequireRootValue<TRootValue> = true extends IsAny<TRootValue> ? {} : undefined extends TRootValue ? {} : unknown extends TRootValue ? {} : {
-    rootValue: TRootValue | LocalState.RootValueFunction<TRootValue>;
+type MaybeRequireContextFunction<TContext> = {} extends RemoveIndexSignature<TContext> ? {} : {
+    context: LocalState.ContextFunction<TContext>;
 };
 
 // (No @packageDocumentation comment for this package)

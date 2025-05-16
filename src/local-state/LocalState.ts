@@ -523,6 +523,10 @@ export class LocalState<
   ) {
     const result = rootValue?.[field.name.value];
 
+    if (!field.selectionSet) {
+      return result;
+    }
+
     if (result == null) {
       if (execContext.phase === "exports") {
         for (const [name, def] of Object.entries(
@@ -537,10 +541,6 @@ export class LocalState<
         }
       }
 
-      return result;
-    }
-
-    if (!field.selectionSet) {
       return result;
     }
 

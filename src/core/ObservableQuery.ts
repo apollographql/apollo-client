@@ -8,8 +8,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { Observable } from "rxjs";
-import { lastValueFrom, Subject, tap } from "rxjs";
+import { lastValueFrom, Observable, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -1178,7 +1177,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           queryMetaSlot.withValue(meta, () => this.input.next(value));
         },
         error: (err) => this.input.error(err),
-        complete: () => this.input.complete(),
       });
 
     return { fromLink, subscription, observable };
@@ -1603,7 +1601,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  public setResult(
+  private setResult(
     result: ApolloQueryResult<TData>,
     additionalMeta?: Omit<Meta, "query" | "variables">
   ) {
@@ -1621,10 +1619,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private operator: OperatorFunction<
     QueryNotification.Value<TData, TVariables>,
     ApolloQueryResult<TData>
-  > = filterMap<
-    QueryNotification.Value<TData, TVariables>,
-    ApolloQueryResult<TData>
-  >((notification) => {
+  > = filterMap((notification) => {
     if (notification.source === "setResult") {
       return notification.value;
     }
@@ -1642,13 +1637,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (notification.source === "cache") {
       result = notification.value;
       if (
-        !(
-          result.networkStatus !== NetworkStatus.ready ||
-          !result.partial ||
-          (!!this.options.returnPartialData &&
-            previousResult.networkStatus !== NetworkStatus.error) ||
-          this.options.fetchPolicy === "cache-only"
-        )
+        result.networkStatus === NetworkStatus.ready &&
+        result.partial &&
+        (!this.options.returnPartialData ||
+          previousResult.networkStatus === NetworkStatus.error) &&
+        this.options.fetchPolicy !== "cache-only"
       ) {
         return;
       }
@@ -1691,7 +1684,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     invariant(result!);
 
     // normalize result shape
-    if ("error" in result && !result.error) delete result.error;
+    if (!result.error) delete result.error;
     result.networkStatus = this.calculateNetworkStatus(result.networkStatus);
     result.loading = isNetworkRequestInFlight(result.networkStatus);
     result = this.maskResult(result);
@@ -1750,13 +1743,13 @@ export function logMissingFieldErrors(
 }
 
 function isEqualQuery(
-  a?: { query: DocumentNode; variables?: OperationVariables },
-  b?: { query: DocumentNode; variables?: OperationVariables }
+  a?: { query: DocumentNode; variables: OperationVariables },
+  b?: { query: DocumentNode; variables: OperationVariables }
 ) {
   return !!(
     a &&
     b &&
     a.query === b.query &&
-    equal(a.variables || {}, b.variables || {})
+    equal(a.variables, b.variables)
   );
 }

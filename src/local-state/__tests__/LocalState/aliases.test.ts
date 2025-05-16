@@ -282,7 +282,7 @@ test("does not confuse aliased __typename", async () => {
     query Test {
       fie: foo @client {
         bar: __typename
-        typename: bar
+        __typename: bar
       }
     }
   `;
@@ -310,7 +310,7 @@ test("does not confuse aliased __typename", async () => {
     })
   ).resolves.toStrictEqualTyped({
     data: {
-      fie: { bar: "Foo", typename: true },
+      fie: { bar: "Foo", __typename: true },
     },
   });
 });

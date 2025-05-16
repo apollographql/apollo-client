@@ -396,9 +396,6 @@ export interface RejectedPromise<TValue> extends Promise<TValue> {
     status: "rejected";
 }
 
-// @internal
-export function removeClientSetsFromDocument(document: DocumentNode): DocumentNode | null;
-
 // @public (undocumented)
 type RemoveDirectiveConfig = {
     name?: string;

@@ -1,9 +1,11 @@
+import { equal } from "@wry/equality";
+
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { LocalState } from "@apollo/client/local-state";
 
 import { gql } from "./testUtils.js";
 
-test("can pass `rootValue` as object that will be used with root client resolvers", async () => {
+test("passes parent value as empty object to root resolver for client-only query", async () => {
   const document = gql`
     query Test {
       foo @client {
@@ -25,7 +27,7 @@ test("can pass `rootValue` as object that will be used with root client resolver
       Query: {
         foo: (rootValue) => ({
           __typename: "Foo",
-          bar: rootValue.isBarEnabled,
+          bar: equal(rootValue, {}),
         }),
       },
     },
@@ -44,11 +46,14 @@ test("can pass `rootValue` as object that will be used with root client resolver
   });
 });
 
-test("can pass `rootValue` as function that will be used with root client resolvers", async () => {
+test("passes rootValue as remote result to root resolver when server fields are present", async () => {
   const document = gql`
     query Test {
       foo @client {
         bar
+      }
+      bar {
+        baz
       }
     }
   `;
@@ -58,15 +63,14 @@ test("can pass `rootValue` as function that will be used with root client resolv
     link: ApolloLink.empty(),
   });
 
-  const rootValue = jest.fn(() => ({ isBarEnabled: true }));
+  const fooResolver = jest.fn(() => ({
+    __typename: "Foo",
+    bar: true,
+  }));
   const localState = new LocalState({
-    rootValue,
     resolvers: {
       Query: {
-        foo: (rootValue) => ({
-          __typename: "Foo",
-          bar: rootValue.isBarEnabled,
-        }),
+        foo: fooResolver,
       },
     },
   });
@@ -77,58 +81,21 @@ test("can pass `rootValue` as function that will be used with root client resolv
       client,
       context: {},
       variables: {},
-      remoteResult: undefined,
+      remoteResult: { data: { bar: { __typename: "Bar", baz: true } } },
     })
   ).resolves.toStrictEqualTyped({
-    data: { foo: { __typename: "Foo", bar: true } },
-  });
-
-  expect(rootValue).toHaveBeenCalledTimes(1);
-  expect(rootValue).toHaveBeenCalledWith({
-    document,
-    client,
-    context: {},
-    phase: "resolve",
-    variables: {},
-  });
-});
-
-test.each([
-  ["string", "enabled"],
-  ["number", 1],
-  ["boolean", false],
-  ["null", null],
-  ["array", [1, 2, 3]],
-])("can pass `rootValue` as %s", async (_type, rootValue) => {
-  const document = gql`
-    query Test {
-      rootValue @client
-    }
-  `;
-
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
-  });
-
-  const localState = new LocalState({
-    rootValue,
-    resolvers: {
-      Query: {
-        rootValue: (rootValue) => rootValue,
-      },
+    data: {
+      foo: { __typename: "Foo", bar: true },
+      bar: { __typename: "Bar", baz: true },
     },
   });
 
-  await expect(
-    localState.execute({
-      document,
-      client,
-      context: {},
-      variables: {},
-      remoteResult: undefined,
-    })
-  ).resolves.toStrictEqualTyped({
-    data: { rootValue },
-  });
+  expect(fooResolver).toHaveBeenCalledWith(
+    {
+      bar: { __typename: "Bar", baz: true },
+    },
+    expect.anything(),
+    expect.anything(),
+    expect.anything()
+  );
 });

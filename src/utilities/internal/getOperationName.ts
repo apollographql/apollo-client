@@ -7,11 +7,9 @@ type OperationDefinitionWithName = OperationDefinitionNode & {
 /** @internal */
 export function getOperationName(doc: DocumentNode): string | null {
   return (
-    doc.definitions
-      .filter(
-        (definition): definition is OperationDefinitionWithName =>
-          definition.kind === "OperationDefinition" && !!definition.name
-      )
-      .map((x) => x.name.value)[0] || null
+    doc.definitions.find(
+      (definition): definition is OperationDefinitionWithName =>
+        definition.kind === "OperationDefinition" && !!definition.name
+    )?.name.value || null
   );
 }

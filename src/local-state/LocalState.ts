@@ -282,7 +282,6 @@ export class LocalState<
     });
 
     const requestContext = { ...client.defaultContext, ...context };
-
     const execContext: ExecContext = {
       client,
       operationDefinition,
@@ -362,11 +361,19 @@ export class LocalState<
       optimistic: false,
     });
 
+    const requestContext = { ...client.defaultContext, ...context };
     const execContext: ExecContext = {
       client,
       operationDefinition,
       fragmentMap,
-      context: { ...client.defaultContext, ...context },
+      context:
+        this.context?.({
+          requestContext,
+          document,
+          client,
+          phase: "resolve",
+          variables: variables ?? {},
+        }) ?? (requestContext as TContext),
       variables,
       exportedVariables: {},
       selectionsToResolve: exportsToResolve,

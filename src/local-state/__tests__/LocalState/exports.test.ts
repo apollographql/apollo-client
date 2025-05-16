@@ -1927,3 +1927,43 @@ test("combines exported variables with user-defined variables", async () => {
     limit: 10,
   });
 });
+
+test("can use context function with exported variables", async () => {
+  const document = gql`
+    query currentAuthorPostCount($authorId: Int!, $limit: Int!) {
+      currentAuthorId @client @export(as: "authorId")
+      posts(authorId: $authorId, limit: $limit) {
+        id
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const testAuthorId = 100;
+
+  const localState = new LocalState({
+    context: () => ({ useTestAuthor: true }),
+    resolvers: {
+      Query: {
+        currentAuthorId: (_, __, { requestContext }) =>
+          requestContext.useTestAuthor ? testAuthorId : 0,
+      },
+    },
+  });
+
+  await expect(
+    localState.getExportedVariables({
+      document,
+      client,
+      context: {},
+      variables: { limit: 10 },
+    })
+  ).resolves.toStrictEqualTyped({
+    authorId: testAuthorId,
+    limit: 10,
+  });
+});

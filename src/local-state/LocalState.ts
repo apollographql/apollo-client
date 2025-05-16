@@ -31,6 +31,7 @@ import type {
   FragmentMap,
   IsAny,
   NoInfer,
+  RemoveIndexSignature,
 } from "@apollo/client/utilities/internal";
 import {
   argumentsObjectFromField,
@@ -115,6 +116,15 @@ interface TraverseCacheEntry {
   selectionsToResolve: Set<SelectionNode>;
 }
 
+type InferContextValueFromResolvers<TResolvers> =
+  TResolvers extends { [typename: string]: infer TFieldResolvers } ?
+    TFieldResolvers extends (
+      { [field: string]: LocalState.Resolver<any, any, infer TContext, any> }
+    ) ?
+      TContext
+    : DefaultContext
+  : DefaultContext;
+
 type InferRootValueFromFieldResolver<TField> =
   TField extends { [key: string]: infer TResolver } ?
     TResolver extends LocalState.Resolver<any, infer TRootValue, any> ?
@@ -139,6 +149,10 @@ type MaybeRequireRootValue<TRootValue> =
       rootValue: TRootValue | LocalState.RootValueFunction<TRootValue>;
     };
 
+type MaybeRequireContextFunction<TContext> =
+  {} extends RemoveIndexSignature<TContext> ? {}
+  : { context: LocalState.ContextFunction<TContext> };
+
 export declare namespace LocalState {
   // `rootValue` can be any value, but using `any` or `unknown` does not allow
   // the ability to add a function signature to this definition. The generic
@@ -146,7 +160,9 @@ export declare namespace LocalState {
   export type Options<
     TResolvers extends Resolvers = Resolvers,
     TRootValue = unknown,
+    TContext = DefaultContext,
   > = {
+    context?: ContextFunction<TContext>;
     /**
      * A value or function called with the request context creating the root
      * value passed to any root field resolvers. Providing a function is useful
@@ -175,7 +191,8 @@ export declare namespace LocalState {
      * The map of resolvers used to provide values for `@local` fields.
      */
     resolvers?: TResolvers;
-  } & MaybeRequireRootValue<TRootValue>;
+  } & MaybeRequireRootValue<TRootValue> &
+    MaybeRequireContextFunction<TContext>;
 
   export interface RootValueFunctionContext {
     document: DocumentNode;
@@ -185,25 +202,38 @@ export declare namespace LocalState {
     variables: OperationVariables;
   }
 
+  export type ContextFunction<TContext> = (
+    options: ContextFunctionOptions
+  ) => TContext;
+
+  export interface ContextFunctionOptions {
+    document: DocumentNode;
+    client: ApolloClient;
+    phase: "exports" | "resolve";
+    variables: OperationVariables;
+    requestContext: DefaultContext;
+  }
+
   export type RootValueFunction<TRootValue> = (
     context: RootValueFunctionContext
   ) => TRootValue;
 
   export interface Resolvers {
     [typename: string]: {
-      [field: string]: Resolver<any, any, any>;
+      [field: string]: Resolver<any, any, any, any>;
     };
   }
 
   export type Resolver<
     TResult = unknown,
     TParent = unknown,
+    TContext = DefaultContext,
     TArgs = Record<string, unknown>,
   > = (
     rootValue: TParent,
     args: TArgs,
     context: {
-      requestContext: DefaultContext;
+      requestContext: TContext;
       client: ApolloClient;
       phase: "exports" | "resolve";
     },
@@ -220,6 +250,7 @@ export declare namespace LocalState {
 export class LocalState<
   TResolvers extends LocalState.Resolvers = LocalState.Resolvers,
   TRootValue = InferRootValueFromResolvers<TResolvers>,
+  TContext = InferContextValueFromResolvers<TResolvers>,
 > {
   private rootValue?: LocalState.Options["rootValue"];
   private resolvers: LocalState.Resolvers = {};
@@ -230,9 +261,19 @@ export class LocalState<
 
   constructor(
     ...[options]: {} extends TResolvers ?
-      [options?: LocalState.Options<TResolvers, NoInfer<TRootValue>>]
+      [
+        options?: LocalState.Options<
+          TResolvers,
+          NoInfer<TRootValue>,
+          NoInfer<TContext>
+        >,
+      ]
     : [
-        options: LocalState.Options<TResolvers, NoInfer<TRootValue>> & {
+        options: LocalState.Options<
+          TResolvers,
+          NoInfer<TRootValue>,
+          NoInfer<TContext>
+        > & {
           resolvers: TResolvers;
         },
       ]

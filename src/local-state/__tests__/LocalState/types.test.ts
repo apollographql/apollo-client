@@ -1,5 +1,6 @@
 import { LocalState } from "@apollo/client/local-state";
 
+import type { ContextValue } from "./fixtures/context-value.js";
 import type { RootValue } from "./fixtures/rootValue.js";
 
 type SetRequired<T, Keys extends keyof T> = { [K in Keys]-?: T[K] } & Omit<
@@ -52,9 +53,9 @@ describe.skip("Type tests", () => {
 
   test("works with codegen resolver types", async () => {
     type Resolvers =
-      import("./fixtures/local-resolvers-without-root.js").Resolvers;
+      import("./fixtures/local-resolvers-without-context-value.js").Resolvers;
     const { FoodCategory } = await import(
-      "./fixtures/local-resolvers-without-root.js"
+      "./fixtures/local-resolvers-without-context-value.js"
     );
 
     type RequiredRootResolver = SetRequired<Resolvers, "Query">;
@@ -347,5 +348,89 @@ describe.skip("Type tests", () => {
         resolvers: {},
       }
     );
+  });
+
+  test("context", () => {
+    type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
+
+    // @ts-expect-error missing required context value
+    new LocalState<Resolvers, undefined, ContextValue>({
+      resolvers: {},
+    });
+
+    new LocalState<Resolvers, undefined, ContextValue>({
+      context: () => ({ env: "dev" }),
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
+    });
+
+    new LocalState<Resolvers, undefined, ContextValue>({
+      context: ({ requestContext }) => ({ ...requestContext, env: "dev" }),
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
+    });
+
+    new LocalState<Resolvers, undefined, ContextValue>({
+      context: ({ requestContext }) => ({
+        ...requestContext,
+        // @ts-expect-error invalid value
+        env: "staging",
+      }),
+      resolvers: {
+        Query: {
+          currentUserId: (_, __, { requestContext }) => requestContext.env,
+        },
+      },
+    });
+
+    new LocalState<Resolvers, undefined, ContextValue>({
+      context: () => ({
+        env: "prod",
+      }),
+      resolvers: {
+        Query: {
+          // @ts-expect-error requestContext is incorrect type
+          currentUserId: (
+            _,
+            __,
+            { requestContext }: { requestContext: { invalid: boolean } }
+          ) => "1",
+        },
+      },
+    });
+
+    new LocalState<Resolvers, undefined>({
+      context: () => ({
+        // @ts-expect-error invalid value for env
+        env: "staging",
+      }),
+      resolvers: {
+        Query: {
+          currentUserId: (rootValue) => rootValue.env,
+        },
+      },
+    });
+
+    new LocalState({
+      context: () => ({
+        // @ts-expect-error invalid value for env
+        env: "staging",
+      }),
+      resolvers: {
+        Query: {
+          currentUserId: (
+            _,
+            __,
+            { requestContext }: { requestContext: ContextValue }
+          ) => 1,
+        },
+      },
+    });
   });
 });

@@ -1900,13 +1900,6 @@ function validateDidEmitValue<T>() {
   });
 }
 
-// Return types used by fetchQueryByPolicy and other private methods above.
-interface ObservableAndInfo<TData> {
-  // Metadata properties that can be returned in addition to the Observable.
-  fromLink: boolean;
-  observable: Observable<QueryNotification.Value<TData, any>>;
-}
-
 function isFullyUnmaskedOperation(document: DocumentNode) {
   let isUnmasked = true;
 

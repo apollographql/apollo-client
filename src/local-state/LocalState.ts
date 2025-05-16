@@ -23,11 +23,7 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
-import {
-  isErrorLike,
-  LocalStateError,
-  toErrorLike,
-} from "@apollo/client/errors";
+import { LocalStateError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import { stripTypename } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";

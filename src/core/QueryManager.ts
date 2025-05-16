@@ -303,7 +303,7 @@ export class QueryManager {
         invariant(
           this.localState,
           "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(mutation) ?? "(anonymous)"
+          getOperationName(mutation, "(anonymous)")
         );
       }
 
@@ -1128,7 +1128,7 @@ export class QueryManager {
         invariant(
           this.localState,
           "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(query) ?? "(anonymous)"
+          getOperationName(query, "(anonymous)")
         );
       }
 
@@ -1478,7 +1478,7 @@ export class QueryManager {
         invariant(
           this.localState,
           "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(normalized.query) ?? "(anonymous)"
+          getOperationName(normalized.query, "(anonymous)")
         );
       }
 
@@ -1793,7 +1793,7 @@ export class QueryManager {
           invariant(
             this.localState,
             "Query '%s' contains `@client` fields but local state has not been configured.",
-            getOperationName(query) ?? "(anonymous)"
+            getOperationName(query, "(anonymous)")
           );
         }
 

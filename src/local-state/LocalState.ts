@@ -66,15 +66,52 @@ interface ExecContext {
   returnPartialData: boolean;
 }
 
+/**
+ * Information about an exported variable defined by an `@export` directive.
+ */
 interface ExportedVariable {
+  /**
+   * Defines whether an exported variable is a required variable (i.e. a non-null variable)
+   */
   required: boolean;
+  /**
+   * The `FieldNode` where the exported variable is defined.
+   */
   field?: FieldNode;
+
+  /**
+   * Ancestor nodes (parent, grandparent, etc.) that contain the `@export`
+   * directive node. This is useful to get access to nested fields that contain
+   * an `@export` directive if a parent resolver throws or returns
+   * `null`/`undefined` that would otherwise prevent us from traversing the
+   * node.
+   */
   ancestors: WeakSet<ASTNode>;
 }
 
+/**
+ * Tracks and caches information related to a GraphQL document by traversing the
+ * document the first time its seen and collecting information about it.
+ */
 interface TraverseCacheEntry {
+  /**
+   * Tracks information about the variable definition for any variables defined
+   * by an `@export` directive.
+   */
   exportedVariableDefs: Record<string, ExportedVariable>;
+
+  /**
+   * SelectionNodes that either directly contain or include an `@export` field
+   * in its selection set. This allows us to avoid traversing subtrees that do
+   * not contain `@export` fields.
+   */
   exportsToResolve: Set<SelectionNode>;
+
+  /**
+   * SelectionNodes that either directly contain or include an `@client` field
+   * in its selection set. This allows us to avoid traversing subtrees that do
+   * not contain `@client` fields.
+   */
   selectionsToResolve: Set<SelectionNode>;
 }
 

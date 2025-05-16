@@ -1066,7 +1066,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const initialFetchPolicy = this.options.fetchPolicy;
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
-    const { observable } = this.queryManager.fetchObservableWithInfo(
+    const observable = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
       networkStatus,

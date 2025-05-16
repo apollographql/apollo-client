@@ -711,7 +711,7 @@ export class QueryManager {
         this.getOrCreateQuery(queryId),
         options,
         networkStatus
-      ).observable.pipe(
+      ).pipe(
         filterMap((value) => {
           switch (value.kind) {
             case "E":
@@ -1378,7 +1378,7 @@ export class QueryManager {
     query = options.query,
     fetchQueryMiddleware = (forward: () => ObservableAndInfo<TData>) =>
       forward()
-  ): ObservableAndInfo<TData> {
+  ): Observable<QueryNotification.Value<TData, any>> {
     const variables = this.getVariables(query, options.variables) as TVars;
 
     const defaults = this.defaultOptions.watchQuery;
@@ -1498,14 +1498,11 @@ export class QueryManager {
       observable = sourcesWithInfo.observable;
     }
 
-    return {
-      observable: observable.pipe(
-        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(fetchCancelSubject),
-        share()
-      ),
-      fromLink: containsDataFromLink,
-    };
+    return observable.pipe(
+      tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
+      mergeWith(fetchCancelSubject),
+      share()
+    );
   }
 
   public refetchQueries<TResult>({

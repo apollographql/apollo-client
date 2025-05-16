@@ -8,7 +8,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { lastValueFrom, Observable, Subject, tap } from "rxjs";
+import { BehaviorSubject, lastValueFrom, Observable, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -20,7 +20,6 @@ import {
   getOperationDefinition,
   getQueryDefinition,
   preventUnhandledRejection,
-  SlotAwareBehaviorSubject,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -117,13 +116,10 @@ const enum EmitBehavior {
   networkStatusChange = 3,
 }
 interface Meta {
-  readonly query: DocumentNode;
-  readonly variables: OperationVariables;
   shouldEmit?: EmitBehavior;
   /** can be used to override `ObservableQuery.options.fetchPolicy` for this notification */
   fetchPolicy?: WatchQueryFetchPolicy;
 }
-const queryMetaSlot = new Slot<Meta>();
 
 export declare namespace ObservableQuery {
   export type Options<
@@ -198,6 +194,13 @@ export declare namespace ObservableQuery {
   }
 }
 
+interface SubjectValue<TData, TVariables extends OperationVariables> {
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  variables: TVariables;
+  result: ApolloQueryResult<TData>;
+  meta: Meta;
+}
+
 export class ObservableQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -239,10 +242,15 @@ export class ObservableQuery<
     query: TypedDocumentNode<TData, TVariables>;
     variables: TVariables;
   };
-  private input: Subject<QueryNotification.Value<TData, TVariables>>;
-  private subject: SlotAwareBehaviorSubject<
-    ApolloQueryResult<MaybeMasked<TData>>,
-    Meta
+  private input: Subject<
+    QueryNotification.Value<TData, TVariables> & {
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+      variables: TVariables;
+      meta: Meta;
+    }
+  >;
+  private subject: BehaviorSubject<
+    SubjectValue<MaybeMasked<TData>, TVariables>
   >;
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
@@ -270,7 +278,7 @@ export class ObservableQuery<
   };
 
   private get networkStatus(): NetworkStatus {
-    return this.subject.getValue().networkStatus;
+    return this.subject.getValue().result.networkStatus;
   }
 
   constructor({
@@ -323,12 +331,13 @@ export class ObservableQuery<
       variables: this.getVariablesWithDefaults(options.variables),
     };
 
-    this.subject = new SlotAwareBehaviorSubject<
-      ApolloQueryResult<MaybeMasked<TData>>,
-      Meta
-    >(uninitialized, queryMetaSlot, {
+    this.subject = new BehaviorSubject<
+      SubjectValue<MaybeMasked<TData>, TVariables>
+    >({
       query: this.query,
       variables: this.variables,
+      result: uninitialized,
+      meta: {},
     });
     this.observable = this.subject.pipe(
       tap({
@@ -356,13 +365,13 @@ export class ObservableQuery<
       }),
       filterMap(
         (
-          current: ApolloQueryResult<TData>,
+          { query, variables, result: current, meta },
           context: {
             previous?: ApolloQueryResult<TData>;
             previousVariables?: TVariables;
           }
         ) => {
-          const { query, variables, shouldEmit } = queryMetaSlot.getValue()!;
+          const { shouldEmit } = meta;
 
           if (current === uninitialized) {
             // reset internal state after `ObservableQuery.reset()`
@@ -461,11 +470,13 @@ export class ObservableQuery<
     });
   }
 
-  private getInitialResult(): ApolloQueryResult<MaybeMasked<TData>> {
+  private getInitialResult(
+    initialFetchPolicy?: WatchQueryFetchPolicy
+  ): ApolloQueryResult<MaybeMasked<TData>> {
     const fetchPolicy =
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
-      : queryMetaSlot.getValue()?.fetchPolicy || this.options.fetchPolicy;
+      : initialFetchPolicy || this.options.fetchPolicy;
     const defaultResult = {
       data: undefined,
       loading: true,
@@ -551,7 +562,7 @@ export class ObservableQuery<
           return;
         }
 
-        const previousResult = this.subject.getValue();
+        const { result: previousResult } = this.subject.getValue();
 
         if (
           diff &&
@@ -593,7 +604,7 @@ export class ObservableQuery<
 
   private stableLastResult?: ApolloQueryResult<MaybeMasked<TData>>;
   public getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>> {
-    const current = this.subject.getValue();
+    const { result: current } = this.subject.getValue();
     let value =
       (
         // if the `current` result is in an error state, we will always return that
@@ -1100,10 +1111,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     this.activeOperations.has(operation)
                   ) {
                     operation.override = networkStatus;
-                    queryMetaSlot.withValue(
-                      {
-                        variables,
-                        query,
+                    this.input.next({
+                      kind: "N",
+                      source: "newNetworkStatus",
+                      value: {
+                        resetError: true,
+                      },
+                      query,
+                      variables,
+                      meta: {
                         shouldEmit: EmitBehavior.networkStatusChange,
                         /*
                          * The moment this notification is emitted, `nextFetchPolicy`
@@ -1114,15 +1130,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                          */
                         fetchPolicy: initialFetchPolicy,
                       },
-                      () =>
-                        this.input.next({
-                          kind: "N",
-                          source: "newNetworkStatus",
-                          value: {
-                            resetError: true,
-                          },
-                        })
-                    );
+                    });
                   }
                 }
               }
@@ -1162,7 +1170,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       )
       .subscribe({
         next: (value) => {
-          const meta: Meta = { variables, query };
+          const meta: Meta = {};
 
           if (
             forceFirstValueEmit &&
@@ -1174,7 +1182,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             meta.shouldEmit = EmitBehavior.force;
           }
 
-          queryMetaSlot.withValue(meta, () => this.input.next(value));
+          this.input.next({ ...value, query, variables, meta });
         },
         error: (err) => this.input.error(err),
       });
@@ -1497,21 +1505,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // reobservation, since oq.reobserveCacheFirst might make a network
           // request, and we never want to trigger network requests in the
           // middle of optimistic updates.
-          queryMetaSlot.withValue(
-            { query: this.query, variables: this.variables },
-            () =>
-              this.input.next({
-                kind: "N",
-                value: {
-                  data: diff.result as TData,
-                  networkStatus: NetworkStatus.ready,
-                  loading: false,
-                  error: undefined,
-                  partial: !diff.complete,
-                },
-                source: "cache",
-              })
-          );
+          this.input.next({
+            kind: "N",
+            value: {
+              data: diff.result as TData,
+              networkStatus: NetworkStatus.ready,
+              loading: false,
+              error: undefined,
+              partial: !diff.complete,
+            },
+            source: "cache",
+            query: this.query,
+            variables: this.variables,
+            meta: {},
+          });
         } else {
           // Otherwise, make the ObservableQuery "reobserve" the latest data
           // using a temporary fetch policy of "cache-first", so complete cache
@@ -1555,12 +1562,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       finalize,
       pushNotification: (
         notification: QueryNotification.Value<TData, TVariables>,
-        additionalMeta?: Omit<Meta, "query" | "variables">
+        additionalMeta?: Meta
       ) => {
         if (!aborted) {
-          queryMetaSlot.withValue({ query, variables, ...additionalMeta }, () =>
-            this.input.next(notification)
-          );
+          this.input.next({
+            ...notification,
+            query,
+            variables,
+            meta: { ...additionalMeta },
+          });
         }
       },
     };
@@ -1601,38 +1611,37 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  private setResult(
-    result: ApolloQueryResult<TData>,
-    additionalMeta?: Omit<Meta, "query" | "variables">
-  ) {
-    queryMetaSlot.withValue(
-      { query: this.query, variables: this.variables, ...additionalMeta },
-      () =>
-        this.input.next({
-          source: "setResult",
-          kind: "N",
-          value: result,
-        })
-    );
+  private setResult(result: ApolloQueryResult<TData>, additionalMeta?: Meta) {
+    this.input.next({
+      source: "setResult",
+      kind: "N",
+      value: result,
+      query: this.query,
+      variables: this.variables,
+      meta: { ...additionalMeta },
+    });
   }
 
   private operator: OperatorFunction<
-    QueryNotification.Value<TData, TVariables>,
-    ApolloQueryResult<TData>
+    QueryNotification.Value<TData, TVariables> & {
+      query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+      variables: TVariables;
+      meta: Meta;
+    },
+    SubjectValue<TData, TVariables>
   > = filterMap((notification) => {
-    if (notification.source === "setResult") {
-      return notification.value;
-    }
-    const meta = queryMetaSlot.getValue();
-    invariant(meta);
+    const { query, variables, meta } = notification;
 
-    if (notification.kind === "C" || !isEqualQuery(meta, this)) {
+    if (notification.source === "setResult") {
+      return { query, variables, result: notification.value, meta };
+    }
+
+    if (notification.kind === "C" || !isEqualQuery(notification, this)) {
       return;
     }
 
     let result: ApolloQueryResult<TData>;
-    const previousResult = this.subject.getValue();
-    const previousMeta = this.subject.getSlotValue();
+    const previous = this.subject.getValue();
 
     if (notification.source === "cache") {
       result = notification.value;
@@ -1640,7 +1649,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         result.networkStatus === NetworkStatus.ready &&
         result.partial &&
         (!this.options.returnPartialData ||
-          previousResult.networkStatus === NetworkStatus.error) &&
+          previous.result.networkStatus === NetworkStatus.error) &&
         this.options.fetchPolicy !== "cache-only"
       ) {
         return;
@@ -1655,7 +1664,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           {
             data: undefined,
             partial: true,
-            ...(isEqualQuery(previousMeta, meta) ? previousResult : {}),
+            ...(isEqualQuery(previous, notification) ? previous.result : {}),
             error: notification.error,
             networkStatus: NetworkStatus.error,
             loading: false,
@@ -1667,9 +1676,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     } else if (notification.source === "newNetworkStatus") {
       const baseResult =
-        previousMeta && isEqualQuery(previousMeta, meta) ? previousResult : (
-          this.getInitialResult()
-        );
+        isEqualQuery(previous, notification) ?
+          previous.result
+        : this.getInitialResult(meta.fetchPolicy);
       const { resetError } = notification.value;
       const error = resetError ? undefined : baseResult.error;
       const networkStatus = error ? NetworkStatus.error : NetworkStatus.ready;
@@ -1689,7 +1698,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result.loading = isNetworkRequestInFlight(result.networkStatus);
     result = this.maskResult(result);
 
-    return result;
+    return { query, variables, result, meta };
   });
 
   // Reobserve with fetchPolicy effectively set to "cache-first", triggering
@@ -1746,10 +1755,5 @@ function isEqualQuery(
   a?: { query: DocumentNode; variables: OperationVariables },
   b?: { query: DocumentNode; variables: OperationVariables }
 ) {
-  return !!(
-    a &&
-    b &&
-    a.query === b.query &&
-    equal(a.variables, b.variables)
-  );
+  return !!(a && b && a.query === b.query && equal(a.variables, b.variables));
 }

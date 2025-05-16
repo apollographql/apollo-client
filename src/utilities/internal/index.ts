@@ -63,7 +63,6 @@ export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
 export { filterMap } from "./filterMap.js";
-export { SlotAwareBehaviorSubject } from "./SlotAwareBehaviorSubject.js";
 
 export {
   getApolloCacheMemoryInternals,

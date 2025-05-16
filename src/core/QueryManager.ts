@@ -1424,7 +1424,7 @@ export class QueryManager {
         ) ?
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
-      const observableWithInfo = fetchQueryMiddleware(() =>
+      const observable = fetchQueryMiddleware(() =>
         this.fetchQueryByPolicy<TData, TVars>(
           queryInfo,
           normalized,
@@ -1444,7 +1444,7 @@ export class QueryManager {
         );
       }
 
-      return observableWithInfo;
+      return observable;
     };
 
     // This cancel function needs to be set before the concast is created,

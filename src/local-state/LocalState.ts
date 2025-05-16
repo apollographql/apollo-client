@@ -445,14 +445,14 @@ export class LocalState<
             await this.resolveClientField(
               selection,
               isClientFieldDescendant,
-              rootValue as any,
+              rootValue,
               execContext,
               selectionSet,
               path.concat(selection.name.value)
             )
           : await this.resolveServerField(
               selection,
-              rootValue as any,
+              rootValue,
               execContext,
               path.concat(selection.name.value)
             );

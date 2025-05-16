@@ -96,3 +96,49 @@ test("passes rootValue as remote result to root resolver when server fields are 
     expect.anything()
   );
 });
+
+test("passes rootValue as empty object when getting exported variables with no cache data", async () => {
+  const document = gql`
+    query Test($foo: FooInput) {
+      foo @client @export(as: "foo") {
+        bar
+      }
+      bar {
+        baz
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  const fooResolver = jest.fn(() => ({
+    __typename: "Foo",
+    bar: true,
+  }));
+  const localState = new LocalState({
+    resolvers: {
+      Query: {
+        foo: fooResolver,
+      },
+    },
+  });
+
+  await expect(
+    localState.getExportedVariables({
+      document,
+      client,
+      context: {},
+      variables: {},
+    })
+  ).resolves.toStrictEqualTyped({ foo: { bar: true } });
+
+  expect(fooResolver).toHaveBeenCalledWith(
+    {},
+    expect.anything(),
+    expect.anything(),
+    expect.anything()
+  );
+});

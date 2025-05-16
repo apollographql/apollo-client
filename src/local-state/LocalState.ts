@@ -654,7 +654,7 @@ export class LocalState<
               // In case the resolve function accesses reactive variables,
               // set cacheSlot to the current cache instance.
               cacheSlot.withValue(client.cache, resolver, [
-                dealias(rootValue, parentSelectionSet),
+                rootValue ? dealias(rootValue, parentSelectionSet) : {},
                 (argumentsObjectFromField(field, variables) ?? {}) as Record<
                   string,
                   unknown

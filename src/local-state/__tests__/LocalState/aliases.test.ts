@@ -314,3 +314,44 @@ test("does not confuse aliased __typename", async () => {
     },
   });
 });
+
+test("will call correct child resolver when __typename is aliased", async () => {
+  const document = gql`
+    query Test {
+      fie: foo @client {
+        bar: __typename
+        __typename: bar
+      }
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+  const localState = new LocalState({
+    resolvers: {
+      Query: {
+        foo: () => ({ __typename: "Foo" }),
+      },
+      Foo: {
+        bar: () => "Bar",
+      },
+      Bar: {
+        __typename: () => "Incorrect",
+      },
+    },
+  });
+  await expect(
+    localState.execute({
+      client,
+      document,
+      context: {},
+      variables: {},
+      remoteResult: undefined,
+    })
+  ).resolves.toStrictEqualTyped({
+    data: {
+      fie: { bar: "Foo", __typename: "Bar" },
+    },
+  });
+});

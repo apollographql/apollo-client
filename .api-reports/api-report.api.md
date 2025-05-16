@@ -1458,17 +1458,6 @@ Merged
 ] extends [never] ? Curr : MergeObjects<Curr, Merged>>;
 
 // @public (undocumented)
-interface Meta {
-    fetchPolicy?: WatchQueryFetchPolicy;
-    // (undocumented)
-    readonly query: DocumentNode;
-    // (undocumented)
-    shouldEmit?: boolean | "notification";
-    // (undocumented)
-    readonly variables: OperationVariables | undefined;
-}
-
-// @public (undocumented)
 export type MethodKeys<T> = {
     [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
@@ -1667,7 +1656,7 @@ interface ObservableAndInfo<TData> {
     // Warning: (ae-forgotten-export) The symbol "QueryNotification" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    observable: Observable<QueryNotification.Value<TData, any>>;
+    observable: Observable<QueryNotification.Value<TData>>;
 }
 
 // @public (undocumented)
@@ -1732,10 +1721,6 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     reset(): void;
     // @internal (undocumented)
     resetDiff(): void;
-    // Warning: (ae-forgotten-export) The symbol "Meta" needs to be exported by the entry point index.d.ts
-    //
-    // @internal (undocumented)
-    setResult(result: ApolloQueryResult<TData>, additionalMeta?: Omit<Meta, "query" | "variables">): void;
     setVariables(variables: TVariables): Promise<QueryResult<TData>>;
     // @internal (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
@@ -2038,28 +2023,21 @@ interface QueryManagerOptions {
 // @public (undocumented)
 namespace QueryNotification {
     // (undocumented)
-    type FromCache<TData, TVariables> = NextNotification<ApolloQueryResult<TData>> & {
+    type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> & {
         source: "cache";
     };
     // (undocumented)
-    type FromNetwork<TData, TVariables> = ObservableNotification<ApolloQueryResult<TData>> & {
+    type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> & {
         source: "network";
     };
     // (undocumented)
-    interface Meta<TData, TVariables> {
-        // (undocumented)
-        query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-        // (undocumented)
-        variables: TVariables;
-    }
-    // (undocumented)
-    type NewNetworkStatus<TData, TVariables> = NextNotification<{
+    type NewNetworkStatus<TData> = NextNotification<{
         resetError?: boolean;
     }> & {
         source: "newNetworkStatus";
     };
     // (undocumented)
-    type SetResult<TData, TVariables> = NextNotification<ApolloQueryResult<TData>> & {
+    type SetResult<TData> = NextNotification<ApolloQueryResult<TData>> & {
         source: "setResult";
     };
     // Warning: (ae-forgotten-export) The symbol "QueryNotification" needs to be exported by the entry point index.d.ts
@@ -2068,7 +2046,7 @@ namespace QueryNotification {
     // Warning: (ae-forgotten-export) The symbol "QueryNotification" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    type Value<TData, TVariables> = FromCache<TData, TVariables> | FromNetwork<TData, TVariables> | NewNetworkStatus<TData, TVariables> | SetResult<TData, TVariables>;
+    type Value<TData> = FromCache<TData> | FromNetwork<TData> | NewNetworkStatus<TData> | SetResult<TData>;
 }
 
 // @public
@@ -2563,9 +2541,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:262:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:263:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:289:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:290:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:463:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

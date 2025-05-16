@@ -6,7 +6,6 @@
 
 import type { ApolloQueryResult } from '@apollo/client';
 import type { ASTNode } from 'graphql';
-import { BehaviorSubject } from 'rxjs';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { ExecutionPatchIncrementalResult } from '@apollo/client/link';
@@ -19,7 +18,6 @@ import { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import type { MutationOptions } from '@apollo/client';
 import { Observable } from 'rxjs';
-import type { Observer } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
@@ -28,9 +26,7 @@ import type { QueryOptions } from '@apollo/client';
 import type { QueryResult } from '@apollo/client';
 import type { Reference } from '@apollo/client/utilities';
 import type { SelectionNode } from 'graphql';
-import type { Slot } from 'optimism';
 import { StrongCache } from '@wry/caches';
-import type { Subscription } from 'rxjs';
 import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
@@ -432,23 +428,6 @@ export function resultKeyNameFromField(field: FieldNode): string;
 
 // @internal (undocumented)
 export function shouldInclude({ directives }: SelectionNode, variables?: Record<string, any>): boolean;
-
-// @public (undocumented)
-export class SlotAwareBehaviorSubject<T, S> extends BehaviorSubject<T> {
-    // Warning: (ae-forgotten-export) The symbol "SlotInstance" needs to be exported by the entry point index.d.ts
-    constructor(initialValue: T, slot: SlotInstance<S>, initialSlotValue?: S);
-    // (undocumented)
-    callingSynchronusly: boolean;
-    // (undocumented)
-    getSlotValue(): S | undefined;
-    // (undocumented)
-    next(value: T): void;
-    // (undocumented)
-    subscribe(observerOrNext?: Partial<Observer<T>> | ((value: T) => void) | null): Subscription;
-}
-
-// @public (undocumented)
-type SlotInstance<S> = InstanceType<typeof Slot<S>>;
 
 // @internal (undocumented)
 export function storeKeyNameFromField(field: FieldNode, variables?: Object): string;

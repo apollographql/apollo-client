@@ -1364,13 +1364,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.resubscribeCache();
 
-    const { subscription, observable, fromLink } = this.fetch(
+    const { subscription, observable } = this.fetch(
       options,
       newNetworkStatus,
       query
     );
 
-    if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {
+    if (!useDisposableObservable && !this.linkSubscription) {
       if (this.linkSubscription) {
         this.linkSubscription.unsubscribe();
       }

@@ -1443,7 +1443,7 @@ export class QueryManager {
         );
       }
 
-      return observableWithInfo;
+      return observableWithInfo.observable;
     };
 
     // This cancel function needs to be set before the concast is created,
@@ -1483,10 +1483,9 @@ export class QueryManager {
           normalized.variables,
           normalized.context
         )
-      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
+      ).pipe(mergeMap((variables) => fromVariables(variables)));
     } else {
-      const sourcesWithInfo = fromVariables(normalized.variables);
-      observable = sourcesWithInfo.observable;
+      observable = fromVariables(normalized.variables);
     }
 
     return observable.pipe(

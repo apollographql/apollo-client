@@ -2,7 +2,6 @@
 import type { LocalState } from "@apollo/client/local-state";
 
 import type { ContextValue } from "./context-value.js";
-import type { RootValue } from "./rootValue.js";
 
 type Maybe<T> = T | null;
 
@@ -35,7 +34,7 @@ export type User = {
 
 type ParentTypes = {
   Food: Food;
-  Query: RootValue;
+  Query: Record<string, never>;
   User: User;
 };
 

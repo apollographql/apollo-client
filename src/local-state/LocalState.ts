@@ -29,7 +29,6 @@ import { stripTypename } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   FragmentMap,
-  IsAny,
   NoInfer,
   RemoveIndexSignature,
 } from "@apollo/client/utilities/internal";
@@ -62,7 +61,6 @@ interface ExecContext {
   errors: GraphQLFormattedError[];
   phase: "exports" | "resolve";
   exportedVariableDefs: Record<string, ExportedVariable>;
-  rootValue: any;
   diff: Cache.DiffResult<any>;
   returnPartialData: boolean;
 }
@@ -125,30 +123,6 @@ type InferContextValueFromResolvers<TResolvers> =
     : DefaultContext
   : DefaultContext;
 
-type InferRootValueFromFieldResolver<TField> =
-  TField extends { [key: string]: infer TResolver } ?
-    TResolver extends LocalState.Resolver<any, infer TRootValue, any> ?
-      TRootValue
-    : unknown
-  : unknown;
-
-type InferRootValueFromResolvers<TResolvers> =
-  TResolvers extends { Query?: infer QueryResolvers } ?
-    InferRootValueFromFieldResolver<QueryResolvers>
-  : TResolvers extends { Mutation?: infer MutationResolvers } ?
-    InferRootValueFromFieldResolver<MutationResolvers>
-  : TResolvers extends { Subscription?: infer SubscriptionResolvers } ?
-    InferRootValueFromFieldResolver<SubscriptionResolvers>
-  : unknown;
-
-type MaybeRequireRootValue<TRootValue> =
-  true extends IsAny<TRootValue> ? {}
-  : undefined extends TRootValue ? {}
-  : unknown extends TRootValue ? {}
-  : {
-      rootValue: TRootValue | LocalState.RootValueFunction<TRootValue>;
-    };
-
 type MaybeRequireContextFunction<TContext> =
   {} extends RemoveIndexSignature<TContext> ? {}
   : { context: LocalState.ContextFunction<TContext> };
@@ -159,40 +133,15 @@ export declare namespace LocalState {
   // allows us to provide the function signature while allowing any value.
   export type Options<
     TResolvers extends Resolvers = Resolvers,
-    TRootValue = unknown,
     TContext = DefaultContext,
   > = {
     context?: ContextFunction<TContext>;
-    /**
-     * A value or function called with the request context creating the root
-     * value passed to any root field resolvers. Providing a function is useful
-     * if you want to use a different root value depending on the operation
-     * details.
-     *
-     * @example
-     * ```ts
-     * new LocalState({
-     *   rootValue: {
-     *     env: "development"
-     *   },
-     *   resolvers: {
-     *     Query: {
-     *       rootField: (parent) => {
-     *         // parent is { env: "development" }
-     *       }
-     *     }
-     *   }
-     * })
-     * ```
-     */
-    rootValue?: TRootValue | RootValueFunction<TRootValue>;
 
     /**
      * The map of resolvers used to provide values for `@local` fields.
      */
     resolvers?: TResolvers;
-  } & MaybeRequireRootValue<TRootValue> &
-    MaybeRequireContextFunction<TContext>;
+  } & MaybeRequireContextFunction<TContext>;
 
   export interface RootValueFunctionContext {
     document: DocumentNode;
@@ -249,10 +198,8 @@ export declare namespace LocalState {
 
 export class LocalState<
   TResolvers extends LocalState.Resolvers = LocalState.Resolvers,
-  TRootValue = InferRootValueFromResolvers<TResolvers>,
   TContext = InferContextValueFromResolvers<TResolvers>,
 > {
-  private rootValue?: LocalState.Options["rootValue"];
   private context?: LocalState.ContextFunction<TContext>;
   private resolvers: LocalState.Resolvers = {};
   private traverseCache = new WeakMap<
@@ -262,24 +209,13 @@ export class LocalState<
 
   constructor(
     ...[options]: {} extends TResolvers ?
-      [
-        options?: LocalState.Options<
-          TResolvers,
-          NoInfer<TRootValue>,
-          NoInfer<TContext>
-        >,
-      ]
+      [options?: LocalState.Options<TResolvers, NoInfer<TContext>>]
     : [
-        options: LocalState.Options<
-          TResolvers,
-          NoInfer<TRootValue>,
-          NoInfer<TContext>
-        > & {
+        options: LocalState.Options<TResolvers, NoInfer<TContext>> & {
           resolvers: TResolvers;
         },
       ]
   ) {
-    this.rootValue = options?.rootValue;
     this.context = options?.context;
 
     if (options?.resolvers) {
@@ -367,16 +303,6 @@ export class LocalState<
       phase: "resolve",
       exportedVariableDefs,
       diff,
-      rootValue:
-        typeof this.rootValue === "function" ?
-          this.rootValue({
-            document,
-            client,
-            context,
-            phase: "resolve",
-            variables: variables ?? {},
-          })
-        : this.rootValue,
       returnPartialData,
     };
 
@@ -450,16 +376,6 @@ export class LocalState<
       exportedVariableDefs,
       diff,
       returnPartialData: false,
-      rootValue:
-        typeof this.rootValue === "function" ?
-          this.rootValue({
-            document,
-            client,
-            context,
-            phase: "resolve",
-            variables,
-          })
-        : this.rootValue,
     };
 
     await this.resolveSelectionSet(

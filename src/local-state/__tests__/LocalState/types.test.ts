@@ -1,7 +1,6 @@
 import { LocalState } from "@apollo/client/local-state";
 
 import type { ContextValue } from "./fixtures/context-value.js";
-import type { RootValue } from "./fixtures/rootValue.js";
 
 type SetRequired<T, Keys extends keyof T> = { [K in Keys]-?: T[K] } & Omit<
   T,
@@ -33,9 +32,9 @@ describe.skip("Type tests", () => {
     });
 
     new LocalState({
-      rootValue: {
+      context: () => ({
         env: "development",
-      },
+      }),
       resolvers: {
         Query: {
           currentUserId: () => "1",
@@ -220,145 +219,15 @@ describe.skip("Type tests", () => {
     });
   });
 
-  test("rootValue", () => {
-    type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
-
-    new LocalState<Resolvers, RootValue>({
-      rootValue: {
-        env: "dev",
-      },
-      resolvers: {
-        Query: {
-          currentUserId: (rootValue) => rootValue.env,
-        },
-      },
-    });
-
-    new LocalState<Resolvers, RootValue>({
-      rootValue: {
-        // @ts-expect-error invalid value
-        env: "staging",
-      },
-      resolvers: {
-        Query: {
-          currentUserId: (rootValue) => rootValue.env,
-        },
-      },
-    });
-
-    new LocalState<Resolvers, RootValue>({
-      rootValue: () => ({
-        env: "prod",
-      }),
-      resolvers: {
-        Query: {
-          currentUserId: (rootValue) => rootValue.env,
-        },
-      },
-    });
-
-    new LocalState<Resolvers, RootValue>({
-      // @ts-expect-error incorrect value
-      rootValue: () => ({
-        env: "staging",
-      }),
-      resolvers: {
-        Query: {
-          currentUserId: (rootValue) => rootValue.env,
-        },
-      },
-    });
-
-    new LocalState<Resolvers, RootValue>({
-      rootValue: {
-        env: "prod",
-      },
-      resolvers: {
-        Query: {
-          currentUserId: (rootValue: RootValue) => rootValue.env,
-        },
-      },
-    });
-
-    new LocalState<Resolvers, RootValue>({
-      rootValue: {
-        env: "prod",
-      },
-      resolvers: {
-        Query: {
-          // @ts-expect-error parent is incorrect type
-          currentUserId: (rootValue: { invalid: boolean }) => "1",
-        },
-      },
-    });
-
-    new LocalState<Resolvers>({
-      rootValue: {
-        // @ts-expect-error invalid value for env
-        env: "staging",
-      },
-      resolvers: {
-        Query: {
-          currentUserId: (rootValue) => rootValue.env,
-        },
-      },
-    });
-
-    new LocalState({
-      rootValue: {
-        // @ts-expect-error invalid value for env
-        env: "staging",
-      },
-      resolvers: {
-        Query: {
-          currentUserId: (_rootValue: RootValue) => 1,
-        },
-      },
-    });
-
-    new LocalState({
-      // @ts-expect-error invalid value for env
-      rootValue: () => ({
-        env: "staging",
-      }),
-      resolvers: {
-        Query: {
-          currentUserId: (_rootValue: RootValue) => 1,
-        },
-      },
-    });
-
-    // @ts-expect-error rootValue is not provided
-    new LocalState({
-      resolvers: {
-        Query: {
-          currentUserId: (_rootValue: RootValue) => 1,
-        },
-      },
-    });
-
-    new LocalState<{ User?: { isLoggedIn: LocalState.Resolver } }, RootValue>(
-      // @ts-expect-error rootValue is required
-      {}
-    );
-
-    new LocalState<{ User?: { isLoggedIn: LocalState.Resolver } }, RootValue>(
-      // @ts-expect-error rootValue is required
-      {
-        resolvers: {},
-      }
-    );
-  });
-
   test("context", () => {
     type Resolvers = import("./fixtures/local-resolvers.js").Resolvers;
 
     // @ts-expect-error missing required context value
-    new LocalState<Resolvers, undefined, ContextValue>({
+    new LocalState<Resolvers, ContextValue>({
       resolvers: {},
     });
 
-    new LocalState<Resolvers, undefined, ContextValue>({
+    new LocalState<Resolvers, ContextValue>({
       context: () => ({ env: "dev" }),
       resolvers: {
         Query: {
@@ -367,7 +236,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalState<Resolvers, undefined, ContextValue>({
+    new LocalState<Resolvers, ContextValue>({
       context: ({ requestContext }) => ({ ...requestContext, env: "dev" }),
       resolvers: {
         Query: {
@@ -376,7 +245,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalState<Resolvers, undefined, ContextValue>({
+    new LocalState<Resolvers, ContextValue>({
       context: ({ requestContext }) => ({
         ...requestContext,
         // @ts-expect-error invalid value
@@ -389,7 +258,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalState<Resolvers, undefined, ContextValue>({
+    new LocalState<Resolvers, ContextValue>({
       context: () => ({
         env: "prod",
       }),
@@ -405,7 +274,7 @@ describe.skip("Type tests", () => {
       },
     });
 
-    new LocalState<Resolvers, undefined>({
+    new LocalState<Resolvers>({
       context: () => ({
         // @ts-expect-error invalid value for env
         env: "staging",

@@ -20,9 +20,6 @@ test("passes parent value as empty object to root resolver for client-only query
   });
 
   const localState = new LocalState({
-    rootValue: {
-      isBarEnabled: true,
-    },
     resolvers: {
       Query: {
         foo: (rootValue) => ({

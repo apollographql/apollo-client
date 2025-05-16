@@ -1078,8 +1078,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // This has to happen in a "middleware wrapper" around `fetchQuery` call,
         // since our definition of "synchronously" should start only after
         // @exports variables have resolved.
-        const result = forward();
-        result.observable = result.observable.pipe(
+        return forward().pipe(
           // we cannot use `tap` here, since it allows only for a "before subscription"
           // hook with `subscribe` and we care for "directly before and after subscription"
           (source) =>
@@ -1129,7 +1128,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               }
             )
         );
-        return result;
       }
     );
 

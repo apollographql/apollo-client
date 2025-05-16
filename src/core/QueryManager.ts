@@ -1376,8 +1376,9 @@ export class QueryManager {
     // or setVariables.
     networkStatus = NetworkStatus.loading,
     query = options.query,
-    fetchQueryMiddleware = (forward: () => ObservableAndInfo<TData>) =>
-      forward()
+    fetchQueryMiddleware = (
+      forward: () => Observable<QueryNotification.Value<TData, any>>
+    ) => forward()
   ): Observable<QueryNotification.Value<TData, any>> {
     const variables = this.getVariables(query, options.variables) as TVars;
 
@@ -1443,7 +1444,7 @@ export class QueryManager {
         );
       }
 
-      return observableWithInfo.observable;
+      return observableWithInfo;
     };
 
     // This cancel function needs to be set before the concast is created,

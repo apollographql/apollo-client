@@ -923,7 +923,7 @@ export class QueryManager {
     include: InternalRefetchQueriesInclude = "active"
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    const queryNames = new Map<string, string | null>();
+    const queryNames = new Map<string, string | undefined>();
     const queryNamesAndQueryStrings = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
@@ -1189,7 +1189,7 @@ export class QueryManager {
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
 
-    const operationName = getOperationName(query) || void 0;
+    const operationName = getOperationName(query);
     const executeContext: ExecuteContext = {
       client: this.client,
     };
@@ -1696,8 +1696,7 @@ export class QueryManager {
 
         invariant.warn(
           '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
-          getOperationName(document) ??
-            `Unnamed ${operationType ?? "operation"}`
+          getOperationName(document, `Unnamed ${operationType ?? "operation"}`)
         );
       }
     }

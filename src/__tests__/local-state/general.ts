@@ -608,7 +608,7 @@ describe("Sample apps", () => {
     const update = (
       query: DocumentNode,
       updater: (data: { count: number }, variables: { amount: number }) => any
-    ): LocalState.Resolver<any, any, any> => {
+    ): LocalState.Resolver<any, any, any, any> => {
       return (_result: {}, variables: { amount: number }, { client }): null => {
         const { cache } = client;
 
@@ -711,7 +711,7 @@ describe("Sample apps", () => {
     const update = (
       query: DocumentNode,
       updater: (todos: any, variables: Todo) => any
-    ): LocalState.Resolver<any, any, any> => {
+    ): LocalState.Resolver<any, any, any, any> => {
       return (_result, variables: Todo, { client }): null => {
         const { cache } = client;
 

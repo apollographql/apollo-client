@@ -1,4 +1,3 @@
-import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import type { NextNotification, ObservableNotification } from "rxjs";
 
@@ -270,38 +269,27 @@ export interface QueryResult<TData = unknown> {
 }
 
 export declare namespace QueryNotification {
-  interface Meta<TData, TVariables> {
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    variables: TVariables;
-  }
-
-  type NewNetworkStatus<TData, TVariables> = NextNotification<{
+  type NewNetworkStatus<TData> = NextNotification<{
     resetError?: boolean;
   }> & {
     source: "newNetworkStatus";
   };
 
-  type SetResult<TData, TVariables> = NextNotification<
-    ApolloQueryResult<TData>
-  > & {
+  type SetResult<TData> = NextNotification<ApolloQueryResult<TData>> & {
     source: "setResult";
   };
 
-  type FromNetwork<TData, TVariables> = ObservableNotification<
-    ApolloQueryResult<TData>
-  > & {
+  type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> & {
     source: "network";
   };
 
-  type FromCache<TData, TVariables> = NextNotification<
-    ApolloQueryResult<TData>
-  > & {
+  type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> & {
     source: "cache";
   };
 
-  type Value<TData, TVariables> =
-    | FromCache<TData, TVariables>
-    | FromNetwork<TData, TVariables>
-    | NewNetworkStatus<TData, TVariables>
-    | SetResult<TData, TVariables>;
+  type Value<TData> =
+    | FromCache<TData>
+    | FromNetwork<TData>
+    | NewNetworkStatus<TData>
+    | SetResult<TData>;
 }

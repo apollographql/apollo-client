@@ -243,7 +243,7 @@ export class ObservableQuery<
     variables: TVariables;
   };
   private input: Subject<
-    QueryNotification.Value<TData, TVariables> & {
+    QueryNotification.Value<TData> & {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       meta: Meta;
@@ -1093,48 +1093,46 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // we cannot use `tap` here, since it allows only for a "before subscription"
           // hook with `subscribe` and we care for "directly before and after subscription"
           (source) =>
-            new Observable<QueryNotification.Value<TData, any>>(
-              (subscriber) => {
-                let synchronouslyEmitted = false;
-                try {
-                  return source.subscribe({
-                    next(value) {
-                      synchronouslyEmitted = true;
-                      subscriber.next(value);
+            new Observable<QueryNotification.Value<TData>>((subscriber) => {
+              let synchronouslyEmitted = false;
+              try {
+                return source.subscribe({
+                  next(value) {
+                    synchronouslyEmitted = true;
+                    subscriber.next(value);
+                  },
+                  error: (error) => subscriber.error(error),
+                  complete: () => subscriber.complete(),
+                });
+              } finally {
+                if (
+                  !synchronouslyEmitted &&
+                  this.activeOperations.has(operation)
+                ) {
+                  operation.override = networkStatus;
+                  this.input.next({
+                    kind: "N",
+                    source: "newNetworkStatus",
+                    value: {
+                      resetError: true,
                     },
-                    error: (error) => subscriber.error(error),
-                    complete: () => subscriber.complete(),
+                    query,
+                    variables,
+                    meta: {
+                      shouldEmit: EmitBehavior.networkStatusChange,
+                      /*
+                       * The moment this notification is emitted, `nextFetchPolicy`
+                       * might already have switched from a `network-only` to a
+                       * `cache-something` policy, so we want to ensure that the
+                       * loading state emit doesn't accidentally read from the cache
+                       * in those cases.
+                       */
+                      fetchPolicy: initialFetchPolicy,
+                    },
                   });
-                } finally {
-                  if (
-                    !synchronouslyEmitted &&
-                    this.activeOperations.has(operation)
-                  ) {
-                    operation.override = networkStatus;
-                    this.input.next({
-                      kind: "N",
-                      source: "newNetworkStatus",
-                      value: {
-                        resetError: true,
-                      },
-                      query,
-                      variables,
-                      meta: {
-                        shouldEmit: EmitBehavior.networkStatusChange,
-                        /*
-                         * The moment this notification is emitted, `nextFetchPolicy`
-                         * might already have switched from a `network-only` to a
-                         * `cache-something` policy, so we want to ensure that the
-                         * loading state emit doesn't accidentally read from the cache
-                         * in those cases.
-                         */
-                        fetchPolicy: initialFetchPolicy,
-                      },
-                    });
-                  }
                 }
               }
-            )
+            })
         );
         return result;
       }
@@ -1538,7 +1536,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private pushOperation(networkStatus: NetworkStatus): {
     finalize: () => void;
     pushNotification: (
-      notification: QueryNotification.Value<TData, TVariables>,
+      notification: QueryNotification.Value<TData>,
       additionalMeta?: Omit<Meta, "query" | "variables">
     ) => void;
   } {
@@ -1561,7 +1559,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return {
       finalize,
       pushNotification: (
-        notification: QueryNotification.Value<TData, TVariables>,
+        notification: QueryNotification.Value<TData>,
         additionalMeta?: Meta
       ) => {
         if (!aborted) {
@@ -1623,7 +1621,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private operator: OperatorFunction<
-    QueryNotification.Value<TData, TVariables> & {
+    QueryNotification.Value<TData> & {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       meta: Meta;

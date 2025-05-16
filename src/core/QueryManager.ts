@@ -1465,10 +1465,8 @@ export class QueryManager {
       cleanupCancelFn();
     });
 
-    const fetchCancelSubject = new Subject<
-      QueryNotification.Value<TData, TVars>
-    >();
-    let observable: Observable<QueryNotification.Value<TData, TVars>>,
+    const fetchCancelSubject = new Subject<QueryNotification.Value<TData>>();
+    let observable: Observable<QueryNotification.Value<TData>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1745,7 +1743,7 @@ export class QueryManager {
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
       networkStatus: NetworkStatus
-    ): Observable<QueryNotification.FromCache<TData, TVars>> => {
+    ): Observable<QueryNotification.FromCache<TData>> => {
       const data = diff.result;
 
       if (__DEV__ && !returnPartialData && data !== null) {
@@ -1774,7 +1772,7 @@ export class QueryManager {
 
       const fromData = (
         data: TData | DeepPartial<TData> | undefined
-      ): Observable<QueryNotification.FromCache<TData, TVars>> => {
+      ): Observable<QueryNotification.FromCache<TData>> => {
         return of({
           kind: "N",
           value: toResult(data),
@@ -1800,7 +1798,7 @@ export class QueryManager {
               onlyRunForcedResolvers: true,
             })
             .then(
-              (resolved): QueryNotification.FromCache<TData, TVars> => ({
+              (resolved): QueryNotification.FromCache<TData> => ({
                 kind: "N" as const,
                 value: toResult(resolved.data || void 0),
                 source: "cache" as const,
@@ -1835,7 +1833,7 @@ export class QueryManager {
         validateDidEmitValue(),
         materialize(),
         map(
-          (result): QueryNotification.FromNetwork<TData, TVars> => ({
+          (result): QueryNotification.FromNetwork<TData> => ({
             ...result,
             source: "network",
           })
@@ -1930,7 +1928,7 @@ function validateDidEmitValue<T>() {
 interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
-  observable: Observable<QueryNotification.Value<TData, any>>;
+  observable: Observable<QueryNotification.Value<TData>>;
 }
 
 function isFullyUnmaskedOperation(document: DocumentNode) {

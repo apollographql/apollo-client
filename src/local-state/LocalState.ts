@@ -904,11 +904,11 @@ export class LocalState<
     const isSingleASTNode = (
       node: ASTNode | readonly ASTNode[]
     ): node is ASTNode => !Array.isArray(node);
-    const fields: Array<{ node: FieldNode; isClientFieldDescendant: boolean }> =
-      [];
+    const fields: Array<FieldNode> = [];
+    let rootClientField: FieldNode | undefined;
 
     function getCurrentPath() {
-      return fields.map((field) => field.node.name.value);
+      return fields.map((field) => field.name.value);
     }
 
     const traverse = (definitionNode: ExecutableDefinitionNode) => {
@@ -937,48 +937,47 @@ export class LocalState<
         },
         Field: {
           enter(field) {
-            const parent = fields.at(-1);
-
-            fields.push({
-              node: field,
-              isClientFieldDescendant: parent?.isClientFieldDescendant || false,
-            });
+            fields.push(field);
           },
           leave() {
-            fields.pop();
+            const removed = fields.pop();
+
+            if (removed === rootClientField) {
+              rootClientField = undefined;
+            }
           },
         },
         Directive(node: DirectiveNode, _, __, ___, ancestors) {
-          const fieldInfo = fields.at(-1);
+          const field = fields.at(-1);
+
+          if (!field) {
+            return;
+          }
 
           if (
             node.name.value === "export" &&
             // Ignore export directives that aren't inside client fields.
             // These will get sent to the server
-            fieldInfo?.isClientFieldDescendant
+            rootClientField
           ) {
-            const fieldName = fieldInfo?.node.name.value;
+            const fieldName = field.name.value;
             const variableName = getExportedVariableName(node);
-
             if (!variableName) {
               throw new LocalStateError(
                 `Cannot determine the variable name from the \`@export\` directive used on field '${fieldName}'. Perhaps you forgot the \`as\` argument?`,
                 { path: getCurrentPath() }
               );
             }
-
             if (!allVariableDefinitions[variableName]) {
               throw new LocalStateError(
                 `\`@export\` directive on field '${fieldName}' does not have an associated variable definition for the '${variableName}' variable.`,
                 { path: getCurrentPath() }
               );
             }
-
             cache.exportedVariableDefs[variableName] = {
               ...allVariableDefinitions[variableName],
-              field: fieldInfo.node,
+              field,
             };
-
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.exportsToResolve.add(node);
@@ -986,12 +985,8 @@ export class LocalState<
               }
             });
           }
-
           if (node.name.value === "client") {
-            if (fieldInfo) {
-              fieldInfo.isClientFieldDescendant = true;
-            }
-
+            rootClientField ??= field;
             ancestors.forEach((node) => {
               if (isSingleASTNode(node) && isSelectionNode(node)) {
                 cache.selectionsToResolve.add(node);

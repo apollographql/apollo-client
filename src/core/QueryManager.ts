@@ -1731,7 +1731,7 @@ export class QueryManager {
       context?: DefaultContext;
     },
     cacheWriteBehavior: CacheWriteBehavior
-  ): ObservableAndInfo<TData> {
+  ): Observable<QueryNotification.Value<TData, any>> {
     queryInfo.init({
       document: query,
       variables,
@@ -1845,57 +1845,43 @@ export class QueryManager {
         const diff = readCache();
 
         if (diff.complete) {
-          return {
-            fromLink: false,
-            observable: resultsFromCache(diff, NetworkStatus.ready),
-          };
+          return resultsFromCache(diff, NetworkStatus.ready);
         }
 
         if (returnPartialData) {
-          return {
-            fromLink: true,
-            observable: concat(
-              resultsFromCache(diff, NetworkStatus.loading),
-              resultsFromLink()
-            ),
-          };
+          return concat(
+            resultsFromCache(diff, NetworkStatus.loading),
+            resultsFromLink()
+          );
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
       }
 
       case "cache-and-network": {
         const diff = readCache();
 
         if (diff.complete || returnPartialData) {
-          return {
-            fromLink: true,
-            observable: concat(
-              resultsFromCache(diff, NetworkStatus.loading),
-              resultsFromLink()
-            ),
-          };
+          return concat(
+            resultsFromCache(diff, NetworkStatus.loading),
+            resultsFromLink()
+          );
         }
 
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
       }
 
       case "cache-only":
-        return {
-          fromLink: false,
-          observable: concat(
-            resultsFromCache(readCache(), NetworkStatus.ready)
-          ),
-        };
+        return concat(resultsFromCache(readCache(), NetworkStatus.ready));
 
       case "network-only":
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
 
       case "no-cache":
-        return { fromLink: true, observable: resultsFromLink() };
+        return resultsFromLink();
 
       case "standby":
-        return { fromLink: false, observable: EMPTY };
+        return EMPTY;
     }
   }
 

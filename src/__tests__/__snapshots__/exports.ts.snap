@@ -410,7 +410,6 @@ Array [
   "AutoCleanedStrongCache",
   "AutoCleanedWeakCache",
   "DeepMerger",
-  "SlotAwareBehaviorSubject",
   "argumentsObjectFromField",
   "canUseDOM",
   "checkDocument",

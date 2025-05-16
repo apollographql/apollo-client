@@ -5,11 +5,14 @@ type OperationDefinitionWithName = OperationDefinitionNode & {
 };
 
 /** @internal */
-export function getOperationName(doc: DocumentNode): string | null {
+export function getOperationName(
+  doc: DocumentNode,
+  fallback: string | null = null
+): string | null {
   return (
     doc.definitions.find(
       (definition): definition is OperationDefinitionWithName =>
         definition.kind === "OperationDefinition" && !!definition.name
-    )?.name.value || null
+    )?.name.value || fallback
   );
 }

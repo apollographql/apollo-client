@@ -36,3 +36,15 @@ test("should return null if the query does not have an operation name", () => {
 
   expect(operationName).toEqual(null);
 });
+
+test("returns fallback if the query does not have an operation name and a fallback is provided", () => {
+  const query = gql`
+    {
+      fortuneCookie
+    }
+  `;
+
+  const operationName = getOperationName(query, "(anonymous)");
+
+  expect(operationName).toEqual("(anonymous)");
+});

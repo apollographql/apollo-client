@@ -456,6 +456,15 @@ export class LocalState<
           (selection.directives?.some((d) => d.name.value === "client") ??
             false);
 
+        if (isClientField && hasAliasedTypename(selectionSet)) {
+          throw new LocalStateError(
+            `'__typename' must not be aliased in the selection set for field '${path.at(
+              -1
+            )}' when using local resolvers.`,
+            { path }
+          );
+        }
+
         const fieldResult =
           isClientField ?
             await this.resolveClientField(
@@ -1126,4 +1135,13 @@ function toQueryOperation(document: DocumentNode): DocumentNode {
     },
   });
   return modifiedDoc;
+}
+
+function hasAliasedTypename(selectionSet: SelectionSetNode) {
+  return selectionSet.selections.some(
+    (selection) =>
+      selection.kind === Kind.FIELD &&
+      selection.alias &&
+      selection.name.value === "__typename"
+  );
 }

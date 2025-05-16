@@ -1,4 +1,9 @@
-import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  InMemoryCache,
+  LocalStateError,
+} from "@apollo/client";
 import { LocalState } from "@apollo/client/local-state";
 
 import { gql } from "./testUtils.js";
@@ -277,7 +282,7 @@ test("does not confuse fields aliased to each other with boolean values", async 
   });
 });
 
-test("does not confuse aliased __typename", async () => {
+test("throws when __typename is aliased in child parent field.", async () => {
   const document = gql`
     query Test {
       fie: foo @client {
@@ -308,50 +313,65 @@ test("does not confuse aliased __typename", async () => {
       variables: {},
       remoteResult: undefined,
     })
-  ).resolves.toStrictEqualTyped({
-    data: {
-      fie: { bar: "Foo", __typename: true },
-    },
-  });
+  ).rejects.toEqual(
+    new LocalStateError(
+      "'__typename' must not be aliased in the selection set for field 'foo' when using local resolvers.",
+      { path: ["foo"] }
+    )
+  );
 });
 
-test("will call correct child resolver when __typename is aliased", async () => {
+test("throws when __typename is aliased in server parent field", async () => {
   const document = gql`
-    query Test {
-      fie: foo @client {
+    query Member {
+      member {
+        __typename: firstName
         bar: __typename
-        __typename: bar
+        firstName
+        lastName
+        fullName @client
       }
     }
   `;
+
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });
+
+  const remoteResult = {
+    data: {
+      member: {
+        __typename: "John",
+        bar: "Member",
+        firstName: "John",
+        lastName: "Smithsonian",
+      },
+    },
+  };
+
   const localState = new LocalState({
     resolvers: {
-      Query: {
-        foo: () => ({ __typename: "Foo" }),
-      },
-      Foo: {
-        bar: () => "Bar",
-      },
-      Bar: {
-        __typename: () => "Incorrect",
+      Member: {
+        fullName(member) {
+          return `${member.firstName} ${member.lastName}`;
+        },
       },
     },
   });
+
   await expect(
     localState.execute({
-      client,
       document,
+      client,
       context: {},
       variables: {},
-      remoteResult: undefined,
+      remoteResult,
     })
-  ).resolves.toStrictEqualTyped({
-    data: {
-      fie: { bar: "Foo", __typename: "Bar" },
-    },
-  });
+  ).rejects.toEqual(
+    new LocalStateError(
+      "'__typename' must not be aliased in the selection set for field 'member' when using local resolvers.",
+      { path: ["member"] }
+    )
+  );
 });

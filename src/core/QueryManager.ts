@@ -175,7 +175,7 @@ export class QueryManager {
 
   /**
    * Whether to prioritize cache values over network results when
-   * `fetchObservableWithInfo` is called.
+   * `fetchObservable` is called.
    * This will essentially turn a `"network-only"` or `"cache-and-network"`
    * fetchPolicy into a `"cache-first"` fetchPolicy, but without influencing
    * the `fetchPolicy` of the `ObservableQuery`.
@@ -707,7 +707,7 @@ export class QueryManager {
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
     return lastValueFrom(
-      this.fetchObservableWithInfo(
+      this.fetchObservable(
         this.getOrCreateQuery(queryId),
         options,
         networkStatus
@@ -1368,7 +1368,7 @@ export class QueryManager {
     );
   }
 
-  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
+  public fetchObservable<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often

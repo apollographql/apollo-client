@@ -1468,8 +1468,7 @@ export class QueryManager {
     const fetchCancelSubject = new Subject<
       QueryNotification.Value<TData, TVars>
     >();
-    let observable: Observable<QueryNotification.Value<TData, TVars>>,
-      containsDataFromLink: boolean;
+    let observable: Observable<QueryNotification.Value<TData, TVars>>;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
     // @export directives (the common case), we deliberately avoid
@@ -1485,16 +1484,8 @@ export class QueryManager {
           normalized.context
         )
       ).pipe(mergeMap((variables) => fromVariables(variables).observable));
-
-      // there is just no way we can synchronously get the *right* value here,
-      // so we will assume `true`, which is the behaviour before the bug fix in
-      // #10597. This means that bug is not fixed in that case, and is probably
-      // un-fixable with reasonable effort for the edge case of @export as
-      // directives.
-      containsDataFromLink = true;
     } else {
       const sourcesWithInfo = fromVariables(normalized.variables);
-      containsDataFromLink = sourcesWithInfo.fromLink;
       observable = sourcesWithInfo.observable;
     }
 

@@ -1371,10 +1371,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
 
     if (!useDisposableObservable && !this.linkSubscription) {
-      if (this.linkSubscription) {
-        this.linkSubscription.unsubscribe();
-      }
-
       this.linkSubscription = subscription;
     }
 

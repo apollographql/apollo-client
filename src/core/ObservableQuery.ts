@@ -28,6 +28,7 @@ import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
+import { fetchQueryOperator, onCacheHit } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
   DefaultContext,
@@ -1076,66 +1077,57 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const initialFetchPolicy = this.options.fetchPolicy;
     const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
     queryInfo.setObservableQuery(this);
+    options.context ??= {};
+
+    let synchronouslyEmitted = false;
+    options.context[onCacheHit] = () => {
+      synchronouslyEmitted = true;
+    };
+    options.context[fetchQueryOperator] = // we cannot use `tap` here, since it allows only for a "before subscription"
+      // hook with `subscribe` and we care for "directly before and after subscription"
+      <T>(source: Observable<T>) =>
+        new Observable<T>((subscriber) => {
+          try {
+            return source.subscribe({
+              next(value) {
+                synchronouslyEmitted = true;
+                subscriber.next(value);
+              },
+              error: (error) => subscriber.error(error),
+              complete: () => subscriber.complete(),
+            });
+          } finally {
+            if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
+              operation.override = networkStatus;
+              this.input.next({
+                kind: "N",
+                source: "newNetworkStatus",
+                value: {
+                  resetError: true,
+                },
+                query,
+                variables,
+                meta: {
+                  shouldEmit: EmitBehavior.networkStatusChange,
+                  /*
+                   * The moment this notification is emitted, `nextFetchPolicy`
+                   * might already have switched from a `network-only` to a
+                   * `cache-something` policy, so we want to ensure that the
+                   * loading state emit doesn't accidentally read from the cache
+                   * in those cases.
+                   */
+                  fetchPolicy: initialFetchPolicy,
+                },
+              });
+            }
+          }
+        });
+
     const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
       networkStatus,
-      fetchQuery,
-      (forward) => {
-        // If the operation synchronously emits a value, that will already have set
-        // some kind of loading state. Otherwise, we will emit a `newNetworkStatus`
-        // event once the subscription is set up.
-        // This has to happen in a "middleware wrapper" around `fetchQuery` call,
-        // since our definition of "synchronously" should start only after
-        // @exports variables have resolved.
-        const result = forward();
-        result.observable = result.observable.pipe(
-          // we cannot use `tap` here, since it allows only for a "before subscription"
-          // hook with `subscribe` and we care for "directly before and after subscription"
-          (source) =>
-            new Observable<QueryNotification.Value<TData>>((subscriber) => {
-              let synchronouslyEmitted = false;
-              try {
-                return source.subscribe({
-                  next(value) {
-                    synchronouslyEmitted = true;
-                    subscriber.next(value);
-                  },
-                  error: (error) => subscriber.error(error),
-                  complete: () => subscriber.complete(),
-                });
-              } finally {
-                if (
-                  !synchronouslyEmitted &&
-                  this.activeOperations.has(operation)
-                ) {
-                  operation.override = networkStatus;
-                  this.input.next({
-                    kind: "N",
-                    source: "newNetworkStatus",
-                    value: {
-                      resetError: true,
-                    },
-                    query,
-                    variables,
-                    meta: {
-                      shouldEmit: EmitBehavior.networkStatusChange,
-                      /*
-                       * The moment this notification is emitted, `nextFetchPolicy`
-                       * might already have switched from a `network-only` to a
-                       * `cache-something` policy, so we want to ensure that the
-                       * loading state emit doesn't accidentally read from the cache
-                       * in those cases.
-                       */
-                      fetchPolicy: initialFetchPolicy,
-                    },
-                  });
-                }
-              }
-            })
-        );
-        return result;
-      }
+      fetchQuery
     );
 
     // track query and variables from the start of the operation

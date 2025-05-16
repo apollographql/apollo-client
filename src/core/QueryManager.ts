@@ -121,6 +121,15 @@ interface MutationStoreValue {
 
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
+export const fetchQueryOperator = Symbol();
+export const onCacheHit = Symbol();
+declare module "@apollo/client" {
+  interface DefaultContext {
+    [fetchQueryOperator]?: <T>(source: Observable<T>) => Observable<T>;
+    [onCacheHit]?: () => void;
+  }
+}
+
 interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
@@ -1375,9 +1384,7 @@ export class QueryManager {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    query = options.query,
-    fetchQueryMiddleware = (forward: () => ObservableAndInfo<TData>) =>
-      forward()
+    query = options.query
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
 
@@ -1423,12 +1430,13 @@ export class QueryManager {
         ) ?
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
-      const observableWithInfo = fetchQueryMiddleware(() =>
-        this.fetchQueryByPolicy<TData, TVars>(
-          queryInfo,
-          normalized,
-          cacheWriteBehavior
-        )
+      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
+        queryInfo,
+        normalized,
+        cacheWriteBehavior
+      );
+      observableWithInfo.observable = observableWithInfo.observable.pipe(
+        options.context?.[fetchQueryOperator] || ((x) => x)
       );
 
       if (
@@ -1781,6 +1789,7 @@ export class QueryManager {
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
+        context?.[onCacheHit]?.();
         return from(
           this.localState
             .runResolvers({

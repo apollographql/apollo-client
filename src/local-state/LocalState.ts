@@ -690,24 +690,6 @@ export class LocalState<
       return null;
     }
 
-    const resultOrMergeError = (data: unknown) => {
-      if (isRootField && rootValue === null) {
-        this.addError(
-          newInvariantError(
-            "Could not merge data from '%s' resolver with remote data since data was `null`.",
-            resolverName
-          ),
-          path,
-          execContext,
-          { resolver: resolverName, data }
-        );
-
-        return null;
-      }
-
-      return data;
-    };
-
     if (phase === "exports") {
       field.directives?.forEach((directive) => {
         if (directive.name.value !== "export") {
@@ -768,19 +750,17 @@ export class LocalState<
     }
 
     if (result == null || !field.selectionSet) {
-      return resultOrMergeError(result);
+      return result;
     }
 
     if (Array.isArray(result)) {
-      const fieldResult = await this.resolveSubSelectedArray(
+      return this.resolveSubSelectedArray(
         field,
         true,
         result,
         execContext,
         path
       );
-
-      return resultOrMergeError(fieldResult);
     }
 
     if (phase === "resolve" && !(result as any).__typename) {
@@ -798,15 +778,13 @@ export class LocalState<
       return null;
     }
 
-    const fieldResult = await this.resolveSelectionSet(
+    return this.resolveSelectionSet(
       field.selectionSet,
       true,
       result,
       execContext,
       path
     );
-
-    return resultOrMergeError(fieldResult);
   }
 
   private addError(

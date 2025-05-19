@@ -1,5 +1,5 @@
 /**
- * This CLI tool will inline docblocks specified with `@inheritDoc` on build.
+ * This build step will inline docblocks specified with `@inheritDoc` on build.
  *
  *
  * E.g. a in a dockblock like this:
@@ -40,7 +40,7 @@ import { visit } from "recast";
 
 import type { BuildStep, BuildStepOptions } from "./build.ts";
 import { buildDocEntryPoints } from "./entryPoints.ts";
-import { applyRecast, withPseudoNodeModules } from "./helpers.ts";
+import { applyRecast, frameComment, withPseudoNodeModules } from "./helpers.ts";
 
 export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(
@@ -182,14 +182,4 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
       };
     },
   });
-}
-
-function frameComment(text: string) {
-  const framed = text
-    .split("\n")
-    .map((t) => t.trim())
-    .map((t) => (!t.startsWith("*") ? "* " + t : t))
-    .join("\n")
-    .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
-  return `*\n${framed}\n`;
 }

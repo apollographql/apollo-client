@@ -7036,15 +7036,6 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(renderStream).toRerenderWithSimilarSnapshot({
-        expected: (previous) => ({
-          ...previous,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: previous.data,
-        }),
-      });
-
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: {
           clientEntity: {

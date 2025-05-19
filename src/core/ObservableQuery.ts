@@ -28,7 +28,6 @@ import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
-import { fetchQueryOperator, onCacheHit } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
   DefaultContext,
@@ -62,6 +61,15 @@ export interface FetchMoreOptions<
       variables?: TVariables;
     }
   ) => TData;
+}
+
+export const fetchQueryOperator = Symbol();
+export const onCacheHit = Symbol();
+declare module "@apollo/client" {
+  interface DefaultContext {
+    [fetchQueryOperator]?: <T>(source: Observable<T>) => Observable<T>;
+    [onCacheHit]?: () => void;
+  }
 }
 
 interface TrackedOperation {

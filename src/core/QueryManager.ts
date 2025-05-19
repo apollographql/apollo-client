@@ -75,7 +75,12 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
+import {
+  fetchQueryOperator,
+  logMissingFieldErrors,
+  ObservableQuery,
+  onCacheHit,
+} from "./ObservableQuery.js";
 import {
   CacheWriteBehavior,
   QueryInfo,
@@ -120,15 +125,6 @@ interface MutationStoreValue {
 }
 
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
-
-export const fetchQueryOperator = Symbol();
-export const onCacheHit = Symbol();
-declare module "@apollo/client" {
-  interface DefaultContext {
-    [fetchQueryOperator]?: <T>(source: Observable<T>) => Observable<T>;
-    [onCacheHit]?: () => void;
-  }
-}
 
 interface TransformCacheEntry {
   hasClientExports: boolean;

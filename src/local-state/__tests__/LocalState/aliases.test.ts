@@ -315,7 +315,7 @@ test("throws when __typename is aliased in child parent field.", async () => {
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "'__typename' must not be aliased in the selection set for field 'foo' when using local resolvers.",
+      "'__typename' is a forbidden field alias name in the selection set for field 'foo' when using local resolvers.",
       { path: ["foo"] }
     )
   );
@@ -370,7 +370,7 @@ test("throws when __typename is aliased in server parent field", async () => {
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "'__typename' must not be aliased in the selection set for field 'member' when using local resolvers.",
+      "'__typename' is a forbidden field alias name in the selection set for field 'member' when using local resolvers.",
       { path: ["member"] }
     )
   );

@@ -433,7 +433,7 @@ export class LocalState<
 
         if (isClientField && hasAliasedTypename(selectionSet)) {
           throw new LocalStateError(
-            `'__typename' must not be aliased in the selection set for field '${path.at(
+            `'__typename' is a forbidden field alias name in the selection set for field '${path.at(
               -1
             )}' when using local resolvers.`,
             { path }

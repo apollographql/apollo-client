@@ -1134,7 +1134,7 @@ type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
     [typename: string]: infer TFieldResolvers;
 } ? TFieldResolvers extends ({
     [field: string]: LocalState.Resolver<any, any, infer TContext, any>;
-}) ? TContext : DefaultContext : DefaultContext;
+}) ? unknown extends TContext ? DefaultContext : TContext : DefaultContext : DefaultContext;
 
 // @public (undocumented)
 export class InMemoryCache extends ApolloCache {
@@ -1354,10 +1354,10 @@ namespace LocalState {
         path: Path;
     }) => TResult | Promise<TResult>;
     // (undocumented)
-    interface Resolvers {
+    interface Resolvers<TContext = any> {
         // (undocumented)
         [typename: string]: {
-            [field: string]: Resolver<any, any, any, any>;
+            [field: string]: Resolver<any, any, TContext, any>;
         };
     }
     // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
@@ -1382,7 +1382,7 @@ namespace LocalState {
 // Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers, TContext = InferContextValueFromResolvers<TResolvers>> {
+class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...[options]: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [
@@ -2587,9 +2587,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:138:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:172:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/local-state/LocalState.ts:192:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:194:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

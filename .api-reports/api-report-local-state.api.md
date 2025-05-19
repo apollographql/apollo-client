@@ -20,7 +20,7 @@ type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
     [typename: string]: infer TFieldResolvers;
 } ? TFieldResolvers extends ({
     [field: string]: LocalState.Resolver<any, any, infer TContext, any>;
-}) ? TContext : DefaultContext : DefaultContext;
+}) ? unknown extends TContext ? DefaultContext : TContext : DefaultContext : DefaultContext;
 
 // @public (undocumented)
 export namespace LocalState {
@@ -59,10 +59,10 @@ export namespace LocalState {
         path: Path;
     }) => TResult | Promise<TResult>;
     // (undocumented)
-    export interface Resolvers {
+    export interface Resolvers<TContext = any> {
         // (undocumented)
         [typename: string]: {
-            [field: string]: Resolver<any, any, any, any>;
+            [field: string]: Resolver<any, any, TContext, any>;
         };
     }
     // (undocumented)
@@ -85,7 +85,7 @@ export namespace LocalState {
 // Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers, TContext = InferContextValueFromResolvers<TResolvers>> {
+export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
     constructor(...[options]: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [

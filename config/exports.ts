@@ -83,6 +83,7 @@ export const addExports: BuildStep = async (options) => {
     }
     return JSON.parse(
       JSON.stringify(existing, [
+        // ensure the order of keys is consistent
         "module",
         "module-sync",
         "require",

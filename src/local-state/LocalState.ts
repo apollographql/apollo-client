@@ -119,7 +119,9 @@ type InferContextValueFromResolvers<TResolvers> =
     TFieldResolvers extends (
       { [field: string]: LocalState.Resolver<any, any, infer TContext, any> }
     ) ?
-      TContext
+      unknown extends TContext ?
+        DefaultContext
+      : TContext
     : DefaultContext
   : DefaultContext;
 

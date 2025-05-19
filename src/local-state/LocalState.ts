@@ -167,9 +167,9 @@ export declare namespace LocalState {
     context: RootValueFunctionContext
   ) => TRootValue;
 
-  export interface Resolvers {
+  export interface Resolvers<TContext = any> {
     [typename: string]: {
-      [field: string]: Resolver<any, any, any, any>;
+      [field: string]: Resolver<any, any, TContext, any>;
     };
   }
 
@@ -197,7 +197,8 @@ export declare namespace LocalState {
 }
 
 export class LocalState<
-  TResolvers extends LocalState.Resolvers = LocalState.Resolvers,
+  TResolvers extends
+    LocalState.Resolvers = LocalState.Resolvers<DefaultContext>,
   TContext = InferContextValueFromResolvers<TResolvers>,
 > {
   private context?: LocalState.ContextFunction<TContext>;

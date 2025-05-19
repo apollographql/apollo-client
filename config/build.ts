@@ -7,7 +7,6 @@ import { babelTransform } from "./babel.ts";
 import { compileTs } from "./compileTs.ts";
 import { addExports } from "./exports.ts";
 import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-import { postprocessDist } from "./postprocessDist.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 import { prepareDist } from "./prepareDist.ts";
 import { processInvariants } from "./processInvariants.ts";
@@ -41,7 +40,6 @@ const buildSteps = {
   updateVersion,
   inlineInheritDoc,
   processInvariants,
-  postprocessDist,
   verifyVersion,
   verifySourceMaps,
 } satisfies BuildSteps;

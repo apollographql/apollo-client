@@ -32,6 +32,10 @@ describe.skip("Type tests", () => {
     });
 
     new LocalState({
+      // note: the default type of context is `DefaultContext` which is defined
+      // as `DefaultContext extends Record<string, any>` so this type test
+      // demonstrates that we can return keys that aren't explicit in the
+      // `DefaultContext` type.
       context: () => ({
         env: "development",
       }),

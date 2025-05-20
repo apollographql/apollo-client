@@ -1643,7 +1643,11 @@ export class QueryManager {
               if (result === true) {
                 // The onQueryUpdated function requested the default refetching
                 // behavior by returning true.
-                result = oq.refetch();
+                result = oq
+                  .refetch()
+                  .then(
+                    /* create a persistent subscription on the query */ (x) => x
+                  );
               }
 
               // Record the result in the results Map, as long as onQueryUpdated
@@ -1686,7 +1690,9 @@ export class QueryManager {
 
         // Otherwise, we fall back to refetching.
         if (!onQueryUpdated || result === true) {
-          result = oq.refetch();
+          result = oq
+            .refetch()
+            .then(/* create a persistent subscription on the query */ (x) => x);
         }
 
         if (result !== false) {

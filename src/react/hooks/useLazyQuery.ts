@@ -364,13 +364,15 @@ export function useLazyQuery<
           fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        return observable.reobserve({
-          ...executeOptions,
-          fetchPolicy,
-          // If `variables` is not given, reset back to empty variables by
-          // ensuring the key exists in options
-          variables: executeOptions?.variables,
-        });
+        return observable
+          .reobserve({
+            ...executeOptions,
+            fetchPolicy,
+            // If `variables` is not given, reset back to empty variables by
+            // ensuring the key exists in options
+            variables: executeOptions?.variables,
+          })
+          .then(/* create a persistent subscription on the query */ (x) => x);
       },
       [observable, calledDuringRender]
     );

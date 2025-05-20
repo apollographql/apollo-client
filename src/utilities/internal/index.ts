@@ -73,3 +73,5 @@ export {
 } from "../internal/getMemoryInternals.js";
 
 export { AutoCleanedStrongCache, AutoCleanedWeakCache } from "./caches.js";
+
+export { LazyPromise } from "./LazyPromise.js";

@@ -19,7 +19,7 @@ import {
   filterMap,
   getOperationDefinition,
   getQueryDefinition,
-  preventUnhandledRejection,
+  LazyPromise,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -346,7 +346,13 @@ export class ObservableQuery<
             startedInactive = false;
           }
           if (!this.subject.observed) {
-            this.reobserve();
+            // The initial reobserve should stay subscribed until the request finishes
+            // even if the `ObservableQuery` is unsubscribed from.
+            // see https://github.com/apollographql/apollo-client/blob/62896ffd27357014a5c35dfe8696a603498d8302/src/core/__tests__/ApolloClient/general.test.ts#L417
+            this.reobserve().catch(
+              // creates a subscription and prevents an unhandled promise rejection
+              () => {}
+            );
 
             // TODO: See if we can rework updatePolling to better handle this.
             // reobserve calls updatePolling but this `subscribe` callback is
@@ -1383,10 +1389,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.linkSubscription = subscription;
     }
 
-    return preventUnhandledRejection(
+    return new LazyPromise((resolve, reject) =>
       // Note: lastValueFrom will create a separate subscription to the
       // observable which means that terminating this ObservableQuery will not
-      // cancel the request from the link chain.
+      // cancel the request from the link chain once this lazy Promise has been
+      // started by `await`ing it or calling `.then`,`.catch`,`.finally` etc.
+      // on it.
       lastValueFrom(
         observable.pipe(
           filterMap((value) => {
@@ -1405,7 +1413,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // omit the extra fields from ApolloQueryResult in the default value.
           defaultValue: { data: undefined } as ApolloQueryResult<TData>,
         }
-      ).then((result) => toQueryResult(this.maskResult(result)))
+      )
+        .then((result) => toQueryResult(this.maskResult(result)))
+        .then(resolve, reject)
     );
   }
 

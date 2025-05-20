@@ -1,4 +1,5 @@
 // externals
+import { waitFor } from "@testing-library/react";
 import type { DocumentNode } from "graphql";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
@@ -489,7 +490,8 @@ describe("ApolloClient", () => {
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
   });
 
-  it("causes link unsubscription after multiple requests finish", async () => {
+  // restoring original test from https://github.com/apollographql/apollo-client/blob/326cbe8260b1cc04b339ed2b968e23c08a392cc4/src/core/__tests__/ApolloClient/general.test.ts#L366-L461
+  it("causes link unsubscription after reobserve", async () => {
     const expResult = {
       data: {
         allPeople: {
@@ -527,10 +529,12 @@ describe("ApolloClient", () => {
       return new Observable((observer) => {
         onRequestSubscribe();
 
+        // Delay (100ms) must be bigger than sum of reobserve and unsubscribe awaits (5ms each)
+        // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 30);
+        }, 100);
 
         return () => {
           onRequestUnsubscribe();
@@ -546,6 +550,7 @@ describe("ApolloClient", () => {
         watchQuery: {
           fetchPolicy: "cache-and-network",
           returnPartialData: false,
+          notifyOnNetworkStatusChange: true,
         },
         query: {
           fetchPolicy: "network-only",
@@ -566,25 +571,22 @@ describe("ApolloClient", () => {
 
     expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
 
-    // Kick off another request while the other is still pending
-    await wait(10);
+    // This is the most important part of this test
+    // Check that reobserve cancels the previous connection while watchQuery remains active
     void observableQuery.reobserve({ variables: { offset: 20 } });
 
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
-
-    // reobserve will allow the original request to finish so we should not see
-    // an unsubscribe yet
-    await wait(0);
-    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(0);
+    await waitFor(() => {
+      // Verify that previous connection was aborted by reobserve
+      expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+    });
 
     stream.unsubscribe();
 
-    // Now validate that both requests unsubscribe
-    await wait(30);
+    await wait(10);
+
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });
-
   test("handles race conditions when changing variables", async () => {
     const query = gql`
       query GetPerson($id: ID!) {

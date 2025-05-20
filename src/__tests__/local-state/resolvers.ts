@@ -1335,9 +1335,10 @@ describe("Force local resolvers", () => {
       client.watchQuery({ query, returnPartialData: true })
     );
 
-    // Discuss in PR: This value is emitted from `ObservableQuery` since
-    // resolvers run asynchronously. Should we prevent this emit if we detect
-    // client fields with forced resolvers and returnPartialData: true?
+    // TODO: This value is emitted from `ObservableQuery` since
+    // resolvers run asynchronously. We will update this behavior after
+    // https://github.com/apollographql/apollo-client/pull/12633 is integrated
+    // with this change.
     await expect(stream).toEmitTypedValue({
       data: undefined,
       loading: true,

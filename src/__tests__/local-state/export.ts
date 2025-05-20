@@ -35,7 +35,7 @@ describe("@client @export tests", () => {
 
     await expect(client.query({ query })).rejects.toEqual(
       new LocalStateError(
-        "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
+        "`@export` directive on field 'field' cannot export the '$someVar' variable as it is missing in the query definition.",
         { path: ["field"] }
       )
     );
@@ -75,7 +75,7 @@ describe("@client @export tests", () => {
 
     await expect(client.query({ query })).rejects.toEqual(
       new LocalStateError(
-        "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
+        "`@export` directive on field 'torque' cannot export the '$torque' variable as it is missing in the query definition.",
         { path: ["car", "engine", "torque"] }
       )
     );

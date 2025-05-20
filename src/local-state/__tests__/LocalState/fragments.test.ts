@@ -1,5 +1,4 @@
 import { ApolloCache, ApolloClient, InMemoryCache } from "@apollo/client";
-import { LocalStateError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { InvariantError } from "@apollo/client/utilities/invariant";

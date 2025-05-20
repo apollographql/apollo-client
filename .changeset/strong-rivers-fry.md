@@ -23,8 +23,8 @@ new LocalState({
   resolvers: {
     Query: {
 -     myResolver: (parent, args, { someValue, cache }) => {
-+     myResolver: (parent, args, { context, client }) => {
-+       const someValue = context.someValue;
++     myResolver: (parent, args, { requestContext, client }) => {
++       const someValue = requestContext.someValue;
 +       const cache = client.cache;
       }
     }

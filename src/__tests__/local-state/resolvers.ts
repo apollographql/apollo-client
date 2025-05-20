@@ -683,14 +683,16 @@ describe("Writing cache data from resolvers", () => {
           Mutation: {
             start(_data, _args, { client }) {
               client.cache.writeQuery({ query, data: { field: 1 } });
-              return { start: true };
+              return true;
             },
           },
         },
       }),
     });
 
-    await client.mutate({ mutation });
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
     const result = await client.query({ query });
 
     expect(result).toStrictEqualTyped({ data: { field: 1 } });
@@ -737,14 +739,16 @@ describe("Writing cache data from resolvers", () => {
                 },
               });
 
-              return { start: true };
+              return true;
             },
           },
         },
       }),
     });
 
-    await client.mutate({ mutation });
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
 
     const result = await client.query({ query });
 
@@ -802,14 +806,16 @@ describe("Writing cache data from resolvers", () => {
                   },
                 },
               });
-              return { start: true };
+              return true;
             },
           },
         },
       }),
     });
 
-    await client.mutate({ mutation });
+    await expect(client.mutate({ mutation })).resolves.toStrictEqualTyped({
+      data: { start: true },
+    });
     const result = await client.query({ query });
 
     expect(result).toStrictEqualTyped({

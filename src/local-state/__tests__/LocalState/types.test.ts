@@ -1,3 +1,5 @@
+import { expectTypeOf } from "expect-type";
+
 import { LocalState } from "@apollo/client/local-state";
 
 import type { ContextValue } from "./fixtures/context-value.js";
@@ -57,6 +59,8 @@ describe.skip("Type tests", () => {
   test("works with codegen resolver types", async () => {
     type Resolvers =
       import("./fixtures/local-resolvers-without-context-value.js").Resolvers;
+    type Food =
+      import("./fixtures/local-resolvers-without-context-value.js").Food;
     const { FoodCategory } = await import(
       "./fixtures/local-resolvers-without-context-value.js"
     );
@@ -94,6 +98,10 @@ describe.skip("Type tests", () => {
         Food: {
           name: (food) => food.name?.toUpperCase() ?? null,
           categories: (food, { limit, offset }) => {
+            expectTypeOf(food).toEqualTypeOf<Food>();
+            expectTypeOf(limit).toEqualTypeOf<number | null | undefined>();
+            expectTypeOf(offset).toEqualTypeOf<number>();
+
             limit = limit ?? 5;
             return food.categories?.slice(offset, offset + limit) ?? [];
           },
@@ -115,6 +123,10 @@ describe.skip("Type tests", () => {
         Food: {
           name: (food) => food.name?.toUpperCase() ?? null,
           categories: (food, { limit, offset }) => {
+            expectTypeOf(food).toEqualTypeOf<Food>();
+            expectTypeOf(limit).toEqualTypeOf<number | null | undefined>();
+            expectTypeOf(offset).toEqualTypeOf<number>();
+
             limit = limit ?? 5;
             return food.categories?.slice(offset, offset + limit) ?? [];
           },

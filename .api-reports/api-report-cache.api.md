@@ -50,7 +50,7 @@ export abstract class ApolloCache implements DataProxy {
     fragmentMatches?(fragment: InlineFragmentNode, typename: string): boolean;
     // (undocumented)
     gc(): string[];
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
@@ -520,7 +520,7 @@ export class InMemoryCache extends ApolloCache {
     gc(options?: {
         resetResultCache?: boolean;
     }): string[];
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;

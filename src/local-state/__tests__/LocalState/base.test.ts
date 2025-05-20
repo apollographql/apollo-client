@@ -186,7 +186,7 @@ test("has access to query variables in @client resolvers", async () => {
   const document = gql`
     query WithVariables($id: ID!) {
       foo @client {
-        bar(id: $id)
+        bar(fromVariable: $id)
       }
     }
   `;
@@ -202,7 +202,7 @@ test("has access to query variables in @client resolvers", async () => {
         foo: () => ({ __typename: "Foo" }),
       },
       Foo: {
-        bar: (_: any, { id }: { id: number }) => id,
+        bar: (_, { fromVariable }) => fromVariable,
       },
     },
   });

@@ -547,7 +547,7 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     protected notify(): void;
     // (undocumented)
     readonly options: ObservableQuery.Options<TData, TVariables>;
@@ -561,16 +561,16 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     readonly queryName?: string;
     refetch(variables?: Partial<TVariables>): Promise<QueryResult_2<TData>>;
     reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): Promise<QueryResult_2<MaybeMasked<TData>>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     protected resetNotifications(): void;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     protected scheduleNotify(): void;
     setVariables(variables: TVariables): Promise<QueryResult_2<TData>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
     stopPolling(): void;

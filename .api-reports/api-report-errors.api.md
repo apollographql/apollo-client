@@ -91,7 +91,7 @@ export class LocalStateError extends Error {
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
 
-// @internal
+// @internal @deprecated
 export function registerLinkError(error: ErrorLike): void;
 
 // @public

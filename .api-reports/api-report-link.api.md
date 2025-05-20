@@ -24,13 +24,13 @@ export class ApolloLink {
     static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: () => unknown;
-    // @internal
+    // @internal @deprecated
     readonly left?: ApolloLink;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
-    // @internal
+    // @internal @deprecated
     readonly right?: ApolloLink;
     // (undocumented)
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;

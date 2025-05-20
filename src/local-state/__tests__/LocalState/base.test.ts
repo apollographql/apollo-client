@@ -605,7 +605,7 @@ test("warns when a resolver is missing for an `@client` field", async () => {
   );
 });
 
-test("does not warn for fields resolved from the server", async () => {
+test("warns for client child fields of a server field", async () => {
   using _ = spyOnConsole("warn");
   const document = gql`
     query {

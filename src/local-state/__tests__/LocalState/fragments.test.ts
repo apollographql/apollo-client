@@ -209,7 +209,7 @@ test("throws when cache does not implement fragmentMatches", async () => {
   );
 });
 
-test("throws error when fragment spread type condition does not match typename", async () => {
+test("does not traverse fragment when fragment spread type condition does not match typename", async () => {
   const document = gql`
     fragment FooDetails on Bar {
       bar
@@ -242,12 +242,7 @@ test("throws error when fragment spread type condition does not match typename",
       variables: {},
       remoteResult: undefined,
     })
-  ).rejects.toEqual(
-    new LocalStateError(
-      "Fragment 'FooDetails' cannot be used with type 'Foo' as objects of type 'Foo' can never be of type 'Bar'.",
-      { path: ["foo"] }
-    )
-  );
+  ).resolves.toStrictEqualTyped({ data: { foo: { __typename: "Foo" } } });
 });
 
 test("can use a fragments on interface types defined by possibleTypes", async () => {

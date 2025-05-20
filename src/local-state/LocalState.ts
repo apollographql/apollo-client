@@ -499,29 +499,22 @@ export class LocalState<
         const typename = rootValue?.__typename;
         const typeCondition = fragment.typeCondition.name.value;
 
-        let matches = typename === typeCondition;
+        const matches =
+          typename === typeCondition ||
+          cache.fragmentMatches(fragment, typename ?? "");
 
-        if (!matches) {
-          matches = cache.fragmentMatches(fragment, typename ?? "");
-        }
-
-        if (!matches) {
-          throw new LocalStateError(
-            `Fragment '${fragment.name.value}' cannot be used with type '${typename}' as objects of type '${typename}' can never be of type '${fragment.typeCondition.name.value}'.`,
-            { path }
+        if (matches) {
+          const fragmentResult = await this.resolveSelectionSet(
+            fragment.selectionSet,
+            isClientFieldDescendant,
+            rootValue,
+            execContext,
+            path
           );
-        }
 
-        const fragmentResult = await this.resolveSelectionSet(
-          fragment.selectionSet,
-          isClientFieldDescendant,
-          rootValue,
-          execContext,
-          path
-        );
-
-        if (fragmentResult) {
-          resultsToMerge.push(fragmentResult);
+          if (fragmentResult) {
+            resultsToMerge.push(fragmentResult);
+          }
         }
 
         return;

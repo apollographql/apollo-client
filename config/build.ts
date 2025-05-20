@@ -8,6 +8,7 @@ import { compileTs } from "./compileTs.ts";
 import { addExports } from "./exports.ts";
 import { distDir } from "./helpers.ts";
 import { inlineInheritDoc } from "./inlineInheritDoc.ts";
+import { deprecateInternals } from "./deprecateInternals.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 import { prepareDist } from "./prepareDist.ts";
 import { processInvariants } from "./processInvariants.ts";
@@ -40,6 +41,7 @@ const buildSteps = {
   babelTransform,
   updateVersion,
   inlineInheritDoc,
+  deprecateInternals,
   processInvariants,
   verifyVersion,
   verifySourceMaps,

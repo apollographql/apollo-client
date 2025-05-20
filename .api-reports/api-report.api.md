@@ -47,7 +47,7 @@ export abstract class ApolloCache implements DataProxy {
     gc(): string[];
     // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
     //
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: typeof getApolloCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
@@ -185,13 +185,13 @@ export class ApolloLink {
     static execute(link: ApolloLink, operation: GraphQLRequest, context: ExecuteContext): Observable<FetchResult>;
     // (undocumented)
     static from(links: (ApolloLink | RequestHandler)[]): ApolloLink;
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: () => unknown;
-    // @internal
+    // @internal @deprecated
     readonly left?: ApolloLink;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
-    // @internal
+    // @internal @deprecated
     readonly right?: ApolloLink;
     // (undocumented)
     static split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
@@ -530,7 +530,7 @@ export interface DataProxy {
 // Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
 //
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
 
 // @public (undocumented)
@@ -617,10 +617,10 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
-    // @internal
+    // @internal @deprecated
     readonly left?: DocumentTransform;
     resetCache(): void;
-    // @internal
+    // @internal @deprecated
     readonly right?: DocumentTransform;
     // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {
@@ -917,13 +917,13 @@ type FieldValueGetter = EntityStore["getFieldValue"];
 // @public (undocumented)
 type FlavorableWriteContext = Pick<WriteContext, "clientOnly" | "deferred" | "flavors">;
 
-// @internal
+// @internal @deprecated
 interface FragmentMap {
     // (undocumented)
     [fragmentName: string]: FragmentDefinitionNode;
 }
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type FragmentMapFunction = (fragmentName: string) => FragmentDefinitionNode | null;
 
 // @public (undocumented)
@@ -955,14 +955,14 @@ TData
 // @public (undocumented)
 export const from: typeof ApolloLink.from;
 
-// @internal
+// @internal @deprecated
 const getApolloCacheMemoryInternals: (() => {
     cache: {
         fragmentQueryDocuments: number | undefined;
     };
 }) | undefined;
 
-// @internal
+// @internal @deprecated
 const getApolloClientMemoryInternals: (() => {
     limits: {
         [k: string]: number;
@@ -996,7 +996,7 @@ const getApolloClientMemoryInternals: (() => {
     };
 }) | undefined;
 
-// @internal
+// @internal @deprecated
 const getInMemoryCacheMemoryInternals: (() => {
     addTypenameDocumentTransform: {
         cache: number;
@@ -1162,7 +1162,7 @@ export class InMemoryCache extends ApolloCache {
     }): string[];
     // Warning: (ae-forgotten-export) The symbol "getInMemoryCacheMemoryInternals" needs to be exported by the entry point index.d.ts
     //
-    // @internal
+    // @internal @deprecated
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
@@ -1252,7 +1252,7 @@ class InvariantError extends Error {
     constructor(message?: string);
 }
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 // @public
@@ -1701,7 +1701,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     hasObservers(): boolean;
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     protected notify(): void;
     // (undocumented)
     readonly options: ObservableQuery.Options<TData, TVariables>;
@@ -1715,16 +1715,16 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     readonly queryName?: string;
     refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>>;
     reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): Promise<QueryResult<MaybeMasked<TData>>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     protected resetNotifications(): void;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     protected scheduleNotify(): void;
     setVariables(variables: TVariables): Promise<QueryResult<TData>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
     stopPolling(): void;
@@ -1829,12 +1829,12 @@ export type PossibleTypesMap = {
     [supertype: string]: string[];
 };
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public
@@ -2137,7 +2137,7 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 // @public (undocumented)
 type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type RemoveIndexSignature<T> = {
     [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
 };
@@ -2425,7 +2425,7 @@ export type UpdateQueryOptions<TData, TVariables> = {
     previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type VariablesOption<TVariables extends OperationVariables> = {} extends TVariables ? {
     variables?: TVariables;
 } : {

@@ -127,3 +127,13 @@ export async function withPseudoNodeModules<T>(fn: () => T) {
     await rm(node_modules, { recursive: true });
   }
 }
+
+export function frameComment(text: string) {
+  const framed = text
+    .split("\n")
+    .map((t) => t.trim())
+    .map((t) => (!t.startsWith("*") ? "* " + t : t))
+    .join("\n")
+    .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
+  return `*\n${framed}\n`;
+}

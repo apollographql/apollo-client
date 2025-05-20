@@ -603,7 +603,7 @@ test("throws error on @client only queries when the @export directive is used on
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "`@export` directive on field 'field' does not have an associated variable definition for the 'someVar' variable.",
+      "`@export` directive on field 'field' cannot export the '$someVar' variable as it is missing in the query definition.",
       { path: ["field"] }
     )
   );
@@ -648,7 +648,7 @@ test("throws error on @client only queries when the @export directive is used on
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "`@export` directive on field 'torque' does not have an associated variable definition for the 'torque' variable.",
+      "`@export` directive on field 'torque' cannot export the '$torque' variable as it is missing in the query definition.",
       { path: ["car", "engine", "torque"] }
     )
   );
@@ -694,7 +694,7 @@ test("throws error if `@export` variable does not exist in a variable definition
     })
   ).rejects.toEqual(
     new LocalStateError(
-      "`@export` directive on field 'authorId' does not have an associated variable definition for the 'authorId' variable.",
+      "`@export` directive on field 'authorId' cannot export the '$authorId' variable as it is missing in the query definition.",
       { path: ["authorId"] }
     )
   );

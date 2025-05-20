@@ -926,7 +926,7 @@ export class LocalState<
             }
             if (!allVariableDefinitions[variableName]) {
               throw new LocalStateError(
-                `\`@export\` directive on field '${fieldName}' does not have an associated variable definition for the '${variableName}' variable.`,
+                `\`@export\` directive on field '${fieldName}' cannot export the '$${variableName}' variable as it is missing in the ${operationDefinition.operation} definition.`,
                 { path: getCurrentPath() }
               );
             }

@@ -25,6 +25,7 @@ import type { QueryOptions } from '@apollo/client';
 import type { QueryResult } from '@apollo/client';
 import type { Reference } from '@apollo/client/utilities';
 import type { SelectionNode } from 'graphql';
+import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
@@ -66,6 +67,11 @@ export function createFulfilledPromise<TValue>(value: TValue): FulfilledPromise<
 
 // @internal @deprecated (undocumented)
 export function createRejectedPromise<TValue = unknown>(reason: unknown): RejectedPromise<TValue>;
+
+// @public (undocumented)
+export function dealias(fieldValue: Record<string, any> | null | undefined, selectionSet: SelectionSetNode): {
+    [x: string]: any;
+} | null | undefined;
 
 // @internal @deprecated (undocumented)
 export type DecoratedPromise<TValue> = PendingPromise<TValue> | FulfilledPromise<TValue> | RejectedPromise<TValue>;
@@ -257,7 +263,7 @@ export function getMainDefinition(queryDoc: DocumentNode): OperationDefinitionNo
 export function getOperationDefinition(doc: DocumentNode): OperationDefinitionNode | undefined;
 
 // @internal @deprecated (undocumented)
-export function getOperationName(doc: DocumentNode): string | null;
+export function getOperationName<TFallback extends string | null | undefined = undefined>(doc: DocumentNode, fallback?: TFallback): string | TFallback;
 
 // @internal @deprecated (undocumented)
 export function getQueryDefinition(doc: DocumentNode): OperationDefinitionNode;
@@ -281,6 +287,9 @@ export function graphQLResultHasError(result: FetchResult<any>): boolean;
 
 // @internal @deprecated (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
+
+// @public (undocumented)
+export function hasForcedResolvers(document: ASTNode): boolean;
 
 // @internal @deprecated (undocumented)
 export type IsAny<T> = 0 extends 1 & T ? true : false;

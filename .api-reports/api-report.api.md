@@ -42,7 +42,7 @@ export abstract class ApolloCache implements DataProxy {
     abstract evict(options: Cache_2.EvictOptions): boolean;
     abstract extract(optimistic?: boolean): unknown;
     // (undocumented)
-    fragmentMatches?(fragment: InlineFragmentNode, typename: string): boolean;
+    abstract fragmentMatches(fragment: InlineFragmentNode | FragmentDefinitionNode, typename: string): boolean;
     // (undocumented)
     gc(): string[];
     // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
@@ -96,7 +96,6 @@ export class ApolloClient implements DataProxy {
     constructor(options: ApolloClientOptions);
     // (undocumented)
     __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
-    addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -115,9 +114,11 @@ export class ApolloClient implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "getApolloClientMemoryInternals" needs to be exported by the entry point index.d.ts
     getMemoryInternals?: typeof getApolloClientMemoryInternals;
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
-    getResolvers(): Resolvers;
     // (undocumented)
     link: ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    get localState(): LocalState | undefined;
+    set localState(localState: LocalState);
     mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
@@ -133,8 +134,6 @@ export class ApolloClient implements DataProxy {
     resetStore(): Promise<QueryResult<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
-    setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
-    setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
     subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
@@ -158,13 +157,11 @@ export interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
-    // (undocumented)
-    fragmentMatcher?: FragmentMatcher;
     link: ApolloLink;
+    // (undocumented)
+    localState?: LocalState;
     name?: string;
     queryDeduplication?: boolean;
-    // (undocumented)
-    resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
     version?: string;
@@ -927,9 +924,6 @@ interface FragmentMap {
 type FragmentMapFunction = (fragmentName: string) => FragmentDefinitionNode | null;
 
 // @public (undocumented)
-export type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
-
-// @public (undocumented)
 interface FragmentRegistryAPI {
     // (undocumented)
     lookup(fragmentName: string): FragmentDefinitionNode | null;
@@ -1136,6 +1130,13 @@ export interface IncrementalPayload<TData, TExtensions> {
 }
 
 // @public (undocumented)
+type InferContextValueFromResolvers<TResolvers> = TResolvers extends {
+    [typename: string]: infer TFieldResolvers;
+} ? TFieldResolvers extends ({
+    [field: string]: LocalState.Resolver<any, any, infer TContext, any>;
+}) ? unknown extends TContext ? DefaultContext : TContext : DefaultContext : DefaultContext;
+
+// @public (undocumented)
 export class InMemoryCache extends ApolloCache {
     constructor(config?: InMemoryCacheConfig);
     // (undocumented)
@@ -1155,7 +1156,7 @@ export class InMemoryCache extends ApolloCache {
     // (undocumented)
     extract(optimistic?: boolean): NormalizedCacheObject;
     // (undocumented)
-    fragmentMatches(fragment: InlineFragmentNode, typename: string): boolean;
+    fragmentMatches(fragment: InlineFragmentNode | FragmentDefinitionNode, typename: string): boolean;
     // (undocumented)
     gc(options?: {
         resetResultCache?: boolean;
@@ -1314,48 +1315,119 @@ export const LinkError: {
 };
 
 // @public (undocumented)
-class LocalState {
-    // Warning: (ae-forgotten-export) The symbol "LocalStateOptions" needs to be exported by the entry point index.d.ts
-    constructor({ cache, client, resolvers, fragmentMatcher, }: LocalStateOptions);
+namespace LocalState {
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    addExportedVariables<TVars extends OperationVariables>(document: DocumentNode, variables?: TVars, context?: {}): Promise<TVars>;
+    type ContextFunction<TContext> = (options: ContextFunctionOptions) => TContext;
     // (undocumented)
-    addResolvers(resolvers: Resolvers | Resolvers[]): void;
+    interface ContextFunctionOptions {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        document: DocumentNode;
+        // (undocumented)
+        phase: "exports" | "resolve";
+        // (undocumented)
+        requestContext: DefaultContext;
+        // (undocumented)
+        variables: OperationVariables;
+    }
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "MaybeRequireContextFunction" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    clientQuery(document: DocumentNode): DocumentNode | null;
+    type Options<TResolvers extends Resolvers = Resolvers, TContext = DefaultContext> = {
+        context?: ContextFunction<TContext>;
+        resolvers?: TResolvers;
+    } & MaybeRequireContextFunction<TContext>;
     // (undocumented)
-    getFragmentMatcher(): FragmentMatcher | undefined;
+    type Path = Array<string | number>;
     // (undocumented)
-    getResolvers(): Resolvers;
+    type Resolver<TResult = unknown, TParent = unknown, TContext = DefaultContext, TArgs = Record<string, unknown>> = (rootValue: TParent, args: TArgs, context: {
+        requestContext: TContext;
+        client: ApolloClient;
+        phase: "exports" | "resolve";
+    }, info: {
+        field: FieldNode;
+        fragmentMap: FragmentMap;
+        path: Path;
+    }) => TResult | Promise<TResult>;
     // (undocumented)
-    prepareContext(context?: Record<string, any>): {
-        getCacheKey(obj: StoreObject): string | undefined;
-    };
+    interface Resolvers<TContext = any> {
+        // (undocumented)
+        [typename: string]: {
+            [field: string]: Resolver<any, any, TContext, any>;
+        };
+    }
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    runResolvers<TData>({ document, remoteResult, context, variables, onlyRunForcedResolvers, }: {
-        document: DocumentNode | null;
-        remoteResult: FetchResult<TData>;
-        context?: Record<string, any>;
-        variables?: Record<string, any>;
+    type RootValueFunction<TRootValue> = (context: RootValueFunctionContext) => TRootValue;
+    // (undocumented)
+    interface RootValueFunctionContext {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        context: DefaultContext;
+        // (undocumented)
+        document: DocumentNode;
+        // (undocumented)
+        phase: "exports" | "resolve";
+        // (undocumented)
+        variables: OperationVariables;
+    }
+}
+
+// Warning: (ae-forgotten-export) The symbol "InferContextValueFromResolvers" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
+    constructor(...[options]: {} extends TResolvers ? [
+    options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
+    ] : [
+    options: LocalState.Options<TResolvers, NoInfer_2<TContext>> & {
+        resolvers: TResolvers;
+    }
+    ]);
+    // (undocumented)
+    addResolvers(resolvers: TResolvers): void;
+    // (undocumented)
+    execute<TData = unknown, TVariables extends OperationVariables = OperationVariables>({ document, client, context, remoteResult, variables, onlyRunForcedResolvers, returnPartialData, }: {
+        document: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        client: ApolloClient;
+        context: DefaultContext | undefined;
+        remoteResult: FetchResult<any> | undefined;
+        variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
+        returnPartialData?: boolean;
     }): Promise<FetchResult<TData>>;
     // (undocumented)
-    serverQuery(document: DocumentNode): DocumentNode | null;
-    // (undocumented)
-    setFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
-    // (undocumented)
-    setResolvers(resolvers: Resolvers | Resolvers[]): void;
-    // (undocumented)
-    shouldForceResolvers(document: ASTNode): boolean;
+    getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
+        document: DocumentNode | TypedDocumentNode<any, TVariables>;
+        client: ApolloClient;
+        context: DefaultContext | undefined;
+        variables: Partial<NoInfer_2<TVariables>>;
+    }): Promise<TVariables>;
 }
 
 // @public (undocumented)
-type LocalStateOptions = {
-    cache: ApolloCache;
-    client?: ApolloClient;
-    resolvers?: Resolvers | Resolvers[];
-    fragmentMatcher?: FragmentMatcher;
-};
+export namespace LocalStateError {
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        path?: Array<string | number>;
+        // (undocumented)
+        sourceError?: unknown;
+    }
+}
+
+// @public
+export class LocalStateError extends Error {
+    constructor(message: string, options?: LocalStateError.Options);
+    static is(error: unknown): error is LocalStateError;
+    readonly path?: Array<string | number>;
+}
 
 // @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
@@ -1404,6 +1476,11 @@ export type MaybeMasked<TData> = DataMasking extends {
 } ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
     mode: "preserveTypes";
 } ? TData : TData;
+
+// @public (undocumented)
+type MaybeRequireContextFunction<TContext> = {} extends RemoveIndexSignature<TContext> ? {} : {
+    context: LocalState.ContextFunction<TContext>;
+};
 
 // @public (undocumented)
 export interface MergeInfo {
@@ -1923,10 +2000,6 @@ class QueryManager {
     //
     // (undocumented)
     getDocumentInfo(document: DocumentNode): TransformCacheEntry;
-    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    getLocalState(): LocalState;
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Map<string, ObservableQuery<any, OperationVariables>>;
     // (undocumented)
@@ -1939,6 +2012,8 @@ class QueryManager {
     }>;
     // (undocumented)
     get link(): ApolloLink;
+    // (undocumented)
+    localState: LocalState | undefined;
     // (undocumented)
     markMutationOptimistic<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
         mutationId: string;
@@ -2019,7 +2094,7 @@ interface QueryManagerOptions {
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
     // (undocumented)
-    localState: LocalState;
+    localState: LocalState | undefined;
     // (undocumented)
     onBroadcast: undefined | (() => void);
     // (undocumented)
@@ -2149,20 +2224,6 @@ type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 export { resetCaches }
-
-// @public (undocumented)
-export type Resolver = (rootValue?: any, args?: any, context?: any, info?: {
-    field: FieldNode;
-    fragmentMap: FragmentMap;
-}) => any;
-
-// @public (undocumented)
-export interface Resolvers {
-    // (undocumented)
-    [key: string]: {
-        [field: string]: Resolver;
-    };
-}
 
 // @public (undocumented)
 export function rewriteURIForGET(chosenURI: string, body: HttpLink.Body): {
@@ -2523,9 +2584,12 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:84:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:190:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:191:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:461:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/local-state/LocalState.ts:194:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

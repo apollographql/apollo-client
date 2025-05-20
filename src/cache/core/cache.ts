@@ -155,16 +155,15 @@ export abstract class ApolloCache implements DataProxy {
 
   public abstract removeOptimistic(id: string): void;
 
-  // Data masking API
-
   // Used by data masking to determine if an inline fragment with a type
-  // condition matches a given typename.
+  // condition matches a given typename. Also used by local resolvers to match a
+  // fragment against a typename.
   //
   // If not implemented by a cache subclass, data masking will effectively be
   // disabled since we will not be able to accurately determine if a given type
   // condition for a union or interface matches a particular type.
-  public fragmentMatches?(
-    fragment: InlineFragmentNode,
+  public abstract fragmentMatches(
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string
   ): boolean;
 

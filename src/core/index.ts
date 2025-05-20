@@ -47,15 +47,14 @@ export type {
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
-  Resolvers,
   SubscribeResult,
   TypedDocumentNode,
 } from "./types.js";
-export type { FragmentMatcher, Resolver } from "./LocalState.js";
 export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
   LinkError,
+  LocalStateError,
   ServerError,
   ServerParseError,
   UnconventionalError,

@@ -35,6 +35,7 @@ import type {
   GraphQLRequest,
 } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
+import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import { print } from "@apollo/client/utilities";
@@ -51,6 +52,7 @@ import {
   getOperationName,
   graphQLResultHasError,
   hasDirectives,
+  hasForcedResolvers,
   isDocumentNode,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
@@ -71,7 +73,6 @@ import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
-import type { LocalState } from "./LocalState.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import {
@@ -151,10 +152,10 @@ interface QueryManagerOptions {
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
   clientAwareness: ClientAwareness;
-  localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
+  localState: LocalState | undefined;
 }
 
 export class QueryManager {
@@ -166,10 +167,10 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
+  public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
   private clientAwareness: ClientAwareness = {};
-  private localState: LocalState;
 
   /**
    * Whether to prioritize cache values over network results when
@@ -209,10 +210,10 @@ export class QueryManager {
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
     this.clientAwareness = options.clientAwareness;
-    this.localState = options.localState;
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
+    this.localState = options.localState;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
@@ -296,12 +297,22 @@ export class QueryManager {
     const { hasClientExports } = this.getDocumentInfo(mutation);
 
     variables = this.getVariables(mutation, variables);
+
     if (hasClientExports) {
-      variables = (await this.localState.addExportedVariables(
-        mutation,
+      if (__DEV__) {
+        invariant(
+          this.localState,
+          "Mutation '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+          getOperationName(mutation, "(anonymous)")
+        );
+      }
+
+      variables = await this.localState!.getExportedVariables<TVariables>({
+        client: this.client,
+        document: mutation,
         variables,
-        context
-      )) as TVariables;
+        context,
+      });
     }
 
     const mutationStoreValue =
@@ -741,10 +752,10 @@ export class QueryManager {
         // traversals into a single pass in the future, though the work is
         // cached after the first time.
         hasClientExports: hasDirectives(["client", "export"], document, true),
-        hasForcedResolvers: this.localState.shouldForceResolvers(document),
+        hasForcedResolvers: hasForcedResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
-        clientQuery: this.localState.clientQuery(document),
+        clientQuery: hasDirectives(["client"], document) ? document : null,
         serverQuery: removeDirectivesFromDocument(
           [
             { name: "client", remove: true },
@@ -834,7 +845,10 @@ export class QueryManager {
     return observable;
   }
 
-  public query<TData, TVars extends OperationVariables = OperationVariables>(
+  public async query<
+    TData,
+    TVars extends OperationVariables = OperationVariables,
+  >(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
@@ -909,7 +923,7 @@ export class QueryManager {
     include: InternalRefetchQueriesInclude = "active"
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    const queryNames = new Map<string, string | null>();
+    const queryNames = new Map<string, string | undefined>();
     const queryNamesAndQueryStrings = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
@@ -1110,9 +1124,20 @@ export class QueryManager {
       );
 
     if (this.getDocumentInfo(query).hasClientExports) {
-      const observablePromise = this.localState
-        .addExportedVariables(query, variables, context)
-        .then(makeObservable);
+      if (__DEV__) {
+        invariant(
+          this.localState,
+          "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+          getOperationName(query, "(anonymous)")
+        );
+      }
+
+      const observablePromise = this.localState!.getExportedVariables({
+        client: this.client,
+        document: query,
+        variables,
+        context,
+      }).then(makeObservable);
 
       return new Observable<SubscribeResult<TData>>((observer) => {
         let sub: Subscription | null = null;
@@ -1145,10 +1170,6 @@ export class QueryManager {
     this.queries.forEach((info) => info.observableQuery?.["notify"]());
   }
 
-  public getLocalState() {
-    return this.localState;
-  }
-
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{
@@ -1168,16 +1189,7 @@ export class QueryManager {
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
 
-    const prepareContext = (context = {}): DefaultContext => {
-      const newContext = this.localState.prepareContext(context);
-      return {
-        ...this.defaultContext,
-        ...newContext,
-        queryDeduplication: deduplication,
-        clientAwareness: this.clientAwareness,
-      };
-    };
-
+    const operationName = getOperationName(query);
     const executeContext: ExecuteContext = {
       client: this.client,
     };
@@ -1188,8 +1200,13 @@ export class QueryManager {
       const operation: GraphQLRequest = {
         query: serverQuery,
         variables,
-        operationName: getOperationName(serverQuery) || void 0,
-        context: prepareContext(context),
+        operationName,
+        context: {
+          ...this.defaultContext,
+          ...context,
+          queryDeduplication: deduplication,
+          clientAwareness: this.clientAwareness,
+        },
         extensions,
       };
 
@@ -1232,14 +1249,25 @@ export class QueryManager {
       }
     } else {
       observable = of({ data: {} } as FetchResult<TData>);
-      context = prepareContext(context);
     }
 
     if (clientQuery) {
+      if (__DEV__) {
+        const { operation } = getOperationDefinition(query)!;
+
+        invariant(
+          this.localState,
+          "%s '%s' contains `@client` fields but local state has not been configured.",
+          operation[0].toUpperCase() + operation.slice(1),
+          operationName ?? "(anonymous)"
+        );
+      }
+
       observable = observable.pipe(
         mergeMap((result) => {
           return from(
-            this.localState.runResolvers({
+            this.localState!.execute<TData>({
+              client: this.client,
               document: clientQuery,
               remoteResult: result,
               context,
@@ -1437,6 +1465,7 @@ export class QueryManager {
     const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
     let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
+
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
     // @export directives (the common case), we deliberately avoid
@@ -1445,12 +1474,21 @@ export class QueryManager {
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
     if (this.getDocumentInfo(normalized.query).hasClientExports) {
+      if (__DEV__) {
+        invariant(
+          this.localState,
+          "Query '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+          getOperationName(normalized.query, "(anonymous)")
+        );
+      }
+
       observable = from(
-        this.localState.addExportedVariables(
-          normalized.query,
-          normalized.variables,
-          normalized.context
-        )
+        this.localState!.getExportedVariables({
+          client: this.client,
+          document: normalized.query,
+          variables: normalized.variables,
+          context: normalized.context,
+        })
       ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
       // there is just no way we can synchronously get the *right* value here,
@@ -1658,8 +1696,7 @@ export class QueryManager {
 
         invariant.warn(
           '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
-          getOperationName(document) ??
-            `Unnamed ${operationType ?? "operation"}`
+          getOperationName(document, `Unnamed ${operationType ?? "operation"}`)
         );
       }
     }
@@ -1744,24 +1781,31 @@ export class QueryManager {
         return of(toResult(data));
       };
 
-      if (this.getDocumentInfo(query).hasForcedResolvers) {
+      if (
+        // Don't attempt to run forced resolvers if we have incomplete cache
+        // data and partial isn't allowed since this result would get set to
+        // `undefined` anyways in `toResult`.
+        (diff.complete || returnPartialData) &&
+        this.getDocumentInfo(query).hasForcedResolvers
+      ) {
+        if (__DEV__) {
+          invariant(
+            this.localState,
+            "Query '%s' contains `@client` fields but local state has not been configured.",
+            getOperationName(query, "(anonymous)")
+          );
+        }
+
         return from(
-          this.localState
-            .runResolvers({
-              document: query,
-              // TODO: Update remoteResult to handle `null`. In v3 the `if`
-              // statement contained a check against `data`, but this value was
-              // always `{}` if nothing was in the cache, which meant the check
-              // above always succeeded when there were forced resolvers. Now that
-              // `data` is nullable, this `remoteResult` needs to be an empty
-              // object. Ideally we can pass in `null` here and the resolvers
-              // would be able to handle this the same way.
-              remoteResult: { data: data || ({} as any) },
-              context,
-              variables,
-              onlyRunForcedResolvers: true,
-            })
-            .then((resolved) => toResult(resolved.data || void 0))
+          this.localState!.execute<TData>({
+            client: this.client,
+            document: query,
+            remoteResult: data ? { data } : undefined,
+            context,
+            variables,
+            onlyRunForcedResolvers: true,
+            returnPartialData: true,
+          }).then((resolved) => toResult(resolved.data || void 0))
         );
       }
 

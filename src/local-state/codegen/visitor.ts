@@ -277,10 +277,6 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     }, {} as ResolverTypes);
   }
 
-  protected transformParentGenericType(parentType: string): string {
-    return `ParentType extends ${parentType} = ${parentType}`;
-  }
-
   protected formatRootResolver(
     schemaTypeName: string,
     resolverType: string,
@@ -390,7 +386,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
     const block = new DeclarationBlock(this._declarationBlockConfig)
       .export()
       .asKind(declarationKind)
-      .withName(name, `<${this.transformParentGenericType(parentType)}>`)
+      .withName(name)
       .withBlock(fieldsContent.join("\n"));
 
     this._collectedResolvers[node.name as any] = {
@@ -448,8 +444,6 @@ export class LocalStateVisitor extends BaseResolversVisitor<
           argsType = this.applyOptionalFields(argsType, original.arguments!);
         }
       }
-      const parentTypeSignature = this.getParentTypeForSignature(node);
-
       const { mappedTypeKey, resolverType } = ((): {
         mappedTypeKey: string;
         resolverType: string;
@@ -486,7 +480,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
         type: resolverType,
         genericTypes: [
           mappedTypeKey,
-          parentTypeSignature,
+          this.getParentTypeToUse(parentName),
           this.config.contextType.type,
           argsType!,
         ].filter((f) => f),

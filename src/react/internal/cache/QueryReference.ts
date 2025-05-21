@@ -486,8 +486,6 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private setResult() {
-    // Don't save this result as last result to prevent delivery of last result
-    // when first subscribing
     const result = this.observable.getCurrentResult();
 
     if (equal(result, this.result)) {

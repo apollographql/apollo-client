@@ -34,6 +34,7 @@ import {
   isInterfaceType,
   isObjectType,
   isUnionType,
+  Kind,
 } from "graphql";
 
 import type { LocalStatePluginConfig } from "./config.js";
@@ -245,8 +246,30 @@ export class LocalStateVisitor extends BaseResolversVisitor<
           }
 
           if (this.config.extendedTypes.has(typeName)) {
+            const node = allSchemaTypes[typeName]?.astNode;
+
+            if (node?.kind !== Kind.OBJECT_TYPE_DEFINITION) {
+              throw new Error(
+                "Extended type must be an object type definition"
+              );
+            }
+
+            const baseType = `${this.config.baseSchemaTypesImportName}.${typeName}`;
+
+            const localFieldNames =
+              node.fields?.map((field) => `'${field.name.value}'`) ?? [];
+
             prev[typeName] =
-              `${this.config.baseSchemaTypesImportName}.${typeName}`;
+              // Don't define fields from local resolvers on the parent type
+              // since the parent type passed to a local resolver only contains
+              // keys from the server schema. The schema types might however be
+              // generated from both the local and remote schema in order to
+              // generate queries that contain both types of fields. Filtering
+              // the local fields out ensures a more accurate type in this
+              // situation.
+              localFieldNames.length > 0 ?
+                `Omit<${baseType}, ${localFieldNames.join(" | ")}>`
+              : baseType;
           } else {
             prev[typeName] = applyWrapper(internalType);
           }

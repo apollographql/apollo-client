@@ -26,7 +26,7 @@ export const toEmitSimilarValue = async function toEmitSimilarValue(
   this: MatcherContext,
   actual,
   {
-    expected: expect = (previous) => previous,
+    expected: getExpected = (previous) => previous,
     ...options
   }: ToEmitSimilarValueOptions<any> = {}
 ) {
@@ -43,7 +43,7 @@ export const toEmitSimilarValue = async function toEmitSimilarValue(
   const previousResult = stream.getCurrent();
   let reason = "rerender.";
   try {
-    const expected = getSerializableProperties(expect(previousResult), {
+    const expected = getSerializableProperties(getExpected(previousResult), {
       skipUnknownInstances: true,
     });
     const nextResult = await stream.takeNext({ timeout: 100, ...options });

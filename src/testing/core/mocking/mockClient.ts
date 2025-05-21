@@ -2,8 +2,7 @@ import type { DocumentNode } from "graphql";
 
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-
-import { mockSingleLink } from "./mockLink.js";
+import { MockLink } from "./mockLink.js";
 
 // TODO: Deprecate this function
 export function createMockClient<TData>(
@@ -12,10 +11,12 @@ export function createMockClient<TData>(
   variables = {}
 ): ApolloClient {
   return new ApolloClient({
-    link: mockSingleLink({
-      request: { query, variables },
-      result: { data },
-    }),
+    link: new MockLink([
+      {
+        request: { query, variables },
+        result: { data },
+      },
+    ]),
     cache: new InMemoryCache(),
   });
 }

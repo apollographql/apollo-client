@@ -16,7 +16,7 @@ import {
   renderToStringWithData,
 } from "@apollo/client/react/ssr";
 import type { MockedResponse } from "@apollo/client/testing";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import { resetApolloContext } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 
@@ -154,10 +154,12 @@ describe("useQuery Hook SSR", () => {
   });
 
   it("should skip both SSR tree rendering and SSR component rendering if `ssr` option is `false` and `ssrMode` is `true`", async () => {
-    const link = mockSingleLink({
-      request: { query: CAR_QUERY },
-      result: { data: CAR_RESULT_DATA },
-    });
+    const link = new MockLink([
+      {
+        request: { query: CAR_QUERY },
+        result: { data: CAR_RESULT_DATA },
+      },
+    ]);
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -449,7 +451,7 @@ describe("useQuery Hook SSR", () => {
         }
       `;
 
-      const link = mockSingleLink(
+      const link = new MockLink([
         { request: { query: query1 }, result: { data: { hello: "world" } } },
         {
           request: { query: query2 },
@@ -458,8 +460,8 @@ describe("useQuery Hook SSR", () => {
         {
           request: { query: query3 },
           result: { data: { currentTime: "2025-03-26T14:40:53.118Z" } },
-        }
-      );
+        },
+      ]);
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),

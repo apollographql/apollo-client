@@ -330,14 +330,6 @@ export interface MockApolloLink extends ApolloLink {
   operation?: Operation;
 }
 
-// Pass in multiple mocked responses, so that you can test flows that end up
-// making multiple queries to the server.
-export function mockSingleLink(
-  ...mockedResponses: Array<MockedResponse<any, any>>
-): MockApolloLink {
-  return new MockLink(mockedResponses);
-}
-
 // This is similiar to the stringifyForDisplay utility we ship, but includes
 // support for NaN in addition to undefined. More values may be handled in the
 // future. This is not added to the primary stringifyForDisplay helper since it

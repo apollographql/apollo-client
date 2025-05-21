@@ -7,7 +7,7 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -65,7 +65,7 @@ const mutationResult = {
 const merged = { author: { ...result.author, firstName: "James" } };
 
 const createLink = () =>
-  mockSingleLink(
+  new MockLink([
     {
       request: { query },
       result: { data: result },
@@ -73,11 +73,11 @@ const createLink = () =>
     {
       request: { query },
       result: { data: result },
-    }
-  );
+    },
+  ]);
 
 const createFailureLink = () =>
-  mockSingleLink(
+  new MockLink([
     {
       request: { query },
       error: new Error("query failed"),
@@ -85,12 +85,12 @@ const createFailureLink = () =>
     {
       request: { query },
       result: { data: result },
-    }
-  );
+    },
+  ]);
 
 const createMutationLink = () =>
   // fetch the data
-  mockSingleLink(
+  new MockLink([
     {
       request: { query },
       result: { data: result },
@@ -102,8 +102,8 @@ const createMutationLink = () =>
     {
       request: { query },
       result: { data: merged },
-    }
-  );
+    },
+  ]);
 
 describe("network-only", () => {
   it("requests from the network even if already in cache", async () => {

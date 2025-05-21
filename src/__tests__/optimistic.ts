@@ -12,7 +12,7 @@ import { ApolloClient, ApolloLink } from "@apollo/client";
 import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { MockedResponse } from "@apollo/client/testing";
-import { MockLink, mockSingleLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 import { makeReference } from "@apollo/client/utilities/internal";
@@ -102,13 +102,13 @@ describe("optimistic mutation results", () => {
   };
 
   async function setup(...mockedResponses: MockedResponse[]) {
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: { query },
         result,
       },
-      ...mockedResponses
-    );
+      ...mockedResponses,
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -1328,7 +1328,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("will handle dependent updates", async () => {
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query },
           result,
@@ -1343,8 +1343,8 @@ describe("optimistic mutation results", () => {
           request: { query: mutation },
           result: mutationResult2,
           delay: 20,
-        }
-      );
+        },
+      ]);
 
       const customOptimisticResponse1 = {
         __typename: "Mutation",
@@ -2254,7 +2254,7 @@ describe("optimistic mutation - githunt comments", () => {
   };
 
   async function setup(...mockedResponses: MockedResponse[]) {
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: {
           query: addTypenameToDocument(query),
@@ -2269,8 +2269,8 @@ describe("optimistic mutation - githunt comments", () => {
         },
         result,
       },
-      ...mockedResponses
-    );
+      ...mockedResponses,
+    ]);
 
     const client = new ApolloClient({
       link,

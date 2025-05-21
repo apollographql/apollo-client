@@ -5,11 +5,7 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
-import {
-  MockLink,
-  mockObservableLink,
-  mockSingleLink,
-} from "@apollo/client/testing";
+import { MockLink, mockObservableLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -69,7 +65,7 @@ describe("subscribeToMore", () => {
 
   it("triggers new result from subscription data", async () => {
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = new MockLink([req1]);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -190,7 +186,7 @@ describe("subscribeToMore", () => {
     using _ = spyOnConsole("error");
 
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const httpLink = new MockLink([req1]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
@@ -245,7 +241,7 @@ describe("subscribeToMore", () => {
 
   it("should not corrupt the cache (#3062)", async () => {
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req4);
+    const httpLink = new MockLink([req4]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
@@ -361,7 +357,7 @@ describe("subscribeToMore", () => {
     }
 
     const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(typedReq);
+    const httpLink = new MockLink([typedReq]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({

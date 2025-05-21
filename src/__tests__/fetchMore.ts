@@ -11,7 +11,7 @@ import type {
 } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { MockedResponse } from "@apollo/client/testing";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   setupPaginatedCase,
@@ -42,10 +42,12 @@ describe("updateQuery on a simple query", () => {
   };
 
   it("triggers new result from updateQuery", async () => {
-    const link = mockSingleLink({
-      request: { query },
-      result,
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result,
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -110,14 +112,16 @@ describe("updateQuery on a query with required and optional variables", () => {
   };
 
   it("triggers new result from updateQuery", async () => {
-    const link = mockSingleLink({
-      request: {
-        query,
-        variables,
+    const link = new MockLink([
+      {
+        request: {
+          query,
+          variables,
+        },
+        result,
+        delay: 20,
       },
-      result,
-      delay: 20,
-    });
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -245,7 +249,7 @@ describe("fetchMore on an observable query", () => {
   }
 
   function setup(...mockedResponses: MockedResponse[]) {
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: {
           query,
@@ -253,8 +257,8 @@ describe("fetchMore on an observable query", () => {
         },
         result,
       },
-      ...mockedResponses
-    );
+      ...mockedResponses,
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -282,7 +286,7 @@ describe("fetchMore on an observable query", () => {
     ...mockedResponses: any[]
   ) {
     const client = new ApolloClient({
-      link: mockSingleLink(
+      link: new MockLink([
         {
           request: {
             query,
@@ -290,8 +294,8 @@ describe("fetchMore on an observable query", () => {
           },
           result,
         },
-        ...mockedResponses
-      ),
+        ...mockedResponses,
+      ]),
       cache: new InMemoryCache(cacheConfig),
     });
 
@@ -1195,7 +1199,7 @@ describe("fetchMore on an observable query", () => {
 
     const client = new ApolloClient({
       cache,
-      link: mockSingleLink(
+      link: new MockLink([
         {
           request: {
             query,
@@ -1217,8 +1221,8 @@ describe("fetchMore on an observable query", () => {
               groceries: additionalGroceries,
             },
           },
-        }
-      ),
+        },
+      ]),
     });
 
     const observable = client.watchQuery({
@@ -1365,7 +1369,7 @@ describe("fetchMore on an observable query", () => {
   describe("will not get an error from `fetchMore` if thrown", () => {
     it("updateQuery", async () => {
       const fetchMoreError = new Error("Uh, oh!");
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query, variables },
           result,
@@ -1375,8 +1379,8 @@ describe("fetchMore on an observable query", () => {
           request: { query, variables: variablesMore },
           error: fetchMoreError,
           delay: 5,
-        }
-      );
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
@@ -1412,7 +1416,7 @@ describe("fetchMore on an observable query", () => {
 
     it("field policy", async () => {
       const fetchMoreError = new Error("Uh, oh!");
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query, variables },
           result,
@@ -1422,8 +1426,8 @@ describe("fetchMore on an observable query", () => {
           request: { query, variables: variablesMore },
           error: fetchMoreError,
           delay: 5,
-        }
-      );
+        },
+      ]);
 
       let calledFetchMore = false;
 
@@ -1524,7 +1528,7 @@ describe("fetchMore on an observable query", () => {
       },
     };
 
-    const link = mockSingleLink(emptyItemsMock, emptyItemsMock, emptyItemsMock);
+    const link = new MockLink([emptyItemsMock, emptyItemsMock, emptyItemsMock]);
 
     const client = new ApolloClient({
       link,
@@ -1652,7 +1656,7 @@ describe("fetchMore on an observable query with connection", () => {
   }
 
   function setup(...mockedResponses: MockedResponse[]) {
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: {
           query: transformedQuery,
@@ -1660,8 +1664,8 @@ describe("fetchMore on an observable query with connection", () => {
         },
         result,
       },
-      ...mockedResponses
-    );
+      ...mockedResponses,
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -1689,7 +1693,7 @@ describe("fetchMore on an observable query with connection", () => {
     ...mockedResponses: any[]
   ) {
     const client = new ApolloClient({
-      link: mockSingleLink(
+      link: new MockLink([
         {
           request: {
             query: transformedQuery,
@@ -1697,8 +1701,8 @@ describe("fetchMore on an observable query with connection", () => {
           },
           result,
         },
-        ...mockedResponses
-      ),
+        ...mockedResponses,
+      ]),
       cache: new InMemoryCache(cacheConfig),
     });
 
@@ -1849,7 +1853,7 @@ describe("fetchMore on an observable query with connection", () => {
 
   describe("will set the network status to `fetchMore`", () => {
     it("updateQuery", async () => {
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query: transformedQuery, variables },
           result,
@@ -1859,8 +1863,8 @@ describe("fetchMore on an observable query with connection", () => {
           request: { query: transformedQuery, variables: variablesMore },
           result: resultMore,
           delay: 5,
-        }
-      );
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
@@ -1915,7 +1919,7 @@ describe("fetchMore on an observable query with connection", () => {
     });
 
     it("field policy", async () => {
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query: transformedQuery, variables },
           result,
@@ -1925,8 +1929,8 @@ describe("fetchMore on an observable query with connection", () => {
           request: { query: transformedQuery, variables: variablesMore },
           result: resultMore,
           delay: 5,
-        }
-      );
+        },
+      ]);
 
       const client = new ApolloClient({
         link,

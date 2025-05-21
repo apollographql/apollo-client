@@ -33,11 +33,7 @@ import {
 } from "@apollo/client/react";
 import type { QueryRef, QueryReference } from "@apollo/client/react/internal";
 import type { MockedResponse } from "@apollo/client/testing";
-import {
-  MockLink,
-  mockSingleLink,
-  MockSubscriptionLink,
-} from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
   SimpleCaseData,
@@ -914,11 +910,13 @@ it("passes context to the link", async () => {
 it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
   const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
-  const link = mockSingleLink({
-    request: { query },
-    result: { data: { greeting: "from link" } },
-    delay: 20,
-  });
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { greeting: "from link" } },
+      delay: 20,
+    },
+  ]);
 
   const client = new ApolloClient({ link, cache });
 
@@ -1032,11 +1030,13 @@ it("partial data is present in the cache so it is ignored and network request is
     }
   `;
   const cache = new InMemoryCache();
-  const link = mockSingleLink({
-    request: { query },
-    result: { data: { hello: "from link", foo: "bar" } },
-    delay: 20,
-  });
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { hello: "from link", foo: "bar" } },
+      delay: 20,
+    },
+  ]);
 
   const client = new ApolloClient({ link, cache });
 
@@ -1090,11 +1090,13 @@ it("partial data is present in the cache so it is ignored and network request is
 it("existing data in the cache is ignored when fetchPolicy is 'network-only'", async () => {
   const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
-  const link = mockSingleLink({
-    request: { query },
-    result: { data: { greeting: "from link" } },
-    delay: 20,
-  });
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { greeting: "from link" } },
+      delay: 20,
+    },
+  ]);
 
   const client = new ApolloClient({ link, cache });
 
@@ -1147,11 +1149,13 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
 it("fetches data from the network but does not update the cache when fetchPolicy is 'no-cache'", async () => {
   const { query } = setupSimpleCase();
   const cache = new InMemoryCache();
-  const link = mockSingleLink({
-    request: { query },
-    result: { data: { greeting: "from link" } },
-    delay: 20,
-  });
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data: { greeting: "from link" } },
+      delay: 20,
+    },
+  ]);
 
   const client = new ApolloClient({ link, cache });
 

@@ -31,11 +31,7 @@ import type {
   Unmasked,
 } from "@apollo/client/masking";
 import { ApolloProvider, useLazyQuery } from "@apollo/client/react";
-import {
-  MockLink,
-  mockSingleLink,
-  MockSubscriptionLink,
-} from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type { VariablesCaseVariables } from "@apollo/client/testing/internal";
 import {
   renderAsync,
@@ -1270,11 +1266,13 @@ describe("useLazyQuery Hook", () => {
 
   it("should work with cache-and-network fetch policy", async () => {
     const cache = new InMemoryCache();
-    const link = mockSingleLink({
-      request: { query: helloQuery },
-      result: { data: { hello: "from link" } },
-      delay: 20,
-    });
+    const link = new MockLink([
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "from link" } },
+        delay: 20,
+      },
+    ]);
 
     const client = new ApolloClient({
       link,

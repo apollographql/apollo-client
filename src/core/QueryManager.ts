@@ -1845,9 +1845,9 @@ export class QueryManager {
             returnPartialData: true,
           }).then(
             (resolved): QueryNotification.FromCache<TData> => ({
-              kind: "N" as const,
+              kind: "N",
               value: toResult(resolved.data || void 0),
-              source: "cache" as const,
+              source: "cache",
             })
           )
         );

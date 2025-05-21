@@ -155,8 +155,24 @@ export class LocalStateVisitor extends BaseResolversVisitor<
 
       if (isRootType) {
         if (this.config.extendedTypes.has(typeName)) {
+          const node = allSchemaTypes[typeName]
+            .astNode as ObjectTypeDefinitionNode;
+
+          const baseType = `DeepPartial<${this.config.baseSchemaTypesImportName}.${typeName}>`;
+          const localFieldNames =
+            node.fields?.map((field) => `'${field.name.value}'`) ?? [];
+
           prev[typeName] = applyWrapper(
-            `DeepPartial<${this.config.baseSchemaTypesImportName}.${typeName}>`
+            // Don't define fields from local resolvers on the root type
+            // since the root value passed to a local root resolver only
+            // contains keys from the server schema. The schema types might
+            // however be generated from both the local and remote schema in
+            // order to generate queries that contain both types of fields.
+            // Filtering the local fields out ensures a more accurate type in
+            // this situation.
+            localFieldNames.length > 0 ?
+              `Omit<${baseType}, ${localFieldNames.join(" | ")}>`
+            : baseType
           );
         } else {
           prev[typeName] = applyWrapper("{}");

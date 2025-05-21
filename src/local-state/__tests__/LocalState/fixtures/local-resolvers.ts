@@ -79,7 +79,7 @@ export type ResolversParentTypes = {
   Food: Food;
   ID: Scalars["ID"]["output"];
   Int: Scalars["Int"]["output"];
-  Query: DeepPartial<BaseSchemaTypes.Query>;
+  Query: Omit<DeepPartial<BaseSchemaTypes.Query>, "currentUserId">;
   String: Scalars["String"]["output"];
   User: Omit<DeepPartial<BaseSchemaTypes.User>, "isLoggedIn" | "favoriteFood">;
 };

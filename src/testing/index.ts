@@ -3,9 +3,6 @@ export type {
   MockedResponse,
   MockLinkOptions,
   ResultFunction,
-} from "@apollo/client/testing/core";
-export {
-  MockLink,
-  MockSubscriptionLink,
-  realisticDelay,
-} from "@apollo/client/testing/core";
+} from "./core/mocking/mockLink.js";
+export { MockLink, realisticDelay } from "./core/mocking/mockLink.js";
+export { MockSubscriptionLink } from "./core/mocking/mockSubscriptionLink.js";

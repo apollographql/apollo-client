@@ -391,7 +391,11 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
               return;
             }
 
-            if (previousResult && previousResult.data) {
+            if (
+              previousResult &&
+              previousResult.data &&
+              !equal(previousResult.data, result.data)
+            ) {
               // eslint-disable-next-line react-compiler/react-compiler
               resultData.previousData = previousResult.data;
             }

@@ -804,7 +804,6 @@ describe("ObservableQuery", () => {
       // fetch first data from server
       const observable = client.watchQuery({
         query: testQuery,
-        notifyOnNetworkStatusChange: false,
       });
 
       const stream = new ObservableStream(observable);

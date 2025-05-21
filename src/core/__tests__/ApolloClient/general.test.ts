@@ -490,7 +490,6 @@ describe("ApolloClient", () => {
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
   });
 
-  // restoring original test from https://github.com/apollographql/apollo-client/blob/326cbe8260b1cc04b339ed2b968e23c08a392cc4/src/core/__tests__/ApolloClient/general.test.ts#L366-L461
   it("causes link unsubscription after reobserve", async () => {
     const expResult = {
       data: {

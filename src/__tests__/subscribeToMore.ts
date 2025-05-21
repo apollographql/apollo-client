@@ -5,7 +5,7 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
-import { MockLink, mockObservableLink } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -64,7 +64,7 @@ describe("subscribeToMore", () => {
   }
 
   it("triggers new result from subscription data", async () => {
-    const wSLink = mockObservableLink();
+    const wSLink = new MockSubscriptionLink();
     const httpLink = new MockLink([req1]);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
@@ -123,7 +123,7 @@ describe("subscribeToMore", () => {
   });
 
   it("calls error callback on error", async () => {
-    const wSLink = mockObservableLink();
+    const wSLink = new MockSubscriptionLink();
     const httpLink = new MockLink([req1]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -185,7 +185,7 @@ describe("subscribeToMore", () => {
   it("prints unhandled subscription errors to the console", async () => {
     using _ = spyOnConsole("error");
 
-    const wSLink = mockObservableLink();
+    const wSLink = new MockSubscriptionLink();
     const httpLink = new MockLink([req1]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -240,7 +240,7 @@ describe("subscribeToMore", () => {
   });
 
   it("should not corrupt the cache (#3062)", async () => {
-    const wSLink = mockObservableLink();
+    const wSLink = new MockSubscriptionLink();
     const httpLink = new MockLink([req4]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
@@ -356,7 +356,7 @@ describe("subscribeToMore", () => {
       someString: string;
     }
 
-    const wSLink = mockObservableLink();
+    const wSLink = new MockSubscriptionLink();
     const httpLink = new MockLink([typedReq]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 

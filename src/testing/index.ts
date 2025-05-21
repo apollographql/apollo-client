@@ -6,7 +6,6 @@ export type {
 export {
   createMockClient,
   MockLink,
-  mockObservableLink,
   MockSubscriptionLink,
   realisticDelay,
   withErrorSpy,

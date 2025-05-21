@@ -59,7 +59,3 @@ export class MockSubscriptionLink extends ApolloLink {
     this.unsubscribers = this.unsubscribers.concat([listener]);
   }
 }
-
-export function mockObservableLink(): MockSubscriptionLink {
-  return new MockSubscriptionLink();
-}

@@ -1,6 +1,8 @@
 /* eslint-disable */
 import * as BaseSchemaTypes from "./base-types.js";
+import { DefaultContext } from "@apollo/client";
 import { LocalState } from "@apollo/client/local-state";
+import { DeepPartial } from "@apollo/client/utilities";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -66,7 +68,7 @@ export type ResolversTypes = {
   FoodCategory: FoodCategory;
   ID: Scalars["ID"]["output"];
   Int: Scalars["Int"]["output"];
-  Query: undefined;
+  Query: {};
   String: Scalars["String"]["output"];
   User: User;
 };
@@ -77,36 +79,44 @@ export type ResolversParentTypes = {
   Food: Food;
   ID: Scalars["ID"]["output"];
   Int: Scalars["Int"]["output"];
-  Query: undefined;
+  Query: DeepPartial<BaseSchemaTypes.Query>;
   String: Scalars["String"]["output"];
   User: BaseSchemaTypes.User;
 };
 
-export type FoodResolvers<
-  ParentType extends
-    ResolversParentTypes["Food"] = ResolversParentTypes["Food"],
-> = {
+export type FoodResolvers = {
   categories?: LocalState.Resolver<
     Maybe<Array<ResolversTypes["FoodCategory"]>>,
-    ParentType,
+    ResolversParentTypes["Food"],
+    DefaultContext,
     RequireFields<FoodCategoriesArgs, "offset">
   >;
-  name?: LocalState.Resolver<Maybe<ResolversTypes["String"]>, ParentType>;
+  name?: LocalState.Resolver<
+    Maybe<ResolversTypes["String"]>,
+    ResolversParentTypes["Food"],
+    DefaultContext
+  >;
 };
 
-export type QueryResolvers<
-  ParentType extends
-    ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
-> = {
-  currentUserId?: LocalState.Resolver<Maybe<ResolversTypes["ID"]>, ParentType>;
+export type QueryResolvers = {
+  currentUserId?: LocalState.Resolver<
+    Maybe<ResolversTypes["ID"]>,
+    ResolversParentTypes["Query"],
+    DefaultContext
+  >;
 };
 
-export type UserResolvers<
-  ParentType extends
-    ResolversParentTypes["User"] = ResolversParentTypes["User"],
-> = {
-  favoriteFood?: LocalState.Resolver<Maybe<ResolversTypes["Food"]>, ParentType>;
-  isLoggedIn?: LocalState.Resolver<ResolversTypes["Boolean"], ParentType>;
+export type UserResolvers = {
+  favoriteFood?: LocalState.Resolver<
+    Maybe<ResolversTypes["Food"]>,
+    ResolversParentTypes["User"],
+    DefaultContext
+  >;
+  isLoggedIn?: LocalState.Resolver<
+    ResolversTypes["Boolean"],
+    ResolversParentTypes["User"],
+    DefaultContext
+  >;
 };
 
 export type Resolvers = {

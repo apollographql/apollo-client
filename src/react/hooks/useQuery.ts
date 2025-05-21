@@ -449,8 +449,8 @@ function useResubscribeIfNecessary<
     const result = observable.getCurrentResult();
 
     if (!equal(result.data, resultData.current.data)) {
-    resultData.previousData =
-      resultData.current.data || resultData.previousData;
+      resultData.previousData =
+        resultData.current.data || resultData.previousData;
     }
     resultData.current = result;
   }

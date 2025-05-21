@@ -17,6 +17,7 @@ export interface LocalStatePluginConfig extends RawConfig {
     avoidOptionals?: boolean | AvoidOptionalsConfig;
     baseSchemaTypesImportName?: string;
     baseTypesPath?: string;
+    contextType?: string;
     defaultMapper?: string;
     immutableTypes?: boolean;
     mappers?: {
@@ -25,7 +26,6 @@ export interface LocalStatePluginConfig extends RawConfig {
     mapperTypeSuffix?: string;
     namespacedImportName?: string;
     resolverTypeSuffix?: string;
-    rootValueType?: string;
     showUnusedMappers?: boolean;
 }
 

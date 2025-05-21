@@ -112,48 +112,6 @@ type DeepOmitArray<T extends any[], K> = {
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
-// Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlyMap" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialSet" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
-//
-// @internal @deprecated (undocumented)
-export type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
-
-// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialMap" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
-//
-// @public (undocumented)
-type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
-
-// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialObject" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
-//
-// @public (undocumented)
-type DeepPartialObject<T extends object> = {
-    [K in keyof T]?: DeepPartial<T[K]>;
-};
-
-// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialPrimitive" is marked as @public, but its signature references "Primitive" which is marked as @internal
-//
-// @public (undocumented)
-type DeepPartialPrimitive = Primitive | Date | RegExp;
-
-// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialReadonlyMap" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
-//
-// @public (undocumented)
-type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<DeepPartial<TKey>, DeepPartial<TValue>>;
-
-// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialReadonlySet" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
-//
-// @public (undocumented)
-type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
-
-// Warning: (ae-incompatible-release-tags) The symbol "DeepPartialSet" is marked as @public, but its signature references "DeepPartial" which is marked as @internal
-//
-// @public (undocumented)
-type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
-
 // @public (undocumented)
 type Directives = {
     [directiveName: string]: {

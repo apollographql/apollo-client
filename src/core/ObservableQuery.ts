@@ -1487,48 +1487,48 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { dirty } = this;
     this.resetNotifications();
 
-    if (dirty) {
-      if (
-        this.options.fetchPolicy == "cache-only" ||
+    if (
+      dirty &&
+      (this.options.fetchPolicy == "cache-only" ||
         this.options.fetchPolicy == "cache-and-network" ||
-        !this.activeOperations.size
+        !this.activeOperations.size)
+    ) {
+      const diff = this.getCacheDiff();
+      if (
+        // `fromOptimisticTransaction` is not avaiable through the `cache.diff`
+        // code path, so we need to check it this way
+        equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
       ) {
-        const diff = this.getCacheDiff();
-        if (
-          // `fromOptimisticTransaction` is not avaiable through the `cache.diff`
-          // code path, so we need to check it this way
-          !equal(diff.result, this.getCacheDiff({ optimistic: false }).result)
-        ) {
-          // If this diff came from an optimistic transaction, deliver the
-          // current cache data to the ObservableQuery, but don't perform a
-          // reobservation, since oq.reobserveCacheFirst might make a network
-          // request, and we never want to trigger network requests in the
-          // middle of optimistic updates.
-          this.input.next({
-            kind: "N",
-            value: {
-              data: diff.result as TData,
-              networkStatus: NetworkStatus.ready,
-              loading: false,
-              error: undefined,
-              partial: !diff.complete,
-            },
-            source: "cache",
-            query: this.query,
-            variables: this.variables,
-            meta: {},
-          });
-        } else {
-          // Otherwise, make the ObservableQuery "reobserve" the latest data
-          // using a temporary fetch policy of "cache-first", so complete cache
-          // results have a chance to be delivered without triggering additional
-          // network requests, even when options.fetchPolicy is "network-only"
-          // or "cache-and-network". All other fetch policies are preserved by
-          // this method, and are handled by calling oq.reobserve(). If this
-          // reobservation is spurious, distinctUntilChanged still has a
-          // chance to catch it before delivery to ObservableQuery subscribers.
-          this.reobserveCacheFirst();
-        }
+        //If this diff did not come from an optimistic transaction
+        // make the ObservableQuery "reobserve" the latest data
+        // using a temporary fetch policy of "cache-first", so complete cache
+        // results have a chance to be delivered without triggering additional
+        // network requests, even when options.fetchPolicy is "network-only"
+        // or "cache-and-network". All other fetch policies are preserved by
+        // this method, and are handled by calling oq.reobserve(). If this
+        // reobservation is spurious, distinctUntilChanged still has a
+        // chance to catch it before delivery to ObservableQuery subscribers.
+        this.reobserveCacheFirst();
+      } else {
+        // If this diff came from an optimistic transaction, deliver the
+        // current cache data to the ObservableQuery, but don't perform a
+        // reobservation, since oq.reobserveCacheFirst might make a network
+        // request, and we never want to trigger network requests in the
+        // middle of optimistic updates.
+        this.input.next({
+          kind: "N",
+          value: {
+            data: diff.result as TData,
+            networkStatus: NetworkStatus.ready,
+            loading: false,
+            error: undefined,
+            partial: !diff.complete,
+          },
+          source: "cache",
+          query: this.query,
+          variables: this.variables,
+          meta: {},
+        });
       }
     }
   }

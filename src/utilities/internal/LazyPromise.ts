@@ -67,5 +67,5 @@ export class LazyPromise<T> implements /* but not extends */ Promise<T> {
   // will call `.then`: https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-promise.prototype.finally step 7
   finally = Promise.prototype.finally;
 
-  [Symbol.toStringTag] = "PromiseLike";
+  [Symbol.toStringTag] = "LazyPromise";
 }

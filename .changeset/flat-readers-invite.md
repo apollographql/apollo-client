@@ -53,8 +53,9 @@ const config: CodegenConfig = {
         // Required if your localSchema extends existing schema types.
         baseTypesPath: "./relative/path/to/base/schema/types",
 
-        // If you use the `rootValue` option, provide the path to it here
-        rootValueType: "./path/to/rootValue#RootValue",
+        // If you provide a `context` function to customize the context value,
+        // provide the path or type here.
+        contextType: "./path/to/contextValue#ContextValue",
       } satisfies LocalStatePluginConfig
     }
   }

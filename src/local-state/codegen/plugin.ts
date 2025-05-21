@@ -70,6 +70,10 @@ export const plugin: PluginFunction<
     prepend.push(`${importType} { ${imports.join(", ")} } from 'graphql';`);
   }
 
+  if (!config.contextType) {
+    prepend.push(`${importType} { DefaultContext } from '@apollo/client';`);
+  }
+
   prepend.push(
     `${importType} { LocalState } from '@apollo/client/local-state'`
   );

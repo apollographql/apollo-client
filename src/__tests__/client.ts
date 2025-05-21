@@ -4,7 +4,7 @@ import type {
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
-import { GraphQLError, Kind, print, visit } from "graphql";
+import { GraphQLError, Kind, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 import type { Subscription } from "rxjs";
@@ -34,6 +34,7 @@ import {
   UnconventionalError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -1014,6 +1015,8 @@ describe("client", () => {
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {
+    // Silence warning for unconfigured local resolvers
+    using _ = spyOnConsole("warn");
     const result: { current: Operation | undefined } = {
       current: undefined,
     };
@@ -1055,11 +1058,12 @@ describe("client", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(transformedQuery));
+    expect(result.current!.query).toMatchDocument(transformedQuery);
   });
 
   it("should handle named fragments on mutations", async () => {
@@ -4155,6 +4159,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs @client directives added from custom transforms through local state", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       query TestQuery {
         currentUser {
@@ -4222,6 +4228,7 @@ describe("custom document transforms", () => {
           },
         },
       }),
+      localState: new LocalState(),
     });
 
     const { data } = await client.query({ query });
@@ -4281,6 +4288,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `query`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       query TestQuery {
         currentUser @nonreactive {
@@ -4304,6 +4313,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     // Pass no-cache to silence cache write warnings
@@ -4602,6 +4612,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `mutate`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const mutation = gql`
       mutation TestMutation {
         updateProfile @nonreactive {
@@ -4633,6 +4645,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.mutate({ mutation });
@@ -4822,6 +4835,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `subscribe`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       subscription TestSubscription {
         profileUpdated @nonreactive {
@@ -4853,6 +4868,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     const subscription = client.subscribe({ query }).subscribe(jest.fn());
@@ -4948,6 +4964,8 @@ describe("custom document transforms", () => {
   });
 
   it("runs default transforms with no custom document transform when calling `watchQuery`", async () => {
+    // Silence local resolvers warning
+    using _ = spyOnConsole("warn");
     const query = gql`
       query TestQuery @nonreactive {
         currentUser {
@@ -4979,6 +4997,7 @@ describe("custom document transforms", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     const observable = client.watchQuery({ query });

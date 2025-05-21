@@ -113,18 +113,27 @@ export async function applyRecast({
  * so that tools can pick up the client package as an "external" package
  */
 export async function withPseudoNodeModules<T>(fn: () => T) {
-  const dist = path.join(import.meta.dirname, "..", "dist");
-  const node_modules = path.join(dist, "node_modules");
+  const node_modules = path.join(distDir, "node_modules");
   const parent = path.join(node_modules, "@apollo");
   const link = path.join(parent, "client");
 
   try {
     await mkdir(parent, { recursive: true });
     await unlink(link).catch(() => {});
-    await symlink(dist, link);
+    await symlink(distDir, link);
 
     return await fn();
   } finally {
     await rm(node_modules, { recursive: true });
   }
+}
+
+export function frameComment(text: string) {
+  const framed = text
+    .split("\n")
+    .map((t) => t.trim())
+    .map((t) => (!t.startsWith("*") ? "* " + t : t))
+    .join("\n")
+    .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
+  return `*\n${framed}\n`;
 }

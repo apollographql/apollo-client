@@ -283,7 +283,7 @@ export interface VariablesCaseVariables {
     id: string;
 }
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 export function withCleanup<T extends object>(item: T, cleanup: (item: T) => void): T & Disposable;
 
 // @public (undocumented)

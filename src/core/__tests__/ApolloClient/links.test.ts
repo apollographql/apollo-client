@@ -1,4 +1,3 @@
-import { print } from "graphql";
 import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, of } from "rxjs";
@@ -7,6 +6,7 @@ import type { NextLink, Operation, Reference } from "@apollo/client";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 describe("Link interactions", () => {
@@ -275,7 +275,7 @@ describe("Link interactions", () => {
     void client.mutate({ mutation, context: { planet: "Tatooine" } });
   });
 
-  it("includes getCacheKey function on the context for cache resolvers", async () => {
+  it("includes client on operation for cache resolvers", async () => {
     const query = gql`
       {
         books {
@@ -301,9 +301,11 @@ describe("Link interactions", () => {
     };
 
     const link = new ApolloLink((operation, forward) => {
-      const { getCacheKey } = operation.getContext();
-      expect(getCacheKey).toBeDefined();
-      expect(getCacheKey({ id: 1, __typename: "Book" })).toEqual("Book:1");
+      const { client } = operation;
+      expect(client).toBeDefined();
+      expect(client.cache.identify({ id: 1, __typename: "Book" })).toEqual(
+        "Book:1"
+      );
       return of({ data: bookData });
     });
 
@@ -385,10 +387,11 @@ describe("Link interactions", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      localState: new LocalState(),
     });
 
     await client.query({ query });
 
-    expect(print(result.current!.query)).toEqual(print(expectedQuery));
+    expect(result.current!.query).toMatchDocument(expectedQuery);
   });
 });

@@ -9,7 +9,6 @@ import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link';
 import type { ApolloQueryResult as ApolloQueryResult_2 } from '@apollo/client';
-import type { ASTNode } from 'graphql';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
 import type { DataProxy } from '@apollo/client/cache';
 import type { DeepPartial } from '@apollo/client/utilities/internal';
@@ -24,9 +23,7 @@ import type { FetchMoreQueryOptions as FetchMoreQueryOptions_2 } from '@apollo/c
 import type { FetchPolicy as FetchPolicy_2 } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
 import type { FetchResult as FetchResult_2 } from '@apollo/client';
-import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
-import type { FragmentMap } from '@apollo/client/utilities/internal';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import { gql } from '@apollo/client';
@@ -35,6 +32,7 @@ import type { HookWrappers } from '@apollo/client/react/internal';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
+import type { LocalState } from '@apollo/client/local-state';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { MissingTree } from '@apollo/client/cache';
@@ -62,9 +60,8 @@ import type { Reference } from '@apollo/client/cache';
 import type { Reference as Reference_2 } from '@apollo/client';
 import type { RefetchFunction } from '@apollo/client/react/internal';
 import type { RefetchWritePolicy as RefetchWritePolicy_2 } from '@apollo/client';
-import type { StoreObject } from '@apollo/client/utilities';
-import type { StoreObject as StoreObject_2 } from '@apollo/client/cache';
-import type { StoreObject as StoreObject_3 } from '@apollo/client';
+import type { StoreObject } from '@apollo/client/cache';
+import type { StoreObject as StoreObject_2 } from '@apollo/client';
 import type { Subscribable } from 'rxjs';
 import type { SubscribeToMoreFunction } from '@apollo/client';
 import type { Subscription } from 'rxjs';
@@ -89,8 +86,6 @@ class ApolloClient_2 implements DataProxy {
     constructor(options: ApolloClientOptions);
     // (undocumented)
     __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
-    // Warning: (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
-    addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -111,9 +106,10 @@ class ApolloClient_2 implements DataProxy {
     getMemoryInternals?: typeof getApolloClientMemoryInternals;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesInclude" needs to be exported by the entry point index.d.ts
     getObservableQueries(include?: RefetchQueriesInclude): Map<string, ObservableQuery<any>>;
-    getResolvers(): Resolvers;
     // (undocumented)
     link: ApolloLink;
+    get localState(): LocalState | undefined;
+    set localState(localState: LocalState);
     // Warning: (ae-forgotten-export) The symbol "MutationOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MutateResult" needs to be exported by the entry point index.d.ts
     mutate<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
@@ -135,9 +131,6 @@ class ApolloClient_2 implements DataProxy {
     resetStore(): Promise<QueryResult_2<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
-    // Warning: (ae-forgotten-export) The symbol "FragmentMatcher" needs to be exported by the entry point index.d.ts
-    setLocalStateFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
-    setResolvers(resolvers: Resolvers | Resolvers[]): void;
     stop(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscriptionOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "SubscribeResult" needs to be exported by the entry point index.d.ts
@@ -166,13 +159,11 @@ interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
-    // (undocumented)
-    fragmentMatcher?: FragmentMatcher;
     link: ApolloLink;
+    // (undocumented)
+    localState?: LocalState;
     name?: string;
     queryDeduplication?: boolean;
-    // (undocumented)
-    resolvers?: Resolvers | Resolvers[];
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
     version?: string;
@@ -307,10 +298,7 @@ interface FetchMoreQueryOptions<TVariables, TData = unknown> {
 type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
 
 // @public (undocumented)
-type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
-
-// @public (undocumented)
-type From<TData> = StoreObject_3 | Reference_2 | FragmentType<NoInfer_2<TData>> | string | null;
+type From<TData> = StoreObject_2 | Reference_2 | FragmentType<NoInfer_2<TData>> | string | null;
 
 // @public (undocumented)
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
@@ -378,50 +366,6 @@ export type LoadableQueryHookOptions = useLoadableQuery.Options;
 
 // @public @deprecated (undocumented)
 export type LoadQueryFunction<TVariables extends OperationVariables> = useLoadableQuery.LoadQueryFunction<TVariables>;
-
-// @public (undocumented)
-class LocalState {
-    // Warning: (ae-forgotten-export) The symbol "LocalStateOptions" needs to be exported by the entry point index.d.ts
-    constructor({ cache, client, resolvers, fragmentMatcher, }: LocalStateOptions);
-    // (undocumented)
-    addExportedVariables<TVars extends OperationVariables_2>(document: DocumentNode, variables?: TVars, context?: {}): Promise<TVars>;
-    // (undocumented)
-    addResolvers(resolvers: Resolvers | Resolvers[]): void;
-    // (undocumented)
-    clientQuery(document: DocumentNode): DocumentNode | null;
-    // (undocumented)
-    getFragmentMatcher(): FragmentMatcher | undefined;
-    // (undocumented)
-    getResolvers(): Resolvers;
-    // (undocumented)
-    prepareContext(context?: Record<string, any>): {
-        getCacheKey(obj: StoreObject): string | undefined;
-    };
-    // (undocumented)
-    runResolvers<TData>({ document, remoteResult, context, variables, onlyRunForcedResolvers, }: {
-        document: DocumentNode | null;
-        remoteResult: FetchResult<TData>;
-        context?: Record<string, any>;
-        variables?: Record<string, any>;
-        onlyRunForcedResolvers?: boolean;
-    }): Promise<FetchResult<TData>>;
-    // (undocumented)
-    serverQuery(document: DocumentNode): DocumentNode | null;
-    // (undocumented)
-    setFragmentMatcher(fragmentMatcher: FragmentMatcher): void;
-    // (undocumented)
-    setResolvers(resolvers: Resolvers | Resolvers[]): void;
-    // (undocumented)
-    shouldForceResolvers(document: ASTNode): boolean;
-}
-
-// @public (undocumented)
-type LocalStateOptions = {
-    cache: ApolloCache;
-    client?: ApolloClient_2;
-    resolvers?: Resolvers | Resolvers[];
-    fragmentMatcher?: FragmentMatcher;
-};
 
 // @public (undocumented)
 type MakeRequiredVariablesOptional<TVariables extends OperationVariables, TConfiguredVariables extends Partial<TVariables>> = Prettify<{
@@ -560,8 +504,9 @@ interface ObservableAndInfo<TData> {
 
 // @public (undocumented)
 namespace ObservableQuery {
-    // @internal
+    // @internal @deprecated
     interface CacheWatchOptions<TData = unknown, TVariables extends OperationVariables_2 = OperationVariables_2> extends Cache_2.WatchOptions<TData, TVariables> {
+        // @deprecated
         lastOwnDiff?: Cache_2.DiffResult<TData>;
     }
     // (undocumented)
@@ -605,7 +550,7 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
     hasObservers(): boolean;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     notify(scheduled?: boolean): void;
     // (undocumented)
     readonly options: ObservableQuery.Options<TData, TVariables>;
@@ -619,12 +564,12 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     readonly queryName?: string;
     refetch(variables?: Partial<TVariables>): Promise<QueryResult_2<TData>>;
     reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): Promise<QueryResult_2<MaybeMasked<TData>>>;
-    // @internal
+    // @internal @deprecated
     reset(): void;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     resetDiff(): void;
     setVariables(variables: TVariables): Promise<QueryResult_2<TData>>;
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
     stopPolling(): void;
@@ -727,6 +672,8 @@ class QueryManager {
     get cache(): ApolloCache;
     // (undocumented)
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
+    // Warning: (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     readonly client: ApolloClient_2;
     // (undocumented)
@@ -757,10 +704,6 @@ class QueryManager {
     //
     // (undocumented)
     getDocumentInfo(document: DocumentNode): TransformCacheEntry;
-    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    getLocalState(): LocalState;
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Map<string, ObservableQuery<any, OperationVariables_2>>;
     // (undocumented)
@@ -773,6 +716,8 @@ class QueryManager {
     }>;
     // (undocumented)
     get link(): ApolloLink;
+    // (undocumented)
+    localState: LocalState | undefined;
     // (undocumented)
     markMutationOptimistic<TData, TVariables extends OperationVariables_2, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
         mutationId: string;
@@ -858,7 +803,7 @@ interface QueryManagerOptions {
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
     // (undocumented)
-    localState: LocalState;
+    localState: LocalState | undefined;
     // (undocumented)
     onBroadcast: undefined | (() => void);
     // (undocumented)
@@ -956,20 +901,6 @@ type RefetchWritePolicy = "merge" | "overwrite";
 
 // @public (undocumented)
 type ResetFunction = () => void;
-
-// @public (undocumented)
-type Resolver = (rootValue?: any, args?: any, context?: any, info?: {
-    field: FieldNode;
-    fragmentMap: FragmentMap;
-}) => any;
-
-// @public (undocumented)
-interface Resolvers {
-    // (undocumented)
-    [key: string]: {
-        [field: string]: Resolver;
-    };
-}
 
 // @public (undocumented)
 export type SkipToken = typeof skipToken;
@@ -1184,7 +1115,7 @@ export namespace useFragment {
         fragment: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>;
         fragmentName?: string;
         // (undocumented)
-        from: StoreObject_2 | Reference | FragmentType<NoInfer_2<TData>> | string | null;
+        from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
         optimistic?: boolean;
         variables?: NoInfer_2<TVariables>;
     }
@@ -1648,15 +1579,13 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 
 // Warnings were encountered during analysis:
 //
-// src/core/LocalState.ts:70:3 - (ae-forgotten-export) The symbol "ApolloClient_2" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:134:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:146:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:290:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:291:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:199:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:209:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:237:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:142:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:154:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:298:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:299:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:196:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:479:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:208:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts

@@ -32,6 +32,7 @@ import {
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -6957,30 +6958,36 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink(() => of({ data: {} })),
-        resolvers: {
-          ClientData: {
-            titleLength(data) {
-              return data.title.length;
+        localState: new LocalState({
+          resolvers: {
+            ClientData: {
+              titleLength(data) {
+                return data.title.length;
+              },
+            },
+            Query: {
+              clientEntity(_root, { id }, { client }) {
+                const { cache } = client;
+
+                return cache.readFragment({
+                  id: cache.identify({ id, __typename: "ClientData" }),
+                  fragment,
+                });
+              },
+            },
+            Mutation: {
+              addOrUpdate(_root, { id, title }, { client }) {
+                const { cache } = client;
+
+                return cache.writeFragment({
+                  id: cache.identify({ id, __typename: "ClientData" }),
+                  fragment,
+                  data: { id, title, __typename: "ClientData" },
+                });
+              },
             },
           },
-          Query: {
-            clientEntity(_root, { id }, { cache }) {
-              return cache.readFragment({
-                id: cache.identify({ id, __typename: "ClientData" }),
-                fragment,
-              });
-            },
-          },
-          Mutation: {
-            addOrUpdate(_root, { id, title }, { cache }) {
-              return cache.writeFragment({
-                id: cache.identify({ id, __typename: "ClientData" }),
-                fragment,
-                data: { id, title, __typename: "ClientData" },
-              });
-            },
-          },
-        },
+        }),
       });
 
       const entityId = 1;

@@ -67,10 +67,10 @@ export class DocumentTransform {
     concat(otherTransform: DocumentTransform): DocumentTransform;
     // (undocumented)
     static identity(): DocumentTransform;
-    // @internal
+    // @internal @deprecated
     readonly left?: DocumentTransform;
     resetCache(): void;
-    // @internal
+    // @internal @deprecated
     readonly right?: DocumentTransform;
     // (undocumented)
     static split(predicate: (document: DocumentNode) => boolean, left: DocumentTransform, right?: DocumentTransform): DocumentTransform & {

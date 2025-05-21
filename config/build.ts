@@ -6,8 +6,9 @@ import { $ } from "zx";
 import { babelTransform } from "./babel.ts";
 import { compileTs } from "./compileTs.ts";
 import { addExports } from "./exports.ts";
+import { distDir } from "./helpers.ts";
 import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-import { postprocessDist } from "./postprocessDist.ts";
+import { deprecateInternals } from "./deprecateInternals.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 import { prepareDist } from "./prepareDist.ts";
 import { processInvariants } from "./processInvariants.ts";
@@ -40,8 +41,8 @@ const buildSteps = {
   babelTransform,
   updateVersion,
   inlineInheritDoc,
+  deprecateInternals,
   processInvariants,
-  postprocessDist,
   verifyVersion,
   verifySourceMaps,
 } satisfies BuildSteps;
@@ -92,13 +93,12 @@ for (const options of buildStepOptions) {
   const first = options === buildStepOptions.at(0);
   const last = options === buildStepOptions.at(-1);
   const rootDir = resolve(import.meta.dirname, "..");
-  const packageRoot = resolve(rootDir, "dist");
 
   for (const step of runSteps) {
     const buildStep: BuildStep = allSteps[step];
 
     console.log("--- Step %s: running ---", step);
-    await buildStep({ ...options, first, last, rootDir, packageRoot });
+    await buildStep({ ...options, first, last, rootDir, packageRoot: distDir });
     console.log("--- Step %s: done ---", step);
   }
 }

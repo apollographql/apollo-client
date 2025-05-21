@@ -7254,6 +7254,59 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("should not automatically set `data` to `undefined` when `skip` becomes `true`", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: { data: { hello: "world" } },
+        },
+      ];
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ skip }) => useQuery(query, { skip }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+          initialProps: { skip: false },
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ skip: true });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.
     it("should refetch when skip is true", async () => {
       const query = gql`

@@ -1335,14 +1335,6 @@ describe("Force local resolvers", () => {
       client.watchQuery({ query, returnPartialData: true })
     );
 
-    // TODO: This value is emitted from `ObservableQuery` since
-    // resolvers run asynchronously. We will update this behavior after
-    // https://github.com/apollographql/apollo-client/pull/12633 is integrated
-    // with this change.
-    // Not quite:
-    // This is emitted because we deliver the "current value" of the ObservableQuery
-    // `BehaviorSubject` when subscribing to it - in this case, the initialState.
-    // So I think it's okay and we can remove this comment?
     await expect(stream).toEmitTypedValue({
       data: undefined,
       loading: true,

@@ -619,18 +619,19 @@ export class ObservableQuery<
       (
         // if the `current` result is in an error state, we will always return that
         // error state, even if we have no observers
-        current.networkStatus !== NetworkStatus.error &&
-        // if we have no observers, we are not watching the cache and
-        // this.subject.getValue() could potentially be outdated,
-        // so we recalculate the result
-        !this.hasObservers() &&
-        // unless we are using a `no-cache` fetch policy in which case this
+        current.networkStatus === NetworkStatus.error ||
+        // if we have observers, we are watching the cache and
+        // this.subject.getValue() will always be up to date
+        this.hasObservers() ||
+        // if we are using a `no-cache` fetch policy in which case this
         // `ObservableQuery` cannot have been updated from the outside - in
         // that case, we prefer to keep the current value
-        this.options.fetchPolicy !== "no-cache"
+        this.options.fetchPolicy === "no-cache"
       ) ?
-        this.getInitialResult()
-      : current;
+        current
+        // otherwise, the `current` value might be outdated due to missed
+        // external updates - calculate it again
+      : this.getInitialResult();
 
     if (value === uninitialized) {
       value = this.getInitialResult();

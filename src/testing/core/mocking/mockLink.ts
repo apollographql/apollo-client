@@ -20,41 +20,17 @@ import { invariant } from "@apollo/client/utilities/invariant";
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
 
-export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
-  V,
-  T
->;
-
 type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
   V,
   boolean
 >;
 
-export interface MockedRequest<TVariables = Record<string, any>> {
-  query: DocumentNode;
-  variables?: TVariables | VariableMatcher<TVariables>;
-}
-
-export interface MockedResponse<
-  // @ts-ignore
-  out TData = Record<string, any>,
-  out TVariables = Record<string, any>,
-> {
-  request: MockedRequest<TVariables>;
-  maxUsageCount?: number;
-  result?:
-    | FetchResult<Unmasked<TData>>
-    | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
-  error?: Error;
-  delay?: number | MockLink.DelayFunction;
-}
-
 interface NormalizedMockedResponse {
-  original: MockedResponse;
-  request: MockedRequest;
+  original: MockLink.MockedResponse;
+  request: MockLink.MockedRequest;
   variablesWithDefaults: Record<string, any>;
   maxUsageCount: number;
-  result?: FetchResult | ResultFunction<FetchResult, any>;
+  result?: FetchResult | MockLink.ResultFunction<FetchResult, any>;
   error?: Error;
   delay: number | MockLink.DelayFunction;
 }
@@ -63,16 +39,40 @@ type UnmatchedVariables = Array<
   Record<string, any> | "<undefined>" | `<function ${string}>`
 >;
 
-export interface MockLinkOptions {
-  showWarnings?: boolean;
-  defaultOptions?: MockLink.DefaultOptions;
-}
-
 export declare namespace MockLink {
   export type DelayFunction = (operation: Operation) => number;
   export type Delay = number | DelayFunction;
   export interface DefaultOptions {
     delay?: MockLink.Delay;
+  }
+
+  export interface MockedRequest<TVariables = Record<string, any>> {
+    query: DocumentNode;
+    variables?: TVariables | VariableMatcher<TVariables>;
+  }
+
+  export interface MockedResponse<
+    // @ts-ignore
+    out TData = Record<string, any>,
+    out TVariables = Record<string, any>,
+  > {
+    request: MockedRequest<TVariables>;
+    maxUsageCount?: number;
+    result?:
+      | FetchResult<Unmasked<TData>>
+      | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
+    error?: Error;
+    delay?: number | MockLink.DelayFunction;
+  }
+
+  export type ResultFunction<
+    T,
+    V = Record<string, any>,
+  > = CovariantUnaryFunction<V, T>;
+
+  export interface Options {
+    showWarnings?: boolean;
+    defaultOptions?: DefaultOptions;
   }
 }
 
@@ -99,9 +99,9 @@ export class MockLink extends ApolloLink {
 
   constructor(
     mockedResponses: ReadonlyArray<
-      MockedResponse<Record<string, any>, Record<string, any>>
+      MockLink.MockedResponse<Record<string, any>, Record<string, any>>
     >,
-    options: MockLinkOptions = {}
+    options: MockLink.Options = {}
   ) {
     super();
     const defaultOptions = options.defaultOptions ?? MockLink.defaultOptions;
@@ -116,7 +116,7 @@ export class MockLink extends ApolloLink {
     }
   }
 
-  public addMockedResponse(mockedResponse: MockedResponse) {
+  public addMockedResponse(mockedResponse: MockLink.MockedResponse) {
     validateMockedResponse(mockedResponse);
 
     const normalized = this.normalizeMockedResponse(mockedResponse);
@@ -223,7 +223,7 @@ export class MockLink extends ApolloLink {
     });
   }
 
-  private getMockedResponses(request: MockedRequest) {
+  private getMockedResponses(request: MockLink.MockedRequest) {
     const key = JSON.stringify({
       query: print(addTypenameToDocument(request.query)),
     });
@@ -238,7 +238,7 @@ export class MockLink extends ApolloLink {
   }
 
   private normalizeMockedResponse(
-    mockedResponse: MockedResponse
+    mockedResponse: MockLink.MockedResponse
   ): NormalizedMockedResponse {
     const { request } = mockedResponse;
     const response = cloneDeep(mockedResponse) as NormalizedMockedResponse;
@@ -297,7 +297,7 @@ function getServerQuery(query: DocumentNode) {
   return serverQuery;
 }
 
-function validateMockedResponse(mock: MockedResponse) {
+function validateMockedResponse(mock: MockLink.MockedResponse) {
   checkDocument(mock.request.query);
 
   invariant(
@@ -308,7 +308,9 @@ function validateMockedResponse(mock: MockedResponse) {
 }
 
 /** @internal */
-export function stringifyMockedResponse(mockedResponse: MockedResponse) {
+export function stringifyMockedResponse(
+  mockedResponse: MockLink.MockedResponse
+) {
   return JSON.stringify(
     mockedResponse,
     (_, value) => {

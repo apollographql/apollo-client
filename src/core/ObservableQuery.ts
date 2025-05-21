@@ -198,7 +198,6 @@ export declare namespace ObservableQuery {
      * So instead we track the last "own diff" and suppress further processing
      * in the callback.
      */
-
     lastOwnDiff?: Cache.DiffResult<TData>;
   }
 }
@@ -387,9 +386,12 @@ export class ObservableQuery<
             context.previous = undefined;
             context.previousVariables = undefined;
           }
-          if (this.options.fetchPolicy === "standby") return;
+          if (
+            this.options.fetchPolicy === "standby" ||
+            shouldEmit === EmitBehavior.never
+          )
+            return;
           if (shouldEmit === EmitBehavior.force) return emit();
-          if (shouldEmit === EmitBehavior.never) return;
 
           const { previous, previousVariables } = context;
 
@@ -420,7 +422,7 @@ export class ObservableQuery<
 
           function emit() {
             context.previous = current;
-            context.previousVariables = variables as TVariables;
+            context.previousVariables = variables;
             return current;
           }
         },
@@ -574,7 +576,6 @@ export class ObservableQuery<
         const { result: previousResult } = this.subject.getValue();
 
         if (
-          diff &&
           !diff.complete &&
           // If we are trying to deliver an incomplete cache result, we avoid
           // reporting it if the query has errored, otherwise we let the broadcast try
@@ -586,26 +587,26 @@ export class ObservableQuery<
           // See https://github.com/apollographql/apollo-client/issues/11400 for more
           // information on this issue.
           (previousResult.error ||
-            // we also want to prevent to schedule reads directly after the `ObservableQuery`
+            // Prevent scheduled reads directly after the `ObservableQuery`
             // has been `reset` (which will set the `previousResult` to `uninitialized` or `empty`)
-            // as in those cases, `resetCache` will manually call `refetch` more intentional timing.
+            // as in those cases, `resetCache` will manually call `refetch` with more intentional timing.
             previousResult === uninitialized ||
             previousResult === empty)
         ) {
           return;
         }
 
-        if (!equal(previousResult.data, diff && diff.result)) {
+        if (!equal(previousResult.data, diff.result)) {
           this.scheduleNotify();
         }
       },
     };
-    const nextUnsubscribe = this.queryManager.cache.watch(watch);
+    const cancelWatch = this.queryManager.cache.watch(watch);
 
     this.unsubscribeFromCache = Object.assign(
       () => {
         this.unsubscribeFromCache = undefined;
-        nextUnsubscribe();
+        cancelWatch();
       },
       { query, variables }
     );
@@ -1182,7 +1183,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
           this.input.next({ ...value, query, variables, meta });
         },
-        error: (err) => this.input.error(err),
       });
 
     return { fromLink, subscription, observable };
@@ -1476,7 +1476,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (!scheduled) {
       // For queries with client exports or forced resolvers, we don't want to
       // synchronously reobserve the cache on broadcast,
-      // but actually wait for the `scheduleNotify` timeout.
+      // but actually wait for the `scheduleNotify` timeout triggered by the
+      // `cache.watch` callback from `resubscribeCache`.
       const info = this.queryManager.getDocumentInfo(this.query);
       if (info.hasClientExports || info.hasForcedResolvers) {
         return;

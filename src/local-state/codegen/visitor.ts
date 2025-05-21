@@ -153,15 +153,19 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       const hasDefaultMapper = !!this.config.defaultMapper?.type;
 
       if (isRootType) {
-        this._globalDeclarations.add(
-          `${
-            this.config.useTypeImports ? "import type" : "import"
-          } { DeepPartial } from '@apollo/client/utilities';`
-        );
+        if (this.config.extendedTypes.has(typeName)) {
+          this._globalDeclarations.add(
+            `${
+              this.config.useTypeImports ? "import type" : "import"
+            } { DeepPartial } from '@apollo/client/utilities';`
+          );
 
-        prev[typeName] = applyWrapper(
-          `DeepPartial<${this.config.baseSchemaTypesImportName}.${typeName}>`
-        );
+          prev[typeName] = applyWrapper(
+            `DeepPartial<${this.config.baseSchemaTypesImportName}.${typeName}>`
+          );
+        } else {
+          prev[typeName] = applyWrapper("{}");
+        }
 
         return prev;
       }

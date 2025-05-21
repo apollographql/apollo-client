@@ -772,6 +772,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 
+        // disable the `fetchMore` override that is currently active
+        // the next updates caused by this should not be `fetchMore` anymore,
+        // but `ready` or whatever other calculated loading state is currently
+        // appropriate
         finalize();
 
         if (isCached) {

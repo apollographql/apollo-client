@@ -4,7 +4,6 @@ export type {
   ResultFunction,
 } from "@apollo/client/testing/core";
 export {
-  createMockClient,
   MockLink,
   MockSubscriptionLink,
   realisticDelay,

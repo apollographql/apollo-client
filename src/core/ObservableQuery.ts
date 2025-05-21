@@ -63,15 +63,6 @@ export interface FetchMoreOptions<
   ) => TData;
 }
 
-export const fetchQueryOperator = Symbol();
-export const onCacheHit = Symbol();
-declare module "@apollo/client" {
-  interface DefaultContext {
-    [fetchQueryOperator]?: <T>(source: Observable<T>) => Observable<T>;
-    [onCacheHit]?: () => void;
-  }
-}
-
 interface TrackedOperation {
   /**
    * This NetworkStatus will be used to override the current networkStatus
@@ -1094,10 +1085,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options.context ??= {};
 
     let synchronouslyEmitted = false;
-    options.context[onCacheHit] = () => {
+    const onCacheHit = () => {
       synchronouslyEmitted = true;
     };
-    options.context[fetchQueryOperator] = // we cannot use `tap` here, since it allows only for a "before subscription"
+    const fetchQueryOperator = // we cannot use `tap` here, since it allows only for a "before subscription"
       // hook with `subscribe` and we care for "directly before and after subscription"
       <T>(source: Observable<T>) =>
         new Observable<T>((subscriber) => {
@@ -1140,8 +1131,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
-      networkStatus,
-      fetchQuery
+      { networkStatus, query: fetchQuery, onCacheHit, fetchQueryOperator }
     );
 
     // track query and variables from the start of the operation

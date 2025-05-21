@@ -76,12 +76,7 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import {
-  fetchQueryOperator,
-  logMissingFieldErrors,
-  ObservableQuery,
-  onCacheHit,
-} from "./ObservableQuery.js";
+import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import {
   CacheWriteBehavior,
   QueryInfo,
@@ -723,11 +718,9 @@ export class QueryManager {
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
     return lastValueFrom(
-      this.fetchObservableWithInfo(
-        this.getOrCreateQuery(queryId),
-        options,
-        networkStatus
-      ).observable.pipe(
+      this.fetchObservableWithInfo(this.getOrCreateQuery(queryId), options, {
+        networkStatus,
+      }).observable.pipe(
         filterMap((value) => {
           switch (value.kind) {
             case "E":
@@ -1401,11 +1394,20 @@ export class QueryManager {
   public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus = NetworkStatus.loading,
-    query = options.query
+    {
+      // The initial networkStatus for this fetch, most often
+      // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
+      // or setVariables.
+      networkStatus = NetworkStatus.loading,
+      query = options.query,
+      fetchQueryOperator = (x) => x,
+      onCacheHit = () => {},
+    }: {
+      networkStatus?: NetworkStatus;
+      query?: DocumentNode;
+      fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
+      onCacheHit?: () => void;
+    }
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
 
@@ -1454,11 +1456,11 @@ export class QueryManager {
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
-        cacheWriteBehavior
+        cacheWriteBehavior,
+        onCacheHit
       );
-      observableWithInfo.observable = observableWithInfo.observable.pipe(
-        options.context?.[fetchQueryOperator] || ((x) => x)
-      );
+      observableWithInfo.observable =
+        observableWithInfo.observable.pipe(fetchQueryOperator);
 
       if (
         // If we're in standby, postpone advancing options.fetchPolicy using
@@ -1769,7 +1771,8 @@ export class QueryManager {
       returnPartialData?: boolean;
       context?: DefaultContext;
     },
-    cacheWriteBehavior: CacheWriteBehavior
+    cacheWriteBehavior: CacheWriteBehavior,
+    onCacheHit: () => void
   ): ObservableAndInfo<TData> {
     queryInfo.init({
       document: query,
@@ -1832,7 +1835,7 @@ export class QueryManager {
             getOperationName(query, "(anonymous)")
           );
         }
-        context?.[onCacheHit]?.();
+        onCacheHit();
 
         return from(
           this.localState!.execute<TData>({

@@ -6,4 +6,3 @@ export type {
 } from "./mocking/mockLink.js";
 export { MockLink, realisticDelay } from "./mocking/mockLink.js";
 export { MockSubscriptionLink } from "./mocking/mockSubscriptionLink.js";
-export { withLogSpy } from "./withConsoleSpy.js";

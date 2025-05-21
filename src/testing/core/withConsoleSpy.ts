@@ -15,15 +15,6 @@ function wrapTestFunction(
 }
 
 /** @deprecated This method will be removed in the next major version of Apollo Client */
-export function withWarningSpy<TArgs extends any[], TResult>(
-  it: (...args: TArgs) => TResult,
-  ...args: TArgs
-) {
-  args[1] = wrapTestFunction(args[1], "warn");
-  return it(...args);
-}
-
-/** @deprecated This method will be removed in the next major version of Apollo Client */
 export function withLogSpy<TArgs extends any[], TResult>(
   it: (...args: TArgs) => TResult,
   ...args: TArgs

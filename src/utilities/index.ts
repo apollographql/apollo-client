@@ -1,5 +1,7 @@
 export { Observable } from "rxjs";
 
+export type { DeepPartial } from "./DeepPartial.js";
+
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 

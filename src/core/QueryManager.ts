@@ -1310,8 +1310,8 @@ export class QueryManager {
       query: DocumentNode;
       variables: TVariables;
       context: DefaultContext | undefined;
-      fetchPolicy: WatchQueryFetchPolicy | undefined;
-      errorPolicy: ErrorPolicy | undefined;
+      fetchPolicy: WatchQueryFetchPolicy;
+      errorPolicy: ErrorPolicy;
     }
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -1764,8 +1764,8 @@ export class QueryManager {
     }: {
       query: DocumentNode | TypedDocumentNode<TData, TVars>;
       variables: TVars;
-      fetchPolicy?: WatchQueryFetchPolicy;
-      errorPolicy?: ErrorPolicy;
+      fetchPolicy: WatchQueryFetchPolicy;
+      errorPolicy: ErrorPolicy;
       returnPartialData?: boolean;
       context?: DefaultContext;
     },

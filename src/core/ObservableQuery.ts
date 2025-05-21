@@ -349,10 +349,7 @@ export class ObservableQuery<
             // The initial reobserve should stay subscribed until the request finishes
             // even if the `ObservableQuery` is unsubscribed from.
             // see https://github.com/apollographql/apollo-client/blob/62896ffd27357014a5c35dfe8696a603498d8302/src/core/__tests__/ApolloClient/general.test.ts#L417
-            this.reobserve().catch(
-              // creates a subscription and prevents an unhandled promise rejection
-              () => {}
-            );
+            this.reobserve().eager(/* create a persistent subscription on the query */);
 
             // TODO: See if we can rework updatePolling to better handle this.
             // reobserve calls updatePolling but this `subscribe` callback is
@@ -652,7 +649,9 @@ export class ObservableQuery<
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
+  public refetch(
+    variables?: Partial<TVariables>
+  ): LazyPromise<QueryResult<TData>> {
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {
@@ -1272,7 +1271,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
-  ): Promise<QueryResult<MaybeMasked<TData>>> {
+  ): LazyPromise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
     let newNetworkStatus: NetworkStatus | undefined;
 
@@ -1389,33 +1388,35 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.linkSubscription = subscription;
     }
 
-    return new LazyPromise((resolve, reject) =>
-      // Note: lastValueFrom will create a separate subscription to the
-      // observable which means that terminating this ObservableQuery will not
-      // cancel the request from the link chain once this lazy Promise has been
-      // started by `await`ing it or calling `.then`,`.catch`,`.finally` etc.
-      // on it.
-      lastValueFrom(
-        observable.pipe(
-          filterMap((value) => {
-            switch (value.kind) {
-              case "E":
-                throw value.error;
-              case "N":
-                if (value.source !== "newNetworkStatus") return value.value;
-            }
-          })
-        ),
-        {
-          // This default value should only be used when using a `fetchPolicy` of
-          // `standby` since that fetch policy completes without emitting a
-          // result. Since we are converting this to a QueryResult type, we
-          // omit the extra fields from ApolloQueryResult in the default value.
-          defaultValue: { data: undefined } as ApolloQueryResult<TData>,
-        }
-      )
-        .then((result) => toQueryResult(this.maskResult(result)))
-        .then(resolve, reject)
+    return new LazyPromise(
+      (resolve, reject) =>
+        // Note: lastValueFrom will create a separate subscription to the
+        // observable which means that terminating this ObservableQuery will not
+        // cancel the request from the link chain once this lazy Promise has been
+        // started by `await`ing it or calling `.then`,`.catch`,`.finally` etc.
+        // on it.
+        lastValueFrom(
+          observable.pipe(
+            filterMap((value) => {
+              switch (value.kind) {
+                case "E":
+                  throw value.error;
+                case "N":
+                  if (value.source !== "newNetworkStatus") return value.value;
+              }
+            })
+          ),
+          {
+            // This default value should only be used when using a `fetchPolicy` of
+            // `standby` since that fetch policy completes without emitting a
+            // result. Since we are converting this to a QueryResult type, we
+            // omit the extra fields from ApolloQueryResult in the default value.
+            defaultValue: { data: undefined } as ApolloQueryResult<TData>,
+          }
+        )
+          .then((result) => toQueryResult(this.maskResult(result)))
+          .then(resolve, reject),
+      true
     );
   }
 

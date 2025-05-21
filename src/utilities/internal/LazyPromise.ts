@@ -1,3 +1,6 @@
+import { identity } from "./identity.js";
+import { noop } from "./noop.js";
+
 export namespace LazyPromise {
   export type Executor<T> = (
     resolve: (value: T | PromiseLike<T>) => void,
@@ -42,9 +45,22 @@ export namespace LazyPromise {
 export class LazyPromise<T> implements /* but not extends */ Promise<T> {
   private executor?: LazyPromise.Executor<T>;
   private promise?: Promise<T>;
-  constructor(executor: LazyPromise.Executor<T>) {
+  constructor(
+    executor: LazyPromise.Executor<T>,
+    preventUnhandledRejection = true
+  ) {
     this.executor = executor;
+    this.eager = () => {
+      const promise = this.then(identity);
+      if (preventUnhandledRejection) {
+        promise.catch(noop);
+      }
+      return promise;
+    };
   }
+
+  /** If the LazyQuery hasn't started yet, kick it off. */
+  eager: () => Promise<T>;
 
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?:

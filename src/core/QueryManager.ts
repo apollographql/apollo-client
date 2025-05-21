@@ -1645,9 +1645,7 @@ export class QueryManager {
                 // behavior by returning true.
                 result = oq
                   .refetch()
-                  .then(
-                    /* create a persistent subscription on the query */ (x) => x
-                  );
+                  .eager(/* create a persistent subscription on the query */);
               }
 
               // Record the result in the results Map, as long as onQueryUpdated
@@ -1692,7 +1690,7 @@ export class QueryManager {
         if (!onQueryUpdated || result === true) {
           result = oq
             .refetch()
-            .then(/* create a persistent subscription on the query */ (x) => x);
+            .eager(/* create a persistent subscription on the query */);
         }
 
         if (result !== false) {

@@ -919,13 +919,10 @@ export class QueryManager {
       )
     );
 
-    this.queries.forEach((queryInfo) => {
-      const { observableQuery } = queryInfo;
-      if (observableQuery) {
-        // Set loading to true so listeners don't trigger unless they want
-        // results with partial data.
-        observableQuery.reset();
-      }
+    this.queries.forEach(({ observableQuery }) => {
+      // Set loading to true so listeners don't trigger unless they want
+      // results with partial data.
+      observableQuery?.reset();
     });
 
     if (this.mutationStore) {

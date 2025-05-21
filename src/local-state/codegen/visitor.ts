@@ -1,6 +1,7 @@
 import { TypeScriptOperationVariablesToObject } from "@graphql-codegen/typescript";
 import type {
   DeclarationKind,
+  ParsedMapper,
   ParsedResolversConfig,
   ResolverTypes,
   RootResolver,
@@ -49,6 +50,8 @@ interface ParsedTypeScriptResolversConfig extends ParsedResolversConfig {
   allowParentTypeOverride: boolean;
   extendedTypes: Set<string>;
   baseSchemaTypesImportName: string;
+  contextType: ParsedMapper;
+  rootValueType: never;
 }
 
 export class LocalStateVisitor extends BaseResolversVisitor<
@@ -65,9 +68,9 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       {
         avoidOptionals: normalizeAvoidOptionals(pluginConfig.avoidOptionals),
         allowParentTypeOverride: false,
-        rootValueType: parseMapper(
-          pluginConfig.rootValueType || "undefined",
-          "RootValueType"
+        contextType: parseMapper(
+          pluginConfig.contextType || "DefaultContext",
+          "DefaultContext"
         ),
         baseSchemaTypesImportName: getConfigValue(
           pluginConfig.baseSchemaTypesImportName,
@@ -481,9 +484,12 @@ export class LocalStateVisitor extends BaseResolversVisitor<
         name: node.name as any,
         modifier: avoidResolverOptionals ? "" : "?",
         type: resolverType,
-        genericTypes: [mappedTypeKey, parentTypeSignature, argsType!].filter(
-          (f) => f
-        ),
+        genericTypes: [
+          mappedTypeKey,
+          parentTypeSignature,
+          this.config.contextType.type,
+          argsType!,
+        ].filter((f) => f),
       };
 
       return indent(

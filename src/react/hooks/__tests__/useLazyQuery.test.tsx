@@ -41,7 +41,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import type { DeepPartial } from "@apollo/client/utilities/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("useLazyQuery Hook", () => {

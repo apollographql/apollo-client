@@ -25,8 +25,6 @@ import {
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import type { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-
 const IS_REACT_17 = React.version.startsWith("17");
 
 describe("useSubscription Hook", () => {
@@ -1207,13 +1205,13 @@ followed by new in-flight setup", async () => {
           wrapper,
         }
       );
-      const graphQlErrorResult: MockedSubscriptionResult = {
+      const graphQlErrorResult: MockSubscriptionLink.Result = {
         result: {
           data: { totalLikes: 42 },
           errors: [{ message: "test" }],
         },
       };
-      const protocolErrorResult: MockedSubscriptionResult = {
+      const protocolErrorResult: MockSubscriptionLink.Result = {
         error: new Error("Socket closed with event -1: I'm a test!"),
       };
       return {

@@ -587,7 +587,7 @@ export class ObservableQuery<
           // See https://github.com/apollographql/apollo-client/issues/11400 for more
           // information on this issue.
           (previousResult.error ||
-            // Prevent scheduled reads directly after the `ObservableQuery`
+            // Prevent to schedule a notify directly after the `ObservableQuery`
             // has been `reset` (which will set the `previousResult` to `uninitialized` or `empty`)
             // as in those cases, `resetCache` will manually call `refetch` with more intentional timing.
             previousResult === uninitialized ||

@@ -446,9 +446,13 @@ function useResubscribeIfNecessary<
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult
     // usually does.
+    const result = observable.getCurrentResult();
+
+    if (!equal(result.data, resultData.current.data)) {
     resultData.previousData =
       resultData.current.data || resultData.previousData;
-    resultData.current = observable.getCurrentResult();
+    }
+    resultData.current = result;
   }
   observable[lastWatchOptions] = watchQueryOptions;
 }

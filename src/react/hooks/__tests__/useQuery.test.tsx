@@ -1974,12 +1974,7 @@ describe("useQuery Hook", () => {
       await rerender({ skip: true });
 
       await expect(renderStream).toRerenderWithSimilarSnapshot({
-        expected(previous) {
-          return {
-            ...previous,
-            previousData: previous.data,
-          };
-        },
+        /* equal result */
       });
 
       await expect(takeSnapshot).not.toRerender({ timeout: 100 });
@@ -1993,7 +1988,7 @@ describe("useQuery Hook", () => {
           data: { hello: "world 1" },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 1" },
+          previousData: undefined,
           variables: {},
         });
       }

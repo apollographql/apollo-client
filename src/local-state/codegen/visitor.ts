@@ -359,7 +359,6 @@ export class LocalStateVisitor extends BaseResolversVisitor<
       suffix: this.config.resolverTypeSuffix,
     });
     const typeName = node.name as any as string;
-    const parentType = this.getParentTypeToUse(typeName);
 
     const rootType = ((): false | "query" | "mutation" | "subscription" => {
       if (this.schema.getQueryType()?.name === typeName) {

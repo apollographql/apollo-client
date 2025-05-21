@@ -21,6 +21,7 @@ import { Observable } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
+import type { OperatorFunction } from 'rxjs';
 import type { QueryOptions } from '@apollo/client';
 import type { QueryResult } from '@apollo/client';
 import type { Reference } from '@apollo/client/utilities';
@@ -159,6 +160,12 @@ type Directives = {
         [argName: string]: any;
     };
 };
+
+// @public (undocumented)
+export function filterMap<T, R>(fn: (value: T, context: undefined) => R | undefined): OperatorFunction<T, R>;
+
+// @public (undocumented)
+export function filterMap<T, R, Context>(fn: (value: T, context: Context) => R | undefined, makeContext: () => NoInfer<Context>): OperatorFunction<T, R>;
 
 // @internal @deprecated
 export interface FragmentMap {

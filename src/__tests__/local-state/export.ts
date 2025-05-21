@@ -769,11 +769,12 @@ describe("@client @export tests", () => {
       data: { currentAuthorId },
     });
 
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
     });
 
     await expect(stream).toEmitTypedValue({
@@ -850,7 +851,12 @@ describe("@client @export tests", () => {
       data: { postCount: testPostCount2 },
     });
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        data: { ...previous.data!, postCount: testPostCount2 },
+      }),
+    });
     expect(fetchCount).toBe(1);
   });
 
@@ -1007,11 +1013,12 @@ describe("@client @export tests", () => {
       },
     });
 
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      }),
     });
 
     await expect(stream).toEmitTypedValue({

@@ -88,7 +88,7 @@
     "ci:precheck": "node config/precheck.ts",
     "format": "prettier --write .",
     "lint": "EXTENDED_RULES=1 eslint 'src/**/*.{[jt]s,[jt]sx}'",
-    "test": "node --expose-gc --experimental-import-meta-resolve ./node_modules/jest/bin/jest.js --config ./config/jest.config.ts",
+    "test": "node --expose-gc --experimental-import-meta-resolve --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --config ./config/jest.config.ts",
     "test:type-benches": "find src -name '*.bench.ts' | xargs -n1 tsx",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.ts --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",

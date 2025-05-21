@@ -530,7 +530,7 @@ describe("ApolloClient", () => {
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 20);
+        }, 30);
 
         return () => {
           onRequestUnsubscribe();
@@ -580,7 +580,7 @@ describe("ApolloClient", () => {
     stream.unsubscribe();
 
     // Now validate that both requests unsubscribe
-    await wait(20);
+    await wait(30);
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });
@@ -4012,14 +4012,15 @@ describe("ApolloClient", () => {
       const link: ApolloLink = new ApolloLink(
         (op) =>
           new Observable((observer) => {
-            timesFired += 1;
-            if (timesFired > 1) {
-              observer.next({ data: data2 });
-            } else {
-              observer.next({ data });
-            }
-            observer.complete();
-            return;
+            setTimeout(() => {
+              timesFired += 1;
+              if (timesFired > 1) {
+                observer.next({ data: data2 });
+              } else {
+                observer.next({ data });
+              }
+              observer.complete();
+            });
           })
       );
       const client = new ApolloClient({
@@ -4028,6 +4029,12 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4572,14 +4579,15 @@ describe("ApolloClient", () => {
       const link = new ApolloLink(
         (op) =>
           new Observable((observer) => {
-            timesFired += 1;
-            if (timesFired > 1) {
-              observer.next({ data: data2 });
-            } else {
-              observer.next({ data });
-            }
-            observer.complete();
-            return;
+            setTimeout(() => {
+              timesFired += 1;
+              if (timesFired > 1) {
+                observer.next({ data: data2 });
+              } else {
+                observer.next({ data });
+              }
+              observer.complete();
+            });
           })
       );
       const client = new ApolloClient({
@@ -4588,6 +4596,13 @@ describe("ApolloClient", () => {
       });
       const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data,
@@ -4665,7 +4680,7 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(1);
     });
 
-    it("should not error after reFetchObservableQueries", async () => {
+    it("should not error after refetchObservableQueries", async () => {
       const query = gql`
         query {
           author {
@@ -6516,6 +6531,7 @@ describe("ApolloClient", () => {
       });
 
       expect(finishedRefetch).toBe(true);
+
       await expect(stream).toEmitTypedValue({
         data: secondReqData,
         loading: false,

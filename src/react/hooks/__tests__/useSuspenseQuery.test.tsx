@@ -50,6 +50,7 @@ import type {
 } from "@apollo/client/testing/internal";
 import {
   actAsync,
+  createClientWrapper,
   renderAsync,
   renderHookAsync,
   setupPaginatedCase,
@@ -181,7 +182,7 @@ function useSimpleQueryCase() {
   return { query, mocks };
 }
 
-function usePaginatedCase() {
+declare namespace usePaginatedCase {
   interface QueryData {
     letters: {
       letter: string;
@@ -193,8 +194,12 @@ function usePaginatedCase() {
     limit?: number;
     offset?: number;
   }
-
-  const query: TypedDocumentNode<QueryData, Variables> = gql`
+}
+function usePaginatedCase({ delay = 10 } = {}) {
+  const query: TypedDocumentNode<
+    usePaginatedCase.QueryData,
+    usePaginatedCase.Variables
+  > = gql`
     query letters($limit: Int, $offset: Int) {
       letters(limit: $limit) {
         letter
@@ -217,7 +222,7 @@ function usePaginatedCase() {
       setTimeout(() => {
         observer.next({ data: { letters } });
         observer.complete();
-      }, 10);
+      }, delay);
     });
   });
 
@@ -4829,47 +4834,85 @@ describe("useSuspenseQuery", () => {
   });
 
   it("re-suspends when calling `fetchMore` with different variables", async () => {
-    const { data, query, link } = usePaginatedCase();
+    const { data, query, link } = usePaginatedCase({ delay: 150 });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-    const { result, renders } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { variables: { limit: 2 } }),
-      { link }
-    );
+    const renderStream = createRenderStream<
+      useSuspenseQuery.Result<
+        usePaginatedCase.QueryData,
+        usePaginatedCase.Variables
+      >
+    >({ skipNonTrackingRenders: true });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    function Component() {
+      useTrackRenders();
+      renderStream.replaceSnapshot(
+        useSuspenseQuery(query, { variables: { limit: 2 } })
+      );
+      return <div />;
+    }
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <p>Loading</p>;
+    }
+    function ErrorFallback() {
+      useTrackRenders();
+      return <p>Error</p>;
+    }
+    function App() {
+      useTrackRenders();
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary fallback={<ErrorFallback />}>
+            <Component />
+          </ErrorBoundary>
+        </Suspense>
+      );
+    }
+
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
+
+    {
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toStrictEqualTyped({
         data: { letters: data.slice(0, 2) },
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await actAsync(async () => {
-      await result.current.fetchMore({ variables: { offset: 2 } });
-    });
+    renderStream
+      .getCurrentRender()
+      .snapshot.fetchMore({ variables: { offset: 2 } });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toStrictEqualTyped({
         data: { letters: data.slice(2, 4) },
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(2);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: { letters: data.slice(0, 2) },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { letters: data.slice(2, 4) },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    await expect(renderStream).not.toRerender();
   });
 
   it("properly resolves `fetchMore` when returning a result that is deeply equal to data in the cache", async () => {
@@ -6383,23 +6426,73 @@ describe("useSuspenseQuery", () => {
       data: { character: { __typename: "Character", id: "1" } },
     });
 
-    const { result, renders, rerenderAsync } = await renderSuspenseHook(
-      ({ returnPartialData }) =>
-        useSuspenseQuery(fullQuery, { returnPartialData }),
-      { cache, mocks, initialProps: { returnPartialData: false } }
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache,
+    });
+
+    const renderStream = createRenderStream<useSuspenseQuery.Result>();
+
+    function Component({ returnPartialData }: { returnPartialData: boolean }) {
+      useTrackRenders();
+      renderStream.replaceSnapshot(
+        useSuspenseQuery(fullQuery, { returnPartialData })
+      );
+      return <div />;
+    }
+    function SuspenseFallback() {
+      useTrackRenders();
+      return <p>Loading</p>;
+    }
+    function ErrorFallback() {
+      useTrackRenders();
+      return <p>Error</p>;
+    }
+    function App({ returnPartialData }: { returnPartialData: boolean }) {
+      useTrackRenders();
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ErrorBoundary fallback={<ErrorFallback />}>
+            <Component returnPartialData={returnPartialData} />
+          </ErrorBoundary>
+        </Suspense>
+      );
+    }
+
+    using _disabledAct = disableActEnvironment();
+    const { rerender } = await renderStream.render(
+      <App returnPartialData={false} />,
+      {
+        wrapper: createClientWrapper(client),
+      }
     );
 
-    expect(renders.suspenseCount).toBe(1);
+    {
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[0].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
+    }
 
-    await rerenderAsync({ returnPartialData: true });
+    await rerender(<App returnPartialData={true} />);
+
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([App, Component]);
+      expect(snapshot).toStrictEqualTyped({
+        ...mocks[0].result,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
+    }
 
     cache.modify({
       id: cache.identify({ __typename: "Character", id: "1" }),
@@ -6408,52 +6501,25 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toStrictEqualTyped({
         data: { character: { __typename: "Character", id: "1" } },
         networkStatus: NetworkStatus.loading,
         error: undefined,
       });
-    });
+    }
 
-    await waitFor(() => {
-      expect(result.current).toStrictEqualTyped({
+    {
+      const { renderedComponents, snapshot } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([Component]);
+      expect(snapshot).toStrictEqualTyped({
         ...mocks[1].result,
         networkStatus: NetworkStatus.ready,
         error: undefined,
       });
-    });
-
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
-    expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toStrictEqualTyped([
-      {
-        data: {
-          character: {
-            __typename: "Character",
-            id: "1",
-            name: "Doctor Strange",
-          },
-        },
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        ...mocks[0].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-      {
-        data: { character: { __typename: "Character", id: "1" } },
-        networkStatus: NetworkStatus.loading,
-        error: undefined,
-      },
-      {
-        ...mocks[1].result,
-        networkStatus: NetworkStatus.ready,
-        error: undefined,
-      },
-    ]);
+    }
   });
 
   it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
@@ -10743,6 +10809,7 @@ describe("useSuspenseQuery", () => {
     }
 
     const { snapshot } = renderStream.getCurrentRender();
+
     snapshot.result!.fetchMore({ variables: { offset: 2 } }).catch(() => {});
 
     {

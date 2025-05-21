@@ -2560,14 +2560,14 @@ describe("client", () => {
     expect(onResetStoreOne).toHaveBeenCalled();
   });
 
-  it("has a reFetchObservableQueries method which calls QueryManager", async () => {
+  it("has a refetchObservableQueries method which calls QueryManager", async () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
     // @ts-ignore
-    const spy = jest.spyOn(client.queryManager, "reFetchObservableQueries");
+    const spy = jest.spyOn(client.queryManager, "refetchObservableQueries");
     await client.reFetchObservableQueries();
     expect(spy).toHaveBeenCalled();
   });
@@ -2725,16 +2725,10 @@ describe("client", () => {
 
     stream.unsubscribe();
 
-    const lastError = observable.getLastError();
+    const lastError = observable.getCurrentResult().error;
     expect(lastError).toBeInstanceOf(Error);
     expect(lastError).toEqual(new Error("This is an error!"));
 
-    const lastResult = observable.getLastResult();
-    expect(lastResult).toBeTruthy();
-    expect(lastResult!.loading).toBe(false);
-    expect(lastResult!.networkStatus).toBe(8);
-
-    observable.resetLastResults();
     stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
@@ -3371,18 +3365,6 @@ describe("@connection", () => {
       partial: false,
     });
 
-    // Since the ObservableQuery skips results that are the same as the
-    // previous result, and nothing is actually changing about the
-    // ROOT_QUERY.a field, clear previous results to give the invalidated
-    // results a chance to be delivered.
-    obsQueries.forEach((obsQuery) => obsQuery.resetLastResults());
-
-    // Verify that resetting previous results did not trigger the delivery
-    // of any new results, by itself.
-    await expect(aStream).not.toEmitAnything({ timeout: 10 });
-    await expect(bStream).not.toEmitAnything({ timeout: 10 });
-    await expect(abStream).not.toEmitAnything({ timeout: 10 });
-
     // Now invalidate the ROOT_QUERY.a field.
     client.cache.evict({ fieldName: "a" });
 
@@ -3636,12 +3618,14 @@ describe("@connection", () => {
         link: new ApolloLink(
           () =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  count: networkCounter++,
-                },
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    count: networkCounter++,
+                  },
+                });
+                observer.complete();
               });
-              observer.complete();
             })
         ),
         cache: new InMemoryCache(),
@@ -3733,10 +3717,10 @@ describe("@connection", () => {
       client.cache.evict({ fieldName: "count" });
 
       await expect(stream).toEmitTypedValue({
-        data: undefined,
+        data: { count: "secondary" },
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
+        partial: false,
       });
 
       await expect(stream).toEmitTypedValue({
@@ -3758,12 +3742,14 @@ describe("@connection", () => {
         link: new ApolloLink(
           () =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  linkCount: ++linkCount,
-                },
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    linkCount: ++linkCount,
+                  },
+                });
+                observer.complete();
               });
-              observer.complete();
             })
         ),
         defaultOptions: {
@@ -3793,6 +3779,13 @@ describe("@connection", () => {
       });
 
       const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },
@@ -5355,7 +5348,7 @@ describe("custom document transforms", () => {
 
     await expect(stream).toEmitTypedValue({
       data: {
-        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+        products: [{ __typename: "Product", id: 1 }],
       },
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
@@ -5546,7 +5539,7 @@ describe("custom document transforms", () => {
     await expect(stream).toEmitTypedValue({
       data: {
         currentUser: { id: 1 },
-        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+        products: [{ __typename: "Product", id: 1 }],
       },
       loading: true,
       networkStatus: NetworkStatus.fetchMore,

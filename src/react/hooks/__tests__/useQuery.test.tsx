@@ -1741,7 +1741,7 @@ describe("useQuery Hook", () => {
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
         const { observable } = getCurrentSnapshot();
-        expect(obsQueries.size).toBe(2);
+        expect(obsQueries.size).toBe(1);
 
         const activeSet = new Set<typeof observable>();
         const inactiveSet = new Set<typeof observable>();
@@ -4618,7 +4618,7 @@ describe("useQuery Hook", () => {
         });
 
         // Ensure we store the merged result as the last result
-        expect(result.observable.getCurrentResult(false).data).toEqual({
+        expect(result.observable.getCurrentResult().data).toEqual({
           letters: [
             { __typename: "Letter", letter: "A", position: 1 },
             { __typename: "Letter", letter: "B", position: 2 },
@@ -4693,7 +4693,7 @@ describe("useQuery Hook", () => {
           variables: { limit: 2 },
         });
 
-        expect(result.observable.getCurrentResult(false).data).toEqual({
+        expect(result.observable.getCurrentResult().data).toEqual({
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },
@@ -5114,7 +5114,7 @@ describe("useQuery Hook", () => {
       // ensure we aren't setting a value on the observable query that contains
       // the partial result
       expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)!
+        snapshot.useQueryResult?.observable.getCurrentResult()!
       ).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
@@ -5177,7 +5177,7 @@ describe("useQuery Hook", () => {
       // ensure we aren't setting a value on the observable query that contains
       // the partial result
       expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)!
+        snapshot.useQueryResult?.observable.getCurrentResult()!
       ).toStrictEqualTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
@@ -5938,7 +5938,18 @@ describe("useQuery Hook", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult!).toStrictEqualTyped({
-        data: undefined,
+        data: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee",
+            post: {
+              __typename: "Post",
+              id: 1,
+              title: "Title",
+            },
+          },
+        },
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: {
@@ -6995,10 +7006,11 @@ describe("useQuery Hook", () => {
       );
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
+      const renderStream = await renderHookToSnapshotStream(
         () => useQuery(query, { variables: { id: entityId } }),
         { wrapper }
       );
+      const { takeSnapshot } = renderStream;
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
         data: undefined,
@@ -10160,6 +10172,20 @@ describe("useQuery Hook", () => {
       previousData: undefined,
       variables: {},
     });
+
+    if (IS_REACT_17) {
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        error: new CombinedGraphQLErrors({
+          data: { user: { __typename: "User", id: "1", name: null } },
+          errors: [graphQLError],
+        }),
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,

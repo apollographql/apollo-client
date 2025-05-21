@@ -738,7 +738,7 @@ export class ApolloClient implements DataProxy {
   public reFetchObservableQueries(
     includeStandby?: boolean
   ): Promise<QueryResult<any>[]> {
-    return this.queryManager.reFetchObservableQueries(includeStandby);
+    return this.queryManager.refetchObservableQueries(includeStandby);
   }
 
   /**

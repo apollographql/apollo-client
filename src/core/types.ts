@@ -1,4 +1,5 @@
 import type { DocumentNode } from "graphql";
+import type { NextNotification, ObservableNotification } from "rxjs";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
@@ -259,4 +260,30 @@ export interface QueryResult<TData = unknown> {
 
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ErrorLike;
+}
+
+export declare namespace QueryNotification {
+  type NewNetworkStatus<TData> = NextNotification<{
+    resetError?: boolean;
+  }> & {
+    source: "newNetworkStatus";
+  };
+
+  type SetResult<TData> = NextNotification<ApolloQueryResult<TData>> & {
+    source: "setResult";
+  };
+
+  type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> & {
+    source: "network";
+  };
+
+  type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> & {
+    source: "cache";
+  };
+
+  type Value<TData> =
+    | FromCache<TData>
+    | FromNetwork<TData>
+    | NewNetworkStatus<TData>
+    | SetResult<TData>;
 }

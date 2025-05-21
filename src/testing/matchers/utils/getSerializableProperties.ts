@@ -9,15 +9,22 @@ export function getSerializableProperties(
   obj: unknown,
   {
     includeKnownClassInstances = false,
-  }: { includeKnownClassInstances?: boolean } = {}
+  }: {
+    includeKnownClassInstances?: boolean;
+  } = {}
 ): any {
   if (Array.isArray(obj)) {
-    return obj.map((item) => getSerializableProperties(item));
+    return obj.map((item) =>
+      getSerializableProperties(item, {
+        includeKnownClassInstances,
+      })
+    );
   }
 
   if (isPlainObject(obj)) {
-    return Object.entries(obj).reduce(
-      (memo, [key, value]) => {
+    return [...Object.keys(obj), ...Object.getOwnPropertySymbols(obj)].reduce(
+      (memo, key) => {
+        const value = obj[key as any];
         if (
           typeof value === "function" ||
           (!includeKnownClassInstances && isKnownClassInstance(value))
@@ -25,6 +32,15 @@ export function getSerializableProperties(
           return memo;
         }
 
+        // Recurse if we have a nested object/array
+        if (isPlainObject(value) || Array.isArray(value)) {
+          return {
+            ...memo,
+            [key]: getSerializableProperties(value, {
+              includeKnownClassInstances,
+            }),
+          };
+        }
         return { ...memo, [key]: value };
       },
       {} as Record<string, any>

@@ -430,6 +430,7 @@ Array [
   "createRejectedPromise",
   "dealias",
   "decoratePromise",
+  "filterMap",
   "getApolloCacheMemoryInternals",
   "getApolloClientMemoryInternals",
   "getDefaultValues",

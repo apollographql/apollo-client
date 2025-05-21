@@ -1,24 +1,36 @@
 import type {
   NextRenderOptions,
   RenderStream,
+  SnapshotStream,
 } from "@testing-library/react-render-stream";
 import { WaitForRenderTimeoutError } from "@testing-library/react-render-stream";
 import type { MatcherContext } from "expect";
 import type { MatcherFunction } from "expect";
 
-interface ToRerenderWithSimilarSnapshotOptions<T>
+import { getSerializableProperties } from "./utils/getSerializableProperties.js";
+
+export interface ToRerenderWithSimilarSnapshotOptions<T>
   extends Partial<NextRenderOptions> {
-  compare(previous: T, current: T): boolean;
+  expected?(previous: T): T;
 }
 
-export const toRerenderWithSimilarSnapshot: MatcherFunction<
-  [options: ToRerenderWithSimilarSnapshotOptions<any>]
-> = async function toRerenderWithSimilarSnapshot(
+export type ToEmitSimilarValueOptions<T> =
+  ToRerenderWithSimilarSnapshotOptions<T>;
+
+export type CommonStream<T = unknown> = {
+  getCurrent(): undefined | T;
+  takeNext(options: Partial<NextRenderOptions>): Promise<T>;
+};
+
+export const toEmitSimilarValue = async function toEmitSimilarValue(
   this: MatcherContext,
   actual,
-  options
+  {
+    expected: getExpected = (previous) => previous,
+    ...options
+  }: ToEmitSimilarValueOptions<any> = {}
 ) {
-  const stream = actual as RenderStream<any>;
+  const stream = actual as CommonStream;
   const hint = this.utils.matcherHint(
     "toRerenderWithSimilarSnapshot",
     undefined,
@@ -28,10 +40,29 @@ export const toRerenderWithSimilarSnapshot: MatcherFunction<
     }
   );
   let pass = true;
-  const previousResult = stream.getCurrentRender();
+  const previousResult = stream.getCurrent();
+  let reason = "rerender.";
   try {
-    const nextResult = await stream.takeRender({ timeout: 100, ...options });
-    pass = options.compare(previousResult.snapshot, nextResult.snapshot);
+    const expected = getSerializableProperties(getExpected(previousResult));
+    const nextResult = await stream.takeNext({ timeout: 100, ...options });
+    const received = getSerializableProperties(nextResult);
+
+    pass = this.equals(
+      expected,
+      received,
+      // https://github.com/jestjs/jest/blob/22029ba06b69716699254bb9397f2b3bc7b3cf3b/packages/expect/src/matchers.ts#L62-L67
+      [...this.customTesters, this.utils.iterableEquality],
+      true
+    );
+    reason =
+      "match: \n" +
+      this.utils.printDiffOrStringify(
+        expected,
+        received,
+        "Expected",
+        "Received",
+        true
+      );
   } catch (e) {
     if (e instanceof WaitForRenderTimeoutError) {
       pass = false;
@@ -46,16 +77,17 @@ export const toRerenderWithSimilarSnapshot: MatcherFunction<
       return (
         `${hint}\n\nExpected component to${
           pass ? " not" : ""
-        } rerender, with a similar snapshot by comparison function` +
-        `but it did${pass ? "" : " not"}.`
+        } rerender, with a similar result ` +
+        `but it did${pass ? "" : " not"} ${reason}`
       );
     },
+    reason,
   };
-};
+} satisfies MatcherFunction<[options?: ToEmitSimilarValueOptions<any>]>;
 
-export const toRerenderWithStrictEqualSnapshot: MatcherFunction<
+export const toRerenderWithSimilarSnapshot: MatcherFunction<
   [options?: NextRenderOptions]
-> = async function toRerenderWithStrictEqualSnapshot(
+> = async function toRerenderWithSimilarSnapshot(
   this: MatcherContext,
   actual,
   options
@@ -68,17 +100,19 @@ export const toRerenderWithStrictEqualSnapshot: MatcherFunction<
       isNot: this.isNot,
     }
   );
-  const { pass } = await toRerenderWithSimilarSnapshot.call(this, actual, {
-    ...options,
-    compare: (previous, current) =>
-      this.equals(
-        previous,
-        current,
-        // https://github.com/jestjs/jest/blob/22029ba06b69716699254bb9397f2b3bc7b3cf3b/packages/expect/src/matchers.ts#L62-L67
-        [...this.customTesters, this.utils.iterableEquality],
-        true
-      ),
-  });
+  const stream = actual as RenderStream<any> | SnapshotStream<any, any>;
+  const common: CommonStream =
+    "getCurrentRender" in stream ?
+      {
+        getCurrent: () => stream.getCurrentRender()?.snapshot,
+        takeNext: (options) =>
+          stream.takeRender(options).then((result) => result.snapshot),
+      }
+    : {
+        getCurrent: () => stream.getCurrentSnapshot(),
+        takeNext: () => stream.takeSnapshot(),
+      };
+  const { pass, reason } = await toEmitSimilarValue.call(this, common, options);
 
   return {
     pass,
@@ -86,9 +120,11 @@ export const toRerenderWithStrictEqualSnapshot: MatcherFunction<
       return (
         `${hint}\n\nExpected component to${
           pass ? " not" : ""
-        } rerender, with a strict equal snapshot` +
-        `but it did${pass ? "" : " not"}.`
+        } rerender, with a similar snapshot ` +
+        `but it was${pass ? "" : " not"} ${reason}`
       );
     },
   };
-};
+} satisfies MatcherFunction<
+  [options?: ToRerenderWithSimilarSnapshotOptions<any>]
+>;

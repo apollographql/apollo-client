@@ -43,13 +43,9 @@ export const toEmitSimilarValue = async function toEmitSimilarValue(
   const previousResult = stream.getCurrent();
   let reason = "rerender.";
   try {
-    const expected = getSerializableProperties(getExpected(previousResult), {
-      skipUnknownInstances: true,
-    });
+    const expected = getSerializableProperties(getExpected(previousResult));
     const nextResult = await stream.takeNext({ timeout: 100, ...options });
-    const received = getSerializableProperties(nextResult, {
-      skipUnknownInstances: true,
-    });
+    const received = getSerializableProperties(nextResult);
 
     pass = this.equals(
       expected,

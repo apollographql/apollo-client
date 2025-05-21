@@ -22,8 +22,9 @@ export function getSerializableProperties(
   }
 
   if (isPlainObject(obj)) {
-    return Object.entries(obj).reduce(
-      (memo, [key, value]) => {
+    return [...Object.keys(obj), ...Object.getOwnPropertySymbols(obj)].reduce(
+      (memo, key) => {
+        const value = obj[key as any];
         if (
           typeof value === "function" ||
           (!includeKnownClassInstances && isKnownClassInstance(value))

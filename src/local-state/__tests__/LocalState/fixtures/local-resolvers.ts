@@ -1,8 +1,8 @@
 /* eslint-disable */
 import * as BaseSchemaTypes from "./base-types.js";
 import { LocalState } from "@apollo/client/local-state";
-import { ContextValue } from "./context-value.js";
 import { DeepPartial } from "@apollo/client/utilities";
+import { ContextValue } from "./context-value.js";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {
@@ -81,7 +81,7 @@ export type ResolversParentTypes = {
   Int: Scalars["Int"]["output"];
   Query: DeepPartial<BaseSchemaTypes.Query>;
   String: Scalars["String"]["output"];
-  User: Omit<BaseSchemaTypes.User, "isLoggedIn" | "favoriteFood">;
+  User: Omit<DeepPartial<BaseSchemaTypes.User>, "isLoggedIn" | "favoriteFood">;
 };
 
 export type FoodResolvers = {

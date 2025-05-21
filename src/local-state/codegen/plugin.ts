@@ -75,7 +75,8 @@ export const plugin: PluginFunction<
   }
 
   prepend.push(
-    `${importType} { LocalState } from '@apollo/client/local-state'`
+    `${importType} { LocalState } from '@apollo/client/local-state'`,
+    `${importType} { DeepPartial } from '@apollo/client/utilities';`
   );
 
   prepend.push(...mappersImports, ...visitor.globalDeclarations);

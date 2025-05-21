@@ -155,12 +155,6 @@ export class LocalStateVisitor extends BaseResolversVisitor<
 
       if (isRootType) {
         if (this.config.extendedTypes.has(typeName)) {
-          this._globalDeclarations.add(
-            `${
-              this.config.useTypeImports ? "import type" : "import"
-            } { DeepPartial } from '@apollo/client/utilities';`
-          );
-
           prev[typeName] = applyWrapper(
             `DeepPartial<${this.config.baseSchemaTypesImportName}.${typeName}>`
           );
@@ -268,7 +262,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
               // the local fields out ensures a more accurate type in this
               // situation.
               localFieldNames.length > 0 ?
-                `Omit<${baseType}, ${localFieldNames.join(" | ")}>`
+                `Omit<DeepPartial<${baseType}>, ${localFieldNames.join(" | ")}>`
               : baseType;
           } else {
             prev[typeName] = applyWrapper(internalType);

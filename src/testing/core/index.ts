@@ -14,5 +14,4 @@ export {
   MockSubscriptionLink,
 } from "./mocking/mockSubscriptionLink.js";
 export { createMockClient } from "./mocking/mockClient.js";
-export { tick } from "./wait.js";
 export { withErrorSpy, withLogSpy, withWarningSpy } from "./withConsoleSpy.js";

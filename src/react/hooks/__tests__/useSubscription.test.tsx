@@ -18,7 +18,7 @@ import {
 } from "@apollo/client/errors";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider, useSubscription } from "@apollo/client/react";
-import { MockSubscriptionLink, tick } from "@apollo/client/testing";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockMultipartSubscriptionStream,
   wait,
@@ -1780,7 +1780,7 @@ describe("`restart` callback", () => {
     }
 
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
-    await tick();
+    await wait(0);
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
@@ -1874,7 +1874,7 @@ describe("ignoreResults", () => {
     });
 
     link.simulateResult(results[0]);
-    await tick();
+    await wait(0);
 
     expect(onData).toHaveBeenCalledTimes(1);
     expect(onData).toHaveBeenLastCalledWith({
@@ -1890,7 +1890,7 @@ describe("ignoreResults", () => {
     expect(onComplete).toHaveBeenCalledTimes(0);
 
     link.simulateResult(results[1], true);
-    await tick();
+    await wait(0);
 
     expect(onData).toHaveBeenCalledTimes(2);
     expect(onData).toHaveBeenLastCalledWith({
@@ -1944,7 +1944,7 @@ describe("ignoreResults", () => {
     });
 
     link.simulateResult(results[0]);
-    await tick();
+    await wait(0);
 
     expect(onData).toHaveBeenCalledTimes(1);
     expect(onData).toHaveBeenLastCalledWith({
@@ -1961,7 +1961,7 @@ describe("ignoreResults", () => {
 
     const error = new Error("test");
     link.simulateResult({ error });
-    await tick();
+    await wait(0);
 
     expect(onData).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledTimes(1);

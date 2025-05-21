@@ -10,7 +10,6 @@ export {
   mockSingleLink,
   MockSubscriptionLink,
   realisticDelay,
-  tick,
   withErrorSpy,
   withLogSpy,
   withWarningSpy,

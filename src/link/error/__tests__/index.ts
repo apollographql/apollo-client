@@ -12,12 +12,12 @@ import {
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ErrorLink, onError } from "@apollo/client/link/error";
-import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   mockDeferStream,
   mockMultipartSubscriptionStream,
   ObservableStream,
+  wait,
 } from "@apollo/client/testing/internal";
 
 describe("error handling", () => {

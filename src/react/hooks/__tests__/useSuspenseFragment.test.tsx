@@ -19,8 +19,12 @@ import type {
 } from "@apollo/client";
 import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
 import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
-import { MockSubscriptionLink, wait } from "@apollo/client/testing";
-import { renderAsync, spyOnConsole } from "@apollo/client/testing/internal";
+import { MockSubscriptionLink } from "@apollo/client/testing";
+import {
+  renderAsync,
+  spyOnConsole,
+  wait,
+} from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 

@@ -37,7 +37,6 @@ import {
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
-  wait,
 } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -54,6 +53,7 @@ import {
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import {

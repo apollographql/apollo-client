@@ -9,11 +9,11 @@ import {
   MockLink,
   mockObservableLink,
   mockSingleLink,
-  wait,
 } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 
 const isSub = (operation: Operation) =>

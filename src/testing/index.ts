@@ -11,7 +11,6 @@ export {
   MockSubscriptionLink,
   realisticDelay,
   tick,
-  wait,
   withErrorSpy,
   withLogSpy,
   withWarningSpy,

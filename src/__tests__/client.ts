@@ -35,10 +35,11 @@ import {
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
-import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
+import { MockLink, mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import {
   DocumentTransform,

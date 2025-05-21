@@ -45,12 +45,12 @@ import {
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
-  wait,
 } from "@apollo/client/testing";
 import {
   enableFakeTimers,
   setupPaginatedCase,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import type { Reference } from "@apollo/client/utilities";

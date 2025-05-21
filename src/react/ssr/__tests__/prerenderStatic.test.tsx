@@ -23,8 +23,8 @@ import {
 } from "@apollo/client/react";
 import { prerenderStatic } from "@apollo/client/react/ssr";
 import type { MockedResponse } from "@apollo/client/testing";
-import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
-import { resetApolloContext } from "@apollo/client/testing/internal";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import { resetApolloContext, wait } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 beforeEach(() => {

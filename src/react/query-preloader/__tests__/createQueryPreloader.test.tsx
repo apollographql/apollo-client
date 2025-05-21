@@ -32,7 +32,7 @@ import type {
 } from "@apollo/client/react/internal";
 import { unwrapQueryRef } from "@apollo/client/react/internal";
 import type { MockedResponse } from "@apollo/client/testing";
-import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   MaskedVariablesCaseData,
   SimpleCaseData,
@@ -45,6 +45,7 @@ import {
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities/internal";
 

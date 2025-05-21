@@ -18,8 +18,11 @@ import {
 } from "@apollo/client/errors";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider, useSubscription } from "@apollo/client/react";
-import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
-import { mockMultipartSubscriptionStream } from "@apollo/client/testing/internal";
+import { MockSubscriptionLink, tick } from "@apollo/client/testing";
+import {
+  mockMultipartSubscriptionStream,
+  wait,
+} from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";

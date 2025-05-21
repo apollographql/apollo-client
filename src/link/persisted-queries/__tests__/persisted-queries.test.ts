@@ -12,10 +12,10 @@ import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
-import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  wait,
 } from "@apollo/client/testing/internal";
 
 // Necessary configuration in order to mock multiple requests

@@ -38,13 +38,14 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing";
-import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type { SimpleCaseData } from "@apollo/client/testing/internal";
 import {
   renderAsync,
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import type { MockedProviderProps } from "@apollo/client/testing/react";
 import { MockedProvider } from "@apollo/client/testing/react";

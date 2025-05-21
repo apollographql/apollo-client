@@ -3,8 +3,8 @@ import { gql } from "graphql-tag";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { MockSubscriptionLink, wait } from "@apollo/client/testing/core";
-import { ObservableStream } from "@apollo/client/testing/internal";
+import { MockSubscriptionLink } from "@apollo/client/testing/core";
+import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {

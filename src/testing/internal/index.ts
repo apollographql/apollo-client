@@ -34,3 +34,5 @@ export {
   createOperationWithDefaultContext,
   executeWithDefaultContext,
 } from "./link.js";
+
+export { wait } from "./wait.js";

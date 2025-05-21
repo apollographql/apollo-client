@@ -42,7 +42,6 @@ import {
   skipToken,
   useSuspenseQuery,
 } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -79,7 +78,7 @@ type RenderSuspenseHookOptions<Props> = Omit<
   client?: ApolloClient;
   link?: ApolloLink;
   cache?: ApolloCache;
-  mocks?: MockedResponse[];
+  mocks?: MockLink.MockedResponse[];
   strictMode?: boolean;
 };
 
@@ -254,7 +253,7 @@ function useErrorCase<TData extends ErrorCaseData>({
     }
   `;
 
-  const mock: MockedResponse<TData> = compact({
+  const mock: MockLink.MockedResponse<TData> = compact({
     request: { query },
     result: (data || graphQLErrors) && compact({ data, errors: graphQLErrors }),
     error: networkError,
@@ -4317,7 +4316,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -5826,7 +5825,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -5930,7 +5929,7 @@ describe("useSuspenseQuery", () => {
         }
       }
     `;
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -6030,7 +6029,7 @@ describe("useSuspenseQuery", () => {
         }
       }
     `;
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -9776,7 +9775,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -9919,7 +9918,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -10041,7 +10040,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { offset: 0 } },
         result: {
@@ -10373,7 +10372,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { offset: 0 } },
         result: {

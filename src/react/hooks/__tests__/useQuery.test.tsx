@@ -40,7 +40,6 @@ import {
   useMutation,
   useQuery,
 } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   enableFakeTimers,
@@ -2129,7 +2128,7 @@ describe("useQuery Hook", () => {
           hello
         }
       `;
-      const mocks: MockedResponse[] = [
+      const mocks: MockLink.MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
@@ -2217,7 +2216,7 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const mocks: MockedResponse[] = [
+      const mocks: MockLink.MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
@@ -2391,7 +2390,7 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const mocks: MockedResponse[] = [
+      const mocks: MockLink.MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },

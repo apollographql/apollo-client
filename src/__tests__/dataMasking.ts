@@ -22,7 +22,6 @@ import {
 import { createFragmentRegistry } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -5045,7 +5044,7 @@ describe("observableQuery.subscribeToMore", () => {
       ${fragment}
     `;
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: { query },
         result: {
@@ -5181,7 +5180,7 @@ describe("observableQuery.subscribeToMore", () => {
       ${fragment}
     `;
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: { query },
         result: {
@@ -5331,7 +5330,7 @@ describe("observableQuery.subscribeToMore", () => {
       ${fragment}
     `;
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: { query },
         result: {

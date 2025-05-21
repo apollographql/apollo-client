@@ -23,7 +23,6 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import type { QueryRef } from "@apollo/client/react/internal";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -621,7 +620,7 @@ test("`refetch` works with startTransition", async () => {
     }
   `;
 
-  const mocks: MockedResponse[] = [
+  const mocks: MockLink.MockedResponse[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {

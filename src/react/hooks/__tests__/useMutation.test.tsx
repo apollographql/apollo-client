@@ -35,7 +35,6 @@ import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
@@ -1208,7 +1207,7 @@ describe("useMutation Hook", () => {
       },
     };
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: {
           query: CREATE_TODO_MUTATION,

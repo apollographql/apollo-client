@@ -10,7 +10,6 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -125,7 +124,7 @@ describe("mutation results", () => {
     },
   };
 
-  function setupObsQuery(...mockedResponses: MockedResponse[]) {
+  function setupObsQuery(...mockedResponses: MockLink.MockedResponse[]) {
     const client = new ApolloClient({
       link: new MockLink([
         {

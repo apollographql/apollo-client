@@ -37,7 +37,6 @@ import {
   useLoadableQuery,
   useReadQuery,
 } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type { SimpleCaseData } from "@apollo/client/testing/internal";
 import {
@@ -80,7 +79,7 @@ function useSimpleQueryCase() {
     }
   `;
 
-  const mocks: MockedResponse<SimpleQueryData>[] = [
+  const mocks: MockLink.MockedResponse<SimpleQueryData>[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
@@ -114,13 +113,13 @@ function useVariablesQueryCase() {
     `;
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
-    (name, index) => ({
-      request: { query, variables: { id: String(index + 1) } },
-      result: { data: { character: { id: String(index + 1), name } } },
-      delay: 20,
-    })
-  );
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
+    ...CHARACTERS,
+  ].map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: { data: { character: { id: String(index + 1), name } } },
+    delay: 20,
+  }));
 
   return { mocks, query };
 }
@@ -1728,7 +1727,7 @@ it("reacts to cache updates", async () => {
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
   const { query } = useSimpleQueryCase();
 
-  const mocks: MockedResponse<SimpleQueryData>[] = [
+  const mocks: MockLink.MockedResponse<SimpleQueryData>[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
@@ -2368,7 +2367,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 it("re-suspends when calling `refetch`", async () => {
   const { query } = useVariablesQueryCase();
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2459,7 +2458,7 @@ it("re-suspends when calling `refetch`", async () => {
 it("re-suspends when calling `refetch` with new variables", async () => {
   const { query } = useVariablesQueryCase();
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2549,7 +2548,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
 it("re-suspends multiple times when calling `refetch` multiple times", async () => {
   const { query } = useVariablesQueryCase();
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2656,7 +2655,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
 
   const { query } = useVariablesQueryCase();
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2826,7 +2825,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
 it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
   const { query } = useVariablesQueryCase();
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -3026,7 +3025,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     }
   `;
 
-  const mocks: MockedResponse<Data>[] = [
+  const mocks: MockLink.MockedResponse<Data>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -3436,7 +3435,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     }
   `;
 
-  const mocks: MockedResponse<Data>[] = [
+  const mocks: MockLink.MockedResponse<Data>[] = [
     {
       request: { query, variables: { offset: 0 } },
       result: {

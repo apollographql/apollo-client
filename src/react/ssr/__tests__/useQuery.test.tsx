@@ -15,7 +15,6 @@ import {
   prerenderStatic,
   renderToStringWithData,
 } from "@apollo/client/react/ssr";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink } from "@apollo/client/testing";
 import { resetApolloContext } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
@@ -355,7 +354,7 @@ describe("useQuery Hook SSR", () => {
   });
 
   it("should deduplicate `variables` with identical content, but different order", async () => {
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: {
           query: CAR_QUERY,

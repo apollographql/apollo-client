@@ -32,7 +32,6 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import type { QueryRef, QueryReference } from "@apollo/client/react/internal";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -1228,7 +1227,7 @@ it("works with startTransition to change variables", async () => {
     }
   `;
 
-  const mocks: MockedResponse<Data, Variables>[] = [
+  const mocks: MockLink.MockedResponse<Data, Variables>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -2824,7 +2823,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     }
   `;
 
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query },
       result: {
@@ -3060,7 +3059,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 it("properly handles changing options along with changing `variables`", async () => {
   const { query } = setupVariablesCase();
   const user = userEvent.setup();
-  const mocks: MockedResponse<VariablesCaseData>[] = [
+  const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
       result: {
@@ -4860,7 +4859,7 @@ describe("refetch", () => {
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
 
-    const mocks: MockedResponse<VariablesCaseData>[] = [
+    const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
       ...defaultMocks,
       {
         request: { query, variables: { id: "1" } },
@@ -5032,7 +5031,7 @@ describe("refetch", () => {
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
 
-    const mocks: MockedResponse<VariablesCaseData>[] = [
+    const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
       ...defaultMocks,
       {
         request: { query, variables: { id: "1" } },
@@ -5158,7 +5157,7 @@ describe("refetch", () => {
     using _consoleSpy = spyOnConsole("error");
     const { query, mocks: defaultMocks } = setupVariablesCase();
     const user = userEvent.setup();
-    const mocks: MockedResponse<VariablesCaseData>[] = [
+    const mocks: MockLink.MockedResponse<VariablesCaseData>[] = [
       ...defaultMocks,
       {
         request: { query, variables: { id: "1" } },
@@ -5834,7 +5833,7 @@ describe("refetch", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { id: "1" } },
         result: {
@@ -6475,7 +6474,7 @@ describe("fetchMore", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { offset: 0 } },
         result: {
@@ -6685,7 +6684,7 @@ describe("fetchMore", () => {
       }
     `;
 
-    const mocks: MockedResponse<Data, Variables>[] = [
+    const mocks: MockLink.MockedResponse<Data, Variables>[] = [
       {
         request: { query, variables: { offset: 0 } },
         result: {

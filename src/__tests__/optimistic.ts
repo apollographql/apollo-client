@@ -11,7 +11,6 @@ import type {
 import { ApolloClient, ApolloLink } from "@apollo/client";
 import type { Cache, NormalizedCacheObject } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink } from "@apollo/client/testing";
 import { ObservableStream } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
@@ -101,7 +100,7 @@ describe("optimistic mutation results", () => {
     },
   };
 
-  async function setup(...mockedResponses: MockedResponse[]) {
+  async function setup(...mockedResponses: MockLink.MockedResponse[]) {
     const link = new MockLink([
       {
         request: { query },
@@ -2253,7 +2252,7 @@ describe("optimistic mutation - githunt comments", () => {
     },
   };
 
-  async function setup(...mockedResponses: MockedResponse[]) {
+  async function setup(...mockedResponses: MockLink.MockedResponse[]) {
     const link = new MockLink([
       {
         request: {

@@ -31,7 +31,6 @@ import type {
   QueryRef,
 } from "@apollo/client/react/internal";
 import { unwrapQueryRef } from "@apollo/client/react/internal";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   MaskedVariablesCaseData,
@@ -49,7 +48,7 @@ import {
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities/internal";
 
-function createDefaultClient(mocks: MockedResponse[]) {
+function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   return new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
@@ -1680,7 +1679,7 @@ test("passes context to the link", async () => {
 test("creates unique query refs when calling preloadQuery with the same query", async () => {
   const { query } = setupSimpleCase();
 
-  const mocks: MockedResponse[] = [
+  const mocks: MockLink.MockedResponse[] = [
     {
       request: { query },
       result: { data: { greeting: "Hello" } },

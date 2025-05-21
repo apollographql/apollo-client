@@ -10,7 +10,6 @@ import type {
   InMemoryCacheConfig,
 } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -248,7 +247,7 @@ describe("fetchMore on an observable query", () => {
     });
   }
 
-  function setup(...mockedResponses: MockedResponse[]) {
+  function setup(...mockedResponses: MockLink.MockedResponse[]) {
     const link = new MockLink([
       {
         request: {
@@ -1655,7 +1654,7 @@ describe("fetchMore on an observable query with connection", () => {
     });
   }
 
-  function setup(...mockedResponses: MockedResponse[]) {
+  function setup(...mockedResponses: MockLink.MockedResponse[]) {
     const link = new MockLink([
       {
         request: {

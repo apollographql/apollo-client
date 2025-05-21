@@ -6,8 +6,9 @@ The resolver function's `context` argument (the 3rd argument) has changed to pro
 
 ```ts
 {
-  // the request context
-  requestContext: DefaultContext,
+  // the request context. By default `TContextValue` is of type `DefaultContext`,
+  // but can be changed if a `context` function is provided.
+  requestContext: TContextValue,
   // The client instance making the request
   client: ApolloClient,
   // Whether the resolver is run as a result of gathering exported variables
@@ -16,7 +17,7 @@ The resolver function's `context` argument (the 3rd argument) has changed to pro
 }
 ```
 
-To migrate, pull any request context from `context` and the `cache` from the `client` property:
+To migrate, pull any request context from `requestContext` and the `cache` from the `client` property:
 
 ```diff
 new LocalState({

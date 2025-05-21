@@ -1015,6 +1015,12 @@
 
 - [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't emit a partial cache result from `cache-only` queries when `returnPartialData` is `false`.
 
+## 3.13.8
+
+### Patch Changes
+
+- [#12567](https://github.com/apollographql/apollo-client/pull/12567) [`c19d415`](https://github.com/apollographql/apollo-client/commit/c19d41513cac0cc143aa7358f26c89c9408da102) Thanks [@thearchitector](https://github.com/thearchitector)! - Fix in-flight multipart urql subscription cancellation
+
 ## 3.13.7
 
 ### Patch Changes

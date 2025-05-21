@@ -138,52 +138,6 @@ export interface LocalStatePluginConfig extends RawConfig {
    */
   addUnderscoreToArgsType?: boolean;
   /**
-   * Use this configuration to set a custom type for the `rootValue`, and it will
-   * affect resolvers of all root types (Query, Mutation and Subscription), without the need to override it using generics each time.
-   * If you wish to use an external type and import it from another file, you can use `add` plugin
-   * and add the required `import` statement, or you can use both `module#type` or `module#namespace#type` syntax.
-   *
-   * @example
-   * ## Custom RootValue Type
-   *
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
-   *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          rootValueType: 'MyRootValue'
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
-   * ```
-   *
-   * ## Custom RootValue Type
-   *
-   * ```ts
-   *  import type { CodegenConfig } from '@graphql-codegen/cli';
-   *
-   *  const config: CodegenConfig = {
-   *    // ...
-   *    generates: {
-   *      'path/to/file': {
-   *        // plugins...
-   *        config: {
-   *          rootValueType: './my-types#MyRootValue'
-   *        },
-   *      },
-   *    },
-   *  };
-   *  export default config;
-   * ```
-   */
-  rootValueType?: string;
-  /**
    * Adds a suffix to the imported names to prevent name clashes.
    *
    * @example

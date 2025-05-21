@@ -19,7 +19,6 @@ const config: CodegenConfig = {
       ],
       config: {
         nonOptionalTypename: true,
-        rootValueType: "./rootValue.js#RootValue",
         baseTypesPath: "./base-types.js",
       },
     },

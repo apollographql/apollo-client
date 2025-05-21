@@ -7,7 +7,7 @@ import { ApolloClient } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
-import { MockSubscriptionLink } from "@apollo/client/testing/core";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 
 describe("Link interactions", () => {
   it("includes the client on the operation for eviction links", (done) => {

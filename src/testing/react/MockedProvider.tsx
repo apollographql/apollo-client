@@ -7,8 +7,8 @@ import { InMemoryCache as Cache } from "@apollo/client/cache";
 import type { ApolloLink } from "@apollo/client/link";
 import type { LocalState } from "@apollo/client/local-state";
 import { ApolloProvider } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing/core";
-import { MockLink } from "@apollo/client/testing/core";
+import type { MockedResponse } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 
 export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;

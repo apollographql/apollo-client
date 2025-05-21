@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { MockSubscriptionLink } from "@apollo/client/testing/core";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
 describe("mutiple results", () => {

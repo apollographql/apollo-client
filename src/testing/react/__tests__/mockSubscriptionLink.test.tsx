@@ -5,7 +5,7 @@ import React from "react";
 import { ApolloClient } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloProvider, useSubscription } from "@apollo/client/react";
-import { MockSubscriptionLink } from "@apollo/client/testing/core";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 
 describe("mockSubscriptionLink", () => {
   it("should work with multiple subscribers to the same mock websocket", async () => {

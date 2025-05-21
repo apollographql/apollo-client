@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 import type { TypedDocumentNode } from "@apollo/client";
 import { ApolloLink, gql } from "@apollo/client";
 import type { MaskedDocumentNode } from "@apollo/client/masking";
-import type { MockedResponse } from "@apollo/client/testing/core";
+import type { MockedResponse } from "@apollo/client/testing";
 
 export interface SimpleCaseData {
   greeting: string;

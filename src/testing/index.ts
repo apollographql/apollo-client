@@ -7,7 +7,6 @@ export {
   MockLink,
   MockSubscriptionLink,
   realisticDelay,
-  withErrorSpy,
   withLogSpy,
   withWarningSpy,
 } from "@apollo/client/testing/core";

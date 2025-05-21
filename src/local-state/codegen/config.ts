@@ -138,6 +138,54 @@ export interface LocalStatePluginConfig extends RawConfig {
    */
   addUnderscoreToArgsType?: boolean;
   /**
+   * Use this configuration to set a custom type for your `context`, and it will
+   * affect all the resolvers, without the need to override it using generics each time.
+   * If you wish to use an external type and import it from another file, you can use `add` plugin
+   * and add the required `import` statement, or you can use a `module#type` syntax.
+   *
+   * @example
+   * ## Custom Context Type
+   *
+   * ```ts filename="codegen.ts"
+   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   *
+   *  const config: CodegenConfig = {
+   *    // ...
+   *    generates: {
+   *      'path/to/file': {
+   *        // plugins...
+   *        config: {
+   *          contextType: 'MyContext'
+   *        },
+   *      },
+   *    },
+   *  };
+   *  export default config;
+   * ```
+   *
+   * ## Custom Context Type by Path
+   *
+   * Note that the path should be relative to the generated file.
+   *
+   * ```ts filename="codegen.ts"
+   *  import type { CodegenConfig } from '@graphql-codegen/cli';
+   *
+   *  const config: CodegenConfig = {
+   *    // ...
+   *    generates: {
+   *      'path/to/file': {
+   *        // plugins...
+   *        config: {
+   *          contextType: './my-types#MyContext'
+   *        },
+   *      },
+   *    },
+   *  };
+   *  export default config;
+   * ```
+   */
+  contextType?: string;
+  /**
    * Adds a suffix to the imported names to prevent name clashes.
    *
    * @example

@@ -19,6 +19,7 @@ const config: CodegenConfig = {
       ],
       config: {
         nonOptionalTypename: true,
+        contextType: "./src/local-state/__tests__/LocalState/fixtures/context-value.ts#ContextValue"
         baseTypesPath: "./base-types.js",
       },
     },

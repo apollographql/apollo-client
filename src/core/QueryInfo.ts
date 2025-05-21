@@ -14,11 +14,7 @@ import {
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { OperationVariables } from "./types.js";
-import type {
-  ErrorPolicy,
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "./watchQueryOptions.js";
+import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -162,7 +158,6 @@ export class QueryInfo {
     document: DocumentNode,
     options: {
       variables: OperationVariables;
-      fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
     },
     cacheWriteBehavior: CacheWriteBehavior
@@ -171,9 +166,7 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    const fetchPolicy = options.fetchPolicy;
-
-    if (fetchPolicy === "no-cache") {
+    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
       const diffOptions = this.getDiffOptions(options.variables);
       const lastDiff =
         this.lastDiff && equal(diffOptions, this.lastDiff.options) ?

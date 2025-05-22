@@ -4,48 +4,133 @@
 
 ```ts
 
-import { createMockClient } from '@apollo/client/testing/core';
-import { MockedResponse } from '@apollo/client/testing/core';
-import { MockLink } from '@apollo/client/testing/core';
-import { MockLinkOptions } from '@apollo/client/testing/core';
-import { mockObservableLink } from '@apollo/client/testing/core';
-import { mockSingleLink } from '@apollo/client/testing/core';
-import { MockSubscriptionLink } from '@apollo/client/testing/core';
-import { realisticDelay } from '@apollo/client/testing/core';
-import { ResultFunction } from '@apollo/client/testing/core';
-import { tick } from '@apollo/client/testing/core';
-import { wait } from '@apollo/client/testing/core';
-import { withErrorSpy } from '@apollo/client/testing/core';
-import { withLogSpy } from '@apollo/client/testing/core';
-import { withWarningSpy } from '@apollo/client/testing/core';
+import { ApolloLink } from '@apollo/client/link';
+import type { DocumentNode } from 'graphql';
+import type { FetchResult } from '@apollo/client/link';
+import { Observable } from 'rxjs';
+import type { Operation } from '@apollo/client/link';
+import type { Unmasked } from '@apollo/client/masking';
 
-export { createMockClient }
+// @internal @deprecated (undocumented)
+type CovariantUnaryFunction<out Arg, out Ret> = {
+    fn(arg: Arg): Ret;
+}["fn"];
 
-export { MockedResponse }
+// @public @deprecated (undocumented)
+export type MockedRequest<TVariables = Record<string, any>> = MockLink.MockedRequest<TVariables>;
 
-export { MockLink }
+// @public @deprecated (undocumented)
+export type MockedResponse<TData = Record<string, any>, TVariables = Record<string, any>> = MockLink.MockedResponse<TData, TVariables>;
 
-export { MockLinkOptions }
+// @public (undocumented)
+export namespace MockLink {
+    // (undocumented)
+    export interface DefaultOptions {
+        // (undocumented)
+        delay?: MockLink.Delay;
+    }
+    // (undocumented)
+    export type Delay = number | DelayFunction;
+    // (undocumented)
+    export type DelayFunction = (operation: Operation) => number;
+    // (undocumented)
+    export interface MockedRequest<TVariables = Record<string, any>> {
+        // (undocumented)
+        query: DocumentNode;
+        // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        variables?: TVariables | VariableMatcher<TVariables>;
+    }
+    // (undocumented)
+    export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
+        // (undocumented)
+        delay?: number | MockLink.DelayFunction;
+        // (undocumented)
+        error?: Error;
+        // (undocumented)
+        maxUsageCount?: number;
+        // (undocumented)
+        request: MockedRequest<TVariables>;
+        // (undocumented)
+        result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
+    }
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        defaultOptions?: DefaultOptions;
+        // (undocumented)
+        showWarnings?: boolean;
+    }
+    // Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<V, T>;
+}
 
-export { mockObservableLink }
+// @public (undocumented)
+export class MockLink extends ApolloLink {
+    constructor(mockedResponses: ReadonlyArray<MockLink.MockedResponse<Record<string, any>, Record<string, any>>>, options?: MockLink.Options);
+    // (undocumented)
+    addMockedResponse(mockedResponse: MockLink.MockedResponse): void;
+    // (undocumented)
+    static defaultOptions: MockLink.DefaultOptions;
+    // (undocumented)
+    operation: Operation;
+    // (undocumented)
+    request(operation: Operation): Observable<FetchResult> | null;
+    // (undocumented)
+    showWarnings: boolean;
+}
 
-export { mockSingleLink }
+// @public @deprecated (undocumented)
+export type MockLinkOptions = MockLink.Options;
 
-export { MockSubscriptionLink }
+// @public (undocumented)
+export namespace MockSubscriptionLink {
+    // (undocumented)
+    export interface Result {
+        // (undocumented)
+        delay?: number;
+        // (undocumented)
+        error?: Error;
+        // (undocumented)
+        result?: FetchResult;
+    }
+}
 
-export { realisticDelay }
+// @public (undocumented)
+export class MockSubscriptionLink extends ApolloLink {
+    constructor();
+    // (undocumented)
+    onSetup(listener: any): void;
+    // (undocumented)
+    onUnsubscribe(listener: any): void;
+    // (undocumented)
+    operation?: Operation;
+    // (undocumented)
+    request(operation: Operation): Observable<FetchResult>;
+    // (undocumented)
+    setups: any[];
+    // (undocumented)
+    simulateComplete(): void;
+    // (undocumented)
+    simulateResult(result: MockSubscriptionLink.Result, complete?: boolean): void;
+    // (undocumented)
+    unsubscribers: any[];
+}
 
-export { ResultFunction }
+// @public (undocumented)
+export function realisticDelay({ min, max, }?: {
+    min?: number;
+    max?: number;
+}): MockLink.DelayFunction;
 
-export { tick }
+// @public @deprecated (undocumented)
+export type ResultFunction<T, V = Record<string, any>> = MockLink.ResultFunction<T, V>;
 
-export { wait }
-
-export { withErrorSpy }
-
-export { withLogSpy }
-
-export { withWarningSpy }
+// @public (undocumented)
+type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<V, boolean>;
 
 // (No @packageDocumentation comment for this package)
 

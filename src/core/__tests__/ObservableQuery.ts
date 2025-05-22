@@ -18,10 +18,11 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
-import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import { DocumentTransform } from "@apollo/client/utilities";
 import type { DeepPartial } from "@apollo/client/utilities/internal";

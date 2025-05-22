@@ -16,10 +16,10 @@ import {
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink, HttpLink } from "@apollo/client/link/http";
-import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  wait,
 } from "@apollo/client/testing/internal";
 
 import type { ClientParseError } from "../serializeFetchParameter.js";

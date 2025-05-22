@@ -18,7 +18,7 @@ import {
   useQuery,
 } from "@apollo/client/react";
 import { getDataFromTree } from "@apollo/client/react/ssr";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {
@@ -58,11 +58,13 @@ describe("SSR", () => {
         }
       `;
       const data1 = { currentUser: { firstName: "James" } };
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: data1 },
-        delay: 50,
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: data1 },
+          delay: 50,
+        },
+      ]);
       const apolloClient = new ApolloClient({
         link,
         cache: new Cache(),
@@ -106,17 +108,19 @@ describe("SSR", () => {
           }
         }
       `;
-      const link = mockSingleLink({
-        request: { query },
-        result: {
-          data: {
-            allPeople: {
-              people: null,
+      const link = new MockLink([
+        {
+          request: { query },
+          result: {
+            data: {
+              allPeople: {
+                people: null,
+              },
             },
+            errors: [{ message: "this is an error" }],
           },
-          errors: [{ message: "this is an error" }],
         },
-      });
+      ]);
 
       const client = new ApolloClient({
         link,

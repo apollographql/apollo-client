@@ -3,10 +3,12 @@ import { Observable } from "rxjs";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
-export interface MockedSubscriptionResult {
-  result?: FetchResult;
-  error?: Error;
-  delay?: number;
+export declare namespace MockSubscriptionLink {
+  export interface Result {
+    result?: FetchResult;
+    error?: Error;
+    delay?: number;
+  }
 }
 
 export class MockSubscriptionLink extends ApolloLink {
@@ -31,7 +33,7 @@ export class MockSubscriptionLink extends ApolloLink {
     });
   }
 
-  public simulateResult(result: MockedSubscriptionResult, complete = false) {
+  public simulateResult(result: MockSubscriptionLink.Result, complete = false) {
     setTimeout(() => {
       const { observers } = this;
       if (!observers.length) throw new Error("subscription torn down");
@@ -58,8 +60,4 @@ export class MockSubscriptionLink extends ApolloLink {
   public onUnsubscribe(listener: any): void {
     this.unsubscribers = this.unsubscribers.concat([listener]);
   }
-}
-
-export function mockObservableLink(): MockSubscriptionLink {
-  return new MockSubscriptionLink();
 }

@@ -1,6 +1,5 @@
 import { gql } from "graphql-tag";
 
-import type { MockedResponse } from "@apollo/client/testing";
 import { MockLink, realisticDelay } from "@apollo/client/testing";
 import {
   enableFakeTimers,
@@ -1727,12 +1726,17 @@ test("can use `result` as callback with `maxUsageCount`", async () => {
 
 describe.skip("type tests", () => {
   const ANY = {} as any;
-  test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {
-    let unspecificArray: MockedResponse[] = [];
-    let specificArray: MockedResponse<{ foo: string }, { foo: string }>[] = [];
-    let unspecificResponse: MockedResponse = ANY;
-    let specificResponse: MockedResponse<{ foo: string }, { foo: string }> =
-      ANY;
+  test("covariant behaviour: `MockLink.MockedResponses<X,Y>` should be assignable to `MockLink.MockedResponse`", () => {
+    let unspecificArray: MockLink.MockedResponse[] = [];
+    let specificArray: MockLink.MockedResponse<
+      { foo: string },
+      { foo: string }
+    >[] = [];
+    let unspecificResponse: MockLink.MockedResponse = ANY;
+    let specificResponse: MockLink.MockedResponse<
+      { foo: string },
+      { foo: string }
+    > = ANY;
 
     unspecificArray.push(specificResponse);
     unspecificArray.push(unspecificResponse);
@@ -1756,9 +1760,9 @@ describe.skip("type tests", () => {
     specificResponse = unspecificResponse;
   });
 
-  describe("MockedResponse.result as a callback", () => {
+  describe("MockLink.MockedResponse.result as a callback", () => {
     const setup = () => {
-      const weaklyTypedMockResponse: MockedResponse = {
+      const weaklyTypedMockResponse: MockLink.MockedResponse = {
         request: {
           query: gql`
             query A {
@@ -1768,7 +1772,7 @@ describe.skip("type tests", () => {
         },
       };
 
-      const stronglyTypedMockResponse: MockedResponse<
+      const stronglyTypedMockResponse: MockLink.MockedResponse<
         { a: string },
         { input: string }
       > = {

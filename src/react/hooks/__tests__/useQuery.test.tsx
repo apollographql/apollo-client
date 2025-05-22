@@ -40,17 +40,12 @@ import {
   useMutation,
   useQuery,
 } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing";
-import {
-  MockLink,
-  mockSingleLink,
-  MockSubscriptionLink,
-  wait,
-} from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   enableFakeTimers,
   setupPaginatedCase,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import type { Reference } from "@apollo/client/utilities";
@@ -1103,7 +1098,7 @@ describe("useQuery Hook", () => {
         },
       };
 
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query: query1 },
           result: { data: allPeopleData },
@@ -1113,8 +1108,8 @@ describe("useQuery Hook", () => {
           request: { query: query2 },
           result: { data: allThingsData },
           delay: 50,
-        }
-      );
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
@@ -1311,11 +1306,13 @@ describe("useQuery Hook", () => {
       `;
 
       const cache = new InMemoryCache();
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: { hello: "from link" } },
-        delay: 20,
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: { hello: "from link" } },
+          delay: 20,
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
@@ -1427,10 +1424,12 @@ describe("useQuery Hook", () => {
           hello
         }
       `;
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: { hello: "from link" } },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: { hello: "from link" } },
+        },
+      ]);
 
       const cache = new InMemoryCache();
       cache.writeQuery({
@@ -1472,10 +1471,12 @@ describe("useQuery Hook", () => {
           hello
         }
       `;
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: { hello: "from link" } },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data: { hello: "from link" } },
+        },
+      ]);
 
       const client = new ApolloClient({
         link,
@@ -1616,10 +1617,12 @@ describe("useQuery Hook", () => {
         hello
       }
     `;
-    const link = mockSingleLink({
-      request: { query },
-      result: { data: { hello: "from link" } },
-    });
+    const link = new MockLink([
+      {
+        request: { query },
+        result: { data: { hello: "from link" } },
+      },
+    ]);
 
     const client = new ApolloClient({
       link,
@@ -2125,7 +2128,7 @@ describe("useQuery Hook", () => {
           hello
         }
       `;
-      const mocks: MockedResponse[] = [
+      const mocks: MockLink.MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
@@ -2213,7 +2216,7 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const mocks: MockedResponse[] = [
+      const mocks: MockLink.MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
@@ -2387,7 +2390,7 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const mocks: MockedResponse[] = [
+      const mocks: MockLink.MockedResponse[] = [
         {
           request: { query },
           result: { data: { hello: "world 1" } },
@@ -7150,7 +7153,7 @@ describe("useQuery Hook", () => {
       const link = new ApolloLink((o, f) => {
         linkFn();
         return f ? f(o) : null;
-      }).concat(mockSingleLink(...mocks));
+      }).concat(new MockLink(mocks));
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -8416,7 +8419,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const cache = new InMemoryCache();
-      const link = mockSingleLink(
+      const link = new MockLink([
         {
           request: { query },
           result: { data: { hello: "world 1" } },
@@ -8428,8 +8431,8 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "world 3" } },
-        }
-      );
+        },
+      ]);
 
       const client = new ApolloClient({
         defaultOptions: {

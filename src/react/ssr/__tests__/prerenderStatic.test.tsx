@@ -22,9 +22,8 @@ import {
   useSuspenseQuery,
 } from "@apollo/client/react";
 import { prerenderStatic } from "@apollo/client/react/ssr";
-import type { MockedResponse } from "@apollo/client/testing";
-import { MockLink, MockSubscriptionLink, wait } from "@apollo/client/testing";
-import { resetApolloContext } from "@apollo/client/testing/internal";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import { resetApolloContext, wait } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 beforeEach(() => {
@@ -614,7 +613,7 @@ test("`maxRerenders` will throw an error if exceeded", async () => {
         request: { query, variables: () => true },
         result: (arg) => ({ data: { hello: "world" + arg.depth } }),
         maxUsageCount: Number.POSITIVE_INFINITY,
-      } satisfies MockedResponse<{ hello: string }, { depth: number }>,
+      } satisfies MockLink.MockedResponse<{ hello: string }, { depth: number }>,
     ]),
   });
 
@@ -660,7 +659,7 @@ test("`maxRerenders` defaults to 50", async () => {
         request: { query, variables: () => true },
         result: (arg) => ({ data: { hello: "world" + arg.depth } }),
         maxUsageCount: Number.POSITIVE_INFINITY,
-      } satisfies MockedResponse<{ hello: string }, { depth: number }>,
+      } satisfies MockLink.MockedResponse<{ hello: string }, { depth: number }>,
     ]),
   });
 

@@ -3,10 +3,10 @@ import { Observable, of } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 import { setContext } from "@apollo/client/link/context";
-import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  wait,
 } from "@apollo/client/testing/internal";
 
 const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));

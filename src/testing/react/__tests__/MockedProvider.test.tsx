@@ -8,8 +8,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { useQuery } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing/core";
-import { MockLink } from "@apollo/client/testing/core";
+import { MockLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 
 const variables = {
@@ -42,7 +41,7 @@ const queryWithTypename: DocumentNode = gql`
   }
 `;
 
-const mocks: ReadonlyArray<MockedResponse> = [
+const mocks: ReadonlyArray<MockLink.MockedResponse> = [
   {
     request: {
       query,
@@ -110,7 +109,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
         variables,
@@ -135,7 +134,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
         variables: jest.fn().mockReturnValue(true),
@@ -168,7 +167,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
         variables: (v) => v.username === variables.username,
@@ -290,7 +289,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mock2: MockedResponse<Data, Variables> = {
+    const mock2: MockLink.MockedResponse<Data, Variables> = {
       request: {
         query,
         variables: () => false,
@@ -620,7 +619,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -671,7 +670,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -731,7 +730,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -779,7 +778,7 @@ describe("General use", () => {
       });
     };
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         request: {
           query,
@@ -1009,7 +1008,7 @@ describe("General use", () => {
       return <p>The user ID is '{data.user.id}'</p>;
     }
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         delay: 30000, // prevent React from batching the loading state away
         request: {
@@ -1053,7 +1052,7 @@ describe("General use", () => {
       return <p>The user ID is '{data.user.id}'</p>;
     }
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         delay: Infinity, // keep loading forever.
         request: {
@@ -1099,7 +1098,7 @@ describe("General use", () => {
       return <p>The user ID is '{data.user.id}'</p>;
     }
 
-    const mocks: ReadonlyArray<MockedResponse> = [
+    const mocks: ReadonlyArray<MockLink.MockedResponse> = [
       {
         delay: Infinity, // keep loading forever.
         request: {

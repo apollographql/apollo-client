@@ -16,9 +16,7 @@ import { HttpLink } from '@apollo/client/link/http';
 import type { InitialIncrementalExecutionResult } from 'graphql-17-alpha2';
 import type { MaskedDocumentNode } from '@apollo/client/masking';
 import type { MockedProviderProps } from '@apollo/client/testing/react';
-import { MockedRequest } from '@apollo/client/testing/core';
-import type { MockedResponse } from '@apollo/client/testing/core';
-import { MockLink } from '@apollo/client/testing/core';
+import type { MockLink } from '@apollo/client/testing';
 import type { Observable } from 'rxjs';
 import { Observable as Observable_2 } from '@apollo/client';
 import { Operation } from '@apollo/client';
@@ -30,7 +28,6 @@ import type { RenderHookOptions } from '@testing-library/react';
 import type { RenderHookResult } from '@testing-library/react';
 import type { RenderOptions } from '@testing-library/react';
 import type { RenderResult } from '@testing-library/react';
-import { ResultFunction } from '@apollo/client/testing/core';
 import type { Subscribable } from 'rxjs';
 import type { SubsequentIncrementalExecutionResult } from 'graphql-17-alpha2';
 import type { TypedDocumentNode } from '@apollo/client';
@@ -39,10 +36,10 @@ import type { TypedDocumentNode } from '@apollo/client';
 export function actAsync<T>(scope: () => T | Promise<T>): Promise<T>;
 
 // @public (undocumented)
-export function addDelayToMocks<T extends MockedResponse<unknown>[]>(mocks: T, delay?: number, override?: boolean): {
-    request: MockedRequest<Record<string, any>>;
+export function addDelayToMocks<T extends MockLink.MockedResponse<unknown>[]>(mocks: T, delay?: number, override?: boolean): {
+    request: MockLink.MockedRequest<Record<string, any>>;
     maxUsageCount?: number;
-    result?: FetchResult<unknown> | ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
+    result?: FetchResult<unknown> | MockLink.ResultFunction<FetchResult<unknown>, Record<string, any>> | undefined;
     error?: Error;
     delay: number | MockLink.DelayFunction;
 }[];
@@ -211,7 +208,7 @@ export function resetApolloContext(): void;
 
 // @public (undocumented)
 export function setupMaskedVariablesCase(): {
-    mocks: MockedResponse<MaskedVariablesCaseData, Record<string, any>>[];
+    mocks: MockLink.MockedResponse<MaskedVariablesCaseData, Record<string, any>>[];
     query: MaskedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;
     unmaskedQuery: TypedDocumentNode<MaskedVariablesCaseData, VariablesCaseVariables>;
 };
@@ -230,12 +227,12 @@ export function setupPaginatedCase(): {
 // @public (undocumented)
 export function setupSimpleCase(): {
     query: TypedDocumentNode<SimpleCaseData, Record<string, never>>;
-    mocks: MockedResponse<SimpleCaseData, Record<string, any>>[];
+    mocks: MockLink.MockedResponse<SimpleCaseData, Record<string, any>>[];
 };
 
 // @public (undocumented)
 export function setupVariablesCase(): {
-    mocks: MockedResponse<VariablesCaseData, VariablesCaseVariables>[];
+    mocks: MockLink.MockedResponse<VariablesCaseData, VariablesCaseVariables>[];
     query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables>;
 };
 
@@ -283,6 +280,9 @@ export interface VariablesCaseVariables {
     id: string;
 }
 
+// @public (undocumented)
+export function wait(ms: number): Promise<void>;
+
 // @internal @deprecated (undocumented)
 export function withCleanup<T extends object>(item: T, cleanup: (item: T) => void): T & Disposable;
 
@@ -293,7 +293,7 @@ export function withProdMode(): {
 
 // Warnings were encountered during analysis:
 //
-// src/testing/internal/scenarios/index.ts:80:7 - (ae-forgotten-export) The symbol "MaskedVariablesCaseFragment" needs to be exported by the entry point index.d.ts
+// src/testing/internal/scenarios/index.ts:81:7 - (ae-forgotten-export) The symbol "MaskedVariablesCaseFragment" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

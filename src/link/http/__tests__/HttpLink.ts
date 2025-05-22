@@ -1445,7 +1445,7 @@ describe("HttpLink", () => {
         "--graphql--",
       ].join("\r\n");
 
-      it("whatwg stream bodies", (done) => {
+      it("whatwg stream bodies", async () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = body.split("\r\n");
@@ -1470,57 +1470,40 @@ describe("HttpLink", () => {
           fetch: fetch as any,
         });
 
-        let i = 0;
-        execute(link, { query: sampleDeferredQuery }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    stub: {
-                      id: "0",
-                    },
-                  },
-                  hasNext: true,
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  incremental: [
-                    {
-                      data: {
-                        name: "stubby---",
-                      },
-                      extensions: {
-                        timestamp: 1633038919,
-                      },
-                      path: ["stub"],
-                    },
-                  ],
-                  hasNext: false,
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-
-            done();
-          }
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleDeferredQuery })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            stub: {
+              id: "0",
+            },
+          },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: {
+                name: "stubby---",
+              },
+              extensions: {
+                timestamp: 1633038919,
+              },
+              path: ["stub"],
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
       });
 
       // Verify that observable completes if final chunk does not contain
       // incremental array.
-      it("whatwg stream bodies, final chunk of { hasNext: false }", (done) => {
+      it("whatwg stream bodies, final chunk of { hasNext: false }", async () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = finalChunkOnlyHasNextFalse.split("\r\n");
@@ -1548,40 +1531,35 @@ describe("HttpLink", () => {
           fetch: fetch as any,
         });
 
-        let i = 0;
-        execute(link, { query: sampleDeferredQuery }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toMatchObject({
-                  data: {
-                    allProducts: [null, null, null],
-                  },
-                  // errors is also present, but for the purpose of this test
-                  // we're not interested in its (lengthy) content.
-                  // errors: [{...}],
-                  hasNext: true,
-                });
-              }
-              // Since the second chunk contains only hasNext: false,
-              // there is no next result to receive.
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 1) {
-              done(new Error("Unexpected end to observable"));
-            }
-
-            done();
-          }
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleDeferredQuery })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            allProducts: [null, null, null],
+          },
+          errors: [
+            {
+              message:
+                "Cannot return null for non-nullable field Product.nonNullErrorField.",
+            },
+            {
+              message:
+                "Cannot return null for non-nullable field Product.nonNullErrorField.",
+            },
+            {
+              message:
+                "Cannot return null for non-nullable field Product.nonNullErrorField.",
+            },
+          ],
+          hasNext: true,
+        });
+
+        // the second chunk contains only hasNext: false which is not emitted as
+        // a `next` event so the link completes.
+
+        await expect(observableStream).toComplete();
       });
 
       it("sets correct accept header on request with deferred query", async () => {
@@ -1599,7 +1577,23 @@ describe("HttpLink", () => {
         const observable = execute(link, { query: sampleDeferredQuery });
         const observableStream = new ObservableStream(observable);
 
-        await expect(observableStream).toEmitNext();
+        await expect(observableStream).toEmitTypedValue({
+          data: { stub: { id: "0" } },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: { name: "stubby---" },
+              path: ["stub"],
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
 
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",
@@ -1629,7 +1623,23 @@ describe("HttpLink", () => {
         const observable = execute(link, { query: sampleQueryCustomDirective });
         const observableStream = new ObservableStream(observable);
 
-        await expect(observableStream).toEmitNext();
+        await expect(observableStream).toEmitTypedValue({
+          data: { stub: { id: "0" } },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: { name: "stubby---" },
+              path: ["stub"],
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
 
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",
@@ -1685,7 +1695,7 @@ describe("HttpLink", () => {
         "-----",
       ].join("\r\n");
 
-      it("whatwg stream bodies", (done) => {
+      it("whatwg stream bodies", async () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = subscriptionsBody.split("\r\n");
@@ -1710,51 +1720,35 @@ describe("HttpLink", () => {
           fetch: fetch as any,
         });
 
-        let i = 0;
-        execute(link, { query: sampleSubscription }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "red",
-                        roll: 1,
-                        sides: 4,
-                      },
-                    },
-                  },
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "blue",
-                        roll: 2,
-                        sides: 5,
-                      },
-                    },
-                  },
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-            done();
-          }
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleSubscription })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: {
+              die: {
+                color: "red",
+                roll: 1,
+                sides: 4,
+              },
+            },
+          },
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: {
+              die: {
+                color: "blue",
+                roll: 2,
+                sides: 5,
+              },
+            },
+          },
+        });
+
+        await expect(observableStream).toComplete();
       });
 
       test("whatwg stream bodies, warns if combined with @defer", () => {
@@ -1792,7 +1786,8 @@ describe("HttpLink", () => {
         );
         warningSpy.mockRestore();
       });
-      it("with errors", (done) => {
+
+      it("with errors", async () => {
         const stream = ReadableStream.from(
           subscriptionsBodyError.split("\r\n").map((line) => line + "\r\n")
         );
@@ -1806,52 +1801,36 @@ describe("HttpLink", () => {
           fetch: fetch as any,
         });
 
-        let i = 0;
-        execute(link, { query: sampleSubscription }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "red",
-                        roll: 1,
-                        sides: 4,
-                      },
-                    },
-                  },
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  extensions: {
-                    [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
-                      {
-                        extensions: {
-                          code: "INTERNAL_SERVER_ERROR",
-                        },
-                        message: "Error field",
-                      },
-                    ]),
-                  },
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-            done();
-          }
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleSubscription })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: {
+              die: {
+                color: "red",
+                roll: 1,
+                sides: 4,
+              },
+            },
+          },
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+              {
+                extensions: {
+                  code: "INTERNAL_SERVER_ERROR",
+                },
+                message: "Error field",
+              },
+            ]),
+          },
+        });
+
+        await expect(observableStream).toComplete();
       });
 
       it("sets correct accept header on request with subscription", async () => {

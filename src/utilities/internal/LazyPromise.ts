@@ -15,6 +15,9 @@ export namespace LazyPromise {
  * The executor function is not called until the first `.then()`, `.catch()`,
  * or `.finally()` called.
  *
+ * ⚠️ `return`ing a `LazyPromise` from an `async function` will immediately
+ * call `.then` and invoke the executor function, turning it from "lazy" to "eager".
+ *
  * This promise should not be combined with tools like `preventUnhandledRejection`
  * as those will immediately call `.catch` and execute the promise constructor.
  * This is also not necessary, as the promise will never throw an error

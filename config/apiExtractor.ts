@@ -148,7 +148,6 @@ async function buildReport(
     };
   }
 
-  console.log("really?", configObjectFullPath);
   const extractorConfig = ExtractorConfig.prepare({
     configObject,
     packageJsonFullPath,

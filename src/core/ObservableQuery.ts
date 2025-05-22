@@ -3,6 +3,7 @@ import type { DocumentNode } from "graphql";
 import { Slot } from "optimism";
 import type {
   InteropObservable,
+  MonoTypeOperatorFunction,
   Observer,
   OperatorFunction,
   Subscribable,
@@ -19,6 +20,7 @@ import {
   filterMap,
   getOperationDefinition,
   getQueryDefinition,
+  identity,
   LazyPromise,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -80,7 +82,6 @@ interface TrackedOperation {
   variables: OperationVariables;
 }
 
-const newNetworkStatusSymbol: any = Symbol();
 const uninitialized: ApolloQueryResult<any> = {
   loading: true,
   networkStatus: NetworkStatus.loading,
@@ -346,10 +347,7 @@ export class ObservableQuery<
             startedInactive = false;
           }
           if (!this.subject.observed) {
-            // The initial reobserve should stay subscribed until the request finishes
-            // even if the `ObservableQuery` is unsubscribed from.
-            // see https://github.com/apollographql/apollo-client/blob/62896ffd27357014a5c35dfe8696a603498d8302/src/core/__tests__/ApolloClient/general.test.ts#L417
-            this.reobserve().eager(/* create a persistent subscription on the query */);
+            this.reobserve();
 
             // TODO: See if we can rework updatePolling to better handle this.
             // reobserve calls updatePolling but this `subscribe` callback is
@@ -689,9 +687,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return this.reobserve({
-      ...reobserveOptions,
-      [newNetworkStatusSymbol]: NetworkStatus.refetch,
+    return this.reobserve(reobserveOptions, {
+      newNetworkStatus: NetworkStatus.refetch,
     });
   }
 
@@ -987,12 +984,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return LazyPromise.resolve(toQueryResult(this.getCurrentResult()));
     }
 
-    return this.reobserve({
-      // Reset options.fetchPolicy to its original value.
-      fetchPolicy: this.options.initialFetchPolicy,
-      variables,
-      [newNetworkStatusSymbol]: NetworkStatus.setVariables,
-    });
+    return this.reobserve(
+      {
+        // Reset options.fetchPolicy to its original value.
+        fetchPolicy: this.options.initialFetchPolicy,
+        variables,
+      },
+      { newNetworkStatus: NetworkStatus.setVariables }
+    );
   }
 
   /**
@@ -1084,7 +1083,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private fetch(
     options: ObservableQuery.Options<TData, TVariables>,
     networkStatus: NetworkStatus,
-    fetchQuery?: DocumentNode
+    fetchQuery: DocumentNode,
+    pipeOperator: MonoTypeOperatorFunction<
+      QueryNotification.Value<TData>
+    > = identity
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -1169,7 +1171,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             }
           },
           finalize: () => this.activeOperations.delete(operation),
-        })
+        }),
+        pipeOperator
       )
       .subscribe({
         next: (value) => {
@@ -1227,18 +1230,25 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this.reobserve({
-            // Most fetchPolicy options don't make sense to use in a polling context, as
-            // users wouldn't want to be polling the cache directly. However, network-only and
-            // no-cache are both useful for when the user wants to control whether or not the
-            // polled results are written to the cache.
-            fetchPolicy:
-              this.options.initialFetchPolicy === "no-cache" ?
-                "no-cache"
-              : "network-only",
-            [newNetworkStatusSymbol]: NetworkStatus.poll,
-            // TODO: This will create a permanent subscription - do we want that?
-          }).then(poll, poll);
+          this.reobserve(
+            {
+              // Most fetchPolicy options don't make sense to use in a polling context, as
+              // users wouldn't want to be polling the cache directly. However, network-only and
+              // no-cache are both useful for when the user wants to control whether or not the
+              // polled results are written to the cache.
+              fetchPolicy:
+                this.options.initialFetchPolicy === "no-cache" ?
+                  "no-cache"
+                : "network-only",
+            },
+            {
+              newNetworkStatus: NetworkStatus.poll,
+              // polling should not create a subscription that would
+              // prevent the query from being torn down
+              // so we tap here instead of calling `.then`
+              pipeOperator: tap({ finalize: poll }),
+            }
+          );
         } else {
           poll();
         }
@@ -1269,16 +1279,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * merged with the current options when given.
    */
   public reobserve(
-    newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
+    newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
+    /** @internal These options are an implementation detail of `ObservableQuery` and should not be specified in userland code. */
+    internalOptions?: {
+      /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
+      newNetworkStatus?: NetworkStatus;
+      /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
+      pipeOperator?: MonoTypeOperatorFunction<QueryNotification.Value<TData>>;
+    }
   ): LazyPromise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
-    let newNetworkStatus: NetworkStatus | undefined;
-
-    if (newOptions) {
-      newNetworkStatus = (newOptions as any)[newNetworkStatusSymbol];
-      // Avoid setting the symbol option in this.options
-      delete (newOptions as any)[newNetworkStatusSymbol];
-    }
+    let { newNetworkStatus, pipeOperator } = internalOptions || {};
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
@@ -1376,11 +1387,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { subscription, observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
-      query
+      query,
+      pipeOperator
     );
 
     if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {
       if (this.linkSubscription) {
+        console.log("Unsubscribing from previous link subscription");
         this.linkSubscription.unsubscribe();
       }
 

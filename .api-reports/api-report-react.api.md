@@ -32,10 +32,12 @@ import type { HookWrappers } from '@apollo/client/react/internal';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
+import { LazyPromise } from '@apollo/client/utilities/internal';
 import type { LocalState } from '@apollo/client/local-state';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { MissingTree } from '@apollo/client/cache';
+import type { MonoTypeOperatorFunction } from 'rxjs';
 import type { MutateResult as MutateResult_2 } from '@apollo/client';
 import type { MutationFetchPolicy as MutationFetchPolicy_2 } from '@apollo/client';
 import type { MutationQueryReducersMap as MutationQueryReducersMap_2 } from '@apollo/client';
@@ -562,13 +564,17 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     readonly queryId: string;
     // (undocumented)
     readonly queryName?: string;
-    refetch(variables?: Partial<TVariables>): Promise<QueryResult_2<TData>>;
-    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): Promise<QueryResult_2<MaybeMasked<TData>>>;
+    refetch(variables?: Partial<TVariables>): LazyPromise<QueryResult_2<TData>>;
+    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
+    internalOptions?: {
+        newNetworkStatus?: NetworkStatus;
+        pipeOperator?: MonoTypeOperatorFunction<QueryNotification.Value<TData>>;
+    }): LazyPromise<QueryResult_2<MaybeMasked<TData>>>;
     // @internal @deprecated
     reset(): void;
     // @internal @deprecated (undocumented)
     resetDiff(): void;
-    setVariables(variables: TVariables): Promise<QueryResult_2<TData>>;
+    setVariables(variables: TVariables): LazyPromise<QueryResult_2<TData>>;
     // @internal @deprecated (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
@@ -1585,10 +1591,10 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:288:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:289:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:134:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:146:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:289:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:290:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:191:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:474:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:208:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

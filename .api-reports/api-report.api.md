@@ -16,6 +16,7 @@ import { gql } from 'graphql-tag';
 import type { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import type { InteropObservable } from 'rxjs';
+import type { MonoTypeOperatorFunction } from 'rxjs';
 import type { NextNotification } from 'rxjs';
 import { Observable } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
@@ -1311,6 +1312,30 @@ class Layer extends EntityStore {
     toObject(): NormalizedCacheObject;
 }
 
+// Warning: (ae-internal-mixed-release-tag) Mixed release tags are not allowed for "LazyPromise" because one of its declarations is marked as @internal
+//
+// @public (undocumented)
+namespace LazyPromise {
+    // (undocumented)
+    type Executor<T> = (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void;
+}
+
+// @internal @deprecated
+class LazyPromise<T> implements /* but not extends */ Promise<T> {
+    // (undocumented)
+    [Symbol.toStringTag]: string;
+    constructor(executor: LazyPromise.Executor<T>, preventUnhandledRejection?: boolean);
+    // (undocumented)
+    catch: <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<any>;
+    eager: () => Promise<T>;
+    // (undocumented)
+    finally: (onfinally?: (() => void) | null | undefined) => Promise<any>;
+    // (undocumented)
+    static resolve<T>(value: T): LazyPromise<T>;
+    // (undocumented)
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
+}
+
 // @public
 export const LinkError: {
     is: (error: unknown) => boolean;
@@ -1793,13 +1818,18 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     readonly queryId: string;
     // (undocumented)
     readonly queryName?: string;
-    refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>>;
-    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): Promise<QueryResult<MaybeMasked<TData>>>;
+    // Warning: (ae-forgotten-export) The symbol "LazyPromise" needs to be exported by the entry point index.d.ts
+    refetch(variables?: Partial<TVariables>): LazyPromise<QueryResult<TData>>;
+    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
+    internalOptions?: {
+        newNetworkStatus?: NetworkStatus;
+        pipeOperator?: MonoTypeOperatorFunction<QueryNotification.Value<TData>>;
+    }): LazyPromise<QueryResult<MaybeMasked<TData>>>;
     // @internal @deprecated
     reset(): void;
     // @internal @deprecated (undocumented)
     resetDiff(): void;
-    setVariables(variables: TVariables): Promise<QueryResult<TData>>;
+    setVariables(variables: TVariables): LazyPromise<QueryResult<TData>>;
     // @internal @deprecated (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
@@ -2611,9 +2641,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:288:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:289:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:134:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:289:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:290:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:191:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:474:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

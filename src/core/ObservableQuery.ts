@@ -691,7 +691,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return this.reobserve(reobserveOptions, {
+    return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
   }
@@ -990,7 +990,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return toQueryResult(this.getCurrentResult());
     }
 
-    return this.reobserve(
+    return this._reobserve(
       {
         // Reset options.fetchPolicy to its original value.
         fetchPolicy: this.options.initialFetchPolicy,
@@ -1234,7 +1234,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this.reobserve(
+          this._reobserve(
             {
               // Most fetchPolicy options don't make sense to use in a polling context, as
               // users wouldn't want to be polling the cache directly. However, network-only and
@@ -1283,6 +1283,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * merged with the current options when given.
    */
   public reobserve(
+    newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
+  ): ObservableQuery.RetainablePromise<QueryResult<MaybeMasked<TData>>> {
+    return this._reobserve(newOptions);
+  }
+  private _reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
     /** @internal These options are an implementation detail of `ObservableQuery` and should not be specified in userland code. */
     internalOptions?: {

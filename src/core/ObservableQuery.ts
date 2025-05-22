@@ -970,23 +970,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public async setVariables(
-    variables: TVariables
-  ): Promise<QueryResult<TData>> {
+  public setVariables(variables: TVariables): LazyPromise<QueryResult<TData>> {
     variables = this.getVariablesWithDefaults(variables);
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return toQueryResult(this.getCurrentResult());
+      return LazyPromise.resolve(toQueryResult(this.getCurrentResult()));
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return toQueryResult(this.getCurrentResult());
+      return LazyPromise.resolve(toQueryResult(this.getCurrentResult()));
     }
 
     return this.reobserve({
@@ -1239,6 +1237,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 "no-cache"
               : "network-only",
             [newNetworkStatusSymbol]: NetworkStatus.poll,
+            // TODO: This will create a permanent subscription - do we want that?
           }).then(poll, poll);
         } else {
           poll();
@@ -1719,11 +1718,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   // this.options.fetchPolicy is "cache-and-network" or "network-only". When
   // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
   // "standby", or "no-cache"), we call this.reobserve() as usual.
-  private reobserveCacheFirst() {
+  private reobserveCacheFirst(): void {
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
     if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-      return this.reobserve({
+      this.reobserve({
         fetchPolicy: "cache-first",
         // Use a temporary nextFetchPolicy function that replaces itself with the
         // previous nextFetchPolicy value and returns the original fetchPolicy.
@@ -1744,9 +1743,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           return fetchPolicy!;
         },
       });
+    } else {
+      this.reobserve();
     }
-
-    return this.reobserve();
   }
 
   private getVariablesWithDefaults(variables: TVariables | undefined) {

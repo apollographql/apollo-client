@@ -13,6 +13,7 @@ import {
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
+import type { OperationVariables } from "./types.js";
 import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
 
 export const enum CacheWriteBehavior {
@@ -61,9 +62,7 @@ export class QueryInfo {
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
-  stopped = false;
 
-  private cancelWatch?: () => void;
   private cache: ApolloCache;
 
   constructor(
@@ -90,9 +89,7 @@ export class QueryInfo {
     variables: Record<string, any> | undefined;
   }): this {
     if (!equal(query.variables, this.variables)) {
-      this.lastDiff = void 0;
-      // Ensure we don't continue to receive cache updates for old variables
-      this.cancel();
+      this.resetDiff();
     }
 
     Object.assign(this, {
@@ -103,48 +100,7 @@ export class QueryInfo {
     return this;
   }
 
-  resetDiff() {
-    this.lastDiff = void 0;
-  }
-
-  getDiff(): Cache.DiffResult<any> {
-    const options = this.getDiffOptions();
-
-    if (this.lastDiff && equal(options, this.lastDiff.options)) {
-      return this.lastDiff.diff;
-    }
-
-    this.updateWatch(this.variables);
-
-    const oq = this.observableQuery;
-    if (oq && oq.options.fetchPolicy === "no-cache") {
-      return { result: null, complete: false };
-    }
-
-    const diff = this.cache.diff(options);
-    this.updateLastDiff(diff, options);
-    return diff;
-  }
-
-  private lastDiff?: {
-    diff: Cache.DiffResult<any>;
-    options: Cache.DiffOptions;
-  };
-
-  private updateLastDiff(
-    diff: Cache.DiffResult<any> | null,
-    options?: Cache.DiffOptions
-  ) {
-    this.lastDiff =
-      diff ?
-        {
-          diff,
-          options: options || this.getDiffOptions(),
-        }
-      : void 0;
-  }
-
-  private getDiffOptions(variables = this.variables): Cache.DiffOptions {
+  public getDiffOptions(variables = this.variables): Cache.DiffOptions {
     return {
       query: this.document!,
       variables,
@@ -153,76 +109,12 @@ export class QueryInfo {
     };
   }
 
-  setDiff(diff: Cache.DiffResult<any> | null) {
-    const oldDiff = this.lastDiff && this.lastDiff.diff;
-
-    // If we are trying to deliver an incomplete cache result, we avoid
-    // reporting it if the query has errored, otherwise we let the broadcast try
-    // and repair the partial result by refetching the query. This check avoids
-    // a situation where a query that errors and another succeeds with
-    // overlapping data does not report the partial data result to the errored
-    // query.
-    //
-    // See https://github.com/apollographql/apollo-client/issues/11400 for more
-    // information on this issue.
-    if (diff && !diff.complete && this.observableQuery?.getLastError()) {
-      return;
-    }
-
-    this.updateLastDiff(diff);
-
-    if (!equal(oldDiff && oldDiff.result, diff && diff.result)) {
-      this.observableQuery?.["scheduleNotify"]();
-    }
-  }
-
   public readonly observableQuery: ObservableQuery<any, any> | null = null;
   setObservableQuery(oq: ObservableQuery<any, any> | null) {
     if (oq === this.observableQuery) return;
     (this as any).observableQuery = oq;
     if (oq) {
       oq["queryInfo"] = this;
-    }
-  }
-
-  public stop() {
-    if (!this.stopped) {
-      this.stopped = true;
-
-      // Cancel the pending notify timeout
-      this.observableQuery?.["resetNotifications"]();
-      this.cancel();
-
-      const oq = this.observableQuery;
-      if (oq) oq.stopPolling();
-    }
-  }
-
-  private cancel() {
-    this.cancelWatch?.();
-    this.cancelWatch = void 0;
-  }
-
-  private lastWatch?: Cache.WatchOptions;
-
-  private updateWatch(variables = this.variables) {
-    const oq = this.observableQuery;
-    if (oq && oq.options.fetchPolicy === "no-cache") {
-      return;
-    }
-
-    const watchOptions: Cache.WatchOptions = {
-      // Although this.getDiffOptions returns Cache.DiffOptions instead of
-      // Cache.WatchOptions, all the overlapping options should be the same, so
-      // we can reuse getDiffOptions here, for consistency.
-      ...this.getDiffOptions(variables),
-      watcher: this,
-      callback: (diff) => this.setDiff(diff),
-    };
-
-    if (!this.lastWatch || !equal(watchOptions, this.lastWatch)) {
-      this.cancel();
-      this.cancelWatch = this.cache.watch((this.lastWatch = watchOptions));
     }
   }
 
@@ -252,132 +144,154 @@ export class QueryInfo {
     );
   }
 
+  resetDiff() {
+    this.lastDiff = void 0;
+  }
+
+  private lastDiff?: {
+    diff: Cache.DiffResult<any>;
+    options: Cache.DiffOptions;
+  };
+
   public markResult<T>(
     result: FetchResult<T>,
     document: DocumentNode,
-    options: Pick<
-      WatchQueryOptions,
-      "variables" | "fetchPolicy" | "errorPolicy"
-    >,
+    options: {
+      variables: OperationVariables;
+      errorPolicy: ErrorPolicy;
+    },
     cacheWriteBehavior: CacheWriteBehavior
   ) {
-    const merger = new DeepMerger();
-
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-      const mergedData = mergeIncrementalData(this.getDiff().result, result);
-      result.data = mergedData;
+    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
+      const diffOptions = this.getDiffOptions(options.variables);
+      const lastDiff =
+        this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
+          this.lastDiff.diff
+        : { result: null, complete: false };
+      handleIncrementalResult(result, lastDiff);
 
-      // Detect the first chunk of a deferred query and merge it with existing
-      // cache data. This ensures a `cache-first` fetch policy that returns
-      // partial cache data or a `cache-and-network` fetch policy that already
-      // has full data in the cache does not complain when trying to merge the
-      // initial deferred server data with existing cache data.
-    } else if ("hasNext" in result && result.hasNext) {
-      const diff = this.getDiff();
-      result.data = merger.merge(diff.result, result.data);
-    }
+      this.lastDiff = {
+        diff: { result: result.data, complete: true },
+        options: diffOptions,
+      };
+    } else {
+      const lastDiff = this.cache.diff<any>(this.getDiffOptions());
+      handleIncrementalResult(result, lastDiff);
 
-    if (options.fetchPolicy === "no-cache") {
-      this.updateLastDiff(
-        { result: result.data, complete: true },
-        this.getDiffOptions(options.variables)
-      );
-    } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
-        this.cache.performTransaction((cache) => {
-          if (this.shouldWrite(result, options.variables)) {
-            cache.writeQuery({
-              query: document,
-              data: result.data as Unmasked<T>,
-              variables: options.variables,
-              overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-            });
-
-            this.lastWrite = {
-              result,
-              variables: options.variables,
-              dmCount: destructiveMethodCounts.get(this.cache),
-            };
-          } else {
-            // If result is the same as the last result we received from
-            // the network (and the variables match too), avoid writing
-            // result into the cache again. The wisdom of skipping this
-            // cache write is far from obvious, since any cache write
-            // could be the one that puts the cache back into a desired
-            // state, fixing corruption or missing data. However, if we
-            // always write every network result into the cache, we enable
-            // feuds between queries competing to update the same data in
-            // incompatible ways, which can lead to an endless cycle of
-            // cache broadcasts and useless network requests. As with any
-            // feud, eventually one side must step back from the brink,
-            // letting the other side(s) have the last word(s). There may
-            // be other points where we could break this cycle, such as
-            // silencing the broadcast for cache.writeQuery (not a good
-            // idea, since it just delays the feud a bit) or somehow
-            // avoiding the network request that just happened (also bad,
-            // because the server could return useful new data). All
-            // options considered, skipping this cache write seems to be
-            // the least damaging place to break the cycle, because it
-            // reflects the intuition that we recently wrote this exact
-            // result into the cache, so the cache *should* already/still
-            // contain this data. If some other query has clobbered that
-            // data in the meantime, that's too bad, but there will be no
-            // winners if every query blindly reverts to its own version
-            // of the data. This approach also gives the network a chance
-            // to return new data, which will be written into the cache as
-            // usual, notifying only those queries that are directly
-            // affected by the cache updates, as usual. In the future, an
-            // even more sophisticated cache could perhaps prevent or
-            // mitigate the clobbering somehow, but that would make this
-            // particular cache write even less important, and thus
-            // skipping it would be even safer than it is today.
-            if (this.lastDiff && this.lastDiff.diff.complete) {
-              // Reuse data from the last good (complete) diff that we
-              // received, when possible.
-              result.data = this.lastDiff.diff.result;
-              return;
+        this.cache.batch({
+          onWatchUpdated: (
+            // all additional options on ObservableQuery.CacheWatchOptions are
+            // optional so we can use the type here
+            watch: ObservableQuery.CacheWatchOptions,
+            diff
+          ) => {
+            if (watch.watcher === this.observableQuery) {
+              // see comment on `lastOwnDiff` for explanation
+              watch.lastOwnDiff = diff;
             }
-            // If the previous this.diff was incomplete, fall through to
-            // re-reading the latest data with cache.diff, below.
-          }
+          },
+          update: (cache) => {
+            if (this.shouldWrite(result, options.variables)) {
+              cache.writeQuery({
+                query: document,
+                data: result.data as Unmasked<T>,
+                variables: options.variables,
+                overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+              });
 
-          const diffOptions = this.getDiffOptions(options.variables);
-          const diff = cache.diff<T>(diffOptions);
+              this.lastWrite = {
+                result,
+                variables: options.variables,
+                dmCount: destructiveMethodCounts.get(this.cache),
+              };
+            } else {
+              // If result is the same as the last result we received from
+              // the network (and the variables match too), avoid writing
+              // result into the cache again. The wisdom of skipping this
+              // cache write is far from obvious, since any cache write
+              // could be the one that puts the cache back into a desired
+              // state, fixing corruption or missing data. However, if we
+              // always write every network result into the cache, we enable
+              // feuds between queries competing to update the same data in
+              // incompatible ways, which can lead to an endless cycle of
+              // cache broadcasts and useless network requests. As with any
+              // feud, eventually one side must step back from the brink,
+              // letting the other side(s) have the last word(s). There may
+              // be other points where we could break this cycle, such as
+              // silencing the broadcast for cache.writeQuery (not a good
+              // idea, since it just delays the feud a bit) or somehow
+              // avoiding the network request that just happened (also bad,
+              // because the server could return useful new data). All
+              // options considered, skipping this cache write seems to be
+              // the least damaging place to break the cycle, because it
+              // reflects the intuition that we recently wrote this exact
+              // result into the cache, so the cache *should* already/still
+              // contain this data. If some other query has clobbered that
+              // data in the meantime, that's too bad, but there will be no
+              // winners if every query blindly reverts to its own version
+              // of the data. This approach also gives the network a chance
+              // to return new data, which will be written into the cache as
+              // usual, notifying only those queries that are directly
+              // affected by the cache updates, as usual. In the future, an
+              // even more sophisticated cache could perhaps prevent or
+              // mitigate the clobbering somehow, but that would make this
+              // particular cache write even less important, and thus
+              // skipping it would be even safer than it is today.
+              if (lastDiff && lastDiff.complete) {
+                // Reuse data from the last good (complete) diff that we
+                // received, when possible.
+                result.data = lastDiff.result;
+                return;
+              }
+              // If the previous this.diff was incomplete, fall through to
+              // re-reading the latest data with cache.diff, below.
+            }
 
-          // In case the QueryManager stops this QueryInfo before its
-          // results are delivered, it's important to avoid restarting the
-          // cache watch when markResult is called. We also avoid updating
-          // the watch if we are writing a result that doesn't match the current
-          // variables to avoid race conditions from broadcasting the wrong
-          // result.
-          if (!this.stopped && equal(this.variables, options.variables)) {
-            // Any time we're about to update this.diff, we need to make
-            // sure we've started watching the cache.
-            this.updateWatch(options.variables);
-          }
+            const diffOptions = this.getDiffOptions(options.variables);
+            const diff = cache.diff<T>(diffOptions);
 
-          // If we're allowed to write to the cache, and we can read a
-          // complete result from the cache, update result.data to be the
-          // result from the cache, rather than the raw network result.
-          // Set without setDiff to avoid triggering a notify call, since
-          // we have other ways of notifying for this result.
-          this.updateLastDiff(diff, diffOptions);
-          if (diff.complete) {
-            result.data = diff.result;
-          }
+            // If we're allowed to write to the cache, and we can read a
+            // complete result from the cache, update result.data to be the
+            // result from the cache, rather than the raw network result.
+            // Set without setDiff to avoid triggering a notify call, since
+            // we have other ways of notifying for this result.
+            if (diff.complete) {
+              result.data = diff.result;
+            }
+          },
         });
       } else {
         this.lastWrite = void 0;
       }
     }
+  }
+}
+
+function handleIncrementalResult<T>(
+  result: FetchResult<T>,
+  lastDiff: Cache.DiffResult<any>
+) {
+  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
+    const mergedData = mergeIncrementalData(lastDiff.result, result);
+    result.data = mergedData;
+
+    // Detect the first chunk of a deferred query and merge it with existing
+    // cache data. This ensures a `cache-first` fetch policy that returns
+    // partial cache data or a `cache-and-network` fetch policy that already
+    // has full data in the cache does not complain when trying to merge the
+    // initial deferred server data with existing cache data.
+  } else if ("hasNext" in result && result.hasNext) {
+    const merger = new DeepMerger();
+    result.data = merger.merge(lastDiff.result, result.data);
   }
 }
 

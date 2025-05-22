@@ -1138,7 +1138,7 @@ describe("client.watchQuery", () => {
       }
 
       {
-        const { data } = observable.getCurrentResult(false);
+        const { data } = observable.getCurrentResult();
 
         expect(data).toEqual({
           currentUser: {
@@ -1704,17 +1704,18 @@ describe("client.watchQuery", () => {
     });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
         },
-      });
-    }
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     const result = await observable.refetch();
 
@@ -1733,6 +1734,19 @@ describe("client.watchQuery", () => {
         name: "Test User",
         age: 31,
       },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
@@ -6170,6 +6184,8 @@ describe("client.mutate", () => {
   });
 });
 
+// @ts-ignore intentionally don't implement fragmentMatches until we remove the
+// check for it
 class TestCache extends ApolloCache {
   public diff<T>(query: Cache.DiffOptions<T>): DataProxy.DiffResult<T> {
     return { result: null, complete: false };

@@ -278,18 +278,15 @@ export class InternalQueryReference<TData = unknown> {
       if (avoidNetworkRequests) {
         observable.silentSetOptions({ fetchPolicy: "standby" });
       } else {
-        observable.resetLastResults();
+        observable.reset();
         observable.silentSetOptions({ fetchPolicy: "cache-first" });
       }
 
-      this.subscribeToQuery();
-
-      if (avoidNetworkRequests) {
-        return;
+      if (!avoidNetworkRequests) {
+        observable.resetDiff();
+        this.setResult();
       }
-
-      observable.resetDiff();
-      this.setResult();
+      this.subscribeToQuery();
     } finally {
       observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
     }
@@ -489,9 +486,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   private setResult() {
-    // Don't save this result as last result to prevent delivery of last result
-    // when first subscribing
-    const result = this.observable.getCurrentResult(false);
+    const result = this.observable.getCurrentResult();
 
     if (equal(result, this.result)) {
       return;

@@ -6,6 +6,7 @@ import type { ObservableQuery } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
+import { LocalState } from "@apollo/client/local-state";
 import { mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -342,17 +343,19 @@ describe("no-cache", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
         cache: new InMemoryCache(),
-        resolvers: {
-          Query: {
-            hero(_data, args) {
-              return {
-                __typename: "Hero",
-                ...args,
-                name: "Luke Skywalker",
-              };
+        localState: new LocalState({
+          resolvers: {
+            Query: {
+              hero(_data, args) {
+                return {
+                  __typename: "Hero",
+                  ...args,
+                  name: "Luke Skywalker",
+                };
+              },
             },
           },
-        },
+        }),
       });
 
       const observable = client.watchQuery({
@@ -590,12 +593,14 @@ describe("cache-only", () => {
       link: new ApolloLink(
         () =>
           new Observable((observer) => {
-            observer.next({
-              data: {
-                count: ++counter,
-              },
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  count: ++counter,
+                },
+              });
+              observer.complete();
             });
-            observer.complete();
           })
       ),
     });
@@ -613,6 +618,12 @@ describe("cache-only", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: undefined,
+      partial: true,
+    });
     await expect(stream).toEmitTypedValue({
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -652,17 +663,19 @@ describe("cache-and-network", function () {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
-      resolvers: {
-        Query: {
-          hero(_data, args) {
-            return {
-              __typename: "Hero",
-              ...args,
-              name: "Luke Skywalker",
-            };
+      localState: new LocalState({
+        resolvers: {
+          Query: {
+            hero(_data, args) {
+              return {
+                __typename: "Hero",
+                ...args,
+                name: "Luke Skywalker",
+              };
+            },
           },
         },
-      },
+      }),
     });
 
     const observable = client.watchQuery({
@@ -967,24 +980,19 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      // Changing variables resets the fetchPolicy to its initial value.
+      // Changing variables resets the fetchPolicy to its initial value - but
+      // it also immediately applies `nextFetchPolicy` again.
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
+    // Changing variables resets the fetchPolicy to its initial value of `network-only`.
+    // That means the loading state will reset to an initial state, and `network-only`
+    // is not allowed to read data from the cache, hence `data` is `undefined`.
     await expect(stream).toEmitTypedValue({
-      data: {
-        echo: {
-          __typename: "Echo",
-          linkCounter: 2,
-          opName: "EchoQuery",
-          opVars: {
-            refetching: true,
-          },
-        },
-      },
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
-      partial: false,
+      partial: true,
     });
 
     await expect(stream).toEmitTypedValue({

@@ -120,7 +120,7 @@ export function getWrappedPromise<TData>(queryRef: WrappedQueryRef<TData, any>):
 
 // Warning: (ae-forgotten-export) The symbol "WrappableHooks" needs to be exported by the entry point index.d.ts
 //
-// @internal
+// @internal @deprecated
 export type HookWrappers = {
     [K in keyof WrappableHooks]?: (originalHook: WrappableHooks[K]) => WrappableHooks[K];
 };
@@ -209,7 +209,7 @@ export interface QueryKey {
 
 // @public
 export interface QueryRef<TData = unknown, TVariables = unknown> {
-    // @internal (undocumented)
+    // @internal @deprecated (undocumented)
     [QUERY_REF_BRAND]?(variables: TVariables): TData;
 }
 
@@ -280,13 +280,13 @@ interface WrappableHooks {
     useSuspenseQuery: typeof useSuspenseQuery;
 }
 
-// @internal
+// @internal @deprecated
 interface WrappedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
-    // (undocumented)
+    // @deprecated (undocumented)
     [PROMISE_SYMBOL]: QueryRefPromise<TData>;
-    // (undocumented)
+    // @deprecated (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
-    // (undocumented)
+    // @deprecated (undocumented)
     toPromise?(): Promise<unknown>;
 }
 

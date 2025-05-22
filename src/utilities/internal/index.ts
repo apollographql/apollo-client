@@ -21,6 +21,7 @@ export { compact } from "./compact.js";
 export { createFragmentMap } from "./createFragmentMap.js";
 export { createFulfilledPromise } from "./createFulfilledPromise.js";
 export { createRejectedPromise } from "./createRejectedPromise.js";
+export { dealias } from "./dealias.js";
 export { decoratePromise } from "./decoratePromise.js";
 export { DeepMerger } from "./DeepMerger.js";
 export { getDefaultValues } from "./getDefaultValues.js";
@@ -36,6 +37,7 @@ export { getQueryDefinition } from "./getQueryDefinition.js";
 export { getStoreKeyName } from "./getStoreKeyName.js";
 export { graphQLResultHasError } from "./graphQLResultHasError.js";
 export { hasDirectives } from "./hasDirectives.js";
+export { hasForcedResolvers } from "./hasForcedResolvers.js";
 export { isArray } from "./isArray.js";
 export { isDocumentNode } from "./isDocumentNode.js";
 export { isExecutionPatchIncrementalResult } from "./isExecutionPatchIncrementalResult.js";
@@ -61,6 +63,7 @@ export { shouldInclude } from "./shouldInclude.js";
 export { storeKeyNameFromField } from "./storeKeyNameFromField.js";
 export { stringifyForDisplay } from "./stringifyForDisplay.js";
 export { toQueryResult } from "./toQueryResult.js";
+export { filterMap } from "./filterMap.js";
 
 export {
   getApolloCacheMemoryInternals,

@@ -1,4 +1,5 @@
 import type { DocumentNode } from "graphql";
+import type { NextNotification, ObservableNotification } from "rxjs";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
@@ -6,7 +7,6 @@ import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { IsAny } from "@apollo/client/utilities/internal";
 
-import type { Resolver } from "./LocalState.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryInfo } from "./QueryInfo.js";
@@ -231,11 +231,6 @@ export type MutationUpdaterFunction<
     variables?: TVariables;
   }
 ) => void;
-export interface Resolvers {
-  [key: string]: {
-    [field: string]: Resolver;
-  };
-}
 
 export interface MutateResult<TData = unknown> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
@@ -265,4 +260,30 @@ export interface QueryResult<TData = unknown> {
 
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ErrorLike;
+}
+
+export declare namespace QueryNotification {
+  type NewNetworkStatus<TData> = NextNotification<{
+    resetError?: boolean;
+  }> & {
+    source: "newNetworkStatus";
+  };
+
+  type SetResult<TData> = NextNotification<ApolloQueryResult<TData>> & {
+    source: "setResult";
+  };
+
+  type FromNetwork<TData> = ObservableNotification<ApolloQueryResult<TData>> & {
+    source: "network";
+  };
+
+  type FromCache<TData> = NextNotification<ApolloQueryResult<TData>> & {
+    source: "cache";
+  };
+
+  type Value<TData> =
+    | FromCache<TData>
+    | FromNetwork<TData>
+    | NewNetworkStatus<TData>
+    | SetResult<TData>;
 }

@@ -3,12 +3,14 @@ import { expectTypeOf } from "expect-type";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
+  LocalStateError,
   ServerError,
   ServerParseError,
   UnconventionalError,
 } from "@apollo/client/errors";
 
 const graphQLErrors = new CombinedGraphQLErrors({ errors: [] });
+const localStateError = new LocalStateError("Oops");
 const protocolErrors = new CombinedProtocolErrors([]);
 const serverError = new ServerError("Oops", {
   response: new Response("", { status: 400 }),
@@ -24,6 +26,7 @@ const unconventionalError = new UnconventionalError(Symbol());
 test("CombinedGraphQLErrors.is", () => {
   expect(CombinedGraphQLErrors.is(graphQLErrors)).toBe(true);
 
+  expect(CombinedGraphQLErrors.is(localStateError)).toBe(false);
   expect(CombinedGraphQLErrors.is(protocolErrors)).toBe(false);
   expect(CombinedGraphQLErrors.is(serverError)).toBe(false);
   expect(CombinedGraphQLErrors.is(serverParseError)).toBe(false);
@@ -43,6 +46,7 @@ test("CombinedProtocolErrors.is", () => {
   expect(CombinedProtocolErrors.is(protocolErrors)).toBe(true);
 
   expect(CombinedProtocolErrors.is(graphQLErrors)).toBe(false);
+  expect(CombinedProtocolErrors.is(localStateError)).toBe(false);
   expect(CombinedProtocolErrors.is(serverError)).toBe(false);
   expect(CombinedProtocolErrors.is(serverParseError)).toBe(false);
   expect(CombinedProtocolErrors.is(unconventionalError)).toBe(false);
@@ -57,10 +61,30 @@ test("CombinedProtocolErrors.is", () => {
   expect(CombinedProtocolErrors.is(true)).toBe(false);
 });
 
+test("LocalStateError.is", () => {
+  expect(LocalStateError.is(localStateError)).toBe(true);
+
+  expect(LocalStateError.is(graphQLErrors)).toBe(false);
+  expect(LocalStateError.is(protocolErrors)).toBe(false);
+  expect(LocalStateError.is(serverError)).toBe(false);
+  expect(LocalStateError.is(serverParseError)).toBe(false);
+  expect(LocalStateError.is(unconventionalError)).toBe(false);
+  expect(LocalStateError.is(new Error("Oops"))).toBe(false);
+
+  expect(LocalStateError.is(undefined)).toBe(false);
+  expect(LocalStateError.is(null)).toBe(false);
+  expect(LocalStateError.is({})).toBe(false);
+  expect(LocalStateError.is(Symbol())).toBe(false);
+  expect(LocalStateError.is(10)).toBe(false);
+  expect(LocalStateError.is("true")).toBe(false);
+  expect(LocalStateError.is(true)).toBe(false);
+});
+
 test("ServerError.is", () => {
   expect(ServerError.is(serverError)).toBe(true);
 
   expect(ServerError.is(graphQLErrors)).toBe(false);
+  expect(ServerError.is(localStateError)).toBe(false);
   expect(ServerError.is(protocolErrors)).toBe(false);
   expect(ServerError.is(serverParseError)).toBe(false);
   expect(ServerError.is(unconventionalError)).toBe(false);
@@ -79,6 +103,7 @@ test("ServerParseError.is", () => {
   expect(ServerParseError.is(serverParseError)).toBe(true);
 
   expect(ServerParseError.is(graphQLErrors)).toBe(false);
+  expect(ServerParseError.is(localStateError)).toBe(false);
   expect(ServerParseError.is(protocolErrors)).toBe(false);
   expect(ServerParseError.is(serverError)).toBe(false);
   expect(ServerParseError.is(unconventionalError)).toBe(false);
@@ -97,6 +122,7 @@ test("UnconventionalError.is", () => {
   expect(UnconventionalError.is(unconventionalError)).toBe(true);
 
   expect(UnconventionalError.is(graphQLErrors)).toBe(false);
+  expect(UnconventionalError.is(localStateError)).toBe(false);
   expect(UnconventionalError.is(protocolErrors)).toBe(false);
   expect(UnconventionalError.is(serverError)).toBe(false);
   expect(UnconventionalError.is(serverParseError)).toBe(false);
@@ -123,6 +149,12 @@ describe.skip("type tests", () => {
   test("type narrows CombinedProtocolErrors", () => {
     if (CombinedProtocolErrors.is(error)) {
       expectTypeOf(error).toEqualTypeOf<CombinedProtocolErrors>();
+    }
+  });
+
+  test("type narrows LocalStateError", () => {
+    if (LocalStateError.is(error)) {
+      expectTypeOf(error).toEqualTypeOf<LocalStateError>();
     }
   });
 

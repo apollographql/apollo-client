@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
 import type { Unmasked } from '@apollo/client/masking';
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 type CovariantUnaryFunction<out Arg, out Ret> = {
     fn(arg: Arg): Ret;
 }["fn"];

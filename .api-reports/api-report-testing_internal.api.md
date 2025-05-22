@@ -139,14 +139,26 @@ type ObservableEvent<T> = {
 
 // @public (undocumented)
 export class ObservableStream<T> {
+    // (undocumented)
+    [Symbol.dispose](): void;
     constructor(observable: Observable<T> | Subscribable<T>);
+    // (undocumented)
+    getCurrent(): T | undefined;
     // Warning: (ae-forgotten-export) The symbol "TakeOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "ObservableEvent" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     peek({ timeout }?: TakeOptions): Promise<ObservableEvent<T>>;
     // (undocumented)
-    take({ timeout }?: TakeOptions): Promise<ObservableEvent<T>>;
+    take({ timeout }?: TakeOptions): Promise<{
+        type: "error";
+        error: any;
+    } | {
+        type: "complete";
+    } | {
+        type: "next";
+        value: T;
+    }>;
     // (undocumented)
     takeComplete(options?: TakeOptions): Promise<void>;
     // (undocumented)
@@ -271,7 +283,7 @@ export interface VariablesCaseVariables {
     id: string;
 }
 
-// @internal (undocumented)
+// @internal @deprecated (undocumented)
 export function withCleanup<T extends object>(item: T, cleanup: (item: T) => void): T & Disposable;
 
 // @public (undocumented)

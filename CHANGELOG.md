@@ -1,5 +1,133 @@
 # @apollo/client
 
+## 4.0.0-alpha.14
+
+### Major Changes
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `getCacheKey` function is no longer available from `operation.getContext()` in the link chain. Use `operation.client.cache.identify(obj)` in the link chain instead.
+
+- [#12556](https://github.com/apollographql/apollo-client/pull/12556) [`c3fceda`](https://github.com/apollographql/apollo-client/commit/c3fceda86c5e0f499d0b5fa54ea7dc4c4391ae2c) Thanks [@phryneas](https://github.com/phryneas)! - `ObservableQuery` will now keep previous `data` around when emitting a `loading` state, unless `query` or `variables` changed.
+  Note that `@exports` variables are not taken into account for this, so `data` will stay around even if they change.
+
+- [#12556](https://github.com/apollographql/apollo-client/pull/12556) [`c3fceda`](https://github.com/apollographql/apollo-client/commit/c3fceda86c5e0f499d0b5fa54ea7dc4c4391ae2c) Thanks [@phryneas](https://github.com/phryneas)! - Removed `getLastResult`, `getLastError` and `resetLastResults` from `ObservableQuery`
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `resolvers` option from `ApolloClient`. Local resolvers have instead been moved to the new `LocalState` instance which is assigned to the `localState` option in `ApolloClient`. To migrate, move the `resolvers` values into a `LocalState` instance and assign that instance to `localState`.
+
+  ```diff
+  new ApolloClient({
+  - resolvers: { /* ... */ }
+  + localState: new LocalState({
+  +   resolvers: { /* ... */ }
+  + }),
+  });
+  ```
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove local resolvers APIs from `ApolloClient` in favor of `localState`. Methods removed are:
+
+  - `addResolvers`
+  - `getResolvers`
+  - `setResolvers`
+  - `setLocalStateFragmentMatcher`
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Third-party caches must now implement the `fragmentMatches` API. Additionally `fragmentMatches` must be able to handle both `InlineFragmentNode` and `FragmentDefinitionNode` nodes.
+
+  ```ts
+  class MyCache extends ApolloCache {
+    // This is now required
+    public fragmentMatches(
+      fragment: InlineFragmentNode | FragmentDefinitionNode,
+      typename: string
+    ): boolean {
+      return; // ... logic to determine if typename matches fragment
+    }
+  }
+  ```
+
+- [#12556](https://github.com/apollographql/apollo-client/pull/12556) [`c3fceda`](https://github.com/apollographql/apollo-client/commit/c3fceda86c5e0f499d0b5fa54ea7dc4c4391ae2c) Thanks [@phryneas](https://github.com/phryneas)! - Reworked the logic for then a loading state is triggered. If the link chain responds synchronously, a loading state will be omitted, otherwise it will be triggered.
+  If local resolvers are used, the time window for "sync vs async" starts as soon as `@exports` variables are resolved.
+
+- [#12556](https://github.com/apollographql/apollo-client/pull/12556) [`c3fceda`](https://github.com/apollographql/apollo-client/commit/c3fceda86c5e0f499d0b5fa54ea7dc4c4391ae2c) Thanks [@phryneas](https://github.com/phryneas)! - Dropped the `saveAsLastResult` argument from `ObservableQuery.getCurrentResult`
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The resolver function's `context` argument (the 3rd argument) has changed to provide additional information without the possibility of name clashes. Previously the `context` argument would spread request context and override the `client` and `cache` properties to give access to both inside of a resolver. The `context` argument takes now takes the following shape:
+
+  ```ts
+  {
+    // the request context. By default `TContextValue` is of type `DefaultContext`,
+    // but can be changed if a `context` function is provided.
+    requestContext: TContextValue,
+    // The client instance making the request
+    client: ApolloClient,
+    // Whether the resolver is run as a result of gathering exported variables
+    // or resolving the value as part of the result
+    phase: "exports" | "resolve"
+  }
+  ```
+
+  To migrate, pull any request context from `requestContext` and the `cache` from the `client` property:
+
+  ```diff
+  new LocalState({
+    resolvers: {
+      Query: {
+  -     myResolver: (parent, args, { someValue, cache }) => {
+  +     myResolver: (parent, args, { requestContext, client }) => {
+  +       const someValue = requestContext.someValue;
+  +       const cache = client.cache;
+        }
+      }
+    }
+  });
+  ```
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Apollo Client no longer ships with support for `@client` fields out-of-the-box and now must be opt-in. To opt in to use `@client` fields, pass an instantiated `LocalState` instance to the `localState` option. If a query contains `@client` and local state hasn't been configured, an error will be thrown.
+
+  ```ts
+  import { LocalState } from "@apollo/client/local-state";
+
+  new ApolloClient({
+    localState: new LocalState(),
+  });
+  ```
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `fragmentMatcher` option from `ApolloClient`. Custom fragment matchers used with local state are no longer supported. Fragment matching is now performed by the configured `cache` via the `cache.fragmentMatches` API.
+
+- [#12556](https://github.com/apollographql/apollo-client/pull/12556) [`c3fceda`](https://github.com/apollographql/apollo-client/commit/c3fceda86c5e0f499d0b5fa54ea7dc4c4391ae2c) Thanks [@phryneas](https://github.com/phryneas)! - A call to `ObservableQuery.setVariables` with different variables or a `ObservableQuery.refetch` call will always now guarantee that a value will be emitted from the observable, even if it is deep equal to the previous value.
+
+### Minor Changes
+
+- [#12614](https://github.com/apollographql/apollo-client/pull/12614) [`d2851e2`](https://github.com/apollographql/apollo-client/commit/d2851e2c74541995760a86904b1e3ab4bd736e62) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Revamp local resolvers and fix several issues from the existing `resolvers` option.
+
+  - Throwing errors in a resolver will set the field value as `null` and add an error to the response's `errors` array.
+  - Remote results are dealiased before they are passed as the parent object to a resolver so that you can access fields by their field name.
+  - You can now specify a `context` function that you can use to customize the `requestContext` given to resolvers.
+  - The `LocalState` class accepts a `Resolvers` generic that provides autocompletion and type checking against your resolver types to ensure your resolvers are type-safe.
+  - `data: null` is now handled correctly and does not call your local resolvers when the server does not provide a result.
+  - Additional warnings have been added to provide hints when resolvers behave unexpectedly.
+
+  ```ts
+  import { LocalState } from "@apollo/client/local-state";
+
+  import { Resolvers } from "./path/to/local-resolvers-types.ts";
+
+  // LocalState now accepts a `Resolvers` generic.
+  const localState = new LocalState<Resolvers>({
+    // The return value of this funciton
+    context: (options) => ({
+      // ...
+    }),
+    resolvers: {
+      // ...
+    },
+  });
+
+  // You may also pass a `ContextValue` generic used to ensure the `context`
+  // function returns the correct type. This type is inferred from your resolvers
+  // if not provided.
+  new LocalState<Resolvers, ContextValue>({
+    // ...
+  });
+  ```
+
 ## 4.0.0-alpha.13
 
 ### Major Changes
@@ -1014,6 +1142,12 @@
 - [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - `@apollo/client`, `@apollo/client/core` and `@apollo/client/cache` no longer export an empty `Cache` runtime object. This is meant to be a type-only namespace.
 
 - [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't emit a partial cache result from `cache-only` queries when `returnPartialData` is `false`.
+
+## 3.13.8
+
+### Patch Changes
+
+- [#12567](https://github.com/apollographql/apollo-client/pull/12567) [`c19d415`](https://github.com/apollographql/apollo-client/commit/c19d41513cac0cc143aa7358f26c89c9408da102) Thanks [@thearchitector](https://github.com/thearchitector)! - Fix in-flight multipart urql subscription cancellation
 
 ## 3.13.7
 

@@ -10,6 +10,15 @@ import type { QueryRef } from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
+import type {
+  CommonStream,
+  ToEmitSimilarValueOptions,
+  ToRerenderWithSimilarSnapshotOptions,
+} from "./toRerenderWithSimilarSnapshot.ts";
+import {
+  RenderStream,
+  SnapshotStream,
+} from "@testing-library/react-render-stream";
 import { MatcherHintOptions } from "jest-matcher-utils";
 
 // Unfortunately TypeScript does not have a way to determine if a generic
@@ -133,14 +142,16 @@ interface ApolloCustomMatchers<R = void, T = {}> {
       options?: TOptions
     ) => R;
 
-  toRerenderWithSimilarSnapshot: T extends RenderStream<infer Snapshot> ?
-    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
+  toEmitSimilarValue: T extends CommonStream<infer Snapshot> ?
+    (options: ToEmitSimilarValueOptions<Snapshot>) => Promise<R>
   : {
-      error: "matcher needs to be called on a `RenderStream` instance";
+      error: "matcher needs to be called on a `CommonStream` (e.g. ObservableStream) instance";
     };
 
-  toRerenderWithStrictEqualSnapshot: T extends RenderStream<infer Snapshot> ?
-    (options?: NextRenderOptions) => Promise<R>
+  toRerenderWithSimilarSnapshot: T extends RenderStream<infer Snapshot> ?
+    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
+  : T extends SnapshotStream<infer Snapshot, any> ?
+    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
   : {
       error: "matcher needs to be called on a `RenderStream` instance";
     };

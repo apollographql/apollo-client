@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "4.0.0-alpha.13",
+  "version": "4.0.0-alpha.14",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -48,6 +48,7 @@
     "./link/subscriptions": "./src/link/subscriptions/index.ts",
     "./link/utils": "./src/link/utils/index.ts",
     "./link/ws": "./src/link/ws/index.ts",
+    "./local-state": "./src/local-state/index.ts",
     "./masking": "./src/masking/index.ts",
     "./react": {
       "react-server": "./src/react/index.react-server.ts",
@@ -81,13 +82,13 @@
     "build": "node config/build.ts",
     "typecheck": "tsc --project config/tsconfig.json; tsc --noEmit --project tsconfig.json",
     "postinstall": "patch-package",
-    "extract-api": "node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --generate apiReport",
+    "extract-api": "node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc --step=deprecateInternals && node config/apiExtractor.ts --generate apiReport",
     "clean": "rimraf dist coverage lib temp",
     "check:format": "prettier --check .",
     "ci:precheck": "node config/precheck.ts",
     "format": "prettier --write .",
     "lint": "EXTENDED_RULES=1 eslint 'src/**/*.{[jt]s,[jt]sx}'",
-    "test": "node --expose-gc --experimental-import-meta-resolve ./node_modules/jest/bin/jest.js --config ./config/jest.config.ts",
+    "test": "node --expose-gc --experimental-import-meta-resolve --disable-warning=ExperimentalWarning ./node_modules/jest/bin/jest.js --config ./config/jest.config.ts",
     "test:type-benches": "find src -name '*.bench.ts' | xargs -n1 tsx",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.ts --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",

@@ -372,7 +372,7 @@ export function useLazyQuery<
             // ensuring the key exists in options
             variables: executeOptions?.variables,
           })
-          .eager(/* create a persistent subscription on the query */);
+          .retain(/* create a persistent subscription on the query */);
       },
       [observable, calledDuringRender]
     );

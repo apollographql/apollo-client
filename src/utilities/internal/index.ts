@@ -74,6 +74,5 @@ export {
 
 export { AutoCleanedStrongCache, AutoCleanedWeakCache } from "./caches.js";
 
-export { LazyPromise } from "./LazyPromise.js";
 export { noop } from "./noop.js";
 export { identity } from "./identity.js";

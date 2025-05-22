@@ -9,7 +9,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { BehaviorSubject, lastValueFrom, Observable, Subject, tap } from "rxjs";
+import { BehaviorSubject, Observable, pipe, share, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -21,7 +21,7 @@ import {
   getOperationDefinition,
   getQueryDefinition,
   identity,
-  LazyPromise,
+  preventUnhandledRejection,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -191,6 +191,10 @@ export declare namespace ObservableQuery {
      * in the callback.
      */
     lastOwnDiff?: Cache.DiffResult<TData>;
+  }
+
+  interface RetainablePromise<T> extends Promise<T> {
+    retain(): this;
   }
 }
 
@@ -649,7 +653,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): LazyPromise<QueryResult<TData>> {
+  ): ObservableQuery.RetainablePromise<QueryResult<TData>> {
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {
@@ -967,21 +971,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public setVariables(variables: TVariables): LazyPromise<QueryResult<TData>> {
+  public async setVariables(
+    variables: TVariables
+  ): Promise<QueryResult<TData>> {
     variables = this.getVariablesWithDefaults(variables);
 
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return LazyPromise.resolve(toQueryResult(this.getCurrentResult()));
+      return toQueryResult(this.getCurrentResult());
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return LazyPromise.resolve(toQueryResult(this.getCurrentResult()));
+      return toQueryResult(this.getCurrentResult());
     }
 
     return this.reobserve(
@@ -1084,9 +1090,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options: ObservableQuery.Options<TData, TVariables>,
     networkStatus: NetworkStatus,
     fetchQuery: DocumentNode,
-    pipeOperator: MonoTypeOperatorFunction<
-      QueryNotification.Value<TData>
-    > = identity
+    pipeOperator: MonoTypeOperatorFunction<QueryNotification.Value<TData>>
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -1139,7 +1143,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           }
         });
 
-    const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
+    let { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
       { networkStatus, query: fetchQuery, onCacheHit, fetchQueryOperator }
@@ -1157,6 +1161,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     let forceFirstValueEmit =
       networkStatus == NetworkStatus.refetch ||
       networkStatus == NetworkStatus.setVariables;
+    observable = observable.pipe(pipeOperator, share());
     const subscription = observable
       .pipe(
         tap({
@@ -1171,8 +1176,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             }
           },
           finalize: () => this.activeOperations.delete(operation),
-        }),
-        pipeOperator
+        })
       )
       .subscribe({
         next: (value) => {
@@ -1287,9 +1291,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
       pipeOperator?: MonoTypeOperatorFunction<QueryNotification.Value<TData>>;
     }
-  ): LazyPromise<QueryResult<MaybeMasked<TData>>> {
+  ): ObservableQuery.RetainablePromise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
-    let { newNetworkStatus, pipeOperator } = internalOptions || {};
+    let { newNetworkStatus, pipeOperator = identity } = internalOptions || {};
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
@@ -1383,53 +1387,50 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.resubscribeCache();
-
+    const { promise, operator: promiseOperator } = getTrackingOperatorPromise(
+      (value: QueryNotification.Value<TData>) => {
+        switch (value.kind) {
+          case "E":
+            throw value.error;
+          case "N":
+            if (value.source !== "newNetworkStatus") return value.value;
+        }
+      },
+      // This default value should only be used when using a `fetchPolicy` of
+      // `standby` since that fetch policy completes without emitting a
+      // result. Since we are converting this to a QueryResult type, we
+      // omit the extra fields from ApolloQueryResult in the default value.
+      { data: undefined } as ApolloQueryResult<TData>
+    );
     const { subscription, observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
       query,
-      pipeOperator
+      pipe(pipeOperator, promiseOperator)
     );
 
     if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {
       if (this.linkSubscription) {
-        console.log("Unsubscribing from previous link subscription");
         this.linkSubscription.unsubscribe();
       }
 
       this.linkSubscription = subscription;
     }
 
-    return new LazyPromise(
-      (resolve, reject) =>
-        // Note: lastValueFrom will create a separate subscription to the
-        // observable which means that terminating this ObservableQuery will not
-        // cancel the request from the link chain once this lazy Promise has been
-        // started by `await`ing it or calling `.then`,`.catch`,`.finally` etc.
-        // on it.
-        lastValueFrom(
-          observable.pipe(
-            filterMap((value) => {
-              switch (value.kind) {
-                case "E":
-                  throw value.error;
-                case "N":
-                  if (value.source !== "newNetworkStatus") return value.value;
-              }
-            })
-          ),
-          {
-            // This default value should only be used when using a `fetchPolicy` of
-            // `standby` since that fetch policy completes without emitting a
-            // result. Since we are converting this to a QueryResult type, we
-            // omit the extra fields from ApolloQueryResult in the default value.
-            defaultValue: { data: undefined } as ApolloQueryResult<TData>,
-          }
-        )
-          .then((result) => toQueryResult(this.maskResult(result)))
-          .then(resolve, reject),
-      true
+    const ret = Object.assign(
+      preventUnhandledRejection(
+        promise.then((result) => toQueryResult(this.maskResult(result)))
+      ),
+      {
+        retain: () => {
+          const subscription = observable.subscribe({});
+          const unsubscribe = () => subscription.unsubscribe();
+          promise.then(unsubscribe, unsubscribe);
+          return ret;
+        },
+      }
     );
+    return ret;
   }
 
   public hasObservers() {
@@ -1779,4 +1780,32 @@ function isEqualQuery(
   b?: { query: DocumentNode; variables: OperationVariables }
 ) {
   return !!(a && b && a.query === b.query && equal(a.variables, b.variables));
+}
+
+function getTrackingOperatorPromise<ObservedValue, ReturnValue = ObservedValue>(
+  filterMapCb: (value: ObservedValue) => ReturnValue | undefined,
+  defaultValue: ReturnValue
+) {
+  let lastValue = defaultValue,
+    resolve: (value: ReturnValue) => void,
+    reject: (error: unknown) => void;
+  const promise = new Promise<ReturnValue>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  const operator: MonoTypeOperatorFunction<ObservedValue> = tap({
+    next(value) {
+      try {
+        const newValue = filterMapCb(value);
+        if (newValue !== undefined) {
+          lastValue = newValue;
+        }
+      } catch (error) {
+        reject(error);
+      }
+    },
+    error: (error) => reject(error),
+    finalize: () => resolve(lastValue),
+  });
+  return { promise, operator };
 }

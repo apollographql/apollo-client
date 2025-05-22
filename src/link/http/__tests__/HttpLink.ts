@@ -19,6 +19,7 @@ import { createHttpLink, HttpLink } from "@apollo/client/link/http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 
@@ -446,17 +447,16 @@ describe("HttpLink", () => {
     });
 
     it("raises warning if called with concat", () => {
+      using _ = spyOnConsole("warn");
       const link = createHttpLink();
-      const _warn = console.warn;
-      console.warn = (...args: any) =>
-        expect(args).toEqual([
-          "You are calling concat on a terminating link, which will have no effect %o",
-          link,
-        ]);
+
       expect(link.concat((operation, forward) => forward(operation))).toEqual(
         link
       );
-      console.warn = _warn;
+      expect(console.warn).toHaveBeenCalledWith(
+        "You are calling concat on a terminating link, which will have no effect %o",
+        link
+      );
     });
 
     it("does not need any constructor arguments", () => {

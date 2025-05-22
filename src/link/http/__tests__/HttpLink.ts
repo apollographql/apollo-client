@@ -146,7 +146,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
 
@@ -168,7 +168,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -191,7 +191,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -219,7 +219,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -245,7 +245,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -270,7 +270,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -313,7 +313,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -353,7 +353,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [, options] = fetchMock.lastCall()!;
@@ -385,7 +385,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [, options] = fetchMock.lastCall()!;
@@ -470,7 +470,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
 
@@ -532,7 +532,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
@@ -640,7 +640,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
 
@@ -661,7 +661,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
@@ -686,7 +686,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
@@ -710,7 +710,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
@@ -733,7 +733,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
       expect(creds).toBe("same-team-yo");
@@ -746,7 +746,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
       expect(creds).toBe("same-team-yo");
@@ -767,7 +767,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
       expect(creds).toBe("same-team-yo");
@@ -786,7 +786,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const uri = fetchMock.lastUrl();
       expect(uri).toBe("/data");
@@ -799,7 +799,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const uri = fetchMock.lastUrl();
       expect(uri).toBe("/data");
@@ -820,7 +820,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const uri = fetchMock.lastUrl();
       expect(uri).toBe("/apollo");
@@ -840,7 +840,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       expect(fetchMock.lastUrl()).toBe("/dataFunc");
     });
@@ -855,7 +855,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const { someOption, mode, headers } = fetchMock.lastCall()![1] as any;
       expect(someOption).toBe("foo");
@@ -878,7 +878,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const { someOption } = fetchMock.lastCall()![1] as any;
       expect(someOption).toBe("foo");
@@ -940,7 +940,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       expect(customPrinter).toHaveBeenCalledTimes(1);
       const [uri] = fetchMock.lastCall()!;
@@ -966,7 +966,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const { someOption } = fetchMock.lastCall()![1] as any;
       expect(someOption).toBe("foo");
@@ -989,7 +989,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
 
@@ -1023,7 +1023,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
   });
@@ -1032,22 +1032,17 @@ describe("HttpLink", () => {
     voidFetchDuringEachTest();
 
     it("warns if fetch is undeclared", async () => {
-      try {
-        createHttpLink({ uri: "data" });
-        throw new Error("warning wasn't called");
-      } catch (e) {
-        expect((e as Error).message).toMatch(/has not been found globally/);
-      }
+      expect(() => createHttpLink({ uri: "data" })).toThrow(
+        /has not been found globally/
+      );
     });
 
     it("warns if fetch is undefined", async () => {
       window.fetch = undefined as any;
-      try {
-        createHttpLink({ uri: "data" });
-        throw new Error("warning wasn't called");
-      } catch (e) {
-        expect((e as Error).message).toMatch(/has not been found globally/);
-      }
+
+      expect(() => createHttpLink({ uri: "data" })).toThrow(
+        /has not been found globally/
+      );
     });
 
     it("does not warn if fetch is undeclared but a fetch is passed", () => {
@@ -1874,7 +1869,17 @@ describe("HttpLink", () => {
         const observable = execute(link, { query: sampleSubscription });
         const observableStream = new ObservableStream(observable);
 
-        await expect(observableStream).toEmitNext();
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } },
+          },
+        });
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: { die: { color: "blue", roll: 2, sides: 5 } },
+          },
+        });
+        await expect(observableStream).toComplete();
 
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",

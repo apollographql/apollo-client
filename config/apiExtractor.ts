@@ -93,10 +93,10 @@ try {
       while (typeof entry === "object") {
         entry = entry.types || Object.values(entry).at(-1);
       }
-      const mainEntryPointFilePath = `<projectFolder>/dist/${entry}`.replace(
-        "//",
-        "/"
-      );
+      const mainEntryPointFilePath = `<projectFolder>/dist/${entry}`
+        .replace("//", "/")
+        .replace(/\.cjs$/, ".d.cts")
+        .replace(/\.js$/, ".d.ts");
       console.log(
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );

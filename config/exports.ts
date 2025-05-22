@@ -6,10 +6,6 @@ import type { BuildStep } from "./build.ts";
 import { entryPoints } from "./entryPoints.ts";
 
 type ConditionRoot = {
-  types: {
-    import?: string;
-    require?: string;
-  };
   import?: string;
   "module-sync"?: string;
   module?: string;
@@ -69,17 +65,13 @@ export const addExports: BuildStep = async (options) => {
     await writeLegacyExport([], "apollo-client", "@apollo/client");
   }
 
-  function processEntryPoint(
-    value: string,
-    existing: ConditionRoot = { types: {} }
-  ) {
+  function processEntryPoint(value: string, existing: ConditionRoot = {}) {
     value = value.replace(
       /^.\/src/,
       `.${options.targetDir.replace(/^dist/, "")}`
     );
 
     if (options.type === "esm") {
-      existing.types.import = value.replace(/\.ts$/, `.d.${options.tsExt}`);
       const target = value.replace(/\.ts$/, `.${options.jsExt}`);
       existing.module = target;
       existing["module-sync"] = target;
@@ -87,13 +79,11 @@ export const addExports: BuildStep = async (options) => {
       // existing.import = target;
       existing.default = target;
     } else {
-      existing.types.require = value.replace(/\.ts$/, `.d.${options.tsExt}`);
       existing.require = value.replace(/\.ts$/, `.${options.jsExt}`);
     }
     return JSON.parse(
       JSON.stringify(existing, [
         // ensure the order of keys is consistent
-        "types",
         "module",
         "module-sync",
         "require",

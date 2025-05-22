@@ -1,5 +1,4 @@
 // externals
-import { waitFor } from "@testing-library/react";
 import type { DocumentNode } from "graphql";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";

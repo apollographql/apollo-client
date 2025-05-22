@@ -331,30 +331,6 @@ export function isNonNullObject(obj: unknown): obj is Record<string | number, an
 // @internal @deprecated (undocumented)
 export function isPlainObject(obj: unknown): obj is Record<string | number, any>;
 
-// Warning: (ae-internal-mixed-release-tag) Mixed release tags are not allowed for "LazyPromise" because one of its declarations is marked as @internal
-//
-// @public (undocumented)
-export namespace LazyPromise {
-    // (undocumented)
-    export type Executor<T> = (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void;
-}
-
-// @internal @deprecated
-export class LazyPromise<T> implements /* but not extends */ Promise<T> {
-    // (undocumented)
-    [Symbol.toStringTag]: string;
-    constructor(executor: LazyPromise.Executor<T>, preventUnhandledRejection?: boolean);
-    // (undocumented)
-    catch: <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<any>;
-    eager: () => Promise<T>;
-    // (undocumented)
-    finally: (onfinally?: (() => void) | null | undefined) => Promise<any>;
-    // (undocumented)
-    static resolve<T>(value: T): LazyPromise<T>;
-    // (undocumented)
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): Promise<TResult1 | TResult2>;
-}
-
 // @internal @deprecated (undocumented)
 export function makeReference(id: string): Reference;
 

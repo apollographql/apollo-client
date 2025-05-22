@@ -397,7 +397,6 @@ Array [
   "AutoCleanedStrongCache",
   "AutoCleanedWeakCache",
   "DeepMerger",
-  "LazyPromise",
   "argumentsObjectFromField",
   "canUseDOM",
   "checkDocument",

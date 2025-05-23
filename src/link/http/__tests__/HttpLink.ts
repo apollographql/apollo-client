@@ -1820,7 +1820,7 @@ describe("HttpLink", () => {
 
       await expect(stream).toEmitError(
         new ServerError(
-          "Could not determine content encoding because `content-type` header is not set.",
+          "Could not determine content encoding because the 'content-type' header is missing.",
           {
             response,
             bodyText: JSON.stringify({ data: { foo: true } }),

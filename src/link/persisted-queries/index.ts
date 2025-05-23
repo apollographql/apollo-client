@@ -197,15 +197,16 @@ export const createPersistedQueryLink = (
             }
 
             // Network errors can return GraphQL errors on for example a 403
-            let networkErrors;
-            if (typeof networkError?.result !== "string") {
-              networkErrors =
-                networkError &&
-                networkError.result &&
-                (networkError.result.errors as GraphQLFormattedError[]);
-            }
-            if (isNonEmptyArray(networkErrors)) {
-              graphQLErrors.push(...networkErrors);
+            if (networkError?.bodyText) {
+              try {
+                const result = JSON.parse(networkError.bodyText);
+                const networkErrors: GraphQLFormattedError[] | undefined =
+                  result && (result.errors as GraphQLFormattedError[]);
+
+                if (isNonEmptyArray(networkErrors)) {
+                  graphQLErrors.push(...networkErrors);
+                }
+              } catch {}
             }
 
             const disablePayload: ErrorResponse = {

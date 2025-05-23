@@ -7,10 +7,6 @@ export type ObservableEvent<T> =
   | { type: "error"; error: any }
   | { type: "complete" };
 
-export interface TakeOptions {
-  timeout?: number;
-}
-
 // Lightweight expect(...).toEqual(...) check that avoids using `expect` so that
 // `expect.assertions(num)` does not double count assertions when using the take*
 // functions inside of expect(stream).toEmit* matchers.

@@ -1110,14 +1110,13 @@ describe("SharedHttpTest", () => {
     });
 
     it("resolving fetch does not cause the AbortController to be aborted", async () => {
-      const { text, fetch } = mockFetch();
       const abortControllers = trackGlobalAbortControllers();
-      text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
-      // (the request is already finished at that point)
       const link = new BatchHttpLink({
         uri: "data",
-        fetch: fetch as any,
+        fetch: async () => {
+          return Response.json({ data: { hello: "world" } }, { status: 200 });
+        },
         batchMax: 1,
       });
 

@@ -109,33 +109,31 @@ describe("BatchHttpLink", () => {
     );
   });
 
-  it("errors on an incorrect number of results for a batch", (done) => {
+  it("errors on an incorrect number of results for a batch", async () => {
+    fetchMock.post("begin:/batch", makePromise([data, data2]), {
+      headers: { "content-type": "application/json" },
+      overwriteRoutes: true,
+    });
+
     const link = new BatchHttpLink({
       uri: "/batch",
       batchInterval: 0,
       batchMax: 3,
     });
 
-    let errors = 0;
-    const next = (data: any) => {
-      throw new Error("next should not have been called");
-    };
+    const stream1 = new ObservableStream(execute(link, { query: sampleQuery }));
+    const stream2 = new ObservableStream(execute(link, { query: sampleQuery }));
+    const stream3 = new ObservableStream(execute(link, { query: sampleQuery }));
 
-    const complete = () => {
-      throw new Error("complete should not have been called");
-    };
-
-    const error = (error: any) => {
-      errors++;
-
-      if (errors === 3) {
-        done();
-      }
-    };
-
-    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
-    execute(link, { query: sampleQuery }).subscribe(next, error, complete);
+    await expect(stream1).toEmitError(
+      new Error("server returned results with length 2, expected length of 3")
+    );
+    await expect(stream2).toEmitError(
+      new Error("server returned results with length 2, expected length of 3")
+    );
+    await expect(stream3).toEmitError(
+      new Error("server returned results with length 2, expected length of 3")
+    );
   });
 
   describe("batchKey", () => {

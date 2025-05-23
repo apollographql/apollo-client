@@ -1019,7 +1019,7 @@ describe("HttpLink", () => {
             next: ob.next.bind(ob),
             error: ob.error.bind(ob),
             complete: () => {
-              expect(operation.getContext().response.headers.toBeDefined);
+              expect(operation.getContext().response.headers).toBeDefined();
               ob.complete();
             },
           });

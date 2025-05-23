@@ -1079,7 +1079,7 @@ describe("SharedHttpTest", () => {
       );
     });
 
-    it("aborting the internal signal will not cause an error", async () => {
+    it("aborting the internal signal emits abort error", async () => {
       try {
         fetchMock.restore();
         fetchMock.postOnce(
@@ -1089,8 +1089,14 @@ describe("SharedHttpTest", () => {
         const abortControllers = trackGlobalAbortControllers();
 
         const link = new BatchHttpLink({ uri: "/data", batchMax: 1 });
-        execute(link, { query: sampleQuery }).subscribe(failingObserver);
+        const stream = new ObservableStream(
+          execute(link, { query: sampleQuery })
+        );
         abortControllers[0].abort();
+
+        await expect(stream).toEmitError(
+          new DOMException("The operation was aborted.", "AbortError")
+        );
       } finally {
         fetchMock.restore();
       }

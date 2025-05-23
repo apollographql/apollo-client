@@ -2287,22 +2287,24 @@ export const selectURI: (operation: Operation, fallbackURI?: string | ((operatio
 // @public (undocumented)
 export const serializeFetchParameter: (p: any, label: string) => string;
 
-// @public
-export class ServerError extends Error {
-    // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
-    constructor(message: string, options: ServerErrorOptions);
-    static is(error: unknown): error is ServerError;
-    response: Response;
-    result: Record<string, any> | string;
-    statusCode: number;
+// @public (undocumented)
+export namespace ServerError {
+    // (undocumented)
+    export interface Options {
+        // (undocumented)
+        bodyText: string;
+        // (undocumented)
+        response: Response;
+    }
 }
 
-// @public (undocumented)
-interface ServerErrorOptions {
-    // (undocumented)
+// @public
+export class ServerError extends Error {
+    constructor(message: string, options: ServerError.Options);
+    bodyText: string;
+    static is(error: unknown): error is ServerError;
     response: Response;
-    // (undocumented)
-    result: Record<string, any> | string;
+    statusCode: number;
 }
 
 // @public

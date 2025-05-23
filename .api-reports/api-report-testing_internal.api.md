@@ -19,6 +19,7 @@ import type { MockedProviderProps } from '@apollo/client/testing/react';
 import type { MockLink } from '@apollo/client/testing';
 import type { Observable } from 'rxjs';
 import { Observable as Observable_2 } from '@apollo/client';
+import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client';
 import type { Queries } from '@testing-library/dom';
 import type { queries } from '@testing-library/dom';
@@ -167,6 +168,39 @@ export class ObservableStream<T> {
 }
 
 // @public (undocumented)
+export class ObservableSubscriber<T> implements Observer<T> {
+    constructor();
+    // (undocumented)
+    complete(): void;
+    // (undocumented)
+    error(error: unknown): void;
+    // (undocumented)
+    getCurrent(): T | undefined;
+    // (undocumented)
+    next(value: T): void;
+    // Warning: (ae-forgotten-export) The symbol "TakeOptions_2" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    peek({ timeout }?: TakeOptions_2): Promise<ObservableEvent<T>>;
+    // (undocumented)
+    take({ timeout }?: TakeOptions_2): Promise<{
+        type: "error";
+        error: any;
+    } | {
+        type: "complete";
+    } | {
+        type: "next";
+        value: T;
+    }>;
+    // (undocumented)
+    takeComplete(options?: TakeOptions_2): Promise<void>;
+    // (undocumented)
+    takeError(options?: TakeOptions_2): Promise<any>;
+    // (undocumented)
+    takeNext(options?: TakeOptions_2): Promise<T>;
+}
+
+// @public (undocumented)
 export interface PaginatedCaseData {
     // Warning: (ae-forgotten-export) The symbol "Letter" needs to be exported by the entry point index.d.ts
     //
@@ -260,6 +294,12 @@ export namespace spyOnConsole {
 
 // @public (undocumented)
 interface TakeOptions {
+    // (undocumented)
+    timeout?: number;
+}
+
+// @public (undocumented)
+interface TakeOptions_2 {
     // (undocumented)
     timeout?: number;
 }

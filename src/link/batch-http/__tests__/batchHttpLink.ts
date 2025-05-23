@@ -67,6 +67,11 @@ describe("BatchHttpLink", () => {
   });
 
   it("handles batched requests", async () => {
+    fetchMock.post("begin:/batch", makePromise([data, data2]), {
+      headers: { "content-type": "application/json" },
+      overwriteRoutes: true,
+    });
+
     const clientAwareness = {
       name: "Some Client Name",
       version: "1.0.1",

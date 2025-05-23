@@ -58,7 +58,7 @@ jobs:
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
-      - run: npm run build
+      - run: npm run build:test
       - run: npm run typecheck
       - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
       - run:

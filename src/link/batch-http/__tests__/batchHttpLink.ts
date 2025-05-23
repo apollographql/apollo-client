@@ -519,7 +519,7 @@ describe("SharedHttpTest", () => {
     );
   });
 
-  it("uses the latest window.fetch function if options.fetch not configured", (done) => {
+  it("uses the latest window.fetch function if options.fetch not configured", async () => {
     const httpLink = new BatchHttpLink({ uri: "data" });
 
     const fetch = window.fetch;
@@ -527,48 +527,35 @@ describe("SharedHttpTest", () => {
 
     const fetchSpy = jest.spyOn(window, "fetch");
     fetchSpy.mockImplementation(() =>
-      Promise.resolve<Response>({
-        text() {
-          return Promise.resolve(
-            JSON.stringify({
-              data: { hello: "from spy" },
-            })
-          );
-        },
-        headers: new Headers({ "content-type": "application/json" }),
-      } as Response)
+      Promise.resolve(
+        Response.json(
+          { data: { hello: "from spy" } },
+          { headers: { "content-type": "application/json" } }
+        )
+      )
     );
 
     const spyFn = window.fetch;
     expect(spyFn).not.toBe(fetch);
 
-    subscriptions.add(
-      execute(httpLink, { query: sampleQuery }).subscribe({
-        error: done.fail,
-
-        next(result) {
-          expect(fetchSpy).toHaveBeenCalledTimes(1);
-          expect(result).toEqual({
-            data: { hello: "from spy" },
-          });
-
-          fetchSpy.mockRestore();
-          expect(window.fetch).toBe(fetch);
-
-          subscriptions.add(
-            execute(httpLink, { query: sampleQuery }).subscribe({
-              error: done.fail,
-              next(result) {
-                expect(result).toEqual({
-                  data: { hello: "world" },
-                });
-                done();
-              },
-            })
-          );
-        },
-      })
+    using stream = new ObservableStream(
+      execute(httpLink, { query: sampleQuery })
     );
+
+    await expect(stream).toEmitTypedValue({
+      data: { hello: "from spy" },
+    });
+    await expect(stream).toComplete();
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    fetchSpy.mockRestore();
+
+    using stream2 = new ObservableStream(
+      execute(httpLink, { query: sampleQuery })
+    );
+
+    await expect(stream2).toEmitTypedValue({ data: { hello: "world" } });
+    await expect(stream2).toComplete();
   });
 
   it("prioritizes context headers over setup headers", async () => {

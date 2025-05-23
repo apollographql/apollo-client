@@ -51,9 +51,6 @@ describe("BatchHttpLink", () => {
 
   beforeEach(() => {
     fetchMock.restore();
-    fetchMock.post("begin:/batch", makePromise([data, data2]), {
-      headers: { "content-type": "application/json" },
-    });
     fetchMock.post("begin:/rofl", makePromise([roflData, roflData]), {
       headers: { "content-type": "application/json" },
     });
@@ -69,7 +66,6 @@ describe("BatchHttpLink", () => {
   it("handles batched requests", async () => {
     fetchMock.post("begin:/batch", makePromise([data, data2]), {
       headers: { "content-type": "application/json" },
-      overwriteRoutes: true,
     });
 
     const clientAwareness = {
@@ -117,7 +113,6 @@ describe("BatchHttpLink", () => {
   it("errors on an incorrect number of results for a batch", async () => {
     fetchMock.post("begin:/batch", makePromise([data, data2]), {
       headers: { "content-type": "application/json" },
-      overwriteRoutes: true,
     });
 
     const link = new BatchHttpLink({

@@ -2989,7 +2989,7 @@ describe("useMutation Hook", () => {
           data: GET_TODOS_RESULT_1,
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          previousData: GET_TODOS_RESULT_1,
+          previousData: undefined,
           variables: {},
         });
 
@@ -3011,7 +3011,7 @@ describe("useMutation Hook", () => {
           data: GET_TODOS_RESULT_1,
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          previousData: GET_TODOS_RESULT_1,
+          previousData: undefined,
           variables: {},
         });
 
@@ -3188,7 +3188,7 @@ describe("useMutation Hook", () => {
           data: GET_TODOS_RESULT_1,
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          previousData: GET_TODOS_RESULT_1,
+          previousData: undefined,
           variables: {},
         });
 
@@ -3210,7 +3210,7 @@ describe("useMutation Hook", () => {
           data: GET_TODOS_RESULT_1,
           loading: true,
           networkStatus: NetworkStatus.refetch,
-          previousData: GET_TODOS_RESULT_1,
+          previousData: undefined,
           variables: {},
         });
 

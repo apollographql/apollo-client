@@ -14,7 +14,7 @@ const localStateError = new LocalStateError("Oops");
 const protocolErrors = new CombinedProtocolErrors([]);
 const serverError = new ServerError("Oops", {
   response: new Response("", { status: 400 }),
-  result: "",
+  bodyText: "",
 });
 const serverParseError = new ServerParseError(new Error("Oops"), {
   response: new Response("", { status: 400 }),

@@ -13,6 +13,8 @@ type ConditionRoot = {
   default?: string;
 };
 
+const EXCLUDED_ENTRYPOINTS = ["./testing/internal"];
+
 export const addExports: BuildStep = async (options) => {
   const pkgFileName = join(options.packageRoot, "package.json");
   const pkg = JSON.parse(await readFile(pkgFileName, "utf-8"));
@@ -20,6 +22,10 @@ export const addExports: BuildStep = async (options) => {
   // these entry points will be used in most cases and point to the right file depending
   // on how the user is consuming the package.
   for (const entryPoint of entryPoints) {
+    if (EXCLUDED_ENTRYPOINTS.includes(entryPoint.key)) {
+      continue;
+    }
+
     if (typeof entryPoint.value === "string") {
       pkg.exports[entryPoint.key] = processEntryPoint(
         entryPoint.value,

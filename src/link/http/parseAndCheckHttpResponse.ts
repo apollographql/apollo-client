@@ -145,17 +145,8 @@ function parseHeaders(headerText: string): Record<string, string> {
   return headersInit;
 }
 
-function parseGraphQLResponse(response: Response, bodyText: string) {
-  const contentType = response.headers.get("content-type");
-
-  if (contentType === null) {
-    throw new ServerError(
-      "Could not determine content encoding because the 'content-type' header is missing.",
-      { response, bodyText }
-    );
-  }
-
-  if (contentType.includes("application/json") && response.status >= 300) {
+function parseJsonEncoding(response: Response, bodyText: string) {
+  if (response.status >= 300) {
     throw new ServerError(
       `Response not successful: Received status code ${response.status}`,
       { response, bodyText }
@@ -167,6 +158,41 @@ function parseGraphQLResponse(response: Response, bodyText: string) {
   } catch (err) {
     throw new ServerParseError(err, { response, bodyText });
   }
+}
+
+function parseGraphQLResponseJsonEncoding(
+  response: Response,
+  bodyText: string
+) {
+  try {
+    return JSON.parse(bodyText);
+  } catch (err) {
+    throw new ServerParseError(err, { response, bodyText });
+  }
+}
+
+function parseGraphQLResponse(response: Response, bodyText: string) {
+  const contentType = response.headers.get("content-type");
+
+  if (contentType === null) {
+    throw new ServerError(
+      "Could not determine content encoding because the 'content-type' header is missing.",
+      { response, bodyText }
+    );
+  }
+
+  if (contentType.includes("application/json")) {
+    return parseJsonEncoding(response, bodyText);
+  }
+
+  if (contentType.includes("application/graphql-response+json")) {
+    return parseGraphQLResponseJsonEncoding(response, bodyText);
+  }
+
+  throw new ServerError(`Unsupported mime type: '${contentType}'`, {
+    response,
+    bodyText,
+  });
 }
 
 function parseJsonBody<T>(response: Response, bodyText: string): T {

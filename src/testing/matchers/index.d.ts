@@ -7,7 +7,11 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
-import { NextRenderOptions, ObservableStream } from "../internal/index.js";
+import {
+  NextRenderOptions,
+  ObservableStream,
+  ObservableSubscriber,
+} from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
 import type {
@@ -101,6 +105,19 @@ interface ApolloCustomMatchers<R = void, T = {}> {
       }
     ) => Promise<R>
   : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
+
+  toObserveTypedValue: T extends ObservableSubscriber<infer TResult> ?
+    (
+      expected: FilterUnserializableProperties<TResult>,
+      options?: TakeOptions & {
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
+      }
+    ) => Promise<R>
+  : {
+      error: "toObserveTypedValue needs to be called on an ObservableSubscriber";
+    };
 
   toStrictEqualTyped: [T] extends [Promise<infer TResult>] ?
     <

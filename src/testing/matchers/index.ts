@@ -10,6 +10,7 @@ import { toEmitNext } from "./toEmitNext.js";
 import { toEmitTypedValue } from "./toEmitTypedValue.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
+import { toObserveTypedValue } from "./toObserveTypedValue.js";
 import {
   toEmitSimilarValue,
   toRerenderWithSimilarSnapshot,
@@ -27,6 +28,7 @@ expect.extend({
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,
   toBeGarbageCollected,
+  toObserveTypedValue,
   toStrictEqualTyped,
   toRerenderWithSimilarSnapshot,
   toEmitSimilarValue,

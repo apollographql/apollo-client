@@ -227,7 +227,7 @@ const convertBatchedBody = (body: any) => {
   return parsed.pop();
 };
 
-const createHttpLink = (httpArgs?: any) => {
+const createBatchHttpLink = (httpArgs?: any) => {
   const args = {
     ...httpArgs,
     batchInterval: 0,
@@ -281,7 +281,7 @@ describe("SharedHttpTest", () => {
 
   it("raises warning if called with concat", () => {
     using _ = spyOnConsole("warn");
-    const link = createHttpLink();
+    const link = createBatchHttpLink();
     expect(link.concat((operation, forward) => forward(operation))).toEqual(
       link
     );
@@ -293,11 +293,11 @@ describe("SharedHttpTest", () => {
   });
 
   it("does not need any constructor arguments", () => {
-    expect(() => createHttpLink()).not.toThrow();
+    expect(() => createBatchHttpLink()).not.toThrow();
   });
 
   it("calls next and then complete", async () => {
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
     const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
 
@@ -306,7 +306,7 @@ describe("SharedHttpTest", () => {
   });
 
   it("calls error when fetch fails", async () => {
-    const link = createHttpLink({ uri: "/error" });
+    const link = createBatchHttpLink({ uri: "/error" });
     const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
 
@@ -314,7 +314,7 @@ describe("SharedHttpTest", () => {
   });
 
   it("calls error when fetch fails", async () => {
-    const link = createHttpLink({ uri: "/error" });
+    const link = createBatchHttpLink({ uri: "/error" });
     const observable = execute(link, { query: sampleMutation });
     const stream = new ObservableStream(observable);
 
@@ -322,7 +322,7 @@ describe("SharedHttpTest", () => {
   });
 
   it("strips unused variables, respecting nested fragments", async () => {
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
 
     const query = gql`
       query PEOPLE($declaredAndUsed: String, $declaredButUnused: Int) {
@@ -370,7 +370,7 @@ describe("SharedHttpTest", () => {
   });
 
   it("unsubscribes without calling subscriber", async () => {
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
     const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
     stream.unsubscribe();
@@ -408,21 +408,21 @@ describe("SharedHttpTest", () => {
   };
 
   it("passes all arguments to multiple fetch body including extensions", async () => {
-    const link = createHttpLink({ uri: "/data", includeExtensions: true });
+    const link = createBatchHttpLink({ uri: "/data", includeExtensions: true });
 
     await verifyRequest(link, true, false);
     await verifyRequest(link, true, false);
   });
 
   it("passes all arguments to multiple fetch body excluding extensions", async () => {
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
 
     await verifyRequest(link, false, false);
     await verifyRequest(link, false, false);
   });
 
   it("calls multiple subscribers", (done) => {
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
     const context = { info: "stub" };
     const variables = { params: "stub" };
 
@@ -446,7 +446,7 @@ describe("SharedHttpTest", () => {
   });
 
   it("calls remaining subscribers after unsubscribe", (done) => {
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
     const context = { info: "stub" };
     const variables = { params: "stub" };
 
@@ -473,7 +473,7 @@ describe("SharedHttpTest", () => {
 
   it("allows for dynamic endpoint setting", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
 
     const stream = new ObservableStream(
       execute(link, {
@@ -500,7 +500,7 @@ describe("SharedHttpTest", () => {
         })
       );
     });
-    const link = middleware.concat(createHttpLink({ uri: "/data" }));
+    const link = middleware.concat(createBatchHttpLink({ uri: "/data" }));
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
     );
@@ -518,7 +518,7 @@ describe("SharedHttpTest", () => {
 
   it("adds headers to the request from the setup", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({
+    const link = createBatchHttpLink({
       uri: "/data",
       headers: { authorization: "1234" },
     });
@@ -539,7 +539,7 @@ describe("SharedHttpTest", () => {
   });
 
   it("uses the latest window.fetch function if options.fetch not configured", (done) => {
-    const httpLink = createHttpLink({ uri: "data" });
+    const httpLink = createBatchHttpLink({ uri: "data" });
 
     const fetch = window.fetch;
     expect(typeof fetch).toBe("function");
@@ -599,7 +599,10 @@ describe("SharedHttpTest", () => {
       return forward(operation);
     });
     const link = middleware.concat(
-      createHttpLink({ uri: "/data", headers: { authorization: "no user" } })
+      createBatchHttpLink({
+        uri: "/data",
+        headers: { authorization: "no user" },
+      })
     );
 
     const stream = new ObservableStream(
@@ -619,7 +622,7 @@ describe("SharedHttpTest", () => {
 
   it("adds headers to the request from the context on an operation", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
 
     const context = {
       headers: { authorization: "1234" },
@@ -645,7 +648,7 @@ describe("SharedHttpTest", () => {
 
   it("adds headers w/ preserved case to the request from the setup", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({
+    const link = createBatchHttpLink({
       uri: "/data",
       headers: {
         authorization: "1234",
@@ -679,7 +682,7 @@ describe("SharedHttpTest", () => {
       return forward(operation);
     });
     const link = middleware.concat(
-      createHttpLink({
+      createBatchHttpLink({
         uri: "/data",
         headers: { authorization: "no user" },
         preserveHeaderCase: false,
@@ -702,7 +705,7 @@ describe("SharedHttpTest", () => {
 
   it("adds headers w/ preserved case to the request from the context on an operation", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
 
     const context = {
       headers: { AUTHORIZATION: "1234" },
@@ -730,7 +733,7 @@ describe("SharedHttpTest", () => {
       });
       return forward(operation);
     });
-    const link = middleware.concat(createHttpLink({ uri: "/data" }));
+    const link = middleware.concat(createBatchHttpLink({ uri: "/data" }));
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -744,7 +747,10 @@ describe("SharedHttpTest", () => {
 
   it("adds creds to the request from the setup", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({ uri: "/data", credentials: "same-team-yo" });
+    const link = createBatchHttpLink({
+      uri: "/data",
+      credentials: "same-team-yo",
+    });
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -765,7 +771,7 @@ describe("SharedHttpTest", () => {
       return forward(operation);
     });
     const link = middleware.concat(
-      createHttpLink({ uri: "/data", credentials: "error" })
+      createBatchHttpLink({ uri: "/data", credentials: "error" })
     );
 
     const stream = new ObservableStream(
@@ -786,7 +792,7 @@ describe("SharedHttpTest", () => {
       });
       return forward(operation);
     });
-    const link = middleware.concat(createHttpLink());
+    const link = middleware.concat(createBatchHttpLink());
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -800,7 +806,7 @@ describe("SharedHttpTest", () => {
 
   it("adds uri to the request from the setup", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({ uri: "/data" });
+    const link = createBatchHttpLink({ uri: "/data" });
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -821,7 +827,7 @@ describe("SharedHttpTest", () => {
       return forward(operation);
     });
     const link = middleware.concat(
-      createHttpLink({ uri: "/data", credentials: "error" })
+      createBatchHttpLink({ uri: "/data", credentials: "error" })
     );
 
     const stream = new ObservableStream(
@@ -842,7 +848,7 @@ describe("SharedHttpTest", () => {
       return fetch("/dataFunc", options);
     };
 
-    const link = createHttpLink({ fetch: customFetch });
+    const link = createBatchHttpLink({ fetch: customFetch });
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -855,7 +861,7 @@ describe("SharedHttpTest", () => {
 
   it("adds fetchOptions to the request from the setup", async () => {
     const variables = { params: "stub" };
-    const link = createHttpLink({
+    const link = createBatchHttpLink({
       uri: "/data",
       fetchOptions: { someOption: "foo", mode: "no-cors" },
     });
@@ -882,7 +888,7 @@ describe("SharedHttpTest", () => {
       });
       return forward(operation);
     });
-    const link = middleware.concat(createHttpLink({ uri: "/data" }));
+    const link = middleware.concat(createBatchHttpLink({ uri: "/data" }));
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -901,7 +907,7 @@ describe("SharedHttpTest", () => {
       }
     );
 
-    const httpLink = createHttpLink({ uri: "data", print: customPrinter });
+    const httpLink = createBatchHttpLink({ uri: "data", print: customPrinter });
 
     const stream = new ObservableStream(
       execute(httpLink, { query: sampleQuery })
@@ -923,7 +929,7 @@ describe("SharedHttpTest", () => {
       return forward(operation);
     });
     const link = middleware.concat(
-      createHttpLink({ uri: "/data", fetchOptions: { someOption: "bar" } })
+      createBatchHttpLink({ uri: "/data", fetchOptions: { someOption: "bar" } })
     );
 
     const stream = new ObservableStream(
@@ -948,7 +954,7 @@ describe("SharedHttpTest", () => {
       operation.extensions.persistedQuery = { hash: "1234" };
       return forward(operation);
     });
-    const link = middleware.concat(createHttpLink({ uri: "/data" }));
+    const link = middleware.concat(createBatchHttpLink({ uri: "/data" }));
 
     const stream = new ObservableStream(
       execute(link, { query: sampleQuery, variables })
@@ -981,7 +987,9 @@ describe("SharedHttpTest", () => {
       });
     });
 
-    const link = middleware.concat(createHttpLink({ uri: "/data", fetch }));
+    const link = middleware.concat(
+      createBatchHttpLink({ uri: "/data", fetch })
+    );
 
     const stream = new ObservableStream(execute(link, { query: sampleQuery }));
 
@@ -1036,7 +1044,7 @@ describe("SharedHttpTest", () => {
       const { fetch } = mockFetch();
       const abortControllers = trackGlobalAbortControllers();
 
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const link = createBatchHttpLink({ uri: "data", fetch: fetch as any });
 
       const sub = execute(link, { query: sampleQuery }).subscribe(
         failingObserver
@@ -1051,7 +1059,7 @@ describe("SharedHttpTest", () => {
       const { fetch } = mockFetch();
       const externalAbortController = new AbortController();
 
-      const link = createHttpLink({
+      const link = createBatchHttpLink({
         uri: "data",
         fetch: fetch as any,
         fetchOptions: { signal: externalAbortController.signal },
@@ -1077,7 +1085,7 @@ describe("SharedHttpTest", () => {
         );
         const abortControllers = trackGlobalAbortControllers();
 
-        const link = createHttpLink({ uri: "/data" });
+        const link = createBatchHttpLink({ uri: "/data" });
         execute(link, { query: sampleQuery }).subscribe(failingObserver);
         abortControllers[0].abort();
       } finally {
@@ -1091,7 +1099,7 @@ describe("SharedHttpTest", () => {
       text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
       // (the request is already finished at that point)
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const link = createBatchHttpLink({ uri: "data", fetch: fetch as any });
 
       await new Promise<void>((resolve) =>
         execute(link, { query: sampleQuery }).subscribe({
@@ -1108,7 +1116,7 @@ describe("SharedHttpTest", () => {
       const abortControllers = trackGlobalAbortControllers();
       fetch.mockRejectedValueOnce("This is an error!");
       // the request would be closed by the browser in the case of an error anyways
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const link = createBatchHttpLink({ uri: "data", fetch: fetch as any });
 
       await new Promise<void>((resolve) =>
         execute(link, { query: sampleQuery }).subscribe({

@@ -10,7 +10,9 @@ import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  ObservableSubscriber,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
@@ -394,7 +396,7 @@ describe("SharedHttpTest", () => {
     await verifyRequest(link, false, false);
   });
 
-  it("calls multiple subscribers", (done) => {
+  it("calls multiple subscribers", async () => {
     const link = new BatchHttpLink({ uri: "/data" });
     const context = { info: "stub" };
     const variables = { params: "stub" };
@@ -404,21 +406,24 @@ describe("SharedHttpTest", () => {
       context,
       variables,
     });
-    observable.subscribe(subscriber);
-    observable.subscribe(subscriber);
 
-    setTimeout(() => {
-      expect(subscriber.next).toHaveBeenCalledTimes(2);
-      expect(subscriber.complete).toHaveBeenCalledTimes(2);
-      expect(subscriber.error).not.toHaveBeenCalled();
-      // only one call because batchHttpLink can handle more than one subscriber
-      // without starting a new request
-      expect(fetchMock.calls().length).toBe(1);
-      done();
-    }, 50);
+    const observer = new ObservableSubscriber();
+
+    observable.subscribe(observer);
+    observable.subscribe(observer);
+
+    await expect(observer).toHaveObservedNextValue(data);
+    await expect(observer).toHaveObservedNextValue(data);
+
+    await expect(observer).toHaveObservedCompleteNotification();
+    await expect(observer).toHaveObservedCompleteNotification();
+
+    await expect(observer).not.toHaveObservedAnything();
+
+    expect(fetchMock.calls().length).toBe(1);
   });
 
-  it("calls remaining subscribers after unsubscribe", (done) => {
+  it("calls remaining subscribers after unsubscribe", async () => {
     const link = new BatchHttpLink({ uri: "/data" });
     const context = { info: "stub" };
     const variables = { params: "stub" };
@@ -429,19 +434,20 @@ describe("SharedHttpTest", () => {
       variables,
     });
 
-    observable.subscribe(subscriber);
+    const observer = new ObservableSubscriber();
 
-    setTimeout(() => {
-      const subscription = observable.subscribe(subscriber);
-      subscription.unsubscribe();
-    }, 10);
+    observable.subscribe(observer);
 
-    setTimeout(() => {
-      expect(subscriber.next).toHaveBeenCalledTimes(1);
-      expect(subscriber.complete).toHaveBeenCalledTimes(1);
-      expect(subscriber.error).not.toHaveBeenCalled();
-      done();
-    }, 50);
+    await wait(10);
+
+    const subscription = observable.subscribe(subscriber);
+    subscription.unsubscribe();
+
+    await wait(50);
+
+    await expect(observer).toHaveObservedNextValue(data);
+    await expect(observer).toHaveObservedCompleteNotification();
+    await expect(observer).not.toHaveObservedAnything();
   });
 
   it("allows for dynamic endpoint setting", async () => {

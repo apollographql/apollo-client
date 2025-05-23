@@ -1,16 +1,7 @@
-import type { Tester } from "@jest/expect-utils";
-import { equals, iterableEquality } from "@jest/expect-utils";
-import * as matcherUtils from "jest-matcher-utils";
 import type { Observer } from "rxjs";
 
-type ObservableEvent<T> =
-  | { type: "next"; value: T }
-  | { type: "error"; error: any }
-  | { type: "complete" };
-
-export interface TakeOptions {
-  timeout?: number;
-}
+import type { ObservableEvent, TakeOptions } from "./utils/observable.js";
+import { validateEquals } from "./utils/observable.js";
 
 export class ObservableSubscriber<T> implements Observer<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;
@@ -35,6 +26,33 @@ export class ObservableSubscriber<T> implements Observer<T> {
 
   complete() {
     this.controller.enqueue({ type: "complete" });
+  }
+
+  peek({ timeout = 100 }: TakeOptions = {}) {
+    // Calling `peek` multiple times in a row should not advance the reader
+    // multiple times until this value has been consumed.
+    let readerPromise = this.readerQueue[0];
+
+    if (!readerPromise) {
+      // Since this.reader.read() advances the reader in the stream, we don't
+      // want to consume this promise entirely, otherwise we will miss it when
+      // calling `take`. Instead, we push it into a queue that can be consumed
+      // by `take` the next time its called so that we avoid advancing the
+      // reader until we are finished processing all peeked values.
+      readerPromise = this.readNextValue();
+      this.readerQueue.push(readerPromise);
+    }
+
+    return Promise.race([
+      readerPromise,
+      new Promise<ObservableEvent<T>>((_, reject) => {
+        setTimeout(
+          reject,
+          timeout,
+          new Error("Timeout waiting for next event")
+        );
+      }),
+    ]);
   }
 
   take({ timeout = 100 }: TakeOptions = {}) {
@@ -80,43 +98,4 @@ export class ObservableSubscriber<T> implements Observer<T> {
   getCurrent() {
     return this.current;
   }
-}
-
-// Lightweight expect(...).toEqual(...) check that avoids using `expect` so that
-// `expect.assertions(num)` does not double count assertions when using the take*
-// functions inside of expect(stream).toEmit* matchers.
-function validateEquals(
-  actualEvent: ObservableEvent<any>,
-  expectedEvent: ObservableEvent<any>
-) {
-  // Uses the same matchers as expect(...).toEqual(...)
-  // https://github.com/jestjs/jest/blob/611d1a4ba0008d67b5dcda485177f0813b2b573e/packages/expect/src/matchers.ts#L626-L629
-  const isEqual = equals(actualEvent, expectedEvent, [
-    ...getCustomMatchers(),
-    iterableEquality,
-  ]);
-
-  if (isEqual) {
-    return;
-  }
-
-  const hint = matcherUtils.matcherHint("toEqual", "stream", "expected");
-
-  throw new Error(
-    hint +
-      "\n\n" +
-      matcherUtils.printDiffOrStringify(
-        expectedEvent,
-        actualEvent,
-        "Expected",
-        "Received",
-        true
-      )
-  );
-}
-
-function getCustomMatchers(): Array<Tester> {
-  // https://github.com/jestjs/jest/blob/611d1a4ba0008d67b5dcda485177f0813b2b573e/packages/expect/src/jestMatchersObject.ts#L141-L143
-  const JEST_MATCHERS_OBJECT = Symbol.for("$$jest-matchers-object");
-  return (globalThis as any)[JEST_MATCHERS_OBJECT].customEqualityTesters;
 }

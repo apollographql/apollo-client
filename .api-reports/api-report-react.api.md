@@ -524,9 +524,7 @@ namespace ObservableQuery {
         query: DocumentNode | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
     };
-    // (undocumented)
-    interface RetainablePromise<T> extends Promise<T> {
-        // (undocumented)
+    interface ResultPromise<T> extends Promise<T> {
         retain(): this;
     }
 }
@@ -567,8 +565,8 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     readonly queryId: string;
     // (undocumented)
     readonly queryName?: string;
-    refetch(variables?: Partial<TVariables>): ObservableQuery.RetainablePromise<QueryResult_2<TData>>;
-    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): ObservableQuery.RetainablePromise<QueryResult_2<MaybeMasked<TData>>>;
+    refetch(variables?: Partial<TVariables>): ObservableQuery.ResultPromise<QueryResult_2<TData>>;
+    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): ObservableQuery.ResultPromise<QueryResult_2<MaybeMasked<TData>>>;
     // @internal @deprecated
     reset(): void;
     // @internal @deprecated (undocumented)
@@ -1590,10 +1588,10 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:134:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:146:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:294:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:306:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:191:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:474:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:208:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

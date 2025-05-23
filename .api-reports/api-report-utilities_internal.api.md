@@ -298,9 +298,6 @@ export function hasDirectives(names: string[], root: ASTNode, all?: boolean): bo
 // @public (undocumented)
 export function hasForcedResolvers(document: ASTNode): boolean;
 
-// @public (undocumented)
-export function identity<T>(x: T): T;
-
 // @internal @deprecated (undocumented)
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -357,9 +354,6 @@ export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, a
 // @public @deprecated
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 export { NoInfer_2 as NoInfer }
-
-// @public (undocumented)
-export function noop(): void;
 
 // @public (undocumented)
 type ObservableEvent<T> = {

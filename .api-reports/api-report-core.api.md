@@ -570,9 +570,7 @@ export namespace ObservableQuery {
         query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         variables: TVariables;
     };
-    // (undocumented)
-    export interface RetainablePromise<T> extends Promise<T> {
-        // (undocumented)
+    export interface ResultPromise<T> extends Promise<T> {
         retain(): this;
     }
 }
@@ -610,8 +608,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     readonly queryId: string;
     // (undocumented)
     readonly queryName?: string;
-    refetch(variables?: Partial<TVariables>): ObservableQuery.RetainablePromise<QueryResult<TData>>;
-    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): ObservableQuery.RetainablePromise<QueryResult<MaybeMasked<TData>>>;
+    refetch(variables?: Partial<TVariables>): ObservableQuery.ResultPromise<QueryResult<TData>>;
+    reobserve(newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>>;
     // @internal @deprecated
     reset(): void;
     // @internal @deprecated (undocumented)
@@ -1072,9 +1070,9 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:134:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:294:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:306:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:191:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:474:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

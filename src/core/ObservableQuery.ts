@@ -192,7 +192,20 @@ export declare namespace ObservableQuery {
     lastOwnDiff?: Cache.DiffResult<TData>;
   }
 
-  interface RetainablePromise<T> extends Promise<T> {
+  /**
+   * Promise returned by `reobserve` and `refetch` methods.
+   *
+   * By default, if the `ObservableQuery` is not interested in the result
+   * of this operation anymore, the network operation will be cancelled.
+   *
+   * This has an additional `retain` method that can be used to keep the
+   * network operation running until it is finished nonetheless.
+   */
+  interface ResultPromise<T> extends Promise<T> {
+    /**
+     * Kepp the network operation running until it is finished, even if
+     * `ObservableQuery` unsubscribed from the operation.
+     */
     retain(): this;
   }
 }
@@ -652,7 +665,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): ObservableQuery.RetainablePromise<QueryResult<TData>> {
+  ): ObservableQuery.ResultPromise<QueryResult<TData>> {
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {
@@ -1279,7 +1292,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
-  ): ObservableQuery.RetainablePromise<QueryResult<MaybeMasked<TData>>> {
+  ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
     return this._reobserve(newOptions);
   }
   private _reobserve(
@@ -1289,7 +1302,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
       newNetworkStatus?: NetworkStatus;
     }
-  ): ObservableQuery.RetainablePromise<QueryResult<MaybeMasked<TData>>> {
+  ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
     let { newNetworkStatus } = internalOptions || {};
 

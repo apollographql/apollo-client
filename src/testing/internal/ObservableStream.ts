@@ -3,8 +3,12 @@ import { ReadableStream } from "node:stream/web";
 import { expect } from "@jest/globals";
 import type { Observable, Subscribable, Unsubscribable } from "rxjs";
 
-import type { ObservableEvent, TakeOptions } from "./utils/observable.js";
+import type { ObservableEvent } from "./utils/observable.js";
 import { validateEquals } from "./utils/observable.js";
+
+export interface TakeOptions {
+  timeout?: number;
+}
 
 export class ObservableStream<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;

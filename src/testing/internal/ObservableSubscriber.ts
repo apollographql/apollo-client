@@ -1,7 +1,11 @@
 import type { Observer } from "rxjs";
 
-import type { ObservableEvent, TakeOptions } from "./utils/observable.js";
+import type { ObservableEvent } from "./utils/observable.js";
 import { validateEquals } from "./utils/observable.js";
+
+export interface TakeOptions {
+  timeout?: number;
+}
 
 export class ObservableSubscriber<T> implements Observer<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;

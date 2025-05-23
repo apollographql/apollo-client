@@ -13,7 +13,8 @@ import {
   ObservableSubscriber,
 } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
-import { TakeOptions } from "../internal/ObservableStream.js";
+import { TakeOptions as StreamTakeOptions } from "../internal/ObservableStream.js";
+import { TakeOptions as ObserverTakeOptions } from "../internal/ObservableSubscriber.js";
 import type {
   CommonStream,
   ToEmitSimilarValueOptions,
@@ -62,21 +63,21 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    * Used to determine if the observer received any notification.
    */
   toHaveObservedAnything: T extends ObservableSubscriber<any> ?
-    (options?: TakeOptions) => Promise<R>
+    (options?: ObserverTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableSubscriber instance" };
 
   /**
    * Used to determine if the observer received a complete notification.
    */
   toHaveObservedCompleteNotification: T extends ObservableSubscriber<any> ?
-    (options?: TakeOptions) => Promise<R>
+    (options?: ObserverTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableSubscriber instance" };
 
   /**
    * Used to determine if the observer received an error notification.
    */
   toHaveObservedError: T extends ObservableSubscriber<any> ?
-    (error?: any, options?: TakeOptions) => Promise<R>
+    (error?: any, options?: ObserverTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableSubscriber instance" };
 
   /**
@@ -86,7 +87,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toHaveObservedNextValue: T extends ObservableSubscriber<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,
-      options?: TakeOptions & {
+      options?: ObserverTakeOptions & {
         received?: string;
         expected?: string;
         hintOptions?: MatcherHintOptions;
@@ -113,15 +114,15 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : { error: "matcher needs to be called on a WeakRef instance" };
 
   toComplete: T extends ObservableStream<any> ?
-    (options?: TakeOptions) => Promise<R>
+    (options?: StreamTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   toEmitAnything: T extends ObservableStream<any> ?
-    (options?: TakeOptions) => Promise<R>
+    (options?: StreamTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   toEmitError: T extends ObservableStream<any> ?
-    (error?: any, options?: TakeOptions) => Promise<R>
+    (error?: any, options?: StreamTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   /**
@@ -129,14 +130,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    * `toEmitValue` to check if the `next` event emitted a specific value.
    */
   toEmitNext: T extends ObservableStream<any> ?
-    (options?: TakeOptions) => Promise<R>
+    (options?: StreamTakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   toEmitTypedValue: T extends ObservableStream<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,
 
-      options?: TakeOptions & {
+      options?: StreamTakeOptions & {
         received?: string;
         expected?: string;
         hintOptions?: MatcherHintOptions;

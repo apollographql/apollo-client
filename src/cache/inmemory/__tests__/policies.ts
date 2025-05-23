@@ -13,7 +13,7 @@ import {
   makeVar,
   MissingFieldError,
 } from "@apollo/client/cache";
-import { MockLink } from "@apollo/client/testing/core";
+import { MockLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,

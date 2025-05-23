@@ -1,18 +1,8 @@
 export type {
+  MockedRequest,
   MockedResponse,
   MockLinkOptions,
   ResultFunction,
-} from "@apollo/client/testing/core";
-export {
-  createMockClient,
-  MockLink,
-  mockObservableLink,
-  mockSingleLink,
-  MockSubscriptionLink,
-  realisticDelay,
-  tick,
-  wait,
-  withErrorSpy,
-  withLogSpy,
-  withWarningSpy,
-} from "@apollo/client/testing/core";
+} from "./core/types/deprecated.js";
+export { MockLink, realisticDelay } from "./core/mocking/mockLink.js";
+export { MockSubscriptionLink } from "./core/mocking/mockSubscriptionLink.js";

@@ -9,8 +9,7 @@ import { ApolloClient } from '@apollo/client';
 import type { ApolloLink } from '@apollo/client/link';
 import type { DefaultOptions } from '@apollo/client';
 import type { LocalState } from '@apollo/client/local-state';
-import type { MockedResponse } from '@apollo/client/testing/core';
-import { MockLink } from '@apollo/client/testing/core';
+import { MockLink } from '@apollo/client/testing';
 import * as React_2 from 'react';
 
 // Warning: (ae-forgotten-export) The symbol "MockedProviderState" needs to be exported by the entry point index.d.ts
@@ -42,7 +41,7 @@ export interface MockedProviderProps {
     // (undocumented)
     mockLinkDefaultOptions?: MockLink.DefaultOptions;
     // (undocumented)
-    mocks?: ReadonlyArray<MockedResponse<any, any>>;
+    mocks?: ReadonlyArray<MockLink.MockedResponse<any, any>>;
     // (undocumented)
     showWarnings?: boolean;
 }

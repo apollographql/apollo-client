@@ -35,12 +35,7 @@ import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { Masked } from "@apollo/client/masking";
 import { ApolloProvider, useMutation, useQuery } from "@apollo/client/react";
-import type { MockedResponse } from "@apollo/client/testing";
-import {
-  MockLink,
-  mockSingleLink,
-  MockSubscriptionLink,
-} from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -1212,7 +1207,7 @@ describe("useMutation Hook", () => {
       },
     };
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: {
           query: CREATE_TODO_MUTATION,
@@ -2643,14 +2638,16 @@ describe("useMutation Hook", () => {
           },
         }),
 
-        link: mockSingleLink({
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables,
+        link: new MockLink([
+          {
+            request: {
+              query: CREATE_TODO_MUTATION,
+              variables,
+            },
+            result: { data: CREATE_TODO_RESULT },
+            delay: 20,
           },
-          result: { data: CREATE_TODO_RESULT },
-          delay: 20,
-        }),
+        ]),
       });
 
       // The goal of this test is to make sure onQueryUpdated gets called as
@@ -2885,7 +2882,7 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const link = mockSingleLink(...mocks);
+      const link = new MockLink(mocks);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -3084,7 +3081,7 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const link = mockSingleLink(...mocks);
+      const link = new MockLink(mocks);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -3283,7 +3280,7 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const link = mockSingleLink(...mocks);
+      const link = new MockLink(mocks);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),

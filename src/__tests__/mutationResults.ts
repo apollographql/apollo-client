@@ -10,8 +10,7 @@ import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
-import type { MockedResponse } from "@apollo/client/testing";
-import { mockSingleLink } from "@apollo/client/testing";
+import { MockLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
@@ -125,15 +124,15 @@ describe("mutation results", () => {
     },
   };
 
-  function setupObsQuery(...mockedResponses: MockedResponse[]) {
+  function setupObsQuery(...mockedResponses: MockLink.MockedResponse[]) {
     const client = new ApolloClient({
-      link: mockSingleLink(
+      link: new MockLink([
         {
           request: { query: queryWithTypename } as any,
           result,
         },
-        ...mockedResponses
-      ),
+        ...mockedResponses,
+      ]),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -157,14 +156,14 @@ describe("mutation results", () => {
 
   function setupDelayObsQuery(delay: number, ...mockedResponses: any[]) {
     const client = new ApolloClient({
-      link: mockSingleLink(
+      link: new MockLink([
         {
           request: { query: queryWithTypename } as any,
           result,
           delay,
         },
-        ...mockedResponses
-      ),
+        ...mockedResponses,
+      ]),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -242,7 +241,7 @@ describe("mutation results", () => {
       }
     `;
 
-    const link = mockSingleLink(
+    const link = new MockLink([
       {
         request: {
           query,
@@ -262,8 +261,8 @@ describe("mutation results", () => {
         result: {
           data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
         },
-      }
-    );
+      },
+    ]);
 
     interface Data {
       mini: { id: number; cover: string; __typename: string };
@@ -1260,7 +1259,7 @@ describe("mutation results", () => {
     };
 
     const client = new ApolloClient({
-      link: mockSingleLink(
+      link: new MockLink([
         {
           request: { query: variableQuery, variables: variables1 } as any,
           result: result1,
@@ -1272,8 +1271,8 @@ describe("mutation results", () => {
         {
           request: { query: resetMutation } as any,
           result: resetMutationResult,
-        }
-      ),
+        },
+      ]),
       cache: new InMemoryCache(),
     });
 
@@ -1868,10 +1867,12 @@ describe("mutation results", () => {
       };
 
       const client = new ApolloClient({
-        link: mockSingleLink({
-          request: { query: mutation } as any,
-          result: result1,
-        }),
+        link: new MockLink([
+          {
+            request: { query: mutation } as any,
+            result: result1,
+          },
+        ]),
         cache: new InMemoryCache(),
       });
 

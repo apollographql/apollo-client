@@ -1,7 +1,7 @@
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
-import { wait } from "@apollo/client/testing";
+import { wait } from "@apollo/client/testing/internal";
 
 import { gql } from "./testUtils.js";
 

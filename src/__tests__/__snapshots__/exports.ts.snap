@@ -328,31 +328,7 @@ exports[`exports of public entry points @apollo/client/testing 1`] = `
 Array [
   "MockLink",
   "MockSubscriptionLink",
-  "createMockClient",
-  "mockObservableLink",
-  "mockSingleLink",
   "realisticDelay",
-  "tick",
-  "wait",
-  "withErrorSpy",
-  "withLogSpy",
-  "withWarningSpy",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/testing/core 1`] = `
-Array [
-  "MockLink",
-  "MockSubscriptionLink",
-  "createMockClient",
-  "mockObservableLink",
-  "mockSingleLink",
-  "realisticDelay",
-  "tick",
-  "wait",
-  "withErrorSpy",
-  "withLogSpy",
-  "withWarningSpy",
 ]
 `;
 
@@ -376,6 +352,7 @@ Array [
   "setupSimpleCase",
   "setupVariablesCase",
   "spyOnConsole",
+  "wait",
   "withCleanup",
   "withProdMode",
 ]

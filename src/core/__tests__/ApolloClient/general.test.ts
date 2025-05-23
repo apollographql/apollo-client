@@ -12,11 +12,11 @@ import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult, RequestHandler } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { MockLink } from "@apollo/client/testing";
-import { wait } from "@apollo/client/testing/core";
 import {
   mockDeferStream,
   ObservableStream,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {

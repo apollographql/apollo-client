@@ -4,10 +4,10 @@ import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 import { BatchLink, OperationBatcher } from "@apollo/client/link/batch";
-import { wait } from "@apollo/client/testing";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  wait,
 } from "@apollo/client/testing/internal";
 
 import type {

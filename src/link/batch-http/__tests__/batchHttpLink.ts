@@ -66,7 +66,7 @@ describe("BatchHttpLink", () => {
     expect(() => new BatchHttpLink()).not.toThrow();
   });
 
-  it("handles batched requests", (done) => {
+  it("handles batched requests", async () => {
     const clientAwareness = {
       name: "Some Client Name",
       version: "1.0.1",
@@ -78,51 +78,35 @@ describe("BatchHttpLink", () => {
       batchMax: 2,
     });
 
-    let nextCalls = 0;
-    let completions = 0;
-    const next = (expectedData: any) => (data: any) => {
-      expect(data).toEqual(expectedData);
-      nextCalls++;
-    };
+    const stream1 = new ObservableStream(
+      execute(link, {
+        query: sampleQuery,
+        context: { credentials: "two", clientAwareness },
+      })
+    );
+    const stream2 = new ObservableStream(
+      execute(link, {
+        query: sampleQuery,
+        context: { credentials: "two" },
+      })
+    );
 
-    const complete = () => {
-      const calls = fetchMock.calls("begin:/batch");
-      expect(calls.length).toBe(1);
-      expect(nextCalls).toBe(2);
+    await expect(stream1).toEmitTypedValue(data);
+    await expect(stream1).toComplete();
 
-      const options: any = fetchMock.lastOptions("begin:/batch");
-      expect(options.credentials).toEqual("two");
+    await expect(stream2).toEmitTypedValue(data2);
+    await expect(stream2).toComplete();
 
-      const { headers } = options;
-      expect(headers["apollographql-client-name"]).toBeDefined();
-      expect(headers["apollographql-client-name"]).toEqual(
-        clientAwareness.name
-      );
-      expect(headers["apollographql-client-version"]).toBeDefined();
-      expect(headers["apollographql-client-version"]).toEqual(
-        clientAwareness.version
-      );
+    expect(fetchMock.calls("begin:/batch").length).toBe(1);
 
-      completions++;
+    const options: any = fetchMock.lastOptions("begin:/batch");
+    expect(options.credentials).toEqual("two");
 
-      if (completions === 2) {
-        done();
-      }
-    };
-
-    const error = (error: any) => {
-      throw error;
-    };
-
-    execute(link, {
-      query: sampleQuery,
-      context: { credentials: "two", clientAwareness },
-    }).subscribe(next(data), error, complete);
-
-    execute(link, {
-      query: sampleQuery,
-      context: { credentials: "two" },
-    }).subscribe(next(data2), error, complete);
+    const { headers } = options;
+    expect(headers["apollographql-client-name"]).toEqual(clientAwareness.name);
+    expect(headers["apollographql-client-version"]).toEqual(
+      clientAwareness.version
+    );
   });
 
   it("errors on an incorrect number of results for a batch", (done) => {

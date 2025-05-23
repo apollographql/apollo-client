@@ -2,10 +2,9 @@ import fetchMock from "fetch-mock";
 import type { ASTNode } from "graphql";
 import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
-import type { Observer, Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 
-import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import {
@@ -1026,18 +1025,6 @@ describe("SharedHttpTest", () => {
       return instances;
     }
 
-    const failingObserver: Observer<FetchResult> = {
-      next: () => {
-        fail("result should not have been called");
-      },
-      error: (e) => {
-        fail(e);
-      },
-      complete: () => {
-        fail("complete should not have been called");
-      },
-    };
-
     function mockFetch() {
       const text = jest.fn(
         async () => '{ "data": { "stub": { "id": "foo" } } }'
@@ -1049,7 +1036,7 @@ describe("SharedHttpTest", () => {
       return { text, fetch };
     }
 
-    it("aborts the request when unsubscribing before the request has completed", () => {
+    it("aborts the request when unsubscribing before the request has completed", async () => {
       const { fetch } = mockFetch();
       const abortControllers = trackGlobalAbortControllers();
 
@@ -1059,10 +1046,12 @@ describe("SharedHttpTest", () => {
         batchMax: 1,
       });
 
-      const sub = execute(link, { query: sampleQuery }).subscribe(
-        failingObserver
+      const stream = new ObservableStream(
+        execute(link, { query: sampleQuery })
       );
-      sub.unsubscribe();
+      stream.unsubscribe();
+
+      await expect(stream).not.toEmitAnything();
 
       expect(abortControllers.length).toBe(1);
       expect(abortControllers[0].signal.aborted).toBe(true);
@@ -1079,10 +1068,10 @@ describe("SharedHttpTest", () => {
         batchMax: 1,
       });
 
-      const sub = execute(link, { query: sampleQuery }).subscribe(
-        failingObserver
+      const stream = new ObservableStream(
+        execute(link, { query: sampleQuery })
       );
-      sub.unsubscribe();
+      stream.unsubscribe();
 
       expect(fetch.mock.calls.length).toBe(1);
       expect(fetch.mock.calls[0][1]).toEqual(

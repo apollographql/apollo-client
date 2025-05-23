@@ -13,18 +13,20 @@ const pkg = JSON.parse(
 
 export type ExportsCondition = string | { [key: string]: ExportsCondition };
 
+const EXCLUDED_ENTRYPOINTS = ["./testing/internal"];
+
 type EntryPoint = {
   dirs: string[];
   key: string;
   value: ExportsCondition;
 };
-export const entryPoints = Object.entries(pkg.exports).map<EntryPoint>(
-  ([key, value]) => ({
+export const entryPoints = Object.entries(pkg.exports)
+  .filter(([key]) => !EXCLUDED_ENTRYPOINTS.includes(key))
+  .map<EntryPoint>(([key, value]) => ({
     dirs: key.slice("./".length).split("/"),
     key,
     value,
-  })
-);
+  }));
 
 export const buildDocEntryPoints = (
   options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt">

@@ -1,9 +1,8 @@
 import * as React from "react";
 
-import { noop } from "@apollo/client/utilities/internal";
-
 let Ctx: React.Context<null>;
 
+function noop() {}
 export function useRenderGuard() {
   if (!Ctx) {
     // we want the intialization to be lazy because `createContext` would error on import in a RSC

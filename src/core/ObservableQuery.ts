@@ -9,7 +9,7 @@ import type {
   Subscribable,
   Subscription,
 } from "rxjs";
-import { BehaviorSubject, Observable, pipe, share, Subject, tap } from "rxjs";
+import { BehaviorSubject, Observable, share, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -20,7 +20,6 @@ import {
   filterMap,
   getOperationDefinition,
   getQueryDefinition,
-  identity,
   preventUnhandledRejection,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -1247,12 +1246,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             },
             {
               newNetworkStatus: NetworkStatus.poll,
-              // polling should not create a subscription that would
-              // prevent the query from being torn down
-              // so we tap here instead of calling `.then`
-              pipeOperator: tap({ finalize: poll }),
             }
-          );
+          ).then(poll, poll);
         } else {
           poll();
         }
@@ -1293,12 +1288,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     internalOptions?: {
       /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
       newNetworkStatus?: NetworkStatus;
-      /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
-      pipeOperator?: MonoTypeOperatorFunction<QueryNotification.Value<TData>>;
     }
   ): ObservableQuery.RetainablePromise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
-    let { newNetworkStatus, pipeOperator = identity } = internalOptions || {};
+    let { newNetworkStatus } = internalOptions || {};
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
@@ -1411,7 +1404,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options,
       newNetworkStatus,
       query,
-      pipe(pipeOperator, promiseOperator)
+      promiseOperator
     );
 
     if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {

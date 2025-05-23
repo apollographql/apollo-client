@@ -73,6 +73,3 @@ export {
 } from "../internal/getMemoryInternals.js";
 
 export { AutoCleanedStrongCache, AutoCleanedWeakCache } from "./caches.js";
-
-export { noop } from "./noop.js";
-export { identity } from "./identity.js";

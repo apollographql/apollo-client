@@ -83,7 +83,7 @@ export async function readMultipartBody<
       const body = message.slice(i);
 
       if (body) {
-        const result = parseJsonBody<T>(response, body);
+        const result = parseJsonEncoding(response, body);
         if (
           Object.keys(result).length > 1 ||
           "data" in result ||
@@ -193,21 +193,6 @@ function parseResponse(response: Response, bodyText: string) {
     response,
     bodyText,
   });
-}
-
-function parseJsonBody<T>(response: Response, bodyText: string): T {
-  if (response.status >= 300) {
-    throw new ServerError(
-      `Response not successful: Received status code ${response.status}`,
-      { response, bodyText }
-    );
-  }
-
-  try {
-    return JSON.parse(bodyText) as T;
-  } catch (err) {
-    throw new ServerParseError(err, { response, bodyText });
-  }
 }
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {

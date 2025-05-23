@@ -4,7 +4,7 @@ import type { MatcherHintOptions } from "jest-matcher-utils";
 
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { TakeOptions } from "../internal/ObservableStream.js";
+import type { TakeOptions } from "../ObservableStream.js";
 
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 

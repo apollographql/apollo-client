@@ -9,7 +9,7 @@ global.TextEncoder ??= TextEncoder;
 // @ts-ignore
 global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
-import "../../testing/matchers/index.js";
+import "../../testing/internal/matchers/index.js";
 import { setLogVerbosity } from "@apollo/client";
 import {
   loadDevMessages,

@@ -5,11 +5,11 @@ import type {
   FetchResult,
   ObservableQuery,
   OperationVariables,
-} from "../../core/index.js";
-import type { QueryRef } from "../../react/index.js";
-import { NextRenderOptions, ObservableStream } from "../internal/index.js";
+} from "@apollo/client";
+import type { QueryRef } from "@apollo/client/react";
+import { NextRenderOptions, ObservableStream } from "../index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
-import { TakeOptions } from "../internal/ObservableStream.js";
+import { TakeOptions } from "../ObservableStream.js";
 import type {
   CommonStream,
   ToEmitSimilarValueOptions,

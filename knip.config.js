@@ -60,7 +60,7 @@ const config = {
     config: "config/jest.config.js",
     entry: [
       "src/config/jest/setup.ts",
-      "src/testing/matchers/index.d.ts",
+      "src/testing/internal/matchers/index.d.ts",
       "**/__tests__/**/*.[jt]s?(x)",
       "**/*.test.[jt]s?(x)",
       "src/**/__benches__/*.bench.ts",

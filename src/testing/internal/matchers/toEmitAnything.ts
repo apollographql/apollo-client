@@ -2,20 +2,25 @@ import type { MatcherFunction } from "expect";
 
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { TakeOptions } from "../internal/ObservableStream.js";
+import type { TakeOptions } from "../ObservableStream.js";
 
-export const toComplete: MatcherFunction<[options?: TakeOptions]> =
+export const toEmitAnything: MatcherFunction<[options?: TakeOptions]> =
   async function (actual, options) {
     const stream = actual as ObservableStream<any>;
-    const hint = this.utils.matcherHint("toComplete", "stream", "");
+    const hint = this.utils.matcherHint("toEmitAnything", "stream", "");
 
     try {
-      await stream.takeComplete(options);
+      const value = await stream.peek(options);
 
       return {
         pass: true,
         message: () => {
-          return hint + "\n\nExpected stream not to complete but it did.";
+          return (
+            hint +
+            "\n\nExpected stream not to emit anything but it did." +
+            "\n\nReceived:\n" +
+            this.utils.printReceived(value)
+          );
         },
       };
     } catch (error) {
@@ -26,7 +31,7 @@ export const toComplete: MatcherFunction<[options?: TakeOptions]> =
         return {
           pass: false,
           message: () =>
-            hint + "\n\nExpected stream to complete but it did not.",
+            hint + "\n\nExpected stream to emit an event but it did not.",
         };
       } else {
         throw error;

@@ -2,7 +2,7 @@ import type { MatcherContext, MatcherFunction } from "expect";
 
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { TakeOptions } from "../internal/ObservableStream.js";
+import type { TakeOptions } from "../ObservableStream.js";
 
 function isErrorEqual(this: MatcherContext, expected: any, actual: any) {
   if (typeof expected === "string" && actual instanceof Error) {

@@ -2,7 +2,7 @@ import type { MatcherFunction } from "expect";
 
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
-import type { TakeOptions } from "../internal/ObservableStream.js";
+import type { TakeOptions } from "../ObservableStream.js";
 
 export const toEmitNext: MatcherFunction<[options?: TakeOptions]> =
   async function (actual, options) {

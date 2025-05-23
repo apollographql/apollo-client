@@ -1060,27 +1060,7 @@ describe("HttpLink", () => {
       responseBody = JSON.parse(responseBodyText);
       return Promise.resolve(responseBodyText);
     });
-    const textWithStringError = jest.fn(() => {
-      const responseBodyText = "Error! Foo bar";
-      responseBody = responseBodyText;
-      return Promise.resolve(responseBodyText);
-    });
-    const textWithData = jest.fn(() => {
-      responseBody = {
-        data: { stub: { id: 1 } },
-        errors: [{ message: "dangit" }],
-      };
 
-      return Promise.resolve(JSON.stringify(responseBody));
-    });
-
-    const textWithErrors = jest.fn(() => {
-      responseBody = {
-        errors: [{ message: "dangit" }],
-      };
-
-      return Promise.resolve(JSON.stringify(responseBody));
-    });
     const fetch = jest.fn((uri, options) => {
       return Promise.resolve({ text });
     });
@@ -1119,91 +1099,91 @@ describe("HttpLink", () => {
     });
 
     it("throws an error if response code is > 300", async () => {
-      fetch.mockReturnValueOnce(Promise.resolve({ status: 400, text }));
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const response = new Response("{}", { status: 400 });
 
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerError = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 400/);
-      expect(error.statusCode).toBe(400);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          result: {},
+        })
+      );
     });
 
     it("throws an error if response code is > 300 and handles string response body", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 302, text: textWithStringError })
-      );
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const response = new Response("Error! Foo bar", { status: 302 });
+
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerError = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 302/);
-      expect(error.statusCode).toBe(302);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 302", {
+          response,
+          result: "Error! Foo bar",
+        })
+      );
     });
 
     it("throws an error if response code is > 300 and returns data", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: textWithData })
-      );
+      const result = {
+        data: { stub: { id: 1 } },
+        errors: [{ message: "dangit" }],
+      };
+      const response = Response.json(result, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
-
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const result = await stream.takeNext();
+      await expect(stream).toEmitTypedValue(result);
 
-      expect(result).toEqual(responseBody);
-
-      const error = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 400/);
-      expect(error.statusCode).toBe(400);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          result,
+        })
+      );
     });
 
     it("throws an error if only errors are returned", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: textWithErrors })
-      );
+      const result = { errors: [{ message: "dangit" }] };
+      const response = Response.json(result, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 400/);
-      expect(error.statusCode).toBe(400);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          result,
+        })
+      );
     });
 
     it("throws an error if empty response from the server ", async () => {
-      fetch.mockReturnValueOnce(Promise.resolve({ text }));
-      text.mockReturnValueOnce(Promise.resolve('{ "body": "boo" }'));
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const response = Response.json({ body: "boo" }, { status: 200 });
 
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error = await stream.takeError();
-
-      expect(error.message).toMatch(
-        /Server response was missing for query 'SampleQuery'/
+      await expect(stream).toEmitError(
+        new ServerError(
+          "Server response was missing for query 'SampleQuery'.",
+          { response, result: { body: "boo" } }
+        )
       );
     });
 
     it("throws if the body can't be stringified", async () => {
-      fetch.mockReturnValueOnce(Promise.resolve({ data: {}, text }));
       const link = createHttpLink({
         uri: "data",
-        fetch: fetch as any,
+        fetch: async () => new Response(""),
         includeUnusedVariables: true,
       });
 

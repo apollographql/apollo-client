@@ -189,7 +189,7 @@ function parseResponse(response: Response, bodyText: string) {
     return parseGraphQLResponseJsonEncoding(response, bodyText);
   }
 
-  throw new ServerError(`Unsupported mime type: '${contentType}'`, {
+  throw new ServerError(`Unsupported media type: '${contentType}'`, {
     response,
     bodyText,
   });

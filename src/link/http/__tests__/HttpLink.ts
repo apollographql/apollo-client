@@ -1939,7 +1939,7 @@ describe("HttpLink", () => {
       const stream = new ObservableStream(execute(link, { query }));
 
       await expect(stream).toEmitError(
-        new ServerError("Unsupported mime type: 'text/plain'", {
+        new ServerError("Unsupported media type: 'text/plain'", {
           response,
           bodyText: JSON.stringify({
             data: null,

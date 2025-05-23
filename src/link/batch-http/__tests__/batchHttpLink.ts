@@ -1142,11 +1142,11 @@ describe("SharedHttpTest", () => {
         batchMax: 1,
       });
 
-      await new Promise<void>((resolve) =>
-        execute(link, { query: sampleQuery }).subscribe({
-          error: resolve,
-        })
+      const stream = new ObservableStream(
+        execute(link, { query: sampleQuery })
       );
+
+      await expect(stream).toEmitError();
 
       expect(abortControllers.length).toBe(1);
       expect(abortControllers[0].signal.aborted).toBe(false);

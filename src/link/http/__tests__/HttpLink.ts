@@ -1064,7 +1064,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,
-          result: {},
+          bodyText: "{}",
         })
       );
     });
@@ -1079,7 +1079,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 302", {
           response,
-          result: "Error! Foo bar",
+          bodyText: "Error! Foo bar",
         })
       );
     });
@@ -1098,7 +1098,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,
-          result,
+          bodyText: JSON.stringify(result),
         })
       );
     });
@@ -1114,7 +1114,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,
-          result,
+          bodyText: JSON.stringify(result),
         })
       );
     });
@@ -1129,7 +1129,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError(
           "Server response was missing for query 'SampleQuery'.",
-          { response, result: { body: "boo" } }
+          { response, bodyText: JSON.stringify({ body: "boo" }) }
         )
       );
     });
@@ -1311,7 +1311,7 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,
-          result: body,
+          bodyText: body,
         })
       );
     });
@@ -1823,7 +1823,7 @@ describe("HttpLink", () => {
           "Could not determine content encoding because `content-type` header is not set.",
           {
             response,
-            result: JSON.stringify({ data: { foo: true } }),
+            bodyText: JSON.stringify({ data: { foo: true } }),
           }
         )
       );
@@ -1853,9 +1853,9 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,
-          result: {
+          bodyText: JSON.stringify({
             error: "Could not process request",
-          },
+          }),
         })
       );
     });
@@ -1881,10 +1881,10 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,
-          result: {
+          bodyText: JSON.stringify({
             data: null,
             errors: [{ message: "Could not process request" }],
-          },
+          }),
         })
       );
     });
@@ -1913,10 +1913,10 @@ describe("HttpLink", () => {
       await expect(stream).toEmitError(
         new ServerError("Unsupported mime type: 'text/plain'", {
           response,
-          result: {
+          bodyText: JSON.stringify({
             data: null,
             errors: [{ message: "Could not process request" }],
-          },
+          }),
         })
       );
     });

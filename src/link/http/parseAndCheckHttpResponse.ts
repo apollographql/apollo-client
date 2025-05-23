@@ -1,5 +1,3 @@
-import type { Observer } from "rxjs";
-
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
@@ -149,17 +147,9 @@ function parseHeaders(headerText: string): Record<string, string> {
 
 function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
-    // Network error
-    const getResult = (): Record<string, unknown> | string => {
-      try {
-        return JSON.parse(bodyText);
-      } catch (err) {
-        return bodyText;
-      }
-    };
     throw new ServerError(
       `Response not successful: Received status code ${response.status}`,
-      { response, result: getResult() }
+      { response, bodyText }
     );
   }
 
@@ -186,7 +176,7 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
               operations.map((op) => op.operationName)
             : operations.operationName
           }'.`,
-          { response, result }
+          { response, bodyText }
         );
       }
       return result;

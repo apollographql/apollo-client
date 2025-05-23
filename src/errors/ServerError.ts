@@ -1,8 +1,10 @@
 import { brand, isBranded } from "./utils.js";
 
-interface ServerErrorOptions {
-  response: Response;
-  result: Record<string, any> | string;
+export declare namespace ServerError {
+  export interface Options {
+    response: Response;
+    result: Record<string, any> | string;
+  }
 }
 
 /**
@@ -29,7 +31,7 @@ export class ServerError extends Error {
    */
   result: Record<string, any> | string;
 
-  constructor(message: string, options: ServerErrorOptions) {
+  constructor(message: string, options: ServerError.Options) {
     super(message);
     this.name = "ServerError";
     this.response = options.response;

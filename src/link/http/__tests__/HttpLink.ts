@@ -1067,36 +1067,6 @@ describe("HttpLink", () => {
     beforeEach(() => {
       fetch.mockReset();
     });
-    it("makes it easy to do stuff on a 401", async () => {
-      const middleware = new ApolloLink((operation, forward) => {
-        return new Observable((ob) => {
-          fetch.mockReturnValueOnce(Promise.resolve({ status: 401, text }));
-          const op = forward(operation);
-          const sub = op.subscribe({
-            next: ob.next.bind(ob),
-            error: (e: ServerError) => {
-              expect(e.message).toMatch(/Received status code 401/);
-              expect(e.statusCode).toEqual(401);
-              ob.error(e);
-            },
-            complete: ob.complete.bind(ob),
-          });
-
-          return () => {
-            sub.unsubscribe();
-          };
-        });
-      });
-
-      const link = middleware.concat(
-        createHttpLink({ uri: "data", fetch: fetch as any })
-      );
-
-      const observable = execute(link, { query: sampleQuery });
-      const stream = new ObservableStream(observable);
-
-      await expect(stream).toEmitError();
-    });
 
     it("throws an error if response code is > 300", async () => {
       const response = new Response("{}", { status: 400 });

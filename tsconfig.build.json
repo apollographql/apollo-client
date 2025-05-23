@@ -1,8 +1,13 @@
 {
   "compilerOptions": {
-    "noEmit": false
+    "noEmit": false,
+    "types": ["jest", "node", "@testing-library/react-render-stream/expect"]
   },
   "extends": "./tsconfig.json",
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/__tests__/**/*", "src/config/**/*"]
+  "exclude": [
+    "src/**/__tests__/**/*",
+    "src/config/**/*",
+    "src/testing/internal/**/*"
+  ]
 }

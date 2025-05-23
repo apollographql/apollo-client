@@ -1025,24 +1025,18 @@ describe("SharedHttpTest", () => {
       return instances;
     }
 
-    function mockFetch() {
-      const text = jest.fn(
-        async () => '{ "data": { "stub": { "id": "foo" } } }'
-      );
-      const fetch = jest.fn(async (uri, options) => ({
-        text,
-        headers: new Headers({ "content-type": "application/json" }),
-      }));
-      return { text, fetch };
-    }
-
     it("aborts the request when unsubscribing before the request has completed", async () => {
-      const { fetch } = mockFetch();
+      const fetch = jest.fn(async () => {
+        return Response.json(
+          { data: { stub: { id: "foo" } } },
+          { status: 200 }
+        );
+      });
       const abortControllers = trackGlobalAbortControllers();
 
       const link = new BatchHttpLink({
         uri: "data",
-        fetch: fetch as any,
+        fetch,
         batchMax: 1,
       });
 
@@ -1058,12 +1052,17 @@ describe("SharedHttpTest", () => {
     });
 
     it("a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one", () => {
-      const { fetch } = mockFetch();
+      const fetch = jest.fn(async () => {
+        return Response.json(
+          { data: { stub: { id: "foo" } } },
+          { status: 200 }
+        );
+      });
       const externalAbortController = new AbortController();
 
       const link = new BatchHttpLink({
         uri: "data",
-        fetch: fetch as any,
+        fetch,
         fetchOptions: { signal: externalAbortController.signal },
         batchMax: 1,
       });
@@ -1132,13 +1131,13 @@ describe("SharedHttpTest", () => {
     });
 
     it("an unsuccessful fetch does not cause the AbortController to be aborted", async () => {
-      const { fetch } = mockFetch();
       const abortControllers = trackGlobalAbortControllers();
-      fetch.mockRejectedValueOnce("This is an error!");
-      // the request would be closed by the browser in the case of an error anyways
+
       const link = new BatchHttpLink({
         uri: "data",
-        fetch: fetch as any,
+        fetch: async () => {
+          throw new Error("Could not connect to network");
+        },
         batchMax: 1,
       });
 

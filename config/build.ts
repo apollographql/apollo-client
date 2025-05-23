@@ -17,6 +17,7 @@ import { updateVersion, verifyVersion } from "./version.ts";
 
 export interface BuildStepOptions {
   type: "esm" | "cjs";
+  tsconfig: string;
   rootDir: string;
   packageRoot: string;
   /** build target directory, relative to `rootDir` */
@@ -57,6 +58,10 @@ const args = parseArgs({
       multiple: true,
       default: ["build"],
     },
+    tsconfig: {
+      type: "string",
+      default: "tsconfig.build.json",
+    },
   },
 });
 
@@ -69,6 +74,8 @@ const allSteps = Object.assign(
 const runSteps = args.values.step.flatMap((step) =>
   step === "build" ? Object.keys(buildSteps) : [step]
 );
+
+const tsconfig = args.values.tsconfig;
 
 const wrongSteps = runSteps.filter((step) => !(step in allSteps));
 if (wrongSteps.length) {
@@ -83,8 +90,14 @@ console.log("Running build steps: %s", runSteps.join(", "));
 
 const buildStepOptions = [
   // this order is important so that globs on the esm build don't accidentally match the cjs build
-  { type: "esm", targetDir: "dist", jsExt: "js", tsExt: "ts" },
-  { type: "cjs", targetDir: "dist/__cjs", jsExt: "cjs", tsExt: "cts" },
+  { type: "esm", targetDir: "dist", jsExt: "js", tsExt: "ts", tsconfig },
+  {
+    type: "cjs",
+    targetDir: "dist/__cjs",
+    jsExt: "cjs",
+    tsExt: "cts",
+    tsconfig,
+  },
 ] satisfies Omit<
   BuildStepOptions,
   "first" | "last" | "rootDir" | "packageRoot"

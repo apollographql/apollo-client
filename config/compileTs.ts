@@ -9,7 +9,7 @@ import { applyRecast } from "./helpers.ts";
 
 export const compileTs: BuildStep = async (options) => {
   if (options.type === "esm") {
-    await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir}`;
+    await $`npx tsc --project ${options.tsconfig} --outDir ${options.targetDir}`;
   } else {
     const packageJsonPath = join(import.meta.dirname, "..", `package.json`);
     const originalPackageJson = await readFile(packageJsonPath, "utf-8");
@@ -23,7 +23,7 @@ export const compileTs: BuildStep = async (options) => {
       writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
       // noCheck is required to suppress errors like
       // error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("@wry/equality")' call instead.
-      await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir} --module node16 --moduleResolution node16 --noCheck`;
+      await $`npx tsc --project ${options.tsconfig} --outDir ${options.targetDir} --module node16 --moduleResolution node16 --noCheck`;
     } finally {
       await writeFile(packageJsonPath, originalPackageJson);
     }

@@ -145,6 +145,23 @@ function parseHeaders(headerText: string): Record<string, string> {
   return headersInit;
 }
 
+function parseGraphQLResponse(response: Response, bodyText: string) {
+  const contentType = response.headers.get("content-type");
+
+  if (contentType === null) {
+    throw new ServerError(
+      "Could not determine content encoding because the 'content-type' header is missing.",
+      { response, bodyText }
+    );
+  }
+
+  try {
+    return JSON.parse(bodyText);
+  } catch (err) {
+    throw new ServerParseError(err, { response, bodyText });
+  }
+}
+
 function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
     throw new ServerError(
@@ -163,7 +180,7 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
   return (response: Response) =>
     response.text().then((bodyText) => {
-      const result = parseJsonBody(response, bodyText) as any;
+      const result = parseGraphQLResponse(response, bodyText);
 
       if (
         !Array.isArray(result) &&

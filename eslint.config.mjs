@@ -119,6 +119,18 @@ export default [
       ],
     },
   },
+  {
+    ignores: ["**/testing/internal/**/*.[jt]s*", "**/__tests__/**/*.*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          name: "@apollo/client/testing/internal",
+          message: "Internal testing utilities are not published.",
+        },
+      ],
+    },
+  },
   ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
     (config) => ({
       ...config,

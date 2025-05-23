@@ -8,6 +8,7 @@ import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitTypedValue } from "./toEmitTypedValue.js";
+import { toHaveObservedAnything } from "./toHaveObservedAnything.js";
 import { toHaveObservedCompleteNotification } from "./toHaveObservedCompleteNotification.js";
 import { toHaveObservedError } from "./toHaveObservedError.js";
 import { toHaveObservedNextValue } from "./toHaveObservedNextValue.js";
@@ -27,6 +28,7 @@ expect.extend({
   toEmitNext,
   toEmitTypedValue,
   toBeDisposed,
+  toHaveObservedAnything,
   toHaveObservedCompleteNotification,
   toHaveObservedError,
   toHaveObservedNextValue,

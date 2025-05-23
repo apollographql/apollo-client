@@ -59,6 +59,13 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toMatchDocument(document: DocumentNode): R;
 
   /**
+   * Used to determine if the observer received any notification.
+   */
+  toHaveObservedAnything: T extends ObservableSubscriber<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
+
+  /**
    * Used to determine if the observer received a complete notification.
    */
   toHaveObservedCompleteNotification: T extends ObservableSubscriber<any> ?

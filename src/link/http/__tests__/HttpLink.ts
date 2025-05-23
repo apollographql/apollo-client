@@ -8,7 +8,8 @@ import type { Observer, Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
-import type { FetchResult, ServerError } from "@apollo/client";
+import type { FetchResult } from "@apollo/client";
+import { ServerError } from "@apollo/client";
 import type { ServerParseError } from "@apollo/client/errors";
 import {
   CombinedProtocolErrors,
@@ -1871,6 +1872,211 @@ describe("HttpLink", () => {
           })
         );
       });
+    });
+  });
+
+  describe("GraphQL over HTTP", () => {
+    test("emits ServerError when content-type is not set with well formed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json({ data: { foo: true } }, { status: 200 });
+      response.headers.delete("content-type");
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError(
+          "Could not determine content encoding because `content-type` header is not set.",
+          {
+            response,
+            result: JSON.stringify({ data: { foo: true } }),
+          }
+        )
+      );
+    });
+
+    test("emits ServerError when responding with application/json and non-200 status code with malformed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { error: "Could not process request" },
+        {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          result: {
+            error: "Could not process request",
+          },
+        })
+      );
+    });
+
+    test("emits ServerError when responding with application/json and non-200 status code with well-formed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        { status: 400, headers: { "content-type": "application/json" } }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          result: {
+            data: null,
+            errors: [{ message: "Could not process request" }],
+          },
+        })
+      );
+    });
+
+    test("emits ServerError when responding with a non-json mime type and 200 response with well formed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Unsupported mime type: 'text/plain'", {
+          response,
+          result: {
+            data: null,
+            errors: [{ message: "Could not process request" }],
+          },
+        })
+      );
+    });
+
+    test("handles 200 response with application/graphql-response+json", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: { foo: "bar" } },
+        {
+          status: 200,
+          headers: { "content-type": "application/graphql-response+json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({ data: { foo: "bar" } });
+      await expect(stream).toComplete();
+    });
+
+    test("parses non-200 response with application/graphql-response+json", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        {
+          status: 400,
+          headers: { "content-type": "application/graphql-response+json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: null,
+        errors: [{ message: "Could not process request" }],
+      });
+      await expect(stream).toComplete();
+    });
+
+    test("parses 200 response with application/graphql-response+json and errors", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        {
+          status: 200,
+          headers: { "content-type": "application/graphql-response+json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: null,
+        errors: [{ message: "Could not process request" }],
+      });
+      await expect(stream).toComplete();
     });
   });
 });

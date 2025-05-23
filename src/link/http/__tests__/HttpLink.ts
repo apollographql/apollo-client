@@ -10,10 +10,10 @@ import { ReadableStream } from "web-streams-polyfill";
 
 import type { FetchResult } from "@apollo/client";
 import { ServerError } from "@apollo/client";
-import type { ServerParseError } from "@apollo/client/errors";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
+  ServerParseError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink, HttpLink } from "@apollo/client/link/http";
@@ -1316,42 +1316,38 @@ describe("HttpLink", () => {
       });
     });
 
-    const body = "{";
-    const unparsableJson = jest.fn(() => Promise.resolve(body));
     it("throws a Server error if response is > 300 with unparsable json", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: unparsableJson })
-      );
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const body = "{";
+      const response = new Response(body, { status: 400 });
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerParseError = await stream.takeError();
-
-      expect(error.message).toMatch(
-        "Response not successful: Received status code 400"
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          result: body,
+        })
       );
-      expect(error.statusCode).toBe(400);
-      expect(error.response).toBeDefined();
-      expect(error.bodyText).toBe(undefined);
     });
 
     it("throws a ServerParseError if response is 200 with unparsable json", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 200, text: unparsableJson })
-      );
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const body = "{";
+      const response = new Response(body, { status: 200 });
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerParseError = await stream.takeError();
-
-      expect(error.message).toMatch(/JSON/);
-      expect(error.statusCode).toBe(200);
-      expect(error.response).toBeDefined();
-      expect(error.bodyText).toBe(body);
+      await expect(stream).toEmitError(
+        new ServerParseError(
+          new Error(
+            "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+          ),
+          { response, bodyText: body }
+        )
+      );
     });
   });
 

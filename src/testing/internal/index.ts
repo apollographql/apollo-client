@@ -5,6 +5,7 @@ export {
   withProdMode,
 } from "./disposables/index.js";
 export { ObservableStream } from "./ObservableStream.js";
+export { ObservableSubscriber } from "./ObservableSubscriber.js";
 
 export type {
   MaskedVariablesCaseData,

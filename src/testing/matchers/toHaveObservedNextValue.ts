@@ -8,7 +8,7 @@ import type { TakeOptions } from "../internal/ObservableSubscriber.js";
 
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 
-export const toObserveTypedValue: MatcherFunction<
+export const toHaveObservedNextValue: MatcherFunction<
   [
     value: any,
     options?: TakeOptions & {
@@ -20,7 +20,7 @@ export const toObserveTypedValue: MatcherFunction<
 > = async function (actual, expected, options) {
   const observer = actual as ObservableSubscriber<any>;
   const hint = this.utils.matcherHint(
-    "toObserveTypedValue",
+    "toHaveObservedNextValue",
     options?.received || "observer",
     options?.expected || "expected",
     { ...options?.hintOptions, isNot: this.isNot }
@@ -44,7 +44,7 @@ export const toObserveTypedValue: MatcherFunction<
         if (pass) {
           return (
             hint +
-            "\n\nExpected observer not to receive emitted value equal to expected but it did."
+            "\n\nExpected observer not to have observed next notification with value equal to expected but it did."
           );
         }
 
@@ -70,7 +70,7 @@ export const toObserveTypedValue: MatcherFunction<
         pass: false,
         message: () =>
           hint +
-          "\n\nExpected observer to receive an emitted value but it did not.",
+          "\n\nExpected observer to have observed next notification with value but it did not.",
       };
     } else {
       throw error;

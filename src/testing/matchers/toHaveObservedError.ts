@@ -12,13 +12,18 @@ function isErrorEqual(this: MatcherContext, expected: any, actual: any) {
   return this.equals(expected, actual, this.customTesters);
 }
 
-export const toObserveError: MatcherFunction<
+export const toHaveObservedError: MatcherFunction<
   [value?: any, options?: TakeOptions]
 > = async function (actual, expected, options) {
   const observer = actual as ObservableSubscriber<any>;
-  const hint = this.utils.matcherHint("toObserveError", "observer", "error", {
-    isNot: this.isNot,
-  });
+  const hint = this.utils.matcherHint(
+    "toHaveObservedError",
+    "observer",
+    "error",
+    {
+      isNot: this.isNot,
+    }
+  );
 
   try {
     const error = await observer.takeError(options);
@@ -31,7 +36,7 @@ export const toObserveError: MatcherFunction<
         if (pass) {
           return (
             hint +
-            "\n\nExpected observer not to have received error notification but it did." +
+            "\n\nExpected observer not to have observed error notification but it did." +
             `\n\nReceived:` +
             `\n` +
             this.utils.printReceived(error)
@@ -60,7 +65,7 @@ export const toObserveError: MatcherFunction<
         pass: false,
         message: () =>
           hint +
-          "\n\nExpected observer to have received an error notification but it did not.",
+          "\n\nExpected observer to have observed an error notification but it did not.",
       };
     } else {
       throw error;

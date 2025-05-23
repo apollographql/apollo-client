@@ -59,6 +59,37 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toMatchDocument(document: DocumentNode): R;
 
   /**
+   * Used to determine if the observer received a complete notification.
+   */
+  toHaveObservedCompleteNotification: T extends ObservableSubscriber<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
+
+  /**
+   * Used to determine if the observer received an error notification.
+   */
+  toHaveObservedError: T extends ObservableSubscriber<any> ?
+    (error?: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
+
+  /**
+   * Used to determine if the observer received a next notification with a
+   * specified value.
+   */
+  toHaveObservedNextValue: T extends ObservableSubscriber<infer TResult> ?
+    (
+      expected: FilterUnserializableProperties<TResult>,
+      options?: TakeOptions & {
+        received?: string;
+        expected?: string;
+        hintOptions?: MatcherHintOptions;
+      }
+    ) => Promise<R>
+  : {
+      error: "matcher needs to be called on an ObservableSubscriber";
+    };
+
+  /**
    * Used to determine if the Suspense cache has a cache entry.
    */
   toHaveSuspenseCacheEntryUsing: T extends ApolloClient<any> ?
@@ -105,27 +136,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
       }
     ) => Promise<R>
   : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
-
-  toObserveComplete: T extends ObservableSubscriber<any> ?
-    (options?: TakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
-
-  toObserveError: T extends ObservableSubscriber<any> ?
-    (error?: any, options?: TakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
-
-  toObserveTypedValue: T extends ObservableSubscriber<infer TResult> ?
-    (
-      expected: FilterUnserializableProperties<TResult>,
-      options?: TakeOptions & {
-        received?: string;
-        expected?: string;
-        hintOptions?: MatcherHintOptions;
-      }
-    ) => Promise<R>
-  : {
-      error: "toObserveTypedValue needs to be called on an ObservableSubscriber";
-    };
 
   toStrictEqualTyped: [T] extends [Promise<infer TResult>] ?
     <

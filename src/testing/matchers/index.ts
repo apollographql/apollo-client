@@ -8,11 +8,11 @@ import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitTypedValue } from "./toEmitTypedValue.js";
+import { toHaveObservedCompleteNotification } from "./toHaveObservedCompleteNotification.js";
+import { toHaveObservedError } from "./toHaveObservedError.js";
+import { toHaveObservedNextValue } from "./toHaveObservedNextValue.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
-import { toObserveComplete } from "./toObserveComplete.js";
-import { toObserveError } from "./toObserveError.js";
-import { toObserveTypedValue } from "./toObserveTypedValue.js";
 import {
   toEmitSimilarValue,
   toRerenderWithSimilarSnapshot,
@@ -27,12 +27,12 @@ expect.extend({
   toEmitNext,
   toEmitTypedValue,
   toBeDisposed,
+  toHaveObservedCompleteNotification,
+  toHaveObservedError,
+  toHaveObservedNextValue,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,
   toBeGarbageCollected,
-  toObserveComplete,
-  toObserveError,
-  toObserveTypedValue,
   toStrictEqualTyped,
   toRerenderWithSimilarSnapshot,
   toEmitSimilarValue,

@@ -1418,11 +1418,12 @@ describe("HttpLink", () => {
         });
 
         const link = new HttpLink({
-          fetch: jest.fn(async () => ({
-            status: 200,
-            body: stream,
-            headers: new Headers({ "content-type": "multipart/mixed" }),
-          })) as any,
+          fetch: async () => {
+            return new Response(stream, {
+              status: 200,
+              headers: new Headers({ "content-type": "multipart/mixed" }),
+            });
+          },
         });
 
         const observableStream = new ObservableStream(
@@ -1474,14 +1475,15 @@ describe("HttpLink", () => {
         });
 
         const link = new HttpLink({
-          fetch: jest.fn(async () => ({
-            status: 200,
-            body: stream,
-            headers: new Headers({
-              "Content-Type":
-                'multipart/mixed;boundary="graphql";deferSpec=20220824',
-            }),
-          })) as any,
+          fetch: async () => {
+            return new Response(stream, {
+              status: 200,
+              headers: new Headers({
+                "Content-Type":
+                  'multipart/mixed;boundary="graphql";deferSpec=20220824',
+              }),
+            });
+          },
         });
 
         const observableStream = new ObservableStream(

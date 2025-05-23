@@ -51,9 +51,15 @@ describe("BatchHttpLink", () => {
 
   beforeEach(() => {
     fetchMock.restore();
-    fetchMock.post("begin:/batch", makePromise([data, data2]));
-    fetchMock.post("begin:/rofl", makePromise([roflData, roflData]));
-    fetchMock.post("begin:/lawl", makePromise([lawlData, lawlData]));
+    fetchMock.post("begin:/batch", makePromise([data, data2]), {
+      headers: { "content-type": "application/json" },
+    });
+    fetchMock.post("begin:/rofl", makePromise([roflData, roflData]), {
+      headers: { "content-type": "application/json" },
+    });
+    fetchMock.post("begin:/lawl", makePromise([lawlData, lawlData]), {
+      headers: { "content-type": "application/json" },
+    });
   });
 
   it("does not need any constructor arguments", () => {
@@ -548,6 +554,7 @@ describe("SharedHttpTest", () => {
             })
           );
         },
+        headers: new Headers({ "content-type": "application/json" }),
       } as Response)
     );
 
@@ -1018,7 +1025,10 @@ describe("SharedHttpTest", () => {
       const text = jest.fn(
         async () => '{ "data": { "stub": { "id": "foo" } } }'
       );
-      const fetch = jest.fn(async (uri, options) => ({ text }));
+      const fetch = jest.fn(async (uri, options) => ({
+        text,
+        headers: new Headers({ "content-type": "application/json" }),
+      }));
       return { text, fetch };
     }
 

@@ -155,6 +155,13 @@ function parseGraphQLResponse(response: Response, bodyText: string) {
     );
   }
 
+  if (contentType.includes("application/json") && response.status >= 300) {
+    throw new ServerError(
+      `Response not successful: Received status code ${response.status}`,
+      { response, bodyText }
+    );
+  }
+
   try {
     return JSON.parse(bodyText);
   } catch (err) {

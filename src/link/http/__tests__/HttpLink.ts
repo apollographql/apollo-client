@@ -106,13 +106,23 @@ describe("HttpLink", () => {
 
     beforeEach(() => {
       fetchMock.restore();
-      fetchMock.post("begin:/data2", Promise.resolve(data2));
-      fetchMock.post("begin:/data", Promise.resolve(data));
+      fetchMock.post("begin:/data2", Promise.resolve(data2), {
+        headers: { "content-type": "application/json" },
+      });
+      fetchMock.post("begin:/data", Promise.resolve(data), {
+        headers: { "content-type": "application/json" },
+      });
       fetchMock.post("begin:/error", mockError);
-      fetchMock.post("begin:/apollo", Promise.resolve(data));
+      fetchMock.post("begin:/apollo", Promise.resolve(data), {
+        headers: { "content-type": "application/json" },
+      });
 
-      fetchMock.get("begin:/data", Promise.resolve(data));
-      fetchMock.get("begin:/data2", Promise.resolve(data2));
+      fetchMock.get("begin:/data", Promise.resolve(data), {
+        headers: { "content-type": "application/json" },
+      });
+      fetchMock.get("begin:/data2", Promise.resolve(data2), {
+        headers: { "content-type": "application/json" },
+      });
 
       const next = jest.fn();
       const error = jest.fn();
@@ -901,6 +911,7 @@ describe("HttpLink", () => {
               })
             );
           },
+          headers: new Headers({ "content-type": "application/json" }),
         } as Response)
       );
 
@@ -1055,7 +1066,10 @@ describe("HttpLink", () => {
 
   describe("Error handling", () => {
     it("throws an error if response code is > 300", async () => {
-      const response = new Response("{}", { status: 400 });
+      const response = new Response("{}", {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      });
 
       const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
@@ -1070,7 +1084,10 @@ describe("HttpLink", () => {
     });
 
     it("throws an error if response code is > 300 and handles string response body", async () => {
-      const response = new Response("Error! Foo bar", { status: 302 });
+      const response = new Response("Error! Foo bar", {
+        status: 302,
+        headers: { "content-type": "application/json" },
+      });
 
       const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
@@ -1196,7 +1213,10 @@ describe("HttpLink", () => {
         const text = jest.fn(
           async () => '{ "data": { "stub": { "id": "foo" } } }'
         );
-        const fetch = jest.fn(async (uri, options) => ({ text }));
+        const fetch = jest.fn(async (uri, options) => ({
+          text,
+          headers: new Headers({ "content-type": "application/json" }),
+        }));
         return { text, fetch };
       }
 
@@ -1302,7 +1322,10 @@ describe("HttpLink", () => {
 
     it("throws a Server error if response is > 300 with unparsable json", async () => {
       const body = "{";
-      const response = new Response(body, { status: 400 });
+      const response = new Response(body, {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      });
       const link = createHttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
@@ -1318,7 +1341,10 @@ describe("HttpLink", () => {
 
     it("throws a ServerParseError if response is 200 with unparsable json", async () => {
       const body = "{";
-      const response = new Response(body, { status: 200 });
+      const response = new Response(body, {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
       const link = createHttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });

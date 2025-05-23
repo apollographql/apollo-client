@@ -106,6 +106,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     ) => Promise<R>
   : { error: "toEmitTypedValue needs to be called on an ObservableStream" };
 
+  toObserveComplete: T extends ObservableSubscriber<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
+
   toObserveTypedValue: T extends ObservableSubscriber<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,

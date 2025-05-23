@@ -292,7 +292,7 @@ describe("SharedHttpTest", () => {
     const observable = execute(link, { query: sampleQuery });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
   });
 
@@ -340,7 +340,8 @@ describe("SharedHttpTest", () => {
 
     const stream = new ObservableStream(execute(link, { query, variables }));
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const [uri, options] = fetchMock.lastCall()!;
     const { method, body } = options!;
@@ -384,7 +385,7 @@ describe("SharedHttpTest", () => {
     });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
 
     let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
@@ -496,7 +497,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: Record<string, string> = fetchMock.lastCall()![1]!
       .headers as Record<string, string>;
@@ -518,7 +520,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: Record<string, string> = fetchMock.lastCall()![1]!
       .headers as Record<string, string>;
@@ -600,7 +603,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: Record<string, string> = fetchMock.lastCall()![1]!
       .headers as Record<string, string>;
@@ -626,7 +630,8 @@ describe("SharedHttpTest", () => {
       })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: Record<string, string> = fetchMock.lastCall()![1]!
       .headers as Record<string, string>;
@@ -653,7 +658,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
@@ -684,7 +690,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
@@ -706,7 +713,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables, context })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
@@ -730,7 +738,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const creds = fetchMock.lastCall()![1]!.credentials;
     expect(creds).toBe("same-team-yo");
@@ -747,7 +756,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const creds = fetchMock.lastCall()![1]!.credentials;
     expect(creds).toBe("same-team-yo");
@@ -769,7 +779,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const creds = fetchMock.lastCall()![1]!.credentials;
     expect(creds).toBe("same-team-yo");
@@ -789,7 +800,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const uri = fetchMock.lastUrl();
     expect(uri).toBe("/data");
@@ -803,7 +815,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const uri = fetchMock.lastUrl();
     expect(uri).toBe("/data");
@@ -825,7 +838,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const uri = fetchMock.lastUrl();
     expect(uri).toBe("/apollo");
@@ -845,7 +859,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     expect(fetchMock.lastUrl()).toBe("/dataFunc");
   });
@@ -861,7 +876,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const { someOption, mode, headers } = fetchMock.lastCall()![1]! as any;
     expect(someOption).toBe("foo");
@@ -885,7 +901,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const { someOption } = fetchMock.lastCall()![1]! as any;
     expect(someOption).toBe("foo");
@@ -904,7 +921,8 @@ describe("SharedHttpTest", () => {
       execute(httpLink, { query: sampleQuery })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     expect(customPrinter).toHaveBeenCalledTimes(1);
   });
@@ -927,7 +945,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     const { someOption } = fetchMock.lastCall()![1]! as any;
     expect(someOption).toBe("foo");
@@ -951,7 +970,8 @@ describe("SharedHttpTest", () => {
       execute(link, { query: sampleQuery, variables })
     );
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
 
     let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
 
@@ -982,7 +1002,7 @@ describe("SharedHttpTest", () => {
 
     const stream = new ObservableStream(execute(link, { query: sampleQuery }));
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitTypedValue(data);
     await expect(stream).toComplete();
   });
 

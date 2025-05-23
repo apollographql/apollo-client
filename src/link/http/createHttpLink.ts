@@ -14,7 +14,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import { checkFetcher } from "./checkFetcher.js";
 import type { HttpLink } from "./HttpLink.js";
 import {
-  handleError,
   parseAndCheckHttpResponse,
   readMultipartBody,
 } from "./parseAndCheckHttpResponse.js";
@@ -186,7 +185,7 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
         })
         .catch((err) => {
           controller = undefined;
-          handleError(err, observer);
+          observer.error(err);
         });
 
       return () => {

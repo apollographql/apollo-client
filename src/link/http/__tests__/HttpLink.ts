@@ -1095,8 +1095,6 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitTypedValue(result);
-
       await expect(stream).toEmitError(
         new ServerError("Response not successful: Received status code 400", {
           response,

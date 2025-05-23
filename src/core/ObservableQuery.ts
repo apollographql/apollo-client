@@ -513,6 +513,12 @@ export class ObservableQuery<
           loading: true,
           networkStatus: NetworkStatus.loading,
         };
+      case "standby":
+        return {
+          ...defaultResult,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
 
       default:
         return defaultResult;

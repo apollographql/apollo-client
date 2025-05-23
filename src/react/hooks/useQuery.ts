@@ -306,26 +306,11 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const ssrDisabledOverride = useSyncExternalStore(
+  const resultOverride = useSyncExternalStore(
     () => () => {},
     () => void 0,
     () => (ssr === false ? useQuery.ssrDisabledResult : void 0)
   );
-
-  const resultOverride =
-    skip || watchQueryOptions.fetchPolicy === "standby" ?
-      // When skipping a query (ie. we're not querying for data but still want to
-      // render children), make sure the `data` is cleared out and `loading` is
-      // set to `false` (since we aren't loading anything).
-      //
-      // NOTE: We no longer think this is the correct behavior. Skipping should
-      // not automatically set `data` to `undefined`, but instead leave the
-      // previous data in place. In other words, skipping should not mandate that
-      // previously received data is all of a sudden removed. Unfortunately,
-      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-      // to address this.
-      useQuery.skipStandbyResult
-    : ssrDisabledOverride;
 
   const result = useResultSubscription<TData, TVariables>(
     observable,
@@ -461,9 +446,13 @@ function useResubscribeIfNecessary<
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult
     // usually does.
-    resultData.previousData =
-      resultData.current.data || resultData.previousData;
-    resultData.current = observable.getCurrentResult();
+    const result = observable.getCurrentResult();
+
+    if (!equal(result.data, resultData.current.data)) {
+      resultData.previousData =
+        resultData.current.data || resultData.previousData;
+    }
+    resultData.current = result;
   }
   observable[lastWatchOptions] = watchQueryOptions;
 }
@@ -473,13 +462,5 @@ useQuery.ssrDisabledResult = maybeDeepFreeze({
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.loading,
-  partial: true,
-}) satisfies ApolloQueryResult<any> as ApolloQueryResult<any>;
-
-useQuery.skipStandbyResult = maybeDeepFreeze({
-  loading: false,
-  data: void 0 as any,
-  error: void 0,
-  networkStatus: NetworkStatus.ready,
   partial: true,
 }) satisfies ApolloQueryResult<any> as ApolloQueryResult<any>;

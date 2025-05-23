@@ -4036,9 +4036,8 @@ describe("ObservableQuery", () => {
           true,
           {
             resultBeforeSubscribe: {
-              // TODO: should this be done from the start?
               currentResult: {
-                ...loadingStates.loading,
+                ...loadingStates.done,
                 data: undefined,
                 partial: true,
               },
@@ -4078,9 +4077,8 @@ describe("ObservableQuery", () => {
           false,
           {
             resultBeforeSubscribe: {
-              // TODO: should this be done from the start?
               currentResult: {
-                ...loadingStates.loading,
+                ...loadingStates.done,
                 data: undefined,
                 partial: true,
               },
@@ -4120,9 +4118,8 @@ describe("ObservableQuery", () => {
           true,
           {
             resultBeforeSubscribe: {
-              // TODO: should this be done from the start?
               currentResult: {
-                ...loadingStates.loading,
+                ...loadingStates.done,
                 data: undefined,
                 partial: true,
               },
@@ -4162,9 +4159,8 @@ describe("ObservableQuery", () => {
           false,
           {
             resultBeforeSubscribe: {
-              // TODO: should this be done from the start?
               currentResult: {
-                ...loadingStates.loading,
+                ...loadingStates.done,
                 data: undefined,
                 partial: true,
               },

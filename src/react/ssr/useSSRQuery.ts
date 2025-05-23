@@ -1,9 +1,19 @@
 import type { DocumentNode } from "graphql";
 
-import type { ObservableQuery } from "@apollo/client";
+import type { ApolloQueryResult, ObservableQuery } from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
 import { useApolloClient, useQuery } from "@apollo/client/react";
+import { maybeDeepFreeze } from "@apollo/client/utilities/internal";
 
 import type { PrerenderStaticInternalContext } from "./prerenderStatic.js";
+
+const skipStandbyResult: ApolloQueryResult<any> = maybeDeepFreeze({
+  loading: false,
+  data: void 0 as any,
+  error: void 0,
+  networkStatus: NetworkStatus.ready,
+  partial: true,
+});
 
 export const useSSRQuery = function (
   this: PrerenderStaticInternalContext,
@@ -30,10 +40,10 @@ export const useSSRQuery = function (
     previousData: undefined,
   };
 
-  if (options.skip) {
+  if (options.skip || options.fetchPolicy === "standby") {
     return withoutObservableAccess({
       ...baseResult,
-      ...useQuery.skipStandbyResult,
+      ...skipStandbyResult,
     });
   }
   if (options.ssr === false) {

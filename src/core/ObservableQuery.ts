@@ -1815,7 +1815,6 @@ function getTrackingOperatorPromise<ObservedValue, ReturnValue = ObservedValue>(
         reject(error);
       }
     },
-    error: (error) => reject(error),
     finalize: () => resolve(lastValue),
   });
   return { promise, operator };

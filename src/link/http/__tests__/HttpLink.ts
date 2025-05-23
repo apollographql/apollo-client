@@ -1054,20 +1054,6 @@ describe("HttpLink", () => {
   });
 
   describe("Error handling", () => {
-    let responseBody: any;
-    const text = jest.fn(() => {
-      const responseBodyText = "{}";
-      responseBody = JSON.parse(responseBodyText);
-      return Promise.resolve(responseBodyText);
-    });
-
-    const fetch = jest.fn((uri, options) => {
-      return Promise.resolve({ text });
-    });
-    beforeEach(() => {
-      fetch.mockReset();
-    });
-
     it("throws an error if response code is > 300", async () => {
       const response = new Response("{}", { status: 400 });
 

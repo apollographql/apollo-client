@@ -212,24 +212,23 @@ export function handleError(err: any, observer: Observer<any>) {
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
   return (response: Response) =>
-    response
-      .text()
-      .then((bodyText) => parseJsonBody(response, bodyText))
-      .then((result: any) => {
-        if (
-          !Array.isArray(result) &&
-          !hasOwnProperty.call(result, "data") &&
-          !hasOwnProperty.call(result, "errors")
-        ) {
-          throw new ServerError(
-            `Server response was missing for query '${
-              Array.isArray(operations) ?
-                operations.map((op) => op.operationName)
-              : operations.operationName
-            }'.`,
-            { response, result }
-          );
-        }
-        return result;
-      });
+    response.text().then((bodyText) => {
+      const result = parseJsonBody(response, bodyText) as any;
+
+      if (
+        !Array.isArray(result) &&
+        !hasOwnProperty.call(result, "data") &&
+        !hasOwnProperty.call(result, "errors")
+      ) {
+        throw new ServerError(
+          `Server response was missing for query '${
+            Array.isArray(operations) ?
+              operations.map((op) => op.operationName)
+            : operations.operationName
+          }'.`,
+          { response, result }
+        );
+      }
+      return result;
+    });
 }

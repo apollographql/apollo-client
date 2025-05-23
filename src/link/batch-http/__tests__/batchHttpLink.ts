@@ -64,7 +64,7 @@ describe("BatchHttpLink", () => {
   });
 
   it("handles batched requests", async () => {
-    fetchMock.post("begin:/batch", makePromise([data, data2]), {
+    fetchMock.post("/batch", makePromise([data, data2]), {
       headers: { "content-type": "application/json" },
     });
 
@@ -98,9 +98,9 @@ describe("BatchHttpLink", () => {
     await expect(stream2).toEmitTypedValue(data2);
     await expect(stream2).toComplete();
 
-    expect(fetchMock.calls("begin:/batch").length).toBe(1);
+    expect(fetchMock.calls("/batch").length).toBe(1);
 
-    const options: any = fetchMock.lastOptions("begin:/batch");
+    const options: any = fetchMock.lastOptions("/batch");
     expect(options.credentials).toEqual("two");
 
     const { headers } = options;
@@ -111,7 +111,7 @@ describe("BatchHttpLink", () => {
   });
 
   it("errors on an incorrect number of results for a batch", async () => {
-    fetchMock.post("begin:/batch", makePromise([data, data2]), {
+    fetchMock.post("/batch", makePromise([data, data2]), {
       headers: { "content-type": "application/json" },
     });
 

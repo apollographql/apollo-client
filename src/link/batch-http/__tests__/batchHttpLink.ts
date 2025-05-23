@@ -1073,8 +1073,9 @@ describe("SharedHttpTest", () => {
       );
       stream.unsubscribe();
 
-      expect(fetch.mock.calls.length).toBe(1);
-      expect(fetch.mock.calls[0][1]).toEqual(
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledWith(
+        "data",
         expect.objectContaining({ signal: externalAbortController.signal })
       );
     });

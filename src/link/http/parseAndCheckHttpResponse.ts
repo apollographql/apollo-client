@@ -171,7 +171,7 @@ function parseGraphQLResponseJsonEncoding(
   }
 }
 
-function parseGraphQLResponse(response: Response, bodyText: string) {
+function parseResponse(response: Response, bodyText: string) {
   const contentType = response.headers.get("content-type");
 
   if (contentType === null) {
@@ -213,7 +213,7 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
   return (response: Response) =>
     response.text().then((bodyText) => {
-      const result = parseGraphQLResponse(response, bodyText);
+      const result = parseResponse(response, bodyText);
 
       if (
         !Array.isArray(result) &&

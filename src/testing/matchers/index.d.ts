@@ -110,6 +110,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableSubscriber instance" };
 
+  toObserveError: T extends ObservableSubscriber<any> ?
+    (error?: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
+
   toObserveTypedValue: T extends ObservableSubscriber<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,

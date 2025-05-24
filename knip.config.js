@@ -1,12 +1,13 @@
 // @ts-check
 
-import { join } from "node:path";
-import { entryPoints } from "./config/entryPoints.js";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { getEntryPoints } from "./config/entryPoints.js";
 
 const packageJSON = JSON.parse(readFileSync("package.json", "utf-8"));
 
-const packageEntries = entryPoints.map(({ dirs }) =>
+const packageEntries = getEntryPoints("build").map(({ dirs }) =>
   join("src", ...dirs, "index.ts")
 );
 
@@ -21,8 +22,7 @@ const scriptEntries = Array.from(
 /** @type{import('knip').KnipConfig}*/
 const config = {
   exclude: ["optionalPeerDependencies", "unresolved"],
-  entry: []
-    .concat(packageEntries)
+  entry: packageEntries
     .concat(scriptEntries)
     .concat([
       "src/cache/inmemory/fixPolyfills.native.ts",

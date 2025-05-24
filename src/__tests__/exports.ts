@@ -42,7 +42,7 @@ import * as utilitiesInternalGlobals from "@apollo/client/utilities/internal/glo
 import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
 
 // eslint-disable-next-line local-rules/no-relative-imports
-import { entryPoints } from "../../config/entryPoints.js";
+import { getEntryPoints } from "../../config/entryPoints.js";
 
 type Namespace = object;
 
@@ -106,7 +106,7 @@ describe("exports of public entry points", () => {
 
   it("completeness", () => {
     const { join } = require("path").posix;
-    entryPoints.forEach((info: Record<string, any>) => {
+    getEntryPoints("test").forEach((info: Record<string, any>) => {
       const id = join("@apollo/client", ...info.dirs);
       // We don't want to add a devDependency for relay-runtime,
       // and our API extractor job is already validating its public exports,

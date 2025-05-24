@@ -43,10 +43,6 @@ export function getEntryPoints(env: string) {
 export const buildDocEntryPoints = (
   options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt" | "env">
 ) => {
-  console.log({
-    env: options.env,
-    entryPoints: getEntryPoints(options.env).map((e) => e.key),
-  });
   const acc = getEntryPoints(options.env).map((entryPoint) => {
     return `export * from "${path.join(
       "@apollo/client",

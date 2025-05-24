@@ -16,6 +16,7 @@ import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { updateVersion, verifyVersion } from "./version.ts";
 
 export interface BuildStepOptions {
+  env: string;
   type: "esm" | "cjs";
   tsconfig: string;
   rootDir: string;
@@ -62,6 +63,10 @@ const args = parseArgs({
       type: "string",
       default: "tsconfig.build.json",
     },
+    env: {
+      type: "string",
+      default: "build",
+    },
   },
 });
 
@@ -75,7 +80,7 @@ const runSteps = args.values.step.flatMap((step) =>
   step === "build" ? Object.keys(buildSteps) : [step]
 );
 
-const tsconfig = args.values.tsconfig;
+const { env, tsconfig } = args.values;
 
 const wrongSteps = runSteps.filter((step) => !(step in allSteps));
 if (wrongSteps.length) {
@@ -90,13 +95,14 @@ console.log("Running build steps: %s", runSteps.join(", "));
 
 const buildStepOptions = [
   // this order is important so that globs on the esm build don't accidentally match the cjs build
-  { type: "esm", targetDir: "dist", jsExt: "js", tsExt: "ts", tsconfig },
+  { type: "esm", targetDir: "dist", jsExt: "js", tsExt: "ts", tsconfig, env },
   {
     type: "cjs",
     targetDir: "dist/__cjs",
     jsExt: "cjs",
     tsExt: "cts",
     tsconfig,
+    env,
   },
 ] satisfies Omit<
   BuildStepOptions,

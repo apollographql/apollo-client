@@ -13,25 +13,41 @@ const pkg = JSON.parse(
 
 export type ExportsCondition = string | { [key: string]: ExportsCondition };
 
-const EXCLUDED_ENTRYPOINTS = ["./testing/internal"];
+const CONDITIONAL_ENTRYPOINTS = {
+  "./testing/internal": {
+    env: "test",
+  },
+};
 
 type EntryPoint = {
   dirs: string[];
   key: string;
   value: ExportsCondition;
 };
-export const entryPoints = Object.entries(pkg.exports)
-  .filter(([key]) => !EXCLUDED_ENTRYPOINTS.includes(key))
-  .map<EntryPoint>(([key, value]) => ({
-    dirs: key.slice("./".length).split("/"),
-    key,
-    value,
-  }));
+
+export function getEntryPoints(env: string) {
+  return Object.entries(pkg.exports)
+    .filter(([key]) => {
+      return (
+        !Object.hasOwn(CONDITIONAL_ENTRYPOINTS, key) ||
+        CONDITIONAL_ENTRYPOINTS[key]?.env === env
+      );
+    })
+    .map<EntryPoint>(([key, value]) => ({
+      dirs: key.slice("./".length).split("/"),
+      key,
+      value,
+    }));
+}
 
 export const buildDocEntryPoints = (
-  options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt">
+  options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt" | "env">
 ) => {
-  const acc = entryPoints.map((entryPoint) => {
+  console.log({
+    env: options.env,
+    entryPoints: getEntryPoints(options.env).map((e) => e.key),
+  });
+  const acc = getEntryPoints(options.env).map((entryPoint) => {
     return `export * from "${path.join(
       "@apollo/client",
       ...entryPoint.dirs

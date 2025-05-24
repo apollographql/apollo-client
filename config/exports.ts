@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { BuildStep } from "./build.ts";
-import { entryPoints } from "./entryPoints.ts";
+import { getEntryPoints } from "./entryPoints.ts";
 
 type ConditionRoot = {
   import?: string;
@@ -16,6 +16,7 @@ type ConditionRoot = {
 export const addExports: BuildStep = async (options) => {
   const pkgFileName = join(options.packageRoot, "package.json");
   const pkg = JSON.parse(await readFile(pkgFileName, "utf-8"));
+  const entryPoints = getEntryPoints(options.env);
   // normal entry points a la `@apollo/client` and `@apollo/client/core`.
   // these entry points will be used in most cases and point to the right file depending
   // on how the user is consuming the package.

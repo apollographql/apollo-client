@@ -80,7 +80,7 @@
     "prebuild": "npm run clean",
     "prebuild:test": "npm run clean",
     "build": "node config/build.ts",
-    "build:test": "node config/build.ts --tsconfig tsconfig.test.build.json",
+    "build:test": "node config/build.ts --tsconfig tsconfig.test.build.json --env test",
     "typecheck": "tsc --project config/tsconfig.json; tsc --noEmit --project tsconfig.json",
     "postinstall": "patch-package",
     "extract-api": "npm run clean && node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc --step=deprecateInternals && node config/apiExtractor.ts --generate apiReport",

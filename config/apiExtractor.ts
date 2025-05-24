@@ -81,6 +81,7 @@ try {
         rootDir: path.resolve(import.meta.dirname, ".."),
         targetDir: "dist",
         jsExt: "js",
+        env: "build",
       })
     );
 

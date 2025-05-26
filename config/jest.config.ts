@@ -28,6 +28,8 @@ const defaults = {
   resolver: "<rootDir>/config/jest/resolver.ts",
   prettierPath: null,
   moduleNameMapper: {
+    // Our internal testing utilities are not part of the final build, so we
+    // want to always import them from the source directory.
     "^@apollo/client/testing/internal$": "<rootDir>/testing/internal/index.ts",
   },
 };

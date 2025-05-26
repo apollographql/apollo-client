@@ -1,16 +1,14 @@
 import type {
   FetchMoreQueryOptions,
   MaybeMasked,
-  ObservableQuery,
   OperationVariables,
   QueryResult,
   Unmasked,
 } from "@apollo/client";
 
-export type RefetchFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = ObservableQuery<TData, TVariables>["refetch"];
+export type RefetchFunction<TData, TVariables extends OperationVariables> = (
+  variables?: Partial<TVariables>
+) => Promise<QueryResult<TData>>;
 
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {

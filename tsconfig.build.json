@@ -1,11 +1,30 @@
 {
   "compilerOptions": {
     "noEmit": false,
-    "types": ["node"]
+    "types": [
+      // we don't want to include our types for `jest`, our custom matchers etc.
+      // if one of those is referenced in our production code, we want a
+      // build error, so we can fix it
+      // we also explicitly do not include `node` here as we don't want our build
+      // artefact to rely on those types (for now, at least)
+    ]
   },
   "extends": "./tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    // only directly include files that are `index.ts`, `index.production.ts`, etc.
+    // any files referenced from those files will be included automatically
+    // this will avoid including files that cannot be reached from the
+    // package.json exports
+    "src/**/index.ts",
+    "src/**/index.*.ts",
+    // and this one, we need it for docblock inlining
+    "src/react/types/types.documentation.ts"
+  ],
   "exclude": [
+    // explicitly exclude these files
+    // if one of them is imported from one of the included files,
+    // it will be included in the build anyway, so we need to keep
+    // an eye on that
     "src/**/__tests__/**/*",
     "src/config/**/*",
     "src/testing/internal/**/*",

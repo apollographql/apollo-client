@@ -28,6 +28,7 @@
     "jsx": "react",
     "strict": true,
     "paths": {
+      // This entry point is not part of our public API, so we point it directly to the source.
       "@apollo/client/testing/internal": ["./src/testing/internal/index.ts"]
     }
   },

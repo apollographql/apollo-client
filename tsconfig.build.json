@@ -10,24 +10,12 @@
     ]
   },
   "extends": "./tsconfig.json",
-  "include": [
-    // only directly include files that are `index.ts`, `index.production.ts`, etc.
-    // any files referenced from those files will be included automatically
-    // this will avoid including files that cannot be reached from the
-    // package.json exports
-    "src/**/index.ts",
-    "src/**/index.*.ts",
-    // and this one, we need it for docblock inlining
-    "src/react/types/types.documentation.ts"
+  "files": [
+    // during the `compileTs` build step, this will momentarily be populated
+    // with all entry points specified in the `package.json` file
+    // this way we don't bundle up any files that cannot be reached by an
+    // `import` statement
   ],
-  "exclude": [
-    // explicitly exclude these files
-    // if one of them is imported from one of the included files,
-    // it will be included in the build anyway, so we need to keep
-    // an eye on that
-    "src/**/__tests__/**/*",
-    "src/config/**/*",
-    "src/testing/internal/**/*",
-    "src/testing/matchers/**/*"
-  ]
+  "include": [],
+  "exclude": []
 }

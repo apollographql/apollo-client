@@ -26,7 +26,10 @@
       "@testing-library/react-render-stream/expect"
     ],
     "jsx": "react",
-    "strict": true
+    "strict": true,
+    "paths": {
+      "@apollo/client/testing/internal": ["./src/testing/internal/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "references": [

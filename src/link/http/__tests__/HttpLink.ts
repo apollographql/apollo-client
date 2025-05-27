@@ -1208,7 +1208,7 @@ describe("HttpLink", () => {
 
         const link = createHttpLink({
           uri: "data",
-          fetch: fetch as any,
+          fetch,
           fetchOptions: { signal: externalAbortController.signal },
         });
 
@@ -1257,7 +1257,7 @@ describe("HttpLink", () => {
         const abortControllers = trackGlobalAbortControllers();
 
         // (the request is already finished at that point)
-        const link = createHttpLink({ uri: "data", fetch: fetch as any });
+        const link = createHttpLink({ uri: "data", fetch });
 
         await new Promise<void>((resolve) =>
           execute(link, { query: sampleQuery }).subscribe({

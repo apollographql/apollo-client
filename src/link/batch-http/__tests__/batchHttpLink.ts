@@ -5,7 +5,7 @@ import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 
-import { ServerError } from "@apollo/client";
+import { ServerError, ServerParseError } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import {
@@ -1130,7 +1130,7 @@ describe("SharedHttpTest", () => {
 });
 
 describe("GraphQL over HTTP", () => {
-  test("emits ServerError when content-type is not set with well formed GraphQL response", async () => {
+  test("emits result when content-type is not set with well formed GraphQL response", async () => {
     const query = gql`
       query {
         foo
@@ -1146,14 +1146,90 @@ describe("GraphQL over HTTP", () => {
     });
     const stream = new ObservableStream(execute(link, { query }));
 
+    await expect(stream).toEmitTypedValue({ data: { foo: true } });
+    await expect(stream).toComplete();
+  });
+
+  test("emits ServerError when content-type is not set with malformed GraphQL response", async () => {
+    const query = gql`
+      query Foo {
+        foo
+      }
+    `;
+
+    const response = Response.json({ foo: true }, { status: 200 });
+    response.headers.delete("content-type");
+
+    const link = new BatchHttpLink({
+      uri: "/graphql",
+      fetch: async () => response,
+    });
+    const stream = new ObservableStream(execute(link, { query }));
+
     await expect(stream).toEmitError(
-      new ServerError(
-        "Could not determine content encoding because the 'content-type' header is missing.",
+      new ServerError("Server response was malformed for query 'Foo'.", {
+        response,
+        bodyText: JSON.stringify({ foo: true }),
+      })
+    );
+  });
+
+  test("emits ServerParseError when content-type is not set with unparsable JSON body", async () => {
+    const query = gql`
+      query {
+        foo
+      }
+    `;
+
+    const response = new Response("This is a response", { status: 200 });
+    response.headers.delete("content-type");
+
+    const link = new BatchHttpLink({
+      uri: "/graphql",
+      fetch: async () => response,
+    });
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(
+      new ServerParseError(
+        new Error(
+          `Unexpected token 'T', "This is a response" is not valid JSON`
+        ),
         {
           response,
-          bodyText: JSON.stringify({ data: { foo: true } }),
+          bodyText: "This is a response",
         }
       )
+    );
+  });
+
+  test("emits ServerError when content-type is not set with well formed GraphQL response and non-200 status code", async () => {
+    const query = gql`
+      query {
+        foo
+      }
+    `;
+
+    const response = Response.json(
+      { data: null, errors: [{ message: "Something went wrong" }] },
+      { status: 400 }
+    );
+    response.headers.delete("content-type");
+
+    const link = new BatchHttpLink({
+      uri: "/graphql",
+      fetch: async () => response,
+    });
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitError(
+      new ServerError("Response not successful: Received status code 400", {
+        response,
+        bodyText: JSON.stringify({
+          data: null,
+          errors: [{ message: "Something went wrong" }],
+        }),
+      })
     );
   });
 
@@ -1217,7 +1293,7 @@ describe("GraphQL over HTTP", () => {
     );
   });
 
-  test("emits ServerError when responding with a non-json mime type and 200 response with well formed GraphQL response", async () => {
+  test("emits result when responding with a non-json mime type and 200 response with well formed GraphQL response", async () => {
     const query = gql`
       query {
         foo
@@ -1238,15 +1314,11 @@ describe("GraphQL over HTTP", () => {
     });
     const stream = new ObservableStream(execute(link, { query }));
 
-    await expect(stream).toEmitError(
-      new ServerError("Unsupported media type: 'text/plain'", {
-        response,
-        bodyText: JSON.stringify({
-          data: null,
-          errors: [{ message: "Could not process request" }],
-        }),
-      })
-    );
+    await expect(stream).toEmitTypedValue({
+      data: null,
+      errors: [{ message: "Could not process request" }],
+    });
+    await expect(stream).toComplete();
   });
 
   test("handles 200 response with application/graphql-response+json", async () => {

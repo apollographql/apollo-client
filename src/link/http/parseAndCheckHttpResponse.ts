@@ -174,25 +174,11 @@ function parseGraphQLResponseJsonEncoding(
 function parseResponse(response: Response, bodyText: string) {
   const contentType = response.headers.get("content-type");
 
-  if (contentType === null) {
-    throw new ServerError(
-      "Could not determine content encoding because the 'content-type' header is missing.",
-      { response, bodyText }
-    );
-  }
-
-  if (contentType.includes("application/json")) {
-    return parseJsonEncoding(response, bodyText);
-  }
-
-  if (contentType.includes("application/graphql-response+json")) {
+  if (contentType?.includes("application/graphql-response+json")) {
     return parseGraphQLResponseJsonEncoding(response, bodyText);
   }
 
-  throw new ServerError(`Unsupported media type: '${contentType}'`, {
-    response,
-    bodyText,
-  });
+  return parseJsonEncoding(response, bodyText);
 }
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
@@ -206,7 +192,7 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
         !hasOwnProperty.call(result, "errors")
       ) {
         throw new ServerError(
-          `Server response was missing for query '${
+          `Server response was malformed for query '${
             Array.isArray(operations) ?
               operations.map((op) => op.operationName)
             : operations.operationName

@@ -4929,8 +4929,7 @@ describe("ObservableQuery", () => {
 
     const observable = client.watchQuery({ query, variables });
 
-    const queryInfo = observable["queryInfo"];
-    const cache = queryInfo["cache"];
+    const cache = client.cache;
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({

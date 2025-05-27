@@ -1,6 +1,5 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import { Slot } from "optimism";
 import type {
   InteropObservable,
   MonoTypeOperatorFunction,
@@ -27,7 +26,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import type { QueryInfo } from "./QueryInfo.js";
+import { LastWrite, QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -225,18 +224,12 @@ export class ObservableQuery<
     Subscribable<ApolloQueryResult<MaybeMasked<TData>>>,
     InteropObservable<ApolloQueryResult<MaybeMasked<TData>>>
 {
-  /**
-   * @internal
-   * A slot used by the `useQuery` hook to indicate that `client.watchQuery`
-   * should not register the query immediately, but instead wait for the query to
-   * be started registered with the `QueryManager` when `useSyncExternalStore`
-   * actively subscribes to it.
-   */
-  private static inactiveOnCreation = new Slot<boolean>();
-
   public readonly options: ObservableQuery.Options<TData, TVariables>;
   public readonly queryId: string;
   public readonly queryName?: string;
+
+  /** @internal will be read and written from `QueryInfo` */
+  public _lastWrite?: LastWrite;
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw
@@ -284,8 +277,6 @@ export class ObservableQuery<
   private waitForNetworkResult: boolean;
   private lastQuery: DocumentNode;
 
-  private queryInfo: QueryInfo;
-
   private linkSubscription?: Subscription;
 
   private pollingInfo?: {
@@ -299,17 +290,17 @@ export class ObservableQuery<
 
   constructor({
     queryManager,
-    queryInfo,
     options,
+    transformedQuery = queryManager.transform(options.query),
+    queryId = queryManager.generateQueryId(),
   }: {
     queryManager: QueryManager;
-    queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
+    transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    queryId?: string;
   }) {
-    let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
+    this.queryId = queryId;
 
-    // related classes
-    this.queryInfo = queryInfo;
     this.queryManager = queryManager;
 
     // active state
@@ -331,7 +322,7 @@ export class ObservableQuery<
       ),
     } = options;
 
-    this.lastQuery = options.query;
+    this.lastQuery = transformedQuery;
 
     this.options = {
       ...options,
@@ -358,10 +349,6 @@ export class ObservableQuery<
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
-          if (startedInactive) {
-            queryManager["queries"].set(this.queryId, queryInfo);
-            startedInactive = false;
-          }
           if (!this.subject.observed) {
             this.reobserve();
 
@@ -451,8 +438,6 @@ export class ObservableQuery<
     this.input.complete = () => {};
     this.input.pipe(this.operator).subscribe(this.subject);
 
-    this.queryId = queryInfo.queryId || queryManager.generateQueryId();
-
     const opDef = getOperationDefinition(this.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
@@ -475,12 +460,10 @@ export class ObservableQuery<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
 
-  /** @internal */
-  public resetDiff() {
-    this.queryInfo.resetDiff();
-  }
-
-  private getCacheDiff({ optimistic = true } = {}) {
+  /**
+   * @internal
+   */
+  public getCacheDiff({ optimistic = true } = {}) {
     return this.queryManager.cache.diff<TData>({
       query: this.query,
       variables: this.variables,
@@ -702,7 +685,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
-    this.queryInfo.resetLastWrite();
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -786,8 +768,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
-        this.queryManager.removeQuery(qid);
-
         // disable the `fetchMore` override that is currently active
         // the next updates caused by this should not be `fetchMore` anymore,
         // but `ready` or whatever other calculated loading state is currently
@@ -1107,8 +1087,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     const initialFetchPolicy = this.options.fetchPolicy;
-    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
-    queryInfo.setObservableQuery(this);
+    const queryInfo = new QueryInfo({
+      queryManager: this.queryManager,
+      observableQuery: this,
+    });
     options.context ??= {};
 
     let synchronouslyEmitted = false;
@@ -1164,7 +1146,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // track query and variables from the start of the operation
     const { query, variables } = this;
     const operation: TrackedOperation = {
-      abort: () => subscription.unsubscribe(),
+      abort: () => {
+        subscription.unsubscribe();
+      },
       query,
       variables,
     };
@@ -1303,6 +1287,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
     let { newNetworkStatus } = internalOptions || {};
+
+    this.queryManager.obsQueries.add(this);
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
@@ -1463,7 +1449,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
-    this.queryManager.removeQuery(this.queryId);
+    this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
   }

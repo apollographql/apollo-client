@@ -106,23 +106,13 @@ describe("HttpLink", () => {
 
     beforeEach(() => {
       fetchMock.restore();
-      fetchMock.post("begin:/data2", Promise.resolve(data2), {
-        headers: { "content-type": "application/json" },
-      });
-      fetchMock.post("begin:/data", Promise.resolve(data), {
-        headers: { "content-type": "application/json" },
-      });
+      fetchMock.post("begin:/data2", Promise.resolve(data2));
+      fetchMock.post("begin:/data", Promise.resolve(data));
       fetchMock.post("begin:/error", mockError);
-      fetchMock.post("begin:/apollo", Promise.resolve(data), {
-        headers: { "content-type": "application/json" },
-      });
+      fetchMock.post("begin:/apollo", Promise.resolve(data));
 
-      fetchMock.get("begin:/data", Promise.resolve(data), {
-        headers: { "content-type": "application/json" },
-      });
-      fetchMock.get("begin:/data2", Promise.resolve(data2), {
-        headers: { "content-type": "application/json" },
-      });
+      fetchMock.get("begin:/data", Promise.resolve(data));
+      fetchMock.get("begin:/data2", Promise.resolve(data2));
 
       const next = jest.fn();
       const error = jest.fn();

@@ -53,12 +53,8 @@ describe("BatchHttpLink", () => {
 
   beforeEach(() => {
     fetchMock.restore();
-    fetchMock.post("begin:/rofl", makePromise([roflData, roflData]), {
-      headers: { "content-type": "application/json" },
-    });
-    fetchMock.post("begin:/lawl", makePromise([lawlData, lawlData]), {
-      headers: { "content-type": "application/json" },
-    });
+    fetchMock.post("begin:/rofl", makePromise([roflData, roflData]));
+    fetchMock.post("begin:/lawl", makePromise([lawlData, lawlData]));
   });
 
   it("does not need any constructor arguments", () => {
@@ -66,9 +62,7 @@ describe("BatchHttpLink", () => {
   });
 
   it("handles batched requests", async () => {
-    fetchMock.post("/batch", makePromise([data, data2]), {
-      headers: { "content-type": "application/json" },
-    });
+    fetchMock.post("/batch", makePromise([data, data2]));
 
     const clientAwareness = {
       name: "Some Client Name",
@@ -113,9 +107,7 @@ describe("BatchHttpLink", () => {
   });
 
   it("errors on an incorrect number of results for a batch", async () => {
-    fetchMock.post("/batch", makePromise([data, data2]), {
-      headers: { "content-type": "application/json" },
-    });
+    fetchMock.post("/batch", makePromise([data, data2]));
 
     const link = new BatchHttpLink({
       uri: "/batch",

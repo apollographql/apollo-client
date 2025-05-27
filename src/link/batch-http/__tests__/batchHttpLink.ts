@@ -3,7 +3,7 @@ import type { ASTNode } from "graphql";
 import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
-import { map, Observable } from "rxjs";
+import { map, Observable, Subject } from "rxjs";
 
 import { ServerError, ServerParseError } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
@@ -11,7 +11,6 @@ import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
-  ObservableSubscriber,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
@@ -408,18 +407,20 @@ describe("SharedHttpTest", () => {
       variables,
     });
 
-    const observer = new ObservableSubscriber();
+    const observer1 = new Subject();
+    const stream1 = new ObservableStream(observer1);
 
-    observable.subscribe(observer);
-    observable.subscribe(observer);
+    const observer2 = new Subject();
+    const stream2 = new ObservableStream(observer2);
 
-    await expect(observer).toHaveObservedNextValue(data);
-    await expect(observer).toHaveObservedNextValue(data);
+    observable.subscribe(observer1);
+    observable.subscribe(observer2);
 
-    await expect(observer).toHaveObservedCompleteNotification();
-    await expect(observer).toHaveObservedCompleteNotification();
+    await expect(stream1).toEmitTypedValue(data);
+    await expect(stream2).toEmitTypedValue(data);
 
-    await expect(observer).not.toHaveObservedAnything();
+    await expect(stream1).toComplete();
+    await expect(stream2).toComplete();
 
     expect(fetchMock.calls().length).toBe(1);
   });
@@ -435,7 +436,8 @@ describe("SharedHttpTest", () => {
       variables,
     });
 
-    const observer = new ObservableSubscriber();
+    const observer = new Subject();
+    const stream = new ObservableStream(observer);
 
     observable.subscribe(observer);
 
@@ -446,9 +448,8 @@ describe("SharedHttpTest", () => {
 
     await wait(50);
 
-    await expect(observer).toHaveObservedNextValue(data);
-    await expect(observer).toHaveObservedCompleteNotification();
-    await expect(observer).not.toHaveObservedAnything();
+    await expect(stream).toEmitTypedValue(data);
+    await expect(stream).toComplete();
   });
 
   it("allows for dynamic endpoint setting", async () => {

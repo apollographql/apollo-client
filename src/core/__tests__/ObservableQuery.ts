@@ -3070,8 +3070,6 @@ describe("ObservableQuery", () => {
         returnPartialData: true,
       });
 
-      // TODO: Determine why this worked without the `false` argument before
-      // since this updates the last value to be equal to the partial result.
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         loading: true,

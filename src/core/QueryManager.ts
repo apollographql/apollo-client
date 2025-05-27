@@ -195,6 +195,8 @@ export class QueryManager {
   // including mutations and subscriptions).
   private queries = new Map<string, QueryInfo>();
 
+  public obsQueries = new Set<ObservableQuery<any, any>>();
+
   // Maps from queryId strings to Promise rejection functions for
   // currently active queries and fetches.
   // Use protected instead of private field so
@@ -247,13 +249,19 @@ export class QueryManager {
    * to dispose of this QueryManager instance.
    */
   public stop() {
-    this.queries.forEach((_info, queryId) => {
-      this.removeQuery(queryId);
+    this.obsQueries.forEach((oq) => {
+      oq["tearDownQuery"]();
     });
 
+    // the call to `removeQuery` before `cancelPendingFetches` irritates me
+    // `removeQuery` removes all `fetchCancelFns` so `cancelPendingFetches` won't
+    // actually call anything after?
     this.cancelPendingFetches(
       newInvariantError("QueryManager stopped while query was in flight")
     );
+    this.queries.forEach((_info, queryId) => {
+      this.removeQuery(queryId);
+    });
   }
 
   private cancelPendingFetches(error: Error) {
@@ -527,21 +535,17 @@ export class QueryManager {
 
       const { updateQueries } = mutation;
       if (updateQueries) {
-        this.queries.forEach(({ observableQuery }, queryId) => {
+        this.obsQueries.forEach((observableQuery) => {
           const queryName = observableQuery && observableQuery.queryName;
           if (!queryName || !hasOwnProperty.call(updateQueries, queryName)) {
             return;
           }
           const updater = updateQueries[queryName];
-          const { document, variables } = this.queries.get(queryId)!;
+          const { query: document, variables } = observableQuery;
 
           // Read the current query result from the store.
-          const { result: currentQueryResult, complete } = cache.diff<TData>({
-            query: document!,
-            variables,
-            returnPartialData: true,
-            optimistic: false,
-          });
+          const { result: currentQueryResult, complete } =
+            observableQuery.getCacheDiff({ optimistic: false });
 
           if (complete && currentQueryResult) {
             // Run our reducer using the current query result and the mutation result.
@@ -717,8 +721,13 @@ export class QueryManager {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
+    const queryInfo = new QueryInfo({
+      queryManager: this,
+      queryId,
+    });
+    this.queries.set(queryId, queryInfo);
     return lastValueFrom(
-      this.fetchObservableWithInfo(this.getOrCreateQuery(queryId), options, {
+      this.fetchObservableWithInfo(queryInfo, options, {
         networkStatus,
       }).observable.pipe(
         filterMap((value) => {
@@ -737,7 +746,7 @@ export class QueryManager {
         // an EmptyError from rejecting this promise.
         defaultValue: { data: undefined },
       }
-    );
+    ).finally(() => this.queries.delete(queryId));
   }
 
   public transform(document: DocumentNode) {
@@ -836,22 +845,12 @@ export class QueryManager {
       options.notifyOnNetworkStatusChange = true;
     }
 
-    const queryInfo = new QueryInfo(this);
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
-      queryInfo,
       options,
+      transformedQuery: query,
     });
-    observable["lastQuery"] = query;
-
-    if (!ObservableQuery["inactiveOnCreation"].getValue()) {
-      this.queries.set(observable.queryId, queryInfo);
-    }
-
-    // We give queryInfo the transformed query to ensure the first cache diff
-    // uses the transformed query instead of the raw query
-    queryInfo.init({ document: query, variables: observable.variables });
-    queryInfo.setObservableQuery(observable);
+    //  queryInfo.init({ document: query, variables: observable.variables });
 
     return observable;
   }
@@ -868,17 +867,15 @@ export class QueryManager {
     return this.fetchQuery<TData, TVars>(queryId, {
       ...(options as any),
       query,
-    })
-      .then((value) => ({
-        ...value,
-        data: this.maskOperation({
-          document: query,
-          data: value?.data,
-          fetchPolicy: options.fetchPolicy,
-          id: queryId,
-        }),
-      }))
-      .finally(() => this.removeQuery(queryId));
+    }).then((value) => ({
+      ...value,
+      data: this.maskOperation({
+        document: query,
+        data: value?.data,
+        fetchPolicy: options.fetchPolicy,
+        id: queryId,
+      }),
+    }));
   }
 
   private queryIdCounter = 1;
@@ -912,10 +909,10 @@ export class QueryManager {
       )
     );
 
-    this.queries.forEach(({ observableQuery }) => {
+    this.obsQueries.forEach((observableQuery) => {
       // Set loading to true so listeners don't trigger unless they want
       // results with partial data.
-      observableQuery?.reset();
+      observableQuery.reset();
     });
 
     if (this.mutationStore) {
@@ -949,34 +946,31 @@ export class QueryManager {
       });
     }
 
-    this.queries.forEach(({ observableQuery: oq, document }, queryId) => {
-      if (oq) {
-        if (include === "all") {
-          queries.set(queryId, oq);
-          return;
-        }
+    this.obsQueries.forEach((oq) => {
+      const queryId = oq.queryId;
+      const document = oq["lastQuery"] || oq.options.query;
+      if (include === "all") {
+        queries.set(queryId, oq);
+        return;
+      }
 
-        const {
-          queryName,
-          options: { fetchPolicy },
-        } = oq;
+      const {
+        queryName,
+        options: { fetchPolicy },
+      } = oq;
 
-        if (
-          fetchPolicy === "standby" ||
-          (include === "active" && !oq.hasObservers())
-        ) {
-          return;
-        }
+      if (include === "active" && fetchPolicy === "standby") {
+        return;
+      }
 
-        if (
-          include === "active" ||
-          (queryName && queryNamesAndQueryStrings.has(queryName)) ||
-          (document && queryNamesAndQueryStrings.has(print(document)))
-        ) {
-          queries.set(queryId, oq);
-          if (queryName) queryNamesAndQueryStrings.set(queryName, true);
-          if (document) queryNamesAndQueryStrings.set(print(document), true);
-        }
+      if (
+        include === "active" ||
+        (queryName && queryNamesAndQueryStrings.has(queryName)) ||
+        (document && queryNamesAndQueryStrings.has(print(document)))
+      ) {
+        queries.set(queryId, oq);
+        if (queryName) queryNamesAndQueryStrings.set(queryName, true);
+        if (document) queryNamesAndQueryStrings.set(print(document), true);
       }
     });
 
@@ -986,20 +980,14 @@ export class QueryManager {
         // pre-allocate a new query ID here, using a special prefix to enable
         // cleaning up these temporary queries later, after fetching.
         const queryId = makeUniqueId("legacyOneTimeQuery");
-        const queryInfo = this.getOrCreateQuery(queryId).init({
-          document: options.query,
-          variables: options.variables,
-        });
         const oq = new ObservableQuery({
           queryManager: this,
-          queryInfo,
+          queryId,
           options: {
             ...options,
             fetchPolicy: "network-only",
           },
         });
-        invariant(oq.queryId === queryId);
-        queryInfo.setObservableQuery(oq);
         queries.set(queryId, oq);
       });
     }
@@ -1040,7 +1028,6 @@ export class QueryManager {
         ) {
           observableQueryPromises.push(observableQuery.refetch());
         }
-        (this.queries.get(queryId) || observableQuery["queryInfo"]).resetDiff();
       }
     );
 
@@ -1163,20 +1150,12 @@ export class QueryManager {
     // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
     // The same queryId could have two rejection fns for two promises
     this.fetchCancelFns.delete(queryId);
-    if (this.queries.has(queryId)) {
-      const oq = this.queries.get(queryId)!.observableQuery;
-      if (oq) {
-        oq["resetNotifications"]();
-        oq["unsubscribeFromCache"]?.();
-        oq.stopPolling();
-      }
-      this.queries.delete(queryId);
-    }
+    this.queries.delete(queryId);
   }
 
   public broadcastQueries() {
     if (this.onBroadcast) this.onBroadcast();
-    this.queries.forEach((info) => info.observableQuery?.notify());
+    this.obsQueries.forEach((observableQuery) => observableQuery.notify());
   }
 
   // Use protected instead of private field so
@@ -1539,7 +1518,7 @@ export class QueryManager {
 
     return {
       observable: observable.pipe(
-        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
+        tap({ finalize: cleanupCancelFn }),
         mergeWith(fetchCancelSubject),
         share()
       ),
@@ -1681,7 +1660,7 @@ export class QueryManager {
         // queries, even the QueryOptions ones.
         if (onQueryUpdated) {
           if (!diff) {
-            diff = this.cache.diff(oq["queryInfo"].getDiffOptions());
+            diff = oq.getCacheDiff();
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }
@@ -1782,7 +1761,6 @@ export class QueryManager {
       document: query,
       variables,
     });
-
     const readCache = () => this.cache.diff<any>(queryInfo.getDiffOptions());
 
     const resultsFromCache = (
@@ -1951,13 +1929,6 @@ export class QueryManager {
       case "standby":
         return { fromLink: false, observable: EMPTY };
     }
-  }
-
-  public getOrCreateQuery(queryId: string): QueryInfo {
-    if (queryId && !this.queries.has(queryId)) {
-      this.queries.set(queryId, new QueryInfo(this, queryId));
-    }
-    return this.queries.get(queryId)!;
   }
 }
 

@@ -283,7 +283,6 @@ export class InternalQueryReference<TData = unknown> {
       }
 
       if (!avoidNetworkRequests) {
-        observable.resetDiff();
         this.setResult();
       }
       this.subscribeToQuery();

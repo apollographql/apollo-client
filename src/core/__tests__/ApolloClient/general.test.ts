@@ -525,8 +525,6 @@ describe("ApolloClient", () => {
         const id = ++counter;
         onRequestSubscribe(id);
 
-        console.log("Subscribing to link", id);
-
         // Delay (100ms) must be bigger than sum of reobserve and unsubscribe awaits (5ms each)
         // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {
@@ -536,7 +534,6 @@ describe("ApolloClient", () => {
         }, 100);
 
         return () => {
-          console.trace("Unsubscribing from link", id);
           onRequestUnsubscribe(id);
           clearTimeout(timer);
         };
@@ -579,7 +576,6 @@ describe("ApolloClient", () => {
 
     await wait(10);
 
-    console.log("tearing down");
     stream.unsubscribe();
 
     await wait(10);

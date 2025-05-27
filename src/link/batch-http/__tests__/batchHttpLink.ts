@@ -1048,12 +1048,6 @@ describe("SharedHttpTest", () => {
       );
     });
 
-    // Discuss in PR: This wasn't failing before because it was purely
-    // synchronous. Adding some async to this test does show that an error was
-    // emitted (despite the original claim that it didn't emit an error). Does
-    // this change make sense?
-    //
-    // TODO: Remove this comment before merging
     it("aborting the internal signal emits abort error", async () => {
       try {
         fetchMock.restore();

@@ -7,14 +7,9 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
-import {
-  NextRenderOptions,
-  ObservableStream,
-  ObservableSubscriber,
-} from "../internal/index.js";
+import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
-import { TakeOptions as StreamTakeOptions } from "../internal/ObservableStream.js";
-import { TakeOptions as ObserverTakeOptions } from "../internal/ObservableSubscriber.js";
+import { TakeOptions } from "../internal/ObservableStream.js";
 import type {
   CommonStream,
   ToEmitSimilarValueOptions,
@@ -76,15 +71,15 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : { error: "matcher needs to be called on a WeakRef instance" };
 
   toComplete: T extends ObservableStream<any> ?
-    (options?: StreamTakeOptions) => Promise<R>
+    (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   toEmitAnything: T extends ObservableStream<any> ?
-    (options?: StreamTakeOptions) => Promise<R>
+    (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   toEmitError: T extends ObservableStream<any> ?
-    (error?: any, options?: StreamTakeOptions) => Promise<R>
+    (error?: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   /**
@@ -92,14 +87,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
    * `toEmitValue` to check if the `next` event emitted a specific value.
    */
   toEmitNext: T extends ObservableStream<any> ?
-    (options?: StreamTakeOptions) => Promise<R>
+    (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
   toEmitTypedValue: T extends ObservableStream<infer TResult> ?
     (
       expected: FilterUnserializableProperties<TResult>,
 
-      options?: StreamTakeOptions & {
+      options?: TakeOptions & {
         received?: string;
         expected?: string;
         hintOptions?: MatcherHintOptions;

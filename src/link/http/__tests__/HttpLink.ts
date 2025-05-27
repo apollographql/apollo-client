@@ -1184,22 +1184,12 @@ describe("HttpLink", () => {
         },
       };
 
-      function mockFetch() {
-        const text = jest.fn(
-          async () => '{ "data": { "stub": { "id": "foo" } } }'
-        );
-        const fetch = jest.fn(async (uri, options) => ({
-          text,
-          headers: new Headers({ "content-type": "application/json" }),
-        }));
-        return { text, fetch };
-      }
-
       it("aborts the request when unsubscribing before the request has completed", () => {
-        const { fetch } = mockFetch();
+        const fetch = async () =>
+          Response.json({ data: { stub: { id: "foo" } } }, { status: 200 });
         const abortControllers = trackGlobalAbortControllers();
 
-        const link = createHttpLink({ uri: "data", fetch: fetch as any });
+        const link = createHttpLink({ uri: "data", fetch });
 
         const sub = execute(link, { query: sampleQuery }).subscribe(
           failingObserver
@@ -1211,7 +1201,9 @@ describe("HttpLink", () => {
       });
 
       it("a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one", () => {
-        const { fetch } = mockFetch();
+        const fetch = jest.fn(async (_uri, _options) =>
+          Response.json({ data: { stub: { id: "foo" } } }, { status: 200 })
+        );
         const externalAbortController = new AbortController();
 
         const link = createHttpLink({
@@ -1260,9 +1252,9 @@ describe("HttpLink", () => {
       });
 
       it("resolving fetch does not cause the AbortController to be aborted", async () => {
-        const { text, fetch } = mockFetch();
+        const fetch = async () =>
+          Response.json({ data: { hello: "world" } }, { status: 200 });
         const abortControllers = trackGlobalAbortControllers();
-        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
         // (the request is already finished at that point)
         const link = createHttpLink({ uri: "data", fetch: fetch as any });
@@ -1278,11 +1270,13 @@ describe("HttpLink", () => {
       });
 
       it("an unsuccessful fetch does not cause the AbortController to be aborted", async () => {
-        const { fetch } = mockFetch();
+        const fetch = async () => {
+          throw new Error("This is an error!");
+        };
+
         const abortControllers = trackGlobalAbortControllers();
-        fetch.mockRejectedValueOnce("This is an error!");
         // the request would be closed by the browser in the case of an error anyways
-        const link = createHttpLink({ uri: "data", fetch: fetch as any });
+        const link = createHttpLink({ uri: "data", fetch });
 
         await new Promise<void>((resolve) =>
           execute(link, { query: sampleQuery }).subscribe({

@@ -893,16 +893,7 @@ describe("HttpLink", () => {
 
       const fetchSpy = jest.spyOn(window, "fetch");
       fetchSpy.mockImplementation(() =>
-        Promise.resolve<Response>({
-          text() {
-            return Promise.resolve(
-              JSON.stringify({
-                data: { hello: "from spy" },
-              })
-            );
-          },
-          headers: new Headers({ "content-type": "application/json" }),
-        } as Response)
+        Promise.resolve(Response.json({ data: { hello: "from spy" } }))
       );
 
       const spyFn = window.fetch;
@@ -1056,10 +1047,7 @@ describe("HttpLink", () => {
 
   describe("Error handling", () => {
     it("throws an error if response code is > 300", async () => {
-      const response = new Response("{}", {
-        status: 400,
-        headers: { "content-type": "application/json" },
-      });
+      const response = Response.json({}, { status: 400 });
 
       const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
@@ -1074,10 +1062,7 @@ describe("HttpLink", () => {
     });
 
     it("throws an error if response code is > 300 and handles string response body", async () => {
-      const response = new Response("Error! Foo bar", {
-        status: 302,
-        headers: { "content-type": "application/json" },
-      });
+      const response = new Response("Error! Foo bar", { status: 302 });
 
       const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });

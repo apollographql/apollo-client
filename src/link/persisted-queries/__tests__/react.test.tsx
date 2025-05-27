@@ -69,13 +69,7 @@ describe("react application", () => {
   it("works on a simple tree", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
     // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
@@ -87,13 +81,7 @@ describe("react application", () => {
     // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response2,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response2 })),
       { repeat: 1 }
     );
 

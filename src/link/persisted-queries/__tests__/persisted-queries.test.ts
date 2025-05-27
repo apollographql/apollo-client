@@ -88,13 +88,7 @@ describe("happy path", () => {
   it("sends a sha256 hash of the query under extensions", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
@@ -122,13 +116,7 @@ describe("happy path", () => {
   it("sends a version along with the request", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
@@ -146,27 +134,13 @@ describe("happy path", () => {
   it("memoizes between requests", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
-      {
-        repeat: 1,
-      }
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
     );
     const hashSpy = jest.fn(sha256);
     const link = createPersistedQuery({ sha256: hashSpy }).concat(
@@ -195,13 +169,7 @@ describe("happy path", () => {
   it("clears the cache when calling `resetHashCache`", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
 
@@ -227,13 +195,7 @@ describe("happy path", () => {
   it("supports loading the hash from other method", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: response }))
     );
     const generateHash = (query: any) => Promise.resolve("foo");
     const link = createPersistedQuery({ generateHash }).concat(
@@ -255,13 +217,7 @@ describe("happy path", () => {
   it("errors if unable to convert to sha256", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
@@ -319,13 +275,7 @@ describe("happy path", () => {
 
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({
       sha256(data) {
@@ -370,13 +320,7 @@ describe("failure path", () => {
       new Promise<void>((resolve, reject) => {
         fetchMock.post(
           "/graphql",
-          () =>
-            new Promise((resolve) =>
-              resolve({
-                body: failingResponse,
-                headers: { "content-type": "application/json" },
-              })
-            ),
+          () => new Promise((resolve) => resolve({ body: failingResponse })),
           { repeat: 1 }
         );
         // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
@@ -388,13 +332,7 @@ describe("failure path", () => {
         // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
         fetchMock.post(
           "/graphql",
-          () =>
-            new Promise((resolve) =>
-              resolve({
-                body: response,
-                headers: { "content-type": "application/json" },
-              })
-            ),
+          () => new Promise((resolve) => resolve({ body: response })),
           { repeat: 1 }
         );
         const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -427,23 +365,11 @@ describe("failure path", () => {
     }).toString();
     fetchMock.get(
       `/graphql?${params}`,
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: errorResponse,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: errorResponse }))
     );
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        )
+      () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({
       sha256,
@@ -471,24 +397,12 @@ describe("failure path", () => {
   it("sends POST for both requests without useGETForHashedQueries", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: errorResponse,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: errorResponse })),
       { repeat: 1 }
     );
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -531,24 +445,12 @@ describe("failure path", () => {
   it("forces POST request when sending full query", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: giveUpResponse,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: giveUpResponse })),
       { repeat: 1 }
     );
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
     const link = createPersistedQuery({
@@ -600,36 +502,18 @@ describe("failure path", () => {
       new Promise<void>((resolve, reject) => {
         fetchMock.post(
           "/graphql",
-          () =>
-            new Promise((resolve) =>
-              resolve({
-                body: failingResponse,
-                headers: { "content-type": "application/json" },
-              })
-            ),
+          () => new Promise((resolve) => resolve({ body: failingResponse })),
           { repeat: 1 }
         );
         fetchMock.post(
           "/graphql",
-          () =>
-            new Promise((resolve) =>
-              resolve({
-                body: response,
-                headers: { "content-type": "application/json" },
-              })
-            ),
+          () => new Promise((resolve) => resolve({ body: response })),
           { repeat: 1 }
         );
         // mock it again so we can verify it doesn't try anymore
         fetchMock.post(
           "/graphql",
-          () =>
-            new Promise((resolve) =>
-              resolve({
-                body: response,
-                headers: { "content-type": "application/json" },
-              })
-            ),
+          () => new Promise((resolve) => resolve({ body: response })),
           { repeat: 1 }
         );
         const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -667,24 +551,12 @@ describe("failure path", () => {
     async (_description, failingResponse) => {
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: failingResponse,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
         { repeat: 1 }
       );
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: response,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
 
@@ -713,24 +585,12 @@ describe("failure path", () => {
   it("works with multiple errors", async () => {
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: multiResponse,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: multiResponse })),
       { repeat: 1 }
     );
     fetchMock.post(
       "/graphql",
-      () =>
-        new Promise((resolve) =>
-          resolve({
-            body: response,
-            headers: { "content-type": "application/json" },
-          })
-        ),
+      () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
@@ -756,36 +616,21 @@ describe("failure path", () => {
       let requestCount = 0;
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: response,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
 
       // mock it again so we can verify it doesn't try anymore
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: response,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 5 }
       );
 
       const fetcher = (...args: any[]) => {
         if (++requestCount % 2) {
           return Promise.resolve(
-            new Response(errorResponseWithCode, {
-              status,
-              headers: { "content-type": "application/json" },
-            })
+            new Response(errorResponseWithCode, { status })
           );
         }
         // @ts-expect-error
@@ -830,26 +675,14 @@ describe("failure path", () => {
       let failed = false;
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: response,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
 
       // mock it again so we can verify it doesn't try anymore
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: response,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
 
@@ -887,25 +720,14 @@ describe("failure path", () => {
       let failed = false;
       fetchMock.post(
         "/graphql",
-        () =>
-          new Promise((resolve) =>
-            resolve({
-              body: response,
-              headers: { "content-type": "application/json" },
-            })
-          ),
+        () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
 
       const fetcher = (...args: any[]) => {
         if (!failed) {
           failed = true;
-          return Promise.resolve(
-            new Response(errorResponse, {
-              status,
-              headers: { "content-type": "application/json" },
-            })
-          );
+          return Promise.resolve(new Response(errorResponse, { status }));
         }
         // @ts-expect-error
         return global.fetch.apply(null, args);

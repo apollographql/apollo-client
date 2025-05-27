@@ -60,44 +60,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toMatchDocument(document: DocumentNode): R;
 
   /**
-   * Used to determine if the observer received any notification.
-   */
-  toHaveObservedAnything: T extends ObservableSubscriber<any> ?
-    (options?: ObserverTakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
-
-  /**
-   * Used to determine if the observer received a complete notification.
-   */
-  toHaveObservedCompleteNotification: T extends ObservableSubscriber<any> ?
-    (options?: ObserverTakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
-
-  /**
-   * Used to determine if the observer received an error notification.
-   */
-  toHaveObservedError: T extends ObservableSubscriber<any> ?
-    (error?: any, options?: ObserverTakeOptions) => Promise<R>
-  : { error: "matcher needs to be called on an ObservableSubscriber instance" };
-
-  /**
-   * Used to determine if the observer received a next notification with a
-   * specified value.
-   */
-  toHaveObservedNextValue: T extends ObservableSubscriber<infer TResult> ?
-    (
-      expected: FilterUnserializableProperties<TResult>,
-      options?: ObserverTakeOptions & {
-        received?: string;
-        expected?: string;
-        hintOptions?: MatcherHintOptions;
-      }
-    ) => Promise<R>
-  : {
-      error: "matcher needs to be called on an ObservableSubscriber";
-    };
-
-  /**
    * Used to determine if the Suspense cache has a cache entry.
    */
   toHaveSuspenseCacheEntryUsing: T extends ApolloClient<any> ?

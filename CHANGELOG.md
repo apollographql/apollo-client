@@ -1,5 +1,84 @@
 # @apollo/client
 
+## 4.0.0-alpha.15
+
+### Major Changes
+
+- [#12639](https://github.com/apollographql/apollo-client/pull/12639) [`1bdf489`](https://github.com/apollographql/apollo-client/commit/1bdf4893abb173c97877c71012afa15f9d3da8e6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Move internal testing utilities in `@apollo/client/testing` to `@apollo/client/testing/internal` and remove deprecated testing utilities. Some of the testing utilities exported from the `@apollo/client/testing` endpoint were not considered stable. As a result of this change, testing utilities or types exported from `@apollo/client/testing` are now considered stable and will not undergo breaking changes.
+
+  The following APIs were removed. To migrate, update usages of the following APIs as such:
+
+  **`createMockClient`**
+
+  ```diff
+  - const client = createMockClient(data, query, variables);
+  + const client = new ApolloClient({
+  +   cache: new InMemoryCache(),
+  +   link: new MockLink([
+  +     {
+  +       request: { query, variables },
+  +       result: { data },
+  +     }
+  +   ]),
+  + });
+  ```
+
+  **`mockObservableLink`**
+
+  ```diff
+  - const link = mockObservableLink();
+  + const link = new MockSubscriptionLink();
+  ```
+
+  **`mockSingleLink`**
+
+  ```diff
+  - const link = mockSingleLink({
+  -   request: { query, variables },
+  -   result: { data },
+  - });
+  + const link = new MockLink([
+  +   {
+  +     request: { query, variables },
+  +     result: { data },
+  +   }
+  + ]);
+  ```
+
+- [#12637](https://github.com/apollographql/apollo-client/pull/12637) [`d2a60d4`](https://github.com/apollographql/apollo-client/commit/d2a60d45e734a2518dad2443f85d82553cd6456a) Thanks [@phryneas](https://github.com/phryneas)! - `useQuery`: only advance `previousData` if `data` actually changed
+
+- [#12631](https://github.com/apollographql/apollo-client/pull/12631) [`b147cac`](https://github.com/apollographql/apollo-client/commit/b147cac5c96c44bfc3deb72c12c7521981584c12) Thanks [@phryneas](https://github.com/phryneas)! - `ObservableQuery` will now return a `loading: false` state for `fetchPolicy` `standby`, even before subscription
+
+- [#12639](https://github.com/apollographql/apollo-client/pull/12639) [`1bdf489`](https://github.com/apollographql/apollo-client/commit/1bdf4893abb173c97877c71012afa15f9d3da8e6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `@apollo/client/testing/core` entrypoint in favor of `@apollo/client/testing`.
+
+### Minor Changes
+
+- [#12639](https://github.com/apollographql/apollo-client/pull/12639) [`1bdf489`](https://github.com/apollographql/apollo-client/commit/1bdf4893abb173c97877c71012afa15f9d3da8e6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Move `MockLink` types to `MockLink` namespace. This affects the `MockedResponse`, `MockLinkOptions`, and `ResultFunction` types. These types are still exported but are deprecated in favor of the namespace. To migrate, use the types on the `MockLink` namespace instead.
+
+  ```diff
+  import {
+  - MockedResponse,
+  - MockLinkOptions,
+  - ResultFunction,
+  + MockLink
+  } from "@apollo/client/testing";
+
+  - const mocks: MockedResponse = [];
+  + const mocks: MockLink.MockedResponse = [];
+
+  - const result: ResultFunction = () => {/* ... */ }
+  + const result: MockLink.ResultFunction = () => {/* ... */ }
+
+  - const options: MockLinkOptions = {}
+  + const options: MockLink.Options = {}
+  ```
+
+### Patch Changes
+
+- [#12631](https://github.com/apollographql/apollo-client/pull/12631) [`b147cac`](https://github.com/apollographql/apollo-client/commit/b147cac5c96c44bfc3deb72c12c7521981584c12) Thanks [@phryneas](https://github.com/phryneas)! - When updating `skip` from `false` to `true` in `useQuery`, retain `data` if it is available rather than setting it to `undefined`.
+
+- [#12631](https://github.com/apollographql/apollo-client/pull/12631) [`b147cac`](https://github.com/apollographql/apollo-client/commit/b147cac5c96c44bfc3deb72c12c7521981584c12) Thanks [@phryneas](https://github.com/phryneas)! - The `error` property is no longer present when `skip` is `true` in `useQuery`.
+
 ## 4.0.0-alpha.14
 
 ### Major Changes

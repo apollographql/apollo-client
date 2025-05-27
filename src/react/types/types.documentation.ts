@@ -263,6 +263,19 @@ export interface QueryResultDocumentation {
    * @docGroup 3. Helper functions
    */
   updateQuery: unknown;
+
+  /**
+   * Describes the completeness of `data`.
+   * - `empty`: No data could be fulfilled from the cache or the result is
+   *   incomplete. `data` is `undefined`.
+   * - `partial`: Some data could be fulfilled from the cache but `data` is
+   *   incomplete. This is only possible when `returnPartialData` is `true`.
+   * - `streaming`: `data` is incomplete as a result of a deferred query and
+   *   the result is still streaming in.
+   *  - `complete`: `data` is a fully satisfied query result fulfilled
+   *  either from the cache or network.
+   */
+  dataStatus: unknown;
 }
 
 export interface MutationOptionsDocumentation {

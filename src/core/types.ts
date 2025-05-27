@@ -5,7 +5,7 @@ import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import type { IsAny } from "@apollo/client/utilities/internal";
+import type { DeepPartial, IsAny } from "@apollo/client/utilities/internal";
 
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -175,8 +175,7 @@ export type InternalRefetchQueriesMap<TResult> = Map<
 
 export type OperationVariables = Record<string, any>;
 
-export interface ApolloQueryResult<T> {
-  data: T | undefined;
+export type ApolloQueryResult<T> = {
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
@@ -192,7 +191,29 @@ export interface ApolloQueryResult<T> {
    * @deprecated This field will be removed in a future version of Apollo Client.
    */
   partial: boolean;
-}
+} & (
+  | {
+      data: T;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      dataStatus: "complete";
+    }
+  | {
+      // Defer to the passed in type to properly type the `@defer` fields.
+      data: T;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      dataStatus: "streaming";
+    }
+  | {
+      data: DeepPartial<T>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      dataStatus: "partial";
+    }
+  | {
+      data: undefined;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      dataStatus: "empty";
+    }
+);
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

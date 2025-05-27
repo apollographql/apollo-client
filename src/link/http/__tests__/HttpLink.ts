@@ -658,7 +658,7 @@ describe("HttpLink", () => {
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
       expect(headers.accept).toBe(
-        "application/graphql-response+json, application/json;q=0.9"
+        "application/graphql-response+json,application/json;q=0.9"
       );
     });
 
@@ -678,7 +678,7 @@ describe("HttpLink", () => {
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
       expect(headers.accept).toBe(
-        "application/graphql-response+json, application/json;q=0.9"
+        "application/graphql-response+json,application/json;q=0.9"
       );
     });
 
@@ -703,7 +703,7 @@ describe("HttpLink", () => {
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
       expect(headers.accept).toBe(
-        "application/graphql-response+json, application/json;q=0.9"
+        "application/graphql-response+json,application/json;q=0.9"
       );
     });
 
@@ -727,7 +727,7 @@ describe("HttpLink", () => {
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
       expect(headers.accept).toBe(
-        "application/graphql-response+json, application/json;q=0.9"
+        "application/graphql-response+json,application/json;q=0.9"
       );
     });
 
@@ -1601,7 +1601,7 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               accept:
-                "application/graphql-response+json, application/json;q=0.9",
+                "application/graphql-response+json,application/json;q=0.9",
               "content-type": "application/json",
             },
           })

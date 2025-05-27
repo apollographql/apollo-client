@@ -6370,8 +6370,10 @@ describe("custom document transforms", () => {
 
     client.watchQuery({ query: aQuery }).subscribe(jest.fn());
     client.watchQuery({ query: bQuery }).subscribe(jest.fn());
-    // purposely avoid subscribing to prevent it from being an "active" query
-    client.watchQuery({ query: abQuery });
+    client
+      // set `fetchPolicy` to `"standby"` to prevent it from being an "active" query
+      .watchQuery({ query: abQuery, fetchPolicy: "standby" })
+      .subscribe(jest.fn());
 
     await waitFor(() => {
       return (

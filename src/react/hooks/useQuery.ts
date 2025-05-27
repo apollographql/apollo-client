@@ -23,6 +23,7 @@ import type {
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
+  ObservableQuery,
   OperationVariables,
   QueryResult,
   RefetchWritePolicy,
@@ -32,7 +33,7 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client";
-import { NetworkStatus, ObservableQuery } from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
   NoInfer,
@@ -263,10 +264,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   function createState(
     previous?: InternalState<TData, TVariables>
   ): InternalState<TData, TVariables> {
-    const observable = ObservableQuery["inactiveOnCreation"].withValue(
-      true,
-      () => client.watchQuery(watchQueryOptions)
-    );
+    const observable = client.watchQuery(watchQueryOptions);
 
     return {
       client,

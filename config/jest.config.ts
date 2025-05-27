@@ -27,6 +27,11 @@ const defaults = {
   },
   resolver: "<rootDir>/config/jest/resolver.ts",
   prettierPath: null,
+  moduleNameMapper: {
+    // Our internal testing utilities are not part of the final build, so we
+    // want to always import them from the source directory.
+    "^@apollo/client/testing/internal$": "<rootDir>/testing/internal/index.ts",
+  },
 };
 
 const ignoreDTSFiles = ".d.ts$";
@@ -78,6 +83,7 @@ const standardReact18Config = {
     "src/react/ssr/__tests__/prerenderStatic.test.tsx",
   ],
   moduleNameMapper: {
+    ...defaults.moduleNameMapper,
     "^react$": "react-18",
     "^react-dom$": "react-dom-18",
     "^react-dom/(.*)$": "react-dom-18/$1",
@@ -89,6 +95,7 @@ const standardReact17Config = {
   displayName: "ReactDOM 17",
   testPathIgnorePatterns: react17TestFileIgnoreList,
   moduleNameMapper: {
+    ...defaults.moduleNameMapper,
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",
     "^react-dom/client$": "<rootDir>/../config/jest/react-dom-17-client.js",

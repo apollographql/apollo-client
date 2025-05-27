@@ -85,6 +85,7 @@ const uninitialized: ApolloQueryResult<any> = {
   loading: true,
   networkStatus: NetworkStatus.loading,
   data: undefined,
+  dataStatus: "empty",
   partial: true,
 };
 
@@ -92,6 +93,7 @@ const empty: ApolloQueryResult<any> = {
   loading: false,
   networkStatus: NetworkStatus.ready,
   data: undefined,
+  dataStatus: "empty",
   partial: true,
 };
 
@@ -479,28 +481,34 @@ export class ObservableQuery<
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
       : initialFetchPolicy || this.options.fetchPolicy;
-    const defaultResult = {
+    const defaultResult: ApolloQueryResult<TData> = {
       data: undefined,
+      dataStatus: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
     };
 
-    const cacheResult = () => {
+    const cacheResult = (): ApolloQueryResult<TData> => {
       const diff = this.getCacheDiff();
+      // TODO: queryInfo.getDiff should handle this since cache.diff returns a
+      // null when returnPartialData is false
+      const data =
+        this.options.returnPartialData || diff.complete ?
+          (diff.result as TData) ?? undefined
+        : undefined;
 
       return this.maskResult({
-        data:
-          // TODO: queryInfo.getDiff should handle this since cache.diff returns a
-          // null when returnPartialData is false
-          this.options.returnPartialData || diff.complete ?
-            (diff.result as TData) ?? undefined
-          : undefined,
+        data,
+        dataStatus:
+          diff.complete ? "complete"
+          : data === undefined ? "empty"
+          : "partial",
         loading: !diff.complete,
         networkStatus:
           diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
         partial: !diff.complete,
-      });
+      } as ApolloQueryResult<TData>);
     };
 
     switch (fetchPolicy) {
@@ -848,6 +856,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               // will be overwritten anyways, just here for types sake
               loading: false,
               data: data as TData,
+              dataStatus: "complete",
             },
             source: "network",
           });
@@ -1519,12 +1528,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.input.next({
           kind: "N",
           value: {
-            data: diff.result as TData,
+            data: diff.result,
+            dataStatus:
+              diff.complete ? "complete"
+              : diff.result ? "partial"
+              : "empty",
             networkStatus: NetworkStatus.ready,
             loading: false,
             error: undefined,
             partial: !diff.complete,
-          },
+          } as ApolloQueryResult<TData>,
           source: "cache",
           query: this.query,
           variables: this.variables,
@@ -1661,14 +1674,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
       result =
         notification.kind === "E" ?
-          {
+          ({
             data: undefined,
+            dataStatus: "empty",
             partial: true,
             ...(isEqualQuery(previous, notification) ? previous.result : {}),
             error: notification.error,
             networkStatus: NetworkStatus.error,
             loading: false,
-          }
+          } as ApolloQueryResult<TData>)
         : notification.value;
 
       if (result.error) {

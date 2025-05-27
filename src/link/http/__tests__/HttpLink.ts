@@ -1490,14 +1490,13 @@ describe("HttpLink", () => {
         const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleDeferredQuery });
         const observableStream = new ObservableStream(observable);
 
@@ -1536,14 +1535,13 @@ describe("HttpLink", () => {
         const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleQueryCustomDirective });
         const observableStream = new ObservableStream(observable);
 
@@ -1634,15 +1632,14 @@ describe("HttpLink", () => {
           },
         });
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+
+        const link = new HttpLink({ fetch });
 
         const observableStream = new ObservableStream(
           execute(link, { query: sampleSubscription })
@@ -1690,15 +1687,14 @@ describe("HttpLink", () => {
           },
         });
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+
+        const link = new HttpLink({ fetch });
 
         const warningSpy = jest
           .spyOn(console, "warn")
@@ -1716,14 +1712,13 @@ describe("HttpLink", () => {
           subscriptionsBodyError.split("\r\n").map((line) => line + "\r\n")
         );
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
 
         const observableStream = new ObservableStream(
           execute(link, { query: sampleSubscription })
@@ -1761,14 +1756,13 @@ describe("HttpLink", () => {
         const stream = ReadableStream.from(
           subscriptionsBody.split("\r\n").map((line) => line + "\r\n")
         );
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleSubscription });
         const observableStream = new ObservableStream(observable);
 

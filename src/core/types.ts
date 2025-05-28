@@ -193,15 +193,10 @@ export type ApolloQueryResult<T> = {
   partial: boolean;
 } & (
   | {
-      data: T;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
-      dataState: "complete";
-    }
-  | {
       // Defer to the passed in type to properly type the `@defer` fields.
       data: T;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
-      dataState: "streaming";
+      dataState: "complete" | "streaming";
     }
   | {
       data: DeepPartial<T>;

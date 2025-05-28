@@ -248,12 +248,6 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/local-state/codegen 1`] = `
-Array [
-  "plugin",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/masking 1`] = `
 Array [
   "disableWarningsSlot",

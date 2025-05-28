@@ -85,4 +85,8 @@ export const prepareDist: BuildStep = async (options) => {
     `${options.rootDir}/LICENSE`,
     `${options.packageRoot}/LICENSE`
   );
+  fs.copyFileSync(
+    `${options.rootDir}/CHANGELOG.md`,
+    `${options.packageRoot}/CHANGELOG.md`
+  );
 };

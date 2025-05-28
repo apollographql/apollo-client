@@ -5,11 +5,10 @@ import { $ } from "zx";
 
 import { babelTransform } from "./babel.ts";
 import { compileTs } from "./compileTs.ts";
+import { deprecateInternals } from "./deprecateInternals.ts";
 import { addExports } from "./exports.ts";
 import { distDir } from "./helpers.ts";
 import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-import { deprecateInternals } from "./deprecateInternals.ts";
-import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 import { prepareDist } from "./prepareDist.ts";
 import { processInvariants } from "./processInvariants.ts";
 import { verifySourceMaps } from "./verifySourceMaps.ts";
@@ -46,9 +45,7 @@ const buildSteps = {
   verifyVersion,
   verifySourceMaps,
 } satisfies BuildSteps;
-const additionalSteps = {
-  prepareChangesetsRelease,
-} satisfies BuildSteps;
+const additionalSteps = {} satisfies BuildSteps;
 
 const args = parseArgs({
   options: {

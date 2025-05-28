@@ -28,6 +28,7 @@ const config = {
       "src/cache/inmemory/fixPolyfills.native.ts",
       "src/react/types/types.documentation.ts",
       "eslint-local-rules/index.mjs",
+      "codegen/local-state/index.ts",
     ]),
   project: [
     "src/**/*.ts{,x}",

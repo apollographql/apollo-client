@@ -90,7 +90,7 @@
     "test:type-benches": "find src -name '*.bench.ts' | xargs -n1 tsx",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.ts --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",
-    "test:codegen": "graphql-codegen --config ./tests.codegen.ts",
+    "test:codegen": "npm run build -w codegen && graphql-codegen --config ./tests.codegen.ts",
     "test:watch": "jest --config ./config/jest.config.ts --watch",
     "test:memory": "npm i && npm run build && cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",

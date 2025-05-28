@@ -23,10 +23,9 @@ jobs:
 
       - name: Check if any files in codegen/ changed
         id: changed-files-codegen
-        uses: tj-actions/changed-files@27ae6b33eaed7bf87272fdeb9f1c54f9facc9d99
+        uses: karpikpl/list-changed-files-action@1.1.4
         with:
-          since_last_remote_commit: true
-          files: codegen/**
+          file-filter: "codegen/**"
 
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
@@ -34,13 +33,15 @@ jobs:
       - name: Build AC
         run: npm run build
 
+      - run: echo changed files: ${{steps.changed-files-codegen.outputs.changed_files}}
+
       - name: Build Codegen
-        if: steps.changed-files-codegen.outputs.test_any_changed == 'true'
+        if: steps.changed-files-codegen.outputs.changed_files != ''
         run: npm run build
         working-directory: "./codegen"
 
       - name: Build and publish to pkg.pr.new
         env:
-          PACKAGE_CODEGEN: ${{ steps.changed-files-codegen.outputs.test_any_changed == 'true' && './codegen' || '' }}
+          PACKAGE_CODEGEN: ${{ steps.changed-files-codegen.outputs.changed_files != '' && './codegen' || '' }}
         # skipping --compact for a moment as there is an unreleased package
         run: npx pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN

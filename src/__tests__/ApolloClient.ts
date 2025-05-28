@@ -3373,8 +3373,23 @@ describe("ApolloClient", () => {
 
       observableQuery.subscribe({
         next: (result) => {
-          expectTypeOf(result.data).toMatchTypeOf<Query | undefined>();
-          expectTypeOf(result.data).not.toMatchTypeOf<UnmaskedQuery>();
+          if (result.dataState === "complete") {
+            expectTypeOf(result.data).toEqualTypeOf<Masked<Query>>();
+          }
+
+          if (result.dataState === "partial") {
+            expectTypeOf(result.data).toEqualTypeOf<
+              DeepPartial<Masked<Query>>
+            >();
+          }
+
+          if (result.dataState === "streaming") {
+            expectTypeOf(result.data).toEqualTypeOf<Masked<Query>>();
+          }
+
+          if (result.dataState === "empty") {
+            expectTypeOf(result.data).toEqualTypeOf<undefined>();
+          }
         },
       });
 

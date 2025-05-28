@@ -48,6 +48,7 @@ export default [
         rules: localRules,
       },
     },
+    ignores: ["tests.codegen.ts"],
 
     languageOptions: {
       globals: {
@@ -141,6 +142,7 @@ export default [
       parserOptions: {
         project: [
           "./tsconfig.json",
+          "./codegen/tsconfig.json",
           "./config/tsconfig.json",
           "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/data-masking/tsconfig.json",

@@ -247,7 +247,7 @@ describe.skip("Type tests", () => {
       context: () => ({ env: "dev" }),
       resolvers: {
         Query: {
-          currentUserId: (rootValue) => rootValue.env,
+          currentUserId: (rootValue) => rootValue.currentUser?.id ?? null,
         },
       },
     });
@@ -256,7 +256,7 @@ describe.skip("Type tests", () => {
       context: ({ requestContext }) => ({ ...requestContext, env: "dev" }),
       resolvers: {
         Query: {
-          currentUserId: (rootValue) => rootValue.env,
+          currentUserId: (rootValue) => rootValue.currentUser?.id ?? null,
         },
       },
     });
@@ -297,7 +297,7 @@ describe.skip("Type tests", () => {
       }),
       resolvers: {
         Query: {
-          currentUserId: (rootValue) => rootValue.env,
+          currentUserId: (rootValue) => rootValue.currentUser?.id ?? null,
         },
       },
     });

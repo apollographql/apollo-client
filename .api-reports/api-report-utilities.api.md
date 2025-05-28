@@ -13,6 +13,7 @@ import type { FieldPolicy } from '@apollo/client/cache';
 import { hasDirectives } from '@apollo/client/utilities/internal';
 import { mergeIncrementalData } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
+import type { Primitive } from '@apollo/client/utilities/internal';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
 import { removeDirectivesFromDocument } from '@apollo/client/utilities/internal';
 
@@ -57,6 +58,36 @@ export const canonicalStringify: ((value: any) => string) & {
 //
 // @public
 export function concatPagination<T = Reference_2>(keyArgs?: KeyArgs): FieldPolicy<T[]>;
+
+// Warning: (ae-forgotten-export) The symbol "DeepPartialPrimitive" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialMap" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlyMap" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialSet" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialReadonlySet" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "DeepPartialObject" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
+
+// @public (undocumented)
+type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
+
+// @public (undocumented)
+type DeepPartialObject<T extends object> = {
+    [K in keyof T]?: DeepPartial<T[K]>;
+};
+
+// @public (undocumented)
+type DeepPartialPrimitive = Primitive | Date | RegExp;
+
+// @public (undocumented)
+type DeepPartialReadonlyMap<TKey, TValue> = {} & ReadonlyMap<DeepPartial<TKey>, DeepPartial<TValue>>;
+
+// @public (undocumented)
+type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
+
+// @public (undocumented)
+type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 
 // @public (undocumented)
 export class DocumentTransform {

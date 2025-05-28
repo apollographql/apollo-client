@@ -1,2 +1,2 @@
-import { ApolloClient } from "@apollo/client";
-export const test = ApolloClient;
+export type { LocalStatePluginConfig } from "./config.js";
+export { plugin } from "./plugin.js";

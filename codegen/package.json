@@ -35,11 +35,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@apollo/client": "../dist",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@apollo/client": "^4.0.0-alpha.15",
     "@graphql-codegen/plugin-helpers": "^5.0.0",
     "@graphql-codegen/typescript": "^4.0.0",
     "@graphql-codegen/visitor-plugin-common": "^5.0.0"

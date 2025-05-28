@@ -2,9 +2,9 @@
   "compilerOptions": {
     "noEmit": false,
     "target": "ESNext",
-    "module": "Node18",
+    "module": "nodenext",
     "moduleResolution": "nodenext",
-    "lib": ["ES2022"],
+    "lib": ["DOM", "ES2022"],
     "paths": {},
     "types": [],
     "rootDir": "./",

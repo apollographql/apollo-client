@@ -26,8 +26,8 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
 import type {
-  DeepPartial,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";

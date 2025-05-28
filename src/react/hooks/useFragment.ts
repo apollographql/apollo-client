@@ -14,7 +14,8 @@ import type {
   StoreObject,
 } from "@apollo/client/cache";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
-import type { DeepPartial, NoInfer } from "@apollo/client/utilities/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
+import type { NoInfer } from "@apollo/client/utilities/internal";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";

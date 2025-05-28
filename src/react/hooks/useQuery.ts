@@ -164,13 +164,13 @@ export declare namespace useQuery {
   export type States<TData = unknown> =
     | {
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: TData;
+        data: MaybeMasked<TData>;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "complete" | "streaming";
       }
     | {
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: DeepPartial<TData>;
+        data: MaybeMasked<DeepPartial<TData>>;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "partial";
       }

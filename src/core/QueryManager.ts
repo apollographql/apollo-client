@@ -1350,6 +1350,11 @@ export class QueryManager {
           partial: !result.data,
         } as ApolloQueryResult<TData>;
 
+        if (isExecutionPatchResult(result) && result.hasNext) {
+          aqr.dataStatus = "streaming";
+          aqr.partial = true;
+        }
+
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old
         // result which will not be caught by the conditional above that ends up

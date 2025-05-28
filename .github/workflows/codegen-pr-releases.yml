@@ -25,18 +25,10 @@ jobs:
 
       - name: Install AC dependencies with cache
         uses: bahmutov/npm-install@v1
-        with:
-          working-directory: "./"
 
       - name: Build AC
         run: npm run build
-        working-directory: "./"
 
-      - name: Install Codegen dependencies with cache
-        uses: bahmutov/npm-install@v1
-        with:
-          working-directory: "./codegen"
-
-      - name: Build Codegen
+      - name: Build and publish Codegen
         run: npm run pkg-pr-new-publish
         working-directory: "./codegen"

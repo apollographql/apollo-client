@@ -23,6 +23,7 @@ import {
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { makeReference } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -1189,6 +1190,7 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data: undefined,
+            dataState: "empty",
             loading: true,
             networkStatus: NetworkStatus.loading,
             partial: true,
@@ -1196,6 +1198,7 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data,
+            dataState: "complete",
             loading: false,
             networkStatus: NetworkStatus.ready,
             partial: false,
@@ -1231,6 +1234,7 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data: expectation,
+            dataState: "complete",
             loading: false,
             networkStatus: NetworkStatus.ready,
             partial: false,
@@ -1245,6 +1249,7 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data: undefined,
+            dataState: "empty",
             loading: true,
             networkStatus: NetworkStatus.loading,
             partial: true,
@@ -1252,6 +1257,7 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data,
+            dataState: "complete",
             loading: false,
             networkStatus: NetworkStatus.ready,
             partial: false,
@@ -1288,11 +1294,19 @@ describe("ApolloClient", () => {
             type: "okayest",
           };
 
-          const nextResult = await stream.takeNext();
-          const nextFriends = nextResult.data!.people.friends;
-
-          expect(nextFriends[0]).toEqual(expectation0);
-          expect(nextFriends[1]).toEqual(expectation1);
+          await expect(stream).toEmitTypedValue({
+            data: {
+              ...data,
+              people: {
+                ...data.people,
+                friends: [expectation0, expectation1],
+              },
+            },
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
 
           const readFriends = client.readQuery<Data>({ query })!.people.friends;
           expect(readFriends[0]).toEqual(expectation0);
@@ -1308,42 +1322,66 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data: undefined,
+            dataState: "empty",
             loading: true,
             networkStatus: NetworkStatus.loading,
             partial: true,
           });
 
-          {
-            const result = await stream.takeNext();
+          await expect(stream).toEmitTypedValue({
+            data,
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
+          expect(observable.getCurrentResult()).toStrictEqualTyped({
+            data,
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
 
-            expect(result.data).toEqual(data);
-            expect(observable.getCurrentResult().data).toEqual(data);
+          const result = stream.getCurrent();
+          invariant(
+            result?.dataState === "complete",
+            "dataState should be complete"
+          );
 
-            const bestFriends = result.data!.people.friends.filter(
-              (x) => x.type === "best"
-            );
+          const bestFriends = result.data.people.friends.filter(
+            (x) => x.type === "best"
+          );
 
-            // this should re call next
-            client.writeFragment({
-              id: `Person${result.data!.people.id}`,
-              fragment: gql`
-                fragment bestFriends on Person {
-                  friends {
-                    id
-                  }
+          // this should re call next
+          client.writeFragment({
+            id: `Person${result.data!.people.id}`,
+            fragment: gql`
+              fragment bestFriends on Person {
+                friends {
+                  id
                 }
-              `,
-              data: {
-                friends: bestFriends,
-                __typename: "Person",
-              },
-            });
-          }
+              }
+            `,
+            data: {
+              friends: bestFriends,
+              __typename: "Person",
+            },
+          });
 
-          {
-            const result = await stream.takeNext();
-            expect(result.data!.people.friends).toEqual([bestFriend]);
-          }
+          await expect(stream).toEmitTypedValue({
+            data: {
+              ...data,
+              people: {
+                ...data.people,
+                friends: [bestFriend],
+              },
+            },
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         });
 
         it("with a value change inside a nested array (wf)", async () => {
@@ -1353,52 +1391,69 @@ describe("ApolloClient", () => {
 
           await expect(stream).toEmitTypedValue({
             data: undefined,
+            dataState: "empty",
             loading: true,
             networkStatus: NetworkStatus.loading,
             partial: true,
           });
 
-          {
-            const result = await stream.takeNext();
+          await expect(stream).toEmitTypedValue({
+            data,
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
+          expect(observable.getCurrentResult()).toStrictEqualTyped({
+            data,
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
 
-            expect(result.data).toEqual(data);
-            expect(observable.getCurrentResult().data).toEqual(data);
-            const friends = result.data!.people.friends;
+          const result = stream.getCurrent();
 
-            // this should re call next
-            client.writeFragment({
-              id: `Person${result.data!.people.id}`,
-              fragment: gql`
-                fragment bestFriends on Person {
-                  friends {
-                    id
-                    type
-                  }
+          invariant(result?.dataState === "complete");
+
+          const friends = result.data.people.friends;
+
+          // this should re call next
+          client.writeFragment({
+            id: `Person${result.data!.people.id}`,
+            fragment: gql`
+              fragment bestFriends on Person {
+                friends {
+                  id
+                  type
                 }
-              `,
-              data: {
+              }
+            `,
+            data: {
+              friends: [
+                { ...friends[0], type: "okayest" },
+                { ...friends[1], type: "okayest" },
+              ],
+              __typename: "Person",
+            },
+          });
+
+          await expect(stream).toEmitTypedValue({
+            data: {
+              ...data,
+              people: {
+                ...data.people,
                 friends: [
-                  { ...friends[0], type: "okayest" },
-                  { ...friends[1], type: "okayest" },
+                  { ...bestFriend, type: "okayest" },
+                  { ...badFriend, type: "okayest" },
                 ],
-                __typename: "Person",
               },
-            });
-          }
-
-          {
-            const result = await stream.takeNext();
-            const nextFriends = result.data!.people.friends;
-
-            expect(nextFriends[0]).toEqual({
-              ...bestFriend,
-              type: "okayest",
-            });
-            expect(nextFriends[1]).toEqual({
-              ...badFriend,
-              type: "okayest",
-            });
-          }
+            },
+            dataState: "complete",
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         });
       });
     });
@@ -2131,6 +2186,7 @@ describe("ApolloClient", () => {
           networkStatus: NetworkStatus.ready,
           partial: false,
           data: { source: "cache" },
+          dataState: "complete",
         });
         await expect(stream).not.toEmitAnything();
       }
@@ -2161,6 +2217,7 @@ describe("ApolloClient", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -2171,6 +2228,7 @@ describe("ApolloClient", () => {
           networkStatus: NetworkStatus.ready,
           partial: false,
           data: { source: "network" },
+          dataState: "complete",
         });
         await expect(stream).not.toEmitAnything();
       }
@@ -2205,12 +2263,14 @@ describe("ApolloClient", () => {
           networkStatus: NetworkStatus.loading,
           partial: true,
           data: undefined,
+          dataState: "empty",
         });
         await expect(stream).toEmitTypedValue({
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
           data: { source: "network" },
+          dataState: "complete",
         });
         await expect(stream).not.toEmitAnything();
       }
@@ -2958,6 +3018,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2965,6 +3026,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { foo: { bar: 1 } },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2981,6 +3043,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.refetch,
         partial: false,
         data: { foo: { bar: 1 } },
+        dataState: "complete",
       });
 
       link.simulateResult({ error: new Error("refetch failed") });
@@ -2990,6 +3053,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.error,
         partial: false,
         data: { foo: { bar: 1 } },
+        dataState: "complete",
         error: new Error("refetch failed"),
       });
 

@@ -3393,55 +3393,49 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(observableQuery.getCurrentResult()).toMatchTypeOf<
-        ApolloQueryResult<Query>
-      >();
-      expectTypeOf(observableQuery.getCurrentResult()).not.toMatchTypeOf<
-        ApolloQueryResult<UnmaskedQuery>
+      expectTypeOf(observableQuery.getCurrentResult()).toEqualTypeOf<
+        ApolloQueryResult<Masked<Query>>
       >();
 
       const fetchMoreResult = await observableQuery.fetchMore({
         updateQuery: (previousData, { fetchMoreResult }) => {
-          expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
-          expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+          expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
 
-          expectTypeOf(fetchMoreResult).toMatchTypeOf<UnmaskedQuery>();
-          expectTypeOf(fetchMoreResult).not.toMatchTypeOf<Query>();
+          expectTypeOf(fetchMoreResult).toEqualTypeOf<UnmaskedQuery>();
 
           return {} as UnmaskedQuery;
         },
       });
 
-      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(fetchMoreResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+      expectTypeOf(fetchMoreResult.data).toEqualTypeOf<
+        Masked<Query> | undefined
+      >();
 
       const refetchResult = await observableQuery.refetch();
 
-      expectTypeOf(refetchResult.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+      expectTypeOf(refetchResult.data).toEqualTypeOf<
+        Masked<Query> | undefined
+      >();
 
       const setVariablesResult = await observableQuery.setVariables({
         id: "2",
       });
 
-      expectTypeOf(setVariablesResult?.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(setVariablesResult?.data).not.toMatchTypeOf<
-        UnmaskedQuery | undefined
+      expectTypeOf(setVariablesResult?.data).toEqualTypeOf<
+        Masked<Query> | undefined
       >();
 
       const reobserveResult = await observableQuery.reobserve({
         variables: { id: "2" },
       });
 
-      expectTypeOf(reobserveResult.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(reobserveResult.data).not.toMatchTypeOf<
-        UnmaskedQuery | undefined
+      expectTypeOf(reobserveResult.data).toEqualTypeOf<
+        Masked<Query> | undefined
       >();
 
       observableQuery.updateQuery(
         (_previousData, { complete, previousData }) => {
           expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
-          expectTypeOf(_previousData).not.toMatchTypeOf<Query>();
 
           if (complete) {
             expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
@@ -3457,7 +3451,6 @@ describe("ApolloClient", () => {
         document: subscription,
         updateQuery(queryData, { subscriptionData, complete, previousData }) {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
-          expectTypeOf(queryData).not.toMatchTypeOf<Query>();
 
           if (complete) {
             expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
@@ -3469,8 +3462,7 @@ describe("ApolloClient", () => {
 
           expectTypeOf(
             subscriptionData.data
-          ).toMatchTypeOf<UnmaskedSubscription>();
-          expectTypeOf(subscriptionData.data).not.toMatchTypeOf<Subscription>();
+          ).toEqualTypeOf<UnmaskedSubscription>();
         },
       });
     });

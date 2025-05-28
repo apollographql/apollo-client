@@ -25,6 +25,7 @@ jobs:
         id: changed-files-codegen
         uses: tj-actions/changed-files@27ae6b33eaed7bf87272fdeb9f1c54f9facc9d99
         with:
+          since_last_remote_commit: true
           files: codegen/**
 
       - name: Install dependencies with cache

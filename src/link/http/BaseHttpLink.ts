@@ -25,6 +25,7 @@ import {
 import { selectURI } from "./selectURI.js";
 
 const backupFetch = maybe(() => fetch);
+function noop() {}
 
 export class BaseHttpLink extends ApolloLink {
   constructor(linkOptions: HttpLink.Options = {}) {
@@ -89,11 +90,29 @@ export class BaseHttpLink extends ApolloLink {
         );
       }
 
-      let controller: AbortController | undefined;
-      if (!options.signal && typeof AbortController !== "undefined") {
-        controller = new AbortController();
-        options.signal = controller.signal;
+      let controller: AbortController | undefined = new AbortController();
+      let cleanupController = () => {
+        controller = undefined;
+      };
+      if (options.signal) {
+        // in an ideal world we could use `AbortSignal.any` here, but
+        // React Native uses https://github.com/mysticatea/abort-controller as
+        // a polyfill for `AbortController`, and it does not support `AbortSignal.any`.
+        const abort = controller.abort.bind(controller);
+        options.signal.addEventListener("abort", abort, { once: true });
+        cleanupController = () => {
+          controller = undefined;
+          // on cleanup, we need to stop listening to `options.signal` to avoid memory leaks
+          options.signal.removeEventListener("abort", abort);
+          cleanupController = noop;
+        };
+        // react native also does not support the addEventListener `signal` option
+        // so we have to simulate that ourself
+        controller.signal.addEventListener("abort", cleanupController, {
+          once: true,
+        });
       }
+      options.signal = controller.signal;
 
       if (useGETForQueries && !isMutationOperation(operation.query)) {
         options.method = "GET";
@@ -132,11 +151,11 @@ export class BaseHttpLink extends ApolloLink {
             }
           })
           .then(() => {
-            controller = undefined;
+            cleanupController();
             observer.complete();
           })
           .catch((err) => {
-            controller = undefined;
+            cleanupController();
             observer.error(err);
           });
 

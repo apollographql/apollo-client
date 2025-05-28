@@ -11542,7 +11542,7 @@ describe.skip("Type Tests", () => {
 
     const { data, dataState } = useQuery(query);
 
-    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">;
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
@@ -11564,7 +11564,7 @@ describe.skip("Type Tests", () => {
 
     expectTypeOf(dataState).toEqualTypeOf<
       "empty" | "streaming" | "complete" | "partial"
-    >;
+    >();
 
     if (dataState === "complete") {
       expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();

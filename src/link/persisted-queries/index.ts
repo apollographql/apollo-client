@@ -196,7 +196,9 @@ export const createPersistedQueryLink = (
               graphQLErrors.push(...responseErrors);
             }
 
-            // Network errors can return GraphQL errors on for example a 403
+            // This is persisted-query specific (see #9410) and deviates from the
+            // GraphQL-over-HTTP spec for application/json responses.
+            // This is intentional.
             if (networkError?.bodyText) {
               try {
                 const result = JSON.parse(networkError.bodyText);

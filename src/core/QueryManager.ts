@@ -1367,6 +1367,10 @@ export class QueryManager {
         if (hasErrors && errorPolicy !== "ignore") {
           aqr.error = new CombinedGraphQLErrors(result);
           aqr.networkStatus = NetworkStatus.error;
+
+          if (aqr.data) {
+            aqr.dataState = "complete";
+          }
         }
 
         return aqr;

@@ -2707,6 +2707,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: { todoCount: 0 },
+          dataState: "complete",
           networkStatus: NetworkStatus.ready,
           loading: false,
           previousData: undefined,
@@ -2744,6 +2745,7 @@ describe("useMutation Hook", () => {
         if (IS_REACT_17) {
           expect(query).toStrictEqualTyped({
             data: { todoCount: 0 },
+            dataState: "complete",
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: undefined,
@@ -2759,6 +2761,7 @@ describe("useMutation Hook", () => {
         } else {
           expect(query).toStrictEqualTyped({
             data: { todoCount: 1 },
+            dataState: "complete",
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: { todoCount: 0 },
@@ -2791,6 +2794,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: { todoCount: 1 },
+          dataState: "complete",
           networkStatus: NetworkStatus.ready,
           loading: false,
           previousData: { todoCount: 0 },
@@ -2812,6 +2816,7 @@ describe("useMutation Hook", () => {
 
           expect(query).toStrictEqualTyped({
             data: { todoCount: 1 },
+            dataState: "complete",
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: { todoCount: 0 },
@@ -2834,6 +2839,7 @@ describe("useMutation Hook", () => {
 
           expect(query).toStrictEqualTyped({
             data: { todoCount: 1 },
+            dataState: "complete",
             networkStatus: NetworkStatus.ready,
             loading: false,
             previousData: { todoCount: 0 },
@@ -2910,6 +2916,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2932,6 +2939,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2965,6 +2973,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2987,6 +2996,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3009,6 +3019,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3031,6 +3042,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_2,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: GET_TODOS_RESULT_1,
@@ -3109,6 +3121,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3131,6 +3144,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -3164,6 +3178,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -3186,6 +3201,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3208,6 +3224,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3230,6 +3247,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_2,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: GET_TODOS_RESULT_1,
@@ -3308,6 +3326,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3330,6 +3349,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -3366,6 +3386,7 @@ describe("useMutation Hook", () => {
 
         expect(query).toStrictEqualTyped({
           data: GET_TODOS_RESULT_1,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,

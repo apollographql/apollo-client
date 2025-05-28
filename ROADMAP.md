@@ -17,13 +17,13 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### 3.14.0 - June 5th, 2025
-_Release candidate - May 29th, 2025
+#### 3.14.0 - June 18th, 2025
+_Release candidate - June 11th, 2025_
 
 - 4.0 compatibility release/deprecations
 
-#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - June 10th, 2025
-_Release candidate - May 29th 2025_
+#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - July 31st, 2025
+_Release candidate - June 18th 2025_
 
 ### GraphQL Testing Library
 

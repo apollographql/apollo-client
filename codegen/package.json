@@ -14,7 +14,8 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apollographql/apollo-client.git"
+    "url": "git+https://github.com/apollographql/apollo-client.git",
+    "directory": "codegen"
   },
   "bugs": {
     "url": "https://github.com/apollographql/apollo-client/issues"

@@ -79,7 +79,9 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
-          version: npm run changeset-version
+          version: |
+            npm run changeset version
+            npm i
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,8 +92,15 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true' && startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
-          version: echo "This step should never version"
-          publish: npm run changeset-publish # by default, this will publish to npm and GitHub
+          version: |
+            echo "This step should never version"
+            exit 1
+          publish: |
+            # Publish Apollo Client from `dist`, not the workspace root
+            npm pkg set 'workspaces[0]'=dist
+            # For that to work, we need to build the package first - `npm publish` will not run that inside of `dist` anymore
+            npm run build
+            npx changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

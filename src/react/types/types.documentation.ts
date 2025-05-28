@@ -275,7 +275,7 @@ export interface QueryResultDocumentation {
    *  - `complete`: `data` is a fully satisfied query result fulfilled
    *  either from the cache or network.
    */
-  dataStatus: unknown;
+  dataState: unknown;
 }
 
 export interface MutationOptionsDocumentation {

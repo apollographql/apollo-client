@@ -194,23 +194,23 @@ export type ApolloQueryResult<T> = {
 } & (
   | {
       data: T;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "complete";
     }
   | {
       // Defer to the passed in type to properly type the `@defer` fields.
       data: T;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "streaming";
     }
   | {
       data: DeepPartial<T>;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "partial";
     }
   | {
       data: undefined;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "empty";
     }
 );

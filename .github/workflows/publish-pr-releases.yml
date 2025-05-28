@@ -42,4 +42,4 @@ jobs:
         env:
           PACKAGE_CODEGEN: ${{ steps.changed-files-codegen.outputs.test_any_changed == 'true' && './codegen' || '' }}
         # skipping --compact for a moment as there is an unreleased package
-        run: pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN
+        run: npx pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN

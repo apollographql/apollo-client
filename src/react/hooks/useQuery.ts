@@ -35,6 +35,7 @@ import type {
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
+  DeepPartial,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";
@@ -100,18 +101,16 @@ export declare namespace useQuery {
     skip?: boolean;
   } & VariablesOption<TVariables>;
 
-  export interface Result<
+  export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > {
+    TStates extends States["dataState"] = States["dataState"],
+  > = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
     observable: ObservableQuery<TData, TVariables>;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-    data: MaybeMasked<TData> | undefined;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
     previousData?: MaybeMasked<TData>;
@@ -160,7 +159,27 @@ export declare namespace useQuery {
         ) => Unmasked<TData>;
       }
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
-  }
+  } & Extract<States<TData>, { dataState: TStates }>;
+
+  export type States<TData = unknown> =
+    | {
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+        data: TData;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "complete" | "streaming";
+      }
+    | {
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+        data: DeepPartial<TData>;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "partial";
+      }
+    | {
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+        data: undefined;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "empty";
+      };
 }
 
 const lastWatchOptions = Symbol();
@@ -183,6 +202,44 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   observable: ObsQueryWithMeta<TData, TVariables>;
   resultData: InternalResult<TData>;
 }
+
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: true;
+  }
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> & {
+    returnPartialData: boolean;
+  }
+): useQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "complete" | "streaming" | "partial"
+>;
+
+export function useQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  ...[options]: {} extends TVariables ?
+    [options?: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+  : [options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>]
+): useQuery.Result<TData, TVariables, "empty" | "complete" | "streaming">;
 
 /**
  * A hook for executing queries in an Apollo application.
@@ -276,7 +333,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
         current: observable.getCurrentResult(),
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
-        previousData: previous?.resultData.current.data,
+        previousData: previous?.resultData.current.data as TData,
       },
     };
   }
@@ -397,7 +454,7 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
               !equal(previousResult.data, result.data)
             ) {
               // eslint-disable-next-line react-compiler/react-compiler
-              resultData.previousData = previousResult.data;
+              resultData.previousData = previousResult.data as TData;
             }
 
             resultData.current = result;
@@ -453,8 +510,8 @@ function useResubscribeIfNecessary<
     const result = observable.getCurrentResult();
 
     if (!equal(result.data, resultData.current.data)) {
-      resultData.previousData =
-        resultData.current.data || resultData.previousData;
+      resultData.previousData = (resultData.current.data ||
+        (resultData.previousData as TData)) as TData;
     }
     resultData.current = result;
   }
@@ -464,6 +521,7 @@ function useResubscribeIfNecessary<
 useQuery.ssrDisabledResult = maybeDeepFreeze({
   loading: true,
   data: void 0 as any,
+  dataState: "empty",
   error: void 0,
   networkStatus: NetworkStatus.loading,
   partial: true,

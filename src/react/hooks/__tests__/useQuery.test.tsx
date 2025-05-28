@@ -11,6 +11,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
+import { expectTypeOf } from "expect-type";
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
@@ -41,15 +42,18 @@ import {
   useQuery,
 } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import type { SimpleCaseData } from "@apollo/client/testing/internal";
 import {
   enableFakeTimers,
   setupPaginatedCase,
+  setupSimpleCase,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import type { Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
+import type { DeepPartial } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -11184,6 +11188,52 @@ describe("useQuery Hook", () => {
 });
 
 describe.skip("Type Tests", () => {
+  test("returns narrowed TData in default case", () => {
+    const { query } = setupSimpleCase();
+
+    const { data, dataState } = useQuery(query);
+
+    expectTypeOf(dataState).toEqualTypeOf<"empty" | "streaming" | "complete">;
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+  });
+
+  test("returns DeepPartial<TData> with returnPartialData: true", () => {
+    const { query } = setupSimpleCase();
+
+    const { data, dataState } = useQuery(query, { returnPartialData: true });
+
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "streaming" | "complete" | "partial"
+    >;
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "partial") {
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+  });
+
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
     const { variables } = useQuery(typedNode, {

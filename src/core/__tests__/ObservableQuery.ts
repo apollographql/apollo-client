@@ -3470,12 +3470,10 @@ describe("ObservableQuery", () => {
             __typename: "Greeting",
           },
         },
-        dataState: "complete",
+        dataState: "streaming",
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This should be true since there are still outstanding chunks
-        // that haven't been processed.
-        partial: false,
+        partial: true,
       });
 
       expect(obs.getCurrentResult()).toStrictEqualTyped({
@@ -3485,11 +3483,10 @@ describe("ObservableQuery", () => {
             __typename: "Greeting",
           },
         },
-        dataState: "complete",
+        dataState: "streaming",
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // this lines up more with the (faulty) stream emit above now
-        partial: false,
+        partial: true,
       });
 
       link.simulateResult(

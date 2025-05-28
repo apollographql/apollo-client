@@ -7506,10 +7506,10 @@ describe("ApolloClient", () => {
       };
       const initialResult: ApolloQueryResult<typeof initialData> = {
         data: initialData,
-        dataState: "complete",
+        dataState: "streaming",
         loading: false,
         networkStatus: 7,
-        partial: false,
+        partial: true,
       };
 
       defer.enqueueInitialChunk({
@@ -7552,7 +7552,11 @@ describe("ApolloClient", () => {
         ],
         hasNext: true,
       };
-      const resultAfterFirstChunk = structuredClone(initialResult);
+      const resultAfterFirstChunk = {
+        ...structuredClone(initialResult),
+        dataState: "streaming",
+        partial: true,
+      } as ApolloQueryResult<any>;
       resultAfterFirstChunk.data.people.friends[0].name = "Leia";
 
       defer.enqueueSubsequentChunk(firstChunk);
@@ -7564,7 +7568,7 @@ describe("ApolloClient", () => {
       const query4 = new ObservableStream(
         client.watchQuery({ query, fetchPolicy: "network-only" })
       );
-      expect(query4).toEmitTypedValue(resultAfterFirstChunk);
+      await expect(query4).toEmitTypedValue(resultAfterFirstChunk);
       expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
 
       const secondChunk = {
@@ -7578,7 +7582,11 @@ describe("ApolloClient", () => {
         ],
         hasNext: false,
       };
-      const resultAfterSecondChunk = structuredClone(resultAfterFirstChunk);
+      const resultAfterSecondChunk = {
+        ...structuredClone(resultAfterFirstChunk),
+        dataState: "complete",
+        partial: false,
+      } as ApolloQueryResult<any>;
       resultAfterSecondChunk.data.people.friends[1].name = "Han Solo";
 
       defer.enqueueSubsequentChunk(secondChunk);

@@ -1,7 +1,7 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 // @ts-ignore for some reason this allows codegen to load the plugin, otherwise it errors
-await import("@apollo/client/local-state/codegen");
+await import("@apollo/client-graphql-codegen/local-state");
 
 const config: CodegenConfig = {
   hooks: {
@@ -15,7 +15,7 @@ const config: CodegenConfig = {
       plugins: [
         { add: { content: "/* eslint-disable */" } },
         "typescript",
-        "@apollo/client/local-state/codegen",
+        "@apollo/client-graphql-codegen/local-state",
       ],
       config: {
         nonOptionalTypename: true,
@@ -31,7 +31,7 @@ const config: CodegenConfig = {
         plugins: [
           { add: { content: "/* eslint-disable */" } },
           "typescript",
-          "@apollo/client/local-state/codegen",
+          "@apollo/client-graphql-codegen/local-state",
         ],
         config: {
           nonOptionalTypename: true,

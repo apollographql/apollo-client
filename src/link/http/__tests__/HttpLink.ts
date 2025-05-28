@@ -8,17 +8,19 @@ import type { Observer, Subscription } from "rxjs";
 import { map, Observable } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
-import type { FetchResult, ServerError } from "@apollo/client";
-import type { ServerParseError } from "@apollo/client/errors";
+import type { FetchResult } from "@apollo/client";
+import { ServerError } from "@apollo/client";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
+  ServerParseError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink, HttpLink } from "@apollo/client/link/http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
+  spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
 
@@ -94,10 +96,6 @@ function convertBatchedBody(body: BodyInit | null | undefined) {
   return JSON.parse(body as string);
 }
 
-function makePromise(res: any) {
-  return new Promise((resolve) => setTimeout(() => resolve(res)));
-}
-
 describe("HttpLink", () => {
   describe("General", () => {
     const data = { data: { hello: "world" } };
@@ -108,13 +106,13 @@ describe("HttpLink", () => {
 
     beforeEach(() => {
       fetchMock.restore();
-      fetchMock.post("begin:/data2", makePromise(data2));
-      fetchMock.post("begin:/data", makePromise(data));
+      fetchMock.post("begin:/data2", Promise.resolve(data2));
+      fetchMock.post("begin:/data", Promise.resolve(data));
       fetchMock.post("begin:/error", mockError);
-      fetchMock.post("begin:/apollo", makePromise(data));
+      fetchMock.post("begin:/apollo", Promise.resolve(data));
 
-      fetchMock.get("begin:/data", makePromise(data));
-      fetchMock.get("begin:/data2", makePromise(data2));
+      fetchMock.get("begin:/data", Promise.resolve(data));
+      fetchMock.get("begin:/data2", Promise.resolve(data2));
 
       const next = jest.fn();
       const error = jest.fn();
@@ -149,7 +147,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
 
@@ -171,7 +169,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -194,7 +192,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -222,7 +220,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -248,7 +246,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -273,7 +271,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -316,7 +314,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [uri, options] = fetchMock.lastCall()!;
@@ -356,7 +354,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [, options] = fetchMock.lastCall()!;
@@ -388,7 +386,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       const [, options] = fetchMock.lastCall()!;
@@ -450,17 +448,16 @@ describe("HttpLink", () => {
     });
 
     it("raises warning if called with concat", () => {
+      using _ = spyOnConsole("warn");
       const link = createHttpLink();
-      const _warn = console.warn;
-      console.warn = (...args: any) =>
-        expect(args).toEqual([
-          "You are calling concat on a terminating link, which will have no effect %o",
-          link,
-        ]);
+
       expect(link.concat((operation, forward) => forward(operation))).toEqual(
         link
       );
-      console.warn = _warn;
+      expect(console.warn).toHaveBeenCalledWith(
+        "You are calling concat on a terminating link, which will have no effect %o",
+        link
+      );
     });
 
     it("does not need any constructor arguments", () => {
@@ -474,7 +471,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
 
@@ -536,7 +533,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
 
       let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
@@ -644,13 +641,15 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
 
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("application/graphql-response+json");
+      expect(headers.accept).toBe(
+        "application/graphql-response+json,application/json;q=0.9"
+      );
     });
 
     it("adds headers to the request from the setup", async () => {
@@ -663,12 +662,14 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("application/graphql-response+json");
+      expect(headers.accept).toBe(
+        "application/graphql-response+json,application/json;q=0.9"
+      );
     });
 
     it("prioritizes context headers over setup headers", async () => {
@@ -686,12 +687,14 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("application/graphql-response+json");
+      expect(headers.accept).toBe(
+        "application/graphql-response+json,application/json;q=0.9"
+      );
     });
 
     it("adds headers to the request from the context on an operation", async () => {
@@ -708,12 +711,14 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("application/graphql-response+json");
+      expect(headers.accept).toBe(
+        "application/graphql-response+json,application/json;q=0.9"
+      );
     });
 
     it("adds creds to the request from the context", async () => {
@@ -729,7 +734,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
       expect(creds).toBe("same-team-yo");
@@ -742,7 +747,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
       expect(creds).toBe("same-team-yo");
@@ -763,7 +768,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const creds = fetchMock.lastCall()![1]!.credentials;
       expect(creds).toBe("same-team-yo");
@@ -782,7 +787,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const uri = fetchMock.lastUrl();
       expect(uri).toBe("/data");
@@ -795,7 +800,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const uri = fetchMock.lastUrl();
       expect(uri).toBe("/data");
@@ -816,7 +821,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const uri = fetchMock.lastUrl();
       expect(uri).toBe("/apollo");
@@ -836,7 +841,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       expect(fetchMock.lastUrl()).toBe("/dataFunc");
     });
@@ -851,7 +856,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const { someOption, mode, headers } = fetchMock.lastCall()![1] as any;
       expect(someOption).toBe("foo");
@@ -874,7 +879,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const { someOption } = fetchMock.lastCall()![1] as any;
       expect(someOption).toBe("foo");
@@ -888,15 +893,7 @@ describe("HttpLink", () => {
 
       const fetchSpy = jest.spyOn(window, "fetch");
       fetchSpy.mockImplementation(() =>
-        Promise.resolve<Response>({
-          text() {
-            return Promise.resolve(
-              JSON.stringify({
-                data: { hello: "from spy" },
-              })
-            );
-          },
-        } as Response)
+        Promise.resolve(Response.json({ data: { hello: "from spy" } }))
       );
 
       const spyFn = window.fetch;
@@ -936,7 +933,7 @@ describe("HttpLink", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       expect(customPrinter).toHaveBeenCalledTimes(1);
       const [uri] = fetchMock.lastCall()!;
@@ -962,7 +959,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       const { someOption } = fetchMock.lastCall()![1] as any;
       expect(someOption).toBe("foo");
@@ -985,7 +982,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
 
       let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
 
@@ -1003,7 +1000,7 @@ describe("HttpLink", () => {
             next: ob.next.bind(ob),
             error: ob.error.bind(ob),
             complete: () => {
-              expect(operation.getContext().response.headers.toBeDefined);
+              expect(operation.getContext().response.headers).toBeDefined();
               ob.complete();
             },
           });
@@ -1019,7 +1016,7 @@ describe("HttpLink", () => {
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitNext();
+      await expect(stream).toEmitTypedValue(data);
       await expect(stream).toComplete();
     });
   });
@@ -1028,22 +1025,17 @@ describe("HttpLink", () => {
     voidFetchDuringEachTest();
 
     it("warns if fetch is undeclared", async () => {
-      try {
-        createHttpLink({ uri: "data" });
-        throw new Error("warning wasn't called");
-      } catch (e) {
-        expect((e as Error).message).toMatch(/has not been found globally/);
-      }
+      expect(() => createHttpLink({ uri: "data" })).toThrow(
+        /has not been found globally/
+      );
     });
 
     it("warns if fetch is undefined", async () => {
       window.fetch = undefined as any;
-      try {
-        createHttpLink({ uri: "data" });
-        throw new Error("warning wasn't called");
-      } catch (e) {
-        expect((e as Error).message).toMatch(/has not been found globally/);
-      }
+
+      expect(() => createHttpLink({ uri: "data" })).toThrow(
+        /has not been found globally/
+      );
     });
 
     it("does not warn if fetch is undeclared but a fetch is passed", () => {
@@ -1054,156 +1046,90 @@ describe("HttpLink", () => {
   });
 
   describe("Error handling", () => {
-    let responseBody: any;
-    const text = jest.fn(() => {
-      const responseBodyText = "{}";
-      responseBody = JSON.parse(responseBodyText);
-      return Promise.resolve(responseBodyText);
-    });
-    const textWithStringError = jest.fn(() => {
-      const responseBodyText = "Error! Foo bar";
-      responseBody = responseBodyText;
-      return Promise.resolve(responseBodyText);
-    });
-    const textWithData = jest.fn(() => {
-      responseBody = {
-        data: { stub: { id: 1 } },
-        errors: [{ message: "dangit" }],
-      };
-
-      return Promise.resolve(JSON.stringify(responseBody));
-    });
-
-    const textWithErrors = jest.fn(() => {
-      responseBody = {
-        errors: [{ message: "dangit" }],
-      };
-
-      return Promise.resolve(JSON.stringify(responseBody));
-    });
-    const fetch = jest.fn((uri, options) => {
-      return Promise.resolve({ text });
-    });
-    beforeEach(() => {
-      fetch.mockReset();
-    });
-    it("makes it easy to do stuff on a 401", async () => {
-      const middleware = new ApolloLink((operation, forward) => {
-        return new Observable((ob) => {
-          fetch.mockReturnValueOnce(Promise.resolve({ status: 401, text }));
-          const op = forward(operation);
-          const sub = op.subscribe({
-            next: ob.next.bind(ob),
-            error: (e: ServerError) => {
-              expect(e.message).toMatch(/Received status code 401/);
-              expect(e.statusCode).toEqual(401);
-              ob.error(e);
-            },
-            complete: ob.complete.bind(ob),
-          });
-
-          return () => {
-            sub.unsubscribe();
-          };
-        });
-      });
-
-      const link = middleware.concat(
-        createHttpLink({ uri: "data", fetch: fetch as any })
-      );
-
-      const observable = execute(link, { query: sampleQuery });
-      const stream = new ObservableStream(observable);
-
-      await expect(stream).toEmitError();
-    });
-
     it("throws an error if response code is > 300", async () => {
-      fetch.mockReturnValueOnce(Promise.resolve({ status: 400, text }));
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const response = Response.json({}, { status: 400 });
 
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerError = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 400/);
-      expect(error.statusCode).toBe(400);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: "{}",
+        })
+      );
     });
 
     it("throws an error if response code is > 300 and handles string response body", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 302, text: textWithStringError })
-      );
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const response = new Response("Error! Foo bar", { status: 302 });
+
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerError = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 302/);
-      expect(error.statusCode).toBe(302);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 302", {
+          response,
+          bodyText: "Error! Foo bar",
+        })
+      );
     });
 
     it("throws an error if response code is > 300 and returns data", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: textWithData })
-      );
+      const result = {
+        data: { stub: { id: 1 } },
+        errors: [{ message: "dangit" }],
+      };
+      const response = Response.json(result, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
-
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const result = await stream.takeNext();
-
-      expect(result).toEqual(responseBody);
-
-      const error = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 400/);
-      expect(error.statusCode).toBe(400);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: JSON.stringify(result),
+        })
+      );
     });
 
     it("throws an error if only errors are returned", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: textWithErrors })
-      );
+      const result = { errors: [{ message: "dangit" }] };
+      const response = Response.json(result, { status: 400 });
 
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error = await stream.takeError();
-
-      expect(error.message).toMatch(/Received status code 400/);
-      expect(error.statusCode).toBe(400);
-      expect(error.result).toEqual(responseBody);
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: JSON.stringify(result),
+        })
+      );
     });
 
     it("throws an error if empty response from the server ", async () => {
-      fetch.mockReturnValueOnce(Promise.resolve({ text }));
-      text.mockReturnValueOnce(Promise.resolve('{ "body": "boo" }'));
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const response = Response.json({ body: "boo" }, { status: 200 });
 
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error = await stream.takeError();
-
-      expect(error.message).toMatch(
-        /Server response was missing for query 'SampleQuery'/
+      await expect(stream).toEmitError(
+        new ServerError(
+          "Server response was malformed for query 'SampleQuery'.",
+          { response, bodyText: JSON.stringify({ body: "boo" }) }
+        )
       );
     });
 
     it("throws if the body can't be stringified", async () => {
-      fetch.mockReturnValueOnce(Promise.resolve({ data: {}, text }));
       const link = createHttpLink({
         uri: "data",
-        fetch: fetch as any,
+        fetch: async () => new Response(""),
         includeUnusedVariables: true,
       });
 
@@ -1258,19 +1184,12 @@ describe("HttpLink", () => {
         },
       };
 
-      function mockFetch() {
-        const text = jest.fn(
-          async () => '{ "data": { "stub": { "id": "foo" } } }'
-        );
-        const fetch = jest.fn(async (uri, options) => ({ text }));
-        return { text, fetch };
-      }
-
       it("aborts the request when unsubscribing before the request has completed", () => {
-        const { fetch } = mockFetch();
+        const fetch = async () =>
+          Response.json({ data: { stub: { id: "foo" } } }, { status: 200 });
         const abortControllers = trackGlobalAbortControllers();
 
-        const link = createHttpLink({ uri: "data", fetch: fetch as any });
+        const link = createHttpLink({ uri: "data", fetch });
 
         const sub = execute(link, { query: sampleQuery }).subscribe(
           failingObserver
@@ -1282,12 +1201,14 @@ describe("HttpLink", () => {
       });
 
       it("a passed-in signal will be forwarded to the `fetch` call and not be overwritten by an internally-created one", () => {
-        const { fetch } = mockFetch();
+        const fetch = jest.fn(async (_uri, _options) =>
+          Response.json({ data: { stub: { id: "foo" } } }, { status: 200 })
+        );
         const externalAbortController = new AbortController();
 
         const link = createHttpLink({
           uri: "data",
-          fetch: fetch as any,
+          fetch,
           fetchOptions: { signal: externalAbortController.signal },
         });
 
@@ -1331,12 +1252,12 @@ describe("HttpLink", () => {
       });
 
       it("resolving fetch does not cause the AbortController to be aborted", async () => {
-        const { text, fetch } = mockFetch();
+        const fetch = async () =>
+          Response.json({ data: { hello: "world" } }, { status: 200 });
         const abortControllers = trackGlobalAbortControllers();
-        text.mockResolvedValueOnce('{ "data": { "hello": "world" } }');
 
         // (the request is already finished at that point)
-        const link = createHttpLink({ uri: "data", fetch: fetch as any });
+        const link = createHttpLink({ uri: "data", fetch });
 
         await new Promise<void>((resolve) =>
           execute(link, { query: sampleQuery }).subscribe({
@@ -1349,11 +1270,13 @@ describe("HttpLink", () => {
       });
 
       it("an unsuccessful fetch does not cause the AbortController to be aborted", async () => {
-        const { fetch } = mockFetch();
+        const fetch = async () => {
+          throw new Error("This is an error!");
+        };
+
         const abortControllers = trackGlobalAbortControllers();
-        fetch.mockRejectedValueOnce("This is an error!");
         // the request would be closed by the browser in the case of an error anyways
-        const link = createHttpLink({ uri: "data", fetch: fetch as any });
+        const link = createHttpLink({ uri: "data", fetch });
 
         await new Promise<void>((resolve) =>
           execute(link, { query: sampleQuery }).subscribe({
@@ -1366,42 +1289,44 @@ describe("HttpLink", () => {
       });
     });
 
-    const body = "{";
-    const unparsableJson = jest.fn(() => Promise.resolve(body));
     it("throws a Server error if response is > 300 with unparsable json", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 400, text: unparsableJson })
-      );
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const body = "{";
+      const response = new Response(body, {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      });
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerParseError = await stream.takeError();
-
-      expect(error.message).toMatch(
-        "Response not successful: Received status code 400"
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: body,
+        })
       );
-      expect(error.statusCode).toBe(400);
-      expect(error.response).toBeDefined();
-      expect(error.bodyText).toBe(undefined);
     });
 
     it("throws a ServerParseError if response is 200 with unparsable json", async () => {
-      fetch.mockReturnValueOnce(
-        Promise.resolve({ status: 200, text: unparsableJson })
-      );
-      const link = createHttpLink({ uri: "data", fetch: fetch as any });
+      const body = "{";
+      const response = new Response(body, {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+      const link = createHttpLink({ uri: "data", fetch: async () => response });
 
       const observable = execute(link, { query: sampleQuery });
       const stream = new ObservableStream(observable);
 
-      const error: ServerParseError = await stream.takeError();
-
-      expect(error.message).toMatch(/JSON/);
-      expect(error.statusCode).toBe(200);
-      expect(error.response).toBeDefined();
-      expect(error.bodyText).toBe(body);
+      await expect(stream).toEmitError(
+        new ServerParseError(
+          new Error(
+            "Expected property name or '}' in JSON at position 1 (line 1 column 2)"
+          ),
+          { response, bodyText: body }
+        )
+      );
     });
   });
 
@@ -1446,7 +1371,7 @@ describe("HttpLink", () => {
         "--graphql--",
       ].join("\r\n");
 
-      it("whatwg stream bodies", (done) => {
+      it("whatwg stream bodies", async () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = body.split("\r\n");
@@ -1461,67 +1386,49 @@ describe("HttpLink", () => {
           },
         });
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "content-type": "multipart/mixed" }),
-        }));
-
         const link = new HttpLink({
-          fetch: fetch as any,
+          fetch: async () => {
+            return new Response(stream, {
+              status: 200,
+              headers: new Headers({ "content-type": "multipart/mixed" }),
+            });
+          },
         });
 
-        let i = 0;
-        execute(link, { query: sampleDeferredQuery }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    stub: {
-                      id: "0",
-                    },
-                  },
-                  hasNext: true,
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  incremental: [
-                    {
-                      data: {
-                        name: "stubby---",
-                      },
-                      extensions: {
-                        timestamp: 1633038919,
-                      },
-                      path: ["stub"],
-                    },
-                  ],
-                  hasNext: false,
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-
-            done();
-          }
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleDeferredQuery })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            stub: {
+              id: "0",
+            },
+          },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: {
+                name: "stubby---",
+              },
+              extensions: {
+                timestamp: 1633038919,
+              },
+              path: ["stub"],
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
       });
 
       // Verify that observable completes if final chunk does not contain
       // incremental array.
-      it("whatwg stream bodies, final chunk of { hasNext: false }", (done) => {
+      it("whatwg stream bodies, final chunk of { hasNext: false }", async () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = finalChunkOnlyHasNextFalse.split("\r\n");
@@ -1536,71 +1443,80 @@ describe("HttpLink", () => {
           },
         });
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({
-            "Content-Type":
-              'multipart/mixed;boundary="graphql";deferSpec=20220824',
-          }),
-        }));
-
         const link = new HttpLink({
-          fetch: fetch as any,
+          fetch: async () => {
+            return new Response(stream, {
+              status: 200,
+              headers: new Headers({
+                "Content-Type":
+                  'multipart/mixed;boundary="graphql";deferSpec=20220824',
+              }),
+            });
+          },
         });
 
-        let i = 0;
-        execute(link, { query: sampleDeferredQuery }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toMatchObject({
-                  data: {
-                    allProducts: [null, null, null],
-                  },
-                  // errors is also present, but for the purpose of this test
-                  // we're not interested in its (lengthy) content.
-                  // errors: [{...}],
-                  hasNext: true,
-                });
-              }
-              // Since the second chunk contains only hasNext: false,
-              // there is no next result to receive.
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 1) {
-              done(new Error("Unexpected end to observable"));
-            }
-
-            done();
-          }
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleDeferredQuery })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            allProducts: [null, null, null],
+          },
+          errors: [
+            {
+              message:
+                "Cannot return null for non-nullable field Product.nonNullErrorField.",
+            },
+            {
+              message:
+                "Cannot return null for non-nullable field Product.nonNullErrorField.",
+            },
+            {
+              message:
+                "Cannot return null for non-nullable field Product.nonNullErrorField.",
+            },
+          ],
+          hasNext: true,
+        });
+
+        // the second chunk contains only hasNext: false which is not emitted as
+        // a `next` event so the link completes.
+
+        await expect(observableStream).toComplete();
       });
 
       it("sets correct accept header on request with deferred query", async () => {
         const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleDeferredQuery });
         const observableStream = new ObservableStream(observable);
 
-        await expect(observableStream).toEmitNext();
+        await expect(observableStream).toEmitTypedValue({
+          data: { stub: { id: "0" } },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: { name: "stubby---" },
+              path: ["stub"],
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
 
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",
@@ -1619,24 +1535,40 @@ describe("HttpLink", () => {
         const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleQueryCustomDirective });
         const observableStream = new ObservableStream(observable);
 
-        await expect(observableStream).toEmitNext();
+        await expect(observableStream).toEmitTypedValue({
+          data: { stub: { id: "0" } },
+          hasNext: true,
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          incremental: [
+            {
+              data: { name: "stubby---" },
+              path: ["stub"],
+              extensions: { timestamp: 1633038919 },
+            },
+          ],
+          hasNext: false,
+        });
+
+        await expect(observableStream).toComplete();
 
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",
           expect.objectContaining({
             headers: {
-              accept: "application/graphql-response+json",
+              accept:
+                "application/graphql-response+json,application/json;q=0.9",
               "content-type": "application/json",
             },
           })
@@ -1685,7 +1617,7 @@ describe("HttpLink", () => {
         "-----",
       ].join("\r\n");
 
-      it("whatwg stream bodies", (done) => {
+      it("whatwg stream bodies", async () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = subscriptionsBody.split("\r\n");
@@ -1700,61 +1632,44 @@ describe("HttpLink", () => {
           },
         });
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
 
-        let i = 0;
-        execute(link, { query: sampleSubscription }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "red",
-                        roll: 1,
-                        sides: 4,
-                      },
-                    },
-                  },
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "blue",
-                        roll: 2,
-                        sides: 5,
-                      },
-                    },
-                  },
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-            done();
-          }
+        const link = new HttpLink({ fetch });
+
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleSubscription })
         );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: {
+              die: {
+                color: "red",
+                roll: 1,
+                sides: 4,
+              },
+            },
+          },
+        });
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: {
+              die: {
+                color: "blue",
+                roll: 2,
+                sides: 5,
+              },
+            },
+          },
+        });
+
+        await expect(observableStream).toComplete();
       });
 
       test("whatwg stream bodies, warns if combined with @defer", () => {
@@ -1772,15 +1687,14 @@ describe("HttpLink", () => {
           },
         });
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+
+        const link = new HttpLink({ fetch });
 
         const warningSpy = jest
           .spyOn(console, "warn")
@@ -1792,84 +1706,77 @@ describe("HttpLink", () => {
         );
         warningSpy.mockRestore();
       });
-      it("with errors", (done) => {
+
+      it("with errors", async () => {
         const stream = ReadableStream.from(
           subscriptionsBodyError.split("\r\n").map((line) => line + "\r\n")
         );
 
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
+        });
+        const link = new HttpLink({ fetch });
+
+        const observableStream = new ObservableStream(
+          execute(link, { query: sampleSubscription })
+        );
+
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: {
+              die: {
+                color: "red",
+                roll: 1,
+                sides: 4,
+              },
+            },
+          },
         });
 
-        let i = 0;
-        execute(link, { query: sampleSubscription }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "red",
-                        roll: 1,
-                        sides: 4,
-                      },
-                    },
-                  },
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  extensions: {
-                    [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
-                      {
-                        extensions: {
-                          code: "INTERNAL_SERVER_ERROR",
-                        },
-                        message: "Error field",
-                      },
-                    ]),
-                  },
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
+        await expect(observableStream).toEmitTypedValue({
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+              {
+                extensions: {
+                  code: "INTERNAL_SERVER_ERROR",
+                },
+                message: "Error field",
+              },
+            ]),
           },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-            done();
-          }
-        );
+        });
+
+        await expect(observableStream).toComplete();
       });
 
       it("sets correct accept header on request with subscription", async () => {
         const stream = ReadableStream.from(
           subscriptionsBody.split("\r\n").map((line) => line + "\r\n")
         );
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
+        const fetch = jest.fn(async () => {
+          return new Response(stream, {
+            status: 200,
+            headers: { "content-type": "multipart/mixed" },
+          });
         });
+        const link = new HttpLink({ fetch });
         const observable = execute(link, { query: sampleSubscription });
         const observableStream = new ObservableStream(observable);
 
-        await expect(observableStream).toEmitNext();
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } },
+          },
+        });
+        await expect(observableStream).toEmitTypedValue({
+          data: {
+            aNewDieWasCreated: { die: { color: "blue", roll: 2, sides: 5 } },
+          },
+        });
+        await expect(observableStream).toComplete();
 
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",
@@ -1882,6 +1789,283 @@ describe("HttpLink", () => {
           })
         );
       });
+    });
+  });
+
+  describe("GraphQL over HTTP", () => {
+    test("emits result when content-type is not set with well formed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json({ data: { foo: true } }, { status: 200 });
+      response.headers.delete("content-type");
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({ data: { foo: true } });
+      await expect(stream).toComplete();
+    });
+
+    test("emits ServerError when content-type is not set with malformed GraphQL response", async () => {
+      const query = gql`
+        query Foo {
+          foo
+        }
+      `;
+
+      const response = Response.json({ foo: true }, { status: 200 });
+      response.headers.delete("content-type");
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Server response was malformed for query 'Foo'.", {
+          response,
+          bodyText: JSON.stringify({ foo: true }),
+        })
+      );
+    });
+
+    test("emits ServerParseError when content-type is not set with unparsable JSON body", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = new Response("This is a response", { status: 200 });
+      response.headers.delete("content-type");
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerParseError(
+          new Error(
+            `Unexpected token 'T', "This is a response" is not valid JSON`
+          ),
+          {
+            response,
+            bodyText: "This is a response",
+          }
+        )
+      );
+    });
+
+    test("emits ServerError when content-type is not set with well formed GraphQL response and non-200 status code", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Something went wrong" }] },
+        { status: 400 }
+      );
+      response.headers.delete("content-type");
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: JSON.stringify({
+            data: null,
+            errors: [{ message: "Something went wrong" }],
+          }),
+        })
+      );
+    });
+
+    test("emits ServerError when responding with application/json and non-200 status code with malformed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { error: "Could not process request" },
+        {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: JSON.stringify({
+            error: "Could not process request",
+          }),
+        })
+      );
+    });
+
+    test("emits ServerError when responding with application/json and non-200 status code with well-formed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        { status: 400, headers: { "content-type": "application/json" } }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitError(
+        new ServerError("Response not successful: Received status code 400", {
+          response,
+          bodyText: JSON.stringify({
+            data: null,
+            errors: [{ message: "Could not process request" }],
+          }),
+        })
+      );
+    });
+
+    test("emits result when responding with a non-json mime type and 200 response with well formed GraphQL response", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        {
+          status: 200,
+          headers: { "content-type": "text/plain" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: null,
+        errors: [{ message: "Could not process request" }],
+      });
+      await expect(stream).toComplete();
+    });
+
+    test("handles 200 response with application/graphql-response+json", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: { foo: "bar" } },
+        {
+          status: 200,
+          headers: { "content-type": "application/graphql-response+json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({ data: { foo: "bar" } });
+      await expect(stream).toComplete();
+    });
+
+    test("parses non-200 response with application/graphql-response+json", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        {
+          status: 400,
+          headers: { "content-type": "application/graphql-response+json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: null,
+        errors: [{ message: "Could not process request" }],
+      });
+      await expect(stream).toComplete();
+    });
+
+    test("parses 200 response with application/graphql-response+json and errors", async () => {
+      const query = gql`
+        query {
+          foo
+        }
+      `;
+
+      const response = Response.json(
+        { data: null, errors: [{ message: "Could not process request" }] },
+        {
+          status: 200,
+          headers: { "content-type": "application/graphql-response+json" },
+        }
+      );
+
+      const link = new HttpLink({
+        uri: "/graphql",
+        fetch: async () => response,
+      });
+
+      const stream = new ObservableStream(execute(link, { query }));
+
+      await expect(stream).toEmitTypedValue({
+        data: null,
+        errors: [{ message: "Could not process request" }],
+      });
+      await expect(stream).toComplete();
     });
   });
 });

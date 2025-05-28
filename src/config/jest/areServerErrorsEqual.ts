@@ -11,7 +11,7 @@ export const areServerErrorsEqual: Tester = function (a, b, customTesters) {
       a.message === b.message &&
       this.equals(a.response, b.response, customTesters) &&
       this.equals(a.statusCode, b.statusCode, customTesters) &&
-      this.equals(a.result, b.result, customTesters)
+      this.equals(a.bodyText, b.bodyText, customTesters)
     );
   } else if (isAServerError === isBServerError) {
     return undefined;

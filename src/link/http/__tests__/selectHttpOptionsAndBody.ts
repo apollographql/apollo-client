@@ -37,7 +37,7 @@ describe("selectHttpOptionsAndBody", () => {
 
   it("the fallbackConfig is used if no other configs are specified", () => {
     const defaultHeaders = {
-      accept: "application/graphql-response+json",
+      accept: "application/graphql-response+json,application/json;q=0.9",
       "content-type": "application/json",
     };
 

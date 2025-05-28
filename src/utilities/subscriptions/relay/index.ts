@@ -6,10 +6,7 @@ import { serializeFetchParameter } from "@apollo/client";
 import type { HttpLink } from "@apollo/client/link/http";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
-import {
-  handleError,
-  readMultipartBody,
-} from "../../../link/http/parseAndCheckHttpResponse.js";
+import { readMultipartBody } from "../../../link/http/parseAndCheckHttpResponse.js";
 import { fallbackHttpConfig } from "../../../link/http/selectHttpOptionsAndBody.js";
 
 const backupFetch = maybe(() => fetch);
@@ -58,7 +55,7 @@ export function createFetchMultipartSubscription(
           sink.complete();
         })
         .catch((err: any) => {
-          handleError(err, sink);
+          sink.error(err);
         });
     });
   };

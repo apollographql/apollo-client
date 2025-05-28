@@ -33,7 +33,7 @@ jobs:
       - name: Build AC
         run: npm run build
 
-      - run: echo changed files: ${{steps.changed-files-codegen.outputs.changed_files}}
+      - run: echo changed files ${{steps.changed-files-codegen.outputs.changed_files}}
 
       - name: Build Codegen
         if: steps.changed-files-codegen.outputs.changed_files != ''

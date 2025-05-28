@@ -47,6 +47,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataStatus: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -57,6 +58,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -66,6 +68,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -113,6 +116,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataStatus: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -123,6 +127,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -134,6 +139,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataStatus: "empty",
       loading: false,
       networkStatus: 7,
       partial: true,
@@ -144,6 +150,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -191,6 +198,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataStatus: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -201,6 +209,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -216,6 +225,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -266,6 +276,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -278,6 +289,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       error: new Error("defer failed"),
@@ -288,6 +300,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -348,6 +361,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataStatus: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -358,6 +372,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -367,6 +382,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataStatus: "complete",
       error: new Error("defer failed"),
       loading: false,
       networkStatus: NetworkStatus.error,

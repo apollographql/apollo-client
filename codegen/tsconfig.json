@@ -4,9 +4,7 @@
     "target": "ESNext",
     "module": "Node18",
     "moduleResolution": "nodenext",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "paths": {},
     "types": [],
     "rootDir": "./",
@@ -14,13 +12,8 @@
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": true
   },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-  ],
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -79,9 +79,7 @@ jobs:
         if: steps.check_files.outputs.files_exists == 'true' && !startsWith(github.event.head_commit.message, 'Version Packages')
         uses: changesets/action@v1
         with:
-          version: |
-            npx changeset version
-            npm i
+          version: npx changeset version && npm i
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

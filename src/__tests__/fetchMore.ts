@@ -216,7 +216,6 @@ describe("fetchMore on an observable query", () => {
 
   const result: any = {
     data: {
-      __typename: "Query",
       entry: {
         __typename: "Entry",
         comments: [],
@@ -226,7 +225,6 @@ describe("fetchMore on an observable query", () => {
   const resultMore = cloneDeep(result);
   const result2: any = {
     data: {
-      __typename: "Query",
       comments: [],
     },
   };

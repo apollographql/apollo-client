@@ -1,8 +1,8 @@
 /* eslint-disable */
 import * as BaseSchemaTypes from "./base-types.js";
-import { DefaultContext } from "@apollo/client";
 import { LocalState } from "@apollo/client/local-state";
 import { DeepPartial } from "@apollo/client/utilities";
+import { DefaultContext } from "@apollo/client";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = {

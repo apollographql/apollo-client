@@ -70,7 +70,7 @@ export class LocalStateVisitor extends BaseResolversVisitor<
         avoidOptionals: normalizeAvoidOptionals(pluginConfig.avoidOptionals),
         allowParentTypeOverride: false,
         contextType: parseMapper(
-          pluginConfig.contextType || "DefaultContext",
+          pluginConfig.contextType || "@apollo/client#DefaultContext",
           "DefaultContext"
         ),
         baseSchemaTypesImportName: getConfigValue(

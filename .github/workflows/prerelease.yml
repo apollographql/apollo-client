@@ -80,7 +80,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: |
-            npm run changeset version
+            npx changeset version
             npm i
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

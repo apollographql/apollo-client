@@ -1,0 +1,48 @@
+{
+  "name": "@apollo/client-graphql-codegen",
+  "version": "0.0.0",
+  "description": "Apollo Client GraphQL Codegen Plugins",
+  "keywords": [
+    "apollo",
+    "client",
+    "graphql",
+    "codegen"
+  ],
+  "author": "packages@apollographql.com",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-client/issues"
+  },
+  "homepage": "https://www.apollographql.com/docs/react/",
+  "exports": {
+    "./local-state": "./dist/local-state/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "npm run clean",
+    "clean": "rimraf dist",
+    "build": "tsc",
+    "prepack": "npm run build",
+    "publint": "publint run --strict .",
+    "pkg-pr-new-publish": "npm run build && pkg-pr-new publish --no-template"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@apollo/client": "../dist",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@apollo/client": "^4.0.0-alpha.15",
+    "@graphql-codegen/plugin-helpers": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/visitor-plugin-common": "^5.0.0"
+  }
+}

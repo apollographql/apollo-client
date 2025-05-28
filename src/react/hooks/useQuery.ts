@@ -104,7 +104,7 @@ export declare namespace useQuery {
   export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TStates extends States["dataState"] = States["dataState"],
+    TStates extends States<TData>["dataState"] = States<TData>["dataState"],
   > = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;

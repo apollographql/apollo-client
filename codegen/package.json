@@ -31,8 +31,7 @@
     "clean": "rimraf dist",
     "build": "tsc",
     "prepack": "npm run build",
-    "publint": "publint run --strict .",
-    "pkg-pr-new-publish": "npm run build && pkg-pr-new publish --no-template"
+    "publint": "publint run --strict ."
   },
   "dependencies": {},
   "devDependencies": {

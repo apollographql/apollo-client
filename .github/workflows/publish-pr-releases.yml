@@ -21,8 +21,25 @@ jobs:
         with:
           node-version: ">=23.6.0"
 
+      - name: Check if any files in codegen/ changed
+        id: changed-files-codegen
+        uses: tj-actions/changed-files@27ae6b33eaed7bf87272fdeb9f1c54f9facc9d99
+        with:
+          files: codegen/**
+
       - name: Install dependencies with cache
         uses: bahmutov/npm-install@v1
 
+      - name: Build AC
+        run: npm run build
+
+      - name: Build Codegen
+        if: steps.changed-files-codegen.outputs.test_any_changed == 'true'
+        run: npm run build
+        working-directory: "./codegen"
+
       - name: Build and publish to pkg.pr.new
-        run: npm run pkg-pr-new-publish
+        env:
+          PACKAGE_CODEGEN: ${{ steps.changed-files-codegen.outputs.test_any_changed == 'true' && './codegen' || '' }}
+        # skipping --compact for a moment as there is an unreleased package
+        run: pkg-pr-new publish --no-template ./dist $PACKAGE_CODEGEN

@@ -4,7 +4,7 @@
 
 Introduce a new GraphQL Codegen plugin aimed at creating resolver types for `LocalState`. This plugin is similar to `@graphql-codegen/typescript-resolvers` but tailored to provide types that work with `LocalState`.
 
-To use the plugin, add the following to your codegen config:
+To use the plugin, install `@apollo/client-graphql-codegen` and add the following to your codegen config:
 
 ```ts
 // codegen.ts
@@ -18,7 +18,7 @@ const config: CodegenConfig = {
       ],
       plugins: [
         "typescript",
-        "@apollo/client/local-state/codegen",
+        "@apollo/client-graphql-codegen/local-state",
       ],
       // ...
     }
@@ -39,7 +39,7 @@ const localState = new LocalState<Resolvers>({
 It is also recommended to add the following config:
 ```ts
 // codegen.ts
-import type { LocalStatePluginConfig } from "@apollo/client/local-state/codegen";
+import type { LocalStatePluginConfig } from "@apollo/client-graphql-codegen/local-state";
 
 const config: CodegenConfig = {
   // ...

@@ -58,6 +58,7 @@ describe("updateQuery on a simple query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -65,6 +66,7 @@ describe("updateQuery on a simple query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -78,6 +80,7 @@ describe("updateQuery on a simple query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "Query", entry: { __typename: "Entry", value: 2 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -136,6 +139,7 @@ describe("updateQuery on a query with required and optional variables", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -143,6 +147,7 @@ describe("updateQuery on a query with required and optional variables", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "Query", entry: { __typename: "Entry", value: 1 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -156,6 +161,7 @@ describe("updateQuery on a query with required and optional variables", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { __typename: "Query", entry: { __typename: "Entry", value: 2 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -316,6 +322,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -352,6 +359,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
         },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -392,6 +400,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -418,6 +427,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
         },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -453,6 +463,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -491,6 +502,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
         },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -535,6 +547,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -560,6 +573,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           entry: { __typename: "Entry", comments: expect.arrayWithLength(10) },
         },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -703,6 +717,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -724,6 +739,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { TODO: tasks.slice(0, 2) },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -735,6 +751,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -760,6 +777,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { TODO: tasks.slice(0, 4) },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -771,6 +789,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -808,6 +827,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -835,6 +855,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -844,6 +865,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -873,6 +895,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -882,6 +905,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -918,6 +942,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -941,6 +966,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { TODO: tasks.slice(0, 2) },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -952,6 +978,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -977,6 +1004,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { TODO: tasks.slice(0, 4) },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -988,6 +1016,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1024,6 +1053,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1051,6 +1081,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1060,6 +1091,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1089,6 +1121,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1098,6 +1131,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1231,6 +1265,7 @@ describe("fetchMore on an observable query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1242,6 +1277,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         groceries: initialGroceries,
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1266,6 +1302,7 @@ describe("fetchMore on an observable query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { groceries: initialGroceries },
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       partial: false,
@@ -1280,6 +1317,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         groceries: finalGroceries,
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1304,6 +1342,7 @@ describe("fetchMore on an observable query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1340,6 +1379,7 @@ describe("fetchMore on an observable query", () => {
           comments: expect.arrayWithLength(10),
         },
       },
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       partial: false,
@@ -1389,6 +1429,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1454,6 +1495,7 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1538,6 +1580,7 @@ describe("fetchMore on an observable query", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1549,6 +1592,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1566,6 +1610,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1575,6 +1620,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1723,6 +1769,7 @@ describe("fetchMore on an observable query with connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1758,6 +1805,7 @@ describe("fetchMore on an observable query with connection", () => {
             comments: expect.arrayWithLength(10),
           },
         },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -1800,6 +1848,7 @@ describe("fetchMore on an observable query with connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1829,6 +1878,7 @@ describe("fetchMore on an observable query with connection", () => {
             comments: expect.arrayWithLength(10),
           },
         },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         partial: false,
@@ -1874,6 +1924,7 @@ describe("fetchMore on an observable query with connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1948,6 +1999,7 @@ describe("fetchMore on an observable query with connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1998,6 +2050,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
 
   await expect(stream).toEmitTypedValue({
     data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -2010,6 +2063,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "B", position: 2 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -2038,6 +2092,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "B", position: 2 },
       ],
     },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.fetchMore,
     partial: false,
@@ -2052,6 +2107,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -2067,6 +2123,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -2097,6 +2154,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.fetchMore,
     partial: false,
@@ -2109,6 +2167,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "F", position: 6 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -2121,6 +2180,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "F", position: 6 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,

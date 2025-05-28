@@ -32,7 +32,10 @@ import type {
 } from "@apollo/client/masking";
 import { ApolloProvider, useLazyQuery } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import type { VariablesCaseVariables } from "@apollo/client/testing/internal";
+import type {
+  SimpleCaseData,
+  VariablesCaseVariables,
+} from "@apollo/client/testing/internal";
 import {
   renderAsync,
   setupSimpleCase,
@@ -5708,6 +5711,61 @@ test("uses default variables in query", async () => {
 });
 
 describe.skip("Type Tests", () => {
+  test("returns narrowed TData in default case", () => {
+    const { query } = setupSimpleCase();
+
+    const [, { data, dataState, called }] = useLazyQuery(query);
+
+    if (!called) {
+      expectTypeOf(dataState).toEqualTypeOf<"empty">();
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+  });
+
+  test("returns DeepPartial<TData> with returnPartialData: true", () => {
+    const { query } = setupSimpleCase();
+
+    const [, { data, dataState, called }] = useLazyQuery(query, {
+      returnPartialData: true,
+    });
+
+    if (!called) {
+      expectTypeOf(dataState).toEqualTypeOf<"empty">();
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+
+    expectTypeOf(dataState).toEqualTypeOf<
+      "empty" | "streaming" | "complete" | "partial"
+    >;
+
+    if (dataState === "complete") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "partial") {
+      expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+    }
+
+    if (dataState === "streaming") {
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+    }
+
+    if (dataState === "empty") {
+      expectTypeOf(data).toEqualTypeOf<undefined>();
+    }
+  });
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
     const [execute, { variables }] = useLazyQuery(typedNode);

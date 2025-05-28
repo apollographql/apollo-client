@@ -385,7 +385,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
-        dataStatus: "empty",
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -393,7 +393,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataWithId(1),
-        dataStatus: "complete",
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -404,7 +404,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
-        dataStatus: "empty",
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -412,7 +412,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataWithId(2),
-        dataStatus: "complete",
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -423,7 +423,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataWithId(2),
-        dataStatus: "complete",
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -432,7 +432,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataWithId(2),
-        dataStatus: "complete",
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -443,7 +443,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
-        dataStatus: "empty",
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -452,7 +452,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataWithId(3),
-        dataStatus: "complete",
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -491,7 +491,7 @@ describe("cache-first", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -507,7 +507,7 @@ describe("cache-first", () => {
           lastName: "Smith",
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -534,7 +534,7 @@ describe("cache-first", () => {
           __typename: "Bogus",
         },
       },
-      dataStatus: "partial",
+      dataState: "partial",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -555,7 +555,7 @@ describe("cache-first", () => {
           lastName: "Smith",
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -586,7 +586,7 @@ describe("cache-first", () => {
           lastName: "Achebe",
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -635,7 +635,7 @@ describe("cache-only", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       partial: true,
     });
     await expect(stream).toEmitTypedValue({
@@ -644,7 +644,7 @@ describe("cache-only", () => {
       data: {
         count: 1,
       },
-      dataStatus: "complete",
+      dataState: "complete",
       partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
@@ -653,7 +653,7 @@ describe("cache-only", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { count: 1 },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -665,7 +665,7 @@ describe("cache-only", () => {
       data: {
         count: 2,
       },
-      dataStatus: "complete",
+      dataState: "complete",
       partial: false,
     });
 
@@ -722,7 +722,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -730,7 +730,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: dataWithId(1),
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -740,7 +740,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       partial: true,
@@ -748,7 +748,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: dataWithId(2),
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -758,7 +758,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: dataWithId(2),
-      dataStatus: "complete",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -766,7 +766,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: dataWithId(2),
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -776,7 +776,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: true,
@@ -784,7 +784,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitTypedValue({
       data: dataWithId(3),
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -915,7 +915,7 @@ describe("nextFetchPolicy", () => {
   }) => {
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -930,7 +930,7 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -964,7 +964,7 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -981,7 +981,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1019,7 +1019,7 @@ describe("nextFetchPolicy", () => {
     // is not allowed to read data from the cache, hence `data` is `undefined`.
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       partial: true,
@@ -1036,7 +1036,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1099,7 +1099,7 @@ describe("nextFetchPolicy", () => {
   }) => {
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1114,7 +1114,7 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1147,7 +1147,7 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -1164,7 +1164,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1205,7 +1205,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       partial: false,
@@ -1224,7 +1224,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1294,7 +1294,7 @@ describe("nextFetchPolicy", () => {
   }) => {
     await expect(stream).toEmitTypedValue({
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1309,7 +1309,7 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1342,7 +1342,7 @@ describe("nextFetchPolicy", () => {
           opVars: {},
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -1359,7 +1359,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1404,7 +1404,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
-      dataStatus: "complete",
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

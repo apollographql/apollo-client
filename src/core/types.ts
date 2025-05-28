@@ -195,23 +195,23 @@ export type ApolloQueryResult<T> = {
   | {
       data: T;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
-      dataStatus: "complete";
+      dataState: "complete";
     }
   | {
       // Defer to the passed in type to properly type the `@defer` fields.
       data: T;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
-      dataStatus: "streaming";
+      dataState: "streaming";
     }
   | {
       data: DeepPartial<T>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
-      dataStatus: "partial";
+      dataState: "partial";
     }
   | {
       data: undefined;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataStatus:member(1)} */
-      dataStatus: "empty";
+      dataState: "empty";
     }
 );
 

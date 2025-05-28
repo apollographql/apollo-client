@@ -1344,14 +1344,14 @@ export class QueryManager {
 
         const aqr = {
           data: result.data as TData,
-          dataStatus: result.data ? "complete" : "empty",
+          dataState: result.data ? "complete" : "empty",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: !result.data,
         } as ApolloQueryResult<TData>;
 
         if (isExecutionPatchResult(result) && result.hasNext) {
-          aqr.dataStatus = "streaming";
+          aqr.dataState = "streaming";
           aqr.partial = true;
         }
 
@@ -1361,7 +1361,7 @@ export class QueryManager {
         // throwing the markError result.
         if (hasErrors && errorPolicy === "none") {
           aqr.data = void 0 as TData;
-          aqr.dataStatus = "empty";
+          aqr.dataState = "empty";
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
@@ -1381,7 +1381,7 @@ export class QueryManager {
 
         const aqr: ApolloQueryResult<TData> = {
           data: undefined,
-          dataStatus: "empty",
+          dataState: "empty",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: true,
@@ -1811,7 +1811,7 @@ export class QueryManager {
         return {
           // TODO: Handle partial data
           data: data as TData | undefined,
-          dataStatus:
+          dataState:
             diff.complete ? "complete"
             : data ? "partial"
             : "empty",

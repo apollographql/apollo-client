@@ -85,7 +85,7 @@ const uninitialized: ApolloQueryResult<any> = {
   loading: true,
   networkStatus: NetworkStatus.loading,
   data: undefined,
-  dataStatus: "empty",
+  dataState: "empty",
   partial: true,
 };
 
@@ -93,7 +93,7 @@ const empty: ApolloQueryResult<any> = {
   loading: false,
   networkStatus: NetworkStatus.ready,
   data: undefined,
-  dataStatus: "empty",
+  dataState: "empty",
   partial: true,
 };
 
@@ -483,7 +483,7 @@ export class ObservableQuery<
       : initialFetchPolicy || this.options.fetchPolicy;
     const defaultResult: ApolloQueryResult<TData> = {
       data: undefined,
-      dataStatus: "empty",
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -500,7 +500,7 @@ export class ObservableQuery<
 
       return this.maskResult({
         data,
-        dataStatus:
+        dataState:
           diff.complete ? "complete"
           : data === undefined ? "empty"
           : "partial",
@@ -856,7 +856,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               // will be overwritten anyways, just here for types sake
               loading: false,
               data: data as TData,
-              dataStatus: "complete",
+              dataState: "complete",
             },
             source: "network",
           });
@@ -1529,7 +1529,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           kind: "N",
           value: {
             data: diff.result,
-            dataStatus:
+            dataState:
               diff.complete ? "complete"
               : diff.result ? "partial"
               : "empty",
@@ -1676,7 +1676,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         notification.kind === "E" ?
           ({
             data: undefined,
-            dataStatus: "empty",
+            dataState: "empty",
             partial: true,
             ...(isEqualQuery(previous, notification) ? previous.result : {}),
             error: notification.error,

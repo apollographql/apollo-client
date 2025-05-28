@@ -1,8 +1,5 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
-// @ts-ignore for some reason this allows codegen to load the plugin, otherwise it errors
-await import("@apollo/client-graphql-codegen/local-state");
-
 const config: CodegenConfig = {
   hooks: {
     afterAllFileWrite: ["prettier --write"],

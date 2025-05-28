@@ -2,11 +2,13 @@
   "mode": "pre",
   "tag": "alpha",
   "initialVersions": {
-    "@apollo/client": "3.12.2"
+    "@apollo/client": "3.12.2",
+    "@apollo/client-graphql-codegen": "0.0.0"
   },
   "changesets": [
     "afraid-grapes-call",
     "afraid-moons-arrive",
+    "afraid-penguins-sniff",
     "beige-mirrors-talk",
     "beige-spiders-hope",
     "brave-moons-juggle",
@@ -22,6 +24,7 @@
     "cuddly-spiders-tie",
     "curvy-flies-accept",
     "curvy-pianos-count",
+    "curvy-shoes-refuse",
     "dirty-cobras-change",
     "dirty-eagles-poke",
     "dirty-trees-pump",
@@ -30,6 +33,7 @@
     "eleven-kangaroos-jump",
     "empty-rabbits-move",
     "few-crabs-move",
+    "flat-readers-invite",
     "fluffy-shoes-applaud",
     "forty-hairs-occur",
     "forty-shrimps-fry",
@@ -99,9 +103,11 @@
     "purple-lions-cough",
     "rare-houses-prove",
     "real-gorillas-move",
+    "real-onions-drive",
     "real-teachers-peel",
     "rich-eagles-cross",
     "rich-kids-carry",
+    "rich-turtles-clap",
     "rude-fans-study",
     "selfish-spoons-approve",
     "serious-items-develop",

@@ -78,6 +78,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -98,6 +99,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -111,6 +113,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -150,6 +153,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -170,6 +174,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -183,6 +188,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -219,6 +225,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -239,6 +246,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -291,6 +299,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -310,6 +319,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -323,6 +333,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -338,6 +349,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -355,6 +367,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -368,6 +381,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { name: "changed" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -420,6 +434,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -439,6 +454,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -452,6 +468,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -467,6 +484,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -486,6 +504,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -499,6 +518,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { name: "changed" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -555,6 +575,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -574,6 +595,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -589,6 +611,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -606,6 +629,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { name: "changed" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -650,6 +674,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -669,6 +694,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -682,6 +708,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -699,6 +726,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -712,6 +740,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -757,6 +786,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -776,6 +806,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -793,6 +824,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -831,6 +863,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -850,6 +883,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -863,6 +897,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -882,6 +917,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
@@ -894,6 +930,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -940,6 +977,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -959,6 +997,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -972,6 +1011,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -987,6 +1027,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 1" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.poll,
@@ -1000,6 +1041,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1013,6 +1055,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 2" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.poll,
@@ -1026,6 +1069,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "world 3" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1091,6 +1135,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1110,6 +1155,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -1123,6 +1169,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: data1,
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1140,6 +1187,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -1153,6 +1201,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: data2,
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1220,6 +1269,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1239,6 +1289,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: data1,
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1256,6 +1307,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: data2,
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1300,6 +1352,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1319,6 +1372,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "from cache" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -1332,6 +1386,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1381,6 +1436,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1400,6 +1456,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "from cache" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -1413,6 +1470,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1430,6 +1488,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "from link" },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -1443,6 +1502,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "from link 2" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1494,6 +1554,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1519,6 +1580,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "1", name: "Cache 1" },
         },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -1534,6 +1596,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1559,6 +1622,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "2", name: "Cache 2" },
         },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -1576,6 +1640,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "2", name: "Black Widow" },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1633,6 +1698,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1658,6 +1724,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "1", name: "Cache 1" },
         },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -1673,6 +1740,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1698,6 +1766,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "2", name: "Cache 2" },
         },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -1715,6 +1784,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "2", name: "Black Widow" },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1756,6 +1826,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1781,6 +1852,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "1", name: "Spider-Man" },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1804,6 +1876,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           character: { __typename: "Character", id: "2", name: "Black Widow" },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1852,6 +1925,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1869,6 +1943,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -1882,6 +1957,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -1900,6 +1976,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -1913,6 +1990,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -1970,6 +2048,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1991,6 +2070,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2004,6 +2084,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { currentUser: null },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2031,6 +2112,7 @@ describe("useLazyQuery Hook", () => {
         data: {
           currentUser: null,
         },
+        dataState: "complete",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2044,6 +2126,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { currentUser: null },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2108,6 +2191,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2125,6 +2209,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { currentUser: null },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2250,6 +2335,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2274,6 +2360,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: mocks[1].result.data,
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2315,6 +2402,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2330,6 +2418,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2349,6 +2438,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2362,6 +2452,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { hello: "Greetings" },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2489,6 +2580,7 @@ describe("useLazyQuery Hook", () => {
       await waitFor(() => {
         expect(result.current[1]).toStrictEqualTyped({
           data: { user: { id: "2", name: "John Doe" } },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2504,6 +2596,7 @@ describe("useLazyQuery Hook", () => {
       await waitFor(() => {
         expect(result.current[1]).toStrictEqualTyped({
           data: { user: { id: null, name: "John Default" } },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2589,6 +2682,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2608,6 +2702,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2626,6 +2721,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -2639,6 +2735,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2661,6 +2758,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { user: { id: "1", name: "John Doe" } },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2681,6 +2779,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -2694,6 +2793,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
         called: true,
         loading: false,
@@ -2721,6 +2821,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
         called: true,
         loading: false,
@@ -2737,6 +2838,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -2750,6 +2852,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: { user: { id: "3", name: "Johnny Three" } },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2858,6 +2961,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2875,6 +2979,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2888,6 +2993,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           error: networkError,
           called: true,
           loading: false,
@@ -2934,6 +3040,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2954,6 +3061,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -2967,6 +3075,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           error: networkError,
           called: true,
           loading: false,
@@ -3013,6 +3122,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3030,6 +3140,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3043,6 +3154,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3077,6 +3189,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -3104,6 +3217,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -3117,6 +3231,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: new InvariantError(
           "Store reset while query was in flight (not completed in link chain)"
         ),
@@ -3214,6 +3329,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3233,6 +3349,7 @@ describe("useLazyQuery Hook", () => {
               name: "Test User",
             },
           },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3328,6 +3445,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3348,6 +3466,7 @@ describe("useLazyQuery Hook", () => {
               age: 30,
             },
           },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3442,6 +3561,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3462,6 +3582,7 @@ describe("useLazyQuery Hook", () => {
               age: 30,
             },
           },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3543,6 +3664,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3562,6 +3684,7 @@ describe("useLazyQuery Hook", () => {
               name: "Test User",
             },
           },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3593,6 +3716,7 @@ describe("useLazyQuery Hook", () => {
               name: "Test User (updated)",
             },
           },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3676,6 +3800,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toStrictEqualTyped({
           data: undefined,
+          dataState: "empty",
           called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
@@ -3695,6 +3820,7 @@ describe("useLazyQuery Hook", () => {
               name: "Test User",
             },
           },
+          dataState: "complete",
           called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -4008,6 +4134,7 @@ test("uses the updated client when executing the function after changing clients
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4027,6 +4154,7 @@ test("uses the updated client when executing the function after changing clients
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -4040,6 +4168,7 @@ test("uses the updated client when executing the function after changing clients
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 1" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4055,6 +4184,7 @@ test("uses the updated client when executing the function after changing clients
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 1" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4072,6 +4202,7 @@ test("uses the updated client when executing the function after changing clients
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -4085,6 +4216,7 @@ test("uses the updated client when executing the function after changing clients
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello client 2" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4125,6 +4257,7 @@ test("responds to cache updates after executing query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4144,6 +4277,7 @@ test("responds to cache updates after executing query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -4157,6 +4291,7 @@ test("responds to cache updates after executing query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4177,6 +4312,7 @@ test("responds to cache updates after executing query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello (updated)" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4213,6 +4349,7 @@ test("responds to cache updates after changing variables", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4236,6 +4373,7 @@ test("responds to cache updates after changing variables", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -4251,6 +4389,7 @@ test("responds to cache updates after changing variables", async () => {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4272,6 +4411,7 @@ test("responds to cache updates after changing variables", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -4289,6 +4429,7 @@ test("responds to cache updates after changing variables", async () => {
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4322,6 +4463,7 @@ test("responds to cache updates after changing variables", async () => {
           name: "Black Widow (updated)",
         },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4382,6 +4524,7 @@ test("uses cached result when switching to variables already written to the cach
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4405,6 +4548,7 @@ test("uses cached result when switching to variables already written to the cach
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -4420,6 +4564,7 @@ test("uses cached result when switching to variables already written to the cach
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4451,6 +4596,7 @@ test("uses cached result when switching to variables already written to the cach
           name: "Cached Character",
         },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4495,6 +4641,7 @@ test("does not render loading states when switching to variables maybe written t
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4520,6 +4667,7 @@ test("does not render loading states when switching to variables maybe written t
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4551,6 +4699,7 @@ test("does not render loading states when switching to variables maybe written t
           name: "Cached Character",
         },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4584,6 +4733,7 @@ test("does not render loading states when switching to variables maybe written t
           name: "Iron Man",
         },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4661,6 +4811,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4684,6 +4835,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -4699,6 +4851,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4716,6 +4869,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4734,6 +4888,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.refetch,
@@ -4749,6 +4904,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: null,
       },
+      dataState: "complete",
       error: new CombinedGraphQLErrors({
         data: { character: null },
         errors: [{ message: "Could not find character 1" }],
@@ -4805,6 +4961,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4824,6 +4981,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -4837,6 +4995,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "initialHookValue" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4852,6 +5011,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "initialHookValue" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4869,6 +5029,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "initialHookValue" } },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -4882,6 +5043,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "rerender" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4897,6 +5059,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "rerender" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4913,6 +5076,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "rerender" } },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.refetch,
@@ -4926,6 +5090,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "rerenderForRefetch" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4945,6 +5110,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "rerenderForRefetch" } },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -4958,6 +5124,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
     expect(result).toStrictEqualTyped({
       data: { context: { source: "execute" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5036,6 +5203,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5055,6 +5223,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -5068,6 +5237,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: mocks[0].result.data,
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5087,6 +5257,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: mocks[0].result.data,
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.refetch,
@@ -5100,6 +5271,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5123,6 +5295,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5138,6 +5311,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.refetch,
@@ -5151,6 +5325,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
     expect(result).toStrictEqualTyped({
       data: mocks[2].result.data,
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5252,6 +5427,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5275,6 +5451,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -5290,6 +5467,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5307,6 +5485,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5328,6 +5507,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
     expect(result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "2" } },
+      dataState: "partial",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -5343,6 +5523,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
     expect(result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "2", name: "Hulk" } },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5397,6 +5578,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5422,6 +5604,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Cache" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5439,6 +5622,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Cache" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5462,6 +5646,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       data: {
         character: { __typename: "Character", id: "2", name: "Cached Widow" },
       },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -5479,6 +5664,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5525,6 +5711,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5544,6 +5731,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5559,6 +5747,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5576,6 +5765,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -5589,6 +5779,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5604,6 +5795,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5621,6 +5813,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
     expect(result).toStrictEqualTyped({
       data: { greeting: "Hello 3" },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5667,6 +5860,7 @@ test("uses default variables in query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -5686,6 +5880,7 @@ test("uses default variables in query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       called: true,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
@@ -5699,6 +5894,7 @@ test("uses default variables in query", async () => {
 
     expect(result).toStrictEqualTyped({
       data: { letters: ["a", "b"] },
+      dataState: "complete",
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,

@@ -5206,6 +5206,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5232,6 +5233,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5260,6 +5262,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -5302,6 +5305,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5326,6 +5330,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5368,6 +5373,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5501,6 +5507,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5527,6 +5534,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5555,6 +5563,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -5591,6 +5600,7 @@ describe("useQuery Hook", () => {
             lastName: "Doe",
           },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5626,6 +5636,7 @@ describe("useQuery Hook", () => {
             lastName: "Doe",
           },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5759,6 +5770,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5785,6 +5797,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -5813,6 +5826,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useLazyQueryResult!).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
@@ -5845,6 +5859,7 @@ describe("useQuery Hook", () => {
             lastName: "Doe",
           },
         },
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,

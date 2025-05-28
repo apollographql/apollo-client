@@ -1675,10 +1675,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       result =
         notification.kind === "E" ?
           ({
-            data: undefined,
-            dataState: "empty",
-            partial: true,
-            ...(isEqualQuery(previous, notification) ? previous.result : {}),
+            ...(isEqualQuery(previous, notification) ?
+              previous.result
+            : { data: undefined, dataState: "empty", partial: true }),
             error: notification.error,
             networkStatus: NetworkStatus.error,
             loading: false,

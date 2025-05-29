@@ -1457,7 +1457,7 @@ it("works with startTransition to change variables", async () => {
     queryRef,
     onChange,
   }: {
-    queryRef: QueryRef<Data, Variables, "complete" | "streaming">;
+    queryRef: QueryRef<Data, Variables>;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);

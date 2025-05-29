@@ -97,7 +97,7 @@ test("does not interfere with updates from useReadQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -110,7 +110,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -123,7 +123,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -196,7 +196,7 @@ test("refetches and resuspends when calling refetch", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -214,7 +214,7 @@ test("refetches and resuspends when calling refetch", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -318,7 +318,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -332,7 +332,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -445,7 +445,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -459,7 +459,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [13, 17, 19, 23, 29] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -568,7 +568,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -582,7 +582,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [13, 17, 19, 23, 29] },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -710,7 +710,7 @@ test("`refetch` works with startTransition", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       isPending: false,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: false } },
@@ -727,7 +727,7 @@ test("`refetch` works with startTransition", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, Todo]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       isPending: true,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: false } },
@@ -741,7 +741,7 @@ test("`refetch` works with startTransition", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, Todo]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       isPending: false,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: true } },
@@ -851,7 +851,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -864,7 +864,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: true,
       usePreloadedQueryHandlersIsPending: false,
       result: {
@@ -879,7 +879,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: false,
       usePreloadedQueryHandlersIsPending: false,
       result: {
@@ -896,7 +896,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: false,
       usePreloadedQueryHandlersIsPending: true,
       result: {
@@ -911,7 +911,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: false,
       usePreloadedQueryHandlersIsPending: false,
       result: {
@@ -987,7 +987,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1005,7 +1005,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1081,7 +1081,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1099,7 +1099,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1175,7 +1175,7 @@ test("resuspends when calling `fetchMore`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1198,7 +1198,7 @@ test("resuspends when calling `fetchMore`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "C", position: 3 },
@@ -1275,7 +1275,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1298,7 +1298,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1381,7 +1381,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1404,7 +1404,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1487,7 +1487,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1510,7 +1510,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "C", position: 3 },
@@ -1599,7 +1599,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1622,7 +1622,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "C", position: 3 },
@@ -1711,7 +1711,7 @@ test("`fetchMore` works with startTransition", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1729,7 +1729,7 @@ test("`fetchMore` works with startTransition", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       isPending: true,
       result: {
         data: {
@@ -1748,7 +1748,7 @@ test("`fetchMore` works with startTransition", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       isPending: false,
       result: {
         data: {
@@ -1860,7 +1860,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         letters: [
           { __typename: "Letter", letter: "A", position: 1 },
@@ -1878,7 +1878,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: true,
       useQueryRefHandlersIsPending: false,
       result: {
@@ -1898,7 +1898,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: false,
       useQueryRefHandlersIsPending: false,
       result: {
@@ -1920,7 +1920,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: false,
       useQueryRefHandlersIsPending: true,
       result: {
@@ -1940,7 +1940,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot).toEqual({
+    expect(snapshot).toStrictEqualTyped({
       useBackgroundQueryIsPending: false,
       useQueryRefHandlersIsPending: false,
       result: {
@@ -2053,7 +2053,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -2083,7 +2083,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Subscription hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,

@@ -2,7 +2,9 @@ import * as React from "react";
 
 import type {
   ApolloClient,
+  DataStates,
   ErrorLike,
+  GetDataStates,
   NetworkStatus,
   ObservableQuery,
 } from "@apollo/client";
@@ -20,14 +22,11 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export declare namespace useReadQuery {
-  export interface Result<TData = unknown> {
-    /**
-     * An object containing the result of your GraphQL query after it completes.
-     *
-     * This value might be `undefined` if a query results in one or more errors
-     * (depending on the query's `errorPolicy`).
-     */
-    data: MaybeMasked<TData>;
+  export type Result<
+    TData = unknown,
+    TStates extends
+      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  > = {
     /**
      * If the query produces one or more errors, this object contains either an
      * array of `graphQLErrors` or a single `networkError`. Otherwise, this value
@@ -43,12 +42,15 @@ export declare namespace useReadQuery {
      * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.
      */
     networkStatus: NetworkStatus;
-  }
+  } & GetDataStates<MaybeMasked<TData>, TStates>;
 }
 
-export function useReadQuery<TData>(
-  queryRef: QueryRef<TData>
-): useReadQuery.Result<TData> {
+export function useReadQuery<
+  TData,
+  TStates extends DataStates<TData>["dataState"],
+>(
+  queryRef: QueryRef<TData, any, TStates>
+): useReadQuery.Result<TData, TStates> {
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
     unwrapped ?
@@ -66,9 +68,9 @@ export function useReadQuery<TData>(
   )(queryRef);
 }
 
-function useReadQuery_<TData>(
-  queryRef: QueryRef<TData>
-): useReadQuery.Result<TData> {
+function useReadQuery_<TData, TStates extends DataStates<TData>["dataState"]>(
+  queryRef: QueryRef<TData, any, TStates>
+): useReadQuery.Result<TData, TStates> {
   assertWrappedQueryRef(queryRef);
   const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),

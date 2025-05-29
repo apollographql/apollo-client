@@ -176,7 +176,11 @@ export type InternalRefetchQueriesMap<TResult> = Map<
 
 export type OperationVariables = Record<string, any>;
 
-export type ApolloQueryResult<T> = {
+export type ApolloQueryResult<
+  TData,
+  TStates extends
+    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+> = {
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
@@ -192,7 +196,7 @@ export type ApolloQueryResult<T> = {
    * @deprecated This field will be removed in a future version of Apollo Client.
    */
   partial: boolean;
-} & DataStates<T>;
+} & GetDataStates<TData, TStates>;
 
 export type DataStates<TData> =
   | {

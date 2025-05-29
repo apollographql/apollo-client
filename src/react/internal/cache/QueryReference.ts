@@ -90,8 +90,12 @@ export interface QueryReference<TData = unknown, TVariables = unknown>
 /**
  * {@inheritDoc @apollo/client!QueryRef:interface}
  */
-export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
-  extends QueryRef<TData, TVariables> {
+export interface PreloadedQueryRef<
+  TData = unknown,
+  TVariables = unknown,
+  TStates extends
+    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+> extends QueryRef<TData, TVariables, TStates> {
   /**
    * A function that returns a promise that resolves when the query has finished
    * loading. The promise resolves with the `QueryReference` itself.
@@ -129,7 +133,7 @@ export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
    *
    * @since 3.9.0
    */
-  toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
+  toPromise(): Promise<PreloadedQueryRef<TData, TVariables, TStates>>;
 }
 
 interface InternalQueryReferenceOptions {

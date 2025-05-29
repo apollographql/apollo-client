@@ -2375,29 +2375,62 @@ describe.skip("type tests", () => {
     const query = gql``;
 
     const queryRef = preloadQuery(query);
+    const { data, dataState } = useReadQuery(queryRef);
 
     expectTypeOf(queryRef).toEqualTypeOf<
-      PreloadedQueryRef<unknown, OperationVariables>
+      PreloadedQueryRef<unknown, OperationVariables, "complete" | "streaming">
     >();
+    expectTypeOf(data).toEqualTypeOf<unknown>();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
   });
 
   test("returns QueryReference<TData> in default case", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query);
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
       const query = gql``;
       const queryRef = preloadQuery<SimpleCaseData>(query);
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          OperationVariables,
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2405,10 +2438,31 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2416,10 +2470,31 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "ignore",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -2427,10 +2502,31 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "all" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2438,10 +2534,31 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "all",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -2449,10 +2566,25 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "none" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
@@ -2460,10 +2592,25 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2471,10 +2618,33 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: true });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
 
     {
@@ -2482,10 +2652,33 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: true,
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
   });
 
@@ -2493,10 +2686,25 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: false });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
@@ -2504,10 +2712,25 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: false,
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2515,10 +2738,25 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { fetchPolicy: "cache-first" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
@@ -2526,10 +2764,25 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         fetchPolicy: "cache-first",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2540,13 +2793,37 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
         PreloadedQueryRef<
-          DeepPartial<SimpleCaseData> | undefined,
-          { [key: string]: any }
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial" | "empty"
         >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData> | undefined
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2555,13 +2832,37 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
         PreloadedQueryRef<
-          DeepPartial<SimpleCaseData> | undefined,
-          OperationVariables
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial" | "empty"
         >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData> | undefined
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2570,10 +2871,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
 
     {
@@ -2582,10 +2906,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
   });
 
@@ -2597,10 +2944,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
 
     {
@@ -2610,10 +2980,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
   });
 });

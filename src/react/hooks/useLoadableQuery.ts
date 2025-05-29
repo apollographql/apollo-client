@@ -211,7 +211,8 @@ export function useLoadableQuery<
 
   const [queryRef, setQueryRef] = React.useState<QueryRef<
     TData,
-    TVariables
+    TVariables,
+    DataState<TData>["dataState"]
   > | null>(null);
 
   assertWrappedQueryRef(queryRef);

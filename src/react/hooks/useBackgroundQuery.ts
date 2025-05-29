@@ -300,7 +300,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SkipToken | useBackgroundQuery.Options<NoInfer<TVariables>>
 ): [
-  QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+  QueryRef<TData, TVariables, DataState<TData>["dataState"]> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,
 ] {
   return wrapHook(

@@ -81,7 +81,7 @@ function useQueryRefHandlers_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryRef<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>
 ): useQueryRefHandlers.Result<TData, TVariables> {
   assertWrappedQueryRef(queryRef);
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);

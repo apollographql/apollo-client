@@ -1,6 +1,7 @@
 import React from "react";
 import { of } from "rxjs";
 
+import type { DataState } from "@apollo/client";
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { InternalQueryReference } from "@apollo/client/react/internal";
 import { setupSimpleCase } from "@apollo/client/testing/internal";
@@ -43,19 +44,23 @@ test.skip("type tests", () => {
     function ComponentWithQueryRefProp<
       TData = unknown,
       TVariables = unknown,
-    >({}: { queryRef: QueryRef<TData, TVariables> }) {
+      TStates extends
+        DataState<TData>["dataState"] = DataState<TData>["dataState"],
+    >({}: { queryRef: QueryRef<TData, TVariables, TStates> }) {
       return null;
     }
     function ComponentWithQueryReferenceProp<
       TData = unknown,
       TVariables = unknown,
-    >({}: { queryRef: QueryReference<TData> }) {
+    >({}: { queryRef: QueryReference<TData, TVariables> }) {
       return null;
     }
     function ComponentWithPreloadedQueryRefProp<
       TData = unknown,
       TVariables = unknown,
-    >({}: { queryRef: PreloadedQueryRef<TData, TVariables> }) {
+      TStates extends
+        DataState<TData>["dataState"] = DataState<TData>["dataState"],
+    >({}: { queryRef: PreloadedQueryRef<TData, TVariables, TStates> }) {
       return null;
     }
 
@@ -63,6 +68,16 @@ test.skip("type tests", () => {
       const withoutTypes: QueryRef = ANY;
       const withData: QueryRef<Data> = ANY;
       const withDataAndVariables: QueryRef<Data, Vars> = ANY;
+      const withDataAndVariablesAndStates: QueryRef<
+        Data,
+        Vars,
+        "complete" | "streaming"
+      > = ANY;
+      const withDataAndVariablesAndPartialStates: QueryRef<
+        Data,
+        Vars,
+        "complete" | "streaming" | "partial"
+      > = ANY;
 
       <>
         {/* passing queryRef into components that expect queryRef */}
@@ -70,17 +85,73 @@ test.skip("type tests", () => {
           <ComponentWithQueryRefProp queryRef={withoutTypes} />
           <ComponentWithQueryRefProp queryRef={withData} />
           <ComponentWithQueryRefProp queryRef={withDataAndVariables} />
+          <ComponentWithQueryRefProp queryRef={withDataAndVariablesAndStates} />
+          <ComponentWithQueryRefProp
+            queryRef={withDataAndVariablesAndPartialStates}
+          />
+
           <ComponentWithQueryRefProp<Data> /* @ts-expect-error */
             queryRef={withoutTypes}
           />
           <ComponentWithQueryRefProp<Data> queryRef={withData} />
           <ComponentWithQueryRefProp<Data> queryRef={withDataAndVariables} />
+          <ComponentWithQueryRefProp<Data>
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithQueryRefProp<Data>
+            queryRef={withDataAndVariablesAndPartialStates}
+          />
+
           <ComponentWithQueryRefProp<Data, Vars> /* @ts-expect-error */
             queryRef={withoutTypes}
           />
           <ComponentWithQueryRefProp<Data, Vars> queryRef={withData} />
           <ComponentWithQueryRefProp<Data, Vars>
             queryRef={withDataAndVariables}
+          />
+          <ComponentWithQueryRefProp<Data, Vars>
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithQueryRefProp<Data, Vars>
+            queryRef={withDataAndVariablesAndPartialStates}
+          />
+
+          <ComponentWithQueryRefProp<
+            Data,
+            Vars,
+            "complete" | "streaming"
+          > /* @ts-expect-error */
+            queryRef={withoutTypes}
+          />
+          <ComponentWithQueryRefProp<Data, Vars, "complete" | "streaming">
+            queryRef={withData}
+          />
+          <ComponentWithQueryRefProp<Data, Vars, "complete" | "streaming">
+            queryRef={withDataAndVariables}
+          />
+          <ComponentWithQueryRefProp<Data, Vars, "complete" | "streaming">
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithQueryRefProp<
+            Data,
+            Vars,
+            "complete" | "streaming"
+          > /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndPartialStates}
+          />
+          <ComponentWithQueryRefProp<
+            Data,
+            Vars,
+            "complete" | "streaming" | "partial"
+          >
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithQueryRefProp<
+            Data,
+            Vars,
+            "complete" | "streaming" | "partial"
+          >
+            queryRef={withDataAndVariablesAndPartialStates}
           />
         </>
         {/* passing queryRef into components that expect queryReference */}
@@ -114,6 +185,12 @@ test.skip("type tests", () => {
           <ComponentWithPreloadedQueryRefProp /* @ts-expect-error */
             queryRef={withDataAndVariables}
           />
+          <ComponentWithPreloadedQueryRefProp /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithPreloadedQueryRefProp /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndPartialStates}
+          />
           <ComponentWithPreloadedQueryRefProp<Data> /* @ts-expect-error */
             queryRef={withoutTypes}
           />
@@ -123,6 +200,12 @@ test.skip("type tests", () => {
           <ComponentWithPreloadedQueryRefProp<Data> /* @ts-expect-error */
             queryRef={withDataAndVariables}
           />
+          <ComponentWithPreloadedQueryRefProp<Data> /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithPreloadedQueryRefProp<Data> /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndPartialStates}
+          />
           <ComponentWithPreloadedQueryRefProp<Data, Vars> /* @ts-expect-error */
             queryRef={withoutTypes}
           />
@@ -131,6 +214,12 @@ test.skip("type tests", () => {
           />
           <ComponentWithPreloadedQueryRefProp<Data, Vars> /* @ts-expect-error */
             queryRef={withDataAndVariables}
+          />
+          <ComponentWithPreloadedQueryRefProp<Data, Vars> /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndStates}
+          />
+          <ComponentWithPreloadedQueryRefProp<Data, Vars> /* @ts-expect-error */
+            queryRef={withDataAndVariablesAndPartialStates}
           />
         </>
       </>;

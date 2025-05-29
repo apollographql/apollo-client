@@ -134,6 +134,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -165,6 +166,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -318,6 +320,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -343,6 +346,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -359,6 +363,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -386,6 +391,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -430,6 +436,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -468,7 +475,8 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as useReadQuery.Result<
-        DeepPartial<VariablesCaseData>
+        VariablesCaseData,
+        "complete" | "streaming" | "partial"
       > | null,
     },
   });
@@ -521,6 +529,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -548,6 +557,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -580,6 +590,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
           name: "Spider-Man (cached)",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -623,6 +634,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
           name: "Spider-Man (Away)",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -663,6 +675,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -675,6 +688,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -686,7 +700,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   await wait(0);
 
   // Ensure that remounting without data in the cache will fetch and suspend
-  client.clearStore();
+  void client.clearStore();
 
   // mount ReadQueryHook
   await user.click(toggleButton);
@@ -706,6 +720,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -778,6 +793,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -803,6 +819,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -819,6 +836,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -846,6 +864,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -888,6 +907,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -960,6 +980,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -985,6 +1006,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1001,6 +1023,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1028,6 +1051,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1070,6 +1094,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1142,6 +1167,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1167,6 +1193,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1200,6 +1227,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1239,6 +1267,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1268,6 +1297,7 @@ test("reacts to cache updates", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1283,6 +1313,7 @@ test("reacts to cache updates", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (updated)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1314,6 +1345,7 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1344,6 +1376,7 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1372,6 +1405,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Cached Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -1383,6 +1417,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1407,6 +1442,7 @@ test("returns cached data when all data is present in the cache", async () => {
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Cached Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1458,6 +1494,7 @@ test("suspends and ignores partial data in the cache", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from link", foo: "bar" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1530,6 +1567,7 @@ test("returns error when error policy is 'all'", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
       networkStatus: NetworkStatus.error,
     });
@@ -1563,6 +1601,7 @@ test("returns network error when error policy is 'all'", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: new Error("Oops"),
       networkStatus: NetworkStatus.error,
     });
@@ -1595,6 +1634,7 @@ test("discards error when error policy is 'ignore'", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1625,6 +1665,7 @@ test("discards network errors when error policy is 'ignore'", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1671,6 +1712,7 @@ test("passes context to the link", async () => {
 
   expect(snapshot.result).toStrictEqualTyped({
     data: { context: { valueA: "A", valueB: "B" } },
+    dataState: "complete",
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
@@ -1737,6 +1779,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
+      dataState: "partial",
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
@@ -1750,6 +1793,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -1798,6 +1842,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+      dataState: "streaming",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1833,6 +1878,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
           recipient: { __typename: "Person", name: "Alice" },
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1871,6 +1917,7 @@ test("masks result when dataMasking is `true`", async () => {
       data: {
         character: { __typename: "Character", id: "1" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1878,7 +1925,7 @@ test("masks result when dataMasking is `true`", async () => {
 });
 
 test("does not mask result when dataMasking is `false`", async () => {
-  const { query, mocks } = setupMaskedVariablesCase();
+  const { query, mocks } = setupVariablesCase();
   const client = new ApolloClient({
     dataMasking: false,
     cache: new InMemoryCache(),
@@ -1889,7 +1936,7 @@ test("does not mask result when dataMasking is `false`", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
     client,
     queryRef,
   });
@@ -1907,6 +1954,7 @@ test("does not mask result when dataMasking is `false`", async () => {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1914,7 +1962,7 @@ test("does not mask result when dataMasking is `false`", async () => {
 });
 
 test("does not mask results by default", async () => {
-  const { query, mocks } = setupMaskedVariablesCase();
+  const { query, mocks } = setupVariablesCase();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
@@ -1924,7 +1972,7 @@ test("does not mask results by default", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
     client,
     queryRef,
   });
@@ -1942,6 +1990,7 @@ test("does not mask results by default", async () => {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

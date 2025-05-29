@@ -26,6 +26,7 @@ export type {
   ApolloQueryResult,
   ClientAwareness,
   DataStates,
+  GetDataStates,
   DefaultContext,
   ErrorLike,
   InternalRefetchQueriesInclude,

@@ -212,6 +212,11 @@ export type DataStates<TData> =
       dataState: "empty";
     };
 
+export type GetDataStates<
+  TData,
+  TState extends DataStates<TData>["dataState"],
+> = Extract<DataStates<TData>, { dataState: TState }>;
+
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,

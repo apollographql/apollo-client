@@ -18,7 +18,7 @@
 ## ❓ Why Choose Apollo Client?
 
  ✅ Zero-config caching - Intelligent caching out of the box<br>
- ✅ Framework agnostic - Works with React, Vue, Angular, Svelte, and vanilla<br>
+ ✅ Framework agnostic - Works with React, Vue, Angular, Svelte, and vanilla JavaScript<br>
  ✅ TypeScript-first - Full type safety and IntelliSense support<br>
  ✅ React 19 ready - Supports Suspense, RSC, Compiler, and more<br>
  ✅ Production-tested - Powers countless apps worldwide that serve millions of end users<br>

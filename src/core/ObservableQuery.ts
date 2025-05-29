@@ -1676,19 +1676,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         notification.kind === "E" ?
           ({
             ...(isEqualQuery(previous, notification) ?
-              {
-                ...previous.result,
-                dataState:
-                  previous.result.dataState === "streaming" ?
-                    "complete"
-                  : previous.result.dataState,
-              }
+              previous.result
             : { data: undefined, dataState: "empty", partial: true }),
             error: notification.error,
             networkStatus: NetworkStatus.error,
             loading: false,
           } as ApolloQueryResult<TData>)
         : notification.value;
+
+      if (result.error && !result.data && previous.result.data) {
+        result.data = previous.result.data;
+        result.dataState = previous.result.dataState;
+      }
+
+      if (result.error && result.dataState === "streaming") {
+        result.dataState = "complete";
+      }
 
       if (result.error) {
         meta.shouldEmit = EmitBehavior.force;

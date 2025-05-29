@@ -179,7 +179,10 @@ export function assertWrappedQueryRef<
   TStates extends DataStates<TData>["dataState"],
 >(
   queryRef: QueryRef<TData, TVariables, TStates> | undefined | null
-): asserts queryRef is WrappedQueryRef<TData, TVariables> | undefined | null;
+): asserts queryRef is
+  | WrappedQueryRef<TData, TVariables, TStates>
+  | undefined
+  | null;
 
 export function assertWrappedQueryRef<
   TData,

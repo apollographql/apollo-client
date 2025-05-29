@@ -101,7 +101,21 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: true;
+    returnPartialData: false;
+    errorPolicy: "ignore" | "all";
+  }
+): [
+  QueryRef<TData, TVariables, "complete" | "streaming" | "empty">,
+  useBackgroundQuery.Result<TData, TVariables>,
+];
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+    returnPartialData: boolean;
     errorPolicy: "ignore" | "all";
   }
 ): [
@@ -129,7 +143,21 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
-    returnPartialData: true;
+    returnPartialData: false;
+  }
+): [
+  QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+  useBackgroundQuery.Result<TData, TVariables>,
+];
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+    skip: boolean;
+    returnPartialData: boolean;
   }
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,
@@ -142,7 +170,20 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
-    returnPartialData: true;
+    returnPartialData: false;
+  }
+): [
+  QueryRef<TData, TVariables, "complete" | "streaming">,
+  useBackgroundQuery.Result<TData, TVariables>,
+];
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+    returnPartialData: boolean;
   }
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial">,
@@ -178,7 +219,22 @@ export function useBackgroundQuery<
   options:
     | SkipToken
     | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
-        returnPartialData: true;
+        returnPartialData: false;
+      })
+): [
+  QueryRef<TData, TVariables, "complete" | "streaming"> | undefined,
+  useBackgroundQuery.Result<TData, TVariables>,
+];
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | SkipToken
+    | (useBackgroundQuery.Options<NoInfer<TVariables>> & {
+        returnPartialData: boolean;
       })
 ): [
   QueryRef<TData, TVariables, "complete" | "streaming" | "partial"> | undefined,

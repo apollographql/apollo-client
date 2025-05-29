@@ -8110,6 +8110,81 @@ describe.skip("type tests", () => {
     }
   });
 
+  it("returns DeepPartial<TData> with returnPartialData: boolean", () => {
+    const { query } = setupVariablesCase();
+
+    const options = {
+      returnPartialData: true,
+      variables: { id: "1" },
+    };
+
+    {
+      const [queryRef] = useBackgroundQuery(query, options);
+      const { data, dataState } = useReadQuery(queryRef);
+
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
+    }
+
+    {
+      const [queryRef] = useBackgroundQuery<
+        VariablesCaseData,
+        VariablesCaseVariables
+      >(query, options);
+
+      const { data, dataState } = useReadQuery(queryRef);
+
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
+    }
+  });
+
   it("returns TData when passing an option that does not affect TData", () => {
     const { query } = setupVariablesCase();
 

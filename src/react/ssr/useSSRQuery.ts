@@ -16,7 +16,20 @@ const skipStandbyResult: ApolloQueryResult<any> = maybeDeepFreeze({
   partial: true,
 });
 
-export const useSSRQuery = function (
+export function useSSRQuery(
+  this: PrerenderStaticInternalContext,
+  query: DocumentNode,
+  options?: useQuery.Options<any, any> & {
+    returnPartialData: true;
+  }
+): useQuery.Result<any, any, "partial" | "streaming" | "empty" | "complete">;
+
+export function useSSRQuery(
+  query: DocumentNode,
+  options?: useQuery.Options<any, any>
+): useQuery.Result<any, any, "empty" | "complete" | "streaming">;
+
+export function useSSRQuery(
   this: PrerenderStaticInternalContext,
   query: DocumentNode,
   options: useQuery.Options<any, any> = {}
@@ -74,7 +87,7 @@ export const useSSRQuery = function (
     ...observable.getCurrentResult(),
     ...baseResult,
   };
-};
+}
 
 function withoutObservableAccess<T>(
   value: T

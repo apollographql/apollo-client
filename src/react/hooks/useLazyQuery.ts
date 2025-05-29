@@ -175,7 +175,7 @@ export declare namespace useLazyQuery {
   export type ResultTuple<
     TData,
     TVariables extends OperationVariables,
-    TStates extends States["dataState"],
+    TStates extends States<TData>["dataState"] = States<TData>["dataState"],
   > = [
     execute: ExecFunction<TData, TVariables>,
     result: useLazyQuery.Result<TData, TVariables, TStates>,

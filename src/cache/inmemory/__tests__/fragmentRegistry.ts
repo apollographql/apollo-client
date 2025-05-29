@@ -102,6 +102,7 @@ describe("FragmentRegistry", () => {
         __typename: "Query",
         source: "local",
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -112,6 +113,7 @@ describe("FragmentRegistry", () => {
         __typename: "Query",
         source: "link",
       },
+      dataState: "complete",
       partial: false,
     });
 

@@ -38,7 +38,10 @@ import {
   useReadQuery,
 } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import type { SimpleCaseData } from "@apollo/client/testing/internal";
+import type {
+  PaginatedCaseData,
+  SimpleCaseData,
+} from "@apollo/client/testing/internal";
 import {
   renderAsync,
   setupPaginatedCase,
@@ -307,6 +310,7 @@ it("loads a query and suspends when the load query function is called", async ()
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -366,6 +370,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -419,6 +424,7 @@ it("tears down the query on unmount", async () => {
 
   expect(snapshot.result).toStrictEqualTyped({
     data: { greeting: "Hello" },
+    dataState: "complete",
     error: undefined,
     networkStatus: NetworkStatus.ready,
   });
@@ -574,6 +580,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -590,6 +597,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -653,6 +661,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -679,6 +688,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -695,6 +705,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -759,6 +770,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -778,6 +790,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "2", name: "Black Widow" } },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -837,6 +850,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -923,6 +937,7 @@ it("allows the client to be overridden", async () => {
 
   expect(snapshot.result).toStrictEqualTyped({
     data: { greeting: "local hello" },
+    dataState: "complete",
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
@@ -992,6 +1007,7 @@ it("passes context to the link", async () => {
 
   expect(snapshot.result).toStrictEqualTyped({
     data: { context: { valueA: "A", valueB: "B" } },
+    dataState: "complete",
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
@@ -1058,6 +1074,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from cache" },
+      dataState: "complete",
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
@@ -1069,6 +1086,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from link" },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -1134,6 +1152,7 @@ it("all data is present in the cache, no network request is made", async () => {
   expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
   expect(snapshot.result).toStrictEqualTyped({
     data: { hello: "from cache" },
+    dataState: "complete",
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
@@ -1212,6 +1231,7 @@ it("partial data is present in the cache so it is ignored and network request is
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { foo: "bar", hello: "from link" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1285,6 +1305,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from link" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1355,6 +1376,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from link" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1435,7 +1457,7 @@ it("works with startTransition to change variables", async () => {
     queryRef,
     onChange,
   }: {
-    queryRef: QueryRef<Data>;
+    queryRef: QueryRef<Data, Variables, "complete" | "streaming">;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -1580,6 +1602,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -1606,6 +1629,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
+      dataState: "streaming",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1641,6 +1665,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
           recipient: { __typename: "Person", name: "Alice" },
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1700,6 +1725,7 @@ it("reacts to cache updates", async () => {
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1716,6 +1742,7 @@ it("reacts to cache updates", async () => {
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Updated Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1789,6 +1816,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1808,6 +1836,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     expect(renderedComponents).not.toContain(ErrorFallback);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: new CombinedGraphQLErrors({ errors: [{ message: "oops" }] }),
       networkStatus: NetworkStatus.error,
     });
@@ -1886,6 +1915,9 @@ it("applies `context` on next fetch when it changes between renders", async () =
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { phase: "initial" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
     });
   }
 
@@ -1900,6 +1932,9 @@ it("applies `context` on next fetch when it changes between renders", async () =
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { phase: "rerender" },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
     });
   }
 });
@@ -2010,6 +2045,9 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
     });
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
@@ -2022,6 +2060,9 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
     });
     expect(mergeParams).toEqual([
       [undefined, [2, 3, 5, 7, 11]],
@@ -2043,6 +2084,9 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [31, 37, 41, 43, 47] },
+      dataState: "complete",
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
     });
     expect(mergeParams).toEqual([
       [undefined, [2, 3, 5, 7, 11]],
@@ -2178,6 +2222,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
       data: {
         character: { __typename: "Character", id: "1", name: "Doctor Strange" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2201,6 +2246,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
       data: {
         character: { __typename: "Character", id: "1" },
       },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -2218,6 +2264,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
           name: "Doctor Strange (refetched)",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2329,6 +2376,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
           name: "Doctor Strangecache",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2351,6 +2399,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
           name: "Doctor Strange",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2432,6 +2481,7 @@ it("re-suspends when calling `refetch`", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2450,6 +2500,7 @@ it("re-suspends when calling `refetch`", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man (updated)" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2522,6 +2573,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Captain Marvel" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2540,6 +2592,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "2", name: "Captain America" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2607,6 +2660,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2627,6 +2681,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2645,6 +2700,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2717,6 +2773,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Captain Marvel" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2799,8 +2856,9 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toStrictEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Captain Marvel" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2815,6 +2873,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Captain Marvel" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2889,6 +2948,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Captain Marvel" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2904,6 +2964,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Captain Marvel" } },
+      dataState: "complete",
       error: new CombinedGraphQLErrors({
         errors: [{ message: "Something went wrong" }],
       }),
@@ -2915,20 +2976,41 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
 });
 
 it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
-  const { query } = useVariablesQueryCase();
+  type VariablesCaseData = {
+    character: {
+      __typename: "Character";
+      id: string;
+      name: string | null;
+    };
+  };
+  const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+    gql`
+      query CharacterQuery($id: ID!) {
+        character(id: $id) {
+          id
+          name
+        }
+      }
+    `;
 
   const mocks = [
     {
       request: { query, variables: { id: "1" } },
       result: {
-        data: { character: { id: "1", name: "Captain Marvel" } },
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Captain Marvel",
+          },
+        },
       },
       delay: 20,
     },
     {
       request: { query, variables: { id: "1" } },
       result: {
-        data: { character: { id: "1", name: null } },
+        data: { character: { __typename: "Character", id: "1", name: null } },
         errors: [new GraphQLError("Something went wrong")],
       },
       delay: 20,
@@ -2936,7 +3018,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
   ];
 
   using _disabledAct = disableActEnvironment();
-  const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
     createDefaultProfiledComponents(renderStream);
@@ -2978,7 +3060,10 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toStrictEqualTyped({
-      data: { character: { id: "1", name: "Captain Marvel" } },
+      data: {
+        character: { __typename: "Character", id: "1", name: "Captain Marvel" },
+      },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2993,9 +3078,10 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     expect(renderedComponents).not.toContain(ErrorFallback);
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toStrictEqualTyped({
-      data: { character: { id: "1", name: null } },
+      data: { character: { __typename: "Character", id: "1", name: null } },
+      dataState: "complete",
       error: new CombinedGraphQLErrors({
-        data: { character: { id: "1", name: null } },
+        data: { character: { __typename: "Character", id: "1", name: null } },
         errors: [{ message: "Something went wrong" }],
       }),
       networkStatus: NetworkStatus.error,
@@ -3070,7 +3156,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     refetch,
   }: {
     refetch: RefetchFunction<Data, OperationVariables>;
-    queryRef: QueryRef<Data>;
+    queryRef: QueryRef<Data, Variables, "complete" | "streaming">;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -3152,7 +3238,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
   });
 
   using _disabledAct = disableActEnvironment();
-  const renderStream = createDefaultProfiler<PaginatedQueryData>();
+  const renderStream = createDefaultProfiler<PaginatedCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
 
@@ -3199,6 +3285,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3223,6 +3310,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3288,6 +3376,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
           { letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3308,6 +3397,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
           { letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3382,6 +3472,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
           { letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3402,6 +3493,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
           { letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3508,7 +3600,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     fetchMore,
   }: {
     fetchMore: FetchMoreFunction<Data, OperationVariables>;
-    queryRef: QueryRef<Data>;
+    queryRef: QueryRef<Data, Variables, "complete" | "streaming">;
   }) {
     const { data } = useReadQuery(queryRef);
     const [isPending, startTransition] = React.useTransition();
@@ -3671,6 +3763,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3685,6 +3778,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3790,6 +3884,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3804,6 +3899,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [13, 17, 19, 23, 29] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3895,6 +3991,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1" } },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -3907,6 +4004,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Doctor Strange" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -3978,6 +4076,7 @@ it('suspends and does not use partial data from other variables in the cache whe
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1" } },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -3990,6 +4089,7 @@ it('suspends and does not use partial data from other variables in the cache whe
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4010,6 +4110,7 @@ it('suspends and does not use partial data from other variables in the cache whe
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "2", name: "Black Widow" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4106,6 +4207,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Doctor Strange" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4202,6 +4304,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Doctor Strange" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4317,6 +4420,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1" } },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -4327,6 +4431,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Doctor Strange" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4395,6 +4500,7 @@ it('suspends and does not use partial data when changing variables and using a "
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1" } },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -4406,6 +4512,7 @@ it('suspends and does not use partial data when changing variables and using a "
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "1", name: "Spider-Man" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4424,6 +4531,7 @@ it('suspends and does not use partial data when changing variables and using a "
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { character: { id: "2", name: "Black Widow" } },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4522,6 +4630,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -4548,6 +4657,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
           recipient: { __typename: "Person", name: "Cached Alice" },
         },
       },
+      dataState: "streaming",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4583,6 +4693,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
           recipient: { __typename: "Person", name: "Alice" },
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4771,6 +4882,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -4801,6 +4913,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Subscription hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

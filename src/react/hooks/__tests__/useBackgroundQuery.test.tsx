@@ -35,7 +35,7 @@ import {
   useBackgroundQuery,
   useReadQuery,
 } from "@apollo/client/react";
-import type { QueryRef, QueryReference } from "@apollo/client/react/internal";
+import type { QueryRef } from "@apollo/client/react/internal";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type {
   PaginatedCaseData,
@@ -8963,9 +8963,6 @@ describe.skip("type tests", () => {
         variables: { id: "1" },
       });
 
-      expectTypeOf(queryRef).toMatchTypeOf<
-        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-      >();
       expectTypeOf(queryRef).toEqualTypeOf<
         | QueryRef<
             VariablesCaseData,
@@ -8990,9 +8987,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-      >();
     }
 
     {
@@ -9006,13 +9000,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            Masked<MaskedVariablesCaseData>,
-            VariablesCaseVariables
           >
         | undefined
       >();
@@ -9032,10 +9019,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<MaskedVariablesCaseData, VariablesCaseVariables>
-        | undefined
-      >();
     }
 
     {
@@ -9049,13 +9032,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            Masked<MaskedVariablesCaseData>,
-            VariablesCaseVariables
           >
         | undefined
       >();
@@ -9082,9 +9058,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-      >();
     }
 
     {
@@ -9098,13 +9071,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            Masked<MaskedVariablesCaseData>,
-            VariablesCaseVariables
           >
         | undefined
       >();
@@ -9124,10 +9090,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<MaskedVariablesCaseData, VariablesCaseVariables>
-        | undefined
-      >();
     }
 
     {
@@ -9141,13 +9103,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            Masked<MaskedVariablesCaseData>,
-            VariablesCaseVariables
           >
         | undefined
       >();
@@ -9219,9 +9174,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
-      >();
     }
 
     {
@@ -9237,9 +9189,6 @@ describe.skip("type tests", () => {
             "complete" | "streaming"
           >
         | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
       >();
     }
 
@@ -9259,13 +9208,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            Masked<MaskedVariablesCaseData>,
-            VariablesCaseVariables
-          >
-        | undefined
-      >();
     }
 
     {
@@ -9282,10 +9224,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<MaskedVariablesCaseData, VariablesCaseVariables>
-        | undefined
-      >();
     }
 
     {
@@ -9299,13 +9237,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            Masked<MaskedVariablesCaseData>,
-            VariablesCaseVariables
           >
         | undefined
       >();
@@ -9334,10 +9265,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
-        | undefined
-      >();
     }
 
     {
@@ -9359,10 +9286,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
-        | undefined
-      >();
     }
 
     const { query: maskedQuery } = setupMaskedVariablesCase();
@@ -9380,13 +9303,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming" | "partial"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            DeepPartial<Masked<MaskedVariablesCaseData>>,
-            VariablesCaseVariables
           >
         | undefined
       >();
@@ -9411,13 +9327,6 @@ describe.skip("type tests", () => {
           >
         | undefined
       >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            DeepPartial<MaskedVariablesCaseData>,
-            VariablesCaseVariables
-          >
-        | undefined
-      >();
     }
 
     {
@@ -9436,13 +9345,6 @@ describe.skip("type tests", () => {
             Masked<MaskedVariablesCaseData>,
             VariablesCaseVariables,
             "complete" | "streaming" | "partial"
-          >
-        | undefined
-      >();
-      expectTypeOf(queryRef).toMatchTypeOf<
-        | QueryReference<
-            DeepPartial<Masked<MaskedVariablesCaseData>>,
-            VariablesCaseVariables
           >
         | undefined
       >();

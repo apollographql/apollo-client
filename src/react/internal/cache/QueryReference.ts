@@ -74,21 +74,6 @@ interface WrappedQueryRef<
 }
 
 /**
- * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
- *
- * {@inheritDoc @apollo/client!QueryRef:interface}
- */
-export interface QueryReference<TData = unknown, TVariables = unknown>
-  extends QueryRef<TData, TVariables> {
-  /**
-   * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
-   *
-   * {@inheritDoc @apollo/client!PreloadedQueryRef#toPromise:member(1)}
-   */
-  toPromise?: unknown;
-}
-
-/**
  * {@inheritDoc @apollo/client!QueryRef:interface}
  */
 export interface PreloadedQueryRef<

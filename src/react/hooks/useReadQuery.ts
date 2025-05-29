@@ -107,9 +107,10 @@ function useReadQuery_<TData, TStates extends DataStates<TData>["dataState"]>(
 
   return React.useMemo(() => {
     return {
-      data: result.data!,
+      data: result.data,
+      dataState: result.dataState,
       networkStatus: result.networkStatus,
       error: result.error,
-    };
+    } as useReadQuery.Result<TData, TStates>;
   }, [result]);
 }

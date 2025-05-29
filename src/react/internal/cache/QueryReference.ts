@@ -47,8 +47,7 @@ declare const QUERY_REF_BRAND: unique symbol;
 export interface QueryRef<
   TData = unknown,
   TVariables = unknown,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataStates<TData>["dataState"] = "complete" | "streaming",
 > {
   /** @internal */
   [QUERY_REF_BRAND]?(variables: TVariables, states: TStates): TData;
@@ -61,8 +60,7 @@ export interface QueryRef<
 interface WrappedQueryRef<
   TData = unknown,
   TVariables = unknown,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataStates<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
   /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TStates>;
@@ -93,8 +91,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown>
 export interface PreloadedQueryRef<
   TData = unknown,
   TVariables = unknown,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataStates<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
   /**
    * A function that returns a promise that resolves when the query has finished

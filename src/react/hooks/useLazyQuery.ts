@@ -22,8 +22,8 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
+import type { DeepPartial } from "@apollo/client/utilities";
 import type {
-  DeepPartial,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";

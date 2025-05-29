@@ -34,8 +34,8 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
 import type {
-  DeepPartial,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";

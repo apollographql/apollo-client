@@ -51,9 +51,8 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
-import type { Reference } from "@apollo/client/utilities";
+import type { DeepPartial, Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
-import type { DeepPartial } from "@apollo/client/utilities/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 const IS_REACT_17 = React.version.startsWith("17");

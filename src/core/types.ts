@@ -5,7 +5,8 @@ import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import type { DeepPartial, IsAny } from "@apollo/client/utilities/internal";
+import type { IsAny } from "@apollo/client/utilities/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
 
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";

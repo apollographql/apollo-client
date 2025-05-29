@@ -99,6 +99,7 @@ test("does not interfere with updates from useReadQuery", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -112,6 +113,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -125,6 +127,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -198,6 +201,7 @@ test("refetches and resuspends when calling refetch", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -216,6 +220,7 @@ test("refetches and resuspends when calling refetch", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -320,6 +325,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -334,6 +340,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -447,6 +454,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -461,6 +469,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [13, 17, 19, 23, 29] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -570,6 +579,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [2, 3, 5, 7, 11] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -584,6 +594,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { primes: [13, 17, 19, 23, 29] },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -714,6 +725,7 @@ test("`refetch` works with startTransition", async () => {
       isPending: false,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: false } },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -731,6 +743,7 @@ test("`refetch` works with startTransition", async () => {
       isPending: true,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: false } },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -745,6 +758,7 @@ test("`refetch` works with startTransition", async () => {
       isPending: false,
       result: {
         data: { todo: { id: "1", name: "Clean room", completed: true } },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -853,6 +867,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -869,6 +884,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
       usePreloadedQueryHandlersIsPending: false,
       result: {
         data: { greeting: "Hello" },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -884,6 +900,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
       usePreloadedQueryHandlersIsPending: false,
       result: {
         data: { greeting: "Hello again" },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -901,6 +918,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
       usePreloadedQueryHandlersIsPending: true,
       result: {
         data: { greeting: "Hello again" },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -916,6 +934,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
       usePreloadedQueryHandlersIsPending: false,
       result: {
         data: { greeting: "You again?" },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -989,6 +1008,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1007,6 +1027,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1083,6 +1104,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1101,6 +1123,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello again" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1182,6 +1205,7 @@ test("resuspends when calling `fetchMore`", async () => {
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1205,6 +1229,7 @@ test("resuspends when calling `fetchMore`", async () => {
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1282,6 +1307,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1307,6 +1333,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1388,6 +1415,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1413,6 +1441,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1494,6 +1523,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1517,6 +1547,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1606,6 +1637,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1629,6 +1661,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1718,6 +1751,7 @@ test("`fetchMore` works with startTransition", async () => {
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1738,6 +1772,7 @@ test("`fetchMore` works with startTransition", async () => {
             { __typename: "Letter", letter: "B", position: 2 },
           ],
         },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -1757,6 +1792,7 @@ test("`fetchMore` works with startTransition", async () => {
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -1867,6 +1903,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
           { __typename: "Letter", letter: "B", position: 2 },
         ],
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1888,6 +1925,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
             { __typename: "Letter", letter: "B", position: 2 },
           ],
         },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -1908,6 +1946,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -1930,6 +1969,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -1950,6 +1990,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
             { __typename: "Letter", letter: "F", position: 6 },
           ],
         },
+        dataState: "complete",
         error: undefined,
         networkStatus: NetworkStatus.ready,
       },
@@ -2055,6 +2096,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2085,6 +2127,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Subscription hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });

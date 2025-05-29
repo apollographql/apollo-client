@@ -2678,6 +2678,7 @@ describe("client.watchQuery", () => {
         __typename: "User";
         id: number;
         name: string;
+        age: number;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
@@ -2734,7 +2735,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-expect-error using a no-cache query
           age: 30,
         },
       },

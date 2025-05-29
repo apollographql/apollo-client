@@ -5,8 +5,8 @@ import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
-import type { IsAny } from "@apollo/client/utilities/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
+import type { IsAny } from "@apollo/client/utilities/internal";
 
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -192,15 +192,17 @@ export type ApolloQueryResult<T> = {
    * @deprecated This field will be removed in a future version of Apollo Client.
    */
   partial: boolean;
-} & (
+} & DataStates<T>;
+
+export type DataStates<TData> =
   | {
       // Defer to the passed in type to properly type the `@defer` fields.
-      data: T;
+      data: TData;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "complete" | "streaming";
     }
   | {
-      data: DeepPartial<T>;
+      data: DeepPartial<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "partial";
     }
@@ -208,8 +210,7 @@ export type ApolloQueryResult<T> = {
       data: undefined;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
       dataState: "empty";
-    }
-);
+    };
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

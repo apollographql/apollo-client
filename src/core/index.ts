@@ -25,6 +25,7 @@ export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
   ApolloQueryResult,
   ClientAwareness,
+  DataStates,
   DefaultContext,
   ErrorLike,
   InternalRefetchQueriesInclude,

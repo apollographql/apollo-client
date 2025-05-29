@@ -4905,6 +4905,9 @@ describe.skip("type tests", () => {
     const { data } = useReadQuery(queryRef);
 
     expectTypeOf(data).toEqualTypeOf<unknown>();
+    expectTypeOf(queryRef).toEqualTypeOf<
+      QueryRef<unknown, OperationVariables, "complete" | "streaming">
+    >;
   });
 
   it("variables are optional and can be anything with an untyped DocumentNode", () => {
@@ -5039,9 +5042,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
 
     {
@@ -5052,9 +5071,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
   });
 
@@ -5068,9 +5103,31 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "empty"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -5081,9 +5138,31 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "empty"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -5097,9 +5176,31 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "empty"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -5110,9 +5211,31 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "empty"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -5126,9 +5249,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
 
     {
@@ -5155,9 +5294,33 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     }
 
     {
@@ -5168,9 +5331,33 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     }
   });
 
@@ -5184,9 +5371,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
 
     {
@@ -5197,9 +5400,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
   });
 
@@ -5213,9 +5432,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
 
     {
@@ -5226,9 +5461,25 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
     }
   });
 
@@ -5243,11 +5494,37 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial" | "empty"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
+        VariablesCaseData | DeepPartial<VariablesCaseData> | undefined
       >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -5258,11 +5535,37 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial" | "empty"
+        >
+      >;
       expectTypeOf(data).toEqualTypeOf<
-        DeepPartial<VariablesCaseData> | undefined
+        VariablesCaseData | DeepPartial<VariablesCaseData> | undefined
       >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -5273,9 +5576,33 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     }
 
     {
@@ -5286,9 +5613,33 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     }
   });
 
@@ -5304,9 +5655,33 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     }
 
     {
@@ -5321,9 +5696,33 @@ describe.skip("type tests", () => {
 
       invariant(queryRef);
 
-      const { data } = useReadQuery(queryRef);
+      const { data, dataState } = useReadQuery(queryRef);
 
-      expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      expectTypeOf(queryRef).toEqualTypeOf<
+        QueryRef<
+          VariablesCaseData,
+          VariablesCaseVariables,
+          "complete" | "streaming" | "partial"
+        >
+      >;
+      expectTypeOf(data).toEqualTypeOf<
+        VariablesCaseData | DeepPartial<VariablesCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<VariablesCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
+      }
     }
   });
 });

@@ -4119,6 +4119,7 @@ it("does not mask query when dataMasking is `false`", async () => {
       __typename: "User";
       id: number;
       name: string;
+      age: number;
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
@@ -4206,6 +4207,7 @@ it("does not mask query by default", async () => {
       __typename: "User";
       id: number;
       name: string;
+      age: number;
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
@@ -4857,7 +4859,7 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     currentUser: {
       __typename: "User";
       id: number;
-      name: string;
+      name: string | null;
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
@@ -5551,7 +5553,23 @@ describe("refetch", () => {
   });
 
   it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
-    const { query, mocks: defaultMocks } = setupVariablesCase();
+    type VariablesCaseData = {
+      character: {
+        __typename: "Character";
+        id: string;
+        name: string | null;
+      };
+    };
+    const query: TypedDocumentNode<VariablesCaseData, VariablesCaseVariables> =
+      gql`
+        query CharacterQuery($id: ID!) {
+          character(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+    const { mocks: defaultMocks } = setupVariablesCase();
     const user = userEvent.setup();
     const mocks = [
       ...defaultMocks,

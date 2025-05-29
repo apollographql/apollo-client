@@ -101,6 +101,21 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
+    /** @deprecated `returnPartialData` has no effect on `no-cache` queries */
+    returnPartialData: boolean;
+    fetchPolicy: "no-cache";
+  }
+): [
+  QueryRef<TData, TVariables, "complete" | "streaming">,
+  useBackgroundQuery.Result<TData, TVariables>,
+];
+
+export function useBackgroundQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: useBackgroundQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: false;
     errorPolicy: "ignore" | "all";
   }

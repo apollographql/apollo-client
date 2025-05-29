@@ -132,7 +132,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -161,7 +161,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -316,7 +316,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -341,7 +341,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -357,7 +357,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -384,7 +384,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -428,7 +428,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -517,7 +517,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -544,7 +544,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -572,7 +572,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -615,7 +615,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -661,7 +661,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
       error: undefined,
       networkStatus: NetworkStatus.loading,
@@ -671,7 +671,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -702,7 +702,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -776,7 +776,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -801,7 +801,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -817,7 +817,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -844,7 +844,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -886,7 +886,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -958,7 +958,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -983,7 +983,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -999,7 +999,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1026,7 +1026,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1068,7 +1068,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1140,7 +1140,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1165,7 +1165,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1198,7 +1198,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1237,7 +1237,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1266,7 +1266,7 @@ test("reacts to cache updates", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1281,7 +1281,7 @@ test("reacts to cache updates", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (updated)" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1312,7 +1312,7 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1342,7 +1342,7 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1370,7 +1370,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Cached Hello" },
       error: undefined,
       networkStatus: NetworkStatus.loading,
@@ -1381,7 +1381,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1405,7 +1405,7 @@ test("returns cached data when all data is present in the cache", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Cached Hello" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1456,7 +1456,7 @@ test("suspends and ignores partial data in the cache", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from link", foo: "bar" },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1528,7 +1528,7 @@ test("returns error when error policy is 'all'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
       error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
       networkStatus: NetworkStatus.error,
@@ -1561,7 +1561,7 @@ test("returns network error when error policy is 'all'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
       error: new Error("Oops"),
       networkStatus: NetworkStatus.error,
@@ -1593,7 +1593,7 @@ test("discards error when error policy is 'ignore'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1623,7 +1623,7 @@ test("discards network errors when error policy is 'ignore'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1669,7 +1669,7 @@ test("passes context to the link", async () => {
 
   const { snapshot } = await renderStream.takeRender();
 
-  expect(snapshot.result).toEqual({
+  expect(snapshot.result).toStrictEqualTyped({
     data: { context: { valueA: "A", valueB: "B" } },
     networkStatus: NetworkStatus.ready,
     error: undefined,
@@ -1735,7 +1735,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
       networkStatus: NetworkStatus.loading,
       error: undefined,
@@ -1746,7 +1746,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -1796,7 +1796,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: { message: "Hello world", __typename: "Greeting" } },
       error: undefined,
       networkStatus: NetworkStatus.ready,
@@ -1825,7 +1825,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1867,7 +1867,7 @@ test("masks result when dataMasking is `true`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1" },
       },
@@ -1903,7 +1903,7 @@ test("does not mask result when dataMasking is `false`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
@@ -1938,7 +1938,7 @@ test("does not mask results by default", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },

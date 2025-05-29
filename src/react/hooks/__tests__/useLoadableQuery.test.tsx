@@ -3156,7 +3156,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     refetch,
   }: {
     refetch: RefetchFunction<Data, OperationVariables>;
-    queryRef: QueryRef<Data, Variables, "complete" | "streaming">;
+    queryRef: QueryRef<Data>;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -3600,7 +3600,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     fetchMore,
   }: {
     fetchMore: FetchMoreFunction<Data, OperationVariables>;
-    queryRef: QueryRef<Data, Variables, "complete" | "streaming">;
+    queryRef: QueryRef<Data>;
   }) {
     const { data } = useReadQuery(queryRef);
     const [isPending, startTransition] = React.useTransition();

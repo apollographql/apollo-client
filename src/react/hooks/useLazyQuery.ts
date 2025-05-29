@@ -6,12 +6,12 @@ import * as React from "react";
 import type {
   ApolloClient,
   ApolloQueryResult,
-  DataStates,
+  DataState,
   DefaultContext,
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
-  GetDataStates,
+  GetDataState,
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
@@ -85,7 +85,7 @@ export declare namespace useLazyQuery {
     TData,
     TVariables extends OperationVariables,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
     startPolling: (pollInterval: number) => void;
@@ -148,7 +148,7 @@ export declare namespace useLazyQuery {
 
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
         variables: TVariables;
-      } & GetDataStates<TData, TStates>)
+      } & GetDataState<TData, TStates>)
     | {
         /**
          * If `true`, the associated lazy query has been executed.
@@ -178,7 +178,7 @@ export declare namespace useLazyQuery {
     TData,
     TVariables extends OperationVariables,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = [
     execute: ExecFunction<TData, TVariables>,
     result: useLazyQuery.Result<TData, TVariables, TStates>,
@@ -280,8 +280,7 @@ export function useLazyQuery<
 export function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>

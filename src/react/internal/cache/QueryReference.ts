@@ -4,7 +4,7 @@ import { filter } from "rxjs";
 
 import type {
   ApolloQueryResult,
-  DataStates,
+  DataState,
   ObservableQuery,
   OperationVariables,
   QueryResult,
@@ -23,10 +23,10 @@ import type { QueryKey } from "./types.js";
 
 type QueryRefPromise<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 > = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>, TStates>>;
 
-type Listener<TData, TStates extends DataStates<TData>["dataState"]> = (
+type Listener<TData, TStates extends DataState<TData>["dataState"]> = (
   promise: QueryRefPromise<TData, TStates>
 ) => void;
 
@@ -47,7 +47,7 @@ declare const QUERY_REF_BRAND: unique symbol;
 export interface QueryRef<
   TData = unknown,
   TVariables = unknown,
-  TStates extends DataStates<TData>["dataState"] = "complete" | "streaming",
+  TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > {
   /** @internal */
   [QUERY_REF_BRAND]?(variables: TVariables, states: TStates): TData;
@@ -60,7 +60,7 @@ export interface QueryRef<
 interface WrappedQueryRef<
   TData = unknown,
   TVariables = unknown,
-  TStates extends DataStates<TData>["dataState"] = "complete" | "streaming",
+  TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
   /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TStates>;
@@ -91,7 +91,7 @@ export interface QueryReference<TData = unknown, TVariables = unknown>
 export interface PreloadedQueryRef<
   TData = unknown,
   TVariables = unknown,
-  TStates extends DataStates<TData>["dataState"] = "complete" | "streaming",
+  TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
   /**
    * A function that returns a promise that resolves when the query has finished
@@ -141,7 +141,7 @@ interface InternalQueryReferenceOptions {
 export function wrapQueryRef<
   TData,
   TVariables extends OperationVariables,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(internalQueryRef: InternalQueryReference<TData, TStates>) {
   const ref: WrappedQueryRef<TData, TVariables, TStates> = {
     toPromise() {
@@ -168,7 +168,7 @@ export function wrapQueryRef<
 export function assertWrappedQueryRef<
   TData,
   TVariables,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(
   queryRef: QueryRef<TData, TVariables, TStates>
 ): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates>;
@@ -176,7 +176,7 @@ export function assertWrappedQueryRef<
 export function assertWrappedQueryRef<
   TData,
   TVariables,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(
   queryRef: QueryRef<TData, TVariables, TStates> | undefined | null
 ): asserts queryRef is
@@ -187,7 +187,7 @@ export function assertWrappedQueryRef<
 export function assertWrappedQueryRef<
   TData,
   TVariables,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(queryRef: QueryRef<TData, TVariables, TStates> | undefined | null) {
   invariant(
     !queryRef || QUERY_REFERENCE_SYMBOL in queryRef,
@@ -197,7 +197,7 @@ export function assertWrappedQueryRef<
 
 export function getWrappedPromise<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(queryRef: WrappedQueryRef<TData, any, TStates>) {
   const internalQueryRef = unwrapQueryRef(queryRef);
 
@@ -208,28 +208,28 @@ export function getWrappedPromise<
 
 export function unwrapQueryRef<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(
   queryRef: WrappedQueryRef<TData, any, TStates>
 ): InternalQueryReference<TData, TStates>;
 
 export function unwrapQueryRef<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(
   queryRef: Partial<WrappedQueryRef<TData, any, TStates>>
 ): undefined | InternalQueryReference<TData, TStates>;
 
 export function unwrapQueryRef<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(queryRef: Partial<WrappedQueryRef<TData, any, TStates>>) {
   return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 export function updateWrappedQueryRef<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(
   queryRef: WrappedQueryRef<TData, any, TStates>,
   promise: QueryRefPromise<TData, TStates>
@@ -252,8 +252,7 @@ type ObservedOptions = Pick<
 
 export class InternalQueryReference<
   TData = unknown,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 > {
   public result!: ApolloQueryResult<MaybeMasked<TData>, TStates>;
   public readonly key: QueryKey = {};

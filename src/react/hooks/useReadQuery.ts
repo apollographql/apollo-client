@@ -2,9 +2,9 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  DataStates,
+  DataState,
   ErrorLike,
-  GetDataStates,
+  GetDataState,
   NetworkStatus,
   ObservableQuery,
 } from "@apollo/client";
@@ -25,7 +25,7 @@ export declare namespace useReadQuery {
   export type Result<
     TData = unknown,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = {
     /**
      * If the query produces one or more errors, this object contains either an
@@ -42,12 +42,12 @@ export declare namespace useReadQuery {
      * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.
      */
     networkStatus: NetworkStatus;
-  } & GetDataStates<MaybeMasked<TData>, TStates>;
+  } & GetDataState<MaybeMasked<TData>, TStates>;
 }
 
 export function useReadQuery<
   TData,
-  TStates extends DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"],
 >(
   queryRef: QueryRef<TData, any, TStates>
 ): useReadQuery.Result<TData, TStates> {
@@ -68,7 +68,7 @@ export function useReadQuery<
   )(queryRef);
 }
 
-function useReadQuery_<TData, TStates extends DataStates<TData>["dataState"]>(
+function useReadQuery_<TData, TStates extends DataState<TData>["dataState"]>(
   queryRef: QueryRef<TData, any, TStates>
 ): useReadQuery.Result<TData, TStates> {
   assertWrappedQueryRef(queryRef);

@@ -178,8 +178,7 @@ export type OperationVariables = Record<string, any>;
 
 export type ApolloQueryResult<
   TData,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 > = {
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
@@ -196,9 +195,9 @@ export type ApolloQueryResult<
    * @deprecated This field will be removed in a future version of Apollo Client.
    */
   partial: boolean;
-} & GetDataStates<TData, TStates>;
+} & GetDataState<TData, TStates>;
 
-export type DataStates<TData> =
+export type DataState<TData> =
   | {
       // Defer to the passed in type to properly type the `@defer` fields.
       data: TData;
@@ -216,10 +215,10 @@ export type DataStates<TData> =
       dataState: "empty";
     };
 
-export type GetDataStates<
+export type GetDataState<
   TData,
-  TState extends DataStates<TData>["dataState"],
-> = Extract<DataStates<TData>, { dataState: TState }>;
+  TState extends DataState<TData>["dataState"],
+> = Extract<DataState<TData>, { dataState: TState }>;
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

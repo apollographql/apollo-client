@@ -2,7 +2,7 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  DataStates,
+  DataState,
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
@@ -314,8 +314,7 @@ export function useBackgroundQuery<
 function useBackgroundQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
-  TStates extends
-    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+  TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"],
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:

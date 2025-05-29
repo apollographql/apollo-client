@@ -2,7 +2,7 @@ import * as React from "react";
 
 import type {
   ApolloClient,
-  DataStates,
+  DataState,
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
@@ -54,7 +54,7 @@ export declare namespace useLoadableQuery {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = [
     loadQuery: LoadQueryFunction<TVariables>,
     queryRef: QueryRef<TData, TVariables, TStates> | null,

@@ -3,12 +3,12 @@ import * as React from "react";
 import type {
   ApolloClient,
   ApolloQueryResult,
-  DataStates,
+  DataState,
   DefaultContext,
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  GetDataStates,
+  GetDataState,
   MaybeMasked,
   OperationVariables,
   RefetchWritePolicy,
@@ -85,7 +85,7 @@ export declare namespace useSuspenseQuery {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client: ApolloClient;
@@ -104,7 +104,7 @@ export declare namespace useSuspenseQuery {
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-  } & GetDataStates<MaybeMasked<TData>, TStates>;
+  } & GetDataState<MaybeMasked<TData>, TStates>;
 }
 
 export function useSuspenseQuery<
@@ -356,7 +356,7 @@ function useSuspenseQuery_<
     .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
-    useSuspenseQuery.Result<TData, TVariables, DataStates<TData>["dataState"]>
+    useSuspenseQuery.Result<TData, TVariables, DataState<TData>["dataState"]>
   >(() => {
     return {
       client,
@@ -370,7 +370,7 @@ function useSuspenseQuery_<
     } as useSuspenseQuery.Result<
       TData,
       TVariables,
-      DataStates<TData>["dataState"]
+      DataState<TData>["dataState"]
     >;
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }

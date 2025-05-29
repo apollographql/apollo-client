@@ -18,13 +18,13 @@ import { asapScheduler, observeOn } from "rxjs";
 import type {
   ApolloClient,
   ApolloQueryResult,
-  DataStates,
+  DataState,
   DefaultContext,
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
-  GetDataStates,
+  GetDataState,
   OperationVariables,
   QueryResult,
   RefetchWritePolicy,
@@ -106,7 +106,7 @@ export declare namespace useQuery {
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;
@@ -161,7 +161,7 @@ export declare namespace useQuery {
         ) => Unmasked<TData>;
       }
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
-  } & GetDataStates<TData, TStates>;
+  } & GetDataState<TData, TStates>;
 }
 
 const lastWatchOptions = Symbol();

@@ -2,7 +2,7 @@ import { Trie } from "@wry/trie";
 
 import type {
   ApolloClient,
-  DataStates,
+  DataState,
   ObservableQuery,
   OperationVariables,
   WatchFragmentOptions,
@@ -39,7 +39,7 @@ export class SuspenseCache {
   getQueryRef<
     TData = unknown,
     TStates extends
-      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   >(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>) {
     const ref = this.queryRefs.lookupArray(cacheKey) as {
       current?: InternalQueryReference<TData, TStates>;

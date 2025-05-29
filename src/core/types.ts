@@ -201,17 +201,17 @@ export type DataState<TData> =
   | {
       // Defer to the passed in type to properly type the `@defer` fields.
       data: TData;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "complete" | "streaming";
     }
   | {
       data: DeepPartial<TData>;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "partial";
     }
   | {
       data: undefined;
-      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member(1)} */
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "empty";
     };
 

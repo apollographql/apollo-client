@@ -392,6 +392,10 @@ export class InternalQueryReference<TData = unknown> {
         // have one.
         if (result.data === void 0) {
           result.data = this.result.data;
+
+          if (result.data) {
+            result.dataState = "complete";
+          }
         }
 
         if (this.shouldReject(result)) {

@@ -6,10 +6,12 @@ import * as React from "react";
 import type {
   ApolloClient,
   ApolloQueryResult,
+  DataStates,
   DefaultContext,
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
+  GetDataStates,
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
@@ -22,7 +24,6 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import type { DeepPartial } from "@apollo/client/utilities";
 import type {
   NoInfer,
   VariablesOption,
@@ -83,7 +84,8 @@ export declare namespace useLazyQuery {
   export type Result<
     TData,
     TVariables extends OperationVariables,
-    TStates extends States["dataState"] = States["dataState"],
+    TStates extends
+      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
   > = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
     startPolling: (pollInterval: number) => void;
@@ -146,7 +148,7 @@ export declare namespace useLazyQuery {
 
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
         variables: TVariables;
-      } & Extract<States<TData>, { dataState: TStates }>)
+      } & GetDataStates<TData, TStates>)
     | {
         /**
          * If `true`, the associated lazy query has been executed.
@@ -175,7 +177,8 @@ export declare namespace useLazyQuery {
   export type ResultTuple<
     TData,
     TVariables extends OperationVariables,
-    TStates extends States<TData>["dataState"] = States<TData>["dataState"],
+    TStates extends
+      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
   > = [
     execute: ExecFunction<TData, TVariables>,
     result: useLazyQuery.Result<TData, TVariables, TStates>,
@@ -186,26 +189,6 @@ export declare namespace useLazyQuery {
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
   ) => Promise<QueryResult<TData>>;
-
-  export type States<TData = unknown> =
-    | {
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: MaybeMasked<TData>;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "complete" | "streaming";
-      }
-    | {
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: MaybeMasked<DeepPartial<TData>>;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "partial";
-      }
-    | {
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: undefined;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "empty";
-      };
 }
 
 // The following methods, when called will execute the query, regardless of
@@ -298,7 +281,7 @@ export function useLazyQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
   TStates extends
-    useLazyQuery.States<TData>["dataState"] = useLazyQuery.States<TData>["dataState"],
+    DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>

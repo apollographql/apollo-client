@@ -18,11 +18,13 @@ import { asapScheduler, observeOn } from "rxjs";
 import type {
   ApolloClient,
   ApolloQueryResult,
+  DataStates,
   DefaultContext,
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
+  GetDataStates,
   OperationVariables,
   QueryResult,
   RefetchWritePolicy,
@@ -34,7 +36,6 @@ import type {
 } from "@apollo/client";
 import { NetworkStatus, ObservableQuery } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
 import type {
   NoInfer,
   VariablesOption,
@@ -104,7 +105,8 @@ export declare namespace useQuery {
   export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-    TStates extends States<TData>["dataState"] = States<TData>["dataState"],
+    TStates extends
+      DataStates<TData>["dataState"] = DataStates<TData>["dataState"],
   > = {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;
@@ -159,27 +161,7 @@ export declare namespace useQuery {
         ) => Unmasked<TData>;
       }
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
-  } & Extract<States<TData>, { dataState: TStates }>;
-
-  export type States<TData = unknown> =
-    | {
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: MaybeMasked<TData>;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "complete" | "streaming";
-      }
-    | {
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: MaybeMasked<DeepPartial<TData>>;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "partial";
-      }
-    | {
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-        data: undefined;
-        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-        dataState: "empty";
-      };
+  } & GetDataStates<TData, TStates>;
 }
 
 const lastWatchOptions = Symbol();

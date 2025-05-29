@@ -1,11 +1,16 @@
-import gql from "graphql-tag";
-import { DocumentNode, OperationDefinitionNode } from "graphql";
+import type { DocumentNode, OperationDefinitionNode } from "graphql";
+import { gql } from "graphql-tag";
 
-import { ApolloClient } from "../core";
-import { InMemoryCache } from "../cache";
-import { ApolloLink, Operation } from "../link/core";
-import { mockSingleLink, mockObservableLink, wait } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import type { Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
+import {
+  ObservableStream,
+  spyOnConsole,
+  wait,
+} from "@apollo/client/testing/internal";
 
 const isSub = (operation: Operation) =>
   (operation.query as DocumentNode).definitions
@@ -59,13 +64,13 @@ describe("subscribeToMore", () => {
   }
 
   it("triggers new result from subscription data", async () => {
-    const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const wSLink = new MockSubscriptionLink();
+    const httpLink = new MockLink([req1]);
 
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -83,38 +88,48 @@ describe("subscribeToMore", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     wSLink.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(10);
     wSLink.simulateResult(results[1]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
   it("calls error callback on error", async () => {
-    const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const wSLink = new MockSubscriptionLink();
+    const httpLink = new MockLink([req1]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obsHandle = client.watchQuery<(typeof req1)["result"]["data"]>({
@@ -136,20 +151,29 @@ describe("subscribeToMore", () => {
       onError,
     });
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: { entry: { value: "1" } },
+      loading: false,
+      networkStatus: 7,
+      partial: false,
+    });
+
     for (const result of results2) {
       wSLink.simulateResult(result);
     }
 
-    await expect(stream).toEmitValue({
-      data: { entry: { value: "1" } },
-      loading: false,
-      networkStatus: 7,
-    });
-
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(15);
@@ -161,13 +185,13 @@ describe("subscribeToMore", () => {
   it("prints unhandled subscription errors to the console", async () => {
     using _ = spyOnConsole("error");
 
-    const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req1);
+    const wSLink = new MockSubscriptionLink();
+    const httpLink = new MockLink([req1]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obsHandle = client.watchQuery({
@@ -190,10 +214,18 @@ describe("subscribeToMore", () => {
       wSLink.simulateResult(result);
     }
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(15);
@@ -208,19 +240,19 @@ describe("subscribeToMore", () => {
   });
 
   it("should not corrupt the cache (#3062)", async () => {
-    const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(req4);
+    const wSLink = new MockSubscriptionLink();
+    const httpLink = new MockLink([req4]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }).restore({
+      cache: new InMemoryCache().restore({
         ROOT_QUERY: {
           entry: [
             {
-              value: 1,
+              value: "1",
             },
             {
-              value: 2,
+              value: "2",
             },
           ],
         },
@@ -276,31 +308,34 @@ describe("subscribeToMore", () => {
       // note: we don't complete mutation with performTransaction because a real example would detect duplicates
     }
 
-    await expect(stream).toEmitValue({
-      data: { entry: [{ value: 1 }, { value: 2 }] },
+    await expect(stream).toEmitTypedValue({
+      data: { entry: [{ value: "1" }, { value: "2" }] },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: {
-        entry: [{ value: 1 }, { value: 2 }, { value: "Dahivat Pandya" }],
+        entry: [{ value: "1" }, { value: "2" }, { value: "Dahivat Pandya" }],
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: {
         entry: [
-          { value: 1 },
-          { value: 2 },
+          { value: "1" },
+          { value: "2" },
           { value: "Dahivat Pandya" },
           { value: "Amanda Liu" },
         ],
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -321,12 +356,12 @@ describe("subscribeToMore", () => {
       someString: string;
     }
 
-    const wSLink = mockObservableLink();
-    const httpLink = mockSingleLink(typedReq);
+    const wSLink = new MockSubscriptionLink();
+    const httpLink = new MockLink([typedReq]);
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -352,27 +387,37 @@ describe("subscribeToMore", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     wSLink.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(10);
     wSLink.simulateResult(results[1]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 });

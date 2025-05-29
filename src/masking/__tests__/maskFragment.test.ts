@@ -1,8 +1,11 @@
-import { gql, InMemoryCache } from "../../core/index.js";
-import { spyOnConsole } from "../../testing/internal/index.js";
-import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
-import { InvariantError } from "../../utilities/globals/index.js";
-import { maskFragment } from "../maskFragment.js";
+import { gql, InMemoryCache } from "@apollo/client";
+import { maskFragment } from "@apollo/client/masking";
+import { spyOnConsole } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { deepFreeze } from "../../utilities/internal/deepFreeze.js";
 
 test("returns null when data is null", () => {
   const fragment = gql`

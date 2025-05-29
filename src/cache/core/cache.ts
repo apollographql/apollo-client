@@ -1,43 +1,42 @@
+import { WeakCache } from "@wry/caches";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
+import { Observable } from "rxjs";
 
-import type {
-  StoreObject,
-  Reference,
-  DeepPartial,
-  NoInfer,
-} from "../../utilities/index.js";
-import {
-  Observable,
-  cacheSizes,
-  defaultCacheSizes,
-  getFragmentDefinition,
-  getFragmentQueryDocument,
-  mergeDeepArray,
-} from "../../utilities/index.js";
-import type { DataProxy } from "./types/DataProxy.js";
-import type { Cache } from "./types/Cache.js";
-import { WeakCache } from "@wry/caches";
-import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
-import type {
-  OperationVariables,
-  TypedDocumentNode,
-} from "../../core/types.js";
-import type { MissingTree } from "./types/common.js";
-import { equalByQuery } from "../../core/equalByQuery.js";
-import { invariant } from "../../utilities/globals/index.js";
-import { maskFragment } from "../../masking/index.js";
+import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
 import type {
   FragmentType,
   MaybeMasked,
   Unmasked,
-} from "../../masking/index.js";
+} from "@apollo/client/masking";
+import { maskFragment } from "@apollo/client/masking";
+import type {
+  DeepPartial,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
+import { cacheSizes } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { NoInfer } from "@apollo/client/utilities/internal";
+import {
+  getApolloCacheMemoryInternals,
+  getFragmentDefinition,
+  getFragmentQueryDocument,
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
-export type Transaction<T> = (c: ApolloCache<T>) => void;
+import { equalByQuery } from "../../core/equalByQuery.js";
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
+
+import type { Cache } from "./types/Cache.js";
+import type { MissingTree } from "./types/common.js";
+import type { DataProxy } from "./types/DataProxy.js";
+
+export type Transaction = (c: ApolloCache) => void;
 
 /**
  * Watched fragment options.
@@ -99,19 +98,34 @@ export type WatchFragmentResult<TData> =
       missing: MissingTree;
     };
 
-export abstract class ApolloCache<TSerialized> implements DataProxy {
+export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
 
   // required to implement
   // core API
-  public abstract read<TData = any, TVariables = any>(
+  public abstract read<TData = unknown, TVariables = OperationVariables>(
     query: Cache.ReadOptions<TVariables, TData>
   ): Unmasked<TData> | null;
-  public abstract write<TData = any, TVariables = any>(
+  public abstract write<TData = unknown, TVariables = OperationVariables>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
-  public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
-  public abstract watch<TData = any, TVariables = any>(
+
+  /**
+   * Returns data read from the cache for a given query along with information
+   * about the cache result such as whether the result is complete and details
+   * about missing fields.
+   *
+   * Will return `complete` as `true` if it can fulfill the full cache result or
+   * `false` if not. When no data can be fulfilled from the cache, `null` is
+   * returned. When `returnPartialData` is `true`, non-null partial results are
+   * returned if it contains at least one field that can be fulfilled from the
+   * cache.
+   */
+  public abstract diff<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
+  public abstract watch<TData = unknown, TVariables = OperationVariables>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void;
 
@@ -134,29 +148,26 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * Called when hydrating a cache (server side rendering, or offline storage),
    * and also (potentially) during hot reloads.
    */
-  public abstract restore(
-    serializedState: TSerialized
-  ): ApolloCache<TSerialized>;
+  public abstract restore(serializedState: unknown): this;
 
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public abstract extract(optimistic?: boolean): TSerialized;
+  public abstract extract(optimistic?: boolean): unknown;
 
   // Optimistic API
 
   public abstract removeOptimistic(id: string): void;
 
-  // Data masking API
-
   // Used by data masking to determine if an inline fragment with a type
-  // condition matches a given typename.
+  // condition matches a given typename. Also used by local resolvers to match a
+  // fragment against a typename.
   //
   // If not implemented by a cache subclass, data masking will effectively be
   // disabled since we will not be able to accurately determine if a given type
   // condition for a union or interface matches a particular type.
-  public fragmentMatches?(
-    fragment: InlineFragmentNode,
+  public abstract fragmentMatches(
+    fragment: InlineFragmentNode | FragmentDefinitionNode,
     typename: string
   ): boolean;
 
@@ -188,7 +199,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   public abstract performTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction,
     // Although subclasses may implement recordOptimisticTransaction
     // however they choose, the default implementation simply calls
     // performTransaction with a string as the second argument, allowing
@@ -200,7 +211,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): void;
 
   public recordOptimisticTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction,
     optimisticId: string
   ) {
     this.performTransaction(transaction, optimisticId);
@@ -235,10 +246,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   // DataProxy API
-  public readQuery<QueryType, TVariables = any>(
-    options: Cache.ReadQueryOptions<QueryType, TVariables>,
+  public readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.ReadQueryOptions<TData, TVariables>,
     optimistic = !!options.optimistic
-  ): Unmasked<QueryType> | null {
+  ): Unmasked<TData> | null {
     return this.read({
       ...options,
       rootId: options.id || "ROOT_QUERY",
@@ -247,7 +258,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
-  public watchFragment<TData = any, TVars = OperationVariables>(
+  public watchFragment<TData = unknown, TVars = OperationVariables>(
     options: WatchFragmentOptions<TData, TVars>
   ): Observable<WatchFragmentResult<TData>> {
     const {
@@ -297,10 +308,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         ...diffOptions,
         immediate: true,
         callback: (diff) => {
-          const data =
+          let data =
             dataMasking ?
               maskFragment(diff.result, fragment, this, fragmentName)
             : diff.result;
+
+          // TODO: Remove this once `watchFragment` supports `null` as valid
+          // value emitted
+          if (data === null) {
+            data = {} as any;
+          }
 
           if (
             // Always ensure we deliver the first result
@@ -323,12 +340,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
           } as WatchFragmentResult<TData>;
 
           if (diff.missing) {
-            result.missing = mergeDeepArray(
-              diff.missing.map((error) => error.missing)
-            );
+            result.missing = diff.missing.missing;
           }
 
-          latestDiff = { ...diff, result: data };
+          latestDiff = { ...diff, result: data } as DataProxy.DiffResult<TData>;
           observer.next(result);
         },
       });
@@ -344,10 +359,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     cache: WeakCache,
   });
 
-  public readFragment<FragmentType, TVariables = any>(
-    options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
+  public readFragment<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
-  ): Unmasked<FragmentType> | null {
+  ): Unmasked<TData> | null {
     return this.read({
       ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
@@ -356,7 +371,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public writeQuery<TData = any, TVariables = any>({
+  public writeQuery<TData = unknown, TVariables = OperationVariables>({
     id,
     data,
     ...options
@@ -369,7 +384,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     );
   }
 
-  public writeFragment<TData = any, TVariables = any>({
+  public writeFragment<TData = unknown, TVariables = OperationVariables>({
     id,
     data,
     fragment,
@@ -385,7 +400,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     );
   }
 
-  public updateQuery<TData = any, TVariables = any>(
+  public updateQuery<TData = unknown, TVariables = OperationVariables>(
     options: Cache.UpdateQueryOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
@@ -400,7 +415,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public updateFragment<TData = any, TVariables = any>(
+  public updateFragment<TData = unknown, TVariables = OperationVariables>(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {

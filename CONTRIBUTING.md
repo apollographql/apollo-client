@@ -117,7 +117,7 @@ npm run test:watch
 Call jest directly making sure to pass in the jest config, and use its `testRegex` option:
 
 ```
-jest --config ./config/jest.config.js --testRegex __tests__/useQuery.test.tsx
+jest --config ./config/jest.config.ts --testRegex __tests__/useQuery.test.tsx
 ```
 
 ### Wiring a checkout into an application

@@ -1,32 +1,31 @@
-import { invariant } from "../../utilities/globals/index.js";
-
-import { print } from "../../utilities/index.js";
 import type {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
+import type { Observer, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
-import type { Operation } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
-import type {
-  Observer,
-  ObservableSubscription,
-} from "../../utilities/index.js";
-import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import type { ServerError } from "../utils/index.js";
+import type { ServerError, ServerParseError } from "@apollo/client/errors";
+import type { Operation } from "@apollo/client/link";
+import { ApolloLink } from "@apollo/client/link";
+import { print } from "@apollo/client/utilities";
+import { cacheSizes } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
-  cacheSizes,
   AutoCleanedWeakCache,
-  defaultCacheSizes,
-} from "../../utilities/index.js";
+  compact,
+  isNonEmptyArray,
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
 export interface ErrorResponse {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  networkError?: NetworkError;
+  networkError?: Error | ServerParseError | ServerError | null;
   response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;
@@ -68,8 +67,8 @@ function processErrors(
     | ReadonlyArray<GraphQLFormattedError>
     | undefined
 ): ErrorMeta {
-  const byMessage = Object.create(null),
-    byCode = Object.create(null);
+  const byMessage: Record<string, GraphQLFormattedError> = {},
+    byCode: Record<string, GraphQLFormattedError> = {};
 
   if (isNonEmptyArray(graphQLErrors)) {
     graphQLErrors.forEach((error) => {
@@ -173,7 +172,7 @@ export const createPersistedQueryLink = (
       const { query } = operation;
 
       return new Observable((observer: Observer<FormattedExecutionResult>) => {
-        let subscription: ObservableSubscription;
+        let subscription: Subscription;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;
@@ -197,16 +196,19 @@ export const createPersistedQueryLink = (
               graphQLErrors.push(...responseErrors);
             }
 
-            // Network errors can return GraphQL errors on for example a 403
-            let networkErrors;
-            if (typeof networkError?.result !== "string") {
-              networkErrors =
-                networkError &&
-                networkError.result &&
-                (networkError.result.errors as GraphQLFormattedError[]);
-            }
-            if (isNonEmptyArray(networkErrors)) {
-              graphQLErrors.push(...networkErrors);
+            // This is persisted-query specific (see #9410) and deviates from the
+            // GraphQL-over-HTTP spec for application/json responses.
+            // This is intentional.
+            if (networkError?.bodyText) {
+              try {
+                const result = JSON.parse(networkError.bodyText);
+                const networkErrors: GraphQLFormattedError[] | undefined =
+                  result && (result.errors as GraphQLFormattedError[]);
+
+                if (isNonEmptyArray(networkErrors)) {
+                  graphQLErrors.push(...networkErrors);
+                }
+              } catch {}
             }
 
             const disablePayload: ErrorResponse = {

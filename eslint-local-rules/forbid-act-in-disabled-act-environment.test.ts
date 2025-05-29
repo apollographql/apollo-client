@@ -1,5 +1,5 @@
-import { rule } from "./forbid-act-in-disabled-act-environment";
-import { ruleTester } from "./testSetup";
+import { rule } from "./forbid-act-in-disabled-act-environment.ts";
+import { ruleTester } from "./testSetup.ts";
 
 ruleTester.run("forbid-act-in-disabled-act-environment", rule, {
   valid: [

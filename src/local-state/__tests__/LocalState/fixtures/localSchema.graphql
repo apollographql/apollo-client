@@ -1,0 +1,17 @@
+extend type Query {
+  currentUserId: ID
+}
+
+extend type User {
+  isLoggedIn: Boolean!
+  favoriteFood: Food
+}
+
+type Food {
+  name: String
+  categories(limit: Int, offset: Int!): [FoodCategory!]
+}
+
+enum FoodCategory {
+  ITALIAN
+}

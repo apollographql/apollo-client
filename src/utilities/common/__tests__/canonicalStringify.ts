@@ -1,4 +1,4 @@
-import { canonicalStringify } from "../canonicalStringify";
+import { canonicalStringify } from "@apollo/client/utilities";
 
 function forEachPermutation(
   keys: string[],

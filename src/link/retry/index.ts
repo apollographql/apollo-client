@@ -1,1 +1,1 @@
-export * from "./retryLink.js";
+export { RetryLink } from "./retryLink.js";

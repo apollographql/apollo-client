@@ -1,34 +1,34 @@
-import { invariant } from "../../utilities/globals/index.js";
-
 import type { DefinitionNode } from "graphql";
+import { Observable } from "rxjs";
 
-import { ApolloLink } from "../core/index.js";
-import { Observable, hasDirectives } from "../../utilities/index.js";
-import { serializeFetchParameter } from "./serializeFetchParameter.js";
-import { selectURI } from "./selectURI.js";
+import { ApolloLink } from "@apollo/client/link";
+import { filterOperationVariables } from "@apollo/client/link/utils";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
-  handleError,
-  readMultipartBody,
-  parseAndCheckHttpResponse,
-} from "./parseAndCheckHttpResponse.js";
+  getMainDefinition,
+  hasDirectives,
+} from "@apollo/client/utilities/internal";
+import { maybe } from "@apollo/client/utilities/internal/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { checkFetcher } from "./checkFetcher.js";
-import type { HttpOptions } from "./selectHttpOptionsAndBody.js";
+import type { HttpLink } from "./HttpLink.js";
 import {
-  selectHttpOptionsAndBodyInternal,
+  parseAndCheckHttpResponse,
+  readMultipartBody,
+} from "./parseAndCheckHttpResponse.js";
+import { rewriteURIForGET } from "./rewriteURIForGET.js";
+import {
   defaultPrinter,
   fallbackHttpConfig,
+  selectHttpOptionsAndBodyInternal,
 } from "./selectHttpOptionsAndBody.js";
-import { rewriteURIForGET } from "./rewriteURIForGET.js";
-import { fromError, filterOperationVariables } from "../utils/index.js";
-import {
-  maybe,
-  getMainDefinition,
-  removeClientSetsFromDocument,
-} from "../../utilities/index.js";
+import { selectURI } from "./selectURI.js";
+import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
 const backupFetch = maybe(() => fetch);
 
-export const createHttpLink = (linkOptions: HttpOptions = {}) => {
+export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
   let {
     uri = "/graphql",
     // use default global fetch if nothing passed in
@@ -89,20 +89,6 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       headers: contextHeaders,
     };
 
-    if (hasDirectives(["client"], operation.query)) {
-      const transformedQuery = removeClientSetsFromDocument(operation.query);
-
-      if (!transformedQuery) {
-        return fromError(
-          new Error(
-            "HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`."
-          )
-        );
-      }
-
-      operation.query = transformedQuery;
-    }
-
     //uses fallback, link, and then context to build options
     const { options, body } = selectHttpOptionsAndBodyInternal(
       operation,
@@ -162,21 +148,16 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.headers.accept = acceptHeader;
     }
 
-    if (options.method === "GET") {
-      const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
-      if (parseError) {
-        return fromError(parseError);
-      }
-      chosenURI = newURI;
-    } else {
-      try {
-        (options as any).body = serializeFetchParameter(body, "Payload");
-      } catch (parseError) {
-        return fromError(parseError);
-      }
-    }
-
     return new Observable((observer) => {
+      if (options.method === "GET") {
+        const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
+        if (parseError) {
+          throw parseError;
+        }
+        chosenURI = newURI;
+      } else {
+        options.body = serializeFetchParameter(body, "Payload");
+      }
       // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
       // fall back to the *current* global window.fetch function (see issue
       // #7832), or (if all else fails) the backupFetch function we saved when
@@ -204,7 +185,7 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
         })
         .catch((err) => {
           controller = undefined;
-          handleError(err, observer);
+          observer.error(err);
         });
 
       return () => {

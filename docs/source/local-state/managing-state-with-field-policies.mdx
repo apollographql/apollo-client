@@ -246,7 +246,7 @@ export function Cart() {
 Instead of querying for `cartItems`, the `Cart` component can read and react to a reactive variable directly with the `useReactiveVar` hook:
 
 ```jsx {1,4} title="Cart.js"
-import { useReactiveVar } from '@apollo/client';
+import { useReactiveVar } from '@apollo/client/react';
 
 export function Cart() {
   const cartItems = useReactiveVar(cartItemsVar);
@@ -320,13 +320,8 @@ Here's a full example that incorporates the code blocks above:
 ```jsx
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {
-  ApolloClient,
-  InMemoryCache,
-  ApolloProvider,
-  useQuery,
-  gql
-} from '@apollo/client';
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+import { ApolloProvider, useQuery } from '@apollo/client/react';
 
 import Pages from './pages';
 import Login from './pages/login';

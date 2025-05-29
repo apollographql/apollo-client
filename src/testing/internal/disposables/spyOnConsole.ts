@@ -10,7 +10,6 @@ type Spies<Keys extends ConsoleMethod[]> = Record<
   jest.SpyInstance<void, any[], any>
 >;
 
-/** @internal */
 export function spyOnConsole<Keys extends ConsoleMethod[]>(
   ...spyOn: Keys
 ): Spies<Keys> & Disposable {

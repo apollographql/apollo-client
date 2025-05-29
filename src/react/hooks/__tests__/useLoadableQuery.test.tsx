@@ -16,6 +16,7 @@ import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
 import type {
+  DataState,
   ErrorPolicy,
   OperationVariables,
   RefetchWritePolicy,
@@ -189,17 +190,26 @@ function createDefaultProfiledComponents<
   TData = Snapshot["result"] extends useReadQuery.Result<infer TData> | null ?
     TData
   : unknown,
+  TStates extends DataState<TData>["dataState"] = Snapshot["result"] extends (
+    useReadQuery.Result<any, infer TStates> | null
+  ) ?
+    TStates
+  : "complete" | "streaming",
 >(profiler: RenderStream<Snapshot>) {
   function SuspenseFallback() {
     useTrackRenders();
     return <p>Loading</p>;
   }
 
-  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<TData> }) {
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryRef<TData, any, TStates>;
+  }) {
     useTrackRenders();
     profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
-    } as Partial<Snapshot>);
+    } as unknown as Partial<Snapshot>);
 
     return null;
   }

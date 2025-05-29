@@ -11,7 +11,11 @@ import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import type {
+  DataState,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -55,16 +59,19 @@ function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   });
 }
 
-async function renderDefaultTestApp<TData>({
+async function renderDefaultTestApp<
+  TData,
+  TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
+>({
   client,
   queryRef,
 }: {
   client: ApolloClient;
-  queryRef: QueryRef<TData>;
+  queryRef: QueryRef<TData, any, TStates>;
 }) {
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as useReadQuery.Result<TData> | null,
+      result: null as useReadQuery.Result<TData, TStates> | null,
       error: null as Error | null,
     },
   });

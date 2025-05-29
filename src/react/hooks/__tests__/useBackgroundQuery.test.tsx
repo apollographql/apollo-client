@@ -15,6 +15,7 @@ import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { Observable, of } from "rxjs";
 
 import type {
+  DataState,
   ErrorPolicy,
   OperationVariables,
   TypedDocumentNode,
@@ -77,21 +78,32 @@ afterEach(() => {
 });
 
 function createDefaultTrackedComponents<
-  Snapshot extends { result: useReadQuery.Result<any> | null },
+  Snapshot extends {
+    result: useReadQuery.Result<any> | null;
+  },
   TData = Snapshot["result"] extends useReadQuery.Result<infer TData> | null ?
     TData
   : unknown,
+  TStates extends DataState<TData>["dataState"] = Snapshot["result"] extends (
+    useReadQuery.Result<any, infer TStates> | null
+  ) ?
+    TStates
+  : "complete" | "streaming",
 >(renderStream: RenderStream<Snapshot>) {
   function SuspenseFallback() {
     useTrackRenders();
     return <div>Loading</div>;
   }
 
-  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<TData> }) {
+  function ReadQueryHook({
+    queryRef,
+  }: {
+    queryRef: QueryRef<TData, any, TStates>;
+  }) {
     useTrackRenders();
     renderStream.mergeSnapshot({
       result: useReadQuery(queryRef),
-    } as Partial<Snapshot>);
+    } as unknown as Partial<Snapshot>);
 
     return null;
   }
@@ -2920,9 +2932,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
-  const renderStream = createDefaultProfiler<
-    VariablesCaseData | DeepPartial<VariablesCaseData>
-  >();
+  const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
 

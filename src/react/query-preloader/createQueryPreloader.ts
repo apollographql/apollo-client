@@ -14,7 +14,6 @@ import {
   InternalQueryReference,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
 import type {
   NoInfer,
   VariablesOption,
@@ -76,7 +75,11 @@ export interface PreloadQueryFunction {
       returnPartialData: true;
       errorPolicy: "ignore" | "all";
     }
-  ): PreloadedQueryRef<DeepPartial<TData> | undefined, TVariables>;
+  ): PreloadedQueryRef<
+    TData,
+    TVariables,
+    "complete" | "streaming" | "partial" | "empty"
+  >;
 
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
@@ -84,7 +87,7 @@ export interface PreloadQueryFunction {
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       errorPolicy: "ignore" | "all";
     }
-  ): PreloadedQueryRef<TData | undefined, TVariables>;
+  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "empty">;
 
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
@@ -92,7 +95,7 @@ export interface PreloadQueryFunction {
     options: PreloadQueryOptions<NoInfer<TVariables>> & {
       returnPartialData: true;
     }
-  ): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
+  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming" | "partial">;
 
   /** {@inheritDoc @apollo/client!PreloadQueryFunction:interface} */
   <TData = unknown, TVariables extends OperationVariables = OperationVariables>(
@@ -100,7 +103,7 @@ export interface PreloadQueryFunction {
     ...[options]: {} extends TVariables ?
       [options?: PreloadQueryOptions<NoInfer<TVariables>>]
     : [options: PreloadQueryOptions<NoInfer<TVariables>>]
-  ): PreloadedQueryRef<TData, TVariables>;
+  ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
 }
 
 /**

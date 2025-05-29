@@ -2,6 +2,7 @@ import { Trie } from "@wry/trie";
 
 import type {
   ApolloClient,
+  DataState,
   ObservableQuery,
   OperationVariables,
   WatchFragmentOptions,
@@ -35,12 +36,13 @@ export class SuspenseCache {
     this.options = options;
   }
 
-  getQueryRef<TData = unknown>(
-    cacheKey: CacheKey,
-    createObservable: () => ObservableQuery<TData>
-  ) {
+  getQueryRef<
+    TData = unknown,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  >(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>) {
     const ref = this.queryRefs.lookupArray(cacheKey) as {
-      current?: InternalQueryReference<TData>;
+      current?: InternalQueryReference<TData, TStates>;
     };
 
     if (!ref.current) {
@@ -76,7 +78,7 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>) {
+  add(cacheKey: CacheKey, queryRef: InternalQueryReference<any, any>) {
     const ref = this.queryRefs.lookupArray(cacheKey);
     ref.current = queryRef;
   }

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import type { OperationVariables } from "@apollo/client";
+import type { DataState, OperationVariables } from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import type { FetchMoreQueryOptions } from "@apollo/client";
 import type { ApolloClient } from "@apollo/client";
@@ -58,7 +58,7 @@ export function useQueryRefHandlers<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryRef<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>
 ): useQueryRefHandlers.Result<TData, TVariables> {
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
@@ -81,7 +81,7 @@ function useQueryRefHandlers_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  queryRef: QueryRef<TData, TVariables>
+  queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>
 ): useQueryRefHandlers.Result<TData, TVariables> {
   assertWrappedQueryRef(queryRef);
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);

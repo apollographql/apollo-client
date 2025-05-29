@@ -747,6 +747,7 @@ describe("client", () => {
     const stream = new ObservableStream(observable);
     const emittedValue: ApolloQueryResult<unknown> = {
       data: undefined,
+      dataState: "empty",
       error: expectedError,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -933,6 +934,7 @@ describe("client", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -940,6 +942,7 @@ describe("client", () => {
 
     await expect(stream).toEmitTypedValue({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1905,12 +1908,14 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: initialData,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: false,
       });
       await expect(stream).toEmitTypedValue({
         data: networkFetch,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1939,6 +1944,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1946,6 +1952,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: networkFetch,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1974,6 +1981,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1981,6 +1989,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: new Error("Oops"),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2014,12 +2023,14 @@ describe("client", () => {
       await expect(stream).toEmitTypedValue({
         loading: true,
         data: initialData,
+        dataState: "complete",
         networkStatus: 1,
         partial: false,
       });
 
       await expect(stream).toEmitTypedValue({
         data: initialData,
+        dataState: "complete",
         error: new CombinedGraphQLErrors({
           errors: [{ message: "network failure" }],
         }),
@@ -2055,6 +2066,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2062,6 +2074,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2098,6 +2111,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2105,6 +2119,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2121,6 +2136,7 @@ describe("client", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2606,6 +2622,7 @@ describe("client", () => {
 
     await expect(stream).toEmitTypedValue({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2714,6 +2731,7 @@ describe("client", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       error: new Error("Uh oh!"),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -2750,6 +2768,7 @@ describe("client", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -2759,6 +2778,7 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2769,11 +2789,13 @@ describe("client", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      dataState: "complete",
       partial: false,
     });
 
     await expect(stream).toEmitTypedValue({
       data,
+      dataState: "complete",
       error: new Error("This is an error!"),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -2792,6 +2814,7 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2802,6 +2825,7 @@ describe("client", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2809,6 +2833,7 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: dataTwo,
+      dataState: "complete",
       partial: false,
     });
 
@@ -3369,6 +3394,7 @@ describe("@connection", () => {
 
     await expect(aStream).toEmitTypedValue({
       data: { a: 123 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3376,6 +3402,7 @@ describe("@connection", () => {
 
     await expect(bStream).toEmitTypedValue({
       data: { b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3383,6 +3410,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitTypedValue({
       data: { a: 123, b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3392,6 +3420,7 @@ describe("@connection", () => {
 
     await expect(aStream).toEmitTypedValue({
       data: { a: 234 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3401,6 +3430,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitTypedValue({
       data: { a: 234, b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3412,6 +3442,7 @@ describe("@connection", () => {
 
     await expect(bStream).toEmitTypedValue({
       data: { b: "ASDF" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3419,6 +3450,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitTypedValue({
       data: { a: 234, b: "ASDF" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3429,6 +3461,7 @@ describe("@connection", () => {
 
     await expect(aStream).toEmitTypedValue({
       data: { a: 456 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3436,6 +3469,7 @@ describe("@connection", () => {
 
     await expect(bStream).toEmitTypedValue({
       data: { b: "oyez" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3443,6 +3477,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitTypedValue({
       data: { a: 456, b: "oyez" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3466,6 +3501,7 @@ describe("@connection", () => {
 
     await expect(cStream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3485,6 +3521,7 @@ describe("@connection", () => {
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitTypedValue({
       data: { c: "see" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3504,6 +3541,7 @@ describe("@connection", () => {
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitTypedValue({
       data: { c: "saw" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3516,6 +3554,7 @@ describe("@connection", () => {
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3682,12 +3721,14 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: initialData,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: false,
       });
       await expect(stream).toEmitTypedValue({
         data: networkFetch,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3758,6 +3799,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { count: "initial" },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3771,6 +3813,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { count: "initial" },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -3778,6 +3821,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { count: 0 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3793,6 +3837,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { count: "secondary" },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3803,6 +3848,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { count: "secondary" },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: false,
@@ -3810,6 +3856,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { count: 1 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3867,6 +3914,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3874,6 +3922,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3893,12 +3942,14 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 1 },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
       });
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3922,6 +3973,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 2 },
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: false,
@@ -3929,6 +3981,7 @@ describe("@connection", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { linkCount: 3 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5040,6 +5093,7 @@ describe("custom document transforms", () => {
         data: {
           currentUser: { __typename: "User", id: 1, name: "John Doe" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5195,6 +5249,7 @@ describe("custom document transforms", () => {
             description: "Cached product description",
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5286,6 +5341,7 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5312,6 +5368,7 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 1 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5405,6 +5462,7 @@ describe("custom document transforms", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -5414,6 +5472,7 @@ describe("custom document transforms", () => {
       data: {
         products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5439,6 +5498,7 @@ describe("custom document transforms", () => {
       data: {
         products: [{ __typename: "Product", id: 1 }],
       },
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       partial: false,
@@ -5451,6 +5511,7 @@ describe("custom document transforms", () => {
           { __typename: "Product", id: 2 },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5585,6 +5646,7 @@ describe("custom document transforms", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -5595,6 +5657,7 @@ describe("custom document transforms", () => {
         currentUser: { id: 1 },
         products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5630,6 +5693,7 @@ describe("custom document transforms", () => {
         currentUser: { id: 1 },
         products: [{ __typename: "Product", id: 1 }],
       },
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       partial: false,
@@ -5643,6 +5707,7 @@ describe("custom document transforms", () => {
           { __typename: "Product", id: 2 },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5735,6 +5800,7 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5761,6 +5827,7 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 2 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5851,6 +5918,7 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5877,6 +5945,7 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 2 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5976,6 +6045,7 @@ describe("custom document transforms", () => {
     await waitFor(() => {
       expect(handleNext).toHaveBeenLastCalledWith({
         data: mocks[0].result.data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5996,6 +6066,7 @@ describe("custom document transforms", () => {
 
     expect(handleNext).toHaveBeenLastCalledWith({
       data: mocks[1].result.data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -6595,6 +6666,7 @@ describe("unconventional errors", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -6602,6 +6674,7 @@ describe("unconventional errors", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       error: expectedError,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -6660,6 +6733,7 @@ describe("unconventional errors", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -6667,6 +6741,7 @@ describe("unconventional errors", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: expectedError,
         loading: false,
         networkStatus: NetworkStatus.error,

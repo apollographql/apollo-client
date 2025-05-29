@@ -451,6 +451,7 @@ describe("client.refetchQueries", () => {
         next(result) {
           expect(result).toStrictEqualTyped({
             data: { a: "A", b: "B" },
+            dataState: "complete",
             loading: false,
             networkStatus: NetworkStatus.ready,
             partial: false,
@@ -535,6 +536,7 @@ describe("client.refetchQueries", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -542,6 +544,7 @@ describe("client.refetchQueries", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { a: "A", b: "B" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

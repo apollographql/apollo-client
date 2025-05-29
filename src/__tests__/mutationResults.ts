@@ -286,10 +286,14 @@ describe("mutation results", () => {
     });
 
     const stream = new ObservableStream(obs);
-    {
-      const result = await stream.takeNext();
-      expect(result.data!.mini.cover).toBe("image");
-    }
+
+    await expect(stream).toEmitTypedValue({
+      data: { mini: { id: 1, cover: "image", __typename: "Mini" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     await expect(
       client.mutate({ mutation, variables: { signature: "1234" } })
@@ -297,10 +301,13 @@ describe("mutation results", () => {
       data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
     });
 
-    {
-      const result = await stream.takeNext();
-      expect(result.data!.mini.cover).toBe("image2");
-    }
+    await expect(stream).toEmitTypedValue({
+      data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
   });
 
   it("should write results to cache according to errorPolicy", async () => {
@@ -1295,6 +1302,7 @@ describe("mutation results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1304,6 +1312,7 @@ describe("mutation results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: true,
@@ -1311,6 +1320,7 @@ describe("mutation results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { echo: "b" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1329,6 +1339,7 @@ describe("mutation results", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { echo: "0" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

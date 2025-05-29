@@ -748,6 +748,7 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -758,6 +759,7 @@ describe("@client @export tests", () => {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -782,6 +784,7 @@ describe("@client @export tests", () => {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -829,6 +832,7 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -839,6 +843,7 @@ describe("@client @export tests", () => {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -855,6 +860,7 @@ describe("@client @export tests", () => {
       expected: (previous) => ({
         ...previous,
         data: { ...previous.data!, postCount: testPostCount2 },
+        dataState: "complete",
       }),
     });
     expect(fetchCount).toBe(1);
@@ -905,6 +911,7 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -915,6 +922,7 @@ describe("@client @export tests", () => {
         currentAuthorId: testAuthorId1,
         postCount: testPostCount1,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -941,6 +949,7 @@ describe("@client @export tests", () => {
         currentAuthorId: testAuthorId2,
         postCount: testPostCount2,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -991,6 +1000,7 @@ describe("@client @export tests", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1001,6 +1011,7 @@ describe("@client @export tests", () => {
         widgetCount: 100,
         doubleWidgets: 200,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1026,6 +1037,7 @@ describe("@client @export tests", () => {
         widgetCount: 500,
         doubleWidgets: 1000,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

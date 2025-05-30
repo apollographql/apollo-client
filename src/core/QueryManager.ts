@@ -1240,9 +1240,7 @@ export class QueryManager {
           ).pipe(
             onAnyEvent((event) => {
               if (
-                (event.type !== "next" ||
-                  !("hasNext" in event.value) ||
-                  !event.value.hasNext) &&
+                event.type !== "next" &&
                 inFlightLinkObservables.peek(printedServerQuery, varJson) ===
                   entry
               ) {

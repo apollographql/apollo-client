@@ -48,6 +48,7 @@ import type { ObservableNotification } from 'rxjs';
 import { ObservableQuery as ObservableQuery_2 } from '@apollo/client';
 import type { Observer } from 'rxjs';
 import type { OnQueryUpdated as OnQueryUpdated_2 } from '@apollo/client';
+import { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
 import { PreloadedQueryRef } from '@apollo/client/react/internal';
 import type { Prettify } from '@apollo/client/utilities/internal';
@@ -987,6 +988,8 @@ interface TransformCacheEntry {
     // (undocumented)
     nonReactiveQuery: DocumentNode;
     // (undocumented)
+    operationType: OperationTypeNode | undefined;
+    // (undocumented)
     serverQuery: DocumentNode | null;
 }
 
@@ -1589,8 +1592,8 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:288:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:289:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:473:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:208:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

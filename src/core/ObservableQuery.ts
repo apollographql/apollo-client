@@ -26,7 +26,8 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import { LastWrite, QueryInfo } from "./QueryInfo.js";
+import type { LastWrite } from "./QueryInfo.js";
+import { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -1111,7 +1112,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               complete: () => subscriber.complete(),
             });
           } finally {
-            if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
+            if (!synchronouslyEmitted) {
               operation.override = networkStatus;
               this.input.next({
                 kind: "N",

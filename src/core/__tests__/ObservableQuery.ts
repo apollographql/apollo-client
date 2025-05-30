@@ -3255,12 +3255,8 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
 
       link.simulateResult({
         result: {
@@ -3288,18 +3284,8 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            __typename: "Greeting",
-          },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        // this lines up more with the (faulty) stream emit above now
-        partial: false,
-      });
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
 
       link.simulateResult(
         {
@@ -3338,39 +3324,10 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
-            },
-            __typename: "Greeting",
-          },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
       // This 2nd identical check is intentional to ensure calling this function
       // more than once returns the right value.
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
-            },
-            __typename: "Greeting",
-          },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
 
       await expect(stream).not.toEmitAnything();
     });

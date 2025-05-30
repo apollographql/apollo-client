@@ -7,6 +7,7 @@ import {
   concat,
   EMPTY,
   filter,
+  finalize,
   from,
   lastValueFrom,
   map,
@@ -1238,11 +1239,10 @@ export class QueryManager {
             operation,
             executeContext
           ).pipe(
-            onAnyEvent((event) => {
+            finalize(() => {
               if (
-                event.type !== "next" &&
                 inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                  entry
+                entry
               ) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }

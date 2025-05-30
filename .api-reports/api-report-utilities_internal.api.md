@@ -18,7 +18,6 @@ import { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
 import type { MutationOptions } from '@apollo/client';
-import { Observable } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { OperationTypeNode } from 'graphql';
 import type { OperationVariables } from '@apollo/client';
@@ -327,24 +326,8 @@ export function mergeOptions<TDefaultOptions extends Partial<OptionsUnion<any, a
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 export { NoInfer_2 as NoInfer }
 
-// @public (undocumented)
-type ObservableEvent<T> = {
-    type: "complete";
-} | {
-    type: "error";
-    error: unknown;
-} | {
-    type: "next";
-    value: T;
-};
-
 // @internal @deprecated (undocumented)
 export function omitDeep<T, K extends string>(value: T, key: K): DeepOmit<T, K>;
-
-// Warning: (ae-forgotten-export) The symbol "ObservableEvent" needs to be exported by the entry point index.d.ts
-//
-// @internal @deprecated (undocumented)
-export function onAnyEvent<T>(handleEvent: (event: ObservableEvent<T>) => void): (observable: Observable<T>) => Observable<T>;
 
 // @public (undocumented)
 type OptionsUnion<TData, TVariables extends OperationVariables> = WatchQueryOptions<TVariables, TData> | QueryOptions<TVariables, TData> | MutationOptions<TData, TVariables, any>;

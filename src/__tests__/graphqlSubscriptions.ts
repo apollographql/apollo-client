@@ -745,4 +745,80 @@ describe("GraphQL Subscriptions", () => {
 
     await expect(sub3).toComplete();
   });
+
+  it("can mix deduplicated requests and new subscriptions with `queryDeduplication: false`", async () => {
+    const subscription = gql`
+      subscription UserInfo($name: String = "Changping Chen") {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const observers = new Set<Subscriber<FetchResult>>();
+    const link = new ApolloLink((_operation) => {
+      return new Observable((observer) => {
+        observers.add(observer);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    using sub1 = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+    using sub2 = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+
+    expect(observers.size).toBe(1);
+
+    const [observer1] = Array.from(observers);
+
+    observer1.next(results[0].result);
+
+    await expect(sub1).toEmitTypedValue(results[0].result);
+    await expect(sub2).toEmitTypedValue(results[0].result);
+
+    using sub3 = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        context: { queryDeduplication: false },
+      })
+    );
+
+    expect(observers.size).toBe(2);
+
+    const [, observer2] = Array.from(observers);
+
+    observer2.next(results[1].result);
+
+    await expect(sub1).not.toEmitAnything();
+    await expect(sub2).not.toEmitAnything();
+    await expect(sub3).toEmitTypedValue(results[1].result);
+
+    observer1.next(results[2].result);
+
+    await expect(sub1).toEmitTypedValue(results[2].result);
+    await expect(sub2).toEmitTypedValue(results[2].result);
+    await expect(sub3).not.toEmitAnything();
+
+    observer2.next(results[3].result);
+
+    await expect(sub1).not.toEmitAnything();
+    await expect(sub2).not.toEmitAnything();
+    await expect(sub3).toEmitTypedValue(results[3].result);
+
+    observer1.complete();
+
+    await expect(sub1).toComplete();
+    await expect(sub2).toComplete();
+    await expect(sub3).not.toEmitAnything();
+
+    observer2.complete();
+
+    await expect(sub3).toComplete();
+  });
 });

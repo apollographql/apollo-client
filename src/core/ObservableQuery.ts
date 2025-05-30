@@ -1102,7 +1102,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options: ObservableQuery.Options<TData, TVariables>,
     networkStatus: NetworkStatus,
     fetchQuery: DocumentNode,
-    pipeOperator: MonoTypeOperatorFunction<QueryNotification.Value<TData>>
+    operator: MonoTypeOperatorFunction<QueryNotification.Value<TData>>
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -1173,7 +1173,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     let forceFirstValueEmit =
       networkStatus == NetworkStatus.refetch ||
       networkStatus == NetworkStatus.setVariables;
-    observable = observable.pipe(pipeOperator, share());
+    observable = observable.pipe(operator, share());
     const subscription = observable
       .pipe(
         tap({
@@ -1297,9 +1297,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
   private _reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
-    /** @internal These options are an implementation detail of `ObservableQuery` and should not be specified in userland code. */
     internalOptions?: {
-      /** @internal This option is an implementation detail of `ObservableQuery` and should not be specified in userland code. */
       newNetworkStatus?: NetworkStatus;
     }
   ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {

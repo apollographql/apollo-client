@@ -1364,7 +1364,6 @@ export class QueryManager {
       onCacheHit?: () => void;
     }
   ): ObservableAndInfo<TData> {
-    console.log("starting", options);
     const variables = this.getVariables(query, options.variables) as TVars;
 
     const defaults = this.defaultOptions.watchQuery;

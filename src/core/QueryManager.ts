@@ -129,6 +129,7 @@ interface TransformCacheEntry {
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
+  operationType: OperationTypeNode | undefined;
 }
 
 interface MaskFragmentOptions<TData> {
@@ -774,6 +775,7 @@ export class QueryManager {
           ],
           document
         ),
+        operationType: getOperationDefinition(document)?.operation,
         defaultVars: getDefaultValues(
           getOperationDefinition(document)
         ) as OperationVariables,
@@ -1194,7 +1196,8 @@ export class QueryManager {
   ): Observable<FetchResult<TData>> {
     let observable: Observable<FetchResult<TData>> | undefined;
 
-    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+    const { serverQuery, clientQuery, operationType } =
+      this.getDocumentInfo(query);
 
     const operationName = getOperationName(query);
     const executeContext: ExecuteContext = {
@@ -1246,7 +1249,12 @@ export class QueryManager {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
             }),
-            shareReplay({ refCount: true })
+            // We don't want to replay the last emitted value for
+            // subscriptions and instead opt to wait to receive updates until
+            // the subscription emits new values.
+            operationType === OperationTypeNode.SUBSCRIPTION ?
+              share()
+            : shareReplay({ refCount: true })
           );
         }
       } else {

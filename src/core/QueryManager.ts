@@ -61,7 +61,6 @@ import {
   isNonNullObject,
   makeUniqueId,
   mergeIncrementalData,
-  onAnyEvent,
   removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";

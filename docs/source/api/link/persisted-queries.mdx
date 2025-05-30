@@ -81,6 +81,10 @@ You can optionally create a configuration file in the root of your project to ov
 
 To automatically update the manifest for each new app release, include the `generate-persisted-query-manifest` command in your CI/CD pipeline.
 
+<Tip>
+If you see a difference in the id generated in the manifest and the one your client is sending at runtime, be sure to read the options available in your clients respective `generate-persisted-query-manifest` tools
+</Tip>
+
 ## 2. Publish manifests to a PQL
 
 <PublishPQMs />

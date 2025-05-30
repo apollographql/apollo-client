@@ -7,6 +7,7 @@ import {
   concat,
   EMPTY,
   filter,
+  finalize,
   from,
   lastValueFrom,
   map,
@@ -60,7 +61,6 @@ import {
   isNonNullObject,
   makeUniqueId,
   mergeIncrementalData,
-  onAnyEvent,
   removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -129,6 +129,7 @@ interface TransformCacheEntry {
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
+  operationType: OperationTypeNode | undefined;
 }
 
 interface MaskFragmentOptions<TData> {
@@ -754,6 +755,8 @@ export class QueryManager {
     const { transformCache } = this;
 
     if (!transformCache.has(document)) {
+      const operationDefinition = getOperationDefinition(document);
+
       const cacheEntry: TransformCacheEntry = {
         // TODO These three calls (hasClientExports, shouldForceResolvers, and
         // usesNonreactiveDirective) are performing independent full traversals
@@ -774,8 +777,9 @@ export class QueryManager {
           ],
           document
         ),
+        operationType: operationDefinition?.operation,
         defaultVars: getDefaultValues(
-          getOperationDefinition(document)
+          operationDefinition
         ) as OperationVariables,
         // Transform any mutation or subscription operations to query operations
         // so we can read/write them from/to the cache.
@@ -1194,7 +1198,8 @@ export class QueryManager {
   ): Observable<FetchResult<TData>> {
     let observable: Observable<FetchResult<TData>> | undefined;
 
-    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+    const { serverQuery, clientQuery, operationType } =
+      this.getDocumentInfo(query);
 
     const operationName = getOperationName(query);
     const executeContext: ExecuteContext = {
@@ -1235,18 +1240,20 @@ export class QueryManager {
             operation,
             executeContext
           ).pipe(
-            onAnyEvent((event) => {
+            finalize(() => {
               if (
-                (event.type !== "next" ||
-                  !("hasNext" in event.value) ||
-                  !event.value.hasNext) &&
                 inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                  entry
+                entry
               ) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
             }),
-            shareReplay({ refCount: true })
+            // We don't want to replay the last emitted value for
+            // subscriptions and instead opt to wait to receive updates until
+            // the subscription emits new values.
+            operationType === OperationTypeNode.SUBSCRIPTION ?
+              share()
+            : shareReplay({ refCount: true })
           );
         }
       } else {

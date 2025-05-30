@@ -755,6 +755,8 @@ export class QueryManager {
     const { transformCache } = this;
 
     if (!transformCache.has(document)) {
+      const operationDefinition = getOperationDefinition(document);
+
       const cacheEntry: TransformCacheEntry = {
         // TODO These three calls (hasClientExports, shouldForceResolvers, and
         // usesNonreactiveDirective) are performing independent full traversals
@@ -775,9 +777,9 @@ export class QueryManager {
           ],
           document
         ),
-        operationType: getOperationDefinition(document)?.operation,
+        operationType: operationDefinition?.operation,
         defaultVars: getDefaultValues(
-          getOperationDefinition(document)
+          operationDefinition
         ) as OperationVariables,
         // Transform any mutation or subscription operations to query operations
         // so we can read/write them from/to the cache.

@@ -598,9 +598,9 @@ describe("GraphQL Subscriptions", () => {
 
     observer.next(results[2].result);
 
-    await expect(sub1).toEmitTypedValue(results[1].result);
-    await expect(sub2).toEmitTypedValue(results[1].result);
-    await expect(sub3).toEmitTypedValue(results[1].result);
+    await expect(sub1).toEmitTypedValue(results[2].result);
+    await expect(sub2).toEmitTypedValue(results[2].result);
+    await expect(sub3).toEmitTypedValue(results[2].result);
 
     observer.complete();
 

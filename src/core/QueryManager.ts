@@ -245,9 +245,7 @@ export class QueryManager {
    * to dispose of this QueryManager instance.
    */
   public stop() {
-    this.obsQueries.forEach((oq) => {
-      oq["tearDownQuery"]();
-    });
+    this.obsQueries.forEach((oq) => oq.stop());
 
     this.cancelPendingFetches(
       newInvariantError("QueryManager stopped while query was in flight")

@@ -4983,7 +4983,7 @@ describe("ObservableQuery", () => {
     expect(onWatchUpdatedCount).toBe(1);
     client.stop();
 
-    await expect(stream).not.toEmitAnything();
+    await expect(stream).toComplete();
   });
 });
 

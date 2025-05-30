@@ -252,19 +252,17 @@ export class ObservableQuery<
     query: TypedDocumentNode<TData, TVariables>;
     variables: TVariables;
   };
-  private input: Subject<
+  private input!: Subject<
     QueryNotification.Value<TData> & {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       meta: Meta;
     }
   >;
-  private subject: BehaviorSubject<
+  private subject!: BehaviorSubject<
     SubjectValue<MaybeMasked<TData>, TVariables>
   >;
-  private readonly observable: Observable<
-    ApolloQueryResult<MaybeMasked<TData>>
-  >;
+  private observable!: Observable<ApolloQueryResult<MaybeMasked<TData>>>;
 
   private isTornDown: boolean;
   private queryManager: QueryManager;
@@ -339,6 +337,13 @@ export class ObservableQuery<
       variables: this.getVariablesWithDefaults(options.variables),
     };
 
+    this.initializeObservablesQueue();
+
+    const opDef = getOperationDefinition(this.query);
+    this.queryName = opDef && opDef.name && opDef.name.value;
+  }
+
+  private initializeObservablesQueue() {
     this.subject = new BehaviorSubject<
       SubjectValue<MaybeMasked<TData>, TVariables>
     >({
@@ -438,26 +443,23 @@ export class ObservableQuery<
     // be able to close `this.input`
     this.input.complete = () => {};
     this.input.pipe(this.operator).subscribe(this.subject);
-
-    const opDef = getOperationDefinition(this.query);
-    this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
   // We can't use Observable['subscribe'] here as the type as it conflicts with
   // the ability to infer T from Subscribable<T>. This limits the surface area
   // to the non-deprecated signature which works properly with type inference.
-  public subscribe: (
+  public subscribe!: (
     observer:
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) => Subscription;
 
-  public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
+  public pipe!: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
   public [Symbol.observable]!: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  public ["@@observable"]: () => Subscribable<
+  public ["@@observable"]!: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
 
@@ -1434,6 +1436,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   public hasObservers() {
     return this.subject.observed;
+  }
+
+  /**
+   * @internal
+   * Tears down the `ObservableQuery` and stops all active operations by sending a `complete` notification.
+   */
+  public stop() {
+    this.subject.complete();
+    this.initializeObservablesQueue();
+    this.tearDownQuery();
   }
 
   private tearDownQuery() {

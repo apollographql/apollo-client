@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import { tap } from "rxjs";
 
 type ObservableEvent<T> =
   | { type: "complete" }
@@ -9,26 +9,9 @@ type ObservableEvent<T> =
 export function onAnyEvent<T>(
   handleEvent: (event: ObservableEvent<T>) => void
 ) {
-  return (observable: Observable<T>) => {
-    return new Observable<T>((observer) => {
-      const subscription = observable.subscribe({
-        next: (value) => {
-          handleEvent({ type: "next", value });
-          observer.next(value);
-        },
-        error: (error) => {
-          handleEvent({ type: "error", error });
-          observer.error(error);
-        },
-        complete: () => {
-          handleEvent({ type: "complete" });
-          observer.complete();
-        },
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    });
-  };
+  return tap<T>({
+    next: (value) => handleEvent({ type: "next", value }),
+    error: (error) => handleEvent({ type: "error", error }),
+    complete: () => handleEvent({ type: "complete" }),
+  });
 }

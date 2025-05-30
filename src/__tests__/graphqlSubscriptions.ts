@@ -1,7 +1,12 @@
 import { gql } from "graphql-tag";
 import type { Subscriber } from "rxjs";
 
-import type { FetchResult, TypedDocumentNode } from "@apollo/client";
+import type {
+  DefaultContext,
+  FetchResult,
+  Operation,
+  TypedDocumentNode,
+} from "@apollo/client";
 import { ApolloClient, ApolloLink, Observable } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -607,6 +612,58 @@ describe("GraphQL Subscriptions", () => {
     await expect(sub1).toComplete();
     await expect(sub2).toComplete();
     await expect(sub3).toComplete();
+  });
+
+  it("does not deduplicate new request after unsubscribing from previous deduped request", async () => {
+    const subscription = gql`
+      subscription UserInfo($name: String = "Changping Chen") {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    let lastOperation!: Operation;
+    const observers = new Set<Subscriber<FetchResult>>();
+    const link = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        lastOperation = operation;
+        observers.add(observer);
+        return () => observers.delete(observer);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    using sub1 = new ObservableStream(
+      client.subscribe({ query: subscription, context: { count: 1 } })
+    );
+
+    expect(observers.size).toBe(1);
+    expect(lastOperation.getContext()).toMatchObject({ count: 1 });
+
+    const [observer1] = Array.from(observers);
+    observer1.next(results[0].result);
+
+    await expect(sub1).toEmitTypedValue(results[0].result);
+    sub1.unsubscribe();
+
+    expect(observers.size).toBe(0);
+
+    using sub2 = new ObservableStream(
+      client.subscribe({ query: subscription, context: { count: 2 } })
+    );
+
+    expect(observers.size).toBe(1);
+    expect(lastOperation.getContext()).toMatchObject({ count: 2 });
+
+    const [observer2] = Array.from(observers);
+
+    observer2.next(results[2].result);
+
+    await expect(sub2).toEmitTypedValue(results[2].result);
   });
 
   it("does not deduplicate requests when disabling queryDeduplication", async () => {

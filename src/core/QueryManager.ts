@@ -966,19 +966,14 @@ export class QueryManager {
 
     if (legacyQueryOptions.size) {
       legacyQueryOptions.forEach((options: QueryOptions) => {
-        // We will be issuing a fresh network request for this query, so we
-        // pre-allocate a new query ID here, using a special prefix to enable
-        // cleaning up these temporary queries later, after fetching.
-        const queryId = makeUniqueId("legacyOneTimeQuery");
         const oq = new ObservableQuery({
           queryManager: this,
-          queryId,
           options: {
             ...options,
             fetchPolicy: "network-only",
           },
         });
-        queries.set(queryId, oq);
+        queries.set(oq.queryId, oq);
       });
     }
 
@@ -1654,10 +1649,6 @@ export class QueryManager {
 
         if (result !== false) {
           results.set(oq, result as InternalRefetchQueriesResult<TResult>);
-        }
-
-        if (queryId.indexOf("legacyOneTimeQuery") >= 0) {
-          this.removeQuery(queryId);
         }
       });
     }

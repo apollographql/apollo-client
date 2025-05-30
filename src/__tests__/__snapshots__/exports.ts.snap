@@ -442,7 +442,6 @@ Array [
   "mergeIncrementalData",
   "mergeOptions",
   "omitDeep",
-  "onAnyEvent",
   "preventUnhandledRejection",
   "registerGlobalCache",
   "removeDirectivesFromDocument",

@@ -1,12 +1,7 @@
 import { gql } from "graphql-tag";
 import type { Subscriber } from "rxjs";
 
-import type {
-  DefaultContext,
-  FetchResult,
-  Operation,
-  TypedDocumentNode,
-} from "@apollo/client";
+import type { FetchResult, Operation, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, Observable } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {

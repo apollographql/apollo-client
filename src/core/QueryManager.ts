@@ -191,10 +191,9 @@ export class QueryManager {
     [mutationId: string]: MutationStoreValue;
   };
 
-  // All the queries that the QueryManager is currently managing (not
-  // including mutations and subscriptions).
-  private queries = new Map<string, QueryInfo>();
-
+  /**
+   * All ObservableQueries that currently have at least one subscriber.
+   */
   public obsQueries = new Set<ObservableQuery<any, any>>();
 
   // Maps from queryId strings to Promise rejection functions for
@@ -253,15 +252,9 @@ export class QueryManager {
       oq["tearDownQuery"]();
     });
 
-    // the call to `removeQuery` before `cancelPendingFetches` irritates me
-    // `removeQuery` removes all `fetchCancelFns` so `cancelPendingFetches` won't
-    // actually call anything after?
     this.cancelPendingFetches(
       newInvariantError("QueryManager stopped while query was in flight")
     );
-    this.queries.forEach((_info, queryId) => {
-      this.removeQuery(queryId);
-    });
   }
 
   private cancelPendingFetches(error: Error) {
@@ -725,7 +718,6 @@ export class QueryManager {
       queryManager: this,
       queryId,
     });
-    this.queries.set(queryId, queryInfo);
     return lastValueFrom(
       this.fetchObservableWithInfo(queryInfo, options, {
         networkStatus,
@@ -746,7 +738,7 @@ export class QueryManager {
         // an EmptyError from rejecting this promise.
         defaultValue: { data: undefined },
       }
-    ).finally(() => this.queries.delete(queryId));
+    );
   }
 
   public transform(document: DocumentNode) {
@@ -1141,16 +1133,6 @@ export class QueryManager {
     }
 
     return makeObservable(variables);
-  }
-
-  public removeQuery(queryId: string) {
-    // teardown all links
-    // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
-    // that each add their reject functions to fetchCancelFns.
-    // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
-    // The same queryId could have two rejection fns for two promises
-    this.fetchCancelFns.delete(queryId);
-    this.queries.delete(queryId);
   }
 
   public broadcastQueries() {

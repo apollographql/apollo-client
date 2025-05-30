@@ -6101,4 +6101,27 @@ describe.skip("Type Tests", () => {
       },
     });
   });
+
+  test("execution result has `.retain` method", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql`
+      query Greeting {
+        greeting
+      }
+    `;
+
+    const [execute] = useLazyQuery(query);
+    const result = execute();
+
+    // test assignability to a normal promise
+    expectTypeOf(result).toMatchTypeOf<
+      Promise<
+        QueryResult<{
+          greeting: string;
+        }>
+      >
+    >();
+
+    // retain should return the same type as the original result
+    expectTypeOf(result.retain()).toEqualTypeOf(result);
+  });
 });

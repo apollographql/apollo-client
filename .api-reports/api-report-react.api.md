@@ -1156,7 +1156,7 @@ export namespace useLazyQuery {
     // (undocumented)
     export type ExecFunction<TData, TVariables extends OperationVariables> = (...args: {} extends TVariables ? [
     options?: useLazyQuery.ExecOptions<TVariables>
-    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => Promise<QueryResult_3<TData>>;
+    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => ObservableQuery_2.ResultPromise<QueryResult_3<TData>>;
     // (undocumented)
     export type ExecOptions<TVariables extends OperationVariables = OperationVariables> = {
         context?: DefaultContext_2;

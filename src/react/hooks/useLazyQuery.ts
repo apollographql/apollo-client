@@ -174,7 +174,7 @@ export declare namespace useLazyQuery {
     ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
-  ) => Promise<QueryResult<TData>>;
+  ) => ObservableQuery.ResultPromise<QueryResult<TData>>;
 }
 
 // The following methods, when called will execute the query, regardless of
@@ -364,15 +364,13 @@ export function useLazyQuery<
           fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        return observable
-          .reobserve({
-            ...executeOptions,
-            fetchPolicy,
-            // If `variables` is not given, reset back to empty variables by
-            // ensuring the key exists in options
-            variables: executeOptions?.variables,
-          })
-          .retain(/* create a persistent subscription on the query */);
+        return observable.reobserve({
+          ...executeOptions,
+          fetchPolicy,
+          // If `variables` is not given, reset back to empty variables by
+          // ensuring the key exists in options
+          variables: executeOptions?.variables,
+        });
       },
       [observable, calledDuringRender]
     );

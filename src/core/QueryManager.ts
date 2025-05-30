@@ -12,7 +12,6 @@ import {
   map,
   materialize,
   mergeMap,
-  mergeWith,
   Observable,
   of,
   share,
@@ -1365,6 +1364,7 @@ export class QueryManager {
       onCacheHit?: () => void;
     }
   ): ObservableAndInfo<TData> {
+    console.log("starting", options);
     const variables = this.getVariables(query, options.variables) as TVars;
 
     const defaults = this.defaultOptions.watchQuery;
@@ -1440,7 +1440,6 @@ export class QueryManager {
       // We need to call `complete` on the subject here otherwise the merged
       // observable will never complete since it waits for all source
       // observables to complete before itself completes.
-      fetchCancelSubject.complete();
     };
     this.fetchCancelFns.set(queryInfo.queryId, (error) => {
       fetchCancelSubject.next({
@@ -1448,8 +1447,6 @@ export class QueryManager {
         error,
         source: "network",
       });
-      fetchCancelSubject.complete();
-      cleanupCancelFn();
     });
 
     const fetchCancelSubject = new Subject<QueryNotification.Value<TData>>();
@@ -1494,11 +1491,14 @@ export class QueryManager {
     }
 
     return {
-      observable: observable.pipe(
-        tap({ finalize: cleanupCancelFn }),
-        mergeWith(fetchCancelSubject),
-        share()
-      ),
+      // Merge `observable` with `fetchCancelSubject`, in a way that completing or
+      // erroring either of them will complete the merged obserable.
+      //
+      observable: new Observable<QueryNotification.Value<TData>>((observer) => {
+        observer.add(cleanupCancelFn);
+        observer.add(observable.subscribe(observer));
+        observer.add(fetchCancelSubject.subscribe(observer));
+      }).pipe(share()),
       fromLink: containsDataFromLink,
     };
   }
@@ -1900,7 +1900,10 @@ export class QueryManager {
         return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":
-        return { fromLink: false, observable: EMPTY };
+        return {
+          fromLink: false,
+          observable: EMPTY,
+        };
     }
   }
 }

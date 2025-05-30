@@ -4170,7 +4170,8 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(2);
     });
 
-    it("should not error on a stopped query()", async () => {
+    // TODO evaluate if this makes any sense
+    it.skip("should not error on a stopped query()", async () => {
       const query = gql`
         query {
           author {

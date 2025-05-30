@@ -1,7 +1,8 @@
 import { gql } from "graphql-tag";
+import type { Subscriber } from "rxjs";
 
-import type { TypedDocumentNode } from "@apollo/client";
-import { ApolloClient } from "@apollo/client";
+import type { FetchResult, TypedDocumentNode } from "@apollo/client";
+import { ApolloClient, ApolloLink, Observable } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
@@ -546,5 +547,145 @@ describe("GraphQL Subscriptions", () => {
     });
 
     await expect(stream).toComplete();
+  });
+
+  it("deduplicates subscriptions by default", async () => {
+    const subscription = gql`
+      subscription UserInfo($name: String = "Changping Chen") {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const observers = new Set<Subscriber<FetchResult>>();
+    const link = new ApolloLink((_operation) => {
+      return new Observable((observer) => {
+        observers.add(observer);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    using sub1 = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+    using sub2 = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+
+    expect(observers.size).toBe(1);
+
+    const [observer] = Array.from(observers);
+
+    observer.next(results[0].result);
+
+    await expect(sub1).toEmitTypedValue(results[0].result);
+    await expect(sub2).toEmitTypedValue(results[0].result);
+
+    observer.next(results[1].result);
+
+    await expect(sub1).toEmitTypedValue(results[1].result);
+    await expect(sub2).toEmitTypedValue(results[1].result);
+
+    using sub3 = new ObservableStream(
+      client.subscribe({ query: subscription })
+    );
+
+    expect(observers.size).toBe(1);
+
+    observer.next(results[2].result);
+
+    await expect(sub1).toEmitTypedValue(results[1].result);
+    await expect(sub2).toEmitTypedValue(results[1].result);
+    await expect(sub3).toEmitTypedValue(results[1].result);
+
+    observer.complete();
+
+    await expect(sub1).toComplete();
+    await expect(sub2).toComplete();
+    await expect(sub3).toComplete();
+  });
+
+  it("does not deduplicate requests when disabling queryDeduplication", async () => {
+    const subscription = gql`
+      subscription UserInfo($name: String = "Changping Chen") {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const observers = new Set<Subscriber<FetchResult>>();
+    const link = new ApolloLink((_operation) => {
+      return new Observable((observer) => {
+        observers.add(observer);
+      });
+    });
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    using sub1 = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        context: { queryDeduplication: false },
+      })
+    );
+    using sub2 = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        context: { queryDeduplication: false },
+      })
+    );
+
+    expect(observers.size).toBe(2);
+
+    const [observer1, observer2] = Array.from(observers);
+
+    observer1.next(results[0].result);
+
+    await expect(sub1).toEmitTypedValue(results[0].result);
+    await expect(sub2).not.toEmitAnything();
+
+    observer2.next(results[0].result);
+
+    await expect(sub1).not.toEmitAnything();
+    await expect(sub2).toEmitTypedValue(results[0].result);
+
+    using sub3 = new ObservableStream(
+      client.subscribe({
+        query: subscription,
+        context: { queryDeduplication: false },
+      })
+    );
+
+    expect(observers.size).toBe(3);
+
+    const [, , observer3] = Array.from(observers);
+
+    observer3.next(results[1].result);
+
+    await expect(sub1).not.toEmitAnything();
+    await expect(sub2).not.toEmitAnything();
+    await expect(sub3).toEmitTypedValue(results[1].result);
+
+    observer1.complete();
+
+    await expect(sub1).toComplete();
+    await expect(sub2).not.toEmitAnything();
+    await expect(sub3).not.toEmitAnything();
+
+    observer2.complete();
+
+    await expect(sub2).toComplete();
+    await expect(sub3).not.toEmitAnything();
+
+    observer3.complete();
+
+    await expect(sub3).toComplete();
   });
 });

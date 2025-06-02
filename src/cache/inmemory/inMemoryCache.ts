@@ -34,6 +34,7 @@ import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
 import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+import { WeakCache } from "@wry/caches";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -131,6 +132,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
         return this.broadcastWatch(c, options);
       },
       {
+        cache: WeakCache,
         max:
           this.config.resultCacheMaxSize ||
           cacheSizes["inMemoryCache.maybeBroadcastWatch"] ||

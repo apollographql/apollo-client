@@ -422,10 +422,11 @@ export class InternalQueryReference<
       case "pending": {
         // Maintain the last successful `data` value if the next result does not
         // have one.
+        // TODO: This can likely be removed once
+        // https://github.com/apollographql/apollo-client/issues/12667 is fixed
         if (result.data === void 0) {
           result.data = this.result.data;
 
-          // TODO: Move to core
           if (result.data) {
             result.dataState = "complete" as any;
           }

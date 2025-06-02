@@ -1260,7 +1260,7 @@ export namespace useLazyQuery {
     } & (({
         called: true;
         variables: TVariables;
-    } & GetDataState_2<TData, TStates>) | {
+    } & GetDataState_2<MaybeMasked_2<TData>, TStates>) | {
         called: false;
         variables: Partial<TVariables>;
         data: undefined;
@@ -1436,7 +1436,7 @@ export namespace useQuery {
                 variables: TFetchVars;
             }) => Unmasked<TData>;
         }) => Promise<QueryResult_3<MaybeMasked<TFetchData>>>;
-    } & GetDataState_2<TData, TStates>;
+    } & GetDataState_2<MaybeMasked<TData>, TStates>;
 }
 
 // @public (undocumented)

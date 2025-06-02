@@ -2252,14 +2252,14 @@ test("uses updateQuery to update the result of the query with no-cache queries",
 });
 
 test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring yet will not put it into completed state", async () => {
-  const deferLink = mockDeferStream();
+  const defer = mockDeferStream();
   const baseLink = new MockSubscriptionLink();
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: split(
       (op) => op.operationName === "DeferQuery",
-      deferLink.httpLink,
+      defer.httpLink,
       baseLink
     ),
   });
@@ -2313,7 +2313,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
     ],
   };
 
-  deferLink.enqueueInitialChunk({ data: initialData, hasNext: true });
+  defer.enqueueInitialChunk({ data: initialData, hasNext: true });
 
   await expect(stream).toEmitTypedValue({
     data: initialData,
@@ -2323,7 +2323,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
     partial: true,
   });
 
-  deferLink.enqueueSubsequentChunk({
+  defer.enqueueSubsequentChunk({
     incremental: [
       {
         data: {

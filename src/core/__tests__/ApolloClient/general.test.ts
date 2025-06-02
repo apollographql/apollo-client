@@ -525,7 +525,6 @@ describe("ApolloClient", () => {
         const id = ++counter;
         onRequestSubscribe(id);
 
-
         // Delay (100ms) must be bigger than sum of reobserve and unsubscribe awaits (5ms each)
         // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {

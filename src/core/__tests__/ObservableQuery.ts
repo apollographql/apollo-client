@@ -3443,13 +3443,8 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: undefined,
-        dataState: "empty",
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      });
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
 
       link.simulateResult({
         result: {
@@ -3476,18 +3471,8 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            __typename: "Greeting",
-          },
-        },
-        dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: true,
-      });
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
 
       link.simulateResult(
         {
@@ -3527,41 +3512,10 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
-            },
-            __typename: "Greeting",
-          },
-        },
-        dataState: "complete",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
       // This 2nd identical check is intentional to ensure calling this function
       // more than once returns the right value.
-      expect(obs.getCurrentResult()).toStrictEqualTyped({
-        data: {
-          greeting: {
-            message: "Hello world",
-            recipient: {
-              name: "Alice",
-              __typename: "Person",
-            },
-            __typename: "Greeting",
-          },
-        },
-        dataState: "complete",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(obs.getCurrentResult()).toBe(stream.getCurrent());
 
       await expect(stream).not.toEmitAnything();
     });
@@ -7280,4 +7234,104 @@ describe.skip("type tests", () => {
       },
     });
   });
+});
+
+test("does not return partial cache data when `returnPartialData` is false and new variables are passed in", async () => {
+  const partialQuery = gql`
+    query MyCar($id: ID) {
+      car(id: $id) {
+        id
+        make
+      }
+    }
+  `;
+
+  const query = gql`
+    query MyCar($id: ID) {
+      car(id: $id) {
+        id
+        make
+        model
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink([
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
+          },
+        },
+        delay: 50,
+      },
+    ]),
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: 1 },
+    data: {
+      car: {
+        __typename: "Car",
+        id: 1,
+        make: "Ford",
+        model: "Pinto",
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query: partialQuery,
+    variables: { id: 2 },
+    data: {
+      car: {
+        __typename: "Car",
+        id: 2,
+        make: "Ford",
+        model: "Bronco",
+      },
+    },
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { id: 1 },
+    returnPartialData: false,
+  });
+
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      car: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  void observable.reobserve({ variables: { id: 2 } });
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    partial: true,
+  });
+
+  expect(observable.getCurrentResult()).toBe(stream.getCurrent());
+
+  await expect(stream).toEmitTypedValue({
+    data: { car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" } },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(observable.getCurrentResult()).toBe(stream.getCurrent());
 });

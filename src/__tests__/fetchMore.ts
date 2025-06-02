@@ -3,15 +3,17 @@ import { assign, cloneDeep } from "lodash";
 import { Observable } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, NetworkStatus } from "@apollo/client";
+import { ApolloClient, ApolloLink, NetworkStatus, split } from "@apollo/client";
 import type {
   ApolloCache,
   FieldMergeFunction,
   InMemoryCacheConfig,
 } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
-import { MockLink } from "@apollo/client/testing";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
+  mockDeferStream,
+  mockMultipartSubscriptionStream,
   ObservableStream,
   setupPaginatedCase,
 } from "@apollo/client/testing/internal";
@@ -2248,6 +2250,174 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring yet will not put it into completed state", async () => {
+  const deferLink = mockDeferStream();
+  const baseLink = new MockSubscriptionLink();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: split(
+      (op) => op.operationName === "DeferQuery",
+      deferLink.httpLink,
+      baseLink
+    ),
+  });
+
+  const deferredQuery = gql`
+    query DeferQuery {
+      people(from: 1, count: 2) {
+        id
+        ... @defer {
+          name
+        }
+      }
+    }
+  `;
+
+  const fetchMoreQuery = gql`
+    query FetchMoreQuery {
+      people(from: 2, count: 1) {
+        id
+        name
+      }
+    }
+  `;
+
+  const observable = client.watchQuery({
+    query: deferredQuery,
+    variables: {},
+    fetchPolicy: "no-cache",
+  });
+
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  const initialData = {
+    people: [
+      {
+        __typename: "Person",
+        id: 1,
+      },
+      {
+        __typename: "Person",
+        id: 2,
+      },
+    ],
+  };
+
+  deferLink.enqueueInitialChunk({ data: initialData, hasNext: true });
+
+  await expect(stream).toEmitTypedValue({
+    data: initialData,
+    dataState: "streaming",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  deferLink.enqueueSubsequentChunk({
+    incremental: [
+      {
+        data: {
+          name: "Alice",
+        },
+        path: ["people", 0],
+      },
+    ],
+    hasNext: true,
+  });
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      people: [
+        {
+          __typename: "Person",
+          id: 1,
+          name: "Alice",
+        },
+        {
+          __typename: "Person",
+          id: 2,
+        },
+      ],
+    },
+    dataState: "streaming",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  void observable.fetchMore<any>({
+    query: fetchMoreQuery,
+    updateQuery(previousQueryResult: any, options) {
+      const newPeople = options.fetchMoreResult.people;
+      return {
+        ...previousQueryResult,
+        people: [...previousQueryResult.people, ...newPeople],
+      };
+    },
+  });
+
+  await expect(stream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+    }),
+  });
+
+  baseLink.simulateResult(
+    {
+      result: {
+        data: {
+          people: [
+            {
+              __typename: "Person",
+              id: 3,
+              name: "Charles",
+            },
+          ],
+        },
+      },
+    },
+    true
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      people: [
+        {
+          __typename: "Person",
+          id: 1,
+          name: "Alice",
+        },
+        {
+          __typename: "Person",
+          id: 2,
+        },
+        {
+          __typename: "Person",
+          id: 3,
+          name: "Charles",
+        },
+      ],
+    },
+    // should be
+    // dataState: "streaming",
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
 });
 
 function commentsInRange(

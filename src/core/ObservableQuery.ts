@@ -78,6 +78,9 @@ interface TrackedOperation {
    */
   query: DocumentNode;
   variables: OperationVariables;
+
+  // e.g.
+  isStreaming?: boolean;
 }
 
 const newNetworkStatusSymbol: any = Symbol();

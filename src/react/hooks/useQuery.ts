@@ -161,7 +161,7 @@ export declare namespace useQuery {
         ) => Unmasked<TData>;
       }
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
-  } & GetDataState<TData, TStates>;
+  } & GetDataState<MaybeMasked<TData>, TStates>;
 }
 
 const lastWatchOptions = Symbol();

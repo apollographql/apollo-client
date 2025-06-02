@@ -148,7 +148,7 @@ export declare namespace useLazyQuery {
 
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
         variables: TVariables;
-      } & GetDataState<TData, TStates>)
+      } & GetDataState<MaybeMasked<TData>, TStates>)
     | {
         /**
          * If `true`, the associated lazy query has been executed.

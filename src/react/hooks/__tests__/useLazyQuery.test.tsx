@@ -2139,7 +2139,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it("allows in-flight requests to resolve when component unmounts", async () => {
+  it("in-flight request promises reject with an `AbortError` when component unmounts`", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -2151,9 +2151,35 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = result.current;
 
-    let promise: Promise<QueryResult<{ hello: string }>>;
+    let promise: ReturnType<typeof execute>;
     act(() => {
       promise = execute();
+    });
+
+    unmount();
+
+    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+
+    await expect(promise!).rejects.toStrictEqual(
+      new DOMException("The operation was aborted.", "AbortError")
+    );
+  });
+
+  it("allows in-flight requests to resolve when component unmounts when used with `.retain()`", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const { result, unmount } = renderHook(() => useLazyQuery(helloQuery), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const [execute] = result.current;
+
+    let promise: ReturnType<typeof execute>;
+    act(() => {
+      promise = execute().retain();
     });
 
     unmount();
@@ -2165,7 +2191,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it("handles resolving multiple in-flight requests when component unmounts", async () => {
+  it("handles resolving multiple in-flight requests when component unmounts with `.retain()`", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -2180,8 +2206,8 @@ describe("useLazyQuery Hook", () => {
     let promise1: Promise<QueryResult<{ hello: string }>>;
     let promise2: Promise<QueryResult<{ hello: string }>>;
     act(() => {
-      promise1 = execute();
-      promise2 = execute();
+      promise1 = execute().retain();
+      promise2 = execute().retain();
     });
 
     unmount();
@@ -2255,12 +2281,97 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    const promise1 = execute({ variables: { id: "1" } });
+    const promise1 = execute({ variables: { id: "1" } }).retain();
     const promise2 = execute({ variables: { id: "2" } });
 
     await expect(promise1).resolves.toStrictEqualTyped({
       data: mocks[0].result.data,
     });
+
+    await expect(promise2).resolves.toStrictEqualTyped({
+      data: mocks[1].result.data,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: mocks[1].result.data,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  it("aborts early execution of previous query if a subsequent query is started", async () => {
+    interface Data {
+      user: { id: string; name: string };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const query: TypedDocumentNode<Data, Variables> = gql`
+      query UserQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: "1" } },
+        result: { data: { user: { id: "1", name: "John Doe" } } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "2" } },
+        result: { data: { user: { id: "2", name: "Jane Doe" } } },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      // This test is too complicated between the react versions when testing
+      // the loading state
+      () => useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toStrictEqualTyped({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const promise1 = execute({ variables: { id: "1" } });
+    const promise2 = execute({ variables: { id: "2" } });
+
+    await expect(promise1).rejects.toStrictEqual(
+      new DOMException("The operation was aborted.", "AbortError")
+    );
 
     await expect(promise2).resolves.toStrictEqualTyped({
       data: mocks[1].result.data,

@@ -1402,14 +1402,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           case "E":
             throw value.error;
           case "N":
-            if (value.source !== "newNetworkStatus") return value.value;
+            if (value.source !== "newNetworkStatus" && !value.value.loading)
+              return value.value;
         }
       },
       // This default value should only be used when using a `fetchPolicy` of
       // `standby` since that fetch policy completes without emitting a
       // result. Since we are converting this to a QueryResult type, we
       // omit the extra fields from ApolloQueryResult in the default value.
-      { data: undefined } as ApolloQueryResult<TData>
+      options.fetchPolicy === "standby" ?
+        ({ data: undefined } as ApolloQueryResult<TData>)
+      : undefined
     );
     const { subscription, observable, fromLink } = this.fetch(
       options,
@@ -1793,7 +1796,7 @@ function isEqualQuery(
 
 function getTrackingOperatorPromise<ObservedValue, ReturnValue = ObservedValue>(
   filterMapCb: (value: ObservedValue) => ReturnValue | undefined,
-  defaultValue: ReturnValue
+  defaultValue?: ReturnValue
 ) {
   let lastValue = defaultValue,
     resolve: (value: ReturnValue) => void,
@@ -1813,7 +1816,24 @@ function getTrackingOperatorPromise<ObservedValue, ReturnValue = ObservedValue>(
         reject(error);
       }
     },
-    finalize: () => resolve(lastValue),
+    finalize: () => {
+      if (lastValue) {
+        resolve(lastValue);
+      } else {
+        const message = "The operation was aborted.";
+        const name = "AbortError";
+        reject(
+          typeof DOMException !== "undefined" ?
+            new DOMException(message, name)
+            // some environments do not have `DOMException`, e.g. node
+            // uses a normal `Error` with a `name` property instead: https://github.com/phryneas/node/blob/d0579b64f0f6b722f8e49bf8a471dd0d0604a21e/lib/internal/errors.js#L964
+            // error.code is a legacy property that is not used anymore,
+            // and also inconsistent across environments (in supporting
+            // browsers it is `20`, in node `'ABORT_ERR'`) so we omit that.
+          : Object.assign(new Error(message), { name })
+        );
+      }
+    },
   });
   return { promise, operator };
 }

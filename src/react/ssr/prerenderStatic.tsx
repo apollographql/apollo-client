@@ -248,7 +248,7 @@ you have an infinite render loop in your application.`,
         value={{
           ...context,
           [wrapperSymbol]: {
-            useQuery: () => useSSRQuery.bind(internalContext),
+            useQuery: () => useSSRQuery.bind(internalContext) as any,
           },
         }}
       >

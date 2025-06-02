@@ -7310,6 +7310,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
     data: {
       car: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -7319,6 +7320,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   await expect(stream).toEmitTypedValue({
     data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.setVariables,
     partial: true,
@@ -7328,6 +7330,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   await expect(stream).toEmitTypedValue({
     data: { car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,

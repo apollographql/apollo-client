@@ -2410,9 +2410,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
         },
       ],
     },
-    // should be
-    // dataState: "streaming",
-    dataState: "complete",
+    dataState: "streaming",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: true,

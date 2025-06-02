@@ -859,7 +859,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               // will be overwritten anyways, just here for types sake
               loading: false,
               data: data as TData,
-              dataState: "complete",
+              dataState:
+                lastResult.dataState === "streaming" ? "streaming" : "complete",
             },
             source: "network",
           });

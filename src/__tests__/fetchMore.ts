@@ -13,7 +13,6 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockDeferStream,
-  mockMultipartSubscriptionStream,
   ObservableStream,
   setupPaginatedCase,
 } from "@apollo/client/testing/internal";

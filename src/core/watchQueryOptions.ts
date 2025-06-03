@@ -4,8 +4,8 @@ import type { DocumentNode } from "graphql";
 import type { ApolloCache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
 import type {
-  DeepPartial,
   NoInfer,
   VariablesOption,
 } from "@apollo/client/utilities/internal";

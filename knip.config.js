@@ -1,8 +1,9 @@
 // @ts-check
 
-import { join } from "node:path";
-import { entryPoints } from "./config/entryPoints.js";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { entryPoints } from "./config/entryPoints.js";
 
 const packageJSON = JSON.parse(readFileSync("package.json", "utf-8"));
 
@@ -28,6 +29,10 @@ const config = {
       "src/cache/inmemory/fixPolyfills.native.ts",
       "src/react/types/types.documentation.ts",
       "eslint-local-rules/index.mjs",
+      "codegen/local-state/index.ts",
+      "codegen/local-state/config.ts",
+      "codegen/local-state/plugin.ts",
+      "codegen/local-state/visitor.ts",
     ]),
   project: [
     "src/**/*.ts{,x}",

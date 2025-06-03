@@ -403,7 +403,7 @@ describe("error handling", () => {
     const errorLink = onError(callback);
     const error = new ServerError("app is crashing", {
       response: new Response("", { status: 500 }),
-      result: "ServerError",
+      bodyText: "ServerError",
     });
 
     const mockLink = new ApolloLink(() => {

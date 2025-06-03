@@ -21,7 +21,10 @@ describe("parseAndCheckResponse", () => {
 
   it("throws a Server error when response is > 300 with unparsable json", async () => {
     const status = 400;
-    fetchMock.mock("begin:/error", status);
+    fetchMock.mock("begin:/error", {
+      status,
+      headers: { "content-type": "application/json" },
+    });
 
     const error = await fetch("error")
       .then(parseAndCheckHttpResponse(operations))
@@ -30,12 +33,15 @@ describe("parseAndCheckResponse", () => {
     expect(error.statusCode).toBe(status);
     expect(error.name).toBe("ServerError");
     expect(error).toHaveProperty("response");
-    expect(error.bodyText).toBe(undefined);
+    expect(error.bodyText).toBe("");
   });
 
   it("throws a ServerParse error when response is 200 with unparsable json", async () => {
     const status = 200;
-    fetchMock.mock("begin:/error", status);
+    fetchMock.mock("begin:/error", {
+      status,
+      headers: { "content-type": "application/json" },
+    });
     const error = await fetch("error")
       .then(parseAndCheckHttpResponse(operations))
       .catch((error) => error);
@@ -60,7 +66,7 @@ describe("parseAndCheckResponse", () => {
     expect(error.statusCode).toBe(status);
     expect(error.name).toBe("ServerError");
     expect(error).toHaveProperty("response");
-    expect(error).toHaveProperty("result");
+    expect(error).toHaveProperty("bodyText");
   });
 
   it("throws a server error on incorrect data", async () => {
@@ -73,7 +79,7 @@ describe("parseAndCheckResponse", () => {
     expect(error.statusCode).toBe(200);
     expect(error.name).toBe("ServerError");
     expect(error).toHaveProperty("response");
-    expect(error.result).toEqual(data);
+    expect(error.bodyText).toEqual(JSON.stringify(data));
   });
 
   it("is able to return a correct GraphQL result", async () => {

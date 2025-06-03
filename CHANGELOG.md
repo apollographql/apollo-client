@@ -1,5 +1,23 @@
 # @apollo/client
 
+## 4.0.0-alpha.16
+
+### Major Changes
+
+- [#12644](https://github.com/apollographql/apollo-client/pull/12644) [`fe2f005`](https://github.com/apollographql/apollo-client/commit/fe2f005c34913ae082b96a807dc240e2785d50bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Replace the `result` property on `ServerError` with `bodyText`. `bodyText` is set to the raw string body. `HttpLink` and `BatchHttpLink` no longer try and parse the response body as JSON when a `ServerError` is thrown.
+
+- [#12644](https://github.com/apollographql/apollo-client/pull/12644) [`fe2f005`](https://github.com/apollographql/apollo-client/commit/fe2f005c34913ae082b96a807dc240e2785d50bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - More strictly adhere to the [GraphQL over HTTP spec](https://graphql.github.io/graphql-over-http/draft/). This change adds support for the `application/graphql-response+json` media type and modifies the behavior of the `application/json` media type.
+
+  - The client will parse the response as a well-formed GraphQL response when the server encodes `content-type` using `application/graphql-response+json` with a non-200 status code.
+  - The client will now throw a `ServerError` when the server encodes `content-type` using `application/json` and returns a non-200 status code.
+  - The client will now throw a `ServerError` when the server encodes using any other `content-type` and returns a non-200 status code.
+
+  NOTE: If you use a testing utility to mock requests in your test, you may experience different behavior than production if your testing utility responds as `application/json` but your production server responds as `application/graphql-response+json`. If a `content-type` header is not set, the client interprets the response as `application/json`.
+
+- [#12644](https://github.com/apollographql/apollo-client/pull/12644) [`fe2f005`](https://github.com/apollographql/apollo-client/commit/fe2f005c34913ae082b96a807dc240e2785d50bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Change the default `Accept` header to `application/graphql-response+json,application/json;q=0.9`.
+
+- [#12644](https://github.com/apollographql/apollo-client/pull/12644) [`fe2f005`](https://github.com/apollographql/apollo-client/commit/fe2f005c34913ae082b96a807dc240e2785d50bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `HttpLink` and `BatchHttpLink` no longer emit a `next` notification with the JSON-parsed response body when a well-formed GraphQL response is returned and a `ServerError` is thrown.
+
 ## 4.0.0-alpha.15
 
 ### Major Changes

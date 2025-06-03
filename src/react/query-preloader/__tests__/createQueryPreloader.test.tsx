@@ -46,7 +46,7 @@ import {
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
-import type { DeepPartial } from "@apollo/client/utilities/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
 
 function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   return new ApolloClient({

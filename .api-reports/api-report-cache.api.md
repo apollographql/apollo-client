@@ -7,7 +7,7 @@
 import type { ApolloCache as ApolloCache_2 } from '@apollo/client';
 import type { AsStoreObject } from '@apollo/client/utilities';
 import { canonicalStringify } from '@apollo/client/utilities';
-import type { DeepPartial } from '@apollo/client/utilities/internal';
+import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';

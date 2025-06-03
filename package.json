@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "4.0.0-alpha.15",
+  "version": "4.0.0-alpha.16",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -90,6 +90,7 @@
     "test:type-benches": "find src -name '*.bench.ts' | xargs -n1 tsx",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.ts --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",
+    "test:codegen": "npm run build -w codegen && graphql-codegen --config ./tests.codegen.ts",
     "test:watch": "jest --config ./config/jest.config.ts --watch",
     "test:memory": "npm i && npm run build && cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
@@ -98,9 +99,8 @@
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/core/index.ts --json docs/public/docs.json",
     "docmodel": "node config/build.ts --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --main-only --generate docModel",
-    "changeset-publish": "node config/build.ts --step=build --step=prepareChangesetsRelease && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
-    "pkg-pr-new-publish": "npm run build && cd dist && pkg-pr-new publish --no-template --compact",
+    "changeset-publish": "npm pkg set 'workspaces[0]'=dist && npm run build && changeset publish",
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
     "knip": "knip",
@@ -162,6 +162,7 @@
     "@eslint/compat": "1.2.5",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "9.18.0",
+    "@graphql-codegen/cli": "^5.0.6",
     "@graphql-tools/schema": "10.0.4",
     "@jest/expect-utils": "29.7.0",
     "@jest/globals": "29.7.0",
@@ -261,5 +262,9 @@
   "overrides": {
     "pretty-format": "^29.7.0",
     "@testing-library/dom": "$@testing-library/dom"
-  }
+  },
+  "workspaces": [
+    ".",
+    "codegen"
+  ]
 }

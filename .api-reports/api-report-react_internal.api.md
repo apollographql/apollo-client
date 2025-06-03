@@ -221,7 +221,7 @@ export interface QueryRef<TData = unknown, TVariables = unknown, TStates extends
 type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
-export type RefetchFunction<TData, TVariables extends OperationVariables> = ObservableQuery<TData, TVariables>["refetch"];
+export type RefetchFunction<TData, TVariables extends OperationVariables> = (variables?: Partial<TVariables>) => Promise<QueryResult<TData>>;
 
 // @public (undocumented)
 class SuspenseCache {

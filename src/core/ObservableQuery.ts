@@ -3,12 +3,13 @@ import type { DocumentNode } from "graphql";
 import { Slot } from "optimism";
 import type {
   InteropObservable,
+  MonoTypeOperatorFunction,
   Observer,
   OperatorFunction,
   Subscribable,
   Subscription,
 } from "rxjs";
-import { BehaviorSubject, lastValueFrom, Observable, Subject, tap } from "rxjs";
+import { BehaviorSubject, Observable, share, Subject, tap } from "rxjs";
 
 import type { Cache, MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -80,7 +81,6 @@ interface TrackedOperation {
   variables: OperationVariables;
 }
 
-const newNetworkStatusSymbol: any = Symbol();
 const uninitialized: ApolloQueryResult<any> = {
   loading: true,
   networkStatus: NetworkStatus.loading,
@@ -192,6 +192,23 @@ export declare namespace ObservableQuery {
      * in the callback.
      */
     lastOwnDiff?: Cache.DiffResult<TData>;
+  }
+
+  /**
+   * Promise returned by `reobserve` and `refetch` methods.
+   *
+   * By default, if the `ObservableQuery` is not interested in the result
+   * of this operation anymore, the network operation will be cancelled.
+   *
+   * This has an additional `retain` method that can be used to keep the
+   * network operation running until it is finished nonetheless.
+   */
+  interface ResultPromise<T> extends Promise<T> {
+    /**
+     * Kepp the network operation running until it is finished, even if
+     * `ObservableQuery` unsubscribed from the operation.
+     */
+    retain(): this;
   }
 }
 
@@ -654,7 +671,9 @@ export class ObservableQuery<
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public refetch(variables?: Partial<TVariables>): Promise<QueryResult<TData>> {
+  public refetch(
+    variables?: Partial<TVariables>
+  ): ObservableQuery.ResultPromise<QueryResult<TData>> {
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {
@@ -692,9 +711,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return this.reobserve({
-      ...reobserveOptions,
-      [newNetworkStatusSymbol]: NetworkStatus.refetch,
+    return this._reobserve(reobserveOptions, {
+      newNetworkStatus: NetworkStatus.refetch,
     });
   }
 
@@ -994,12 +1012,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return toQueryResult(this.getCurrentResult());
     }
 
-    return this.reobserve({
-      // Reset options.fetchPolicy to its original value.
-      fetchPolicy: this.options.initialFetchPolicy,
-      variables,
-      [newNetworkStatusSymbol]: NetworkStatus.setVariables,
-    });
+    return this._reobserve(
+      {
+        // Reset options.fetchPolicy to its original value.
+        fetchPolicy: this.options.initialFetchPolicy,
+        variables,
+      },
+      { newNetworkStatus: NetworkStatus.setVariables }
+    );
   }
 
   /**
@@ -1091,7 +1111,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private fetch(
     options: ObservableQuery.Options<TData, TVariables>,
     networkStatus: NetworkStatus,
-    fetchQuery?: DocumentNode
+    fetchQuery: DocumentNode,
+    operator: MonoTypeOperatorFunction<QueryNotification.Value<TData>>
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
@@ -1144,7 +1165,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           }
         });
 
-    const { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
+    let { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
       queryInfo,
       options,
       { networkStatus, query: fetchQuery, onCacheHit, fetchQueryOperator }
@@ -1162,6 +1183,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     let forceFirstValueEmit =
       networkStatus == NetworkStatus.refetch ||
       networkStatus == NetworkStatus.setVariables;
+    observable = observable.pipe(operator, share());
     const subscription = observable
       .pipe(
         tap({
@@ -1234,17 +1256,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this.reobserve({
-            // Most fetchPolicy options don't make sense to use in a polling context, as
-            // users wouldn't want to be polling the cache directly. However, network-only and
-            // no-cache are both useful for when the user wants to control whether or not the
-            // polled results are written to the cache.
-            fetchPolicy:
-              this.options.initialFetchPolicy === "no-cache" ?
-                "no-cache"
-              : "network-only",
-            [newNetworkStatusSymbol]: NetworkStatus.poll,
-          }).then(poll, poll);
+          this._reobserve(
+            {
+              // Most fetchPolicy options don't make sense to use in a polling context, as
+              // users wouldn't want to be polling the cache directly. However, network-only and
+              // no-cache are both useful for when the user wants to control whether or not the
+              // polled results are written to the cache.
+              fetchPolicy:
+                this.options.initialFetchPolicy === "no-cache" ?
+                  "no-cache"
+                : "network-only",
+            },
+            {
+              newNetworkStatus: NetworkStatus.poll,
+            }
+          ).then(poll, poll);
         } else {
           poll();
         }
@@ -1276,15 +1302,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public reobserve(
     newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>
-  ): Promise<QueryResult<MaybeMasked<TData>>> {
-    this.isTornDown = false;
-    let newNetworkStatus: NetworkStatus | undefined;
-
-    if (newOptions) {
-      newNetworkStatus = (newOptions as any)[newNetworkStatusSymbol];
-      // Avoid setting the symbol option in this.options
-      delete (newOptions as any)[newNetworkStatusSymbol];
+  ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
+    return this._reobserve(newOptions);
+  }
+  private _reobserve(
+    newOptions?: Partial<ObservableQuery.Options<TData, TVariables>>,
+    internalOptions?: {
+      newNetworkStatus?: NetworkStatus;
     }
+  ): ObservableQuery.ResultPromise<QueryResult<MaybeMasked<TData>>> {
+    this.isTornDown = false;
+    let { newNetworkStatus } = internalOptions || {};
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
@@ -1378,11 +1406,29 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.resubscribeCache();
-
+    const { promise, operator: promiseOperator } = getTrackingOperatorPromise(
+      (value: QueryNotification.Value<TData>) => {
+        switch (value.kind) {
+          case "E":
+            throw value.error;
+          case "N":
+            if (value.source !== "newNetworkStatus" && !value.value.loading)
+              return value.value;
+        }
+      },
+      // This default value should only be used when using a `fetchPolicy` of
+      // `standby` since that fetch policy completes without emitting a
+      // result. Since we are converting this to a QueryResult type, we
+      // omit the extra fields from ApolloQueryResult in the default value.
+      options.fetchPolicy === "standby" ?
+        ({ data: undefined } as ApolloQueryResult<TData>)
+      : undefined
+    );
     const { subscription, observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
-      query
+      query,
+      promiseOperator
     );
 
     if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {
@@ -1393,30 +1439,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.linkSubscription = subscription;
     }
 
-    return preventUnhandledRejection(
-      // Note: lastValueFrom will create a separate subscription to the
-      // observable which means that terminating this ObservableQuery will not
-      // cancel the request from the link chain.
-      lastValueFrom(
-        observable.pipe(
-          filterMap((value) => {
-            switch (value.kind) {
-              case "E":
-                throw value.error;
-              case "N":
-                if (value.source !== "newNetworkStatus") return value.value;
-            }
-          })
-        ),
-        {
-          // This default value should only be used when using a `fetchPolicy` of
-          // `standby` since that fetch policy completes without emitting a
-          // result. Since we are converting this to a QueryResult type, we
-          // omit the extra fields from ApolloQueryResult in the default value.
-          defaultValue: { data: undefined } as ApolloQueryResult<TData>,
-        }
-      ).then((result) => toQueryResult(this.maskResult(result)))
+    const ret = Object.assign(
+      preventUnhandledRejection(
+        promise.then((result) => toQueryResult(this.maskResult(result)))
+      ),
+      {
+        retain: () => {
+          const subscription = observable.subscribe({});
+          const unsubscribe = () => subscription.unsubscribe();
+          promise.then(unsubscribe, unsubscribe);
+          return ret;
+        },
+      }
     );
+    return ret;
   }
 
   public hasObservers() {
@@ -1726,11 +1762,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   // this.options.fetchPolicy is "cache-and-network" or "network-only". When
   // this.options.fetchPolicy is any other policy ("cache-first", "cache-only",
   // "standby", or "no-cache"), we call this.reobserve() as usual.
-  private reobserveCacheFirst() {
+  private reobserveCacheFirst(): void {
     const { fetchPolicy, nextFetchPolicy } = this.options;
 
     if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-      return this.reobserve({
+      this.reobserve({
         fetchPolicy: "cache-first",
         // Use a temporary nextFetchPolicy function that replaces itself with the
         // previous nextFetchPolicy value and returns the original fetchPolicy.
@@ -1751,9 +1787,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           return fetchPolicy!;
         },
       });
+    } else {
+      this.reobserve();
     }
-
-    return this.reobserve();
   }
 
   private getVariablesWithDefaults(variables: TVariables | undefined) {
@@ -1774,4 +1810,48 @@ function isEqualQuery(
   b?: { query: DocumentNode; variables: OperationVariables }
 ) {
   return !!(a && b && a.query === b.query && equal(a.variables, b.variables));
+}
+
+function getTrackingOperatorPromise<ObservedValue, ReturnValue = ObservedValue>(
+  filterMapCb: (value: ObservedValue) => ReturnValue | undefined,
+  defaultValue?: ReturnValue
+) {
+  let lastValue = defaultValue,
+    resolve: (value: ReturnValue) => void,
+    reject: (error: unknown) => void;
+  const promise = new Promise<ReturnValue>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  const operator: MonoTypeOperatorFunction<ObservedValue> = tap({
+    next(value) {
+      try {
+        const newValue = filterMapCb(value);
+        if (newValue !== undefined) {
+          lastValue = newValue;
+        }
+      } catch (error) {
+        reject(error);
+      }
+    },
+    finalize: () => {
+      if (lastValue) {
+        resolve(lastValue);
+      } else {
+        const message = "The operation was aborted.";
+        const name = "AbortError";
+        reject(
+          typeof DOMException !== "undefined" ?
+            new DOMException(message, name)
+            // some environments do not have `DOMException`, e.g. node
+            // uses a normal `Error` with a `name` property instead: https://github.com/phryneas/node/blob/d0579b64f0f6b722f8e49bf8a471dd0d0604a21e/lib/internal/errors.js#L964
+            // error.code is a legacy property that is not used anymore,
+            // and also inconsistent across environments (in supporting
+            // browsers it is `20`, in node `'ABORT_ERR'`) so we omit that.
+          : Object.assign(new Error(message), { name })
+        );
+      }
+    },
+  });
+  return { promise, operator };
 }

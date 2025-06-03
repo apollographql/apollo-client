@@ -816,4 +816,41 @@ describe("GraphQL Subscriptions", () => {
 
     await expect(sub3).toComplete();
   });
+
+  test("can restart a subscription", async () => {
+    const onUnsubscribe = jest.fn();
+    const onSubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onUnsubscribe(onUnsubscribe);
+    link.onSetup(onSubscribe);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+    const stream = new ObservableStream(observable);
+
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    link.simulateResult(results[0]);
+
+    await expect(stream).toEmitTypedValue(results[0].result);
+
+    observable.restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+    // Ensure restarting the connection doesn't complete the existing observable
+    await expect(stream).not.toEmitAnything();
+
+    link.simulateResult(results[1], true);
+
+    await expect(stream).toEmitTypedValue(results[1].result);
+    await expect(stream).toComplete();
+  });
 });

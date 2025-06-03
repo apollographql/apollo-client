@@ -733,8 +733,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     combinedOptions.query = this.transformDocument(combinedOptions.query);
 
-    const qid = this.queryManager.generateQueryId();
-
     // If a temporary query is passed to `fetchMore`, we don't want to store
     // it as the last query result since it may be an optimized query for
     // pagination. We will however run the transforms on the original document
@@ -769,7 +767,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       { shouldEmit: EmitBehavior.networkStatusChange }
     );
     return this.queryManager
-      .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
+      .fetchQuery(combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
         // disable the `fetchMore` override that is currently active
         // the next updates caused by this should not be `fetchMore` anymore,

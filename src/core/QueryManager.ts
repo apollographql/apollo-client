@@ -705,13 +705,11 @@ export class QueryManager {
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(
-    queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
     const queryInfo = new QueryInfo({
       queryManager: this,
-      queryId,
     });
     return lastValueFrom(
       this.fetchObservableWithInfo(queryInfo, options, {
@@ -837,7 +835,6 @@ export class QueryManager {
       options,
       transformedQuery: query,
     });
-    //  queryInfo.init({ document: query, variables: observable.variables });
 
     return observable;
   }
@@ -851,7 +848,7 @@ export class QueryManager {
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
-    return this.fetchQuery<TData, TVars>(queryId, {
+    return this.fetchQuery<TData, TVars>({
       ...(options as any),
       query,
     }).then((value) => ({
@@ -1895,10 +1892,7 @@ export class QueryManager {
         return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":
-        return {
-          fromLink: false,
-          observable: EMPTY,
-        };
+        return { fromLink: false, observable: EMPTY };
     }
   }
 }

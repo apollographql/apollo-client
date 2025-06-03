@@ -70,7 +70,6 @@ export class QueryInfo {
 
   constructor({
     queryManager,
-    queryId = queryManager.generateQueryId(),
     observableQuery,
   }: {
     queryManager: QueryManager;
@@ -78,7 +77,7 @@ export class QueryInfo {
     observableQuery?: ObservableQuery<any, any>;
   }) {
     const cache = (this.cache = queryManager.cache);
-    this.queryId = queryId;
+    this.queryId = queryManager.generateQueryId();
     this.observableQuery = observableQuery;
 
     // Track how often cache.evict is called, since we want eviction to

@@ -72,3 +72,9 @@ export {
 } from "../internal/getMemoryInternals.js";
 
 export { AutoCleanedStrongCache, AutoCleanedWeakCache } from "./caches.js";
+
+export type {
+  ApplyHKT,
+  ApplyHKTImplementationWithDefault,
+  HKT,
+} from "./types/HKT.js";

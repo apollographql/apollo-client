@@ -932,7 +932,7 @@ export class QueryManager {
 
     this.obsQueries.forEach((oq) => {
       const queryId = oq.queryId;
-      const document = oq["lastQuery"] || oq.options.query;
+      const document = print(this.transform(oq.options.query));
       if (include === "all") {
         queries.set(queryId, oq);
         return;
@@ -950,11 +950,11 @@ export class QueryManager {
       if (
         include === "active" ||
         (queryName && queryNamesAndQueryStrings.has(queryName)) ||
-        (document && queryNamesAndQueryStrings.has(print(document)))
+        (document && queryNamesAndQueryStrings.has(document))
       ) {
         queries.set(queryId, oq);
         if (queryName) queryNamesAndQueryStrings.set(queryName, true);
-        if (document) queryNamesAndQueryStrings.set(print(document), true);
+        if (document) queryNamesAndQueryStrings.set(document, true);
       }
     });
 

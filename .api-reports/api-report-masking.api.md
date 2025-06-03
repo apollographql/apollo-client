@@ -5,7 +5,10 @@
 ```ts
 
 import type { ApolloCache } from '@apollo/client';
+import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
+import type { DataMasking as DataMasking_2 } from '@apollo/client';
 import type { DocumentNode } from '@apollo/client';
+import type { HKT } from '@apollo/client/utilities';
 import type { IsAny } from '@apollo/client/utilities/internal';
 import type { Prettify } from '@apollo/client/utilities/internal';
 import type { Primitive } from '@apollo/client/utilities/internal';
@@ -41,6 +44,9 @@ type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? 
 export interface DataMasking {
 }
 
+// @public (undocumented)
+type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
+
 // @internal @deprecated (undocumented)
 export const disableWarningsSlot: {
     readonly id: string;
@@ -62,28 +68,108 @@ type ExtractByMatchingTypeNames<Union extends {
     [K in keyof Union as K extends "__typename" ? K : never]: TypeName;
 } : never : never;
 
+// Warning: (ae-forgotten-export) The symbol "DefaultImplementation" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-export type FragmentType<TData> = [
-TData
-] extends [{
-    " $fragmentName"?: infer TKey;
-}] ? TKey extends string ? {
-    " $fragmentRefs"?: {
-        [key in TKey]: TData;
+export type FragmentType<TData> = ApplyHKTImplementationWithDefault<DataMasking, "FragmentType", DefaultImplementation, TData>;
+
+// @public (undocumented)
+export namespace GraphQLCodegenDataMasking {
+    // (undocumented)
+    export type FragmentType<TData> = [
+    TData
+    ] extends [{
+        " $fragmentName"?: infer TKey;
+    }] ? TKey extends string ? {
+        " $fragmentRefs"?: {
+            [key in TKey]: TData;
+        };
+    } : never : never;
+    // (undocumented)
+    export namespace HKTImplementation {
+        // (undocumented)
+        export interface FragmentType extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenDataMasking.FragmentType<this["arg1"]>;
+        }
+        // (undocumented)
+        export interface Masked extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenDataMasking.Masked<this["arg1"]>;
+        }
+        // (undocumented)
+        export interface MaskedDocumentNode extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            arg2: unknown;
+            // (undocumented)
+            return: GraphQLCodegenDataMasking.MaskedDocumentNode<this["arg1"], this["arg2"]>;
+        }
+        // (undocumented)
+        export interface MaybeMasked extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenDataMasking.MaybeMasked<this["arg1"]>;
+        }
+        // (undocumented)
+        export interface Unmasked extends HKT {
+            // (undocumented)
+            arg1: unknown;
+            // (undocumented)
+            return: GraphQLCodegenDataMasking.Unmasked<this["arg1"]>;
+        }
+    }
+    // (undocumented)
+    export interface Implementation {
+        // (undocumented)
+        FragmentType: HKTImplementation.FragmentType;
+        // (undocumented)
+        Masked: HKTImplementation.Masked;
+        // (undocumented)
+        MaskedDocumentNode: HKTImplementation.MaskedDocumentNode;
+        // (undocumented)
+        MaybeMasked: HKTImplementation.MaybeMasked;
+        // (undocumented)
+        Unmasked: HKTImplementation.Unmasked;
+    }
+    export type Masked<TData> = TData & {
+        __masked?: true;
     };
-} : never : never;
+    export type MaskedDocumentNode<TData = {
+        [key: string]: any;
+    }, TVariables = {
+        [key: string]: any;
+    }> = TypedDocumentNode<Masked<TData>, TVariables>;
+    // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
+    export type MaybeMasked<TData> = DataMasking_2 extends {
+        mode: "unmask";
+    } ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
+        __masked?: true;
+    } ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking_2 extends {
+        mode: "preserveTypes";
+    } ? TData : TData;
+    // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
+    export type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
+        {};
+}
 
 // @public
-export type Masked<TData> = TData & {
-    __masked?: true;
-};
+export type Masked<TData> = ApplyHKTImplementationWithDefault<DataMasking, "Masked", DefaultImplementation, TData>;
 
 // @public
 export type MaskedDocumentNode<TData = {
     [key: string]: any;
 }, TVariables = {
     [key: string]: any;
-}> = TypedDocumentNode<Masked<TData>, TVariables>;
+}> = ApplyHKTImplementationWithDefault<DataMasking, "MaskedDocumentNode", DefaultImplementation, TData, TVariables>;
 
 // @internal @deprecated (undocumented)
 export function maskFragment<TData = unknown>(data: TData, document: TypedDocumentNode_2<TData> | DocumentNode, cache: ApolloCache, fragmentName?: string): TData;
@@ -91,16 +177,8 @@ export function maskFragment<TData = unknown>(data: TData, document: TypedDocume
 // @internal @deprecated (undocumented)
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode_2<TData>, cache: ApolloCache): TData;
 
-// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-//
 // @public
-export type MaybeMasked<TData> = DataMasking extends {
-    mode: "unmask";
-} ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
-    __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
-    mode: "preserveTypes";
-} ? TData : TData;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<DataMasking, "MaybeMasked", DefaultImplementation, TData>;
 
 // Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -145,12 +223,8 @@ type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never
 // @public (undocumented)
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
 
-// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
-//
 // @public
-export type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<DataMasking, "Unmasked", DefaultImplementation, TData>;
 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {

@@ -32,6 +32,19 @@ import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
 
 // @internal @deprecated (undocumented)
+export type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = never> = (fn & {
+    arg1: arg1;
+    arg2: arg2;
+    arg3: arg3;
+    arg4: arg4;
+})["return"];
+
+// @internal @deprecated (undocumented)
+export type ApplyHKTImplementationWithDefault<UserlandImplementation, Name extends string, DefaultImplementation extends Record<Name, HKT>, arg1, arg2 = never, arg3 = never, arg4 = never> = ApplyHKT<UserlandImplementation extends {
+    [name in Name]: infer Implementation extends HKT;
+} ? Implementation : DefaultImplementation[Name], arg1, arg2, arg3, arg4>;
+
+// @internal @deprecated (undocumented)
 export function argumentsObjectFromField(field: FieldNode | DirectiveNode, variables?: Record<string, any>): Object | null;
 
 // @internal @deprecated
@@ -255,6 +268,20 @@ export function hasDirectives(names: string[], root: ASTNode, all?: boolean): bo
 
 // @public (undocumented)
 export function hasForcedResolvers(document: ASTNode): boolean;
+
+// @beta
+export interface HKT {
+    // (undocumented)
+    arg1: unknown;
+    // (undocumented)
+    arg2: unknown;
+    // (undocumented)
+    arg3: unknown;
+    // (undocumented)
+    arg4: unknown;
+    // (undocumented)
+    return: unknown;
+}
 
 // @internal @deprecated (undocumented)
 export type IsAny<T> = 0 extends 1 & T ? true : false;

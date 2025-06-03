@@ -262,7 +262,6 @@ export class ObservableQuery<
   private subject!: BehaviorSubject<
     SubjectValue<MaybeMasked<TData>, TVariables>
   >;
-  private observable!: Observable<ApolloQueryResult<MaybeMasked<TData>>>;
 
   private isTornDown: boolean;
   private queryManager: QueryManager;
@@ -339,6 +338,11 @@ export class ObservableQuery<
 
     this.initializeObservablesQueue();
 
+    this["@@observable"] = () => this;
+    if (Symbol.observable) {
+      this[Symbol.observable] = () => this;
+    }
+
     const opDef = getOperationDefinition(this.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
@@ -352,7 +356,7 @@ export class ObservableQuery<
       result: uninitialized,
       meta: {},
     });
-    this.observable = this.subject.pipe(
+    const observable = this.subject.pipe(
       tap({
         subscribe: () => {
           if (!this.subject.observed) {
@@ -431,12 +435,8 @@ export class ObservableQuery<
       )
     );
 
-    this["@@observable"] = () => this;
-    if (Symbol.observable) {
-      this[Symbol.observable] = () => this;
-    }
-    this.pipe = this.observable.pipe.bind(this.observable);
-    this.subscribe = this.observable.subscribe.bind(this.observable);
+    this.pipe = observable.pipe.bind(observable);
+    this.subscribe = observable.subscribe.bind(observable);
 
     this.input = new Subject();
     // we want to feed many streams into `this.subject`, but none of them should
@@ -459,7 +459,7 @@ export class ObservableQuery<
   public [Symbol.observable]!: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  public ["@@observable"]!: () => Subscribable<
+  public ["@@observable"]: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
 

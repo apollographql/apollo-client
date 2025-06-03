@@ -6373,6 +6373,7 @@ describe("custom document transforms", () => {
     client
       // set `fetchPolicy` to `"standby"` to prevent it from being an "active" query
       .watchQuery({ query: abQuery, fetchPolicy: "standby" })
+      // need to subscribe to it to ensure it is registered with `QueryManager`
       .subscribe(jest.fn());
 
     await waitFor(() => {

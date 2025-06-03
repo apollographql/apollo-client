@@ -2448,6 +2448,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2472,6 +2473,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toStrictEqualTyped({
         data: mocks[1].result.data,
+        dataState: "complete",
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,

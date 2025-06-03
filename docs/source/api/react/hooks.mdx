@@ -1,7 +1,7 @@
 ---
 title: Hooks
 description: Apollo Client react hooks API reference
-minVersion: 3.0.0
+minVersion: 4.0.0
 api_doc:
   - "@apollo/client/react!SuspenseQueryHookOptions:interface"
   - "@apollo/client/react!useQuery:function(1)"
@@ -70,7 +70,48 @@ function WithApolloClient() {
 }
 ```
 
-<FunctionDetails canonicalReference="@apollo/client/react!useQuery:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client/react!useQuery:function(1)" headingLevel={2}>
+  ```ts
+  function useQuery<TData, TVariables>(
+    query: DocumentNode,
+    options?: QueryHookOptions<TData, TVariables>
+  ): QueryResult<TData, TVariables>
+  ```
+
+  The `useQuery` hook is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object containing loading, error, and data properties you can use to render your UI.
+
+  The query result includes a new `dataState` property that indicates the completeness of the data:
+
+  - `empty`: No data could be fulfilled from the cache or the result is incomplete. `data` is `undefined`.
+  - `partial`: Some data could be fulfilled from the cache but `data` is incomplete. This is only possible when `returnPartialData` is `true`.
+  - `streaming`: `data` is incomplete as a result of a deferred query and the result is still streaming in.
+  - `complete`: `data` is a fully satisfied query result fulfilled either from the cache or network.
+
+  Example:
+  ```tsx
+  const { data, dataState } = useQuery<TData>(query);
+
+  if (dataState === "empty") {
+    // data is undefined
+  }
+
+  if (dataState === "partial") {
+    // data is DeepPartial<TData>
+  }
+
+  if (dataState === "streaming") {
+    // data is TData but still streaming
+  }
+
+  if (dataState === "complete") {
+    // data is complete TData
+  }
+  ```
+
+  The hook also maintains previous data when emitting a loading state, unless the query or variables have changed. This means you can safely use the previous data while loading new data.
+
+  Note that `@exports` variables are not taken into account for this behavior, so data will stay around even if they change.
+</FunctionDetails>
 
 <FunctionDetails canonicalReference="@apollo/client/react!useLazyQuery:function(1)" headingLevel={2}>
   ```ts
@@ -85,6 +126,10 @@ function WithApolloClient() {
       type="(options?: LazyQueryHookOptions<TVariables>) => Promise<LazyQueryResult<TData, TVariables>>"
     >
       Function that can be triggered to execute the suspended query. After being called, `useLazyQuery` behaves just like `useQuery`. The `useLazyQuery` function returns a promise that fulfills with a query result when the query succeeds or fails.
+
+      If the `execute` function is called while a previous query from the same `useLazyQuery` usage is still in flight, the previous query will be rejected with an `AbortError` unless `.retain()` is called on the promise returned by the previous `execute` call.
+
+      Please keep in mind that `useLazyQuery` is primarily meant as a means to synchronize your component to the status of a query and that its purpose is not to make a series of network calls. If you plan on making a series of network calls without the need to synchronize the result with your component, consider using `ApolloClient.query` instead.
     </ManualTupleItem>
     <ManualTupleItem
       name="result"

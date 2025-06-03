@@ -20,7 +20,7 @@ This article also assumes that you've already set up Apollo Client and have wrap
 
 ## Executing a query
 
-The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
+The `useQuery` [React hook](https://react.dev/reference/react) is the primary API for executing queries in an Apollo application. To run a query within a React component, call `useQuery` and pass it a GraphQL query string. When your component renders, `useQuery` returns an object from Apollo Client that contains `loading`, `error`, `data`, and `dataState` properties you can use to render your UI.
 
 > **Note:** in Apollo Client >= 3.8, Suspense data fetching hooks are available for querying data within `<Suspense />` boundaries using React 18's new concurrent rendering model. For more information see Apollo Client's [Suspense docs](./suspense/).
 
@@ -44,10 +44,15 @@ Next, we'll create a component named `Dogs`. Inside it, we'll pass our `GET_DOGS
 
 ```jsx title="index.js"
 function Dogs({ onDogSelected }) {
-  const { loading, error, data } = useQuery(GET_DOGS);
+  const { loading, error, data, dataState } = useQuery(GET_DOGS);
 
   if (loading) return 'Loading...';
   if (error) return `Error! ${error.message}`;
+
+  // Handle different data states
+  if (dataState === 'empty') return 'No dogs found';
+  if (dataState === 'partial') return 'Loading more dogs...';
+  if (dataState === 'streaming') return 'Streaming dogs...';
 
   return (
     <select name='dog' onChange={onDogSelected}>
@@ -61,10 +66,18 @@ function Dogs({ onDogSelected }) {
 }
 ```
 
-As our query executes and the values of `loading`, `error`, and `data` change, the `Dogs` component can intelligently render different UI elements according to the query's state:
+The `dataState` property indicates the completeness of the `data` property. It can have the following values:
+
+- `empty`: The query has completed but returned no data
+- `partial`: The query has returned some data but is still loading more
+- `streaming`: The query is streaming data (when using `@defer` or `@stream` directives)
+- `complete`: The query has completed and returned all data
+
+As our query executes and the values of `loading`, `error`, `data`, and `dataState` change, the `Dogs` component can intelligently render different UI elements according to the query's state:
 
 - As long as `loading` is `true` (indicating the query is still in flight), the component presents a `Loading...` notice.
-- When loading is `false` and there is no `error`, the query has completed. The component renders a dropdown menu that's populated with the list of dog breeds returned by the server.
+- When loading is `false` and there is no `error`, the query has completed. The component then checks the `dataState` to determine how to handle the data.
+- Finally, when `dataState` is `complete`, the component renders a dropdown menu that's populated with the list of dog breeds returned by the server.
 
 When the user selects a dog breed from the populated dropdown, the selection is sent to the parent component via the provided `onDogSelected` function.
 
@@ -192,8 +205,21 @@ We've already seen that the `useQuery` hook exposes our query's current loading 
 
 Let's return to our refetching example from the previous section. If you click the refetch button, you'll see that the component doesn't re-render until the new data arrives. What if we want to indicate to the user that we're refetching the photo?
 
-The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. To take advantage
-of this information, we set the `notifyOnNetworkStatusChange` option to `true` so our [query component](../api/react/components/ "Components - Client (React) - Apollo GraphQL Docs") re-renders while a refetch is in flight:
+The `useQuery` hook's result object provides fine-grained information about the status of the query via the `networkStatus` property. In Apollo Client 4.0, `notifyOnNetworkStatusChange` now defaults to `true`, which means that loading states will be emitted (core API) or rendered (React) by default when calling `refetch`, `fetchMore`, etc.
+
+If you want to maintain the old behavior where loading states are not emitted during refetches, you can set `notifyOnNetworkStatusChange` to `false` in `defaultOptions`:
+
+```jsx
+const client = new ApolloClient({
+  defaultOptions: {
+    watchQuery: {
+      notifyOnNetworkStatusChange: false
+    }
+  }
+});
+```
+
+Here's an example of using `networkStatus` to show different loading states:
 
 ```jsx title="index.js" {4,8,12}
 import { NetworkStatus } from '@apollo/client';
@@ -203,7 +229,7 @@ function DogPhoto({ breed }) {
     GET_DOG_PHOTO,
     {
       variables: { breed },
-      notifyOnNetworkStatusChange: true,
+      // notifyOnNetworkStatusChange is true by default in Apollo Client 4.0
     }
   );
 
@@ -222,8 +248,6 @@ function DogPhoto({ breed }) {
 }
 ```
 
-Enabling this option also ensures that the value of `loading` updates accordingly, even if you don't want to use the more fine-grained information provided by the `networkStatus` property.
-
 The `networkStatus` property is a `NetworkStatus` enum that represents different loading states. Refetch is represented by `NetworkStatus.refetch`, and there are also values for polling and pagination. For a full list of all the possible loading states, check out the [source](https://github.com/apollographql/apollo-client/blob/main/src/core/networkStatus.ts).
 
 > To view a complete version of the app we just built, check out the CodeSandbox [here](https://codesandbox.io/s/queries-example-app-final-nrlnl).
@@ -235,7 +259,31 @@ configuration option to the `useQuery` hook. The default value is `none`, which 
 
 If you set `errorPolicy` to `all`, `useQuery` does _not_ discard query response data, allowing you to render partial results.
 
-For more information, see [Handling operation errors](./error-handling/).
+In Apollo Client 4.0, network errors now adhere to the `errorPolicy` setting, just like GraphQL errors. This means that promise-based APIs, such as `client.query`, will resolve the promise with the `error` property set to the network error instead of rejecting the promise, even if `errorPolicy` is set to `ignore`.
+
+For example:
+
+```jsx
+const { loading, error, data } = useQuery(GET_DOGS, {
+  errorPolicy: 'all'
+});
+
+if (error) {
+  // This will now handle both GraphQL errors and network errors
+  console.error('Error details:', error);
+  // The error object will have a bodyText property containing the raw response body
+  if (error.bodyText) {
+    console.error('Raw response:', error.bodyText);
+  }
+}
+
+// With errorPolicy: 'all', we can still render partial data
+if (data) {
+  // Render partial results
+}
+```
+
+For more information about error handling, see [Handling operation errors](./error-handling/).
 
 ## Manual execution with `useLazyQuery`
 
@@ -243,17 +291,32 @@ When React renders a component that calls `useQuery`, Apollo Client _automatical
 
 The `useLazyQuery` hook is perfect for executing queries in response to events besides component rendering. Unlike with `useQuery`, when you call `useLazyQuery`, it does _not_ immediately execute its associated query. Instead, it returns a **query function** in its result tuple that you call whenever you're ready to execute the query.
 
+> **Note:** `useLazyQuery` does not support SSR environments and will throw an error if the `execute` function is called during server-side rendering. If you need to run a query in an SSR environment, use `useQuery` instead.
+
 Here's an example:
 
 ```jsx {2,5,13} title="index.js"
 import React from 'react';
 import { useLazyQuery } from '@apollo/client/react';
+import { gql } from '@apollo/client';
+
+const GET_DOG_PHOTO = gql`
+  query Dog($breed: String!) {
+    dog(breed: $breed) {
+      id
+      displayImage
+    }
+  }
+`;
 
 function DelayedQuery() {
-  const [getDog, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
+  const [getDog, { loading, error, data, dataState }] = useLazyQuery(GET_DOG_PHOTO);
 
-  if (loading) return <p>Loading ...</p>;
-  if (error) return `Error! ${error}`;
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error! {error.message}</p>;
+  if (dataState === 'empty') return <p>No dog found</p>;
+  if (dataState === 'partial') return <p>Loading more data...</p>;
+  if (dataState === 'streaming') return <p>Streaming data...</p>;
 
   return (
     <div>
@@ -266,9 +329,18 @@ function DelayedQuery() {
 }
 ```
 
-The first item in `useLazyQuery`'s return tuple is the query function, and the second item is the same result object returned by `useQuery`.
+The `useLazyQuery` hook returns a tuple with two elements:
 
-As shown above, you can pass options to the query function just like you pass them to `useLazyQuery` itself. If you pass a particular option to _both_, the value you pass to the query function takes precedence. This is a handy way to pass _default_ options to `useLazyQuery` and then customize those options in the query function.
+1. A **query function** that you can call to execute the query
+2. A result object that contains the same properties as the `useQuery` hook's result object (`loading`, `error`, `data`, `dataState`, etc.)
+
+The query function accepts only two options:
+- `variables`: The variables to pass to the query
+- `context`: The context to pass to the query
+
+To change other options (like `fetchPolicy` or `errorPolicy`), you must rerender the component with new options. These options will take effect with the next query execution.
+
+> **Note:** The `defaultOptions` and `initialFetchPolicy` options are no longer supported with `useLazyQuery`. If you need to set default options, pass them directly to the hook instead.
 
 <Note>
 

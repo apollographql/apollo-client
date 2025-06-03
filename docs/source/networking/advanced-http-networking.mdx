@@ -9,6 +9,46 @@ When using Apollo Link, you define network behavior as a collection of **link** 
 
 Apollo Link includes installable, premade links that support a variety of use cases. You can also create your own custom links.
 
+## HTTP Specification Compliance
+
+Apollo Client 4.0 strictly adheres to the [GraphQL over HTTP spec](https://graphql.github.io/graphql-over-http/draft/). This includes:
+
+1. Support for the `application/graphql-response+json` media type
+2. Modified behavior for the `application/json` media type
+3. Updated default `Accept` header to `application/graphql-response+json,application/json;q=0.9`
+
+The client will:
+- Parse the response as a well-formed GraphQL response when the server encodes `content-type` using `application/graphql-response+json` with a non-200 status code
+- Throw a `ServerError` when the server encodes `content-type` using `application/json` and returns a non-200 status code
+- Throw a `ServerError` when the server encodes using any other `content-type` and returns a non-200 status code
+
+Note: If you use a testing utility to mock requests in your test, you may experience different behavior than production if your testing utility responds as `application/json` but your production server responds as `application/graphql-response+json`. If a `content-type` header is not set, the client interprets the response as `application/json`.
+
+## Error Handling
+
+The `ServerError` type has been updated in Apollo Client 4.0. The `result` property has been replaced with `bodyText`, which contains the raw string body. `HttpLink` and `BatchHttpLink` no longer try to parse the response body as JSON when a `ServerError` is thrown.
+
+Example error handling:
+
+```js
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
+
+const httpLink = new HttpLink({ uri: '/graphql' });
+
+const errorLink = onError(({ networkError }) => {
+  if (networkError) {
+    // networkError.bodyText contains the raw response body
+    console.error('Network error:', networkError.bodyText);
+  }
+});
+
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: errorLink.concat(httpLink),
+});
+```
+
 ## Customizing request logic
 
 The following example demonstrates adding a custom link to Apollo Client. This link adds an `Authorization` header to every HTTP request before the `HttpLink` sends it:

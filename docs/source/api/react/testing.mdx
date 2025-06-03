@@ -8,8 +8,6 @@ api_reference: true
 
 ## `MockedProvider`
 
-
-
 ```js
 import { MockedProvider } from "@apollo/client/testing/react";
 ```
@@ -76,13 +74,13 @@ By default, `MockedProvider` creates an `InMemoryCache` with default configurati
 <tr>
 <td>
 
-###### `resolvers`
+###### `localState`
 
-`Resolvers`
+`LocalState`
 </td>
 <td>
 
-**Deprecated.** A collection of [local resolvers](../../local-state/local-resolvers/) for the `MockedProvider`'s `ApolloClient` instance to use.
+A `LocalState` instance containing local resolvers for the `MockedProvider`'s `ApolloClient` instance to use. This replaces the deprecated `resolvers` prop.
 
 </td>
 </tr>
@@ -156,3 +154,218 @@ With the `mocks` array above:
 #### Usage
 
 See [Testing React components](../../development-testing/testing/).
+
+## Testing Utilities
+
+Apollo Client 4.0 has reorganized its testing utilities to provide better stability and organization. The following changes have been made:
+
+1. Internal testing utilities have been moved from `@apollo/client/testing` to `@apollo/client/testing/internal`
+2. Deprecated testing utilities have been removed
+3. Testing utilities exported from `@apollo/client/testing` are now considered stable and will not undergo breaking changes
+
+The following APIs have been removed. To migrate, update usages as shown:
+
+**`createMockClient`**
+```diff
+- const client = createMockClient(data, query, variables);
++ const client = new ApolloClient({
++   cache: new InMemoryCache(),
++   link: new MockLink([
++     {
++       request: { query, variables },
++       result: { data },
++     }
++   ]),
++ });
+```
+
+**`mockObservableLink`**
+```diff
+- const link = mockObservableLink();
++ const link = new MockSubscriptionLink();
+```
+
+**`mockSingleLink`**
+```diff
+- const link = mockSingleLink({
+-   request: { query, variables },
+-   result: { data },
+- });
++ const link = new MockLink([
++   {
++     request: { query, variables },
++     result: { data },
++   }
++ ]);
+```
+
+Additionally, `MockLink` types have been moved to the `MockLink` namespace. This affects the `MockedResponse`, `MockLinkOptions`, and `ResultFunction` types. These types are still exported but are deprecated in favor of the namespace. To migrate, use the types on the `MockLink` namespace instead:
+
+```diff
+import {
+- MockedResponse,
+- MockLinkOptions,
+- ResultFunction,
++ MockLink
+} from "@apollo/client/testing";
+
+- const mocks: MockedResponse = [];
++ const mocks: MockLink.MockedResponse = [];
+
+- const result: ResultFunction = () => {/* ... */ }
++ const result: MockLink.ResultFunction = () => {/* ... */ }
+
+- const options: MockLinkOptions = {}
++ const options: MockLink.Options = {}
+```
+
+
+
+```js
+import { MockedProvider } from "@apollo/client/testing/react";
+```
+
+The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send network requests to your API. Instead, it allows you to specify the exact response payload for a given GraphQL operation. This enables you to test your application's operations without communicating with a server.
+
+#### Props
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `mocks`
+
+`ReadonlyArray<MockedResponse>`
+</td>
+<td>
+
+An array containing GraphQL operation definitions and their corresponding mocked responses. See [Defining mocked responses](../../development-testing/testing/#defining-mocked-responses).
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `defaultOptions`
+
+`DefaultOptions`
+</td>
+<td>
+
+An object containing options to pass directly to the `MockedProvider`'s `ApolloClient` instance. See [Example `defaultOptions` object](../core/ApolloClient/#example-defaultoptions-object).
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `cache`
+
+`ApolloCache<TSerializedCache>`
+</td>
+<td>
+
+A custom cache for the `MockedProvider`'s `ApolloClient` instance to use. Useful when you need to define a custom `dataIdFromObject` function for automatic cache updates.
+
+By default, `MockedProvider` creates an `InMemoryCache` with default configuration.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `localState`
+
+`LocalState`
+</td>
+<td>
+
+A `LocalState` instance containing local resolvers for the `MockedProvider`'s `ApolloClient` instance to use. This replaces the deprecated `resolvers` prop.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `childProps`
+
+`object`
+</td>
+<td>
+
+Props to pass down to the `MockedProvider`'s child.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `showWarnings`
+
+`boolean`
+</td>
+<td>
+
+When a request fails to match a mock, a warning is logged to the console to indicate the mismatch. Set this to `false` to silence these warnings.
+
+The default value is `true`.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+#### Example `mocks` array
+
+```js
+const mocks = [
+  {
+    request: {
+      query: GET_DOG,
+      variables: { index: 4 }
+    },
+    result: {
+      data: {
+        dog: {
+          name: "Douglas"
+        }
+      }
+    }
+  },
+  {
+    request: {
+      query: GET_DOG,
+      variables: { index: 8 }
+    },
+    error: new Error("Something went wrong")
+  }
+]
+```
+
+With the `mocks` array above:
+
+* If the `GET_DOG` operation is executed with variables `{ index: 4 }`, it returns a dog named `Douglas`.
+* If `GET_DOG` is executed with variables `{ index: 8 }`, it returns an `error`.
+
+#### Usage
+
+See [Testing React components](../../development-testing/testing/).
+
+

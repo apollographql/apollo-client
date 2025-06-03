@@ -1,10 +1,6 @@
 export { getSuspenseCache } from "./cache/getSuspenseCache.js";
 export type { CacheKey, QueryKey } from "./cache/types.js";
-export type {
-  PreloadedQueryRef,
-  QueryRef,
-  QueryReference,
-} from "./cache/QueryReference.js";
+export type { PreloadedQueryRef, QueryRef } from "./cache/QueryReference.js";
 export {
   assertWrappedQueryRef,
   getWrappedPromise,

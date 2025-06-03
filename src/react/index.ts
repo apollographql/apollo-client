@@ -31,7 +31,6 @@ export { createQueryPreloader } from "./query-preloader/createQueryPreloader.js"
 export type {
   PreloadedQueryRef,
   QueryRef,
-  QueryReference,
 } from "@apollo/client/react/internal";
 
 // These types will be removed with v5

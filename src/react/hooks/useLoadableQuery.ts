@@ -2,6 +2,7 @@ import * as React from "react";
 
 import type {
   ApolloClient,
+  DataState,
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
@@ -30,7 +31,6 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -53,9 +53,11 @@ export declare namespace useLoadableQuery {
   export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
   > = [
     loadQuery: LoadQueryFunction<TVariables>,
-    queryRef: QueryRef<TData, TVariables> | null,
+    queryRef: QueryRef<TData, TVariables, TStates> | null,
     handlers: {
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
       fetchMore: FetchMoreFunction<TData, TVariables>;
@@ -108,7 +110,11 @@ export function useLoadableQuery<
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
-): useLoadableQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+): useLoadableQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial" | "empty"
+>;
 
 export function useLoadableQuery<
   TData = unknown,
@@ -118,7 +124,11 @@ export function useLoadableQuery<
   options: useLoadableQuery.Options & {
     errorPolicy: "ignore" | "all";
   }
-): useLoadableQuery.Result<TData | undefined, TVariables>;
+): useLoadableQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
 
 export function useLoadableQuery<
   TData = unknown,
@@ -128,7 +138,11 @@ export function useLoadableQuery<
   options: useLoadableQuery.Options & {
     returnPartialData: true;
   }
-): useLoadableQuery.Result<DeepPartial<TData>, TVariables>;
+): useLoadableQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial"
+>;
 
 /**
  * A hook for imperatively loading a query, such as responding to a user
@@ -181,7 +195,7 @@ export function useLoadableQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: useLoadableQuery.Options
-): useLoadableQuery.Result<TData, TVariables>;
+): useLoadableQuery.Result<TData, TVariables, "complete" | "streaming">;
 
 export function useLoadableQuery<
   TData = unknown,
@@ -197,7 +211,8 @@ export function useLoadableQuery<
 
   const [queryRef, setQueryRef] = React.useState<QueryRef<
     TData,
-    TVariables
+    TVariables,
+    DataState<TData>["dataState"]
   > | null>(null);
 
   assertWrappedQueryRef(queryRef);

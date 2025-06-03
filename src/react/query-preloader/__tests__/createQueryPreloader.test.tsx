@@ -11,7 +11,11 @@ import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Observable } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import type {
+  DataState,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import {
   ApolloClient,
   ApolloLink,
@@ -55,16 +59,19 @@ function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   });
 }
 
-async function renderDefaultTestApp<TData>({
+async function renderDefaultTestApp<
+  TData,
+  TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
+>({
   client,
   queryRef,
 }: {
   client: ApolloClient;
-  queryRef: QueryRef<TData>;
+  queryRef: QueryRef<TData, any, TStates>;
 }) {
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as useReadQuery.Result<TData> | null,
+      result: null as useReadQuery.Result<TData, TStates> | null,
       error: null as Error | null,
     },
   });
@@ -132,8 +139,9 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -161,10 +169,11 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -316,8 +325,9 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -341,8 +351,9 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -357,8 +368,9 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -384,8 +396,9 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -428,8 +441,9 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -468,7 +482,8 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as useReadQuery.Result<
-        DeepPartial<VariablesCaseData>
+        VariablesCaseData,
+        "complete" | "streaming" | "partial"
       > | null,
     },
   });
@@ -517,10 +532,11 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -544,10 +560,11 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -572,7 +589,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -580,6 +597,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
           name: "Spider-Man (cached)",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -615,7 +633,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: {
           __typename: "Character",
@@ -623,6 +641,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
           name: "Spider-Man (Away)",
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -661,8 +680,9 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
+      dataState: "partial",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -671,10 +691,11 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -686,7 +707,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   await wait(0);
 
   // Ensure that remounting without data in the cache will fetch and suspend
-  client.clearStore();
+  void client.clearStore();
 
   // mount ReadQueryHook
   await user.click(toggleButton);
@@ -702,10 +723,11 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -776,8 +798,9 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -801,8 +824,9 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -817,8 +841,9 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -844,8 +869,9 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -886,8 +912,9 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -958,8 +985,9 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -983,8 +1011,9 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -999,8 +1028,9 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (cached)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1026,8 +1056,9 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "While you were away" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1068,8 +1099,9 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 2" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1140,8 +1172,9 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1165,8 +1198,9 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1198,8 +1232,9 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1237,8 +1272,9 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello 1" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1266,8 +1302,9 @@ test("reacts to cache updates", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1281,8 +1318,9 @@ test("reacts to cache updates", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello (updated)" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1312,8 +1350,9 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1342,8 +1381,9 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1370,8 +1410,9 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Cached Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.loading,
     });
@@ -1381,8 +1422,9 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1405,8 +1447,9 @@ test("returns cached data when all data is present in the cache", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: "Cached Hello" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1456,8 +1499,9 @@ test("suspends and ignores partial data in the cache", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { hello: "from link", foo: "bar" },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1528,8 +1572,9 @@ test("returns error when error policy is 'all'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: new CombinedGraphQLErrors({ errors: [{ message: "Oops" }] }),
       networkStatus: NetworkStatus.error,
     });
@@ -1561,8 +1606,9 @@ test("returns network error when error policy is 'all'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: new Error("Oops"),
       networkStatus: NetworkStatus.error,
     });
@@ -1593,8 +1639,9 @@ test("discards error when error policy is 'ignore'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1623,8 +1670,9 @@ test("discards network errors when error policy is 'ignore'", async () => {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1669,8 +1717,9 @@ test("passes context to the link", async () => {
 
   const { snapshot } = await renderStream.takeRender();
 
-  expect(snapshot.result).toEqual({
+  expect(snapshot.result).toStrictEqualTyped({
     data: { context: { valueA: "A", valueB: "B" } },
+    dataState: "complete",
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
@@ -1735,8 +1784,9 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { character: { __typename: "Character", id: "1" } },
+      dataState: "partial",
       networkStatus: NetworkStatus.loading,
       error: undefined,
     });
@@ -1746,10 +1796,11 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
@@ -1796,8 +1847,9 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+      dataState: "streaming",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1825,7 +1877,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
     const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -1833,6 +1885,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
           recipient: { __typename: "Person", name: "Alice" },
         },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1867,10 +1920,11 @@ test("masks result when dataMasking is `true`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1878,7 +1932,7 @@ test("masks result when dataMasking is `true`", async () => {
 });
 
 test("does not mask result when dataMasking is `false`", async () => {
-  const { query, mocks } = setupMaskedVariablesCase();
+  const { query, mocks } = setupVariablesCase();
   const client = new ApolloClient({
     dataMasking: false,
     cache: new InMemoryCache(),
@@ -1889,7 +1943,7 @@ test("does not mask result when dataMasking is `false`", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
     client,
     queryRef,
   });
@@ -1903,10 +1957,11 @@ test("does not mask result when dataMasking is `false`", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -1914,7 +1969,7 @@ test("does not mask result when dataMasking is `false`", async () => {
 });
 
 test("does not mask results by default", async () => {
-  const { query, mocks } = setupMaskedVariablesCase();
+  const { query, mocks } = setupVariablesCase();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
@@ -1924,7 +1979,7 @@ test("does not mask results by default", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
     client,
     queryRef,
   });
@@ -1938,10 +1993,11 @@ test("does not mask results by default", async () => {
   {
     const { snapshot } = await renderStream.takeRender();
 
-    expect(snapshot.result).toEqual({
+    expect(snapshot.result).toStrictEqualTyped({
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       error: undefined,
       networkStatus: NetworkStatus.ready,
     });
@@ -2375,29 +2431,62 @@ describe.skip("type tests", () => {
     const query = gql``;
 
     const queryRef = preloadQuery(query);
+    const { data, dataState } = useReadQuery(queryRef);
 
     expectTypeOf(queryRef).toEqualTypeOf<
-      PreloadedQueryRef<unknown, OperationVariables>
+      PreloadedQueryRef<unknown, OperationVariables, "complete" | "streaming">
     >();
+    expectTypeOf(data).toEqualTypeOf<unknown>();
+    expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
   });
 
   test("returns QueryReference<TData> in default case", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query);
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
       const query = gql``;
       const queryRef = preloadQuery<SimpleCaseData>(query);
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          OperationVariables,
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2405,10 +2494,31 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2416,10 +2526,31 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "ignore",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -2427,10 +2558,31 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "all" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2438,10 +2590,31 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "all",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData | undefined, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "empty"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData | undefined>();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -2449,10 +2622,25 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { errorPolicy: "none" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
@@ -2460,10 +2648,25 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2471,10 +2674,33 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: true });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
 
     {
@@ -2482,10 +2708,33 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: true,
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
   });
 
@@ -2493,10 +2742,25 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { returnPartialData: false });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
@@ -2504,10 +2768,25 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         returnPartialData: false,
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2515,10 +2794,25 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, { fetchPolicy: "cache-first" });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
 
     {
@@ -2526,10 +2820,25 @@ describe.skip("type tests", () => {
       const queryRef = preloadQuery<SimpleCaseData>(query, {
         fetchPolicy: "cache-first",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<SimpleCaseData, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(dataState).toEqualTypeOf<"complete" | "streaming">();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
     }
   });
 
@@ -2540,13 +2849,37 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
         PreloadedQueryRef<
-          DeepPartial<SimpleCaseData> | undefined,
-          { [key: string]: any }
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial" | "empty"
         >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData> | undefined
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2555,13 +2888,37 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "ignore",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
         PreloadedQueryRef<
-          DeepPartial<SimpleCaseData> | undefined,
-          OperationVariables
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial" | "empty"
         >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData> | undefined
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial" | "empty"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
+
+      if (dataState === "empty") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -2570,10 +2927,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
 
     {
@@ -2582,10 +2962,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
   });
 
@@ -2597,10 +3000,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, { [key: string]: any }>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
 
     {
@@ -2610,10 +3036,33 @@ describe.skip("type tests", () => {
         returnPartialData: true,
         errorPolicy: "none",
       });
+      const { data, dataState } = useReadQuery(queryRef);
 
       expectTypeOf(queryRef).toEqualTypeOf<
-        PreloadedQueryRef<DeepPartial<SimpleCaseData>, OperationVariables>
+        PreloadedQueryRef<
+          SimpleCaseData,
+          { [key: string]: any },
+          "complete" | "streaming" | "partial"
+        >
       >();
+      expectTypeOf(data).toEqualTypeOf<
+        SimpleCaseData | DeepPartial<SimpleCaseData>
+      >();
+      expectTypeOf(dataState).toEqualTypeOf<
+        "complete" | "streaming" | "partial"
+      >();
+
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "streaming") {
+        expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<SimpleCaseData>>();
+      }
     }
   });
 });

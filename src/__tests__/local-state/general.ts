@@ -296,6 +296,7 @@ describe("Cache manipulation", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -303,6 +304,7 @@ describe("Cache manipulation", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { field: 0 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -314,6 +316,7 @@ describe("Cache manipulation", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { field: 1 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -417,6 +420,7 @@ describe("Cache manipulation", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -427,6 +431,7 @@ describe("Cache manipulation", () => {
         serverData,
         selectedItemId: -1,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -442,6 +447,7 @@ describe("Cache manipulation", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { serverData, selectedItemId: -1 },
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -452,6 +458,7 @@ describe("Cache manipulation", () => {
         serverData,
         selectedItemId: 123,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -532,6 +539,7 @@ describe("Cache manipulation", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -645,6 +653,7 @@ describe("Sample apps", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -652,6 +661,7 @@ describe("Sample apps", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { count: 0, lastCount: 1 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -663,6 +673,7 @@ describe("Sample apps", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { count: 2, lastCount: 1 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -672,6 +683,7 @@ describe("Sample apps", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { count: 1, lastCount: 1 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -736,6 +748,7 @@ describe("Sample apps", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -845,6 +858,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -949,6 +963,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -956,6 +971,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { people: { __typename: "Person", id: "1", name: "John Smith" } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -965,12 +981,14 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: true,
     });
     await expect(stream).toEmitTypedValue({
       data: { people: { __typename: "Person", id: "2", name: "Sara Smith" } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1093,6 +1111,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1100,6 +1119,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { count: 0, lastCount: 1 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1156,6 +1176,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1169,6 +1190,7 @@ describe("Combining client and server state/operations", () => {
           __typename: "User",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1258,6 +1280,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1268,6 +1291,7 @@ describe("Combining client and server state/operations", () => {
         count: 0,
         user: { __typename: "User", firstName: "John" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1290,6 +1314,7 @@ describe("Combining client and server state/operations", () => {
         count: 1,
         user: { __typename: "User", firstName: "Harry" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1332,6 +1357,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1339,6 +1365,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       error: new CombinedGraphQLErrors({
         data: null,
         errors: [error],

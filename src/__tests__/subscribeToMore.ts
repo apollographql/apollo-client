@@ -90,6 +90,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -97,6 +98,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -106,6 +108,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Dahivat Pandya" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -116,6 +119,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -153,6 +157,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -160,6 +165,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -171,6 +177,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -216,6 +223,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -223,6 +231,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -310,6 +319,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: [{ value: "1" }, { value: "2" }] },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -319,6 +329,7 @@ describe("subscribeToMore", () => {
       data: {
         entry: [{ value: "1" }, { value: "2" }, { value: "Dahivat Pandya" }],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -333,6 +344,7 @@ describe("subscribeToMore", () => {
           { value: "Amanda Liu" },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -389,6 +401,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -396,6 +409,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "1" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -405,6 +419,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Dahivat Pandya" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -415,6 +430,7 @@ describe("subscribeToMore", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { entry: { value: "Amanda Liu" } },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,

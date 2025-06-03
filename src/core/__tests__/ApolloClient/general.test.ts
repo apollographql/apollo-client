@@ -413,7 +413,7 @@ describe("ApolloClient", () => {
     expect(stream.unsubscribe).not.toThrow();
   });
 
-  it("unsubscribes from link after initial reobserve when unsubscribing immediately", async () => {
+  it("causes link unsubscription if unsubscribed", async () => {
     const expResult = {
       data: {
         allPeople: {
@@ -451,10 +451,12 @@ describe("ApolloClient", () => {
       return new Observable((observer) => {
         onRequestSubscribe();
 
+        // Delay (100ms) must be bigger than unsubscribe await (5ms)
+        // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 20);
+        }, 100);
 
         return () => {
           onRequestUnsubscribe();
@@ -478,18 +480,13 @@ describe("ApolloClient", () => {
 
     stream.unsubscribe();
 
-    // Unsubscribing will not cause link unsubscription while the initial
-    // reobserve hasn't completed.
     await wait(10);
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
-    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(0);
 
-    await wait(10);
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
   });
 
-  it("causes link unsubscription after multiple requests finish", async () => {
+  it("causes link unsubscription after reobserve", async () => {
     const expResult = {
       data: {
         allPeople: {
@@ -522,18 +519,21 @@ describe("ApolloClient", () => {
 
     const onRequestSubscribe = jest.fn();
     const onRequestUnsubscribe = jest.fn();
-
+    let counter = 0;
     const mockedSingleLink = new ApolloLink(() => {
       return new Observable((observer) => {
-        onRequestSubscribe();
+        const id = ++counter;
+        onRequestSubscribe(id);
 
+        // Delay (100ms) must be bigger than sum of reobserve and unsubscribe awaits (5ms each)
+        // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 30);
+        }, 100);
 
         return () => {
-          onRequestUnsubscribe();
+          onRequestUnsubscribe(id);
           clearTimeout(timer);
         };
       });
@@ -564,27 +564,23 @@ describe("ApolloClient", () => {
 
     const stream = new ObservableStream(observableQuery);
 
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+    expect(onRequestSubscribe.mock.calls).toStrictEqual([[1]]);
 
-    // Kick off another request while the other is still pending
-    await wait(10);
+    await wait(50);
+
+    // This is the most important part of this test
+    // Check that reobserve cancels the previous connection while watchQuery remains active
     void observableQuery.reobserve({ variables: { offset: 20 } });
 
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
-
-    // reobserve will allow the original request to finish so we should not see
-    // an unsubscribe yet
-    await wait(0);
-    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(0);
+    await wait(10);
 
     stream.unsubscribe();
 
-    // Now validate that both requests unsubscribe
-    await wait(30);
-    expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
-    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
-  });
+    await wait(10);
 
+    expect(onRequestSubscribe.mock.calls).toStrictEqual([[1], [2]]);
+    expect(onRequestUnsubscribe.mock.calls).toStrictEqual([[1], [2]]);
+  });
   test("handles race conditions when changing variables", async () => {
     const query = gql`
       query GetPerson($id: ID!) {

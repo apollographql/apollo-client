@@ -174,7 +174,7 @@ export declare namespace useLazyQuery {
     ...args: {} extends TVariables ?
       [options?: useLazyQuery.ExecOptions<TVariables>]
     : [options: useLazyQuery.ExecOptions<TVariables>]
-  ) => Promise<QueryResult<TData>>;
+  ) => ObservableQuery.ResultPromise<QueryResult<TData>>;
 }
 
 // The following methods, when called will execute the query, regardless of

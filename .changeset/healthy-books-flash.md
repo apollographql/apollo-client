@@ -31,3 +31,5 @@ The following types are affected. Provide the allowed `dataState` values to the 
 - `useQuery.Result`
 - `useReadQuery.Result`
 - `useSuspenseQuery.Result`
+
+All `*QueryRef` types default to `complete | streaming` states while the rest of the types default to `'complete' | 'streaming' | 'partial' | 'empty'` states. You shouldn't need to provide the states unless you need to either allow for partial data/empty values (`*QueryRef`) or a restricted set of states.

@@ -107,6 +107,15 @@ jobs:
       matrix:
         package: ${{ fromJSON(needs.prerelease.outputs.packages) }}
     steps:
+      - name: Append NPM token to .npmrc
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+            provenance=true
+            //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Tag release with next on npm
         run: npm dist-tag add ${{ matrix.package.name }}@${{ matrix.package.version }} next
 

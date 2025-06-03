@@ -1082,6 +1082,27 @@ describe("ObservableQuery", () => {
 
       await expect(stream).not.toEmitAnything();
     });
+
+    it("registers and unregisters `ObservableQuery` even if it is not subscribed to", async () => {
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const observable = client.watchQuery({ query, variables });
+      expect(client.getObservableQueries().size).toBe(0);
+      const promise = observable.reobserve();
+      expect(client.getObservableQueries().size).toBe(1);
+      link.simulateResult(
+        {
+          result: { data: dataOne },
+        },
+        true
+      );
+      await promise;
+      expect(client.getObservableQueries().size).toBe(0);
+    });
   });
 
   describe("setVariables", () => {

@@ -1418,7 +1418,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const ret = Object.assign(
       preventUnhandledRejection(
-        promise.then((result) => toQueryResult(this.maskResult(result)))
+        promise
+          .then((result) => toQueryResult(this.maskResult(result)))
+          .finally(() => {
+            if (!this.hasObservers() && this.activeOperations.size === 0) {
+              // If `reobserve` was called on a query without any obervers,
+              // the teardown logic would never be called, so we need to
+              // call it here to ensure the query is properly torn down.
+              this.tearDownQuery();
+            }
+          })
       ),
       {
         retain: () => {

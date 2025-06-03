@@ -4238,7 +4238,7 @@ describe("ApolloClient", () => {
         ]),
       });
       // TODO: Determine if there is a better way to test this.
-      const promise = client["queryManager"].fetchQuery("made up id", {
+      const promise = client["queryManager"].fetchQuery({
         query,
       });
 
@@ -4761,7 +4761,7 @@ describe("ApolloClient", () => {
         ]),
       });
       // TODO: Determine if there is a better way to test this
-      const promise = client["queryManager"].fetchQuery("made up id", {
+      const promise = client["queryManager"].fetchQuery({
         query,
       });
       void client.reFetchObservableQueries();

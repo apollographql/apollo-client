@@ -1228,7 +1228,10 @@ export class QueryManager {
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
   ): { restart: () => void; observable: Observable<FetchResult<TData>> } {
-    let observable: Observable<FetchResult<TData>> | undefined;
+    let entry: {
+      observable?: Observable<FetchResult<TData>>;
+      restart?: () => void;
+    } = {};
 
     const { serverQuery, clientQuery, operationType } =
       this.getDocumentInfo(query);
@@ -1237,8 +1240,6 @@ export class QueryManager {
     const executeContext: ExecuteContext = {
       client: this.client,
     };
-
-    let restart: (() => void) | undefined;
 
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
@@ -1262,20 +1263,10 @@ export class QueryManager {
         const printedServerQuery = print(serverQuery);
         const varJson = canonicalStringify(variables);
 
-        const entry = inFlightLinkObservables.lookup(
-          printedServerQuery,
-          varJson
-        );
+        entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
 
-        observable = entry.observable;
-        restart = entry.restart;
-
-        if (!observable) {
-          observable = entry.observable = execute(
-            link,
-            operation,
-            executeContext
-          ).pipe(
+        if (!entry.observable) {
+          entry.observable = execute(link, operation, executeContext).pipe(
             operationType === OperationTypeNode.SUBSCRIPTION ?
               (source) => {
                 return new Observable<FetchResult>((observer) => {
@@ -1288,14 +1279,14 @@ export class QueryManager {
                   }
                   let subscription = subscribe();
 
-                  restart = entry.restart ||= () => {
+                  entry.restart ||= () => {
                     subscription.unsubscribe();
                     subscription = subscribe();
                   };
 
                   return () => {
                     subscription.unsubscribe();
-                    restart = undefined;
+                    entry.restart = undefined;
                   };
                 });
               }
@@ -1314,15 +1305,17 @@ export class QueryManager {
             operationType === OperationTypeNode.SUBSCRIPTION ?
               share()
             : shareReplay({ refCount: true })
-          );
+          ) as Observable<FetchResult<TData>>;
         }
       } else {
-        observable = execute(link, operation, executeContext) as Observable<
-          FetchResult<TData>
-        >;
+        entry.observable = execute(
+          link,
+          operation,
+          executeContext
+        ) as Observable<FetchResult<TData>>;
       }
     } else {
-      observable = of({ data: {} } as FetchResult<TData>);
+      entry.observable = of({ data: {} } as FetchResult<TData>);
     }
 
     if (clientQuery) {
@@ -1337,7 +1330,7 @@ export class QueryManager {
         );
       }
 
-      observable = observable.pipe(
+      entry.observable = entry.observable.pipe(
         mergeMap((result) => {
           return from(
             this.localState!.execute<TData>({
@@ -1353,8 +1346,8 @@ export class QueryManager {
     }
 
     return {
-      restart: () => restart?.(),
-      observable: observable.pipe(
+      restart: () => entry.restart?.(),
+      observable: entry.observable.pipe(
         catchError((error) => {
           error = toErrorLike(error);
           registerLinkError(error);

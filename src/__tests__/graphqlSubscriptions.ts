@@ -954,9 +954,12 @@ describe("GraphQL Subscriptions", () => {
     });
 
     const observable1 = client.subscribe({ query: subscription });
-    using sub1 = new ObservableStream(observable1);
-
     const observable2 = client.subscribe({ query: subscription });
+
+    // Ensure we aren't eagerly subscribing
+    expect(onSubscribe).not.toHaveBeenCalled();
+
+    using sub1 = new ObservableStream(observable1);
     using sub2 = new ObservableStream(observable2);
 
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);

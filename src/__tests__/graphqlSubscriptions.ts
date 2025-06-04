@@ -561,6 +561,7 @@ describe("GraphQL Subscriptions", () => {
     const link = new ApolloLink((_operation) => {
       return new Observable((observer) => {
         observers.add(observer);
+        return () => observers.delete(observer);
       });
     });
 
@@ -673,6 +674,7 @@ describe("GraphQL Subscriptions", () => {
     const link = new ApolloLink((_operation) => {
       return new Observable((observer) => {
         observers.add(observer);
+        return () => observers.delete(observer);
       });
     });
 
@@ -753,6 +755,7 @@ describe("GraphQL Subscriptions", () => {
     const link = new ApolloLink((_operation) => {
       return new Observable((observer) => {
         observers.add(observer);
+        return () => observers.delete(observer);
       });
     });
 

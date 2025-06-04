@@ -1442,8 +1442,11 @@ test("throws when executing subscriptions with client fields when local state is
     cache: new InMemoryCache(),
     link,
   });
+  const stream = new ObservableStream(
+    client.subscribe({ query: subscription })
+  );
 
-  expect(() => client.subscribe({ query: subscription })).toThrow(
+  await expect(stream).toEmitError(
     new InvariantError(
       "Subscription 'OnUserUpdate' contains `@client` fields but local state has not been configured."
     )

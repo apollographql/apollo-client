@@ -60,35 +60,33 @@ export class ClientAwarenessLink extends ApolloLink {
         ...context.clientAwareness,
         ...constructorOptions,
       };
-
-      operation.setContext(({ headers, extensions }) => {
-        if (clientAwareness === "headers") {
-          headers = compact(
-            // setting these first so that they can be overridden by user-provided headers
-            {
-              "apollographql-client-name": name,
-              "apollographql-client-version": version,
-            },
-            headers
-          );
-        }
-        if (enhancedClientAwareness === "extensions") {
-          extensions = compact(
-            // setting these first so that it can be overridden by user-provided extensions
-            {
-              clientLibrary: {
-                name: "@apollo/client",
-                version: client.version,
+      if (clientAwareness === "headers") {
+        operation.setContext(({ headers, extensions }) => {
+          return {
+            headers: compact(
+              // setting these first so that they can be overridden by user-provided headers
+              {
+                "apollographql-client-name": name,
+                "apollographql-client-version": version,
               },
+              headers
+            ),
+          };
+        });
+      }
+
+      if (enhancedClientAwareness === "extensions") {
+        operation.extensions = compact(
+          // setting these first so that it can be overridden by user-provided extensions
+          {
+            clientLibrary: {
+              name: "@apollo/client",
+              version: client.version,
             },
-            extensions
-          );
-        }
-        return {
-          headers,
-          extensions,
-        };
-      });
+          },
+          operation.extensions
+        );
+      }
 
       return forward(operation);
     });

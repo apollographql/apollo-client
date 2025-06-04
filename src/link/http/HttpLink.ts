@@ -50,7 +50,7 @@ export declare namespace HttpLink {
      * If `true`, includes the `extensions` field in operations sent to your
      * GraphQL endpoint.
      *
-     * @defaultValue false
+     * @defaultValue true
      */
     includeExtensions?: boolean;
 

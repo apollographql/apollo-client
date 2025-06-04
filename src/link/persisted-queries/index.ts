@@ -235,7 +235,9 @@ export const createPersistedQueryLink = (
               operation.setContext({
                 http: {
                   includeQuery: true,
-                  includeExtensions: supportsPersistedQueries,
+                  ...(supportsPersistedQueries ?
+                    { includeExtensions: true }
+                  : {}),
                 },
                 fetchOptions: {
                   // Since we're including the full query, which may be
@@ -266,10 +268,10 @@ export const createPersistedQueryLink = (
 
         // don't send the query the first time
         operation.setContext({
-          http: {
-            includeQuery: !supportsPersistedQueries,
-            includeExtensions: supportsPersistedQueries,
-          },
+          http:
+            supportsPersistedQueries ?
+              { includeQuery: false, includeExtensions: true }
+            : {},
         });
 
         // If requested, set method to GET if there are no mutations. Remember the

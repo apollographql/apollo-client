@@ -5,7 +5,7 @@ import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, Observable, Subject } from "rxjs";
 
-import { ServerError, ServerParseError } from "@apollo/client";
+import { ServerError, ServerParseError, version } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import {
@@ -944,7 +944,13 @@ describe("SharedHttpTest", () => {
     let body = convertBatchedBody(fetchMock.lastCall()![1]!.body);
 
     expect(body.query).not.toBeDefined();
-    expect(body.extensions).toEqual({ persistedQuery: { hash: "1234" } });
+    expect(body.extensions).toEqual({
+      persistedQuery: { hash: "1234" },
+      clientLibrary: {
+        name: "@apollo/client",
+        version,
+      },
+    });
   });
 
   it("sets the raw response on context", async () => {

@@ -34,9 +34,7 @@ describe("SSR", () => {
         return (
           <ApolloContext.Consumer>
             {(context) => (
-              <div>
-                {context?.client?.["queryManager"]["clientAwareness"].name}
-              </div>
+              <div>{context?.client?.["queryManager"].clientOptions.name}</div>
             )}
           </ApolloContext.Consumer>
         );

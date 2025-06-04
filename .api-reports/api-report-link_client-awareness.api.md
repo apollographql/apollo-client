@@ -10,9 +10,7 @@ import { ApolloLink } from '@apollo/client';
 export namespace ClientAwarenessLink {
     // (undocumented)
     export interface Options {
-        clientAwareness?: {
-            transport: "headers" | false;
-        };
+        clientAwareness?: "headers" | false;
         enhancedClientAwareness?: "extensions" | false;
         name?: string;
         version?: string;

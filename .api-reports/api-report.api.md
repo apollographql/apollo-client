@@ -375,9 +375,7 @@ export interface ClientAwareness {
 namespace ClientAwarenessLink {
     // (undocumented)
     interface Options {
-        clientAwareness?: {
-            transport: "headers" | false;
-        };
+        clientAwareness?: "headers" | false;
         enhancedClientAwareness?: "extensions" | false;
         name?: string;
         version?: string;

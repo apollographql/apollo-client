@@ -26,9 +26,7 @@ export declare namespace ClientAwarenessLink {
      *
      * @defaultValue "headers"
      */
-    clientAwareness?: {
-      transport: "headers" | false;
-    };
+    clientAwareness?: "headers" | false;
     /**
      * Determines how the the version information of Apollo Client is sent in outgoing requests.
      *
@@ -52,17 +50,16 @@ export class ClientAwarenessLink extends ApolloLink {
       const clientOptions = client["queryManager"].clientOptions;
       const context = operation.getContext();
 
-      const combined = {
-        ...clientOptions,
-        ...context.clientAwareness,
-        ...constructorOptions,
-      };
       const {
         name,
         version,
         clientAwareness = "headers",
         enhancedClientAwareness = "extensions",
-      } = combined;
+      } = {
+        ...clientOptions,
+        ...context.clientAwareness,
+        ...constructorOptions,
+      };
 
       operation.setContext(({ headers, extensions }) => {
         if (clientAwareness === "headers") {

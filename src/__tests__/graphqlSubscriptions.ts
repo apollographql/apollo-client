@@ -959,6 +959,7 @@ describe("GraphQL Subscriptions", () => {
     const observable2 = client.subscribe({ query: subscription });
     using sub2 = new ObservableStream(observable2);
 
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
     link.simulateResult(results[0]);

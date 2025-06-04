@@ -105,6 +105,40 @@ describe("GraphQL Subscriptions", () => {
     await expect(stream2).toEmitTypedValue(results[0].result);
   });
 
+  it("tears down subscription only after all subscribers are unsubscribed", async () => {
+    const onUnsubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onUnsubscribe(onUnsubscribe);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+
+    const stream1 = new ObservableStream(obs);
+    const stream2 = new ObservableStream(obs);
+
+    link.simulateResult(results[0]);
+
+    await expect(stream1).toEmitTypedValue(results[0].result);
+    await expect(stream2).toEmitTypedValue(results[0].result);
+
+    stream1.unsubscribe();
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+
+    link.simulateResult(results[1]);
+
+    await expect(stream1).not.toEmitAnything();
+    await expect(stream2).toEmitTypedValue(results[1].result);
+
+    stream2.unsubscribe();
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
   it("should receive multiple results for a subscription", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({

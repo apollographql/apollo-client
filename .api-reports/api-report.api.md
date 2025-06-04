@@ -237,7 +237,7 @@ type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = never> = 
 // Warning: (ae-forgotten-export) The symbol "ApplyHKT" needs to be exported by the entry point index.d.ts
 //
 // @internal @deprecated (undocumented)
-type ApplyHKTImplementationWithDefault<UserlandImplementation, Name extends string, DefaultImplementation extends Record<Name, HKT>, arg1, arg2 = never, arg3 = never, arg4 = never> = ApplyHKT<UserlandImplementation extends {
+type ApplyHKTImplementationWithDefault<Implementation, Name extends string, DefaultImplementation extends Record<Name, HKT>, arg1, arg2 = never, arg3 = never, arg4 = never> = ApplyHKT<Implementation extends {
     [name in Name]: infer Implementation extends HKT;
 } ? Implementation : DefaultImplementation[Name], arg1, arg2, arg3, arg4>;
 

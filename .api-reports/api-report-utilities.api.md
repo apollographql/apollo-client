@@ -11,7 +11,6 @@ import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
 import { hasDirectives } from '@apollo/client/utilities/internal';
-import { HKT } from '@apollo/client/utilities/internal';
 import { mergeIncrementalData } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { Primitive } from '@apollo/client/utilities/internal';
@@ -124,7 +123,19 @@ interface DocumentTransformOptions {
 
 export { hasDirectives }
 
-export { HKT }
+// @beta
+export interface HKT {
+    // (undocumented)
+    arg1: unknown;
+    // (undocumented)
+    arg2: unknown;
+    // (undocumented)
+    arg3: unknown;
+    // (undocumented)
+    arg4: unknown;
+    // (undocumented)
+    return: unknown;
+}
 
 // @public
 export function isMutationOperation(document: DocumentNode_2): boolean;

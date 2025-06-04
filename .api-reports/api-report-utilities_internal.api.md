@@ -15,6 +15,7 @@ import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import { GraphQLFormattedError } from 'graphql';
+import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
 import type { MutationOptions } from '@apollo/client';
 import { Observable } from 'rxjs';
@@ -40,7 +41,7 @@ export type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = ne
 })["return"];
 
 // @internal @deprecated (undocumented)
-export type ApplyHKTImplementationWithDefault<UserlandImplementation, Name extends string, DefaultImplementation extends Record<Name, HKT>, arg1, arg2 = never, arg3 = never, arg4 = never> = ApplyHKT<UserlandImplementation extends {
+export type ApplyHKTImplementationWithDefault<Implementation, Name extends string, DefaultImplementation extends Record<Name, HKT>, arg1, arg2 = never, arg3 = never, arg4 = never> = ApplyHKT<Implementation extends {
     [name in Name]: infer Implementation extends HKT;
 } ? Implementation : DefaultImplementation[Name], arg1, arg2, arg3, arg4>;
 
@@ -268,20 +269,6 @@ export function hasDirectives(names: string[], root: ASTNode, all?: boolean): bo
 
 // @public (undocumented)
 export function hasForcedResolvers(document: ASTNode): boolean;
-
-// @beta
-export interface HKT {
-    // (undocumented)
-    arg1: unknown;
-    // (undocumented)
-    arg2: unknown;
-    // (undocumented)
-    arg3: unknown;
-    // (undocumented)
-    arg4: unknown;
-    // (undocumented)
-    return: unknown;
-}
 
 // @internal @deprecated (undocumented)
 export type IsAny<T> = 0 extends 1 & T ? true : false;

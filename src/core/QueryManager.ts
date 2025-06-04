@@ -1135,7 +1135,6 @@ export class QueryManager {
       };
     };
 
-    let observable!: Observable<SubscribeResult<TData>>;
     let restart: (() => void) | undefined;
 
     if (__DEV__) {
@@ -1146,24 +1145,22 @@ export class QueryManager {
       );
     }
 
-    if (this.getDocumentInfo(query).hasClientExports) {
-      observable = from(
+    const observable = from(
+      this.getDocumentInfo(query).hasClientExports ?
         this.localState!.getExportedVariables({
           client: this.client,
           document: query,
           variables,
           context,
         })
-      ).pipe(
-        mergeMap((variables) => {
-          const { observable, restart: res } = makeObservable(variables);
-          restart = res;
-          return observable;
-        })
-      );
-    } else {
-      ({ observable, restart } = makeObservable(variables));
-    }
+      : of(variables)
+    ).pipe(
+      mergeMap((variables) => {
+        const { observable, restart: res } = makeObservable(variables);
+        restart = res;
+        return observable;
+      })
+    );
 
     return Object.assign(observable, { restart: () => restart?.() });
   }

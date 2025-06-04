@@ -1136,7 +1136,7 @@ export class QueryManager {
     };
 
     let observable!: Observable<SubscribeResult<TData>>;
-    let restart = () => {};
+    let restart: (() => void) | undefined;
     if (this.getDocumentInfo(query).hasClientExports) {
       if (__DEV__) {
         invariant(
@@ -1155,18 +1155,16 @@ export class QueryManager {
         })
       ).pipe(
         mergeMap((variables) => {
-          const res = makeObservable(variables);
-          restart = res.restart;
-          return res.observable;
+          const { observable, restart: res } = makeObservable(variables);
+          restart = res;
+          return observable;
         })
       );
     } else {
-      const res = makeObservable(variables);
-      restart = res.restart;
-      observable = res.observable;
+      ({ observable, restart } = makeObservable(variables));
     }
 
-    return Object.assign(observable, { restart: () => restart() });
+    return Object.assign(observable, { restart: () => restart?.() });
   }
 
   public removeQuery(queryId: string) {

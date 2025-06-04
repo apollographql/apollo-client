@@ -1,5 +1,5 @@
-import { ApolloLink } from "@apollo/client";
-import { compact } from "../../utilities/internal/compact.js";
+import { ApolloLink } from "@apollo/client/link";
+import { compact } from "@apollo/client/utilities/internal";
 
 export declare namespace ClientAwarenessLink {
   export interface Options {

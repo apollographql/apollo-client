@@ -120,15 +120,9 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   localState?: LocalState;
-  /**
-   * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
-   */
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#name:member} */
   name?: string;
-  /**
-   * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
-   *
-   * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
-   */
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#version:member} */
   version?: string;
   documentTransform?: DocumentTransform;
 
@@ -242,8 +236,6 @@ export class ApolloClient implements DataProxy {
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       localState,
-      name: clientAwarenessName,
-      version: clientAwarenessVersion,
       devtools,
       dataMasking,
       link,
@@ -279,10 +271,7 @@ export class ApolloClient implements DataProxy {
       queryDeduplication,
       ssrMode,
       dataMasking: !!dataMasking,
-      clientAwareness: {
-        name: clientAwarenessName!,
-        version: clientAwarenessVersion!,
-      },
+      clientOptions: options,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?

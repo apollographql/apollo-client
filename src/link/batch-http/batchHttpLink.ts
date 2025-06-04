@@ -4,6 +4,7 @@ import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
+import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { HttpLink } from "@apollo/client/link/http";
 import {
   checkFetcher,
@@ -36,6 +37,18 @@ const backupFetch = maybe(() => fetch);
  * context can include the headers property, which will be passed to the fetch function
  */
 export class BatchHttpLink extends ApolloLink {
+  constructor(
+    options: BatchHttpLink.Options & ClientAwarenessLink.Options = {}
+  ) {
+    const { left, right, request } = ApolloLink.concat(
+      new ClientAwarenessLink(options),
+      new BaseBatchHttpLink(options)
+    );
+    super(request);
+    Object.assign(this, { left, right });
+  }
+}
+export class BaseBatchHttpLink extends ApolloLink {
   private batchDebounce?: boolean;
   private batchInterval: number;
   private batchMax: number;
@@ -81,25 +94,11 @@ export class BatchHttpLink extends ApolloLink {
 
       const context = operations[0].getContext();
 
-      const clientAwarenessHeaders: {
-        "apollographql-client-name"?: string;
-        "apollographql-client-version"?: string;
-      } = {};
-      if (context.clientAwareness) {
-        const { name, version } = context.clientAwareness;
-        if (name) {
-          clientAwarenessHeaders["apollographql-client-name"] = name;
-        }
-        if (version) {
-          clientAwarenessHeaders["apollographql-client-version"] = version;
-        }
-      }
-
       const contextConfig = {
         http: context.http,
         options: context.fetchOptions,
         credentials: context.credentials,
-        headers: { ...clientAwarenessHeaders, ...context.headers },
+        headers: context.headers,
       };
 
       //uses fallback, link, and then context to build options
@@ -144,6 +143,8 @@ export class BatchHttpLink extends ApolloLink {
         controller = new AbortController();
         options.signal = controller.signal;
       }
+
+      console.log({ options });
 
       return new Observable((observer) => {
         // Prefer BatchHttpLink.Options.fetch (preferredFetch) if provided, and

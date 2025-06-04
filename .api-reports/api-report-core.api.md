@@ -220,9 +220,7 @@ export { checkFetcher }
 
 // @public (undocumented)
 export interface ClientAwareness {
-    // (undocumented)
     name?: string;
-    // (undocumented)
     version?: string;
 }
 
@@ -708,6 +706,7 @@ class QueryManager {
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
     readonly client: ApolloClient;
+    readonly clientOptions: ApolloClientOptions;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -823,7 +822,7 @@ interface QueryManagerOptions {
     // (undocumented)
     client: ApolloClient;
     // (undocumented)
-    clientAwareness: ClientAwareness;
+    clientOptions: ApolloClientOptions;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -1085,8 +1084,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:135:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:307:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:308:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:195:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:478:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

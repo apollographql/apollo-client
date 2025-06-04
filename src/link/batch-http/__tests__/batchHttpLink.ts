@@ -84,7 +84,7 @@ describe("BatchHttpLink", () => {
     const stream2 = new ObservableStream(
       execute(link, {
         query: sampleQuery,
-        context: { credentials: "two" },
+        context: { credentials: "two", clientAwareness },
       })
     );
 

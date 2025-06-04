@@ -4,7 +4,7 @@ import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { print } from "@apollo/client/utilities";
 
-import { createHttpLink } from "./createHttpLink.js";
+import { BaseHttpLink } from "./BaseHttpLink.js";
 
 export declare namespace HttpLink {
   interface ContextOptions {
@@ -148,8 +148,8 @@ export declare namespace HttpLink {
   type UriFunction = (operation: Operation) => string;
 }
 
-export class HttpLink extends ApolloLink {
-  constructor(public options: HttpLink.Options = {}) {
-    super(createHttpLink(options).request);
-  }
+export class HttpLink extends BaseHttpLink {
 }
+
+export const createHttpLink = (linkOptions: HttpLink.Options = {}) =>
+  new BaseHttpLink(linkOptions);

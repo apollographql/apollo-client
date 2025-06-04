@@ -318,6 +318,6 @@ export declare namespace QueryNotification {
     | SetResult<TData>;
 }
 
-export interface RestartableSubscription<T> extends Observable<T> {
+export interface RestartableObservable<T> extends Observable<T> {
   restart: () => void;
 }

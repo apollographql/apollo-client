@@ -144,8 +144,6 @@ export class BaseBatchHttpLink extends ApolloLink {
         options.signal = controller.signal;
       }
 
-      console.log({ options });
-
       return new Observable((observer) => {
         // Prefer BatchHttpLink.Options.fetch (preferredFetch) if provided, and
         // otherwise fall back to the *current* global window.fetch function

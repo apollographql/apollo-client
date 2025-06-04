@@ -4,7 +4,7 @@
 
 ```ts
 
-import { ApolloLink } from '@apollo/client';
+import { ApolloLink } from '@apollo/client/link';
 
 // @public (undocumented)
 export namespace ClientAwarenessLink {

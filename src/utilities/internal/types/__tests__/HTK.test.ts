@@ -1,11 +1,11 @@
 import { expectTypeOf } from "expect-type";
 
+import type { CustomHKT } from "@apollo/client";
+import type { HKT } from "@apollo/client/utilities";
 import type {
   ApplyHKT,
   ApplyHKTImplementationWithDefault,
-  HKT,
 } from "@apollo/client/utilities/internal";
-import { CustomHKT } from "@apollo/client";
 
 declare module "@apollo/client" {
   export interface CustomHKT {
@@ -22,7 +22,7 @@ type CustomMaskedImplementation<TData> = {
   [K in keyof TData as K extends `_${string}` ? never : K]: TData[K];
 };
 
-describe.skip("type tests", () => {
+it.skip("type tests", () => {
   type BaseType = {
     _id: string;
     name: string;

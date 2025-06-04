@@ -25,8 +25,6 @@
  *   // Result is "Hello, world!"
  *   ```
  */
-// this type is not internal, but still kept in the same file as the internal types
-// it is re-exported from `@apollo/client/utilities`.
 export interface HKT {
   arg1: unknown;
   arg2: unknown;
@@ -34,42 +32,3 @@ export interface HKT {
   arg4: unknown;
   return: unknown;
 }
-
-/**
- * @internal
- */
-export type ApplyHKT<
-  fn extends HKT,
-  arg1,
-  arg2 = never,
-  arg3 = never,
-  arg4 = never,
-> = (fn & {
-  arg1: arg1;
-  arg2: arg2;
-  arg3: arg3;
-  arg4: arg4;
-})["return"];
-
-/**
- * @internal
- */
-export type ApplyHKTImplementationWithDefault<
-  UserlandImplementation,
-  Name extends string,
-  DefaultImplementation extends Record<Name, HKT>,
-  arg1,
-  arg2 = never,
-  arg3 = never,
-  arg4 = never,
-> = ApplyHKT<
-  UserlandImplementation extends {
-    [name in Name]: infer Implementation extends HKT;
-  } ?
-    Implementation
-  : DefaultImplementation[Name],
-  arg1,
-  arg2,
-  arg3,
-  arg4
->;

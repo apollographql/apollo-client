@@ -73,8 +73,5 @@ export {
 
 export { AutoCleanedStrongCache, AutoCleanedWeakCache } from "./caches.js";
 
-export type {
-  ApplyHKT,
-  ApplyHKTImplementationWithDefault,
-  HKT,
-} from "./types/HKT.js";
+export type { ApplyHKT } from "./types/ApplyHKT.js";
+export type { ApplyHKTImplementationWithDefault } from "./types/ApplyHKTImplementationWithDefault.js";

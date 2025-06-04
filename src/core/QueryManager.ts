@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
-import { identity, Observable } from "rxjs";
+import { Observable } from "rxjs";
 import {
   catchError,
   concat,
@@ -1267,29 +1267,27 @@ export class QueryManager {
 
         if (!entry.observable) {
           entry.observable = execute(link, operation, executeContext).pipe(
-            operationType === OperationTypeNode.SUBSCRIPTION ?
-              (source) => {
-                return new Observable<FetchResult>((observer) => {
-                  function subscribe() {
-                    return source.subscribe({
-                      next: observer.next.bind(observer),
-                      complete: observer.complete.bind(observer),
-                      error: observer.error.bind(observer),
-                    });
-                  }
-                  let subscription = subscribe();
+            (source) => {
+              return new Observable<FetchResult>((observer) => {
+                function subscribe() {
+                  return source.subscribe({
+                    next: observer.next.bind(observer),
+                    complete: observer.complete.bind(observer),
+                    error: observer.error.bind(observer),
+                  });
+                }
+                let subscription = subscribe();
 
-                  entry.restart ||= () => {
-                    subscription.unsubscribe();
-                    subscription = subscribe();
-                  };
+                entry.restart ||= () => {
+                  subscription.unsubscribe();
+                  subscription = subscribe();
+                };
 
-                  return () => {
-                    subscription.unsubscribe();
-                  };
-                });
-              }
-            : identity,
+                return () => {
+                  subscription.unsubscribe();
+                };
+              });
+            },
             finalize(() => {
               if (
                 inFlightLinkObservables.peek(printedServerQuery, varJson) ===

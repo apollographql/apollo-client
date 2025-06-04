@@ -18,7 +18,6 @@ import {
   checkDocument,
   getApolloClientMemoryInternals,
   mergeOptions,
-  pipeWithOwnProps,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -530,19 +529,22 @@ export class ApolloClient implements DataProxy {
   ): RestartableSubscription<SubscribeResult<MaybeMasked<TData>>> {
     const id = this.queryManager.generateQueryId();
 
-    return this.queryManager.startGraphQLSubscription<TData>(options).pipe(
-      pipeWithOwnProps(
-        map((result) => ({
-          ...result,
-          data: this.queryManager.maskOperation({
-            document: options.query,
-            data: result.data,
-            fetchPolicy: options.fetchPolicy,
-            id,
-          }),
-        }))
-      )
-    ) as RestartableSubscription<SubscribeResult<TData>>;
+    const observable =
+      this.queryManager.startGraphQLSubscription<TData>(options);
+
+    const mapped = observable.pipe(
+      map((result) => ({
+        ...result,
+        data: this.queryManager.maskOperation({
+          document: options.query,
+          data: result.data,
+          fetchPolicy: options.fetchPolicy,
+          id,
+        }),
+      }))
+    );
+
+    return Object.assign(mapped, { restart: observable.restart });
   }
 
   /**

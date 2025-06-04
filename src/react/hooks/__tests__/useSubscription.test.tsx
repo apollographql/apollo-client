@@ -10,7 +10,7 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import type { TypedDocumentNode } from "@apollo/client";
+import type { DefaultContext, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, concat } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
@@ -1171,6 +1171,143 @@ describe("useSubscription Hook", () => {
         });
 
         expect(snapshot[2]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await expect(takeRender).not.toRerender();
+    });
+
+    test("does not deduplicate new request after previous is unsubscribed", async () => {
+      const subscription = gql`
+        subscription {
+          car {
+            make
+          }
+        }
+      `;
+
+      const results = ["Audi", "BMW"].map((make) => ({
+        result: { data: { car: { make } } },
+      }));
+
+      const onSubscribe = jest.fn();
+      const onUnsubscribe = jest.fn();
+      const link = new MockSubscriptionLink();
+      link.onSetup(onSubscribe);
+      link.onUnsubscribe(onUnsubscribe);
+
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
+
+      function Subscription({
+        idx,
+        context,
+      }: {
+        idx: number;
+        context: DefaultContext;
+      }) {
+        mergeSnapshot({ [idx]: useSubscription(subscription, { context }) });
+        return null;
+      }
+
+      function App({
+        count,
+        context,
+      }: {
+        count: number;
+        context: DefaultContext;
+      }) {
+        replaceSnapshot({});
+
+        return (
+          <>
+            {Array.from({ length: count }).map((_, idx) => {
+              return <Subscription key={idx} idx={idx} context={context} />;
+            })}
+          </>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      const { rerender } = await render(
+        <App count={1} context={{ count: 1 }} />,
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+      expect(link.operation!.getContext()).toMatchObject({ count: 1 });
+
+      link.simulateResult(results[0]);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await rerender(<App count={0} context={{ count: 1 }} />);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot).toStrictEqualTyped({});
+      }
+
+      await wait(0);
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+      expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+      await rerender(<App count={1} context={{ count: 2 }} />);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(2);
+      expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+      expect(link.operation!.getContext()).toMatchObject({ count: 2 });
+
+      link.simulateResult(results[1]);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
           data: results[1].result.data,
           error: undefined,
           loading: false,

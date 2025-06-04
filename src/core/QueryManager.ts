@@ -1148,7 +1148,7 @@ export class QueryManager {
           variables,
           context,
         })
-      ).pipe(makeObservable);
+      ).pipe(mergeMap(makeObservable));
     } else {
       observable = makeObservable(variables);
     }

@@ -28,7 +28,11 @@ import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
 const backupFetch = maybe(() => fetch);
 
-export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
+export const createHttpLink = (linkOptions: HttpLink.Options = {}) =>
+  new BaseHttpLink(linkOptions);
+
+export class BaseHttpLink extends ApolloLink {
+constructor(linkOptions: HttpLink.Options = {}) {
   let {
     uri = "/graphql",
     // use default global fetch if nothing passed in
@@ -54,7 +58,7 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
     headers: requestOptions.headers,
   };
 
-  return new ApolloLink((operation) => {
+  super((operation) => {
     let chosenURI = selectURI(operation, uri);
 
     const context = operation.getContext();
@@ -195,4 +199,5 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
       };
     });
   });
-};
+}
+}

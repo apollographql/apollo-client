@@ -1137,15 +1137,16 @@ export class QueryManager {
 
     let observable!: Observable<SubscribeResult<TData>>;
     let restart: (() => void) | undefined;
-    if (this.getDocumentInfo(query).hasClientExports) {
-      if (__DEV__) {
-        invariant(
-          this.localState,
-          "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(query, "(anonymous)")
-        );
-      }
 
+    if (__DEV__) {
+      invariant(
+        !this.getDocumentInfo(query).hasClientExports || this.localState,
+        "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+        getOperationName(query, "(anonymous)")
+      );
+    }
+
+    if (this.getDocumentInfo(query).hasClientExports) {
       observable = from(
         this.localState!.getExportedVariables({
           client: this.client,

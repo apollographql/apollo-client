@@ -7,6 +7,7 @@
 import type { ApolloClient } from '@apollo/client';
 import type { ApolloQueryResult } from '@apollo/client';
 import type { createQueryPreloader } from '@apollo/client/react';
+import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
 import type { FetchMoreQueryOptions } from '@apollo/client';
@@ -32,10 +33,10 @@ import type { WatchQueryOptions } from '@apollo/client';
 // Warning: (ae-forgotten-export) The symbol "WrappedQueryRef" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function assertWrappedQueryRef<TData, TVariables>(queryRef: QueryRef<TData, TVariables>): asserts queryRef is WrappedQueryRef<TData, TVariables>;
+export function assertWrappedQueryRef<TData, TVariables, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, TVariables, TStates>): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates>;
 
 // @public (undocumented)
-export function assertWrappedQueryRef<TData, TVariables>(queryRef: QueryRef<TData, TVariables> | undefined | null): asserts queryRef is WrappedQueryRef<TData, TVariables> | undefined | null;
+export function assertWrappedQueryRef<TData, TVariables, TStates extends DataState<TData>["dataState"]>(queryRef: QueryRef<TData, TVariables, TStates> | undefined | null): asserts queryRef is WrappedQueryRef<TData, TVariables, TStates> | undefined | null;
 
 // @public (undocumented)
 export type CacheKey = [
@@ -116,7 +117,7 @@ export function getSuspenseCache(client: ApolloClient & {
 // Warning: (ae-forgotten-export) The symbol "QueryRefPromise" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function getWrappedPromise<TData>(queryRef: WrappedQueryRef<TData, any>): QueryRefPromise<TData>;
+export function getWrappedPromise<TData, TStates extends DataState<TData>["dataState"]>(queryRef: WrappedQueryRef<TData, any, TStates>): QueryRefPromise<TData, TStates>;
 
 // Warning: (ae-forgotten-export) The symbol "WrappableHooks" needs to be exported by the entry point index.d.ts
 //
@@ -126,11 +127,11 @@ export type HookWrappers = {
 };
 
 // @public (undocumented)
-export class InternalQueryReference<TData = unknown> {
+export class InternalQueryReference<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> {
     // Warning: (ae-forgotten-export) The symbol "InternalQueryReferenceOptions" needs to be exported by the entry point index.d.ts
     constructor(observable: ObservableQuery<TData, any>, options: InternalQueryReferenceOptions);
     // (undocumented)
-    applyOptions(watchQueryOptions: ObservedOptions): QueryRefPromise<TData>;
+    applyOptions(watchQueryOptions: ObservedOptions): QueryRefPromise<TData, TStates>;
     // Warning: (ae-forgotten-export) The symbol "ObservedOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -146,17 +147,17 @@ export class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    listen(listener: Listener<TData>): () => void;
+    listen(listener: Listener<TData, TStates>): () => void;
     // (undocumented)
     readonly observable: ObservableQuery<TData>;
     // (undocumented)
-    promise: QueryRefPromise<TData>;
+    promise: QueryRefPromise<TData, TStates>;
     // (undocumented)
     refetch(variables: OperationVariables | undefined): Promise<QueryResult<TData>>;
     // (undocumented)
     reinitialize(): void;
     // (undocumented)
-    result: ApolloQueryResult<MaybeMasked<TData>>;
+    result: ApolloQueryResult<MaybeMasked<TData>, TStates>;
     // (undocumented)
     retain(): () => void;
     // (undocumented)
@@ -174,7 +175,7 @@ interface InternalQueryReferenceOptions {
 }
 
 // @public (undocumented)
-type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
+type Listener<TData, TStates extends DataState<TData>["dataState"]> = (promise: QueryRefPromise<TData, TStates>) => void;
 
 // @public (undocumented)
 type Listener_2<TData> = (promise: FragmentRefPromise<TData>) => void;
@@ -188,8 +189,8 @@ const OBSERVED_CHANGED_OPTIONS: readonly ["context", "errorPolicy", "fetchPolicy
 type ObservedOptions = Pick<WatchQueryOptions, (typeof OBSERVED_CHANGED_OPTIONS)[number]>;
 
 // @public
-export interface PreloadedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
-    toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
+export interface PreloadedQueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
+    toPromise(): Promise<PreloadedQueryRef<TData, TVariables, TStates>>;
 }
 
 // @public (undocumented)
@@ -208,19 +209,16 @@ export interface QueryKey {
 }
 
 // @public
-export interface QueryRef<TData = unknown, TVariables = unknown> {
+export interface QueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> {
     // @internal @deprecated (undocumented)
-    [QUERY_REF_BRAND]?(variables: TVariables): TData;
-}
-
-// @public @deprecated (undocumented)
-export interface QueryReference<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
-    // @deprecated (undocumented)
-    toPromise?: unknown;
+    [QUERY_REF_BRAND]?(variables: TVariables): {
+        data: TData;
+        states: TStates;
+    };
 }
 
 // @public (undocumented)
-type QueryRefPromise<TData> = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>>>;
+type QueryRefPromise<TData, TStates extends DataState<TData>["dataState"]> = DecoratedPromise<ApolloQueryResult<MaybeMasked<TData>, TStates>>;
 
 // @public (undocumented)
 export type RefetchFunction<TData, TVariables extends OperationVariables> = (variables?: Partial<TVariables>) => Promise<QueryResult<TData>>;
@@ -229,7 +227,7 @@ export type RefetchFunction<TData, TVariables extends OperationVariables> = (var
 class SuspenseCache {
     constructor(options?: SuspenseCacheOptions);
     // (undocumented)
-    add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>): void;
+    add(cacheKey: CacheKey, queryRef: InternalQueryReference<any, any>): void;
     // Warning: (ae-forgotten-export) The symbol "FragmentCacheKey" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "FragmentReference" needs to be exported by the entry point index.d.ts
     //
@@ -238,7 +236,7 @@ class SuspenseCache {
         from: string;
     }): FragmentReference<TData, TVariables>;
     // (undocumented)
-    getQueryRef<TData = unknown>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
+    getQueryRef<TData = unknown, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData, TStates>;
 }
 
 // @public (undocumented)
@@ -250,13 +248,13 @@ export interface SuspenseCacheOptions {
 const suspenseCacheSymbol: unique symbol;
 
 // @public (undocumented)
-export function unwrapQueryRef<TData>(queryRef: WrappedQueryRef<TData>): InternalQueryReference<TData>;
+export function unwrapQueryRef<TData, TStates extends DataState<TData>["dataState"]>(queryRef: WrappedQueryRef<TData, any, TStates>): InternalQueryReference<TData, TStates>;
 
 // @public (undocumented)
-export function unwrapQueryRef<TData>(queryRef: Partial<WrappedQueryRef<TData>>): undefined | InternalQueryReference<TData>;
+export function unwrapQueryRef<TData, TStates extends DataState<TData>["dataState"]>(queryRef: Partial<WrappedQueryRef<TData, any, TStates>>): undefined | InternalQueryReference<TData, TStates>;
 
 // @public (undocumented)
-export function updateWrappedQueryRef<TData>(queryRef: WrappedQueryRef<TData>, promise: QueryRefPromise<TData>): void;
+export function updateWrappedQueryRef<TData, TStates extends DataState<TData>["dataState"]>(queryRef: WrappedQueryRef<TData, any, TStates>, promise: QueryRefPromise<TData, TStates>): void;
 
 // @public (undocumented)
 interface WrappableHooks {
@@ -281,11 +279,11 @@ interface WrappableHooks {
 }
 
 // @internal @deprecated
-interface WrappedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
+interface WrappedQueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
     // @deprecated (undocumented)
-    [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+    [PROMISE_SYMBOL]: QueryRefPromise<TData, TStates>;
     // @deprecated (undocumented)
-    readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
+    readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TStates>;
     // @deprecated (undocumented)
     toPromise?(): Promise<unknown>;
 }
@@ -294,7 +292,7 @@ interface WrappedQueryRef<TData = unknown, TVariables = unknown> extends QueryRe
 export const wrapperSymbol: unique symbol;
 
 // @public (undocumented)
-export function wrapQueryRef<TData, TVariables extends OperationVariables>(internalQueryRef: InternalQueryReference<TData>): WrappedQueryRef<TData, TVariables>;
+export function wrapQueryRef<TData, TVariables extends OperationVariables, TStates extends DataState<TData>["dataState"]>(internalQueryRef: InternalQueryReference<TData, TStates>): WrappedQueryRef<TData, TVariables, TStates>;
 
 // (No @packageDocumentation comment for this package)
 

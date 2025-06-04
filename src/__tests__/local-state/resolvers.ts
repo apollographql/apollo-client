@@ -76,6 +76,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -83,6 +84,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: true } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -128,6 +130,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -138,6 +141,7 @@ describe("Basic resolver capabilities", () => {
         foo: { __typename: "Foo", bar: true },
         bar: { __typename: "Bar", baz: true },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -188,6 +192,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -198,6 +203,7 @@ describe("Basic resolver capabilities", () => {
         foo: { bar: true, __typename: "ClientData" },
         bar: { baz: true, __typename: "Bar" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -259,6 +265,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -269,6 +276,7 @@ describe("Basic resolver capabilities", () => {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -310,6 +318,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -317,6 +326,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -358,6 +368,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -365,6 +376,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: { foo: { __typename: "Foo", bar: 1 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -425,6 +437,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -442,6 +455,7 @@ describe("Basic resolver capabilities", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -643,6 +657,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -653,6 +668,7 @@ describe("Basic resolver capabilities", () => {
         foo: { __typename: "Foo", bar: true },
         bar: { __typename: "Bar", baz: true },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1337,6 +1353,7 @@ describe("Force local resolvers", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1346,6 +1363,7 @@ describe("Force local resolvers", () => {
       data: {
         isLoggedIn: true,
       },
+      dataState: "partial",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -1356,6 +1374,7 @@ describe("Force local resolvers", () => {
         user: { __typename: "User", id: 1, name: "Test User" },
         isLoggedIn: true,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

@@ -89,6 +89,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -96,6 +97,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 1 },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -114,6 +116,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 1 },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.poll,
           partial: false,
@@ -121,6 +124,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 2 },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -128,6 +132,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 2 },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.poll,
           partial: false,
@@ -135,6 +140,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 3 },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -172,6 +178,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -179,6 +186,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataOne,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -186,6 +194,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataOne,
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.poll,
           partial: false,
@@ -193,6 +202,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataTwo,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -230,6 +240,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -237,6 +248,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataOne,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -244,6 +256,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataOne,
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.poll,
           partial: false,
@@ -251,6 +264,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataTwo,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -285,6 +299,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -292,6 +307,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { greeting: "hello 1" },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -299,6 +315,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { greeting: "hello 1" },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.poll,
           partial: false,
@@ -306,6 +323,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { greeting: "hello 2" },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -323,6 +341,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { greeting: "hello 2" },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.poll,
           partial: false,
@@ -330,6 +349,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { greeting: "hello 3" },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -365,6 +385,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -372,6 +393,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 1 },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -380,6 +402,7 @@ describe("ObservableQuery", () => {
         await expect(stream).toEmitTypedValue(
           {
             data: { count: 1 },
+            dataState: "complete",
             loading: true,
             networkStatus: NetworkStatus.poll,
             partial: false,
@@ -389,6 +412,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 2 },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -405,6 +429,7 @@ describe("ObservableQuery", () => {
         await expect(stream).toEmitTypedValue(
           {
             data: { count: 2 },
+            dataState: "complete",
             loading: true,
             networkStatus: NetworkStatus.poll,
             partial: false,
@@ -414,6 +439,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { count: 3 },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -467,6 +493,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -474,6 +501,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -483,6 +511,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -490,6 +519,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -536,6 +566,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -543,6 +574,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -552,6 +584,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -559,6 +592,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -602,6 +636,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -609,6 +644,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -618,6 +654,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -625,6 +662,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -636,6 +674,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -667,6 +706,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -674,6 +714,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -685,6 +726,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -692,6 +734,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -704,6 +747,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -711,6 +755,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -739,6 +784,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -746,6 +792,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -755,6 +802,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: false,
@@ -762,6 +810,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -811,6 +860,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -825,6 +875,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -878,6 +929,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -888,6 +940,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -895,6 +948,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -945,6 +999,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -952,6 +1007,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1011,6 +1067,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1048,6 +1105,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1055,6 +1113,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1068,6 +1127,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: false,
@@ -1075,6 +1135,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1108,6 +1169,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1115,6 +1177,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1126,6 +1189,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1133,6 +1197,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1162,6 +1227,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1169,12 +1235,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1186,18 +1254,21 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
       });
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1233,6 +1304,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1240,6 +1312,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -1247,6 +1320,7 @@ describe("ObservableQuery", () => {
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -1259,18 +1333,21 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
       });
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1302,6 +1379,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1309,6 +1387,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1320,6 +1399,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1327,6 +1407,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1358,6 +1439,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1365,6 +1447,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1376,6 +1459,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -1383,6 +1467,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1412,6 +1497,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1419,6 +1505,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1458,6 +1545,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1465,6 +1553,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { users: [{ __typename: "User", id: 1 }] },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1505,6 +1594,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1512,6 +1602,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: { users: [{ __typename: "User", id: 1 }] },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1555,6 +1646,7 @@ describe("ObservableQuery", () => {
       // Initial fetch
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1563,6 +1655,7 @@ describe("ObservableQuery", () => {
       // setVariables
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1570,6 +1663,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1607,6 +1701,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1614,6 +1709,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1623,6 +1719,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -1630,6 +1727,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1666,6 +1764,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1673,6 +1772,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -1680,6 +1780,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1709,6 +1810,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1716,6 +1818,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1738,6 +1841,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -1749,6 +1853,7 @@ describe("ObservableQuery", () => {
             name: "SomeOneElse",
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1783,6 +1888,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1790,6 +1896,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1803,6 +1910,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -1810,6 +1918,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1871,6 +1980,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -1878,6 +1988,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1887,6 +1998,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -1894,6 +2006,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1903,6 +2016,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -1910,6 +2024,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1998,6 +2113,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2005,6 +2121,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2015,6 +2132,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -2023,6 +2141,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2038,6 +2157,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: false,
@@ -2046,6 +2166,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2061,6 +2182,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: false,
@@ -2069,6 +2191,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2140,6 +2263,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { counter: 1 },
+          dataState: "partial",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -2147,6 +2271,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { counter: 2, name: "Ben" },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2162,6 +2287,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { counter: 3, name: "Ben" },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           partial: false,
@@ -2169,6 +2295,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { counter: 3, name: "Ben" },
+          dataState: "complete",
           error: intentionalNetworkFailure,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2189,6 +2316,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { counter: 4, name: "Ben" },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           partial: false,
@@ -2196,6 +2324,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: { counter: 5, name: "Ben" },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2255,6 +2384,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -2268,6 +2398,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "c" },
             ],
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2285,6 +2416,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "c" },
             ],
           },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           partial: false,
@@ -2297,6 +2429,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "e" },
             ],
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2367,6 +2500,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -2380,6 +2514,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "c" },
             ],
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2400,6 +2535,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "c" },
             ],
           },
+          dataState: "complete",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           partial: false,
@@ -2413,6 +2549,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "c" },
             ],
           },
+          dataState: "complete",
           error: expect.objectContaining({
             message: expect.stringMatching(
               /No more mocked responses for the query:\s+query QueryWithVarsVar\(\$vars: \[String!\]\)/
@@ -2495,6 +2632,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -2508,6 +2646,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "c" },
             ],
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2517,6 +2656,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.refetch,
           partial: true,
@@ -2529,6 +2669,7 @@ describe("ObservableQuery", () => {
               { __typename: "Var", name: "e" },
             ],
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -2635,6 +2776,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2644,6 +2786,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2651,12 +2794,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2664,6 +2809,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOneWithTypename,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2671,6 +2817,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOneWithTypename,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2680,12 +2827,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOneWithTypename,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOneWithTypename,
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -2693,11 +2842,13 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwoWithTypename,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
+        dataState: "complete",
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2727,6 +2878,7 @@ describe("ObservableQuery", () => {
       // execute the query?
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2736,6 +2888,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2743,6 +2896,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2750,6 +2904,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2774,6 +2929,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2783,6 +2939,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2790,6 +2947,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2797,6 +2955,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2804,6 +2963,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2812,6 +2972,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2836,6 +2997,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2843,6 +3005,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2854,6 +3017,7 @@ describe("ObservableQuery", () => {
 
       expect(currentResult).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2884,6 +3048,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2891,6 +3056,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2898,6 +3064,7 @@ describe("ObservableQuery", () => {
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "complete",
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2927,6 +3094,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2934,6 +3102,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: wrappedError,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2964,6 +3133,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2971,6 +3141,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         error: new CombinedGraphQLErrors({ data: dataOne, errors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2979,6 +3150,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         error: wrappedError,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -3015,6 +3187,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3022,12 +3195,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3070,10 +3245,9 @@ describe("ObservableQuery", () => {
         returnPartialData: true,
       });
 
-      // TODO: Determine why this worked without the `false` argument before
-      // since this updates the last value to be equal to the partial result.
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "partial",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3083,12 +3257,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataOne,
+        dataState: "partial",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
+        dataState: "partial",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3096,12 +3272,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: superDataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: superDataOne,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3132,6 +3310,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3141,6 +3320,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3148,12 +3328,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3184,6 +3366,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3193,12 +3376,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3206,12 +3391,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataTwo,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3250,6 +3437,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitTypedValue({
         data: undefined,
+        dataState: "empty",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -3277,11 +3465,10 @@ describe("ObservableQuery", () => {
             __typename: "Greeting",
           },
         },
+        dataState: "streaming",
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This should be true since there are still outstanding chunks
-        // that haven't been processed.
-        partial: false,
+        partial: true,
       });
 
       expect(obs.getCurrentResult()).toBe(stream.getCurrent());
@@ -3319,6 +3506,7 @@ describe("ObservableQuery", () => {
             __typename: "Greeting",
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3404,6 +3592,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3411,6 +3600,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.loading,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3418,6 +3608,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.loading,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3425,6 +3616,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3432,6 +3624,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3439,6 +3632,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3446,6 +3640,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3453,6 +3648,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3460,6 +3656,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3474,6 +3671,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3481,6 +3679,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.loading,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3488,6 +3687,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.loading,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3495,6 +3695,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3502,6 +3703,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3509,6 +3711,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3516,6 +3719,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3523,6 +3727,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3530,6 +3735,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3544,6 +3750,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3551,6 +3758,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3558,6 +3766,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3566,6 +3775,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3573,6 +3783,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3581,6 +3792,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3588,6 +3800,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3602,6 +3815,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3609,6 +3823,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3616,6 +3831,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3624,6 +3840,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3631,6 +3848,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3639,6 +3857,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3646,6 +3865,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3660,6 +3880,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3667,6 +3888,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3674,6 +3896,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3682,6 +3905,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3689,6 +3913,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3696,6 +3921,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3703,6 +3929,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3710,6 +3937,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3724,6 +3952,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3731,6 +3960,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3738,6 +3968,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3746,6 +3977,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3753,6 +3985,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3760,6 +3993,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3767,6 +4001,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3774,6 +4009,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3788,6 +4024,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3795,6 +4032,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3803,6 +4041,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3811,6 +4050,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3819,6 +4059,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3834,6 +4075,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3841,6 +4083,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3849,6 +4092,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3857,6 +4101,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3865,6 +4110,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3880,6 +4126,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3887,6 +4134,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3895,6 +4143,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3903,6 +4152,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3910,6 +4160,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3917,6 +4168,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3924,6 +4176,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3938,6 +4191,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3945,6 +4199,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.loading,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -3953,6 +4208,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3961,6 +4217,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.link,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3968,6 +4225,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3975,6 +4233,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3982,6 +4241,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -3996,6 +4256,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4003,6 +4264,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4014,6 +4276,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4022,6 +4285,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4037,6 +4301,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4044,6 +4309,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4055,6 +4321,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4063,6 +4330,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4078,6 +4346,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4085,6 +4354,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4096,6 +4366,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4104,6 +4375,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4119,6 +4391,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4126,6 +4399,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4137,6 +4411,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: undefined,
+                dataState: "empty",
                 partial: true,
               },
             },
@@ -4145,6 +4420,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4160,6 +4436,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4167,6 +4444,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4174,6 +4452,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4182,6 +4461,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4189,6 +4469,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4196,6 +4477,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4203,6 +4485,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4210,6 +4493,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4224,6 +4508,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4231,6 +4516,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4238,6 +4524,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4246,6 +4533,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4253,6 +4541,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4260,6 +4549,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4267,6 +4557,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4274,6 +4565,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4288,6 +4580,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4295,6 +4588,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4302,6 +4596,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4310,6 +4605,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4317,6 +4613,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4324,6 +4621,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4331,6 +4629,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4338,6 +4637,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4352,6 +4652,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4359,6 +4660,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.initial,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4366,6 +4668,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update1,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4374,6 +4677,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4381,6 +4685,7 @@ describe("ObservableQuery", () => {
               currentResult: {
                 ...loadingStates.refetching,
                 data: cacheValues.update2,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4388,6 +4693,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.refetching,
                 data: cacheValues.update3,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4395,6 +4701,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.refetch,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4402,6 +4709,7 @@ describe("ObservableQuery", () => {
               emit: {
                 ...loadingStates.done,
                 data: cacheValues.update4,
+                dataState: "complete",
                 partial: false,
               },
             },
@@ -4577,6 +4885,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: undefined,
+          dataState: "empty",
           loading: true,
           networkStatus: NetworkStatus.loading,
           partial: true,
@@ -4584,12 +4893,14 @@ describe("ObservableQuery", () => {
 
         await expect(stream).toEmitTypedValue({
           data: dataOne,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
         });
         expect(observable.getCurrentResult()).toStrictEqualTyped({
           data: dataOne,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -4605,6 +4916,7 @@ describe("ObservableQuery", () => {
           data: {
             people_one: optimisticResponse,
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -4613,6 +4925,7 @@ describe("ObservableQuery", () => {
           data: {
             people_one: optimisticResponse,
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -4622,6 +4935,7 @@ describe("ObservableQuery", () => {
           data: {
             people_one: mutationData,
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -4630,6 +4944,7 @@ describe("ObservableQuery", () => {
           data: {
             people_one: mutationData,
           },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -4889,8 +5204,9 @@ describe("ObservableQuery", () => {
       observable.subscribe(jest.fn());
 
       await waitFor(() => {
-        expect(observable.getCurrentResult()).toEqual({
+        expect(observable.getCurrentResult()).toStrictEqualTyped({
           data: dataOne,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -4935,6 +5251,7 @@ describe("ObservableQuery", () => {
 
     await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -4942,6 +5259,7 @@ describe("ObservableQuery", () => {
 
     await expect(stream).toEmitTypedValue({
       data: dataOne,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5053,6 +5371,7 @@ test("regression test for #10587", async () => {
               a: "",
             },
           },
+          dataState: "complete",
           loading: true,
           networkStatus: 1,
           partial: false,
@@ -5066,6 +5385,7 @@ test("regression test for #10587", async () => {
               a: "a",
             },
           },
+          dataState: "complete",
           loading: false,
           networkStatus: 7,
           partial: false,
@@ -5082,6 +5402,7 @@ test("regression test for #10587", async () => {
               b: "",
             },
           },
+          dataState: "complete",
           loading: true,
           networkStatus: 1,
           partial: false,
@@ -5096,6 +5417,7 @@ test("regression test for #10587", async () => {
               b: "",
             },
           },
+          dataState: "complete",
           loading: true,
           networkStatus: 1,
           partial: false,
@@ -5110,6 +5432,7 @@ test("regression test for #10587", async () => {
               b: "b",
             },
           },
+          dataState: "complete",
           loading: false,
           networkStatus: 7,
           partial: false,
@@ -5185,6 +5508,7 @@ test("handles changing variables in rapid succession before other request is com
   await waitFor(() => {
     expect(observable.getCurrentResult()).toStrictEqualTyped({
       data: { userCount: 10 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5201,6 +5525,7 @@ test("handles changing variables in rapid succession before other request is com
   expect(observable.options.variables).toEqual({ department: null });
   expect(observable.getCurrentResult()).toStrictEqualTyped({
     data: { userCount: 10 },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5235,6 +5560,7 @@ test("works with `from`", async () => {
 
   await expect(stream).toEmitTypedValue({
     data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -5242,6 +5568,7 @@ test("works with `from`", async () => {
 
   await expect(stream).toEmitTypedValue({
     data,
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5269,6 +5596,7 @@ test("does not emit initial loading state with notifyOnNetworkStatusChange: fals
 
   await expect(stream).toEmitTypedValue({
     data,
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5299,6 +5627,7 @@ test("does not emit initial loading state using network-only fetch policy with n
 
   await expect(stream).toEmitTypedValue({
     data,
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5329,6 +5658,7 @@ test("does not emit initial loading state using cache-and-network fetch policy w
 
   await expect(stream).toEmitTypedValue({
     data,
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5362,6 +5692,7 @@ test("emits initial loading state using cache-and-network fetch policy with init
 
   await expect(stream).toEmitTypedValue({
     data: { hello: "world (cached)" },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: false,
@@ -5369,6 +5700,7 @@ test("emits initial loading state using cache-and-network fetch policy with init
 
   await expect(stream).toEmitTypedValue({
     data: { hello: "world" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5399,6 +5731,7 @@ test("does not emit initial loading state using no-cache fetch policy with notif
 
   await expect(stream).toEmitTypedValue({
     data,
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5430,6 +5763,7 @@ test("does not emit loading state on refetch with notifyOnNetworkStatusChange: f
 
   await expect(stream).toEmitTypedValue({
     data: { hello: "world" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5441,6 +5775,7 @@ test("does not emit loading state on refetch with notifyOnNetworkStatusChange: f
 
   await expect(stream).toEmitTypedValue({
     data: { hello: "world 2" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5479,6 +5814,7 @@ test("does not emit loading state on refetch with new variables with notifyOnNet
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "Hello, Test" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5490,6 +5826,7 @@ test("does not emit loading state on refetch with new variables with notifyOnNet
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "Hello, Test 2" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5529,6 +5866,7 @@ test("does not emit loading state on setVariables with notifyOnNetworkStatusChan
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "Hello, Test" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5540,6 +5878,7 @@ test("does not emit loading state on setVariables with notifyOnNetworkStatusChan
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "Hello, Test 2" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5579,6 +5918,7 @@ test("does not emit loading state on reobserve with notifyOnNetworkStatusChange:
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "Hello, Test" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5590,6 +5930,7 @@ test("does not emit loading state on reobserve with notifyOnNetworkStatusChange:
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "Hello, Test 2" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5652,6 +5993,7 @@ test("does not emit loading state on fetchMore with notifyOnNetworkStatusChange:
         { __typename: "Comment", id: 2 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5678,6 +6020,7 @@ test("does not emit loading state on fetchMore with notifyOnNetworkStatusChange:
         { __typename: "Comment", id: 4 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5719,6 +6062,7 @@ test("does not emit loading state on client.resetStore with notifyOnNetworkStatu
 
   await expect(stream).toEmitTypedValue({
     data: { count: 1 },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5728,6 +6072,7 @@ test("does not emit loading state on client.resetStore with notifyOnNetworkStatu
 
   await expect(stream).toEmitTypedValue({
     data: { count: 2 },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5773,6 +6118,7 @@ test("does not emit loading state on when evicting fields with notifyOnNetworkSt
 
   await expect(stream).toEmitTypedValue({
     data: { user: { __typename: "User", id: 1, username: "test1" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5787,6 +6133,7 @@ test("does not emit loading state on when evicting fields with notifyOnNetworkSt
 
   await expect(stream).toEmitTypedValue({
     data: { user: { __typename: "User", id: 1, username: "test2" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5815,6 +6162,7 @@ test("emits proper cache result if cache changes between watchQuery initializati
 
   await expect(stream).toEmitTypedValue({
     data: { value: "updated" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5843,6 +6191,7 @@ test("emits proper cache result if cache changes when subscribing after previous
 
     await expect(stream).toEmitTypedValue({
       data: { value: "initial" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5860,6 +6209,7 @@ test("emits proper cache result if cache changes when subscribing after previous
 
     await expect(stream).toEmitTypedValue({
       data: { value: "updated" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5898,6 +6248,7 @@ test("emits loading state when switching from standby to non-standby fetch polic
 
   await expect(stream).toEmitTypedValue({
     data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -5905,6 +6256,7 @@ test("emits loading state when switching from standby to non-standby fetch polic
 
   await expect(stream).toEmitTypedValue({
     data: { greeting: "hello" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5992,6 +6344,7 @@ test("emits loading state when calling reobserve with new fetch policy after cha
 
   await expect(stream).toEmitTypedValue({
     data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -5999,6 +6352,7 @@ test("emits loading state when calling reobserve with new fetch policy after cha
 
   await expect(stream).toEmitTypedValue({
     data: { user: { __typename: "User", id: 2, name: "Test 2" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -6956,6 +7310,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
     data: {
       car: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -6965,6 +7320,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   await expect(stream).toEmitTypedValue({
     data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.setVariables,
     partial: true,
@@ -6974,6 +7330,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   await expect(stream).toEmitTypedValue({
     data: { car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,

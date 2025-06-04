@@ -3,10 +3,13 @@ import * as React from "react";
 import type {
   ApolloClient,
   ApolloQueryResult,
+  DataState,
   DefaultContext,
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
+  GetDataState,
+  MaybeMasked,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -16,7 +19,6 @@ import type {
 import type { SubscribeToMoreFunction } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
 import { canonicalStringify } from "@apollo/client/cache";
-import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   CacheKey,
   FetchMoreFunction,
@@ -24,7 +26,6 @@ import type {
   RefetchFunction,
 } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   NoInfer,
@@ -80,15 +81,14 @@ export declare namespace useSuspenseQuery {
     skip?: boolean;
   } & VariablesOption<TVariables>;
 
-  export interface Result<
+  export type Result<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  > {
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  > = {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client: ApolloClient;
-
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-    data: MaybeMasked<TData>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
     error: ErrorLike | undefined;
@@ -104,7 +104,7 @@ export declare namespace useSuspenseQuery {
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-  }
+  } & GetDataState<MaybeMasked<TData>, TStates>;
 }
 
 export function useSuspenseQuery<
@@ -116,7 +116,11 @@ export function useSuspenseQuery<
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
-): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "partial" | "empty"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -126,7 +130,11 @@ export function useSuspenseQuery<
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
-): useSuspenseQuery.Result<TData | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -137,7 +145,11 @@ export function useSuspenseQuery<
     skip: boolean;
     returnPartialData: true;
   }
-): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "empty" | "streaming" | "partial"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -147,7 +159,11 @@ export function useSuspenseQuery<
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
   }
-): useSuspenseQuery.Result<DeepPartial<TData>, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "partial" | "streaming" | "complete"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -157,7 +173,11 @@ export function useSuspenseQuery<
   options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
   }
-): useSuspenseQuery.Result<TData | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -169,7 +189,11 @@ export function useSuspenseQuery<
     | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
         returnPartialData: true;
       })
-): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "streaming" | "complete" | "partial"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -179,7 +203,7 @@ export function useSuspenseQuery<
   ...[options]: {} extends TVariables ?
     [options?: useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: useSuspenseQuery.Options<NoInfer<TVariables>>]
-): useSuspenseQuery.Result<TData, TVariables>;
+): useSuspenseQuery.Result<TData, TVariables, "complete" | "streaming">;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -189,7 +213,11 @@ export function useSuspenseQuery<
   ...[options]: {} extends TVariables ?
     [options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
   : [options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>]
-): useSuspenseQuery.Result<TData | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -197,7 +225,11 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
-): useSuspenseQuery.Result<TData | undefined, TVariables>;
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "complete" | "streaming" | "empty"
+>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -205,7 +237,11 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
-): useSuspenseQuery.Result<TData | undefined, TVariables> {
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "empty" | "streaming" | "complete" | "partial"
+> {
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -222,7 +258,11 @@ function useSuspenseQuery_<
   options:
     | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
     | useSuspenseQuery.Options<TVariables>
-): useSuspenseQuery.Result<TData | undefined, TVariables> {
+): useSuspenseQuery.Result<
+  TData,
+  TVariables,
+  "partial" | "complete" | "streaming" | "empty"
+> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions<any, any>({
@@ -279,6 +319,7 @@ function useSuspenseQuery_<
     return {
       loading: false,
       data: queryRef.result.data,
+      dataState: queryRef.result.dataState,
       networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
       error,
       complete,
@@ -315,17 +356,22 @@ function useSuspenseQuery_<
     .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
-    useSuspenseQuery.Result<TData | undefined, TVariables>
+    useSuspenseQuery.Result<TData, TVariables, DataState<TData>["dataState"]>
   >(() => {
     return {
       client,
       data: result.data,
+      dataState: result.dataState,
       error: result.error,
       networkStatus: result.networkStatus,
       fetchMore,
       refetch,
       subscribeToMore,
-    };
+    } as useSuspenseQuery.Result<
+      TData,
+      TVariables,
+      DataState<TData>["dataState"]
+    >;
   }, [client, fetchMore, refetch, result, subscribeToMore]);
 }
 

@@ -1,5 +1,93 @@
 # @apollo/client
 
+## 4.0.0-alpha.17
+
+### Major Changes
+
+- [#12649](https://github.com/apollographql/apollo-client/pull/12649) [`0be92ad`](https://github.com/apollographql/apollo-client/commit/0be92ad51cf8de444fa1cc507bab2c21d230a44e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `TData` generic provided to types that return a `dataState` property is now modified by the given `DataState` generic instead of passing a modified `TData` type. For example, a `QueryRef` that could return partial data was defined as `QueryRef<DeepPartial<TData>, TVariables>`. Now `TData` should be provided unmodified and a set of allowed states should be given instead: `QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>`.
+
+  To migrate, use the following guide to replace your type with the right set of states (all types listed below are changed the same way):
+
+  ```diff
+  - QueryRef<TData, TVariables>
+  // `QueryRef`'s default is 'complete' | 'streaming' so this can also be left alone if you prefer
+  // All other types affected by this change default to all states
+  + QueryRef<TData, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming'>
+
+  - QueryRef<TData | undefined, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'empty'>
+
+  - QueryRef<DeepPartial<TData>, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>
+
+  - QueryRef<DeepPartial<TData> | undefined, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial' | 'empty'>
+  ```
+
+  The following types are affected. Provide the allowed `dataState` values to the `TDataState` generic:
+
+  - `ApolloQueryResult`
+  - `QueryRef`
+  - `PreloadedQueryRef`
+  - `useLazyQuery.Result`
+  - `useQuery.Result`
+  - `useReadQuery.Result`
+  - `useSuspenseQuery.Result`
+
+  All `*QueryRef` types default to `complete | streaming` states while the rest of the types default to `'complete' | 'streaming' | 'partial' | 'empty'` states. You shouldn't need to provide the states unless you need to either allow for partial data/empty values (`*QueryRef`) or a restricted set of states.
+
+- [#12649](https://github.com/apollographql/apollo-client/pull/12649) [`0be92ad`](https://github.com/apollographql/apollo-client/commit/0be92ad51cf8de444fa1cc507bab2c21d230a44e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `QueryReference` type. Please use `QueryRef` instead.
+
+- [#12633](https://github.com/apollographql/apollo-client/pull/12633) [`9bfb51f`](https://github.com/apollographql/apollo-client/commit/9bfb51fdbca69560da71f9012c74ee172b6c2b69) Thanks [@phryneas](https://github.com/phryneas)! - If the `execute` function of `useLazyQuery` is executed, previously started queries
+  from the same `useLazyQuery` usage will be rejected with an `AbortError` unless
+  `.retain()` is called on the promise returned by previous `execute` calls.
+
+  Please keep in mind that `useLazyQuery` is primarily meant as a means to synchronize
+  your component to the status of a query and that it's purpose it not to make a
+  series of network calls.
+  If you plan on making a series of network calls without the need to synchronize
+  the result with your component, consider using `ApolloClient.query` instead.
+
+### Minor Changes
+
+- [#12633](https://github.com/apollographql/apollo-client/pull/12633) [`9bfb51f`](https://github.com/apollographql/apollo-client/commit/9bfb51fdbca69560da71f9012c74ee172b6c2b69) Thanks [@phryneas](https://github.com/phryneas)! - `ObservableQuery.refetch` and `ObservableQuery.reobserve` and the `execute` function of `useLazyQuery` now return a
+  `ResultPromise` with an additional `.retain` method.
+  If this method is called, the underlying network operation will be kept running even if the `ObservableQuery` itself does
+  not require the result anymore, and the Promise will resolve with the final result instead of resolving with an intermediate
+  result in the case of early cancellation.
+
+- [#12649](https://github.com/apollographql/apollo-client/pull/12649) [`0be92ad`](https://github.com/apollographql/apollo-client/commit/0be92ad51cf8de444fa1cc507bab2c21d230a44e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a new `dataState` property that determines the completeness of the `data` property. `dataState` helps narrow the type of `data`. `dataState` is now emitted from `ObservableQuery` and returned from all React hooks that return a `data` property.
+
+  The `dataState` values are:
+
+  - `empty`: No data could be fulfilled from the cache or the result is incomplete. `data` is `undefined`.
+  - `partial`: Some data could be fulfilled from the cache but `data` is incomplete. This is only possible when `returnPartialData` is `true`.
+  - `streaming`: `data` is incomplete as a result of a deferred query and the result is still streaming in.
+  - `complete`: `data` is a fully satisfied query result fulfilled either from the cache or network.
+
+  Example:
+
+  ```ts
+  const { data, dataState } = useQuery<TData>(query);
+
+  if (dataState === "empty") {
+    expectTypeOf(data).toEqualTypeOf<undefined>();
+  }
+
+  if (dataState === "partial") {
+    expectTypeOf(data).toEqualTypeOf<DeepPartial<TData>>();
+  }
+
+  if (dataState === "streaming") {
+    expectTypeOf(data).toEqualTypeOf<TData>();
+  }
+
+  if (dataState === "complete") {
+    expectTypeOf(data).toEqualTypeOf<TData>();
+  }
+  ```
+
 ## 4.0.0-alpha.16
 
 ### Major Changes

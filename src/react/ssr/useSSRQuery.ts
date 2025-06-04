@@ -10,6 +10,7 @@ import type { PrerenderStaticInternalContext } from "./prerenderStatic.js";
 const skipStandbyResult: ApolloQueryResult<any> = maybeDeepFreeze({
   loading: false,
   data: void 0 as any,
+  dataState: "empty",
   error: void 0,
   networkStatus: NetworkStatus.ready,
   partial: true,
@@ -27,7 +28,7 @@ export const useSSRQuery = function (
 
   const baseResult: Omit<
     useQuery.Result,
-    "observable" | "data" | "error" | "loading" | "networkStatus"
+    "observable" | "data" | "error" | "loading" | "networkStatus" | "dataState"
   > = {
     client,
     refetch: notAllowed,

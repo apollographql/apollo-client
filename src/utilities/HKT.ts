@@ -23,7 +23,7 @@
  *
  *   type Result = ApplyHKT<Concat, "Hello, ", "world!">;
  *   // Result is "Hello, world!"
- *   ```
+ * ```
  */
 export interface HKT {
   arg1: unknown;

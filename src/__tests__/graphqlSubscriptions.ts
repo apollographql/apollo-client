@@ -1011,4 +1011,38 @@ describe("GraphQL Subscriptions", () => {
     await expect(sub2).toComplete();
     await expect(sub3).toComplete();
   });
+
+  test("does not start link subscription after observable is unsubscribed", async () => {
+    const onUnsubscribe = jest.fn();
+    const onSubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onUnsubscribe(onUnsubscribe);
+    link.onSetup(onSubscribe);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+    const stream = new ObservableStream(observable);
+
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    stream.unsubscribe();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    onSubscribe.mockReset();
+    onUnsubscribe.mockReset();
+
+    observable.restart();
+
+    expect(onUnsubscribe).not.toHaveBeenCalled();
+    expect(onSubscribe).not.toHaveBeenCalled();
+  });
 });

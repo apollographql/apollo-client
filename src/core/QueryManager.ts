@@ -1253,6 +1253,7 @@ export class QueryManager {
 
                 return () => {
                   subscription.unsubscribe();
+                  entry.restart = undefined;
                 };
               });
             },

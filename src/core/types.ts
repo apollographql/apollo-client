@@ -1,5 +1,9 @@
 import type { DocumentNode } from "graphql";
-import type { NextNotification, ObservableNotification } from "rxjs";
+import type {
+  NextNotification,
+  Observable,
+  ObservableNotification,
+} from "rxjs";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
@@ -312,4 +316,8 @@ export declare namespace QueryNotification {
     | FromNetwork<TData>
     | NewNetworkStatus<TData>
     | SetResult<TData>;
+}
+
+export interface RestartableSubscription<T> extends Observable<T> {
+  restart: () => void;
 }

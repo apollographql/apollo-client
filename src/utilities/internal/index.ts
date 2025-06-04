@@ -54,6 +54,7 @@ export { mergeDeepArray } from "./mergeDeepArray.js";
 export { mergeIncrementalData } from "./mergeIncrementalData.js";
 export { mergeOptions } from "./mergeOptions.js";
 export { omitDeep } from "./omitDeep.js";
+export { pipeWithOwnProps } from "./pipeWithOwnProps.js";
 export { preventUnhandledRejection } from "./preventUnhandledRejection.js";
 export { removeDirectivesFromDocument } from "./removeDirectivesFromDocument.js";
 export { resultKeyNameFromField } from "./resultKeyNameFromField.js";

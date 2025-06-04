@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
-import type { Subscription } from "rxjs";
+import type { Observable } from "rxjs";
 import {
   catchError,
   concat,
@@ -14,7 +14,6 @@ import {
   materialize,
   mergeMap,
   mergeWith,
-  Observable,
   of,
   share,
   shareReplay,
@@ -94,6 +93,7 @@ import type {
   OperationVariables,
   QueryNotification,
   QueryResult,
+  RestartableSubscription,
   SubscribeResult,
   TypedDocumentNode,
 } from "./types.js";
@@ -1053,7 +1053,7 @@ export class QueryManager {
 
   public startGraphQLSubscription<TData = unknown>(
     options: SubscriptionOptions
-  ): Observable<SubscribeResult<TData>> {
+  ): RestartableSubscription<SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -1067,7 +1067,9 @@ export class QueryManager {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
-    const makeObservable = (variables: OperationVariables) =>
+    const makeObservable = (
+      variables: OperationVariables
+    ): Observable<SubscribeResult<TData>> =>
       this.getObservableFromLink<TData>(
         query,
         context,
@@ -1129,6 +1131,7 @@ export class QueryManager {
         filter((result) => !!(result.data || result.error))
       );
 
+    let observable: Observable<SubscribeResult<TData>>;
     if (this.getDocumentInfo(query).hasClientExports) {
       if (__DEV__) {
         invariant(
@@ -1138,24 +1141,39 @@ export class QueryManager {
         );
       }
 
-      const observablePromise = this.localState!.getExportedVariables({
-        client: this.client,
-        document: query,
-        variables,
-        context,
-      }).then(makeObservable);
-
-      return new Observable<SubscribeResult<TData>>((observer) => {
-        let sub: Subscription | null = null;
-        observablePromise.then(
-          (observable) => (sub = observable.subscribe(observer)),
-          observer.error
-        );
-        return () => sub && sub.unsubscribe();
-      });
+      observable = from(
+        this.localState!.getExportedVariables({
+          client: this.client,
+          document: query,
+          variables,
+          context,
+        })
+      ).pipe(makeObservable);
+    } else {
+      observable = makeObservable(variables);
     }
 
-    return makeObservable(variables);
+    return observable.pipe((source) => {
+      const subject = new Subject<SubscribeResult<TData>>();
+
+      let subscription = source.subscribe(subject);
+
+      return Object.assign(
+        subject.pipe(
+          finalize(() => {
+            if (!subject.observed) {
+              subscription.unsubscribe();
+            }
+          })
+        ),
+        {
+          restart: () => {
+            subscription.unsubscribe();
+            subscription = source.subscribe(subject);
+          },
+        }
+      );
+    }) as unknown as RestartableSubscription<SubscribeResult<TData>>;
   }
 
   public removeQuery(queryId: string) {

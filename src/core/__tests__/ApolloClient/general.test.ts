@@ -7412,6 +7412,7 @@ describe("ApolloClient", () => {
         )
       ).toEqual({
         observable: expect.any(Observable),
+        restart: expect.any(Function),
       });
     });
 

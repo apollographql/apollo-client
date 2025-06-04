@@ -834,7 +834,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.writeQuery({
                   query: combinedOptions.query,
                   variables: combinedOptions.variables,
-                  data: fetchMoreResult.data as Unmasked<TFetchData>,
+                  data: fetchMoreResult.data as Unmasked<any>,
                 });
               }
             },

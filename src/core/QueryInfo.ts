@@ -203,7 +203,7 @@ export class QueryInfo {
             if (this.shouldWrite(result, options.variables)) {
               cache.writeQuery({
                 query: document,
-                data: result.data as Unmasked<T>,
+                data: result.data as Unmasked<any>,
                 variables: options.variables,
                 overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
               });

@@ -1167,26 +1167,6 @@ export class QueryManager {
     }
 
     return Object.assign(observable, { restart: () => restart() });
-    // return observable.pipe((source) => {
-    //   const subject = new Subject<SubscribeResult<TData>>();
-    //
-    //   let subscription = source.subscribe(subject);
-    //
-    //   return Object.assign(
-    //     subject.pipe(
-    //       finalize(() => {
-    //         if (!subject.observed) {
-    //           subscription.unsubscribe();
-    //         }
-    //       })
-    //     ),
-    //     {
-    //       restart: () => {
-    //         restart();
-    //       },
-    //     }
-    //   );
-    // }) as unknown as RestartableSubscription<SubscribeResult<TData>>;
   }
 
   public removeQuery(queryId: string) {

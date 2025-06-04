@@ -999,9 +999,10 @@ describe("useSubscription Hook", () => {
         cache: new Cache(),
       });
 
-      const { render, takeRender, mergeSnapshot } = createRenderStream<
-        Record<number, useSubscription.Result<any>>
-      >({ initialSnapshot: {} });
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
 
       function Subscription({ idx }: { idx: number }) {
         mergeSnapshot({ [idx]: useSubscription(subscription) });
@@ -1009,6 +1010,8 @@ describe("useSubscription Hook", () => {
       }
 
       function App({ count }: { count: number }) {
+        replaceSnapshot({});
+
         return (
           <>
             {Array.from({ length: count }).map((_, idx) => {

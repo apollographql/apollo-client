@@ -1067,17 +1067,36 @@ export class QueryManager {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
-    const makeObservable = (variables: OperationVariables) => {
-      const { restart, observable } = this.getObservableFromLink<TData>(
-        query,
-        context,
-        variables,
-        extensions
-      );
+    let restart: (() => void) | undefined;
 
-      return {
-        restart,
-        observable: observable.pipe(
+    if (__DEV__) {
+      invariant(
+        !this.getDocumentInfo(query).hasClientExports || this.localState,
+        "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+        getOperationName(query, "(anonymous)")
+      );
+    }
+
+    const observable = from(
+      this.getDocumentInfo(query).hasClientExports ?
+        this.localState!.getExportedVariables({
+          client: this.client,
+          document: query,
+          variables,
+          context,
+        })
+      : of(variables)
+    ).pipe(
+      mergeMap((variables) => {
+        const { observable, restart: res } = this.getObservableFromLink<TData>(
+          query,
+          context,
+          variables,
+          extensions
+        );
+
+        restart = res;
+        return observable.pipe(
           map((rawResult): SubscribeResult<TData> => {
             if (fetchPolicy !== "no-cache") {
               // the subscription interface should handle not sending us results we no longer subscribe to.
@@ -1131,34 +1150,7 @@ export class QueryManager {
             return of({ data: undefined, error });
           }),
           filter((result) => !!(result.data || result.error))
-        ),
-      };
-    };
-
-    let restart: (() => void) | undefined;
-
-    if (__DEV__) {
-      invariant(
-        !this.getDocumentInfo(query).hasClientExports || this.localState,
-        "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-        getOperationName(query, "(anonymous)")
-      );
-    }
-
-    const observable = from(
-      this.getDocumentInfo(query).hasClientExports ?
-        this.localState!.getExportedVariables({
-          client: this.client,
-          document: query,
-          variables,
-          context,
-        })
-      : of(variables)
-    ).pipe(
-      mergeMap((variables) => {
-        const { observable, restart: res } = makeObservable(variables);
-        restart = res;
-        return observable;
+        );
       })
     );
 

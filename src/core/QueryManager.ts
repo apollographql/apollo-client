@@ -1,19 +1,19 @@
 import { Trie } from "@wry/trie";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
-import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import {
   catchError,
   concat,
   EMPTY,
   filter,
+  finalize,
   from,
   lastValueFrom,
   map,
   materialize,
   mergeMap,
   mergeWith,
-  Observable,
   of,
   share,
   shareReplay,
@@ -60,7 +60,6 @@ import {
   isNonNullObject,
   makeUniqueId,
   mergeIncrementalData,
-  onAnyEvent,
   removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -95,6 +94,7 @@ import type {
   QueryNotification,
   QueryResult,
   SubscribeResult,
+  SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -129,6 +129,7 @@ interface TransformCacheEntry {
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
+  operationType: OperationTypeNode | undefined;
 }
 
 interface MaskFragmentOptions<TData> {
@@ -354,7 +355,7 @@ export class QueryManager {
         {},
         false
       )
-        .pipe(
+        .observable.pipe(
           validateDidEmitValue(),
           mergeMap((result) => {
             const hasErrors = graphQLResultHasError(result);
@@ -754,6 +755,8 @@ export class QueryManager {
     const { transformCache } = this;
 
     if (!transformCache.has(document)) {
+      const operationDefinition = getOperationDefinition(document);
+
       const cacheEntry: TransformCacheEntry = {
         // TODO These three calls (hasClientExports, shouldForceResolvers, and
         // usesNonreactiveDirective) are performing independent full traversals
@@ -774,8 +777,9 @@ export class QueryManager {
           ],
           document
         ),
+        operationType: operationDefinition?.operation,
         defaultVars: getDefaultValues(
-          getOperationDefinition(document)
+          operationDefinition
         ) as OperationVariables,
         // Transform any mutation or subscription operations to query operations
         // so we can read/write them from/to the cache.
@@ -1049,7 +1053,7 @@ export class QueryManager {
 
   public startGraphQLSubscription<TData = unknown>(
     options: SubscriptionOptions
-  ): Observable<SubscribeResult<TData>> {
+  ): SubscriptionObservable<SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -1063,95 +1067,95 @@ export class QueryManager {
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
-    const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<TData>(
-        query,
-        context,
-        variables,
-        extensions
-      ).pipe(
-        map((rawResult): SubscribeResult<TData> => {
-          if (fetchPolicy !== "no-cache") {
-            // the subscription interface should handle not sending us results we no longer subscribe to.
-            // XXX I don't think we ever send in an object with errors, but we might in the future...
-            if (shouldWriteResult(rawResult, errorPolicy)) {
-              this.cache.write({
-                query,
-                result: rawResult.data,
-                dataId: "ROOT_SUBSCRIPTION",
-                variables: variables,
-              });
-            }
+    let restart: (() => void) | undefined;
 
-            this.broadcastQueries();
-          }
-
-          const result: SubscribeResult<TData> = {
-            data: rawResult.data ?? undefined,
-          };
-
-          if (graphQLResultHasError(rawResult)) {
-            result.error = new CombinedGraphQLErrors(rawResult);
-          } else if (graphQLResultHasProtocolErrors(rawResult)) {
-            result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
-            // Don't emit protocol errors added by HttpLink
-            delete rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
-          }
-
-          if (
-            rawResult.extensions &&
-            Object.keys(rawResult.extensions).length
-          ) {
-            result.extensions = rawResult.extensions;
-          }
-
-          if (result.error && errorPolicy === "none") {
-            result.data = undefined;
-          }
-
-          if (errorPolicy === "ignore") {
-            delete result.error;
-          }
-
-          return result;
-        }),
-        catchError((error) => {
-          if (errorPolicy === "ignore") {
-            return of({ data: undefined } as SubscribeResult<TData>);
-          }
-
-          return of({ data: undefined, error });
-        }),
-        filter((result) => !!(result.data || result.error))
+    if (__DEV__) {
+      invariant(
+        !this.getDocumentInfo(query).hasClientExports || this.localState,
+        "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
+        getOperationName(query, "(anonymous)")
       );
-
-    if (this.getDocumentInfo(query).hasClientExports) {
-      if (__DEV__) {
-        invariant(
-          this.localState,
-          "Subscription '%s' contains `@client` fields with variables provided by `@export` but local state has not been configured.",
-          getOperationName(query, "(anonymous)")
-        );
-      }
-
-      const observablePromise = this.localState!.getExportedVariables({
-        client: this.client,
-        document: query,
-        variables,
-        context,
-      }).then(makeObservable);
-
-      return new Observable<SubscribeResult<TData>>((observer) => {
-        let sub: Subscription | null = null;
-        observablePromise.then(
-          (observable) => (sub = observable.subscribe(observer)),
-          observer.error
-        );
-        return () => sub && sub.unsubscribe();
-      });
     }
 
-    return makeObservable(variables);
+    const observable = (
+      this.getDocumentInfo(query).hasClientExports ?
+        from(
+          this.localState!.getExportedVariables({
+            client: this.client,
+            document: query,
+            variables,
+            context,
+          })
+        )
+      : of(variables)).pipe(
+      mergeMap((variables) => {
+        const { observable, restart: res } = this.getObservableFromLink<TData>(
+          query,
+          context,
+          variables,
+          extensions
+        );
+
+        restart = res;
+        return observable.pipe(
+          map((rawResult): SubscribeResult<TData> => {
+            if (fetchPolicy !== "no-cache") {
+              // the subscription interface should handle not sending us results we no longer subscribe to.
+              // XXX I don't think we ever send in an object with errors, but we might in the future...
+              if (shouldWriteResult(rawResult, errorPolicy)) {
+                this.cache.write({
+                  query,
+                  result: rawResult.data,
+                  dataId: "ROOT_SUBSCRIPTION",
+                  variables: variables,
+                });
+              }
+
+              this.broadcastQueries();
+            }
+
+            const result: SubscribeResult<TData> = {
+              data: rawResult.data ?? undefined,
+            };
+
+            if (graphQLResultHasError(rawResult)) {
+              result.error = new CombinedGraphQLErrors(rawResult);
+            } else if (graphQLResultHasProtocolErrors(rawResult)) {
+              result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+              // Don't emit protocol errors added by HttpLink
+              delete rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+            }
+
+            if (
+              rawResult.extensions &&
+              Object.keys(rawResult.extensions).length
+            ) {
+              result.extensions = rawResult.extensions;
+            }
+
+            if (result.error && errorPolicy === "none") {
+              result.data = undefined;
+            }
+
+            if (errorPolicy === "ignore") {
+              delete result.error;
+            }
+
+            return result;
+          }),
+          catchError((error) => {
+            if (errorPolicy === "ignore") {
+              return of({ data: undefined } as SubscribeResult<TData>);
+            }
+
+            return of({ data: undefined, error });
+          }),
+          filter((result) => !!(result.data || result.error))
+        );
+      })
+    );
+
+    return Object.assign(observable, { restart: () => restart?.() });
   }
 
   public removeQuery(queryId: string) {
@@ -1181,6 +1185,7 @@ export class QueryManager {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected inFlightLinkObservables = new Trie<{
     observable?: Observable<FetchResult<any>>;
+    restart?: () => void;
   }>(false);
 
   private getObservableFromLink<TData = unknown>(
@@ -1191,10 +1196,18 @@ export class QueryManager {
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
-  ): Observable<FetchResult<TData>> {
-    let observable: Observable<FetchResult<TData>> | undefined;
+  ): { restart: () => void; observable: Observable<FetchResult<TData>> } {
+    let entry: {
+      observable?: Observable<FetchResult<TData>>;
+      // The restart function has to be on a mutable object that way if multiple
+      // client.subscribe() calls are made before the first one subscribes to
+      // the observable, the `restart` function can be updated for all
+      // deduplicated client.subscribe() calls.
+      restart?: () => void;
+    } = {};
 
-    const { serverQuery, clientQuery } = this.getDocumentInfo(query);
+    const { serverQuery, clientQuery, operationType } =
+      this.getDocumentInfo(query);
 
     const operationName = getOperationName(query);
     const executeContext: ExecuteContext = {
@@ -1219,43 +1232,61 @@ export class QueryManager {
 
       context = operation.context;
 
+      function withRestart(source: Observable<FetchResult>) {
+        return new Observable<FetchResult>((observer) => {
+          function subscribe() {
+            return source.subscribe({
+              next: observer.next.bind(observer),
+              complete: observer.complete.bind(observer),
+              error: observer.error.bind(observer),
+            });
+          }
+          let subscription = subscribe();
+
+          entry.restart ||= () => {
+            subscription.unsubscribe();
+            subscription = subscribe();
+          };
+
+          return () => {
+            subscription.unsubscribe();
+            entry.restart = undefined;
+          };
+        });
+      }
+
       if (deduplication) {
         const printedServerQuery = print(serverQuery);
         const varJson = canonicalStringify(variables);
 
-        const entry = inFlightLinkObservables.lookup(
-          printedServerQuery,
-          varJson
-        );
+        entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
 
-        observable = entry.observable;
-        if (!observable) {
-          observable = entry.observable = execute(
-            link,
-            operation,
-            executeContext
-          ).pipe(
-            onAnyEvent((event) => {
+        if (!entry.observable) {
+          entry.observable = execute(link, operation, executeContext).pipe(
+            withRestart,
+            finalize(() => {
               if (
-                (event.type !== "next" ||
-                  !("hasNext" in event.value) ||
-                  !event.value.hasNext) &&
                 inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                  entry
+                entry
               ) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
             }),
-            shareReplay({ refCount: true })
-          );
+            // We don't want to replay the last emitted value for
+            // subscriptions and instead opt to wait to receive updates until
+            // the subscription emits new values.
+            operationType === OperationTypeNode.SUBSCRIPTION ?
+              share()
+            : shareReplay({ refCount: true })
+          ) as Observable<FetchResult<TData>>;
         }
       } else {
-        observable = execute(link, operation, executeContext) as Observable<
-          FetchResult<TData>
-        >;
+        entry.observable = execute(link, operation, executeContext).pipe(
+          withRestart
+        ) as Observable<FetchResult<TData>>;
       }
     } else {
-      observable = of({ data: {} } as FetchResult<TData>);
+      entry.observable = of({ data: {} } as FetchResult<TData>);
     }
 
     if (clientQuery) {
@@ -1270,7 +1301,7 @@ export class QueryManager {
         );
       }
 
-      observable = observable.pipe(
+      entry.observable = entry.observable.pipe(
         mergeMap((result) => {
           return from(
             this.localState!.execute<TData>({
@@ -1285,13 +1316,16 @@ export class QueryManager {
       );
     }
 
-    return observable.pipe(
-      catchError((error) => {
-        error = toErrorLike(error);
-        registerLinkError(error);
-        throw error;
-      })
-    );
+    return {
+      restart: () => entry.restart?.(),
+      observable: entry.observable.pipe(
+        catchError((error) => {
+          error = toErrorLike(error);
+          registerLinkError(error);
+          throw error;
+        })
+      ),
+    };
   }
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
@@ -1317,7 +1351,7 @@ export class QueryManager {
       linkDocument,
       options.context,
       options.variables
-    ).pipe(
+    ).observable.pipe(
       map((result) => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;

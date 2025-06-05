@@ -35,6 +35,7 @@ import type {
   RefetchQueriesOptions,
   RefetchQueriesResult,
   SubscribeResult,
+  SubscriptionObservable,
 } from "./types.js";
 import type {
   MutationOptions,
@@ -525,10 +526,13 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: SubscriptionOptions<TVariables, TData>
-  ): Observable<SubscribeResult<MaybeMasked<TData>>> {
+  ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
     const id = this.queryManager.generateQueryId();
 
-    return this.queryManager.startGraphQLSubscription<TData>(options).pipe(
+    const observable =
+      this.queryManager.startGraphQLSubscription<TData>(options);
+
+    const mapped = observable.pipe(
       map((result) => ({
         ...result,
         data: this.queryManager.maskOperation({
@@ -539,6 +543,8 @@ export class ApolloClient implements DataProxy {
         }),
       }))
     );
+
+    return Object.assign(mapped, { restart: observable.restart });
   }
 
   /**

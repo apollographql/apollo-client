@@ -1268,15 +1268,19 @@ describe("mutation results", () => {
     const client = new ApolloClient({
       link: new MockLink([
         {
-          request: { query: variableQuery, variables: variables1 } as any,
+          request: { query: variableQuery, variables: variables1 },
           result: result1,
+          // Needed since unsubscribing from the first query will cancel the
+          // request and remove it from inFlightObservables for query
+          // deduplication.
+          maxUsageCount: 2,
         },
         {
-          request: { query: variableQuery, variables: variables2 } as any,
+          request: { query: variableQuery, variables: variables2 },
           result: result2,
         },
         {
-          request: { query: resetMutation } as any,
+          request: { query: resetMutation },
           result: resetMutationResult,
         },
       ]),

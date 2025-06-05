@@ -76,6 +76,7 @@ import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
 import { Operation } from '@apollo/client/link';
 import { OperationContext } from '@apollo/client/link';
+import { OperationTypeNode } from 'graphql';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
 import { Path } from '@apollo/client/link';
@@ -158,7 +159,7 @@ export class ApolloClient implements DataProxy {
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
     stop(): void;
-    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable_2<SubscribeResult<MaybeMasked<TData>>>;
+    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable_2<WatchFragmentResult<TData>>;
@@ -748,6 +749,7 @@ class QueryManager {
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable_2<FetchResult<any>>;
+        restart?: () => void;
     }>;
     // (undocumented)
     get link(): ApolloLink;
@@ -808,7 +810,7 @@ class QueryManager {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable_2<SubscribeResult<TData>>;
+    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): SubscriptionObservable<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
     transform(document: DocumentNode_2): DocumentNode_2;
@@ -993,6 +995,11 @@ export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends Ope
     }): Unmasked<TData> | void;
 };
 
+// @public
+export interface SubscriptionObservable<T> extends Observable_2<T> {
+    restart: () => void;
+}
+
 // @public (undocumented)
 export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
     query: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
@@ -1020,6 +1027,8 @@ interface TransformCacheEntry {
     hasNonreactiveDirective: boolean;
     // (undocumented)
     nonReactiveQuery: DocumentNode_2;
+    // (undocumented)
+    operationType: OperationTypeNode | undefined;
     // (undocumented)
     serverQuery: DocumentNode_2 | null;
 }
@@ -1085,8 +1094,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:135:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:307:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:308:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:190:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:473:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

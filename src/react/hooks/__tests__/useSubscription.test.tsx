@@ -1,5 +1,6 @@
 import { waitFor } from "@testing-library/react";
 import {
+  createRenderStream,
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
@@ -9,7 +10,7 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import type { TypedDocumentNode } from "@apollo/client";
+import type { DefaultContext, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, ApolloLink, concat } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
@@ -973,6 +974,786 @@ describe("useSubscription Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  describe("query deduplication", () => {
+    test("deduplicates subscriptions by default", async () => {
+      const subscription = gql`
+        subscription {
+          car {
+            make
+          }
+        }
+      `;
+
+      const results = ["Audi", "BMW"].map((make) => ({
+        result: { data: { car: { make } } },
+      }));
+
+      const onSubscribe = jest.fn();
+      const onUnsubscribe = jest.fn();
+      const link = new MockSubscriptionLink();
+      link.onSetup(onSubscribe);
+      link.onUnsubscribe(onUnsubscribe);
+
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
+
+      function Subscription({ idx }: { idx: number }) {
+        mergeSnapshot({ [idx]: useSubscription(subscription) });
+        return null;
+      }
+
+      function App({ count }: { count: number }) {
+        replaceSnapshot({});
+
+        return (
+          <>
+            {Array.from({ length: count }).map((_, idx) => {
+              return <Subscription key={idx} idx={idx} />;
+            })}
+          </>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      const { rerender } = await render(<App count={2} />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+      link.simulateResult(results[0]);
+
+      if (IS_REACT_17) {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await rerender(<App count={3} />);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+      expect(onUnsubscribe).not.toHaveBeenCalled();
+
+      link.simulateResult(results[1]);
+
+      if (IS_REACT_17) {
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[0].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await expect(takeRender).not.toRerender();
+    });
+
+    test("does not deduplicate new request after previous is unsubscribed", async () => {
+      const subscription = gql`
+        subscription {
+          car {
+            make
+          }
+        }
+      `;
+
+      const results = ["Audi", "BMW"].map((make) => ({
+        result: { data: { car: { make } } },
+      }));
+
+      const onSubscribe = jest.fn();
+      const onUnsubscribe = jest.fn();
+      const link = new MockSubscriptionLink();
+      link.onSetup(onSubscribe);
+      link.onUnsubscribe(onUnsubscribe);
+
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
+
+      function Subscription({
+        idx,
+        context,
+      }: {
+        idx: number;
+        context: DefaultContext;
+      }) {
+        mergeSnapshot({ [idx]: useSubscription(subscription, { context }) });
+        return null;
+      }
+
+      function App({
+        count,
+        context,
+      }: {
+        count: number;
+        context: DefaultContext;
+      }) {
+        replaceSnapshot({});
+
+        return (
+          <>
+            {Array.from({ length: count }).map((_, idx) => {
+              return <Subscription key={idx} idx={idx} context={context} />;
+            })}
+          </>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      const { rerender } = await render(
+        <App count={1} context={{ count: 1 }} />,
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+      expect(link.operation!.getContext()).toMatchObject({ count: 1 });
+
+      link.simulateResult(results[0]);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await rerender(<App count={0} context={{ count: 1 }} />);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot).toStrictEqualTyped({});
+      }
+
+      await wait(0);
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+      expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+      await rerender(<App count={1} context={{ count: 2 }} />);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(2);
+      expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+      expect(link.operation!.getContext()).toMatchObject({ count: 2 });
+
+      link.simulateResult(results[1]);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await expect(takeRender).not.toRerender();
+    });
+
+    test("does not deduplicate requests when disabling queryDeduplication", async () => {
+      const subscription = gql`
+        subscription {
+          car {
+            make
+          }
+        }
+      `;
+
+      const results = ["Audi", "BMW"].map((make) => ({
+        result: { data: { car: { make } } },
+      }));
+
+      const onSubscribe = jest.fn();
+      const onUnsubscribe = jest.fn();
+      const link = new MockSubscriptionLink();
+      link.onSetup(onSubscribe);
+      link.onUnsubscribe(onUnsubscribe);
+
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
+
+      function Subscription({ idx }: { idx: number }) {
+        mergeSnapshot({
+          [idx]: useSubscription(subscription, {
+            context: { queryDeduplication: false },
+          }),
+        });
+        return null;
+      }
+
+      function App({ count }: { count: number }) {
+        replaceSnapshot({});
+
+        return (
+          <>
+            {Array.from({ length: count }).map((_, idx) => {
+              return <Subscription key={idx} idx={idx} />;
+            })}
+          </>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      const { rerender } = await render(<App count={2} />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(2);
+
+      link.simulateResult(results[0]);
+
+      if (IS_REACT_17) {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await rerender(<App count={3} />);
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(3);
+      expect(onUnsubscribe).not.toHaveBeenCalled();
+
+      link.simulateResult(results[1]);
+
+      if (IS_REACT_17) {
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[0].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await expect(takeRender).not.toRerender();
+    });
+
+    test("can mix deduplicated subscriptions", async () => {
+      const subscription = gql`
+        subscription {
+          car {
+            make
+          }
+        }
+      `;
+
+      const results = ["Audi", "BMW"].map((make) => ({
+        result: { data: { car: { make } } },
+      }));
+
+      const onSubscribe = jest.fn();
+      const onUnsubscribe = jest.fn();
+      const link = new MockSubscriptionLink();
+      link.onSetup(onSubscribe);
+      link.onUnsubscribe(onUnsubscribe);
+
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
+
+      function Subscription({
+        idx,
+        options,
+      }: {
+        idx: number;
+        options: useSubscription.Options;
+      }) {
+        mergeSnapshot({ [idx]: useSubscription(subscription, options) });
+        return null;
+      }
+
+      function App({ options }: { options: useSubscription.Options[] }) {
+        replaceSnapshot({});
+
+        return (
+          <>
+            {options.map((opts, idx) => {
+              return <Subscription key={idx} idx={idx} options={opts} />;
+            })}
+          </>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      const { rerender } = await render(
+        <App
+          options={[
+            { context: { queryDeduplication: true } },
+            { context: { queryDeduplication: true } },
+          ]}
+        />,
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+      link.simulateResult(results[0]);
+
+      if (IS_REACT_17) {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await rerender(
+        <App
+          options={[
+            { context: { queryDeduplication: true } },
+            { context: { queryDeduplication: true } },
+            { context: { queryDeduplication: false } },
+          ]}
+        />
+      );
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(2);
+      expect(onUnsubscribe).not.toHaveBeenCalled();
+
+      link.simulateResult(results[1]);
+
+      if (IS_REACT_17) {
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[0].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await expect(takeRender).not.toRerender();
+    });
+  });
+
   describe("multipart subscriptions", () => {
     it("should handle a simple subscription properly", async () => {
       const { httpLink, enqueueProtocolErrors } =
@@ -1506,6 +2287,7 @@ describe("`restart` callback", () => {
       rerender,
     };
   }
+
   it("can restart a running subscription", async () => {
     using _disabledAct = disableActEnvironment();
     const {
@@ -1544,14 +2326,7 @@ describe("`restart` callback", () => {
 
     getCurrentSnapshot().restart();
 
-    {
-      const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqualTyped({
-        loading: true,
-        data: undefined,
-        error: undefined,
-      });
-    }
+    await expect(takeSnapshot).not.toRerender();
 
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
@@ -1590,9 +2365,6 @@ describe("`restart` callback", () => {
       });
     }
 
-    // deliberately keeping a reference to a very old `restart` function
-    // to show that the most recent options are used even with that
-    const restart = getCurrentSnapshot().restart;
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
 
     {
@@ -1638,20 +2410,13 @@ describe("`restart` callback", () => {
     expect(onSubscribe).toHaveBeenCalledTimes(2);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
-    restart();
+    getCurrentSnapshot().restart();
 
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(2));
     expect(onSubscribe).toHaveBeenCalledTimes(3);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
-    {
-      const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqualTyped({
-        loading: true,
-        data: undefined,
-        error: undefined,
-      });
-    }
+    await expect(takeSnapshot).not.toRerender();
 
     link.simulateResult({ result: { data: { totalLikes: 1005 } } });
 
@@ -1727,7 +2492,7 @@ describe("`restart` callback", () => {
     }
   });
 
-  it("can restart a subscription that has errored", async () => {
+  it("can restart a subscription that has graphql errors", async () => {
     using _disabledAct = disableActEnvironment();
     const {
       link,
@@ -1768,6 +2533,36 @@ describe("`restart` callback", () => {
 
     getCurrentSnapshot().restart();
 
+    await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
+    await wait(0);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    await expect(takeSnapshot).not.toRerender();
+
+    link.simulateResult({ result: { data: { totalLikes: 2 } } });
+
+    {
+      const snapshot = await takeSnapshot();
+      expect(snapshot).toStrictEqualTyped({
+        loading: false,
+        data: { totalLikes: 2 },
+        error: undefined,
+      });
+    }
+  });
+
+  it("can restart a subscription that has network errors", async () => {
+    using _disabledAct = disableActEnvironment();
+    const {
+      link,
+      takeSnapshot,
+      getCurrentSnapshot,
+      onSubscribe,
+      onUnsubscribe,
+    } = await setup({
+      variables: { id: "1" },
+    });
+
     {
       const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqualTyped({
@@ -1777,9 +2572,36 @@ describe("`restart` callback", () => {
       });
     }
 
+    link.simulateResult({ error: new Error("Oops") });
+
+    {
+      const snapshot = await takeSnapshot();
+      expect(snapshot).toStrictEqualTyped({
+        loading: false,
+        data: undefined,
+        error: new Error("Oops"),
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
+    // A network error completes the observable so unsubscribe is called
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    getCurrentSnapshot().restart();
+
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
     await wait(0);
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    {
+      const snapshot = await takeSnapshot();
+      expect(snapshot).toStrictEqualTyped({
+        loading: true,
+        data: undefined,
+        error: undefined,
+      });
+    }
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
 
@@ -1820,6 +2642,341 @@ describe("`restart` callback", () => {
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
+  });
+
+  test("can restart a deduplicated subscription", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW", "Honda", "Toyota"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const onSubscribe = jest.fn();
+    const onUnsubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSubscribe);
+    link.onUnsubscribe(onUnsubscribe);
+
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    const {
+      render,
+      takeRender,
+      mergeSnapshot,
+      replaceSnapshot,
+      getCurrentRender,
+    } = createRenderStream<Record<number, useSubscription.Result<any>>>({
+      initialSnapshot: {},
+    });
+
+    function Subscription({ idx }: { idx: number }) {
+      mergeSnapshot({ [idx]: useSubscription(subscription) });
+      return null;
+    }
+
+    function App({ count }: { count: number }) {
+      replaceSnapshot({});
+
+      return (
+        <>
+          {Array.from({ length: count }).map((_, idx) => {
+            return <Subscription key={idx} idx={idx} />;
+          })}
+        </>
+      );
+    }
+
+    using _disabledAct = disableActEnvironment();
+    const { rerender } = await render(<App count={2} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+    }
+
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    link.simulateResult(results[0]);
+
+    if (IS_REACT_17) {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    getCurrentRender().snapshot[0].restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+
+    // Calling restart on a non-errored/completed result should not rerender
+    await expect(takeRender).not.toRerender();
+
+    link.simulateResult(results[1]);
+
+    if (IS_REACT_17) {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    getCurrentRender().snapshot[1].restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(2);
+    expect(onSubscribe).toHaveBeenCalledTimes(3);
+
+    // Calling restart on a non-errored/completed result should not rerender
+    await expect(takeRender).not.toRerender();
+
+    await rerender(<App count={3} />);
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[2]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+    }
+
+    link.simulateResult(results[2]);
+
+    if (IS_REACT_17) {
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[2].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[2].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[2]).toStrictEqualTyped({
+        data: results[2].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    getCurrentRender().snapshot[2].restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(3);
+    expect(onSubscribe).toHaveBeenCalledTimes(4);
+
+    // Calling restart on a non-errored/completed result should not rerender
+    await expect(takeRender).not.toRerender();
+
+    link.simulateResult(results[3]);
+
+    if (IS_REACT_17) {
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[3].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[3].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[3].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[3].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[3].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[2]).toStrictEqualTyped({
+        data: results[3].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
   });
 });
 

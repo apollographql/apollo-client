@@ -1577,9 +1577,9 @@ export class QueryManager {
         onWatchUpdated(watch, diff, lastDiff) {
           const oq = watch.watcher;
 
-          if (oq instanceof ObservableQuery) {
-            if (onQueryUpdated && !handled.has(oq)) {
-              handled.add(oq);
+          if (oq instanceof ObservableQuery && !handled.has(oq)) {
+            handled.add(oq);
+            if (onQueryUpdated) {
               // Since we're about to handle this query now, remove it from
               // includedQueriesById, in case it was added earlier because of
               // options.include.

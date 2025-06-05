@@ -688,6 +688,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
+    this._lastWrite = undefined;
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -1420,6 +1421,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       preventUnhandledRejection(
         promise
           .then((result) => toQueryResult(this.maskResult(result)))
+          .then((result) => {
+            console.log(
+              "ObservableQuery reobserve result",
+              result,
+              options.fetchPolicy,
+              NetworkStatus[newNetworkStatus]
+            );
+            return result;
+          })
           .finally(() => {
             if (!this.hasObservers() && this.activeOperations.size === 0) {
               // If `reobserve` was called on a query without any obervers,
@@ -1472,6 +1482,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
+    this._lastWrite = undefined;
   }
 
   private transformDocument(document: DocumentNode) {

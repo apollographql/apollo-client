@@ -490,7 +490,6 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
-  // this test needs a rewrite
   it("includes queries named in refetchQueries even if they have `standby` fetchPolicy", async () => {
     const client = makeClient();
 
@@ -638,7 +637,7 @@ describe("client.refetchQueries", () => {
     expect(queries.size).toBe(0);
   });
 
-  it.skip("refetches watched queries if onQueryUpdated not provided", async () => {
+  it("refetches watched queries if onQueryUpdated not provided", async () => {
     expect.assertions(10);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
@@ -772,7 +771,7 @@ describe("client.refetchQueries", () => {
     expect(results).toEqual([{ a: "A" }, { b: "B" }]);
   });
 
-  it.skip("can return true from onQueryUpdated when using options.updateCache", async () => {
+  it("can return true from onQueryUpdated when using options.updateCache", async () => {
     const client = makeClient();
     const [_aObs, bObs, abObs] = await setup(client);
 

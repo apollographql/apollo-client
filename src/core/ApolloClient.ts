@@ -34,8 +34,8 @@ import type {
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
-  SubscriptionObservable,
   SubscribeResult,
+  SubscriptionObservable,
 } from "./types.js";
 import type {
   MutationOptions,

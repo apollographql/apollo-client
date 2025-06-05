@@ -6,10 +6,18 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import { BatchLink } from '@apollo/client/link/batch';
+import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import type { FetchResult } from '@apollo/client/link';
 import type { HttpLink } from '@apollo/client/link/http';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
+
+// @public (undocumented)
+export class BaseBatchHttpLink extends ApolloLink {
+    constructor(fetchParams?: BatchHttpLink.Options);
+    // (undocumented)
+    request(operation: Operation): Observable<FetchResult> | null;
+}
 
 // @public (undocumented)
 export namespace BatchHttpLink {
@@ -21,9 +29,7 @@ export namespace BatchHttpLink {
 
 // @public
 export class BatchHttpLink extends ApolloLink {
-    constructor(fetchParams?: BatchHttpLink.Options);
-    // (undocumented)
-    request(operation: Operation): Observable<FetchResult> | null;
+    constructor(options?: BatchHttpLink.Options & ClientAwarenessLink.Options);
 }
 
 // (No @packageDocumentation comment for this package)

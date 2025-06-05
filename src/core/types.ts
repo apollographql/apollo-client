@@ -20,7 +20,9 @@ export type MethodKeys<T> = {
 }[keyof T];
 
 export interface ClientAwareness {
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#name:member} */
   name?: string;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#version:member} */
   version?: string;
 }
 

@@ -38,6 +38,7 @@
     "./link": "./src/link/index.ts",
     "./link/batch": "./src/link/batch/index.ts",
     "./link/batch-http": "./src/link/batch-http/index.ts",
+    "./link/client-awareness": "./src/link/client-awareness/index.ts",
     "./link/context": "./src/link/context/index.ts",
     "./link/error": "./src/link/error/index.ts",
     "./link/http": "./src/link/http/index.ts",

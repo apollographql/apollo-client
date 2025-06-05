@@ -161,7 +161,14 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/batch-http 1`] = `
 Array [
+  "BaseBatchHttpLink",
   "BatchHttpLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/client-awareness 1`] = `
+Array [
+  "ClientAwarenessLink",
 ]
 `;
 
@@ -180,6 +187,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/http 1`] = `
 Array [
+  "BaseHttpLink",
   "HttpLink",
   "checkFetcher",
   "createHttpLink",

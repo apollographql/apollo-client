@@ -17,6 +17,7 @@ import {
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
+import { version } from "@apollo/client";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -104,6 +105,10 @@ describe("happy path", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: hash,
@@ -296,6 +301,10 @@ describe("happy path", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: sha256Hash,
@@ -357,6 +366,10 @@ describe("failure path", () => {
         id: 1,
       }),
       extensions: JSON.stringify({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
         persistedQuery: {
           version: 1,
           sha256Hash: hash,
@@ -422,6 +435,10 @@ describe("failure path", () => {
           version: VERSION,
           sha256Hash: hash,
         },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
       },
     });
 
@@ -433,6 +450,10 @@ describe("failure path", () => {
       query: queryString,
       variables,
       extensions: {
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
         persistedQuery: {
           version: VERSION,
           sha256Hash: hash,
@@ -479,6 +500,10 @@ describe("failure path", () => {
         persistedQuery: {
           version: VERSION,
           sha256Hash: hash,
+        },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
         },
       },
     });

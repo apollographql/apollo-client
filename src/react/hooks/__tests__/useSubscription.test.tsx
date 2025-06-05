@@ -2287,6 +2287,7 @@ describe("`restart` callback", () => {
       rerender,
     };
   }
+
   it("can restart a running subscription", async () => {
     using _disabledAct = disableActEnvironment();
     const {
@@ -2325,14 +2326,7 @@ describe("`restart` callback", () => {
 
     getCurrentSnapshot().restart();
 
-    {
-      const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqualTyped({
-        loading: true,
-        data: undefined,
-        error: undefined,
-      });
-    }
+    await expect(takeSnapshot).not.toRerender();
 
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
@@ -2371,9 +2365,6 @@ describe("`restart` callback", () => {
       });
     }
 
-    // deliberately keeping a reference to a very old `restart` function
-    // to show that the most recent options are used even with that
-    const restart = getCurrentSnapshot().restart;
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
 
     {
@@ -2419,20 +2410,13 @@ describe("`restart` callback", () => {
     expect(onSubscribe).toHaveBeenCalledTimes(2);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
-    restart();
+    getCurrentSnapshot().restart();
 
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(2));
     expect(onSubscribe).toHaveBeenCalledTimes(3);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
-    {
-      const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqualTyped({
-        loading: true,
-        data: undefined,
-        error: undefined,
-      });
-    }
+    await expect(takeSnapshot).not.toRerender();
 
     link.simulateResult({ result: { data: { totalLikes: 1005 } } });
 
@@ -2508,7 +2492,7 @@ describe("`restart` callback", () => {
     }
   });
 
-  it("can restart a subscription that has errored", async () => {
+  it("can restart a subscription that has graphql errors", async () => {
     using _disabledAct = disableActEnvironment();
     const {
       link,
@@ -2549,6 +2533,36 @@ describe("`restart` callback", () => {
 
     getCurrentSnapshot().restart();
 
+    await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
+    await wait(0);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    await expect(takeSnapshot).not.toRerender();
+
+    link.simulateResult({ result: { data: { totalLikes: 2 } } });
+
+    {
+      const snapshot = await takeSnapshot();
+      expect(snapshot).toStrictEqualTyped({
+        loading: false,
+        data: { totalLikes: 2 },
+        error: undefined,
+      });
+    }
+  });
+
+  it("can restart a subscription that has network errors", async () => {
+    using _disabledAct = disableActEnvironment();
+    const {
+      link,
+      takeSnapshot,
+      getCurrentSnapshot,
+      onSubscribe,
+      onUnsubscribe,
+    } = await setup({
+      variables: { id: "1" },
+    });
+
     {
       const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqualTyped({
@@ -2558,9 +2572,36 @@ describe("`restart` callback", () => {
       });
     }
 
+    link.simulateResult({ error: new Error("Oops") });
+
+    {
+      const snapshot = await takeSnapshot();
+      expect(snapshot).toStrictEqualTyped({
+        loading: false,
+        data: undefined,
+        error: new Error("Oops"),
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
+    // A network error completes the observable so unsubscribe is called
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    getCurrentSnapshot().restart();
+
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
     await wait(0);
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    {
+      const snapshot = await takeSnapshot();
+      expect(snapshot).toStrictEqualTyped({
+        loading: true,
+        data: undefined,
+        error: undefined,
+      });
+    }
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
 

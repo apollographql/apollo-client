@@ -318,7 +318,7 @@ export declare namespace QueryNotification {
     | SetResult<TData>;
 }
 
-/** Observable created from initiating a subscription operation. */
+/** Observable created by initiating a subscription operation. */
 export interface SubscriptionObservable<T> extends Observable<T> {
   /**
    * Used to restart the connection to the link chain. Calling this on a

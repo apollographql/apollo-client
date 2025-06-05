@@ -1270,6 +1270,7 @@ describe("mutation results", () => {
         {
           request: { query: variableQuery, variables: variables1 },
           result: result1,
+          maxUsageCount: 2,
         },
         {
           request: { query: variableQuery, variables: variables2 },

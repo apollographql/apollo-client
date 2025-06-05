@@ -71,6 +71,7 @@ const tsRxJSMinConfig = {
   ...tsStandardConfig,
   displayName: "Core Tests - RxJS min version",
   moduleNameMapper: {
+    ...tsStandardConfig.moduleNameMapper,
     "^rxjs$": "rxjs-min",
   },
 };

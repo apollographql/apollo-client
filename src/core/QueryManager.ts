@@ -93,8 +93,8 @@ import type {
   OperationVariables,
   QueryNotification,
   QueryResult,
-  SubscriptionObservable,
   SubscribeResult,
+  SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
 import type {

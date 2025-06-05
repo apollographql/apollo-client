@@ -1525,6 +1525,233 @@ describe("useSubscription Hook", () => {
 
       await expect(takeRender).not.toRerender();
     });
+
+    test("can mix deduplicated subscriptions", async () => {
+      const subscription = gql`
+        subscription {
+          car {
+            make
+          }
+        }
+      `;
+
+      const results = ["Audi", "BMW"].map((make) => ({
+        result: { data: { car: { make } } },
+      }));
+
+      const onSubscribe = jest.fn();
+      const onUnsubscribe = jest.fn();
+      const link = new MockSubscriptionLink();
+      link.onSetup(onSubscribe);
+      link.onUnsubscribe(onUnsubscribe);
+
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+
+      const { render, takeRender, mergeSnapshot, replaceSnapshot } =
+        createRenderStream<Record<number, useSubscription.Result<any>>>({
+          initialSnapshot: {},
+        });
+
+      function Subscription({
+        idx,
+        options,
+      }: {
+        idx: number;
+        options: useSubscription.Options;
+      }) {
+        mergeSnapshot({ [idx]: useSubscription(subscription, options) });
+        return null;
+      }
+
+      function App({ options }: { options: useSubscription.Options[] }) {
+        replaceSnapshot({});
+
+        return (
+          <>
+            {options.map((opts, idx) => {
+              return <Subscription key={idx} idx={idx} options={opts} />;
+            })}
+          </>
+        );
+      }
+
+      using _disabledAct = disableActEnvironment();
+      const { rerender } = await render(
+        <App
+          options={[
+            { context: { queryDeduplication: true } },
+            { context: { queryDeduplication: true } },
+          ]}
+        />,
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+      link.simulateResult(results[0]);
+
+      if (IS_REACT_17) {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await rerender(
+        <App
+          options={[
+            { context: { queryDeduplication: true } },
+            { context: { queryDeduplication: true } },
+            { context: { queryDeduplication: false } },
+          ]}
+        />
+      );
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      expect(onSubscribe).toHaveBeenCalledTimes(2);
+      expect(onUnsubscribe).not.toHaveBeenCalled();
+
+      link.simulateResult(results[1]);
+
+      if (IS_REACT_17) {
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[0].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+
+        {
+          const { snapshot } = await takeRender();
+
+          expect(snapshot[0]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[1]).toStrictEqualTyped({
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+          });
+
+          expect(snapshot[2]).toStrictEqualTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+          });
+        }
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      await expect(takeRender).not.toRerender();
+    });
   });
 
   describe("multipart subscriptions", () => {

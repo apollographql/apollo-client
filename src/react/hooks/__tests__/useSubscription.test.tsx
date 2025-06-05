@@ -2602,6 +2602,341 @@ describe("`restart` callback", () => {
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
   });
+
+  test("can restart a deduplicated subscription", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW", "Honda", "Toyota"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const onSubscribe = jest.fn();
+    const onUnsubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSubscribe);
+    link.onUnsubscribe(onUnsubscribe);
+
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    const {
+      render,
+      takeRender,
+      mergeSnapshot,
+      replaceSnapshot,
+      getCurrentRender,
+    } = createRenderStream<Record<number, useSubscription.Result<any>>>({
+      initialSnapshot: {},
+    });
+
+    function Subscription({ idx }: { idx: number }) {
+      mergeSnapshot({ [idx]: useSubscription(subscription) });
+      return null;
+    }
+
+    function App({ count }: { count: number }) {
+      replaceSnapshot({});
+
+      return (
+        <>
+          {Array.from({ length: count }).map((_, idx) => {
+            return <Subscription key={idx} idx={idx} />;
+          })}
+        </>
+      );
+    }
+
+    using _disabledAct = disableActEnvironment();
+    const { rerender } = await render(<App count={2} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+    }
+
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    link.simulateResult(results[0]);
+
+    if (IS_REACT_17) {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    getCurrentRender().snapshot[0].restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+
+    // Calling restart on a non-errored/completed result should not rerender
+    await expect(takeRender).not.toRerender();
+
+    link.simulateResult(results[1]);
+
+    if (IS_REACT_17) {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    getCurrentRender().snapshot[1].restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(2);
+    expect(onSubscribe).toHaveBeenCalledTimes(3);
+
+    // Calling restart on a non-errored/completed result should not rerender
+    await expect(takeRender).not.toRerender();
+
+    await rerender(<App count={3} />);
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[2]).toStrictEqualTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+      });
+    }
+
+    link.simulateResult(results[2]);
+
+    if (IS_REACT_17) {
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+        });
+      }
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[2].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[2].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[2]).toStrictEqualTyped({
+        data: results[2].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    getCurrentRender().snapshot[2].restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(3);
+    expect(onSubscribe).toHaveBeenCalledTimes(4);
+
+    // Calling restart on a non-errored/completed result should not rerender
+    await expect(takeRender).not.toRerender();
+
+    link.simulateResult(results[3]);
+
+    if (IS_REACT_17) {
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[3].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+
+      {
+        const { snapshot } = await takeRender();
+
+        expect(snapshot[0]).toStrictEqualTyped({
+          data: results[3].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[1]).toStrictEqualTyped({
+          data: results[3].result.data,
+          error: undefined,
+          loading: false,
+        });
+
+        expect(snapshot[2]).toStrictEqualTyped({
+          data: results[2].result.data,
+          error: undefined,
+          loading: false,
+        });
+      }
+    }
+
+    {
+      const { snapshot } = await takeRender();
+
+      expect(snapshot[0]).toStrictEqualTyped({
+        data: results[3].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[1]).toStrictEqualTyped({
+        data: results[3].result.data,
+        error: undefined,
+        loading: false,
+      });
+
+      expect(snapshot[2]).toStrictEqualTyped({
+        data: results[3].result.data,
+        error: undefined,
+        loading: false,
+      });
+    }
+
+    await expect(takeRender).not.toRerender();
+  });
 });
 
 describe("ignoreResults", () => {

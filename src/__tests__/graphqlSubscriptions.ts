@@ -85,6 +85,28 @@ describe("GraphQL Subscriptions", () => {
     stream.unsubscribe();
   });
 
+  test("does not eagerly start subscription until subscribing to the returned observable", async () => {
+    const onSubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSubscribe);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+
+    expect(onSubscribe).not.toHaveBeenCalled();
+
+    observable.subscribe();
+
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+  });
+
   it("should multiplex subscriptions", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({

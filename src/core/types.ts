@@ -318,6 +318,23 @@ export declare namespace QueryNotification {
     | SetResult<TData>;
 }
 
-export interface RestartableObservable<T> extends Observable<T> {
+/** Observable created from initiating a subscription operation. */
+export interface SubscriptionObservable<T> extends Observable<T> {
+  /**
+   * Used to restart the connection to the link chain. Calling this on a
+   * deduplicated subscription will restart the connection for all observables
+   * that share the request.
+   *
+   * @example
+   *
+   * ```ts
+   * const observable = client.subscribe({ query: subscription });
+   * observable.subscribe((value) => {
+   *   // ...
+   * });
+   *
+   * observable.restart();
+   * ```
+   */
   restart: () => void;
 }

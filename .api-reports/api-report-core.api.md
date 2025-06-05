@@ -159,7 +159,8 @@ export class ApolloClient implements DataProxy {
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
     stop(): void;
-    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable_2<SubscribeResult<MaybeMasked<TData>>>;
+    // Warning: (ae-forgotten-export) The symbol "SubscriptionObservable" needs to be exported by the entry point index.d.ts
+    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable_2<WatchFragmentResult<TData>>;
@@ -749,6 +750,7 @@ class QueryManager {
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable_2<FetchResult<any>>;
+        restart?: () => void;
     }>;
     // (undocumented)
     get link(): ApolloLink;
@@ -809,7 +811,7 @@ class QueryManager {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable_2<SubscribeResult<TData>>;
+    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): SubscriptionObservable<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
     transform(document: DocumentNode_2): DocumentNode_2;
@@ -993,6 +995,11 @@ export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends Ope
         };
     }): Unmasked<TData> | void;
 };
+
+// @public
+interface SubscriptionObservable<T> extends Observable_2<T> {
+    restart: () => void;
+}
 
 // @public (undocumented)
 export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {

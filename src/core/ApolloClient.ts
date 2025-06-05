@@ -34,7 +34,7 @@ import type {
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
-  RestartableObservable,
+  SubscriptionObservable,
   SubscribeResult,
 } from "./types.js";
 import type {
@@ -526,7 +526,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: SubscriptionOptions<TVariables, TData>
-  ): RestartableObservable<SubscribeResult<MaybeMasked<TData>>> {
+  ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
     const id = this.queryManager.generateQueryId();
 
     const observable =

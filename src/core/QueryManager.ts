@@ -93,7 +93,7 @@ import type {
   OperationVariables,
   QueryNotification,
   QueryResult,
-  RestartableObservable,
+  SubscriptionObservable,
   SubscribeResult,
   TypedDocumentNode,
 } from "./types.js";
@@ -1053,7 +1053,7 @@ export class QueryManager {
 
   public startGraphQLSubscription<TData = unknown>(
     options: SubscriptionOptions
-  ): RestartableObservable<SubscribeResult<TData>> {
+  ): SubscriptionObservable<SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,

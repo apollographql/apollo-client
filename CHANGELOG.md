@@ -1,5 +1,28 @@
 # @apollo/client
 
+## 4.0.0-alpha.19
+
+### Major Changes
+
+- [#12663](https://github.com/apollographql/apollo-client/pull/12663) [`01512f2`](https://github.com/apollographql/apollo-client/commit/01512f2429dd394fb72b8ba9284047a09ade666f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Unsubscribing from an `ObservableQuery` before a value has been emitted will remove the query from the tracked list of queries and will no longer be eligible for query deduplication.
+
+### Minor Changes
+
+- [#12663](https://github.com/apollographql/apollo-client/pull/12663) [`01512f2`](https://github.com/apollographql/apollo-client/commit/01512f2429dd394fb72b8ba9284047a09ade666f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Subscriptions created by `client.subscribe()` can now be restarted. Restarting a subscription will terminate the connection with the link chain and recreate the request. Restarts also work across deduplicated subscriptions so calling `restart` on an `observable` who's request is deduplicated will restart the connection for each observable.
+
+  ```ts
+  const observable = client.subscribe({ query: subscription });
+
+  // Restart the connection to the link
+  observable.restart();
+  ```
+
+- [#12663](https://github.com/apollographql/apollo-client/pull/12663) [`01512f2`](https://github.com/apollographql/apollo-client/commit/01512f2429dd394fb72b8ba9284047a09ade666f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deduplicating subscription operations is now supported. Previously it was possible to deduplicate a subscription only if the new subscription was created before a previously subscribed subscription emitted any values. As soon as a value was emitted from a subscription, new subscriptions would create new connections. Deduplication is now active for as long as a subscription connection is open (i.e. the source observable hasn't emitted a `complete` or `error` notification yet.)
+
+  To disable deduplication and force a new connection, use the `queryDeduplication` option in `context` like you would a query operation.
+
+  As a result of this change, calling the `restart` function returned from `useSubscription` will now restart the connection on deduplicated subscriptions.
+
 ## 4.0.0-alpha.18
 
 ### Minor Changes

@@ -219,8 +219,6 @@ export function useSubscription<
     recreateRef.current = recreate;
   });
 
-  const syncUnsubscribeRef = React.useRef(false);
-
   if (skip) {
     if (observable) {
       setObservable((observable = null));
@@ -314,11 +312,7 @@ export function useSubscription<
           // reusing the same underlying observable and is about to subscribe
           subscriptionStopped = true;
 
-          syncUnsubscribeRef.current ?
-            subscription.unsubscribe()
-          : setTimeout(() => subscription.unsubscribe());
-
-          syncUnsubscribeRef.current = false;
+          setTimeout(() => subscription.unsubscribe());
         };
       },
       [observable]
@@ -335,12 +329,6 @@ export function useSubscription<
       !optionsRef.current.skip,
       "A subscription that is skipped cannot be restarted."
     );
-    // We need uSES to synchrously unsubscribe from the old observable in order
-    // to interrupt the connection in the link chain from the previous
-    // subscription, otherwise query deduplication kicks in when using
-    // `setTimeout` and the new link observable is never created.
-    syncUnsubscribeRef.current = true;
-
     if (observable?.__.completed) {
       setObservable(recreateRef.current());
     } else {

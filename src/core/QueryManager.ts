@@ -1077,16 +1077,17 @@ export class QueryManager {
       );
     }
 
-    const observable = from(
+    const observable = (
       this.getDocumentInfo(query).hasClientExports ?
-        this.localState!.getExportedVariables({
-          client: this.client,
-          document: query,
-          variables,
-          context,
-        })
-      : of(variables)
-    ).pipe(
+        from(
+          this.localState!.getExportedVariables({
+            client: this.client,
+            document: query,
+            variables,
+            context,
+          })
+        )
+      : of(variables)).pipe(
       mergeMap((variables) => {
         const { observable, restart: res } = this.getObservableFromLink<TData>(
           query,

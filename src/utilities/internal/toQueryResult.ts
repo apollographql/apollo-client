@@ -5,7 +5,7 @@ export function toQueryResult<TData = unknown>(
   value: ApolloQueryResult<TData>
 ) {
   const result: QueryResult<TData> = {
-    data: value.data,
+    data: value.data as TData | undefined,
   };
 
   if (value.error) {

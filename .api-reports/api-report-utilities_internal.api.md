@@ -15,6 +15,7 @@ import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import { GraphQLFormattedError } from 'graphql';
+import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
 import type { MutationOptions } from '@apollo/client';
 import { Observable } from 'rxjs';
@@ -30,6 +31,19 @@ import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { WatchQueryOptions } from '@apollo/client';
 import { WeakCache } from '@wry/caches';
+
+// @internal @deprecated (undocumented)
+export type ApplyHKT<fn extends HKT, arg1, arg2 = never, arg3 = never, arg4 = never> = (fn & {
+    arg1: arg1;
+    arg2: arg2;
+    arg3: arg3;
+    arg4: arg4;
+})["return"];
+
+// @internal @deprecated (undocumented)
+export type ApplyHKTImplementationWithDefault<Implementation, Name extends string, DefaultImplementation extends Record<Name, HKT>, arg1, arg2 = never, arg3 = never, arg4 = never> = ApplyHKT<Implementation extends {
+    [name in Name]: infer Implementation extends HKT;
+} ? Implementation : DefaultImplementation[Name], arg1, arg2, arg3, arg4>;
 
 // @internal @deprecated (undocumented)
 export function argumentsObjectFromField(field: FieldNode | DirectiveNode, variables?: Record<string, any>): Object | null;

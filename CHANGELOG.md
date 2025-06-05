@@ -1,5 +1,138 @@
 # @apollo/client
 
+## 4.0.0-alpha.18
+
+### Minor Changes
+
+- [#12670](https://github.com/apollographql/apollo-client/pull/12670) [`0a880ea`](https://github.com/apollographql/apollo-client/commit/0a880ea4c2360a985fdd2edadb94fcc4b82bad73) Thanks [@phryneas](https://github.com/phryneas)! - Provide a mechanism to override the DataMasking types.
+
+  Up until now, our types `Masked`, `MaskedDocumentNode`, `FragmentType`, `MaybeMasked` and `Unmasked` would assume that you are stictly using the type output format of GraphQL Codegen.
+
+  With this change, you can now modify the behaviour of those types if you use a different form of codegen that produces different types for your queries.
+
+  A simple implementation that would override the `Masked` type to remove all fields starting with `_` from a type would look like this:
+
+  ```ts
+  // your actual implementation of `Masked`
+  type CustomMaskedImplementation<TData> = {
+    [K in keyof TData as K extends `_${string}` ? never : K]: TData[K];
+  };
+
+  import { HKT } from "@apollo/client/utilities";
+  // transform this type into a higher kinded type that can be evaulated at a later time
+  interface CustomMaskedType extends HKT {
+    arg1: unknown; // TData
+    return: CustomMaskedImplementation<this["arg1"]>;
+  }
+
+  // create an "implementation interface" for the types you want to override
+  export interface CustomDataMaskingImplementation {
+    Masked: CustomMaskedType;
+    // other possible keys: `MaskedDocumentNode`, `FragmentType`, `MaybeMasked` and `Unmasked`
+  }
+  ```
+
+  then you would use that `CustomDataMaskingImplementation` interface in your project to extend the `DataMasking` interface exported by `@apollo/client` with it's functionality:
+
+  ```ts
+  declare module "@apollo/client" {
+    export interface DataMasking extends CustomDataMaskingImplementation {}
+  }
+  ```
+
+  After that, all internal usage of `Masked` in Apollo Client as well as all usage in your code base will use the new `CustomMaskedType` implementation.
+
+  If you don't specify overrides, Apollo Client will still default to the GraphQL Codegen data masking implementation.
+  The types for that are also explicitly exported as the `GraphQLCodegenDataMasking` namespace in `@apollo/client/masking`.
+
+## 4.0.0-alpha.17
+
+### Major Changes
+
+- [#12649](https://github.com/apollographql/apollo-client/pull/12649) [`0be92ad`](https://github.com/apollographql/apollo-client/commit/0be92ad51cf8de444fa1cc507bab2c21d230a44e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `TData` generic provided to types that return a `dataState` property is now modified by the given `DataState` generic instead of passing a modified `TData` type. For example, a `QueryRef` that could return partial data was defined as `QueryRef<DeepPartial<TData>, TVariables>`. Now `TData` should be provided unmodified and a set of allowed states should be given instead: `QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>`.
+
+  To migrate, use the following guide to replace your type with the right set of states (all types listed below are changed the same way):
+
+  ```diff
+  - QueryRef<TData, TVariables>
+  // `QueryRef`'s default is 'complete' | 'streaming' so this can also be left alone if you prefer
+  // All other types affected by this change default to all states
+  + QueryRef<TData, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming'>
+
+  - QueryRef<TData | undefined, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'empty'>
+
+  - QueryRef<DeepPartial<TData>, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial'>
+
+  - QueryRef<DeepPartial<TData> | undefined, TVariables>
+  + QueryRef<TData, TVariables, 'complete' | 'streaming' | 'partial' | 'empty'>
+  ```
+
+  The following types are affected. Provide the allowed `dataState` values to the `TDataState` generic:
+
+  - `ApolloQueryResult`
+  - `QueryRef`
+  - `PreloadedQueryRef`
+  - `useLazyQuery.Result`
+  - `useQuery.Result`
+  - `useReadQuery.Result`
+  - `useSuspenseQuery.Result`
+
+  All `*QueryRef` types default to `complete | streaming` states while the rest of the types default to `'complete' | 'streaming' | 'partial' | 'empty'` states. You shouldn't need to provide the states unless you need to either allow for partial data/empty values (`*QueryRef`) or a restricted set of states.
+
+- [#12649](https://github.com/apollographql/apollo-client/pull/12649) [`0be92ad`](https://github.com/apollographql/apollo-client/commit/0be92ad51cf8de444fa1cc507bab2c21d230a44e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `QueryReference` type. Please use `QueryRef` instead.
+
+- [#12633](https://github.com/apollographql/apollo-client/pull/12633) [`9bfb51f`](https://github.com/apollographql/apollo-client/commit/9bfb51fdbca69560da71f9012c74ee172b6c2b69) Thanks [@phryneas](https://github.com/phryneas)! - If the `execute` function of `useLazyQuery` is executed, previously started queries
+  from the same `useLazyQuery` usage will be rejected with an `AbortError` unless
+  `.retain()` is called on the promise returned by previous `execute` calls.
+
+  Please keep in mind that `useLazyQuery` is primarily meant as a means to synchronize
+  your component to the status of a query and that it's purpose it not to make a
+  series of network calls.
+  If you plan on making a series of network calls without the need to synchronize
+  the result with your component, consider using `ApolloClient.query` instead.
+
+### Minor Changes
+
+- [#12633](https://github.com/apollographql/apollo-client/pull/12633) [`9bfb51f`](https://github.com/apollographql/apollo-client/commit/9bfb51fdbca69560da71f9012c74ee172b6c2b69) Thanks [@phryneas](https://github.com/phryneas)! - `ObservableQuery.refetch` and `ObservableQuery.reobserve` and the `execute` function of `useLazyQuery` now return a
+  `ResultPromise` with an additional `.retain` method.
+  If this method is called, the underlying network operation will be kept running even if the `ObservableQuery` itself does
+  not require the result anymore, and the Promise will resolve with the final result instead of resolving with an intermediate
+  result in the case of early cancellation.
+
+- [#12649](https://github.com/apollographql/apollo-client/pull/12649) [`0be92ad`](https://github.com/apollographql/apollo-client/commit/0be92ad51cf8de444fa1cc507bab2c21d230a44e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add a new `dataState` property that determines the completeness of the `data` property. `dataState` helps narrow the type of `data`. `dataState` is now emitted from `ObservableQuery` and returned from all React hooks that return a `data` property.
+
+  The `dataState` values are:
+
+  - `empty`: No data could be fulfilled from the cache or the result is incomplete. `data` is `undefined`.
+  - `partial`: Some data could be fulfilled from the cache but `data` is incomplete. This is only possible when `returnPartialData` is `true`.
+  - `streaming`: `data` is incomplete as a result of a deferred query and the result is still streaming in.
+  - `complete`: `data` is a fully satisfied query result fulfilled either from the cache or network.
+
+  Example:
+
+  ```ts
+  const { data, dataState } = useQuery<TData>(query);
+
+  if (dataState === "empty") {
+    expectTypeOf(data).toEqualTypeOf<undefined>();
+  }
+
+  if (dataState === "partial") {
+    expectTypeOf(data).toEqualTypeOf<DeepPartial<TData>>();
+  }
+
+  if (dataState === "streaming") {
+    expectTypeOf(data).toEqualTypeOf<TData>();
+  }
+
+  if (dataState === "complete") {
+    expectTypeOf(data).toEqualTypeOf<TData>();
+  }
+  ```
+
 ## 4.0.0-alpha.16
 
 ### Major Changes

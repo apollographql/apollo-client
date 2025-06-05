@@ -1292,12 +1292,18 @@ export class QueryManager {
           );
         }
 
-        const aqr: ApolloQueryResult<TData> = {
+        const aqr = {
           data: result.data as TData,
+          dataState: result.data ? "complete" : "empty",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: !result.data,
-        };
+        } as ApolloQueryResult<TData>;
+
+        if (isExecutionPatchResult(result) && result.hasNext) {
+          aqr.dataState = "streaming";
+          aqr.partial = true;
+        }
 
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old
@@ -1305,11 +1311,16 @@ export class QueryManager {
         // throwing the markError result.
         if (hasErrors && errorPolicy === "none") {
           aqr.data = void 0 as TData;
+          aqr.dataState = "empty";
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
           aqr.error = new CombinedGraphQLErrors(result);
           aqr.networkStatus = NetworkStatus.error;
+
+          if (aqr.data) {
+            aqr.dataState = "complete";
+          }
         }
 
         return aqr;
@@ -1324,6 +1335,7 @@ export class QueryManager {
 
         const aqr: ApolloQueryResult<TData> = {
           data: undefined,
+          dataState: "empty",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: true,
@@ -1752,10 +1764,14 @@ export class QueryManager {
         return {
           // TODO: Handle partial data
           data: data as TData | undefined,
+          dataState:
+            diff.complete ? "complete"
+            : data ? "partial"
+            : "empty",
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
-        };
+        } as ApolloQueryResult<TData>;
       };
 
       const fromData = (

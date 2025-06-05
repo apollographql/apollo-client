@@ -51,3 +51,5 @@ export {
    * */
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities/internal";
+
+export type { HKT } from "./HKT.js";

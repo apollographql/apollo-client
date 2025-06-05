@@ -13,9 +13,10 @@ import { MockSubscriptionLink, MockLink } from "@apollo/client/testing";
  */
 
 export function useWrappedQuery<TData, TVariables extends OperationVariables>(
-  query: TypedDocumentNode<TData, TVariables>
+  query: TypedDocumentNode<TData, TVariables>,
+  variables: TVariables = {} as TVariables
 ) {
-  return useQuery(query);
+  return useQuery(query, { variables });
 }
 
 export const fieldPolicy = relayStylePagination();

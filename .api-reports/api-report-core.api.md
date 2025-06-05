@@ -195,17 +195,12 @@ export { ApolloLink }
 export { ApolloPayloadResult }
 
 // @public (undocumented)
-export interface ApolloQueryResult<T> {
-    // (undocumented)
-    data: T | undefined;
+export type ApolloQueryResult<TData, TStates extends DataState<TData>["dataState"] = DataState<TData>["dataState"]> = {
     error?: ErrorLike;
-    // (undocumented)
     loading: boolean;
-    // (undocumented)
     networkStatus: NetworkStatus;
-    // @deprecated
     partial: boolean;
-}
+} & GetDataState<TData, TStates>;
 
 export { ApolloReducerConfig }
 
@@ -246,6 +241,18 @@ export { createSignalIfSupported }
 export { DataMasking }
 
 export { DataProxy }
+
+// @public (undocumented)
+export type DataState<TData> = {
+    data: TData;
+    dataState: "complete" | "streaming";
+} | {
+    data: DeepPartial<TData>;
+    dataState: "partial";
+} | {
+    data: undefined;
+    dataState: "empty";
+};
 
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
@@ -345,6 +352,11 @@ export { FieldReadFunction }
 export { FragmentType }
 
 export { from }
+
+// @public (undocumented)
+export type GetDataState<TData, TState extends DataState<TData>["dataState"]> = Extract<DataState<TData>, {
+    dataState: TState;
+}>;
 
 export { gql }
 
@@ -1070,9 +1082,9 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:305:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:306:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:135:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:307:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:308:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:472:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

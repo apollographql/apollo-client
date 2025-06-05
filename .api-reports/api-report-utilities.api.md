@@ -123,6 +123,20 @@ interface DocumentTransformOptions {
 
 export { hasDirectives }
 
+// @beta
+export interface HKT {
+    // (undocumented)
+    arg1: unknown;
+    // (undocumented)
+    arg2: unknown;
+    // (undocumented)
+    arg3: unknown;
+    // (undocumented)
+    arg4: unknown;
+    // (undocumented)
+    return: unknown;
+}
+
 // @public
 export function isMutationOperation(document: DocumentNode_2): boolean;
 

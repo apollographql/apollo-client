@@ -302,9 +302,6 @@ export function useSubscription<
               });
             }
           },
-          error() {
-            observable.__.completed = true;
-          },
           complete() {
             observable.__.completed = true;
             if (!subscriptionStopped && optionsRef.current.onComplete) {

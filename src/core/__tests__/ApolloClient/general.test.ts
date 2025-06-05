@@ -4535,6 +4535,41 @@ describe("ApolloClient", () => {
         )
       );
     });
+
+    it("should throw an error on an inflight ObservableQuery if the store is reset", async () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const link = new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            // reset the store as soon as we hear about the query
+            void client.resetStore();
+            observer.next({ data });
+            return;
+          })
+      );
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      await expect(client.watchQuery({ query }).reobserve()).rejects.toThrow(
+        new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        )
+      );
+    });
   });
 
   describe("refetching observed queries", () => {

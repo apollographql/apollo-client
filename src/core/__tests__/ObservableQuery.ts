@@ -6381,6 +6381,60 @@ test("emits loading state when calling reobserve with new fetch policy after cha
   await expect(stream).not.toEmitAnything();
 });
 
+test('completes open subscription when "stop" is called', async () => {
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+  observable.stop();
+  await expect(stream).toComplete();
+  expect(observable.hasObservers()).toBe(false);
+});
+
+test('completes open subscription when "client.stop" is called', async () => {
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+  client.stop();
+  await expect(stream).toComplete();
+  expect(observable.hasObservers()).toBe(false);
+});
+
 describe(".variables", () => {
   test("returns empty object when no variables are passed", () => {
     const query: TypedDocumentNode<

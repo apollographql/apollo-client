@@ -1198,6 +1198,10 @@ export class QueryManager {
   ): { restart: () => void; observable: Observable<FetchResult<TData>> } {
     let entry: {
       observable?: Observable<FetchResult<TData>>;
+      // The restart function has to be on a mutable object that way if multiple
+      // client.subscribe() calls are made before the first one subscribes to
+      // the observable, the `restart` function can be updated for all
+      // deduplicated client.subscribe() calls.
       restart?: () => void;
     } = {};
 

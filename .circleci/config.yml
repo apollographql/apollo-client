@@ -164,7 +164,7 @@ workflows:
                 [
                   "Core Tests",
                   "Core Tests - RxJS min version",
-                  ReactDOM 17",
+                  "ReactDOM 17",
                   "ReactDOM 18",
                   "ReactDOM 19",
                 ]

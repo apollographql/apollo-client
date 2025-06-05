@@ -934,7 +934,7 @@ describe("GraphQL Subscriptions", () => {
     await expect(stream2).toComplete();
   });
 
-  it("restarts subscriptions on deduplicated subscriptions", async () => {
+  test("restarts subscriptions on deduplicated subscriptions", async () => {
     const subscription = gql`
       subscription UserInfo($name: String = "Changping Chen") {
         user(name: $name) {

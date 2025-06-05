@@ -159,7 +159,6 @@ export class ApolloClient implements DataProxy {
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
     stop(): void;
-    // Warning: (ae-forgotten-export) The symbol "SubscriptionObservable" needs to be exported by the entry point index.d.ts
     subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
     version: string;
@@ -997,7 +996,7 @@ export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends Ope
 };
 
 // @public
-interface SubscriptionObservable<T> extends Observable_2<T> {
+export interface SubscriptionObservable<T> extends Observable_2<T> {
     restart: () => void;
 }
 

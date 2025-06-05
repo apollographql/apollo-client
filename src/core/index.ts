@@ -50,6 +50,7 @@ export type {
   RefetchQueriesResult,
   RefetchQueryDescriptor,
   SubscribeResult,
+  SubscriptionObservable,
   TypedDocumentNode,
 } from "./types.js";
 export {

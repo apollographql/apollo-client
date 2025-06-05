@@ -1045,4 +1045,91 @@ describe("GraphQL Subscriptions", () => {
     expect(onUnsubscribe).not.toHaveBeenCalled();
     expect(onSubscribe).not.toHaveBeenCalled();
   });
+
+  test("does not start link subscription after observable is complete", async () => {
+    const onUnsubscribe = jest.fn();
+    const onSubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onUnsubscribe(onUnsubscribe);
+    link.onSetup(onSubscribe);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult(results[0], true);
+
+    await expect(stream).toEmitTypedValue(results[0].result);
+    await expect(stream).toComplete();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    onSubscribe.mockReset();
+    onUnsubscribe.mockReset();
+
+    observable.restart();
+
+    expect(onUnsubscribe).not.toHaveBeenCalled();
+    expect(onSubscribe).not.toHaveBeenCalled();
+  });
+
+  test("restart does not affect future subscriptions", async () => {
+    const onUnsubscribe = jest.fn();
+    const onSubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onUnsubscribe(onUnsubscribe);
+    link.onSetup(onSubscribe);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable1 = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+    const stream = new ObservableStream(observable1);
+
+    link.simulateResult(results[0], true);
+
+    await expect(stream).toEmitTypedValue(results[0].result);
+    await expect(stream).toComplete();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    const observable2 = client.subscribe({
+      query: subscription,
+      variables: { name: "Changping Chen" },
+    });
+    const stream2 = new ObservableStream(observable2);
+
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    link.simulateResult(results[0]);
+
+    await expect(stream2).toEmitTypedValue(results[0].result);
+
+    onSubscribe.mockReset();
+    onUnsubscribe.mockReset();
+
+    observable1.restart();
+
+    expect(onUnsubscribe).not.toHaveBeenCalled();
+    expect(onSubscribe).not.toHaveBeenCalled();
+
+    link.simulateResult(results[1]);
+
+    await expect(stream2).toEmitTypedValue(results[1].result);
+  });
 });

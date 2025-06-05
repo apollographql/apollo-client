@@ -112,7 +112,6 @@ export class FragmentReference<
 
   private dispose() {
     this.subscription.unsubscribe();
-    this.onDispose();
   }
 
   private onDispose() {
@@ -124,6 +123,10 @@ export class FragmentReference<
       this.handleNext.bind(this),
       this.handleError.bind(this)
     );
+    // call `onDispose` when the subscription is finalized, either because it is
+    // unsubscribed as a consequence of a `dispose` call or because the
+    // ObservableQuery completes because of a `ApolloClient.stop()` call.
+    this.subscription.add(this.onDispose);
   }
 
   private handleNext(result: WatchFragmentResult<TData>) {

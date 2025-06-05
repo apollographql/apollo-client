@@ -377,7 +377,6 @@ export class InternalQueryReference<TData = unknown> {
 
   private dispose() {
     this.subscription.unsubscribe();
-    this.onDispose();
   }
 
   private onDispose() {
@@ -482,6 +481,10 @@ export class InternalQueryReference<TData = unknown> {
     this.subscription = this.observable
       .pipe(filter((result) => !equal(result, this.result)))
       .subscribe(this.handleNext);
+    // call `onDispose` when the subscription is finalized, either because it is
+    // unsubscribed as a consequence of a `dispose` call or because the
+    // ObservableQuery completes because of a `ApolloClient.stop()` call.
+    this.subscription.add(this.onDispose);
   }
 
   private setResult() {

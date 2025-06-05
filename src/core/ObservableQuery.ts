@@ -1421,15 +1421,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       preventUnhandledRejection(
         promise
           .then((result) => toQueryResult(this.maskResult(result)))
-          .then((result) => {
-            console.log(
-              "ObservableQuery reobserve result",
-              result,
-              options.fetchPolicy,
-              NetworkStatus[newNetworkStatus]
-            );
-            return result;
-          })
           .finally(() => {
             if (!this.hasObservers() && this.activeOperations.size === 0) {
               // If `reobserve` was called on a query without any obervers,

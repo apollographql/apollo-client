@@ -1270,6 +1270,9 @@ describe("mutation results", () => {
         {
           request: { query: variableQuery, variables: variables1 },
           result: result1,
+          // Needed since unsubscribing from the first query will cancel the
+          // request and remove it from inFlightObservables for query
+          // deduplication.
           maxUsageCount: 2,
         },
         {

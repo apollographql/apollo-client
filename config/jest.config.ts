@@ -67,6 +67,14 @@ const tsStandardConfig = {
   ],
 };
 
+const tsRxJSMinConfig = {
+  ...tsStandardConfig,
+  displayName: "Core Tests - RxJS min version",
+  moduleNameMapper: {
+    "^rxjs$": "rxjs-min",
+  },
+};
+
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
 // do not import React, to avoid running them twice.
 const standardReact19Config = {
@@ -108,6 +116,7 @@ const standardReact17Config = {
 export default {
   projects: [
     tsStandardConfig,
+    tsRxJSMinConfig,
     standardReact17Config,
     standardReact18Config,
     standardReact19Config,

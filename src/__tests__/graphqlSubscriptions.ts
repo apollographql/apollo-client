@@ -1012,6 +1012,93 @@ describe("GraphQL Subscriptions", () => {
     await expect(sub3).toComplete();
   });
 
+  test("restarts only own connection on non deduplicated subscriptions", async () => {
+    const subscription = gql`
+      subscription UserInfo($name: String = "Changping Chen") {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const onUnsubscribe = jest.fn();
+    const onSubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onUnsubscribe(onUnsubscribe);
+    link.onSetup(onSubscribe);
+
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const observable1 = client.subscribe({
+      query: subscription,
+      context: { queryDeduplication: false },
+    });
+    const observable2 = client.subscribe({
+      query: subscription,
+      context: { queryDeduplication: false },
+    });
+
+    // Ensure we aren't eagerly subscribing
+    expect(onSubscribe).not.toHaveBeenCalled();
+
+    using sub1 = new ObservableStream(observable1);
+    using sub2 = new ObservableStream(observable2);
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+
+    link.simulateResult(results[0]);
+
+    await expect(sub1).toEmitTypedValue(results[0].result);
+    await expect(sub2).toEmitTypedValue(results[0].result);
+
+    observable1.restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(3);
+
+    link.simulateResult(results[1]);
+
+    await expect(sub1).toEmitTypedValue(results[1].result);
+    await expect(sub2).toEmitTypedValue(results[1].result);
+
+    observable2.restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(2);
+    expect(onSubscribe).toHaveBeenCalledTimes(4);
+
+    const observable3 = client.subscribe({
+      query: subscription,
+      context: { queryDeduplication: false },
+    });
+    using sub3 = new ObservableStream(observable3);
+
+    expect(onSubscribe).toHaveBeenCalledTimes(5);
+
+    link.simulateResult(results[2]);
+
+    await expect(sub1).toEmitTypedValue(results[2].result);
+    await expect(sub2).toEmitTypedValue(results[2].result);
+    await expect(sub3).toEmitTypedValue(results[2].result);
+
+    observable3.restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(3);
+    expect(onSubscribe).toHaveBeenCalledTimes(6);
+
+    link.simulateResult(results[3], true);
+
+    await expect(sub1).toEmitTypedValue(results[3].result);
+    await expect(sub2).toEmitTypedValue(results[3].result);
+    await expect(sub3).toEmitTypedValue(results[3].result);
+
+    await expect(sub1).toComplete();
+    await expect(sub2).toComplete();
+    await expect(sub3).toComplete();
+  });
+
   test("does not start link subscription after observable is unsubscribed", async () => {
     const onUnsubscribe = jest.fn();
     const onSubscribe = jest.fn();

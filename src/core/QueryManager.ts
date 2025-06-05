@@ -1232,6 +1232,29 @@ export class QueryManager {
 
       context = operation.context;
 
+      function withRestart(source: Observable<FetchResult>) {
+        return new Observable<FetchResult>((observer) => {
+          function subscribe() {
+            return source.subscribe({
+              next: observer.next.bind(observer),
+              complete: observer.complete.bind(observer),
+              error: observer.error.bind(observer),
+            });
+          }
+          let subscription = subscribe();
+
+          entry.restart ||= () => {
+            subscription.unsubscribe();
+            subscription = subscribe();
+          };
+
+          return () => {
+            subscription.unsubscribe();
+            entry.restart = undefined;
+          };
+        });
+      }
+
       if (deduplication) {
         const printedServerQuery = print(serverQuery);
         const varJson = canonicalStringify(variables);
@@ -1240,28 +1263,7 @@ export class QueryManager {
 
         if (!entry.observable) {
           entry.observable = execute(link, operation, executeContext).pipe(
-            (source) => {
-              return new Observable<FetchResult>((observer) => {
-                function subscribe() {
-                  return source.subscribe({
-                    next: observer.next.bind(observer),
-                    complete: observer.complete.bind(observer),
-                    error: observer.error.bind(observer),
-                  });
-                }
-                let subscription = subscribe();
-
-                entry.restart ||= () => {
-                  subscription.unsubscribe();
-                  subscription = subscribe();
-                };
-
-                return () => {
-                  subscription.unsubscribe();
-                  entry.restart = undefined;
-                };
-              });
-            },
+            withRestart,
             finalize(() => {
               if (
                 inFlightLinkObservables.peek(printedServerQuery, varJson) ===
@@ -1279,10 +1281,8 @@ export class QueryManager {
           ) as Observable<FetchResult<TData>>;
         }
       } else {
-        entry.observable = execute(
-          link,
-          operation,
-          executeContext
+        entry.observable = execute(link, operation, executeContext).pipe(
+          withRestart
         ) as Observable<FetchResult<TData>>;
       }
     } else {

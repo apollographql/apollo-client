@@ -11807,6 +11807,94 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("applies `context` on next fetch when it changes between renders", async () => {
+  const query = gql`
+    query {
+      context
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation) => {
+      const context = operation.getContext();
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { context: { source: context.source } } });
+          observer.complete();
+        }, 20);
+      });
+    }),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ context }) =>
+        useQuery(query, { context, fetchPolicy: "network-only" }),
+      {
+        initialProps: { context: { source: "initialHookValue" } },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "initialHookValue" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await rerender({ context: { source: "rerender" } });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "initialHookValue" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { context: { source: "rerender" } },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "initialHookValue" } },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "rerender" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { context: { source: "initialHookValue" } },
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 describe.skip("Type Tests", () => {
   test("returns narrowed TData in default case", () => {
     const { query } = setupSimpleCase();

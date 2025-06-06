@@ -6408,6 +6408,49 @@ test('completes open subscription when "stop" is called', async () => {
   expect(observable.hasObservers()).toBe(false);
 });
 
+test('accepts new subscribers after "stop" is called', async () => {
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+  const firstOperation = link.operation;
+  expect(firstOperation).toBeDefined();
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+  observable.stop();
+  await expect(stream).toComplete();
+  expect(observable.hasObservers()).toBe(false);
+
+  const stream2 = new ObservableStream(observable);
+  const secondOperation = link.operation;
+  expect(secondOperation).toBeDefined();
+  expect(secondOperation).not.toBe(firstOperation);
+  await expect(stream2).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+});
+
 test('completes open subscription when "client.stop" is called', async () => {
   const link = new MockSubscriptionLink();
   const client = new ApolloClient({

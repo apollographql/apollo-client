@@ -129,15 +129,6 @@ export class QueryInfo {
     return this;
   }
 
-  public getDiffOptions(variables = this.variables): Cache.DiffOptions {
-    return {
-      query: this.document!,
-      variables,
-      returnPartialData: true,
-      optimistic: true,
-    };
-  }
-
   /** @internal
    * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
    * In the case of a standalone `QueryInfo`, we will keep a local version.
@@ -184,12 +175,18 @@ export class QueryInfo {
     },
     cacheWriteBehavior: CacheWriteBehavior
   ) {
+    const diffOptions = {
+      query: this.document!,
+      variables: options.variables,
+      returnPartialData: true,
+      optimistic: true,
+    };
+
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      const diffOptions = this.getDiffOptions(options.variables);
       const lastDiff =
         this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
           this.lastDiff.diff
@@ -201,7 +198,7 @@ export class QueryInfo {
         options: diffOptions,
       };
     } else {
-      const lastDiff = this.cache.diff<any>(this.getDiffOptions());
+      const lastDiff = this.cache.diff<any>(diffOptions);
       handleIncrementalResult(result, lastDiff);
 
       if (shouldWriteResult(result, options.errorPolicy)) {
@@ -278,7 +275,6 @@ export class QueryInfo {
               // re-reading the latest data with cache.diff, below.
             }
 
-            const diffOptions = this.getDiffOptions(options.variables);
             const diff = cache.diff<T>(diffOptions);
 
             // If we're allowed to write to the cache, and we can read a

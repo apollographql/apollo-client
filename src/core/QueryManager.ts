@@ -1512,7 +1512,13 @@ export class QueryManager {
       document: query,
       variables,
     });
-    const readCache = () => this.cache.diff<any>(queryInfo.getDiffOptions());
+    const readCache = () =>
+      this.cache.diff<any>({
+        query,
+        variables,
+        returnPartialData: true,
+        optimistic: true,
+      });
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,

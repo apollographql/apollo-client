@@ -1475,9 +1475,6 @@ export class QueryManager {
     // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
       this.fetchCancelFns.delete(queryInfo.queryId);
-      // We need to call `complete` on the subject here otherwise the merged
-      // observable will never complete since it waits for all source
-      // observables to complete before itself completes.
     };
     this.fetchCancelFns.set(queryInfo.queryId, (error) => {
       fetchCancelSubject.next({
@@ -1531,7 +1528,6 @@ export class QueryManager {
     return {
       // Merge `observable` with `fetchCancelSubject`, in a way that completing or
       // erroring either of them will complete the merged obserable.
-      //
       observable: new Observable<QueryNotification.Value<TData>>((observer) => {
         observer.add(cleanupCancelFn);
         observer.add(observable.subscribe(observer));

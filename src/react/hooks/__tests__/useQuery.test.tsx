@@ -56,6 +56,7 @@ import {
   markAsStreaming,
   setupPaginatedCase,
   setupSimpleCase,
+  setupVariablesCase,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
@@ -12190,6 +12191,101 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       character: { __typename: "Character", id: "2" },
     },
     variables: { id: "2" },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    variables: { id: "1" },
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      character: { __typename: "Character", id: "2", name: "Cached Widow" },
+    },
+    variables: { id: "2" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ id, fetchPolicy }) =>
+        useQuery(query, { fetchPolicy, variables: { id } }),
+      {
+        initialProps: {
+          id: "1",
+          fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
+        },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await rerender({ id: "1", fetchPolicy: "cache-and-network" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await rerender({ id: "2", fetchPolicy: "cache-and-network" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "2", name: "Cached Widow" },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    previousData: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "2", name: "Black Widow" },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    previousData: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    variables: { id: "1" },
   });
 
   await expect(takeSnapshot).not.toRerender();

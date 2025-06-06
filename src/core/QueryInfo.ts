@@ -53,6 +53,13 @@ export interface LastWrite {
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
+interface OperationInfo<TData, TVariables extends OperationVariables> {
+  document: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  variables: TVariables;
+  errorPolicy: ErrorPolicy;
+  cacheWriteBehavior: CacheWriteBehavior;
+}
+
 function wrapDestructiveCacheMethod(
   cache: ApolloCache,
   methodName: "evict" | "modify" | "reset"
@@ -154,18 +161,18 @@ export class QueryInfo {
     options: Cache.DiffOptions;
   };
 
-  public markResult<T>(
-    result: FetchResult<T>,
-    query: DocumentNode,
-    options: {
-      variables: OperationVariables;
-      errorPolicy: ErrorPolicy;
-    },
-    cacheWriteBehavior: CacheWriteBehavior
+  public markResult<TData, TVariables extends OperationVariables>(
+    result: FetchResult<TData>,
+    {
+      document: query,
+      variables,
+      errorPolicy,
+      cacheWriteBehavior,
+    }: OperationInfo<TData, TVariables>
   ) {
     const diffOptions = {
       query,
-      variables: options.variables,
+      variables,
       returnPartialData: true,
       optimistic: true,
     };
@@ -189,7 +196,7 @@ export class QueryInfo {
       const lastDiff = this.cache.diff<any>(diffOptions);
       handleIncrementalResult(result, lastDiff);
 
-      if (shouldWriteResult(result, options.errorPolicy)) {
+      if (shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
@@ -207,17 +214,17 @@ export class QueryInfo {
             }
           },
           update: (cache) => {
-            if (this.shouldWrite(result, options.variables)) {
+            if (this.shouldWrite(result, variables)) {
               cache.writeQuery({
                 query: query,
                 data: result.data as Unmasked<any>,
-                variables: options.variables,
+                variables,
                 overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
               });
 
               this.lastWrite = {
                 result,
-                variables: options.variables,
+                variables,
                 dmCount: destructiveMethodCounts.get(this.cache),
               };
             } else {
@@ -263,7 +270,7 @@ export class QueryInfo {
               // re-reading the latest data with cache.diff, below.
             }
 
-            const diff = cache.diff<T>(diffOptions);
+            const diff = cache.diff<TData>(diffOptions);
 
             // If we're allowed to write to the cache, and we can read a
             // complete result from the cache, update result.data to be the
@@ -286,13 +293,9 @@ export class QueryInfo {
     TVariables extends OperationVariables,
     TCache extends ApolloCache,
   >(
-    mutation: {
+    result: FetchResult<TData>,
+    mutation: OperationInfo<TData, TVariables> & {
       mutationId: string;
-      result: FetchResult<TData>;
-      document: DocumentNode;
-      variables?: TVariables;
-      fetchPolicy?: MutationFetchPolicy;
-      errorPolicy: ErrorPolicy;
       context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -304,9 +307,8 @@ export class QueryInfo {
     },
     cache = this.cache
   ): Promise<FetchResult<TData>> {
-    let { result } = mutation;
     const cacheWrites: Cache.WriteOptions[] = [];
-    const skipCache = mutation.fetchPolicy === "no-cache";
+    const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       if (!isExecutionPatchIncrementalResult(result)) {
@@ -505,12 +507,8 @@ export class QueryInfo {
     TCache extends ApolloCache,
   >(
     optimisticResponse: any,
-    mutation: {
+    mutation: OperationInfo<TData, TVariables> & {
       mutationId: string;
-      document: DocumentNode;
-      variables?: TVariables;
-      fetchPolicy?: MutationFetchPolicy;
-      errorPolicy: ErrorPolicy;
       context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -529,10 +527,8 @@ export class QueryInfo {
     this.cache.recordOptimisticTransaction((cache) => {
       try {
         this.markMutationResult<TData, TVariables, TCache>(
-          {
-            ...mutation,
-            result: { data },
-          },
+          { data },
+          mutation,
           cache
         );
       } catch (error) {
@@ -543,20 +539,16 @@ export class QueryInfo {
     return true;
   }
 
-  public markSubscriptionResult<TData, TVariables extends OperationVariables>({
-    result,
-    document,
-    variables,
-    errorPolicy,
-    fetchPolicy,
-  }: {
-    result: FetchResult<TData>;
-    document: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    variables: TVariables;
-    fetchPolicy?: FetchPolicy;
-    errorPolicy: ErrorPolicy;
-  }) {
-    if (fetchPolicy !== "no-cache") {
+  public markSubscriptionResult<TData, TVariables extends OperationVariables>(
+    result: FetchResult<TData>,
+    {
+      document,
+      variables,
+      errorPolicy,
+      cacheWriteBehavior,
+    }: OperationInfo<TData, TVariables>
+  ) {
+    if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, errorPolicy)) {
         this.cache.write({
           query: document,

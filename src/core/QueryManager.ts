@@ -321,7 +321,10 @@ export class QueryManager {
           mutationId,
           document: mutation,
           variables,
-          fetchPolicy,
+          cacheWriteBehavior:
+            fetchPolicy === "no-cache" ?
+              CacheWriteBehavior.FORBID
+            : CacheWriteBehavior.MERGE,
           errorPolicy,
           context,
           updateQueries,
@@ -370,22 +373,27 @@ export class QueryManager {
             }
 
             return from(
-              queryInfo.markMutationResult<TData, TVariables, TCache>({
-                mutationId,
-                result: storeResult,
-                document: mutation,
-                variables,
-                fetchPolicy,
-                errorPolicy,
-                context,
-                update: updateWithProxyFn,
-                updateQueries,
-                awaitRefetchQueries,
-                refetchQueries,
-                removeOptimistic: isOptimistic ? mutationId : void 0,
-                onQueryUpdated,
-                keepRootFields,
-              })
+              queryInfo.markMutationResult<TData, TVariables, TCache>(
+                storeResult,
+                {
+                  mutationId,
+                  document: mutation,
+                  variables,
+                  cacheWriteBehavior:
+                    fetchPolicy === "no-cache" ?
+                      CacheWriteBehavior.FORBID
+                    : CacheWriteBehavior.MERGE,
+                  errorPolicy,
+                  context,
+                  update: updateWithProxyFn,
+                  updateQueries,
+                  awaitRefetchQueries,
+                  refetchQueries,
+                  removeOptimistic: isOptimistic ? mutationId : void 0,
+                  onQueryUpdated,
+                  keepRootFields,
+                }
+              )
             );
           })
         )
@@ -804,12 +812,14 @@ export class QueryManager {
         restart = res;
         return observable.pipe(
           map((rawResult): SubscribeResult<TData> => {
-            queryInfo.markSubscriptionResult({
-              result: rawResult,
+            queryInfo.markSubscriptionResult(rawResult, {
               document: query,
               variables,
               errorPolicy,
-              fetchPolicy,
+              cacheWriteBehavior:
+                fetchPolicy === "no-cache" ?
+                  CacheWriteBehavior.FORBID
+                : CacheWriteBehavior.MERGE,
             });
 
             const result: SubscribeResult<TData> = {
@@ -1055,12 +1065,11 @@ export class QueryManager {
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.
-          queryInfo.markResult(
-            result,
-            linkDocument,
-            options,
-            cacheWriteBehavior
-          );
+          queryInfo.markResult(result, {
+            ...options,
+            document: linkDocument,
+            cacheWriteBehavior,
+          });
         }
 
         const aqr = {

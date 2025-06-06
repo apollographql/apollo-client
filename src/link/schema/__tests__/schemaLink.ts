@@ -1,9 +1,11 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { execute } from "../../core/execute";
-import { SchemaLink } from "../";
-import { ObservableStream } from "../../../testing/internal";
+import { SchemaLink } from "@apollo/client/link/schema";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+} from "@apollo/client/testing/internal";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -81,7 +83,7 @@ describe("SchemaLink", () => {
     });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       data: { sampleQuery: null },
       errors: [{ message: "Unauthorized", path: ["sampleQuery"] }],
     });
@@ -180,7 +182,7 @@ describe("SchemaLink", () => {
       `,
     });
     const stream = new ObservableStream(observable);
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitTypedValue({
       errors: [{ message: 'Cannot query field "unknown" on type "Query".' }],
     });
   });

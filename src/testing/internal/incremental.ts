@@ -1,20 +1,22 @@
-import { HttpLink } from "../../link/http/index.js";
-import type {
-  GraphQLFormattedError,
-  InitialIncrementalExecutionResult,
-  SubsequentIncrementalExecutionResult,
-} from "graphql-17-alpha2";
-import type { GraphQLError } from "graphql";
 import {
   ReadableStream as NodeReadableStream,
   TextEncoderStream,
   TransformStream,
 } from "node:stream/web";
-import type { ApolloPayloadResult } from "../../core/index.js";
+
+import type { GraphQLError } from "graphql";
+import type {
+  GraphQLFormattedError,
+  InitialIncrementalExecutionResult,
+  SubsequentIncrementalExecutionResult,
+} from "graphql-17-alpha2";
+
+import type { ApolloPayloadResult } from "@apollo/client";
+import { HttpLink } from "@apollo/client/link/http";
 
 const hasNextSymbol = Symbol("hasNext");
 
-export function mockIncrementalStream<Chunks>({
+function mockIncrementalStream<Chunks>({
   responseHeaders,
 }: {
   responseHeaders: Headers;

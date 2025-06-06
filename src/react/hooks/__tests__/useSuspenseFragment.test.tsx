@@ -1,37 +1,37 @@
-import {
-  useSuspenseFragment,
-  UseSuspenseFragmentResult,
-} from "../useSuspenseFragment";
-import {
-  ApolloClient,
-  FragmentType,
-  gql,
-  InMemoryCache,
-  Masked,
-  MaskedDocumentNode,
-  MaybeMasked,
-  OperationVariables,
-  TypedDocumentNode,
-} from "../../../core";
-import React, { Suspense } from "react";
-import { ApolloProvider } from "../../context";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import {
   createRenderStream,
   disableActEnvironment,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { renderAsync, spyOnConsole } from "../../../testing/internal";
-import { act, renderHook, screen, waitFor } from "@testing-library/react";
-import { InvariantError } from "ts-invariant";
-import { MockedProvider, MockSubscriptionLink, wait } from "../../../testing";
+import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
-import userEvent from "@testing-library/user-event";
+import React, { Suspense } from "react";
+
+import type {
+  FragmentType,
+  Masked,
+  MaskedDocumentNode,
+  MaybeMasked,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
+import { ApolloClient, ApolloLink, gql, InMemoryCache } from "@apollo/client";
+import { ApolloProvider, useSuspenseFragment } from "@apollo/client/react";
+import { MockSubscriptionLink } from "@apollo/client/testing";
+import {
+  renderAsync,
+  spyOnConsole,
+  wait,
+} from "@apollo/client/testing/internal";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
-      result: null as UseSuspenseFragmentResult<MaybeMasked<TData>> | null,
+      result: null as useSuspenseFragment.Result<MaybeMasked<TData>> | null,
     },
   });
 }
@@ -93,7 +93,10 @@ test("suspends until cache value is complete", async () => {
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const fragment: TypedDocumentNode<ItemFragment> = gql`
     fragment ItemFragment on Item {
@@ -169,7 +172,10 @@ test("updates when the cache updates", async () => {
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const fragment: TypedDocumentNode<ItemFragment> = gql`
     fragment ItemFragment on Item {
@@ -267,7 +273,10 @@ test("resuspends when data goes missing until complete again", async () => {
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const fragment: TypedDocumentNode<ItemFragment> = gql`
     fragment ItemFragment on Item {
@@ -378,7 +387,10 @@ test("does not suspend and returns cache data when data is already in the cache"
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const fragment: TypedDocumentNode<ItemFragment> = gql`
     fragment ItemFragment on Item {
@@ -444,7 +456,10 @@ test("receives cache updates after initial result when data is written to the ca
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const fragment: TypedDocumentNode<ItemFragment> = gql`
     fragment ItemFragment on Item {
@@ -531,8 +546,14 @@ test("allows the client to be overridden", async () => {
     }
   `;
 
-  const defaultClient = new ApolloClient({ cache: new InMemoryCache() });
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const defaultClient = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   defaultClient.writeFragment({
     fragment,
@@ -582,7 +603,10 @@ test("suspends until data is complete when changing `from` with no data written 
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   client.writeFragment({
     fragment,
@@ -678,7 +702,10 @@ test("does not suspend when changing `from` with data already written to cache",
     createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   client.writeFragment({
     fragment,
@@ -764,7 +791,10 @@ it("does not rerender when fields with @nonreactive change", async () => {
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   client.writeFragment({
     fragment,
@@ -823,7 +853,10 @@ it("does not rerender when fields with @nonreactive on nested fragment change", 
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   client.writeFragment({
     fragment,
@@ -880,13 +913,16 @@ it.failing(
       age: number;
     }
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: TypedDocumentNode<Fragment, Record<string, never>> = gql`
       fragment UserFields on User {
         age
       }
     `;
 
-    const client = new ApolloClient({ cache: new InMemoryCache() });
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
 
     const { replaceSnapshot, render, takeRender } =
       createDefaultRenderStream<Fragment>();
@@ -943,7 +979,10 @@ test("returns null if `from` is `null`", async () => {
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   using _disabledAct = disableActEnvironment();
   const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -974,7 +1013,10 @@ test("returns cached value when `from` changes from `null` to non-null value", a
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   client.writeFragment({
     fragment,
@@ -1035,7 +1077,10 @@ test("returns null value when `from` changes from non-null value to `null`", asy
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   client.writeFragment({
     fragment,
@@ -1096,7 +1141,10 @@ test("suspends until cached value is available when `from` changes from `null` t
     }
   `;
 
-  const client = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
 
   const { takeRender, render, replaceSnapshot } =
     createDefaultRenderStream<ItemFragment | null>();
@@ -1185,6 +1233,7 @@ test("returns masked fragment when data masking is enabled", async () => {
   const client = new ApolloClient({
     dataMasking: true,
     cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
   });
 
   const fragment: TypedDocumentNode<Post> = gql`
@@ -1255,6 +1304,7 @@ test("does not rerender for cache writes to masked fields", async () => {
   const client = new ApolloClient({
     dataMasking: true,
     cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
   });
 
   const fragment: TypedDocumentNode<Post> = gql`
@@ -1336,6 +1386,7 @@ test("updates child fragments for cache updates to masked fields", async () => {
   const client = new ApolloClient({
     dataMasking: true,
     cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
   });
 
   const postFieldsFragment: MaskedDocumentNode<PostFields> = gql`
@@ -1367,8 +1418,8 @@ test("updates child fragments for cache updates to masked fields", async () => {
 
   const { render, mergeSnapshot, takeRender } = createRenderStream({
     initialSnapshot: {
-      parent: null as UseSuspenseFragmentResult<Masked<Post>> | null,
-      child: null as UseSuspenseFragmentResult<Masked<PostFields>> | null,
+      parent: null as useSuspenseFragment.Result<Masked<Post>> | null,
+      child: null as useSuspenseFragment.Result<Masked<PostFields>> | null,
     },
   });
 
@@ -1473,7 +1524,7 @@ test("tears down the subscription on unmount", async () => {
   `;
 
   const cache = new InMemoryCache();
-  const client = new ApolloClient({ cache });
+  const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
   client.writeFragment({
     fragment,
@@ -1522,7 +1573,7 @@ test("tears down all watches when rendering multiple records", async () => {
   `;
 
   const cache = new InMemoryCache();
-  const client = new ApolloClient({ cache });
+  const client = new ApolloClient({ cache, link: ApolloLink.empty() });
 
   client.writeFragment({
     fragment,
@@ -1891,10 +1942,12 @@ describe.skip("type tests", () => {
     useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
   });
 
-  it("does not allow variables when TVariables is `never`", () => {
+  it("is invalid with TVariables as `never`", () => {
     const fragment: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
+    // @ts-expect-error
     useSuspenseFragment({ fragment, from: null });
+    // @ts-expect-error
     useSuspenseFragment({ fragment, from: null, variables: {} });
     // @ts-expect-error no variables argument allowed
     useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });

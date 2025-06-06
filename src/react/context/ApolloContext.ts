@@ -1,21 +1,23 @@
-import * as React from "rehackt";
 import type * as ReactTypes from "react";
-import type { ApolloClient } from "../../core/index.js";
-import { canUseSymbol } from "../../utilities/index.js";
-import type { RenderPromises } from "../ssr/index.js";
-import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
+
+import type { ApolloClient } from "@apollo/client";
+import type {
+  HookWrappers,
+  wrapperSymbol,
+} from "@apollo/client/react/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export interface ApolloContextValue {
-  client?: ApolloClient<object>;
-  renderPromises?: RenderPromises;
+  client?: ApolloClient;
+  [wrapperSymbol]?: HookWrappers;
 }
 
 // To make sure Apollo Client doesn't create more than one React context
 // (which can lead to problems like having an Apollo Client instance added
 // in one context, then attempting to retrieve it from another different
 // context), a single Apollo context is created and tracked in global state.
-const contextKey =
-  canUseSymbol ? Symbol.for("__APOLLO_CONTEXT__") : "__APOLLO_CONTEXT__";
+const contextKey = Symbol.for("__APOLLO_CONTEXT__");
 
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue> {
   invariant(
@@ -41,10 +43,3 @@ export function getApolloContext(): ReactTypes.Context<ApolloContextValue> {
   }
   return context;
 }
-
-/**
- * @deprecated This function has no "resetting" effect since Apollo Client 3.4.12,
- * and will be removed in the next major version of Apollo Client.
- * If you want to get the Apollo Context, use `getApolloContext` instead.
- */
-export const resetApolloContext = getApolloContext;

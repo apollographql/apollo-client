@@ -1,12 +1,10 @@
+import { ReadableStream } from "node:stream/web";
+
 import type { Tester } from "@jest/expect-utils";
 import { equals, iterableEquality } from "@jest/expect-utils";
 import { expect } from "@jest/globals";
 import * as matcherUtils from "jest-matcher-utils";
-import type {
-  Observable,
-  ObservableSubscription,
-} from "../../utilities/index.js";
-import { ReadableStream } from "node:stream/web";
+import type { Observable, Subscribable, Unsubscribable } from "rxjs";
 
 export interface TakeOptions {
   timeout?: number;
@@ -18,17 +16,18 @@ type ObservableEvent<T> =
 
 export class ObservableStream<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;
-  private subscription!: ObservableSubscription;
+  private subscription!: Unsubscribable;
   private readerQueue: Array<Promise<ObservableEvent<T>>> = [];
 
-  constructor(observable: Observable<T>) {
+  constructor(observable: Observable<T> | Subscribable<T>) {
+    this.unsubscribe = this.unsubscribe.bind(this);
     this.reader = new ReadableStream<ObservableEvent<T>>({
       start: (controller) => {
-        this.subscription = observable.subscribe(
-          (value) => controller.enqueue({ type: "next", value }),
-          (error) => controller.enqueue({ type: "error", error }),
-          () => controller.enqueue({ type: "complete" })
-        );
+        this.subscription = observable.subscribe({
+          next: (value) => controller.enqueue({ type: "next", value }),
+          error: (error) => controller.enqueue({ type: "error", error }),
+          complete: () => controller.enqueue({ type: "complete" }),
+        });
       },
     }).getReader();
   }
@@ -70,7 +69,16 @@ export class ObservableStream<T> {
           new Error("Timeout waiting for next event")
         );
       }),
-    ]);
+    ]).then((value) => {
+      if (value.type === "next") {
+        this.current = value.value;
+      }
+      return value;
+    });
+  }
+
+  [Symbol.dispose]() {
+    this.unsubscribe();
   }
 
   unsubscribe() {
@@ -96,6 +104,11 @@ export class ObservableStream<T> {
 
   private async readNextValue() {
     return this.reader.read().then((result) => result.value!);
+  }
+
+  private current?: T;
+  getCurrent() {
+    return this.current;
   }
 }
 

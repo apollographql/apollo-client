@@ -1,1 +1,1 @@
-export const version = "local";
+export const version = "local" as string;

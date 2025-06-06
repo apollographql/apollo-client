@@ -1,4 +1,8 @@
-import "../utilities/globals/index.js";
-export type { MockedProviderProps } from "./react/MockedProvider.js";
-export { MockedProvider } from "./react/MockedProvider.js";
-export * from "./core/index.js";
+export type {
+  MockedRequest,
+  MockedResponse,
+  MockLinkOptions,
+  ResultFunction,
+} from "./core/types/deprecated.js";
+export { MockLink, realisticDelay } from "./core/mocking/mockLink.js";
+export { MockSubscriptionLink } from "./core/mocking/mockSubscriptionLink.js";

@@ -36,10 +36,11 @@ Our example application will use the [FlyBy GraphQL API](https://flyby-router-de
 
 With our dependencies set up, we can now initialize an `ApolloClient` instance.
 
-In `main.jsx`, let's first import the symbols we need from `@apollo/client`:
+In `main.jsx`, let's first import the symbols we need from `@apollo/client` and `@apollo/client/react`:
 
 ```jsx title="main.jsx"
-import { ApolloClient, InMemoryCache, ApolloProvider, gql } from '@apollo/client';
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 ```
 
 Next we'll initialize `ApolloClient`, passing its constructor a configuration object with the `uri` and `cache` fields:
@@ -92,7 +93,8 @@ In `main.jsx`, let's wrap our React app with an `ApolloProvider`. We suggest put
 ```jsx title="main.jsx" {15-17}
 import React from 'react';
 import * as ReactDOM from 'react-dom/client';
-import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import App from './App';
 
 const client = new ApolloClient({
@@ -118,7 +120,8 @@ Switching over to our `App.jsx` file, we'll start by replacing our existing file
 
 ```jsx title="App.jsx"
 // Import everything needed to use the `useQuery` hook
-import { useQuery, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 export default function App() {
   return (

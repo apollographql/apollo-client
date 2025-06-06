@@ -1,6 +1,7 @@
-import { Operation } from "../../core/types";
-
-import { buildRetryFunction } from "../retryFunction";
+import type { Operation } from "../../core/types.js";
+// not exported
+// eslint-disable-next-line local-rules/no-relative-imports
+import { buildRetryFunction } from "../retryFunction.js";
 
 describe("buildRetryFunction", () => {
   const operation = { operationName: "foo" } as Operation;

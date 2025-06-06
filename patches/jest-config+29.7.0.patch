@@ -1,0 +1,13 @@
+diff --git a/node_modules/jest-config/build/readConfigFileAndSetRootDir.js b/node_modules/jest-config/build/readConfigFileAndSetRootDir.js
+index e989961..925efb3 100644
+--- a/node_modules/jest-config/build/readConfigFileAndSetRootDir.js
++++ b/node_modules/jest-config/build/readConfigFileAndSetRootDir.js
+@@ -100,7 +100,7 @@ async function readConfigFileAndSetRootDir(configPath) {
+   const isJSON = configPath.endsWith(_constants.JEST_CONFIG_EXT_JSON);
+   let configObject;
+   try {
+-    if (isTS) {
++    if (isTS && !process.features.typescript) {
+       configObject = await loadTSConfigFile(configPath);
+     } else if (isJSON) {
+       const fileContent = fs().readFileSync(configPath, 'utf8');

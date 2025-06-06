@@ -1,17 +1,23 @@
-import { responseIterator } from "./responseIterator.js";
-import type { Operation } from "../core/index.js";
-import { throwServerError } from "../utils/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
-import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
-import type { SubscriptionObserver } from "zen-observable-ts";
+import {
+  CombinedProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+  ServerError,
+  ServerParseError,
+} from "@apollo/client/errors";
+import type { ApolloPayloadResult, Operation } from "@apollo/client/link";
+import { isNonNullObject } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const { hasOwnProperty } = Object.prototype;
 
-export type ServerParseError = Error & {
-  response: Response;
-  statusCode: number;
-  bodyText: string;
-};
+/**
+ * This function detects an Apollo payload result before it is transformed
+ * into a FetchResult via HttpLink; it cannot detect an ApolloPayloadResult
+ * once it leaves the link chain.
+ */
+function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult {
+  return isNonNullObject(value) && "payload" in value;
+}
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>,
@@ -40,11 +46,15 @@ export async function readMultipartBody<
 
   const boundary = `\r\n--${boundaryVal}`;
   let buffer = "";
-  const iterator = responseIterator(response);
+  invariant(
+    response.body && typeof response.body.getReader === "function",
+    "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
+  );
+  const iterator = response.body.getReader();
   let running = true;
 
   while (running) {
-    const { value, done } = await iterator.next();
+    const { value, done } = await iterator.read();
     const chunk = typeof value === "string" ? value : decoder.decode(value);
     const searchFrom = buffer.length - boundary.length + 1;
     running = !done;
@@ -73,7 +83,7 @@ export async function readMultipartBody<
       const body = message.slice(i);
 
       if (body) {
-        const result = parseJsonBody<T>(response, body);
+        const result = parseJsonEncoding(response, body);
         if (
           Object.keys(result).length > 1 ||
           "data" in result ||
@@ -94,7 +104,9 @@ export async function readMultipartBody<
                 ...next,
                 extensions: {
                   ...("extensions" in next ? next.extensions : (null as any)),
-                  [PROTOCOL_ERRORS_SYMBOL]: result.errors,
+                  [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
+                    result.errors ?? []
+                  ),
                 },
               };
             }
@@ -119,7 +131,7 @@ export async function readMultipartBody<
   }
 }
 
-export function parseHeaders(headerText: string): Record<string, string> {
+function parseHeaders(headerText: string): Record<string, string> {
   const headersInit: Record<string, string> = {};
   headerText.split("\n").forEach((line) => {
     const i = line.indexOf(":");
@@ -133,97 +145,61 @@ export function parseHeaders(headerText: string): Record<string, string> {
   return headersInit;
 }
 
-export function parseJsonBody<T>(response: Response, bodyText: string): T {
+function parseJsonEncoding(response: Response, bodyText: string) {
   if (response.status >= 300) {
-    // Network error
-    const getResult = (): Record<string, unknown> | string => {
-      try {
-        return JSON.parse(bodyText);
-      } catch (err) {
-        return bodyText;
-      }
-    };
-    throwServerError(
-      response,
-      getResult(),
-      `Response not successful: Received status code ${response.status}`
+    throw new ServerError(
+      `Response not successful: Received status code ${response.status}`,
+      { response, bodyText }
     );
   }
 
   try {
-    return JSON.parse(bodyText) as T;
+    return JSON.parse(bodyText);
   } catch (err) {
-    const parseError = err as ServerParseError;
-    parseError.name = "ServerParseError";
-    parseError.response = response;
-    parseError.statusCode = response.status;
-    parseError.bodyText = bodyText;
-    throw parseError;
+    throw new ServerParseError(err, { response, bodyText });
   }
 }
 
-export function handleError(err: any, observer: SubscriptionObserver<any>) {
-  // if it is a network error, BUT there is graphql result info fire
-  // the next observer before calling error this gives apollo-client
-  // (and react-apollo) the `graphqlErrors` and `networkErrors` to
-  // pass to UI this should only happen if we *also* have data as
-  // part of the response key per the spec
-  if (err.result && err.result.errors && err.result.data) {
-    // if we don't call next, the UI can only show networkError
-    // because AC didn't get any graphqlErrors this is graphql
-    // execution result info (i.e errors and possibly data) this is
-    // because there is no formal spec how errors should translate to
-    // http status codes. So an auth error (401) could have both data
-    // from a public field, errors from a private field, and a status
-    // of 401
-    // {
-    //  user { // this will have errors
-    //    firstName
-    //  }
-    //  products { // this is public so will have data
-    //    cost
-    //  }
-    // }
-    //
-    // the result of above *could* look like this:
-    // {
-    //   data: { products: [{ cost: "$10" }] },
-    //   errors: [{
-    //      message: 'your session has timed out',
-    //      path: []
-    //   }]
-    // }
-    // status code of above would be a 401
-    // in the UI you want to show data where you can, errors as data where you can
-    // and use correct http status codes
-    observer.next(err.result);
+function parseGraphQLResponseJsonEncoding(
+  response: Response,
+  bodyText: string
+) {
+  try {
+    return JSON.parse(bodyText);
+  } catch (err) {
+    throw new ServerParseError(err, { response, bodyText });
+  }
+}
+
+function parseResponse(response: Response, bodyText: string) {
+  const contentType = response.headers.get("content-type");
+
+  if (contentType?.includes("application/graphql-response+json")) {
+    return parseGraphQLResponseJsonEncoding(response, bodyText);
   }
 
-  observer.error(err);
+  return parseJsonEncoding(response, bodyText);
 }
 
 export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
   return (response: Response) =>
-    response
-      .text()
-      .then((bodyText) => parseJsonBody(response, bodyText))
-      .then((result: any) => {
-        if (
-          !Array.isArray(result) &&
-          !hasOwnProperty.call(result, "data") &&
-          !hasOwnProperty.call(result, "errors")
-        ) {
-          // Data error
-          throwServerError(
-            response,
-            result,
-            `Server response was missing for query '${
-              Array.isArray(operations) ?
-                operations.map((op) => op.operationName)
-              : operations.operationName
-            }'.`
-          );
-        }
-        return result;
-      });
+    response.text().then((bodyText) => {
+      const result = parseResponse(response, bodyText);
+
+      if (
+        !Array.isArray(result) &&
+        !hasOwnProperty.call(result, "data") &&
+        !hasOwnProperty.call(result, "errors")
+      ) {
+        throw new ServerError(
+          `Server response was malformed for query '${
+            Array.isArray(operations) ?
+              operations.map((op) => op.operationName)
+            : operations.operationName
+          }'.`,
+          { response, bodyText }
+        );
+      }
+      return result;
+    });
 }

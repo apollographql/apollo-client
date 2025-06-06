@@ -4318,47 +4318,6 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(2);
     });
 
-    it("should not error on a stopped query()", async () => {
-      const query = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `;
-
-      const data = {
-        author: {
-          firstName: "John",
-          lastName: "Smith",
-        },
-      };
-
-      const link = new ApolloLink(
-        () =>
-          new Observable((observer) => {
-            observer.next({ data });
-          })
-      );
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-      });
-
-      const queryId = "1";
-      // TODO: Determine if there is a better way to test this without digging
-      // into implementation details
-      const promise = client["queryManager"].fetchQuery(queryId, { query });
-
-      client["queryManager"].removeQuery(queryId);
-
-      await client.resetStore();
-      // Ensure the promise doesn't reject
-      await Promise.race([wait(50), promise]);
-    });
-
     it("should throw an error on an inflight fetch query if the store is reset", async () => {
       const query = gql`
         query {
@@ -4385,7 +4344,7 @@ describe("ApolloClient", () => {
         ]),
       });
       // TODO: Determine if there is a better way to test this.
-      const promise = client["queryManager"].fetchQuery("made up id", {
+      const promise = client["queryManager"].fetchQuery({
         query,
       });
 
@@ -4571,6 +4530,41 @@ describe("ApolloClient", () => {
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
       await expect(client.query({ query })).rejects.toThrow(
+        new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        )
+      );
+    });
+
+    it("should throw an error on an inflight ObservableQuery if the store is reset", async () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const link = new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            // reset the store as soon as we hear about the query
+            void client.resetStore();
+            observer.next({ data });
+            return;
+          })
+      );
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      await expect(client.watchQuery({ query }).reobserve()).rejects.toThrow(
         new InvariantError(
           "Store reset while query was in flight (not completed in link chain)"
         )
@@ -4921,7 +4915,7 @@ describe("ApolloClient", () => {
         ]),
       });
       // TODO: Determine if there is a better way to test this
-      const promise = client["queryManager"].fetchQuery("made up id", {
+      const promise = client["queryManager"].fetchQuery({
         query,
       });
       void client.reFetchObservableQueries();

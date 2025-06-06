@@ -22,6 +22,12 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
+export interface LastWrite {
+  result: FetchResult<any>;
+  variables: WatchQueryOptions["variables"];
+  dmCount: number | undefined;
+}
+
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
 function wrapDestructiveCacheMethod(
@@ -46,30 +52,33 @@ function wrapDestructiveCacheMethod(
   }
 }
 
-// A QueryInfo object represents a single query managed by the
-// QueryManager, which tracks all QueryInfo objects by queryId in its
-// this.queries Map. QueryInfo objects store the latest results and errors
-// for the given query, and are responsible for reporting those results to
-// the corresponding ObservableQuery, via the QueryInfo.notify method.
-// Results are reported asynchronously whenever setDiff marks the
-// QueryInfo object as dirty, though a call to the QueryManager's
-// broadcastQueries method may trigger the notification before it happens
-// automatically. This class used to be a simple interface type without
-// any field privacy or meaningful methods, which is why it still has so
-// many public fields. The effort to lock down and simplify the QueryInfo
-// interface is ongoing, and further improvements are welcome.
+// A QueryInfo object represents a single network request, either initiated
+// from the QueryManager or from an ObservableQuery.
+// It will only ever be used for a single network call.
+// It is responsible for reporting results to the cache, merging and in a no-cache
+// scenario accumulating the response.
 export class QueryInfo {
   document: DocumentNode | null = null;
+  // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
   variables?: Record<string, any>;
 
   private cache: ApolloCache;
+  public queryId: string;
+  // TODO should be private
+  public readonly observableQuery?: ObservableQuery<any, any>;
 
-  constructor(
-    queryManager: QueryManager,
-    public readonly queryId = queryManager.generateQueryId()
-  ) {
+  constructor({
+    queryManager,
+    observableQuery,
+  }: {
+    queryManager: QueryManager;
+    queryId?: string;
+    observableQuery?: ObservableQuery<any, any>;
+  }) {
     const cache = (this.cache = queryManager.cache);
+    this.queryId = queryManager.generateQueryId();
+    this.observableQuery = observableQuery;
 
     // Track how often cache.evict is called, since we want eviction to
     // override the feud-stopping logic in the markResult method, by
@@ -88,14 +97,8 @@ export class QueryInfo {
     document: DocumentNode;
     variables: Record<string, any> | undefined;
   }): this {
-    if (!equal(query.variables, this.variables)) {
-      this.resetDiff();
-    }
-
-    Object.assign(this, {
-      document: query.document,
-      variables: query.variables,
-    });
+    this.document = query.document;
+    this.variables = query.variables;
 
     return this;
   }
@@ -109,20 +112,17 @@ export class QueryInfo {
     };
   }
 
-  public readonly observableQuery: ObservableQuery<any, any> | null = null;
-  setObservableQuery(oq: ObservableQuery<any, any> | null) {
-    if (oq === this.observableQuery) return;
-    (this as any).observableQuery = oq;
-    if (oq) {
-      oq["queryInfo"] = this;
-    }
+  /** @internal
+   * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
+   * In the case of a standalone `QueryInfo`, we will keep a local version.
+   */
+  public _lastWrite?: LastWrite;
+  private get lastWrite(): LastWrite | undefined {
+    return (this.observableQuery || this)._lastWrite;
   }
-
-  private lastWrite?: {
-    result: FetchResult<any>;
-    variables: WatchQueryOptions["variables"];
-    dmCount: number | undefined;
-  };
+  private set lastWrite(value: LastWrite | undefined) {
+    (this.observableQuery || this)._lastWrite = value;
+  }
 
   public resetLastWrite() {
     this.lastWrite = void 0;

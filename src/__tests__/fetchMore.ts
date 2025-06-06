@@ -1560,14 +1560,19 @@ describe("fetchMore on an observable query", () => {
     });
 
     function count(): number {
-      return (observable as any).queryManager.queries.size;
+      const qm = observable["queryManager"];
+      return qm.obsQueries.size + qm["fetchCancelFns"].size;
     }
 
     const beforeQueryCount = count();
 
-    await observable.fetchMore({
+    const promise = observable.fetchMore({
       variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
     });
+
+    expect(count()).toBeGreaterThan(beforeQueryCount);
+
+    await promise;
 
     expect(count()).toBe(beforeQueryCount);
   });

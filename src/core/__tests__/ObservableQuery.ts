@@ -1143,6 +1143,27 @@ describe("ObservableQuery", () => {
 
       await expect(stream).not.toEmitAnything();
     });
+
+    it("registers and unregisters `ObservableQuery` even if it is not subscribed to", async () => {
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const observable = client.watchQuery({ query, variables });
+      expect(client.getObservableQueries().size).toBe(0);
+      const promise = observable.reobserve();
+      expect(client.getObservableQueries().size).toBe(1);
+      link.simulateResult(
+        {
+          result: { data: dataOne },
+        },
+        true
+      );
+      await promise;
+      expect(client.getObservableQueries().size).toBe(0);
+    });
   });
 
   describe("setVariables", () => {
@@ -5245,8 +5266,7 @@ describe("ObservableQuery", () => {
 
     const observable = client.watchQuery({ query, variables });
 
-    const queryInfo = observable["queryInfo"];
-    const cache = queryInfo["cache"];
+    const cache = client.cache;
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitTypedValue({
@@ -5302,7 +5322,7 @@ describe("ObservableQuery", () => {
     expect(onWatchUpdatedCount).toBe(1);
     client.stop();
 
-    await expect(stream).not.toEmitAnything();
+    await expect(stream).toComplete();
   });
 });
 
@@ -6359,6 +6379,103 @@ test("emits loading state when calling reobserve with new fetch policy after cha
   });
 
   await expect(stream).not.toEmitAnything();
+});
+
+test('completes open subscription when "stop" is called', async () => {
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+  observable.stop();
+  await expect(stream).toComplete();
+  expect(observable.hasObservers()).toBe(false);
+});
+
+test('accepts new subscribers after "stop" is called', async () => {
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+  const firstOperation = link.operation;
+  expect(firstOperation).toBeDefined();
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+  observable.stop();
+  await expect(stream).toComplete();
+  expect(observable.hasObservers()).toBe(false);
+
+  const stream2 = new ObservableStream(observable);
+  const secondOperation = link.operation;
+  expect(secondOperation).toBeDefined();
+  expect(secondOperation).not.toBe(firstOperation);
+  await expect(stream2).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+});
+
+test('completes open subscription when "client.stop" is called', async () => {
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+  });
+  const query = gql`
+    query {
+      greeting
+    }
+  `;
+  const observable = client.watchQuery({ query });
+  const stream = new ObservableStream(observable);
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  expect(observable.hasObservers()).toBe(true);
+  client.stop();
+  await expect(stream).toComplete();
+  expect(observable.hasObservers()).toBe(false);
 });
 
 describe(".variables", () => {

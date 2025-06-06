@@ -51,11 +51,15 @@ interface LastWrite {
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
-interface OperationInfo<TData, TVariables extends OperationVariables> {
+interface OperationInfo<
+  TData,
+  TVariables extends OperationVariables,
+  AllowedCacheWriteBehavior = CacheWriteBehavior,
+> {
   document: DocumentNode | TypedDocumentNode<TData, TVariables>;
   variables: TVariables;
   errorPolicy: ErrorPolicy;
-  cacheWriteBehavior: CacheWriteBehavior;
+  cacheWriteBehavior: AllowedCacheWriteBehavior;
 }
 
 function wrapDestructiveCacheMethod(
@@ -99,7 +103,7 @@ export class QueryInfo {
     | "getDocumentInfo"
     | "broadcastQueries"
   >;
-  public id: string;
+  public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
 
   constructor(
@@ -296,7 +300,11 @@ export class QueryInfo {
     TCache extends ApolloCache,
   >(
     result: FetchResult<TData>,
-    mutation: OperationInfo<TData, TVariables> & {
+    mutation: OperationInfo<
+      TData,
+      TVariables,
+      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
+    > & {
       context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -508,7 +516,11 @@ export class QueryInfo {
     TCache extends ApolloCache,
   >(
     optimisticResponse: any,
-    mutation: OperationInfo<TData, TVariables> & {
+    mutation: OperationInfo<
+      TData,
+      TVariables,
+      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
+    > & {
       context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -546,7 +558,11 @@ export class QueryInfo {
       variables,
       errorPolicy,
       cacheWriteBehavior,
-    }: OperationInfo<TData, TVariables>
+    }: OperationInfo<
+      TData,
+      TVariables,
+      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
+    >
   ) {
     if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, errorPolicy)) {

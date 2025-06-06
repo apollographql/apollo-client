@@ -20,6 +20,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, Observable, observeOn, of } from "rxjs";
 
 import type {
+  ErrorPolicy,
   FetchPolicy,
   OperationVariables,
   Streaming,
@@ -45,7 +46,10 @@ import {
   useQuery,
 } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import type { SimpleCaseData } from "@apollo/client/testing/internal";
+import type {
+  SimpleCaseData,
+  VariablesCaseVariables,
+} from "@apollo/client/testing/internal";
 import {
   enableFakeTimers,
   markAsStreaming,
@@ -11675,6 +11679,132 @@ describe("useQuery Hook", () => {
       }
     });
   });
+});
+
+test("applies `errorPolicy` on next fetch when it changes between renders", async () => {
+  const query: TypedDocumentNode<
+    {
+      character: { __typename: "Character"; id: string; name: string } | null;
+    },
+    VariablesCaseVariables
+  > = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: { __typename: "Character", id: "1", name: "Spider-Man" },
+          },
+        },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: null,
+          },
+          errors: [{ message: "Could not find character 1" }],
+        },
+        delay: 20,
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ errorPolicy }: { errorPolicy: ErrorPolicy }) =>
+        useQuery(query, {
+          // Use network-only to show no network requests are made between
+          // renders
+          fetchPolicy: "network-only",
+          errorPolicy,
+          variables: { id: "1" },
+        }),
+      {
+        initialProps: { errorPolicy: "none" },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await rerender({ errorPolicy: "all" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  const { refetch } = getCurrentSnapshot();
+  void refetch();
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: null,
+    },
+    dataState: "complete",
+    error: new CombinedGraphQLErrors({
+      data: { character: null },
+      errors: [{ message: "Could not find character 1" }],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    previousData: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
 });
 
 describe.skip("Type Tests", () => {

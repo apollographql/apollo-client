@@ -12120,17 +12120,16 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot, rerender } =
-    await renderHookToSnapshotStream(
-      ({ id, returnPartialData }) =>
-        useQuery(fullQuery, { returnPartialData, variables: { id } }),
-      {
-        initialProps: { id: "1", returnPartialData: false },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+    ({ id, returnPartialData }) =>
+      useQuery(fullQuery, { returnPartialData, variables: { id } }),
+    {
+      initialProps: { id: "1", returnPartialData: false },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -12221,20 +12220,19 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot, rerender } =
-    await renderHookToSnapshotStream(
-      ({ id, fetchPolicy }) =>
-        useQuery(query, { fetchPolicy, variables: { id } }),
-      {
-        initialProps: {
-          id: "1",
-          fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
-        },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+    ({ id, fetchPolicy }) =>
+      useQuery(query, { fetchPolicy, variables: { id } }),
+    {
+      initialProps: {
+        id: "1",
+        fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
+      },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: {

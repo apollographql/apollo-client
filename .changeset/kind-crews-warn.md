@@ -3,4 +3,4 @@
 ---
 
 `ObservableQuery` no longer has a `queryId` property.
-`ApolloClient.getObservableQueries` no longer returns a `Map<queryId, ObservableQuery>`, but a `Set<ObservableQuery>`.
+`ApolloClient.getObservableQueries` no longer returns a `Map<string, ObservableQuery>`, but a `Set<ObservableQuery>`.

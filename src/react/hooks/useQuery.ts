@@ -463,7 +463,11 @@ function useResubscribeIfNecessary<
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    observable.reobserve(watchQueryOptions);
+    if (shouldReobserve(observable[lastWatchOptions], watchQueryOptions)) {
+      observable.reobserve(watchQueryOptions);
+    } else {
+      observable.silentSetOptions(watchQueryOptions);
+    }
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
     // but save the current data as this.previousData, just like setResult
@@ -477,6 +481,18 @@ function useResubscribeIfNecessary<
     resultData.current = result;
   }
   observable[lastWatchOptions] = watchQueryOptions;
+}
+
+function shouldReobserve<TData, TVariables extends OperationVariables>(
+  previousOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
+  options: Readonly<WatchQueryOptions<TVariables, TData>>
+) {
+  return (
+    previousOptions.query !== options.query ||
+    !equal(previousOptions.variables, options.variables) ||
+    (previousOptions.fetchPolicy === "standby" &&
+      options.fetchPolicy !== "standby")
+  );
 }
 
 useQuery.ssrDisabledResult = maybeDeepFreeze({

@@ -34,11 +34,11 @@ npm install @apollo/client graphql
 | Resource | Description | Link |
 | ----- | ----- | ----- |
 | **Getting Started Guide** | Complete setup and first query | [Start Here →](https://www.apollographql.com/docs/react/get-started?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) |
-| **Full Documentation** | Comprehensive guides and examples | [Read Docs →](https://www.apollographql.com/docs/react?utm_source=github&utm_medium=apollographql_apollo&utm_campaign=readme) |
-| **API Reference** | Complete API documentation | [Browse API →](https://www.apollographql.com/docs/react/api/apollo-client?utm_source=github&utm_medium=apollographql_apollo&utm_campaign=readme) |
+| **Full Documentation** | Comprehensive guides and examples | [Read Docs →](https://www.apollographql.com/docs/react?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) |
+| **API Reference** | Complete API documentation | [Browse API →](https://www.apollographql.com/docs/react/api/apollo-client?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) |
 | **VS Code Extension** | Enhanced development experience | [Install Extension →](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo) |
 | **DevTools** | Debug your GraphQL apps | [Chrome](https://chrome.google.com/webstore/detail/apollo-client-devtools/jdkknkkbebbapilgoeccciglkfbmbnfm) \| [Firefox](https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/) |
-| **Free Course** | Learn GraphQL and Apollo Client | [Take Course →](https://odyssey.apollographql.com?utm_source=github&utm_medium=apollographql_apollo&utm_campaign=readme) |
+| **Free Course** | Learn GraphQL and Apollo Client | [Take Course →](https://odyssey.apollographql.com?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) |
 
 ## 💬 Get Support
 
@@ -51,7 +51,7 @@ npm install @apollo/client graphql
 
 Deliver tomorrow's roadmap today with our comprehensive suite of API orchestration tools:
 
-* [**Apollo Client**](https://www.apollographql.com/docs/react?utm_source=github&utm_medium=readme&utm_campaign=about_client) \- Type-safe apps with GraphQL-powered on-device caching ([React](https://www.apollographql.com/docs/react?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme), [iOS](https://www.apollographql.com/docs/ios?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme), [Kotlin](https://www.apollographql.com/docs/kotlin?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme))  
+* [**Apollo Client**](https://www.apollographql.com/docs/react?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Type-safe apps with GraphQL-powered on-device caching ([React](https://www.apollographql.com/docs/react?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme), [iOS](https://www.apollographql.com/docs/ios?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme), [Kotlin](https://www.apollographql.com/docs/kotlin?utm_medium=github&utm_source=apollographql_apollo-client&utm_campaign=readme))  
 * [**Apollo Connectors**](https://www.apollographql.com/connectors?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Compose all your GraphQL and REST APIs into one GraphQL endpoint  
 * [**Apollo MCP Server**](https://www.apollographql.com/ai?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- AI needs APIs. The fastest way to ship reliable AI experiences  
 * [**Apollo Router**](https://www.apollographql.com/docs/router?utm_source=github&utm_medium=apollographql_apollo-client&utm_campaign=readme) \- Scale your APIs seamlessly with GraphQL Federation, Security, Auth, and more  

@@ -944,6 +944,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ) {
     const mergedOptions = compact(this.options, newOptions || {});
     assign(this.options, mergedOptions);
+
+    if (this.options.fetchPolicy === "standby") {
+      this.cancelPolling();
+    }
   }
 
   /**

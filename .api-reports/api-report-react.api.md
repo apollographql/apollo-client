@@ -632,6 +632,7 @@ export interface PreloadQueryFunction {
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode_2 | TypedDocumentNode_2<TData, TVariables>, ...[options]: {} extends TVariables ? [
     options?: PreloadQueryOptions<NoInfer_2<TVariables>>
     ] : [options: PreloadQueryOptions<NoInfer_2<TVariables>>]): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(queryRef: TQueryRef): Promise<TQueryRef>;
 }
 
 // @public (undocumented)

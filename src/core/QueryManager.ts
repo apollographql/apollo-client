@@ -53,12 +53,9 @@ import {
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
-  isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-  isNonEmptyArray,
   isNonNullObject,
   makeUniqueId,
-  mergeIncrementalData,
   removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -67,7 +64,6 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
@@ -87,8 +83,6 @@ import type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   MutateResult,
-  MutationUpdaterFunction,
-  OnQueryUpdated,
   OperationVariables,
   QueryNotification,
   QueryResult,
@@ -98,7 +92,6 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
-  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -106,18 +99,12 @@ import type {
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
-const { hasOwnProperty } = Object.prototype;
-
-const IGNORE = {} as IgnoreModifier;
-
 interface MutationStoreValue {
   mutation: DocumentNode;
   variables: Record<string, any>;
   loading: boolean;
   error: Error | null;
 }
-
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 interface TransformCacheEntry {
   hasClientExports: boolean;
@@ -328,9 +315,11 @@ export class QueryManager {
         error: null,
       } as MutationStoreValue);
 
+    const queryInfo = new QueryInfo({ queryManager: this });
+
     const isOptimistic =
       optimisticResponse &&
-      this.markMutationOptimistic<TData, TVariables, TCache>(
+      queryInfo.markMutationOptimistic<TData, TVariables, TCache>(
         optimisticResponse,
         {
           mutationId,
@@ -385,7 +374,7 @@ export class QueryManager {
             }
 
             return from(
-              this.markMutationResult<TData, TVariables, TCache>({
+              queryInfo.markMutationResult<TData, TVariables, TCache>({
                 mutationId,
                 result: storeResult,
                 document: mutation,
@@ -459,256 +448,6 @@ export class QueryManager {
           },
         });
     });
-  }
-
-  public markMutationResult<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
-    mutation: {
-      mutationId: string;
-      result: FetchResult<TData>;
-      document: DocumentNode;
-      variables?: TVariables;
-      fetchPolicy?: MutationFetchPolicy;
-      errorPolicy: ErrorPolicy;
-      context?: DefaultContext;
-      updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-      awaitRefetchQueries?: boolean;
-      refetchQueries?: InternalRefetchQueriesInclude;
-      removeOptimistic?: string;
-      onQueryUpdated?: OnQueryUpdated<any>;
-      keepRootFields?: boolean;
-    },
-    cache = this.cache
-  ): Promise<FetchResult<TData>> {
-    let { result } = mutation;
-    const cacheWrites: Cache.WriteOptions[] = [];
-    const skipCache = mutation.fetchPolicy === "no-cache";
-
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
-      if (!isExecutionPatchIncrementalResult(result)) {
-        cacheWrites.push({
-          result: result.data,
-          dataId: "ROOT_MUTATION",
-          query: mutation.document,
-          variables: mutation.variables,
-        });
-      }
-      if (
-        isExecutionPatchIncrementalResult(result) &&
-        isNonEmptyArray(result.incremental)
-      ) {
-        const diff = cache.diff<TData>({
-          id: "ROOT_MUTATION",
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.getDocumentInfo(mutation.document).asQuery,
-          variables: mutation.variables,
-          optimistic: false,
-          returnPartialData: true,
-        });
-        let mergedData;
-        if (diff.result) {
-          mergedData = mergeIncrementalData(diff.result, result);
-        }
-        if (typeof mergedData !== "undefined") {
-          // cast the ExecutionPatchResult to FetchResult here since
-          // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult).data = mergedData;
-          cacheWrites.push({
-            result: mergedData,
-            dataId: "ROOT_MUTATION",
-            query: mutation.document,
-            variables: mutation.variables,
-          });
-        }
-      }
-
-      const { updateQueries } = mutation;
-      if (updateQueries) {
-        this.obsQueries.forEach((observableQuery) => {
-          const queryName = observableQuery && observableQuery.queryName;
-          if (!queryName || !hasOwnProperty.call(updateQueries, queryName)) {
-            return;
-          }
-          const updater = updateQueries[queryName];
-          const { query: document, variables } = observableQuery;
-
-          // Read the current query result from the store.
-          const { result: currentQueryResult, complete } =
-            observableQuery.getCacheDiff({ optimistic: false });
-
-          if (complete && currentQueryResult) {
-            // Run our reducer using the current query result and the mutation result.
-            const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: result as FetchResult<Unmasked<TData>>,
-              queryName: (document && getOperationName(document)) || void 0,
-              queryVariables: variables!,
-            });
-
-            // Write the modified result back into the store if we got a new result.
-            if (nextQueryResult) {
-              cacheWrites.push({
-                result: nextQueryResult,
-                dataId: "ROOT_QUERY",
-                query: document!,
-                variables,
-              });
-            }
-          }
-        });
-      }
-    }
-
-    if (
-      cacheWrites.length > 0 ||
-      (mutation.refetchQueries || "").length > 0 ||
-      mutation.update ||
-      mutation.onQueryUpdated ||
-      mutation.removeOptimistic
-    ) {
-      const results: any[] = [];
-
-      this.refetchQueries({
-        updateCache: (cache) => {
-          if (!skipCache) {
-            cacheWrites.forEach((write) => cache.write(write));
-          }
-
-          // If the mutation has some writes associated with it then we need to
-          // apply those writes to the store by running this reducer again with
-          // a write action.
-          const { update } = mutation;
-          // Determine whether result is a SingleExecutionResult,
-          // or the final ExecutionPatchResult.
-          const isFinalResult =
-            !isExecutionPatchResult(result) ||
-            (isExecutionPatchIncrementalResult(result) && !result.hasNext);
-
-          if (update) {
-            if (!skipCache) {
-              // Re-read the ROOT_MUTATION data we just wrote into the cache
-              // (the first cache.write call in the cacheWrites.forEach loop
-              // above), so field read functions have a chance to run for
-              // fields within mutation result objects.
-              const diff = cache.diff<TData>({
-                id: "ROOT_MUTATION",
-                // The cache complains if passed a mutation where it expects a
-                // query, so we transform mutations and subscriptions to queries
-                // (only once, thanks to this.transformCache).
-                query: this.getDocumentInfo(mutation.document).asQuery,
-                variables: mutation.variables,
-                optimistic: false,
-                returnPartialData: true,
-              });
-
-              if (diff.complete) {
-                result = { ...(result as FetchResult), data: diff.result };
-                if ("incremental" in result) {
-                  delete result.incremental;
-                }
-                if ("hasNext" in result) {
-                  delete result.hasNext;
-                }
-              }
-            }
-
-            // If we've received the whole response,
-            // either a SingleExecutionResult or the final ExecutionPatchResult,
-            // call the update function.
-            if (isFinalResult) {
-              update(cache as TCache, result as FetchResult<Unmasked<TData>>, {
-                context: mutation.context,
-                variables: mutation.variables,
-              });
-            }
-          }
-
-          // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
-          // shallow to allow rolling back optimistic evictions.
-          if (!skipCache && !mutation.keepRootFields && isFinalResult) {
-            cache.modify({
-              id: "ROOT_MUTATION",
-              fields(value, { fieldName, DELETE }) {
-                return fieldName === "__typename" ? value : DELETE;
-              },
-            });
-          }
-        },
-
-        include: mutation.refetchQueries,
-
-        // Write the final mutation.result to the root layer of the cache.
-        optimistic: false,
-
-        // Remove the corresponding optimistic layer at the same time as we
-        // write the final non-optimistic result.
-        removeOptimistic: mutation.removeOptimistic,
-
-        // Let the caller of client.mutate optionally determine the refetching
-        // behavior for watched queries after the mutation.update function runs.
-        // If no onQueryUpdated function was provided for this mutation, pass
-        // null instead of undefined to disable the default refetching behavior.
-        onQueryUpdated: mutation.onQueryUpdated || null,
-      }).forEach((result) => results.push(result));
-
-      if (mutation.awaitRefetchQueries || mutation.onQueryUpdated) {
-        // Returning a promise here makes the mutation await that promise, so we
-        // include results in that promise's work if awaitRefetchQueries or an
-        // onQueryUpdated function was specified.
-        return Promise.all(results).then(() => result);
-      }
-    }
-
-    return Promise.resolve(result);
-  }
-
-  public markMutationOptimistic<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
-    optimisticResponse: any,
-    mutation: {
-      mutationId: string;
-      document: DocumentNode;
-      variables?: TVariables;
-      fetchPolicy?: MutationFetchPolicy;
-      errorPolicy: ErrorPolicy;
-      context?: DefaultContext;
-      updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-      keepRootFields?: boolean;
-    }
-  ) {
-    const data =
-      typeof optimisticResponse === "function" ?
-        optimisticResponse(mutation.variables, { IGNORE })
-      : optimisticResponse;
-
-    if (data === IGNORE) {
-      return false;
-    }
-
-    this.cache.recordOptimisticTransaction((cache) => {
-      try {
-        this.markMutationResult<TData, TVariables, TCache>(
-          {
-            ...mutation,
-            result: { data },
-          },
-          cache
-        );
-      } catch (error) {
-        invariant.error(error);
-      }
-    }, mutation.mutationId);
-
-    return true;
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(

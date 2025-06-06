@@ -228,7 +228,6 @@ export class ObservableQuery<
     InteropObservable<ApolloQueryResult<MaybeMasked<TData>>>
 {
   public readonly options: ObservableQuery.Options<TData, TVariables>;
-  public readonly queryId: string;
   public readonly queryName?: string;
 
   /** @internal will be read and written from `QueryInfo` */
@@ -292,15 +291,12 @@ export class ObservableQuery<
     queryManager,
     options,
     transformedQuery = queryManager.transform(options.query),
-    queryId = queryManager.generateQueryId(),
   }: {
     queryManager: QueryManager;
     options: WatchQueryOptions<TVariables, TData>;
     transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
     queryId?: string;
   }) {
-    this.queryId = queryId;
-
     this.queryManager = queryManager;
 
     // active state
@@ -1497,7 +1493,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             document: this.query,
             data: result.data,
             fetchPolicy: this.options.fetchPolicy,
-            id: this.queryId,
+            cause: this,
           }),
         }
       : result;

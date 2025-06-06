@@ -527,7 +527,7 @@ export class ApolloClient implements DataProxy {
   >(
     options: SubscriptionOptions<TVariables, TData>
   ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
-    const id = this.queryManager.generateQueryId();
+    const cause = {};
 
     const observable =
       this.queryManager.startGraphQLSubscription<TData>(options);
@@ -539,7 +539,7 @@ export class ApolloClient implements DataProxy {
           document: options.query,
           data: result.data,
           fetchPolicy: options.fetchPolicy,
-          id,
+          cause,
         }),
       }))
     );
@@ -810,7 +810,7 @@ export class ApolloClient implements DataProxy {
    */
   public getObservableQueries(
     include: RefetchQueriesInclude = "active"
-  ): Map<string, ObservableQuery<any>> {
+  ): Set<ObservableQuery<any>> {
     return this.queryManager.getObservableQueries(include);
   }
 

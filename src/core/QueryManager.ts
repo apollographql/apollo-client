@@ -140,7 +140,12 @@ interface MaskFragmentOptions<TData> {
 interface MaskOperationOptions<TData> {
   document: DocumentNode;
   data: TData;
-  id: string;
+  /**
+   * Can be used to identify the cause to prevent warning for the same cause twice.
+   * This would be an object like e.g. an `ObervableQuery`.
+   * If the `cause` is not provided, we will warn every time.
+   */
+  cause?: object;
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
@@ -343,6 +348,7 @@ export class QueryManager {
     this.broadcastQueries();
 
     return new Promise((resolve, reject) => {
+      const cause = {};
       return this.getObservableFromLink<TData>(
         mutation,
         {
@@ -413,7 +419,7 @@ export class QueryManager {
                   document: mutation,
                   data: storeResult.data,
                   fetchPolicy,
-                  id: mutationId,
+                  cause,
                 }) as any,
               };
 
@@ -847,8 +853,7 @@ export class QueryManager {
     TData,
     TVars extends OperationVariables = OperationVariables,
   >(
-    options: QueryOptions<TVars, TData>,
-    queryId = this.generateQueryId()
+    options: QueryOptions<TVars, TData>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
 
@@ -861,7 +866,6 @@ export class QueryManager {
         document: query,
         data: value?.data,
         fetchPolicy: options.fetchPolicy,
-        id: queryId,
       }),
     }));
   }
@@ -914,7 +918,7 @@ export class QueryManager {
   public getObservableQueries(
     include: InternalRefetchQueriesInclude = "active"
   ) {
-    const queries = new Map<string, ObservableQuery<any>>();
+    const queries = new Set<ObservableQuery<any>>();
     const queryNames = new Map<string, string | undefined>();
     const queryNamesAndQueryStrings = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
@@ -935,10 +939,9 @@ export class QueryManager {
     }
 
     this.obsQueries.forEach((oq) => {
-      const queryId = oq.queryId;
       const document = print(this.transform(oq.options.query));
       if (include === "all") {
-        queries.set(queryId, oq);
+        queries.add(oq);
         return;
       }
 
@@ -956,7 +959,7 @@ export class QueryManager {
         (queryName && queryNamesAndQueryStrings.has(queryName)) ||
         (document && queryNamesAndQueryStrings.has(document))
       ) {
-        queries.set(queryId, oq);
+        queries.add(oq);
         if (queryName) queryNamesAndQueryStrings.set(queryName, true);
         if (document) queryNamesAndQueryStrings.set(document, true);
       }
@@ -971,7 +974,7 @@ export class QueryManager {
             fetchPolicy: "network-only",
           },
         });
-        queries.set(oq.queryId, oq);
+        queries.add(oq);
       });
     }
 
@@ -1003,7 +1006,7 @@ export class QueryManager {
     const observableQueryPromises: Promise<QueryResult<any>>[] = [];
 
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
-      (observableQuery, queryId) => {
+      (observableQuery) => {
         const { fetchPolicy } = observableQuery.options;
         if (
           includeStandby ||
@@ -1547,8 +1550,8 @@ export class QueryManager {
     ApolloCache,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
-    const includedQueriesById = new Map<
-      string,
+    const includedQueriesByOq = new Map<
+      ObservableQuery<any>,
       {
         oq: ObservableQuery<any>;
         lastDiff?: Cache.DiffResult<any>;
@@ -1557,9 +1560,9 @@ export class QueryManager {
     >();
 
     if (include) {
-      this.getObservableQueries(include).forEach((oq, queryId) => {
+      this.getObservableQueries(include).forEach((oq) => {
         const current = oq.getCurrentResult();
-        includedQueriesById.set(queryId, {
+        includedQueriesByOq.set(oq, {
           oq,
           lastDiff: {
             result: current?.data,
@@ -1625,7 +1628,7 @@ export class QueryManager {
               // Since we're about to handle this query now, remove it from
               // includedQueriesById, in case it was added earlier because of
               // options.include.
-              includedQueriesById.delete(oq.queryId);
+              includedQueriesByOq.delete(oq);
 
               let result: TResult | boolean | Promise<QueryResult<any>> =
                 onQueryUpdated(oq, diff, lastDiff);
@@ -1656,15 +1659,15 @@ export class QueryManager {
               // If we don't have an onQueryUpdated function, and onQueryUpdated
               // was not disabled by passing null, make sure this query is
               // "included" like any other options.include-specified query.
-              includedQueriesById.set(oq.queryId, { oq, lastDiff, diff });
+              includedQueriesByOq.set(oq, { oq, lastDiff, diff });
             }
           }
         },
       });
     }
 
-    if (includedQueriesById.size) {
-      includedQueriesById.forEach(({ oq, lastDiff, diff }, queryId) => {
+    if (includedQueriesByOq.size) {
+      includedQueriesByOq.forEach(({ oq, lastDiff, diff }) => {
         let result: TResult | boolean | Promise<QueryResult<any>> | undefined;
 
         // If onQueryUpdated is provided, we want to use it for all included
@@ -1703,7 +1706,7 @@ export class QueryManager {
     return results;
   }
 
-  private noCacheWarningsByQueryId = new Set<string>();
+  private noCacheWarningsByCause = new WeakSet<object>();
 
   public maskOperation<TData = unknown>(
     options: MaskOperationOptions<TData>
@@ -1711,17 +1714,16 @@ export class QueryManager {
     const { document, data } = options;
 
     if (__DEV__) {
-      const { fetchPolicy, id } = options;
+      const { fetchPolicy, cause = {} } = options;
       const operationType = getOperationDefinition(document)?.operation;
-      const operationId = (operationType?.[0] ?? "o") + id;
 
       if (
         this.dataMasking &&
         fetchPolicy === "no-cache" &&
         !isFullyUnmaskedOperation(document) &&
-        !this.noCacheWarningsByQueryId.has(operationId)
+        !this.noCacheWarningsByCause.has(cause)
       ) {
-        this.noCacheWarningsByQueryId.add(operationId);
+        this.noCacheWarningsByCause.add(cause);
 
         invariant.warn(
           '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',

@@ -11862,11 +11862,11 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   void refetch({ min: 12, max: 30 });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: mocks[0].result.data,
-    dataState: "complete",
+    data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.refetch,
-    previousData: undefined,
+    previousData: mocks[0].result.data,
     variables: { min: 12, max: 30 },
   });
 
@@ -11901,11 +11901,11 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   void refetch({ min: 30, max: 50 });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
-    dataState: "complete",
+    data: undefined,
+    dataState: "empty",
     loading: true,
     networkStatus: NetworkStatus.refetch,
-    previousData: mocks[0].result.data,
+    previousData: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
     variables: { min: 30, max: 50 },
   });
 
@@ -12143,7 +12143,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
     previousData: {
       character: { __typename: "Character", id: "1", name: "Spider-Cache" },
     },
-    variables: { id: "1" },
+    variables: { id: "2" },
   });
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
@@ -12151,12 +12151,12 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       character: { __typename: "Character", id: "2", name: "Black Widow" },
     },
     dataState: "complete",
-    loading: true,
-    networkStatus: NetworkStatus.setVariables,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
     previousData: {
-      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+      character: { __typename: "Character", id: "2", name: "Cached Widow" },
     },
-    variables: { id: "1" },
+    variables: { id: "2" },
   });
 
   await expect(takeSnapshot).not.toRerender();
@@ -12243,7 +12243,7 @@ test("renders loading states at appropriate times on next fetch after updating `
     data: { greeting: "Hello 2" },
     dataState: "complete",
     loading: true,
-    networkStatus: NetworkStatus.loading,
+    networkStatus: NetworkStatus.refetch,
     previousData: { greeting: "Hello 1" },
     variables: {},
   });

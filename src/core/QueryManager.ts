@@ -1122,6 +1122,24 @@ export class QueryManager {
     return makeObservable(variables);
   }
 
+  public removeQuery(queryId: string) {
+    // teardown all links
+    // Both `QueryManager.fetchRequest` and `QueryManager.query` create separate promises
+    // that each add their reject functions to fetchCancelFns.
+    // A query created with `QueryManager.query()` could trigger a `QueryManager.fetchRequest`.
+    // The same queryId could have two rejection fns for two promises
+    this.fetchCancelFns.delete(queryId);
+    if (this.queries.has(queryId)) {
+      const oq = this.queries.get(queryId)!.observableQuery;
+      if (oq) {
+        oq["resetNotifications"]();
+        oq["unsubscribeFromCache"]?.();
+        oq.stopPolling();
+      }
+      this.queries.delete(queryId);
+    }
+  }
+
   public broadcastQueries() {
     if (this.onBroadcast) this.onBroadcast();
     this.obsQueries.forEach((observableQuery) => observableQuery.notify());

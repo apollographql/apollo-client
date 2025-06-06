@@ -560,6 +560,8 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
         transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
         queryId?: string;
     });
+    // @internal @deprecated (undocumented)
+    applyOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     // Warning: (ae-forgotten-export) The symbol "FetchMoreQueryOptions" needs to be exported by the entry point index.d.ts
     fetchMore<TFetchData = TData, TFetchVars extends OperationVariables_2 = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
         updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
@@ -592,8 +594,6 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     // @internal @deprecated
     reset(): void;
     setVariables(variables: TVariables): Promise<QueryResult_2<TData>>;
-    // @internal @deprecated (undocumented)
-    silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
     stop(): void;
     stopPolling(): void;

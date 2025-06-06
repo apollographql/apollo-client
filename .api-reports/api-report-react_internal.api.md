@@ -188,8 +188,13 @@ const OBSERVED_CHANGED_OPTIONS: readonly ["context", "errorPolicy", "fetchPolicy
 // @public (undocumented)
 type ObservedOptions = Pick<WatchQueryOptions, (typeof OBSERVED_CHANGED_OPTIONS)[number]>;
 
+// @public (undocumented)
+const PRELOADED_QUERY_REF_BRAND: unique symbol;
+
 // @public
 export interface PreloadedQueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
+    // @internal @deprecated (undocumented)
+    [PRELOADED_QUERY_REF_BRAND]: typeof PRELOADED_QUERY_REF_BRAND;
 }
 
 // @public (undocumented)

@@ -149,9 +149,9 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     };
 
   toRerenderWithSimilarSnapshot: T extends RenderStream<infer Snapshot> ?
-    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
+    (options?: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
   : T extends SnapshotStream<infer Snapshot, any> ?
-    (options: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
+    (options?: ToRerenderWithSimilarSnapshotOptions<Snapshot>) => Promise<R>
   : {
       error: "matcher needs to be called on a `RenderStream` instance";
     };

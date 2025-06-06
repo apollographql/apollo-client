@@ -16,6 +16,16 @@ import { ObservableStream } from "@apollo/client/testing/internal";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 import { makeReference } from "@apollo/client/utilities/internal";
 
+import type { QueryManager } from "../core/QueryManager.js";
+
+const mutationByAccessIndex = (queryManager: QueryManager) => {
+  return new Proxy(queryManager.mutationStore!, {
+    get: (mutationStore, idx) => {
+      return mutationStore[Object.keys(mutationStore)[(idx as any) - 1]];
+    },
+  });
+};
+
 describe("optimistic mutation results", () => {
   const query = gql`
     query todoList {
@@ -360,8 +370,7 @@ describe("optimistic mutation results", () => {
               "Optimistically generated 2"
             );
 
-            // @ts-ignore
-            const latestState = queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(queryManager);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(true);
 
@@ -381,15 +390,14 @@ describe("optimistic mutation results", () => {
             );
 
             // @ts-ignore
-            const latestState = queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(queryManager);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(false);
 
             return res;
           });
 
-        // @ts-ignore
-        const mutationsState = queryManager.mutationStore!;
+        const mutationsState = mutationByAccessIndex(queryManager);
         expect(mutationsState[1].loading).toBe(true);
         expect(mutationsState[2].loading).toBe(true);
 
@@ -583,8 +591,7 @@ describe("optimistic mutation results", () => {
               "Optimistically generated 2"
             );
 
-            // @ts-ignore
-            const latestState = client.queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(client["queryManager"]);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(true);
 
@@ -603,16 +610,14 @@ describe("optimistic mutation results", () => {
               "Second mutation."
             );
 
-            // @ts-ignore
-            const latestState = client.queryManager.mutationStore!;
+            const latestState = mutationByAccessIndex(client["queryManager"]);
             expect(latestState[1].loading).toBe(false);
             expect(latestState[2].loading).toBe(false);
 
             return res;
           });
 
-        // @ts-ignore
-        const mutationsState = client.queryManager.mutationStore!;
+        const mutationsState = mutationByAccessIndex(client["queryManager"]);
         expect(mutationsState[1].loading).toBe(true);
         expect(mutationsState[2].loading).toBe(true);
 

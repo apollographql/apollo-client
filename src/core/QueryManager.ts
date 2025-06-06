@@ -311,7 +311,7 @@ export class QueryManager {
         error: null,
       } as MutationStoreValue);
 
-    const queryInfo = new QueryInfo({ queryManager: this });
+    const queryInfo = new QueryInfo(this);
 
     const isOptimistic =
       optimisticResponse &&
@@ -450,11 +450,8 @@ export class QueryManager {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
-    const queryInfo = new QueryInfo({
-      queryManager: this,
-    });
     return lastValueFrom(
-      this.fetchObservableWithInfo(queryInfo, options, {
+      this.fetchObservableWithInfo(options, {
         networkStatus,
       }).observable.pipe(
         filterMap((value) => {
@@ -802,7 +799,7 @@ export class QueryManager {
           extensions
         );
 
-        const queryInfo = new QueryInfo({ queryManager: this });
+        const queryInfo = new QueryInfo(this);
 
         restart = res;
         return observable.pipe(
@@ -1012,14 +1009,21 @@ export class QueryManager {
   }
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
-    queryInfo: QueryInfo,
-    cacheWriteBehavior: CacheWriteBehavior,
     options: {
       query: DocumentNode;
       variables: TVariables;
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+    },
+    {
+      queryInfo,
+      cacheWriteBehavior,
+      observableQuery,
+    }: {
+      queryInfo: QueryInfo;
+      cacheWriteBehavior: CacheWriteBehavior;
+      observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -1044,7 +1048,7 @@ export class QueryManager {
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.resetLastWrite();
-            queryInfo.observableQuery?.["resetNotifications"]();
+            observableQuery?.["resetNotifications"]();
             // Throwing here effectively calls observer.error.
             throw new CombinedGraphQLErrors(result);
           }
@@ -1096,7 +1100,7 @@ export class QueryManager {
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
           queryInfo.resetLastWrite();
-          queryInfo.observableQuery?.["resetNotifications"]();
+          observableQuery?.["resetNotifications"]();
           throw error;
         }
 
@@ -1119,7 +1123,6 @@ export class QueryManager {
   }
 
   public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
-    queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
     {
       // The initial networkStatus for this fetch, most often
@@ -1129,11 +1132,13 @@ export class QueryManager {
       query = options.query,
       fetchQueryOperator = (x) => x,
       onCacheHit = () => {},
+      observableQuery,
     }: {
       networkStatus?: NetworkStatus;
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
+      observableQuery?: ObservableQuery<TData, TVars> | undefined;
     }
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
@@ -1164,6 +1169,8 @@ export class QueryManager {
       context,
     });
 
+    const queryInfo = new QueryInfo(this, observableQuery);
+
     const fromVariables = (variables: TVars) => {
       // Since normalized is always a fresh copy of options, it's safe to
       // modify its properties here, rather than creating yet another new
@@ -1181,10 +1188,8 @@ export class QueryManager {
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
-        queryInfo,
         normalized,
-        cacheWriteBehavior,
-        onCacheHit
+        { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
       );
       observableWithInfo.observable =
         observableWithInfo.observable.pipe(fetchQueryOperator);
@@ -1192,10 +1197,9 @@ export class QueryManager {
       if (
         // If we're in standby, postpone advancing options.fetchPolicy using
         // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby" &&
-        queryInfo.observableQuery
+        normalized.fetchPolicy !== "standby"
       ) {
-        queryInfo.observableQuery["applyNextFetchPolicy"](
+        observableQuery?.["applyNextFetchPolicy"](
           "after-fetch",
           options as any
         );
@@ -1477,7 +1481,6 @@ export class QueryManager {
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
-    queryInfo: QueryInfo,
     {
       query,
       variables,
@@ -1493,8 +1496,17 @@ export class QueryManager {
       returnPartialData?: boolean;
       context?: DefaultContext;
     },
-    cacheWriteBehavior: CacheWriteBehavior,
-    onCacheHit: () => void
+    {
+      cacheWriteBehavior,
+      onCacheHit,
+      queryInfo,
+      observableQuery,
+    }: {
+      cacheWriteBehavior: CacheWriteBehavior;
+      onCacheHit: () => void;
+      queryInfo: QueryInfo;
+      observableQuery: ObservableQuery<TData, TVars> | undefined;
+    }
   ): ObservableAndInfo<TData> {
     queryInfo.init({
       document: query,
@@ -1597,13 +1609,20 @@ export class QueryManager {
     };
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
-        query,
-        variables,
-        context,
-        fetchPolicy,
-        errorPolicy,
-      }).pipe(
+      this.getResultsFromLink<TData, TVars>(
+        {
+          query,
+          variables,
+          context,
+          fetchPolicy,
+          errorPolicy,
+        },
+        {
+          cacheWriteBehavior,
+          queryInfo,
+          observableQuery,
+        }
+      ).pipe(
         validateDidEmitValue(),
         materialize(),
         map(

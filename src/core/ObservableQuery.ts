@@ -27,7 +27,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { LastWrite } from "./QueryInfo.js";
-import { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -1095,10 +1094,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     const initialFetchPolicy = this.options.fetchPolicy;
-    const queryInfo = new QueryInfo({
-      queryManager: this.queryManager,
-      observableQuery: this,
-    });
     options.context ??= {};
 
     let synchronouslyEmitted = false;
@@ -1146,9 +1141,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         });
 
     let { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
-      queryInfo,
       options,
-      { networkStatus, query: fetchQuery, onCacheHit, fetchQueryOperator }
+      {
+        networkStatus,
+        query: fetchQuery,
+        onCacheHit,
+        fetchQueryOperator,
+        observableQuery: this,
+      }
     );
 
     // track query and variables from the start of the operation

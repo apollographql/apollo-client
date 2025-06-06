@@ -95,17 +95,12 @@ export class QueryInfo {
     | "broadcastQueries"
   >;
   public queryId: string;
-  // TODO should be private
-  public readonly observableQuery?: ObservableQuery<any, any>;
+  private readonly observableQuery?: ObservableQuery<any, any>;
 
-  constructor({
-    queryManager,
-    observableQuery,
-  }: {
-    queryManager: QueryManager;
-    queryId?: string;
-    observableQuery?: ObservableQuery<any, any>;
-  }) {
+  constructor(
+    queryManager: QueryManager,
+    observableQuery?: ObservableQuery<any, any>
+  ) {
     const cache = (this.cache = queryManager.cache);
     this.queryId = queryManager.generateQueryId();
     this.observableQuery = observableQuery;
@@ -173,10 +168,6 @@ export class QueryInfo {
       equal(variables, lastWrite.variables) &&
       equal(result.data, lastWrite.result.data)
     );
-  }
-
-  resetDiff() {
-    this.lastDiff = void 0;
   }
 
   private lastDiff?: {

@@ -1457,7 +1457,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /**
-   * @internal
    * Tears down the `ObservableQuery` and stops all active operations by sending a `complete` notification.
    */
   public stop() {

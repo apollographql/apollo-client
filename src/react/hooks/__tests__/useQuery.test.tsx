@@ -11724,23 +11724,24 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot, rerender } =
-    await renderHookToSnapshotStream(
-      ({ errorPolicy }: { errorPolicy: ErrorPolicy }) =>
-        useQuery(query, {
-          // Use network-only to show no network requests are made between
-          // renders
-          fetchPolicy: "network-only",
-          errorPolicy,
-          variables: { id: "1" },
-        }),
-      {
-        initialProps: { errorPolicy: "none" },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+  const renderStream = await renderHookToSnapshotStream(
+    ({ errorPolicy }: { errorPolicy: ErrorPolicy }) =>
+      useQuery(query, {
+        // Use network-only to show no network requests are made between
+        // renders
+        fetchPolicy: "network-only",
+        errorPolicy,
+        variables: { id: "1" },
+      }),
+    {
+      initialProps: { errorPolicy: "none" },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -11764,16 +11765,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
 
   await rerender({ errorPolicy: "all" });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Man" },
-    },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: undefined,
-    variables: { id: "1" },
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   const { refetch } = getCurrentSnapshot();
   void refetch();
@@ -11831,17 +11823,16 @@ test("applies `context` on next fetch when it changes between renders", async ()
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot, rerender } =
-    await renderHookToSnapshotStream(
-      ({ context }) =>
-        useQuery(query, { context, fetchPolicy: "network-only" }),
-      {
-        initialProps: { context: { source: "initialHookValue" } },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+  const renderStream = await renderHookToSnapshotStream(
+    ({ context }) => useQuery(query, { context, fetchPolicy: "network-only" }),
+    {
+      initialProps: { context: { source: "initialHookValue" } },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -11863,14 +11854,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   await rerender({ context: { source: "rerender" } });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: { context: { source: "initialHookValue" } },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: undefined,
-    variables: {},
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
     data: { context: { source: "rerender" } },
@@ -11948,21 +11932,21 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot, rerender } =
-    await renderHookToSnapshotStream(
-      ({ refetchWritePolicy }) =>
-        useQuery(query, {
-          fetchPolicy: "network-only",
-          refetchWritePolicy,
-          variables: { min: 0, max: 12 },
-        }),
-      {
-        initialProps: { refetchWritePolicy: "merge" as RefetchWritePolicy },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+  const renderStream = await renderHookToSnapshotStream(
+    ({ refetchWritePolicy }) =>
+      useQuery(query, {
+        fetchPolicy: "network-only",
+        refetchWritePolicy,
+        variables: { min: 0, max: 12 },
+      }),
+    {
+      initialProps: { refetchWritePolicy: "merge" as RefetchWritePolicy },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -12016,14 +12000,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
 
   await rerender({ refetchWritePolicy: "overwrite" });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: mocks[0].result.data,
-    variables: { min: 12, max: 30 },
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   void refetch({ min: 30, max: 50 });
 
@@ -12120,7 +12097,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+  const renderStream = await renderHookToSnapshotStream(
     ({ id, returnPartialData }) =>
       useQuery(fullQuery, { returnPartialData, variables: { id } }),
     {
@@ -12130,6 +12107,8 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
       ),
     }
   );
+
+  const { takeSnapshot, rerender } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -12153,16 +12132,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
 
   await rerender({ id: "1", returnPartialData: true });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Doctor Strange" },
-    },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: undefined,
-    variables: { id: "1" },
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   await rerender({ id: "2", returnPartialData: true });
 
@@ -12220,7 +12190,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+  const renderStream = await renderHookToSnapshotStream(
     ({ id, fetchPolicy }) =>
       useQuery(query, { fetchPolicy, variables: { id } }),
     {
@@ -12233,6 +12203,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
       ),
     }
   );
+  const { takeSnapshot, rerender } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: {
@@ -12247,16 +12218,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
 
   await rerender({ id: "1", fetchPolicy: "cache-and-network" });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: {
-      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
-    },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: undefined,
-    variables: { id: "1" },
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   await rerender({ id: "2", fetchPolicy: "cache-and-network" });
 
@@ -12305,20 +12267,20 @@ test("renders loading states at appropriate times on next fetch after updating `
   });
 
   using _disabledAct = disableActEnvironment();
-  const { takeSnapshot, getCurrentSnapshot, rerender } =
-    await renderHookToSnapshotStream(
-      ({ notifyOnNetworkStatusChange }) =>
-        useQuery(query, {
-          notifyOnNetworkStatusChange,
-          fetchPolicy: "network-only",
-        }),
-      {
-        initialProps: { notifyOnNetworkStatusChange: false },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+  const renderStream = await renderHookToSnapshotStream(
+    ({ notifyOnNetworkStatusChange }) =>
+      useQuery(query, {
+        notifyOnNetworkStatusChange,
+        fetchPolicy: "network-only",
+      }),
+    {
+      initialProps: { notifyOnNetworkStatusChange: false },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
 
   await expect(takeSnapshot()).resolves.toStrictEqualTyped({
     data: undefined,
@@ -12353,14 +12315,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   await rerender({ notifyOnNetworkStatusChange: true });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: { greeting: "Hello 2" },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: { greeting: "Hello 1" },
-    variables: {},
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello 3" },
@@ -12386,14 +12341,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   await rerender({ notifyOnNetworkStatusChange: false });
 
-  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-    data: { greeting: "Hello 3" },
-    dataState: "complete",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    previousData: { greeting: "Hello 2" },
-    variables: {},
-  });
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
 
   await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
     data: { greeting: "Hello 4" },

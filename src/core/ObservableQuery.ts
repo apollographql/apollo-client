@@ -946,7 +946,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  public silentSetOptions(
+  public applyOptions(
     newOptions: Partial<ObservableQuery.Options<TData, TVariables>>
   ) {
     const mergedOptions = compact(this.options, newOptions || {});

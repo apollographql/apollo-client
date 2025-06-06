@@ -1508,10 +1508,6 @@ export class QueryManager {
       observableQuery: ObservableQuery<TData, TVars> | undefined;
     }
   ): ObservableAndInfo<TData> {
-    queryInfo.init({
-      document: query,
-      variables,
-    });
     const readCache = () =>
       this.cache.diff<any>({
         query,

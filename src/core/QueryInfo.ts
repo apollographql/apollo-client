@@ -81,10 +81,8 @@ function wrapDestructiveCacheMethod(
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
 export class QueryInfo {
-  document: DocumentNode | null = null;
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
-  variables?: Record<string, any>;
 
   private cache: ApolloCache;
   private queryManager: Pick<
@@ -117,16 +115,6 @@ export class QueryInfo {
       wrapDestructiveCacheMethod(cache, "modify");
       wrapDestructiveCacheMethod(cache, "reset");
     }
-  }
-
-  public init(query: {
-    document: DocumentNode;
-    variables: Record<string, any> | undefined;
-  }): this {
-    this.document = query.document;
-    this.variables = query.variables;
-
-    return this;
   }
 
   /** @internal
@@ -168,7 +156,7 @@ export class QueryInfo {
 
   public markResult<T>(
     result: FetchResult<T>,
-    document: DocumentNode,
+    query: DocumentNode,
     options: {
       variables: OperationVariables;
       errorPolicy: ErrorPolicy;
@@ -176,7 +164,7 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior
   ) {
     const diffOptions = {
-      query: this.document!,
+      query,
       variables: options.variables,
       returnPartialData: true,
       optimistic: true,
@@ -221,7 +209,7 @@ export class QueryInfo {
           update: (cache) => {
             if (this.shouldWrite(result, options.variables)) {
               cache.writeQuery({
-                query: document,
+                query: query,
                 data: result.data as Unmasked<any>,
                 variables: options.variables,
                 overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,

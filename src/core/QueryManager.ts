@@ -182,7 +182,7 @@ export class QueryManager {
    */
   public obsQueries = new Set<ObservableQuery<any, any>>();
 
-  // Maps from queryId strings to Promise rejection functions for
+  // Maps from queryInfo.id strings to Promise rejection functions for
   // currently active queries and fetches.
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
@@ -278,7 +278,7 @@ export class QueryManager {
       "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
     );
 
-    const mutationId = this.generateMutationId();
+    const queryInfo = new QueryInfo(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
@@ -304,21 +304,18 @@ export class QueryManager {
 
     const mutationStoreValue =
       this.mutationStore &&
-      (this.mutationStore[mutationId] = {
+      (this.mutationStore[queryInfo.id] = {
         mutation,
         variables,
         loading: true,
         error: null,
       } as MutationStoreValue);
 
-    const queryInfo = new QueryInfo(this);
-
     const isOptimistic =
       optimisticResponse &&
       queryInfo.markMutationOptimistic<TData, TVariables, TCache>(
         optimisticResponse,
         {
-          mutationId,
           document: mutation,
           variables,
           cacheWriteBehavior:
@@ -376,7 +373,6 @@ export class QueryManager {
               queryInfo.markMutationResult<TData, TVariables, TCache>(
                 storeResult,
                 {
-                  mutationId,
                   document: mutation,
                   variables,
                   cacheWriteBehavior:
@@ -389,7 +385,7 @@ export class QueryManager {
                   updateQueries,
                   awaitRefetchQueries,
                   refetchQueries,
-                  removeOptimistic: isOptimistic ? mutationId : void 0,
+                  removeOptimistic: isOptimistic ? queryInfo.id : void 0,
                   onQueryUpdated,
                   keepRootFields,
                 }
@@ -435,7 +431,7 @@ export class QueryManager {
             }
 
             if (isOptimistic) {
-              this.cache.removeOptimistic(mutationId);
+              this.cache.removeOptimistic(queryInfo.id);
             }
 
             this.broadcastQueries();
@@ -610,19 +606,9 @@ export class QueryManager {
     }));
   }
 
-  private queryIdCounter = 1;
-  public generateQueryId() {
-    return String(this.queryIdCounter++);
-  }
-
   private requestIdCounter = 1;
   public generateRequestId() {
     return this.requestIdCounter++;
-  }
-
-  private mutationIdCounter = 1;
-  public generateMutationId() {
-    return String(this.mutationIdCounter++);
   }
 
   public clearStore(
@@ -1220,9 +1206,9 @@ export class QueryManager {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
-      this.fetchCancelFns.delete(queryInfo.queryId);
+      this.fetchCancelFns.delete(queryInfo.id);
     };
-    this.fetchCancelFns.set(queryInfo.queryId, (error) => {
+    this.fetchCancelFns.set(queryInfo.id, (error) => {
       fetchCancelSubject.next({
         kind: "E",
         error,

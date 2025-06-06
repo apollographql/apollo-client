@@ -29,8 +29,6 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
-  FetchPolicy,
-  MutationFetchPolicy,
   MutationOptions,
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
@@ -82,6 +80,8 @@ function wrapDestructiveCacheMethod(
   }
 }
 
+const queryInfoIds = new WeakMap<QueryManager, number>();
+
 // A QueryInfo object represents a single network request, either initiated
 // from the QueryManager or from an ObservableQuery.
 // It will only ever be used for a single network call.
@@ -99,7 +99,7 @@ export class QueryInfo {
     | "getDocumentInfo"
     | "broadcastQueries"
   >;
-  public queryId: string;
+  public id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
 
   constructor(
@@ -107,7 +107,9 @@ export class QueryInfo {
     observableQuery?: ObservableQuery<any, any>
   ) {
     const cache = (this.cache = queryManager.cache);
-    this.queryId = queryManager.generateQueryId();
+    const id = (queryInfoIds.get(queryManager) || 0) + 1;
+    queryInfoIds.set(queryManager, id);
+    this.id = id + "";
     this.observableQuery = observableQuery;
     this.queryManager = queryManager;
 
@@ -295,7 +297,6 @@ export class QueryInfo {
   >(
     result: FetchResult<TData>,
     mutation: OperationInfo<TData, TVariables> & {
-      mutationId: string;
       context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -508,7 +509,6 @@ export class QueryInfo {
   >(
     optimisticResponse: any,
     mutation: OperationInfo<TData, TVariables> & {
-      mutationId: string;
       context?: DefaultContext;
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -534,7 +534,7 @@ export class QueryInfo {
       } catch (error) {
         invariant.error(error);
       }
-    }, mutation.mutationId);
+    }, this.id);
 
     return true;
   }

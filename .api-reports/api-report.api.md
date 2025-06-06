@@ -20,6 +20,7 @@ import type { NextNotification } from 'rxjs';
 import { Observable } from 'rxjs';
 import type { ObservableNotification } from 'rxjs';
 import type { Observer } from 'rxjs';
+import { OperationTypeNode } from 'graphql';
 import { resetCaches } from 'graphql-tag';
 import type { SelectionSetNode } from 'graphql';
 import type { Subscribable } from 'rxjs';
@@ -137,7 +138,7 @@ export class ApolloClient implements DataProxy {
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
     stop(): void;
-    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): Observable<SubscribeResult<MaybeMasked<TData>>>;
+    subscribe<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: SubscriptionOptions<TVariables, TData>): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>>;
     // (undocumented)
     version: string;
     watchFragment<TData = unknown, TVariables = OperationVariables>(options: WatchFragmentOptions<TData, TVariables>): Observable<WatchFragmentResult<TData>>;
@@ -2161,6 +2162,7 @@ class QueryManager {
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable<FetchResult<any>>;
+        restart?: () => void;
     }>;
     // (undocumented)
     get link(): ApolloLink;
@@ -2220,7 +2222,7 @@ class QueryManager {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): Observable<SubscribeResult<TData>>;
+    startGraphQLSubscription<TData = unknown>(options: SubscriptionOptions): SubscriptionObservable<SubscribeResult<TData>>;
     stop(): void;
     // (undocumented)
     transform(document: DocumentNode): DocumentNode;
@@ -2562,6 +2564,11 @@ export type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends Ope
     }): Unmasked<TData> | void;
 };
 
+// @public
+export interface SubscriptionObservable<T> extends Observable<T> {
+    restart: () => void;
+}
+
 // @public (undocumented)
 export type SubscriptionOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> = {
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -2598,6 +2605,8 @@ interface TransformCacheEntry {
     hasNonreactiveDirective: boolean;
     // (undocumented)
     nonReactiveQuery: DocumentNode;
+    // (undocumented)
+    operationType: OperationTypeNode | undefined;
     // (undocumented)
     serverQuery: DocumentNode | null;
 }

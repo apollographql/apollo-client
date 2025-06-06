@@ -10,6 +10,7 @@ import { MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   spyOnConsole,
+  wait,
 } from "@apollo/client/testing/internal";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
@@ -1077,6 +1078,62 @@ describe("@client @export tests", () => {
     await expect(stream).toEmitTypedValue({
       data: { currentUserId: 1, count: 1 },
     });
+    await expect(stream).toEmitTypedValue({
+      data: { currentUserId: 1, count: 2 },
+    });
+    await expect(stream).toComplete();
+  });
+
+  test("can use exported variables with restart function", async () => {
+    const subscription = gql`
+      subscription ($userId: ID!) {
+        currentUserId @client @export(as: "userId")
+        count(for: $userId)
+      }
+    `;
+
+    const onSubscribe = jest.fn();
+    const onUnsubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSubscribe);
+    link.onUnsubscribe(onUnsubscribe);
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      localState: new LocalState({
+        resolvers: {
+          Subscription: {
+            currentUserId: () => {
+              return 1;
+            },
+          },
+        },
+      }),
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    // Ensure we wait for the local resolver to run
+    await wait(0);
+
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+    expect(onUnsubscribe).not.toHaveBeenCalled();
+
+    link.simulateResult({ result: { data: { count: 1 } } });
+
+    await expect(stream).toEmitTypedValue({
+      data: { currentUserId: 1, count: 1 },
+    });
+
+    observable.restart();
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+
+    link.simulateResult({ result: { data: { count: 2 } } }, true);
+
     await expect(stream).toEmitTypedValue({
       data: { currentUserId: 1, count: 2 },
     });

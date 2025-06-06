@@ -26,7 +26,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import type { LastWrite } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -230,7 +229,7 @@ export class ObservableQuery<
   public readonly queryName?: string;
 
   /** @internal will be read and written from `QueryInfo` */
-  public _lastWrite?: LastWrite;
+  public _lastWrite?: unknown;
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw

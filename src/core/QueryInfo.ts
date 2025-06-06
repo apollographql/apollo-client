@@ -43,7 +43,7 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-export interface LastWrite {
+interface LastWrite {
   result: FetchResult<any>;
   variables: WatchQueryOptions["variables"];
   dmCount: number | undefined;
@@ -132,7 +132,7 @@ export class QueryInfo {
    */
   public _lastWrite?: LastWrite;
   private get lastWrite(): LastWrite | undefined {
-    return (this.observableQuery || this)._lastWrite;
+    return (this.observableQuery || this)._lastWrite as LastWrite | undefined;
   }
   private set lastWrite(value: LastWrite | undefined) {
     (this.observableQuery || this)._lastWrite = value;

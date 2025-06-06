@@ -11,6 +11,7 @@ import type {
 } from "@apollo/client";
 import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
+  getWrappedPromise,
   InternalQueryReference,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
@@ -104,6 +105,47 @@ export interface PreloadQueryFunction {
       [options?: PreloadQueryOptions<NoInfer<TVariables>>]
     : [options: PreloadQueryOptions<NoInfer<TVariables>>]
   ): PreloadedQueryRef<TData, TVariables, "complete" | "streaming">;
+
+  /**
+   * A function that returns a promise that resolves when the query has finished
+   * loading. The promise resolves with the `QueryReference` itself.
+   *
+   * @remarks
+   * This method is useful for preloading queries in data loading routers, such
+   * as [React Router](https://reactrouter.com/en/main) or [TanStack Router](https://tanstack.com/router),
+   * to prevent routes from transitioning until the query has finished loading.
+   * `data` is not exposed on the promise to discourage using the data in
+   * `loader` functions and exposing it to your route components. Instead, we
+   * prefer you rely on `useReadQuery` to access the data to ensure your
+   * component can rerender with cache updates. If you need to access raw query
+   * data, use `client.query()` directly.
+   *
+   * @example
+   * Here's an example using React Router's `loader` function:
+   * ```ts
+   * import { createQueryPreloader } from "@apollo/client";
+   *
+   * const preloadQuery = createQueryPreloader(client);
+   *
+   * export async function loader() {
+   *   const queryRef = preloadQuery(GET_DOGS_QUERY);
+   *
+   *   return preloadQuery.toPromise(queryRef);
+   * }
+   *
+   * export function RouteComponent() {
+   *   const queryRef = useLoaderData();
+   *   const { data } = useReadQuery(queryRef);
+   *
+   *   // ...
+   * }
+   * ```
+   *
+   * @since 4.0.0
+   */
+  toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
+    queryRef: TQueryRef
+  ): Promise<TQueryRef>;
 }
 
 /**
@@ -135,7 +177,7 @@ export function createQueryPreloader(
 }
 
 const _createQueryPreloader: typeof createQueryPreloader = (client) => {
-  return function preloadQuery<
+  function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
@@ -156,5 +198,16 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
     );
 
     return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
-  };
+  }
+
+  return Object.assign(preloadQuery, {
+    toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
+      queryRef: TQueryRef
+    ) {
+      return getWrappedPromise(
+        // PreloadedQueryRef is a WrappedQueryRef
+        queryRef as any
+      ).then(() => queryRef);
+    },
+  });
 };

@@ -466,7 +466,7 @@ function useResubscribeIfNecessary<
     if (shouldReobserve(observable[lastWatchOptions], watchQueryOptions)) {
       observable.reobserve(watchQueryOptions);
     } else {
-      observable.silentSetOptions(watchQueryOptions);
+      observable.applyOptions(watchQueryOptions);
     }
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,

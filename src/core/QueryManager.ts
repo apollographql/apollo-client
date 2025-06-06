@@ -1530,8 +1530,8 @@ export class QueryManager {
       // erroring either of them will complete the merged obserable.
       observable: new Observable<QueryNotification.Value<TData>>((observer) => {
         observer.add(cleanupCancelFn);
-        observer.add(observable.subscribe(observer));
-        observer.add(fetchCancelSubject.subscribe(observer));
+        observable.subscribe(observer);
+        fetchCancelSubject.subscribe(observer);
       }).pipe(share()),
       fromLink: containsDataFromLink,
     };

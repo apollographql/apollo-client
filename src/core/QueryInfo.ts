@@ -118,7 +118,7 @@ export class QueryInfo {
     this.queryManager = queryManager;
 
     // Track how often cache.evict is called, since we want eviction to
-    // override the feud-stopping logic in the markResult method, by
+    // override the feud-stopping logic in the markQueryResult method, by
     // causing shouldWrite to return true. Wrapping the cache.evict method
     // is a bit of a hack, but it saves us from having to make eviction
     // counting an official part of the ApolloCache API.
@@ -167,7 +167,7 @@ export class QueryInfo {
     options: Cache.DiffOptions;
   };
 
-  public markResult<TData, TVariables extends OperationVariables>(
+  public markQueryResult<TData, TVariables extends OperationVariables>(
     result: FetchResult<TData>,
     {
       document: query,

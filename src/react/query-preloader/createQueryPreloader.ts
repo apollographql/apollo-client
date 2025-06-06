@@ -11,6 +11,7 @@ import type {
 } from "@apollo/client";
 import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
+  assertWrappedQueryRef,
   getWrappedPromise,
   InternalQueryReference,
   wrapQueryRef,
@@ -204,10 +205,8 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
     toPromise<TQueryRef extends PreloadedQueryRef<any, any, any>>(
       queryRef: TQueryRef
     ) {
-      return getWrappedPromise(
-        // PreloadedQueryRef is a WrappedQueryRef
-        queryRef as any
-      ).then(() => queryRef);
+      assertWrappedQueryRef(queryRef);
+      return getWrappedPromise(queryRef).then(() => queryRef);
     },
   });
 };

@@ -1560,7 +1560,7 @@ export class QueryManager {
     >();
 
     if (include) {
-      this.getObservableQueries(include).forEach((oq, queryId) => {
+      this.getObservableQueries(include).forEach((oq) => {
         const current = oq.getCurrentResult();
         includedQueriesByOq.set(oq, {
           oq,

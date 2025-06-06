@@ -25,9 +25,11 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  TypedDocumentNode,
 } from "./types.js";
 import type {
   ErrorPolicy,
+  FetchPolicy,
   MutationFetchPolicy,
   MutationOptions,
   WatchQueryOptions,
@@ -87,7 +89,10 @@ export class QueryInfo {
   private cache: ApolloCache;
   private queryManager: Pick<
     QueryManager,
-    "getObservableQueries" | "refetchQueries" | "getDocumentInfo"
+    | "getObservableQueries"
+    | "refetchQueries"
+    | "getDocumentInfo"
+    | "broadcastQueries"
   >;
   public queryId: string;
   // TODO should be private
@@ -562,6 +567,33 @@ export class QueryInfo {
 
     return true;
   }
+
+  public markSubscriptionResult<TData, TVariables extends OperationVariables>({
+    result,
+    document,
+    variables,
+    errorPolicy,
+    fetchPolicy,
+  }: {
+    result: FetchResult<TData>;
+    document: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    variables: TVariables;
+    fetchPolicy?: FetchPolicy;
+    errorPolicy: ErrorPolicy;
+  }) {
+    if (fetchPolicy !== "no-cache") {
+      if (shouldWriteResult(result, errorPolicy)) {
+        this.cache.write({
+          query: document,
+          result: result.data as any,
+          dataId: "ROOT_SUBSCRIPTION",
+          variables: variables,
+        });
+      }
+
+      this.queryManager.broadcastQueries();
+    }
+  }
 }
 
 function handleIncrementalResult<T>(
@@ -583,7 +615,7 @@ function handleIncrementalResult<T>(
   }
 }
 
-export function shouldWriteResult<T>(
+function shouldWriteResult<T>(
   result: FetchResult<T>,
   errorPolicy: ErrorPolicy = "none"
 ) {

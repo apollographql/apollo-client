@@ -69,11 +69,7 @@ import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
-import {
-  CacheWriteBehavior,
-  QueryInfo,
-  shouldWriteResult,
-} from "./QueryInfo.js";
+import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
   ClientAwareness,
@@ -806,23 +802,18 @@ export class QueryManager {
           extensions
         );
 
+        const queryInfo = new QueryInfo({ queryManager: this });
+
         restart = res;
         return observable.pipe(
           map((rawResult): SubscribeResult<TData> => {
-            if (fetchPolicy !== "no-cache") {
-              // the subscription interface should handle not sending us results we no longer subscribe to.
-              // XXX I don't think we ever send in an object with errors, but we might in the future...
-              if (shouldWriteResult(rawResult, errorPolicy)) {
-                this.cache.write({
-                  query,
-                  result: rawResult.data,
-                  dataId: "ROOT_SUBSCRIPTION",
-                  variables: variables,
-                });
-              }
-
-              this.broadcastQueries();
-            }
+            queryInfo.markSubscriptionResult({
+              result: rawResult,
+              document: query,
+              variables,
+              errorPolicy,
+              fetchPolicy,
+            });
 
             const result: SubscribeResult<TData> = {
               data: rawResult.data ?? undefined,

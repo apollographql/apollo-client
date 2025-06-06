@@ -607,7 +607,6 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     // @internal @deprecated (undocumented)
     silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
-    // @internal @deprecated
     stop(): void;
     stopPolling(): void;
     // (undocumented)
@@ -1698,11 +1697,11 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:135:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:147:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:297:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:470:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:188:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:190:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:234:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:189:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:471:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:192:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:194:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts

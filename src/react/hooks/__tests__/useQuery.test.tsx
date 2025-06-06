@@ -12291,6 +12291,128 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("renders loading states at appropriate times on next fetch after updating `notifyOnNetworkStatusChange`", async () => {
+  const { query } = setupSimpleCase();
+
+  let count = 0;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: () => ({ data: { greeting: `Hello ${++count}` } }),
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ notifyOnNetworkStatusChange }) =>
+        useQuery(query, {
+          notifyOnNetworkStatusChange,
+          fetchPolicy: "network-only",
+        }),
+      {
+        initialProps: { notifyOnNetworkStatusChange: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 1" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 1" },
+    variables: {},
+  });
+
+  await rerender({ notifyOnNetworkStatusChange: true });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 1" },
+    variables: {},
+  });
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 3" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: { greeting: "Hello 1" },
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 3" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 2" },
+    variables: {},
+  });
+
+  await rerender({ notifyOnNetworkStatusChange: false });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 3" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 2" },
+    variables: {},
+  });
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 4" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 4" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 3" },
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 describe.skip("Type Tests", () => {
   test("returns narrowed TData in default case", () => {
     const { query } = setupSimpleCase();

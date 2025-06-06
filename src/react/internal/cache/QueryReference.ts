@@ -39,6 +39,7 @@ const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol.for(
 );
 const PROMISE_SYMBOL: unique symbol = Symbol.for("apollo.internal.refPromise");
 declare const QUERY_REF_BRAND: unique symbol;
+declare const PRELOADED_QUERY_REF_BRAND: unique symbol;
 /**
  * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
  * A child component reading the `QueryReference` via `useReadQuery` will
@@ -75,7 +76,10 @@ export interface PreloadedQueryRef<
   TData = unknown,
   TVariables = unknown,
   TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
-> extends QueryRef<TData, TVariables, TStates> {}
+> extends QueryRef<TData, TVariables, TStates> {
+  /** @internal */
+  [PRELOADED_QUERY_REF_BRAND]: typeof PRELOADED_QUERY_REF_BRAND;
+}
 
 interface InternalQueryReferenceOptions {
   onDispose?: () => void;

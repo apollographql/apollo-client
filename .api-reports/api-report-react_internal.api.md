@@ -190,7 +190,6 @@ type ObservedOptions = Pick<WatchQueryOptions, (typeof OBSERVED_CHANGED_OPTIONS)
 
 // @public
 export interface PreloadedQueryRef<TData = unknown, TVariables = unknown, TStates extends DataState<TData>["dataState"] = "complete" | "streaming"> extends QueryRef<TData, TVariables, TStates> {
-    toPromise(): Promise<PreloadedQueryRef<TData, TVariables, TStates>>;
 }
 
 // @public (undocumented)
@@ -284,8 +283,6 @@ interface WrappedQueryRef<TData = unknown, TVariables = unknown, TStates extends
     [PROMISE_SYMBOL]: QueryRefPromise<TData, TStates>;
     // @deprecated (undocumented)
     readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TStates>;
-    // @deprecated (undocumented)
-    toPromise?(): Promise<unknown>;
 }
 
 // @public (undocumented)

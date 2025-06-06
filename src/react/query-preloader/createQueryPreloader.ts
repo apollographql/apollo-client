@@ -198,7 +198,10 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
       }
     );
 
-    return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
+    return wrapQueryRef(queryRef) as unknown as PreloadedQueryRef<
+      TData,
+      TVariables
+    >;
   }
 
   return Object.assign(preloadQuery, {

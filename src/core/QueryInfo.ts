@@ -222,7 +222,7 @@ export class QueryInfo {
           update: (cache) => {
             if (this.shouldWrite(result, variables)) {
               cache.writeQuery({
-                query: query,
+                query,
                 data: result.data as Unmasked<any>,
                 variables,
                 overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,

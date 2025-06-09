@@ -941,13 +941,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   /** @internal */
   public applyOptions(
     newOptions: Partial<ObservableQuery.Options<TData, TVariables>>
-  ) {
+  ): void {
+    if (
+      this.options.fetchPolicy !== "standby" &&
+      newOptions.fetchPolicy === "standby"
+    ) {
+      this._reobserve(newOptions);
+      return;
+    }
+
     const mergedOptions = compact(this.options, newOptions || {});
     assign(this.options, mergedOptions);
-
-    if (this.options.fetchPolicy === "standby") {
-      this.cancelPolling();
-    }
   }
 
   /**

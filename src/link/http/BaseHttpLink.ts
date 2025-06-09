@@ -1,14 +1,13 @@
-import type { DefinitionNode } from "graphql";
 import { Observable } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
-import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
-  compact,
-  getMainDefinition,
-  hasDirectives,
-} from "@apollo/client/utilities/internal";
+  isMutationOperation,
+  isSubscriptionOperation,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -91,42 +90,37 @@ export class BaseHttpLink extends ApolloLink {
       }
 
       // If requested, set method to GET if there are no mutations.
-      const definitionIsMutation = (d: DefinitionNode) => {
-        return d.kind === "OperationDefinition" && d.operation === "mutation";
-      };
-      const definitionIsSubscription = (d: DefinitionNode) => {
-        return (
-          d.kind === "OperationDefinition" && d.operation === "subscription"
-        );
-      };
-      const isSubscription = definitionIsSubscription(
-        getMainDefinition(operation.query)
-      );
-      // does not match custom directives beginning with @defer
-      const hasDefer = hasDirectives(["defer"], operation.query);
-      if (
-        useGETForQueries &&
-        !operation.query.definitions.some(definitionIsMutation)
-      ) {
+      const definitionIsMutation = isMutationOperation(operation.query);
+      const isSubscription = isSubscriptionOperation(operation.query);
+      if (useGETForQueries && !definitionIsMutation) {
         options.method = "GET";
       }
 
-      if (hasDefer || isSubscription) {
+      if (isSubscription) {
         options.headers = options.headers || {};
-        let acceptHeader = "multipart/mixed;";
-        // Omit defer-specific headers if the user attempts to defer a selection
-        // set on a subscription and log a warning.
-        if (isSubscription && hasDefer) {
-          invariant.warn("Multipart-subscriptions do not support @defer");
+        const subscriptionAcceptHeader =
+          "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json";
+        if (true) {
+          const defaultAcceptHeader =
+            linkOptions.headers?.accept || fallbackHttpConfig.headers.accept;
+          const configuredAcceptHeader = options.headers.accept;
+          if (
+            configuredAcceptHeader !== defaultAcceptHeader &&
+            !configuredAcceptHeader.includes("subscriptionSpec=1.0")
+          ) {
+            invariant.warn(
+              `
+Accept header value
+"${subscriptionAcceptHeader}"
+is not supported with multipart subscriptions over HTTP and will be overwritten with
+"${defaultAcceptHeader}".
+Are you trying to combine multipart subscriptions with @defer?
+`.trim()
+            );
+          }
         }
 
-        if (isSubscription) {
-          acceptHeader +=
-            "boundary=graphql;subscriptionSpec=1.0,application/json";
-        } else if (hasDefer) {
-          acceptHeader += "deferSpec=20220824,application/json";
-        }
-        options.headers.accept = acceptHeader;
+        options.headers.accept = subscriptionAcceptHeader;
       }
 
       return new Observable((observer) => {

@@ -5,11 +5,16 @@ import type { ASTNode } from "graphql";
 import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
-import { map, Observable } from "rxjs";
+import { map, Observable, Subject, tap } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import type { FetchResult } from "@apollo/client";
-import { ServerError, version } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  ServerError,
+  version,
+} from "@apollo/client";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
@@ -1497,7 +1502,7 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      it("sets correct accept header on request with deferred query", async () => {
+      it("sets correct accept header on request with deferred query when used with InMemoryCache", async () => {
         const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
@@ -1507,9 +1512,17 @@ describe("HttpLink", () => {
             headers: { "content-type": "multipart/mixed" },
           });
         });
-        const link = new HttpLink({ fetch });
-        const observable = execute(link, { query: sampleDeferredQuery });
-        const observableStream = new ObservableStream(observable);
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+        });
+
+        void client.query({ query: sampleDeferredQuery });
 
         await expect(observableStream).toEmitTypedValue({
           data: { stub: { id: "0" } },
@@ -1707,13 +1720,24 @@ describe("HttpLink", () => {
 
         const link = new HttpLink({ fetch });
 
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+        });
+
         const warningSpy = jest
           .spyOn(console, "warn")
           .mockImplementation(() => {});
-        execute(link, { query: sampleSubscriptionWithDefer });
+        void client
+          .subscribe({ query: sampleSubscriptionWithDefer })
+          .subscribe({});
         expect(warningSpy).toHaveBeenCalledTimes(1);
         expect(warningSpy).toHaveBeenCalledWith(
-          "Multipart-subscriptions do not support @defer"
+          `Accept header value
+"multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json"
+is not supported with multipart subscriptions over HTTP and will be overwritten with
+"application/graphql-response+json,application/json;q=0.9".
+Are you trying to combine multipart subscriptions with @defer?`
         );
         warningSpy.mockRestore();
       });
@@ -2080,3 +2104,23 @@ describe("HttpLink", () => {
     });
   });
 });
+
+function pipeLinkToObservableStream(link: ApolloLink) {
+  const sink = new Subject<FetchResult>();
+  const observableStream = new ObservableStream(sink);
+  const pipedLink = new ApolloLink((operation, forward) =>
+    forward(operation).pipe(
+      tap({
+        next: (result) => {
+          sink.next(structuredClone(result));
+        },
+        error: sink.error.bind(sink),
+        complete: sink.complete.bind(sink),
+      })
+    )
+  ).concat(link);
+  return {
+    observableStream,
+    link: pipedLink,
+  };
+}

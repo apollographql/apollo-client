@@ -1,7 +1,7 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
-import type { ObservableQuery } from "@apollo/client";
+import type { HttpLink, ObservableQuery } from "@apollo/client";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult, GraphQLRequest } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
@@ -9,6 +9,7 @@ import {
   DeepMerger,
   getOperationName,
   graphQLResultHasError,
+  hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   isNonEmptyArray,
@@ -122,8 +123,15 @@ export class MergeStrategy implements Cache.MergeStrategy {
       wrapDestructiveCacheMethod(cache, "reset");
     }
   }
+
   prepareRequest(request: GraphQLRequest) {
-    // TODO
+    if (hasDirectives(["defer"], request.query)) {
+      const typedContext = request.context as HttpLink.ContextOptions;
+      typedContext.headers = {
+        ...typedContext.headers,
+        accept: "multipart/mixed;deferSpec=20220824,application/json",
+      };
+    }
   }
 
   /** @internal

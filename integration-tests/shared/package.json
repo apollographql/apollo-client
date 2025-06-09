@@ -2,6 +2,7 @@
   "name": "shared",
   "license": "UNLICENSED",
   "peerDependencies": {
-    "@playwright/test": "*"
+    "@playwright/test": "*",
+    "@apollo/client": "*"
   }
 }

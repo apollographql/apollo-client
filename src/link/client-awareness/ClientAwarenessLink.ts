@@ -56,8 +56,8 @@ export class ClientAwarenessLink extends ApolloLink {
         enhancedClientAwareness = "extensions",
       } = {
         ...clientOptions,
-        ...context.clientAwareness,
         ...constructorOptions,
+        ...context.clientAwareness,
       };
       if (clientAwareness === "headers") {
         operation.setContext(({ headers, extensions }) => {

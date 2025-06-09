@@ -1,4 +1,6 @@
 import { test as base, expect } from "@playwright/test";
+import pkg from "@apollo/client/package.json" with { type: "json" };
+import { readFile, writeFile } from "node:fs/promises";
 
 export const test = base.extend<{
   withHar: import("@playwright/test").Page;
@@ -11,6 +13,10 @@ export const test = base.extend<{
     await use(page);
   },
   withHar: async ({ page }, use) => {
+    let contents = await readFile("../api.har", "utf-8");
+    contents = contents.replace("__VERSION__", pkg.version);
+    await writeFile("../api.har", contents, "utf-8");
+
     await page.routeFromHAR("../api.har", {
       url: "**/graphql",
       notFound: "abort",

@@ -1,5 +1,5 @@
 import { test as base, expect } from "@playwright/test";
-import pkg from "@apollo/client/package.json" with { type: "json" };
+import { version } from "@apollo/client";
 import { readFile, writeFile } from "node:fs/promises";
 
 export const test = base.extend<{
@@ -14,7 +14,7 @@ export const test = base.extend<{
   },
   withHar: async ({ page }, use) => {
     let contents = await readFile("../api.har", "utf-8");
-    contents = contents.replace("__VERSION__", pkg.version);
+    contents = contents.replace("__VERSION__", version);
     await writeFile("../api.har", contents, "utf-8");
 
     await page.routeFromHAR("../api.har", {

@@ -43,9 +43,6 @@ export class ClientAwarenessLink extends ApolloLink {
   constructor(constructorOptions?: ClientAwarenessLink.Options) {
     super((operation, forward) => {
       const client = operation.client;
-      if (!client) {
-        return forward(operation);
-      }
 
       const clientOptions = client["queryManager"].clientOptions;
       const context = operation.getContext();

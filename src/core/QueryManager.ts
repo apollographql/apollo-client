@@ -53,12 +53,9 @@ import {
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
-  isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-  isNonEmptyArray,
   isNonNullObject,
   makeUniqueId,
-  mergeIncrementalData,
   removeDirectivesFromDocument,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
@@ -67,17 +64,12 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { IgnoreModifier } from "../cache/core/types/common.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
-import {
-  CacheWriteBehavior,
-  QueryInfo,
-  shouldWriteResult,
-} from "./QueryInfo.js";
+import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
   ClientAwareness,
@@ -87,8 +79,6 @@ import type {
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
   MutateResult,
-  MutationUpdaterFunction,
-  OnQueryUpdated,
   OperationVariables,
   QueryNotification,
   QueryResult,
@@ -98,7 +88,6 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
-  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -106,18 +95,12 @@ import type {
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
-const { hasOwnProperty } = Object.prototype;
-
-const IGNORE = {} as IgnoreModifier;
-
 interface MutationStoreValue {
   mutation: DocumentNode;
   variables: Record<string, any>;
   loading: boolean;
   error: Error | null;
 }
-
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 interface TransformCacheEntry {
   hasClientExports: boolean;
@@ -199,7 +182,7 @@ export class QueryManager {
    */
   public obsQueries = new Set<ObservableQuery<any, any>>();
 
-  // Maps from queryId strings to Promise rejection functions for
+  // Maps from queryInfo.id strings to Promise rejection functions for
   // currently active queries and fetches.
   // Use protected instead of private field so
   // @apollo/experimental-nextjs-app-support can access type info.
@@ -295,7 +278,7 @@ export class QueryManager {
       "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
     );
 
-    const mutationId = this.generateMutationId();
+    const queryInfo = new QueryInfo(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
@@ -321,7 +304,7 @@ export class QueryManager {
 
     const mutationStoreValue =
       this.mutationStore &&
-      (this.mutationStore[mutationId] = {
+      (this.mutationStore[queryInfo.id] = {
         mutation,
         variables,
         loading: true,
@@ -330,13 +313,15 @@ export class QueryManager {
 
     const isOptimistic =
       optimisticResponse &&
-      this.markMutationOptimistic<TData, TVariables, TCache>(
+      queryInfo.markMutationOptimistic<TData, TVariables, TCache>(
         optimisticResponse,
         {
-          mutationId,
           document: mutation,
           variables,
-          fetchPolicy,
+          cacheWriteBehavior:
+            fetchPolicy === "no-cache" ?
+              CacheWriteBehavior.FORBID
+            : CacheWriteBehavior.MERGE,
           errorPolicy,
           context,
           updateQueries,
@@ -385,22 +370,26 @@ export class QueryManager {
             }
 
             return from(
-              this.markMutationResult<TData, TVariables, TCache>({
-                mutationId,
-                result: storeResult,
-                document: mutation,
-                variables,
-                fetchPolicy,
-                errorPolicy,
-                context,
-                update: updateWithProxyFn,
-                updateQueries,
-                awaitRefetchQueries,
-                refetchQueries,
-                removeOptimistic: isOptimistic ? mutationId : void 0,
-                onQueryUpdated,
-                keepRootFields,
-              })
+              queryInfo.markMutationResult<TData, TVariables, TCache>(
+                storeResult,
+                {
+                  document: mutation,
+                  variables,
+                  cacheWriteBehavior:
+                    fetchPolicy === "no-cache" ?
+                      CacheWriteBehavior.FORBID
+                    : CacheWriteBehavior.MERGE,
+                  errorPolicy,
+                  context,
+                  update: updateWithProxyFn,
+                  updateQueries,
+                  awaitRefetchQueries,
+                  refetchQueries,
+                  removeOptimistic: isOptimistic ? queryInfo.id : void 0,
+                  onQueryUpdated,
+                  keepRootFields,
+                }
+              )
             );
           })
         )
@@ -442,7 +431,7 @@ export class QueryManager {
             }
 
             if (isOptimistic) {
-              this.cache.removeOptimistic(mutationId);
+              this.cache.removeOptimistic(queryInfo.id);
             }
 
             this.broadcastQueries();
@@ -461,265 +450,12 @@ export class QueryManager {
     });
   }
 
-  public markMutationResult<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
-    mutation: {
-      mutationId: string;
-      result: FetchResult<TData>;
-      document: DocumentNode;
-      variables?: TVariables;
-      fetchPolicy?: MutationFetchPolicy;
-      errorPolicy: ErrorPolicy;
-      context?: DefaultContext;
-      updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-      awaitRefetchQueries?: boolean;
-      refetchQueries?: InternalRefetchQueriesInclude;
-      removeOptimistic?: string;
-      onQueryUpdated?: OnQueryUpdated<any>;
-      keepRootFields?: boolean;
-    },
-    cache = this.cache
-  ): Promise<FetchResult<TData>> {
-    let { result } = mutation;
-    const cacheWrites: Cache.WriteOptions[] = [];
-    const skipCache = mutation.fetchPolicy === "no-cache";
-
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
-      if (!isExecutionPatchIncrementalResult(result)) {
-        cacheWrites.push({
-          result: result.data,
-          dataId: "ROOT_MUTATION",
-          query: mutation.document,
-          variables: mutation.variables,
-        });
-      }
-      if (
-        isExecutionPatchIncrementalResult(result) &&
-        isNonEmptyArray(result.incremental)
-      ) {
-        const diff = cache.diff<TData>({
-          id: "ROOT_MUTATION",
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.getDocumentInfo(mutation.document).asQuery,
-          variables: mutation.variables,
-          optimistic: false,
-          returnPartialData: true,
-        });
-        let mergedData;
-        if (diff.result) {
-          mergedData = mergeIncrementalData(diff.result, result);
-        }
-        if (typeof mergedData !== "undefined") {
-          // cast the ExecutionPatchResult to FetchResult here since
-          // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult).data = mergedData;
-          cacheWrites.push({
-            result: mergedData,
-            dataId: "ROOT_MUTATION",
-            query: mutation.document,
-            variables: mutation.variables,
-          });
-        }
-      }
-
-      const { updateQueries } = mutation;
-      if (updateQueries) {
-        this.obsQueries.forEach((observableQuery) => {
-          const queryName = observableQuery && observableQuery.queryName;
-          if (!queryName || !hasOwnProperty.call(updateQueries, queryName)) {
-            return;
-          }
-          const updater = updateQueries[queryName];
-          const { query: document, variables } = observableQuery;
-
-          // Read the current query result from the store.
-          const { result: currentQueryResult, complete } =
-            observableQuery.getCacheDiff({ optimistic: false });
-
-          if (complete && currentQueryResult) {
-            // Run our reducer using the current query result and the mutation result.
-            const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: result as FetchResult<Unmasked<TData>>,
-              queryName: (document && getOperationName(document)) || void 0,
-              queryVariables: variables!,
-            });
-
-            // Write the modified result back into the store if we got a new result.
-            if (nextQueryResult) {
-              cacheWrites.push({
-                result: nextQueryResult,
-                dataId: "ROOT_QUERY",
-                query: document!,
-                variables,
-              });
-            }
-          }
-        });
-      }
-    }
-
-    if (
-      cacheWrites.length > 0 ||
-      (mutation.refetchQueries || "").length > 0 ||
-      mutation.update ||
-      mutation.onQueryUpdated ||
-      mutation.removeOptimistic
-    ) {
-      const results: any[] = [];
-
-      this.refetchQueries({
-        updateCache: (cache) => {
-          if (!skipCache) {
-            cacheWrites.forEach((write) => cache.write(write));
-          }
-
-          // If the mutation has some writes associated with it then we need to
-          // apply those writes to the store by running this reducer again with
-          // a write action.
-          const { update } = mutation;
-          // Determine whether result is a SingleExecutionResult,
-          // or the final ExecutionPatchResult.
-          const isFinalResult =
-            !isExecutionPatchResult(result) ||
-            (isExecutionPatchIncrementalResult(result) && !result.hasNext);
-
-          if (update) {
-            if (!skipCache) {
-              // Re-read the ROOT_MUTATION data we just wrote into the cache
-              // (the first cache.write call in the cacheWrites.forEach loop
-              // above), so field read functions have a chance to run for
-              // fields within mutation result objects.
-              const diff = cache.diff<TData>({
-                id: "ROOT_MUTATION",
-                // The cache complains if passed a mutation where it expects a
-                // query, so we transform mutations and subscriptions to queries
-                // (only once, thanks to this.transformCache).
-                query: this.getDocumentInfo(mutation.document).asQuery,
-                variables: mutation.variables,
-                optimistic: false,
-                returnPartialData: true,
-              });
-
-              if (diff.complete) {
-                result = { ...(result as FetchResult), data: diff.result };
-                if ("incremental" in result) {
-                  delete result.incremental;
-                }
-                if ("hasNext" in result) {
-                  delete result.hasNext;
-                }
-              }
-            }
-
-            // If we've received the whole response,
-            // either a SingleExecutionResult or the final ExecutionPatchResult,
-            // call the update function.
-            if (isFinalResult) {
-              update(cache as TCache, result as FetchResult<Unmasked<TData>>, {
-                context: mutation.context,
-                variables: mutation.variables,
-              });
-            }
-          }
-
-          // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
-          // shallow to allow rolling back optimistic evictions.
-          if (!skipCache && !mutation.keepRootFields && isFinalResult) {
-            cache.modify({
-              id: "ROOT_MUTATION",
-              fields(value, { fieldName, DELETE }) {
-                return fieldName === "__typename" ? value : DELETE;
-              },
-            });
-          }
-        },
-
-        include: mutation.refetchQueries,
-
-        // Write the final mutation.result to the root layer of the cache.
-        optimistic: false,
-
-        // Remove the corresponding optimistic layer at the same time as we
-        // write the final non-optimistic result.
-        removeOptimistic: mutation.removeOptimistic,
-
-        // Let the caller of client.mutate optionally determine the refetching
-        // behavior for watched queries after the mutation.update function runs.
-        // If no onQueryUpdated function was provided for this mutation, pass
-        // null instead of undefined to disable the default refetching behavior.
-        onQueryUpdated: mutation.onQueryUpdated || null,
-      }).forEach((result) => results.push(result));
-
-      if (mutation.awaitRefetchQueries || mutation.onQueryUpdated) {
-        // Returning a promise here makes the mutation await that promise, so we
-        // include results in that promise's work if awaitRefetchQueries or an
-        // onQueryUpdated function was specified.
-        return Promise.all(results).then(() => result);
-      }
-    }
-
-    return Promise.resolve(result);
-  }
-
-  public markMutationOptimistic<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
-    optimisticResponse: any,
-    mutation: {
-      mutationId: string;
-      document: DocumentNode;
-      variables?: TVariables;
-      fetchPolicy?: MutationFetchPolicy;
-      errorPolicy: ErrorPolicy;
-      context?: DefaultContext;
-      updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-      keepRootFields?: boolean;
-    }
-  ) {
-    const data =
-      typeof optimisticResponse === "function" ?
-        optimisticResponse(mutation.variables, { IGNORE })
-      : optimisticResponse;
-
-    if (data === IGNORE) {
-      return false;
-    }
-
-    this.cache.recordOptimisticTransaction((cache) => {
-      try {
-        this.markMutationResult<TData, TVariables, TCache>(
-          {
-            ...mutation,
-            result: { data },
-          },
-          cache
-        );
-      } catch (error) {
-        invariant.error(error);
-      }
-    }, mutation.mutationId);
-
-    return true;
-  }
-
   public fetchQuery<TData, TVars extends OperationVariables>(
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
-    const queryInfo = new QueryInfo({
-      queryManager: this,
-    });
     return lastValueFrom(
-      this.fetchObservableWithInfo(queryInfo, options, {
+      this.fetchObservableWithInfo(options, {
         networkStatus,
       }).observable.pipe(
         filterMap((value) => {
@@ -870,19 +606,9 @@ export class QueryManager {
     }));
   }
 
-  private queryIdCounter = 1;
-  public generateQueryId() {
-    return String(this.queryIdCounter++);
-  }
-
   private requestIdCounter = 1;
   public generateRequestId() {
     return this.requestIdCounter++;
-  }
-
-  private mutationIdCounter = 1;
-  public generateMutationId() {
-    return String(this.mutationIdCounter++);
   }
 
   public clearStore(
@@ -1067,23 +793,20 @@ export class QueryManager {
           extensions
         );
 
+        const queryInfo = new QueryInfo(this);
+
         restart = res;
         return observable.pipe(
           map((rawResult): SubscribeResult<TData> => {
-            if (fetchPolicy !== "no-cache") {
-              // the subscription interface should handle not sending us results we no longer subscribe to.
-              // XXX I don't think we ever send in an object with errors, but we might in the future...
-              if (shouldWriteResult(rawResult, errorPolicy)) {
-                this.cache.write({
-                  query,
-                  result: rawResult.data,
-                  dataId: "ROOT_SUBSCRIPTION",
-                  variables: variables,
-                });
-              }
-
-              this.broadcastQueries();
-            }
+            queryInfo.markSubscriptionResult(rawResult, {
+              document: query,
+              variables,
+              errorPolicy,
+              cacheWriteBehavior:
+                fetchPolicy === "no-cache" ?
+                  CacheWriteBehavior.FORBID
+                : CacheWriteBehavior.MERGE,
+            });
 
             const result: SubscribeResult<TData> = {
               data: rawResult.data ?? undefined,
@@ -1282,14 +1005,21 @@ export class QueryManager {
   }
 
   private getResultsFromLink<TData, TVariables extends OperationVariables>(
-    queryInfo: QueryInfo,
-    cacheWriteBehavior: CacheWriteBehavior,
     options: {
       query: DocumentNode;
       variables: TVariables;
       context: DefaultContext | undefined;
       fetchPolicy: WatchQueryFetchPolicy;
       errorPolicy: ErrorPolicy;
+    },
+    {
+      queryInfo,
+      cacheWriteBehavior,
+      observableQuery,
+    }: {
+      queryInfo: QueryInfo;
+      cacheWriteBehavior: CacheWriteBehavior;
+      observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
@@ -1314,19 +1044,18 @@ export class QueryManager {
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.resetLastWrite();
-            queryInfo.observableQuery?.["resetNotifications"]();
+            observableQuery?.["resetNotifications"]();
             // Throwing here effectively calls observer.error.
             throw new CombinedGraphQLErrors(result);
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.
-          queryInfo.markResult(
-            result,
-            linkDocument,
-            options,
-            cacheWriteBehavior
-          );
+          queryInfo.markQueryResult(result, {
+            ...options,
+            document: linkDocument,
+            cacheWriteBehavior,
+          });
         }
 
         const aqr = {
@@ -1366,7 +1095,7 @@ export class QueryManager {
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
           queryInfo.resetLastWrite();
-          queryInfo.observableQuery?.["resetNotifications"]();
+          observableQuery?.["resetNotifications"]();
           throw error;
         }
 
@@ -1389,7 +1118,6 @@ export class QueryManager {
   }
 
   public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
-    queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
     {
       // The initial networkStatus for this fetch, most often
@@ -1399,11 +1127,13 @@ export class QueryManager {
       query = options.query,
       fetchQueryOperator = (x) => x,
       onCacheHit = () => {},
+      observableQuery,
     }: {
       networkStatus?: NetworkStatus;
       query?: DocumentNode;
       fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
       onCacheHit?: () => void;
+      observableQuery?: ObservableQuery<TData, TVars> | undefined;
     }
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
@@ -1434,6 +1164,8 @@ export class QueryManager {
       context,
     });
 
+    const queryInfo = new QueryInfo(this, observableQuery);
+
     const fromVariables = (variables: TVars) => {
       // Since normalized is always a fresh copy of options, it's safe to
       // modify its properties here, rather than creating yet another new
@@ -1451,10 +1183,8 @@ export class QueryManager {
           CacheWriteBehavior.OVERWRITE
         : CacheWriteBehavior.MERGE;
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
-        queryInfo,
         normalized,
-        cacheWriteBehavior,
-        onCacheHit
+        { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
       );
       observableWithInfo.observable =
         observableWithInfo.observable.pipe(fetchQueryOperator);
@@ -1462,10 +1192,9 @@ export class QueryManager {
       if (
         // If we're in standby, postpone advancing options.fetchPolicy using
         // applyNextFetchPolicy.
-        normalized.fetchPolicy !== "standby" &&
-        queryInfo.observableQuery
+        normalized.fetchPolicy !== "standby"
       ) {
-        queryInfo.observableQuery["applyNextFetchPolicy"](
+        observableQuery?.["applyNextFetchPolicy"](
           "after-fetch",
           options as any
         );
@@ -1477,9 +1206,9 @@ export class QueryManager {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
-      this.fetchCancelFns.delete(queryInfo.queryId);
+      this.fetchCancelFns.delete(queryInfo.id);
     };
-    this.fetchCancelFns.set(queryInfo.queryId, (error) => {
+    this.fetchCancelFns.set(queryInfo.id, (error) => {
       fetchCancelSubject.next({
         kind: "E",
         error,
@@ -1747,7 +1476,6 @@ export class QueryManager {
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
-    queryInfo: QueryInfo,
     {
       query,
       variables,
@@ -1763,14 +1491,25 @@ export class QueryManager {
       returnPartialData?: boolean;
       context?: DefaultContext;
     },
-    cacheWriteBehavior: CacheWriteBehavior,
-    onCacheHit: () => void
+    {
+      cacheWriteBehavior,
+      onCacheHit,
+      queryInfo,
+      observableQuery,
+    }: {
+      cacheWriteBehavior: CacheWriteBehavior;
+      onCacheHit: () => void;
+      queryInfo: QueryInfo;
+      observableQuery: ObservableQuery<TData, TVars> | undefined;
+    }
   ): ObservableAndInfo<TData> {
-    queryInfo.init({
-      document: query,
-      variables,
-    });
-    const readCache = () => this.cache.diff<any>(queryInfo.getDiffOptions());
+    const readCache = () =>
+      this.cache.diff<any>({
+        query,
+        variables,
+        returnPartialData: true,
+        optimistic: true,
+      });
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
@@ -1867,13 +1606,20 @@ export class QueryManager {
     };
 
     const resultsFromLink = () =>
-      this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
-        query,
-        variables,
-        context,
-        fetchPolicy,
-        errorPolicy,
-      }).pipe(
+      this.getResultsFromLink<TData, TVars>(
+        {
+          query,
+          variables,
+          context,
+          fetchPolicy,
+          errorPolicy,
+        },
+        {
+          cacheWriteBehavior,
+          queryInfo,
+          observableQuery,
+        }
+      ).pipe(
         validateDidEmitValue(),
         materialize(),
         map(

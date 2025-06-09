@@ -1924,10 +1924,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     getCurrentResult(): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
     hasObservers(): boolean;
-    // Warning: (ae-forgotten-export) The symbol "LastWrite" needs to be exported by the entry point index.d.ts
-    //
     // @internal @deprecated
-    _lastWrite?: LastWrite;
+    _lastWrite?: unknown;
     // @internal @deprecated (undocumented)
     notify(scheduled?: boolean): void;
     // (undocumented)
@@ -1984,6 +1982,20 @@ export interface OperationContext extends DefaultContext {
     // (undocumented)
     clientAwareness?: ClientAwareness;
     queryDeduplication?: boolean;
+}
+
+// Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+interface OperationInfo<TData, TVariables extends OperationVariables, AllowedCacheWriteBehavior = CacheWriteBehavior> {
+    // (undocumented)
+    cacheWriteBehavior: AllowedCacheWriteBehavior;
+    // (undocumented)
+    document: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    // (undocumented)
+    errorPolicy: ErrorPolicy;
+    // (undocumented)
+    variables: TVariables;
 }
 
 // @public (undocumented)
@@ -2064,41 +2076,41 @@ const print_2: ((ast: ASTNode) => string) & {
 
 // @public (undocumented)
 class QueryInfo {
-    constructor({ queryManager, observableQuery, }: {
-        queryManager: QueryManager;
-        queryId?: string;
-        observableQuery?: ObservableQuery<any, any>;
-    });
+    constructor(queryManager: QueryManager, observableQuery?: ObservableQuery<any, any>);
     // (undocumented)
-    document: DocumentNode | null;
-    // (undocumented)
-    getDiffOptions(variables?: Record<string, any> | undefined): Cache_2.DiffOptions;
-    // (undocumented)
-    init(query: {
-        document: DocumentNode;
-        variables: Record<string, any> | undefined;
-    }): this;
+    readonly id: string;
     // (undocumented)
     lastRequestId: number;
+    // Warning: (ae-forgotten-export) The symbol "LastWrite" needs to be exported by the entry point index.d.ts
+    //
     // @internal @deprecated
     _lastWrite?: LastWrite;
-    // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
+    // (undocumented)
+    markMutationOptimistic<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(optimisticResponse: any, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
+        context?: DefaultContext;
+        updateQueries: UpdateQueries<TData>;
+        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+        keepRootFields?: boolean;
+    }): boolean;
+    // (undocumented)
+    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: FetchResult<TData>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
+        context?: DefaultContext;
+        updateQueries: UpdateQueries<TData>;
+        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+        awaitRefetchQueries?: boolean;
+        refetchQueries?: InternalRefetchQueriesInclude;
+        removeOptimistic?: string;
+        onQueryUpdated?: OnQueryUpdated<any>;
+        keepRootFields?: boolean;
+    }, cache?: ApolloCache): Promise<FetchResult<TData>>;
+    // Warning: (ae-forgotten-export) The symbol "OperationInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markResult<T>(result: FetchResult<T>, document: DocumentNode, options: {
-        variables: OperationVariables;
-        errorPolicy: ErrorPolicy;
-    }, cacheWriteBehavior: CacheWriteBehavior): void;
+    markQueryResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): void;
     // (undocumented)
-    readonly observableQuery?: ObservableQuery<any, any>;
-    // (undocumented)
-    queryId: string;
-    // (undocumented)
-    resetDiff(): void;
+    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
     // (undocumented)
     resetLastWrite(): void;
-    // (undocumented)
-    variables?: Record<string, any>;
 }
 
 // Warning: (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
@@ -2133,18 +2145,15 @@ class QueryManager {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVars extends OperationVariables>(queryInfo: QueryInfo, options: WatchQueryOptions<TVars, TData>, { networkStatus, query, fetchQueryOperator, onCacheHit, }: {
+    fetchObservableWithInfo<TData, TVars extends OperationVariables>(options: WatchQueryOptions<TVars, TData>, { networkStatus, query, fetchQueryOperator, onCacheHit, observableQuery, }: {
         networkStatus?: NetworkStatus;
         query?: DocumentNode;
         fetchQueryOperator?: <T>(source: Observable<T>) => Observable<T>;
         onCacheHit?: () => void;
+        observableQuery?: ObservableQuery<TData, TVars> | undefined;
     }): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVars extends OperationVariables>(options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus): Promise<QueryResult<TData>>;
-    // (undocumented)
-    generateMutationId(): string;
-    // (undocumented)
-    generateQueryId(): string;
     // (undocumented)
     generateRequestId(): number;
     // Warning: (ae-forgotten-export) The symbol "TransformCacheEntry" needs to be exported by the entry point index.d.ts
@@ -2164,35 +2173,6 @@ class QueryManager {
     get link(): ApolloLink;
     // (undocumented)
     localState: LocalState | undefined;
-    // (undocumented)
-    markMutationOptimistic<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(optimisticResponse: any, mutation: {
-        mutationId: string;
-        document: DocumentNode;
-        variables?: TVariables;
-        fetchPolicy?: MutationFetchPolicy;
-        errorPolicy: ErrorPolicy;
-        context?: DefaultContext;
-        updateQueries: UpdateQueries<TData>;
-        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-        keepRootFields?: boolean;
-    }): boolean;
-    // (undocumented)
-    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(mutation: {
-        mutationId: string;
-        result: FetchResult<TData>;
-        document: DocumentNode;
-        variables?: TVariables;
-        fetchPolicy?: MutationFetchPolicy;
-        errorPolicy: ErrorPolicy;
-        context?: DefaultContext;
-        updateQueries: UpdateQueries<TData>;
-        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-        awaitRefetchQueries?: boolean;
-        refetchQueries?: InternalRefetchQueriesInclude;
-        removeOptimistic?: string;
-        onQueryUpdated?: OnQueryUpdated<any>;
-        keepRootFields?: boolean;
-    }, cache?: ApolloCache): Promise<FetchResult<TData>>;
     // Warning: (ae-forgotten-export) The symbol "MaskFragmentOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2764,10 +2744,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:135:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:295:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:194:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:477:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/QueryInfo.ts:309:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:177:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

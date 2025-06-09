@@ -64,10 +64,7 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import {
-  CacheWriteBehavior,
-  MergeStrategy,
-} from "../cache/inmemory/MergeStrategy.js";
+import { CacheWriteBehavior } from "../cache/inmemory/MergeStrategy.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type {
@@ -287,7 +284,7 @@ export class QueryManager {
       "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
     );
 
-    const queryInfo = new MergeStrategy(this);
+    const mergeStrategy = this.cache.getMergeStrategy(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
@@ -313,7 +310,7 @@ export class QueryManager {
 
     const mutationStoreValue =
       this.mutationStore &&
-      (this.mutationStore[queryInfo.id] = {
+      (this.mutationStore[mergeStrategy.id] = {
         mutation,
         variables,
         loading: true,
@@ -322,7 +319,7 @@ export class QueryManager {
 
     const isOptimistic =
       optimisticResponse &&
-      queryInfo.markMutationOptimistic<TData, TVariables, TCache>(
+      mergeStrategy.markMutationOptimistic<TData, TVariables, TCache>(
         optimisticResponse,
         {
           document: mutation,
@@ -349,6 +346,7 @@ export class QueryManager {
           ...context,
           optimisticResponse: isOptimistic ? optimisticResponse : void 0,
         },
+        mergeStrategy,
         variables,
         {},
         false
@@ -379,7 +377,7 @@ export class QueryManager {
             }
 
             return from(
-              queryInfo.markMutationResult<TData, TVariables, TCache>(
+              mergeStrategy.markMutationResult<TData, TVariables, TCache>(
                 storeResult,
                 {
                   document: mutation,
@@ -394,7 +392,7 @@ export class QueryManager {
                   updateQueries,
                   awaitRefetchQueries,
                   refetchQueries,
-                  removeOptimistic: isOptimistic ? queryInfo.id : void 0,
+                  removeOptimistic: isOptimistic ? mergeStrategy.id : void 0,
                   onQueryUpdated,
                   keepRootFields,
                 }
@@ -440,7 +438,7 @@ export class QueryManager {
             }
 
             if (isOptimistic) {
-              this.cache.removeOptimistic(queryInfo.id);
+              this.cache.removeOptimistic(mergeStrategy.id);
             }
 
             this.broadcastQueries();
@@ -795,19 +793,20 @@ export class QueryManager {
         )
       : of(variables)).pipe(
       mergeMap((variables) => {
+        const mergeStrategy = this.cache.getMergeStrategy(this);
+
         const { observable, restart: res } = this.getObservableFromLink<TData>(
           query,
           context,
+          mergeStrategy,
           variables,
           extensions
         );
 
-        const queryInfo = new MergeStrategy(this);
-
         restart = res;
         return observable.pipe(
           map((rawResult): SubscribeResult<TData> => {
-            queryInfo.markSubscriptionResult(rawResult, {
+            mergeStrategy.markSubscriptionResult(rawResult, {
               document: query,
               variables,
               errorPolicy,
@@ -876,6 +875,7 @@ export class QueryManager {
   private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
     context: DefaultContext | undefined,
+    mergeStrategy: Cache.MergeStrategy,
     variables?: OperationVariables,
     extensions?: Record<string, any>,
     // Prefer context.queryDeduplication if specified.
@@ -913,6 +913,8 @@ export class QueryManager {
         },
         extensions,
       };
+
+      mergeStrategy.prepareRequest(operation);
 
       context = operation.context;
 
@@ -1021,16 +1023,16 @@ export class QueryManager {
       errorPolicy: ErrorPolicy;
     },
     {
-      queryInfo,
+      mergeStrategy,
       cacheWriteBehavior,
       observableQuery,
     }: {
-      queryInfo: MergeStrategy;
+      mergeStrategy: Cache.MergeStrategy & { lastRequestId?: number };
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
   ): Observable<ApolloQueryResult<TData>> {
-    const requestId = (queryInfo.lastRequestId = this.generateRequestId());
+    const requestId = (mergeStrategy.lastRequestId = this.generateRequestId());
     const { errorPolicy } = options;
 
     // Performing transformForLink here gives this.cache a chance to fill in
@@ -1041,6 +1043,7 @@ export class QueryManager {
     return this.getObservableFromLink<TData>(
       linkDocument,
       options.context,
+      mergeStrategy,
       options.variables
     ).observable.pipe(
       map((result) => {
@@ -1049,9 +1052,9 @@ export class QueryManager {
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same MergeStrategy object, we ignore the old results.
-        if (requestId >= queryInfo.lastRequestId) {
+        if (requestId >= mergeStrategy.lastRequestId!) {
           if (hasErrors && errorPolicy === "none") {
-            queryInfo.resetLastWrite();
+            mergeStrategy.resetLastWrite();
             observableQuery?.["resetNotifications"]();
             // Throwing here effectively calls observer.error.
             throw new CombinedGraphQLErrors(result);
@@ -1059,7 +1062,7 @@ export class QueryManager {
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
           // ones used to obtain it from the link.
-          queryInfo.markQueryResult(result, {
+          mergeStrategy.markQueryResult(result, {
             ...options,
             document: linkDocument,
             cacheWriteBehavior,
@@ -1101,8 +1104,11 @@ export class QueryManager {
       }),
       catchError((error) => {
         // Avoid storing errors from older interrupted queries.
-        if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
-          queryInfo.resetLastWrite();
+        if (
+          requestId >= mergeStrategy.lastRequestId! &&
+          errorPolicy === "none"
+        ) {
+          mergeStrategy.resetLastWrite();
           observableQuery?.["resetNotifications"]();
           throw error;
         }
@@ -1172,7 +1178,7 @@ export class QueryManager {
       context,
     });
 
-    const queryInfo = new MergeStrategy(this, observableQuery);
+    const mergeStrategy = this.cache.getMergeStrategy(this, observableQuery);
 
     const fromVariables = (variables: TVars) => {
       // Since normalized is always a fresh copy of options, it's safe to
@@ -1192,7 +1198,12 @@ export class QueryManager {
         : CacheWriteBehavior.MERGE;
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         normalized,
-        { queryInfo, cacheWriteBehavior, onCacheHit, observableQuery }
+        {
+          mergeStrategy: mergeStrategy,
+          cacheWriteBehavior,
+          onCacheHit,
+          observableQuery,
+        }
       );
       observableWithInfo.observable =
         observableWithInfo.observable.pipe(fetchQueryOperator);
@@ -1214,9 +1225,9 @@ export class QueryManager {
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
     const cleanupCancelFn = () => {
-      this.fetchCancelFns.delete(queryInfo.id);
+      this.fetchCancelFns.delete(mergeStrategy.id);
     };
-    this.fetchCancelFns.set(queryInfo.id, (error) => {
+    this.fetchCancelFns.set(mergeStrategy.id, (error) => {
       fetchCancelSubject.next({
         kind: "E",
         error,
@@ -1502,12 +1513,12 @@ export class QueryManager {
     {
       cacheWriteBehavior,
       onCacheHit,
-      queryInfo,
+      mergeStrategy,
       observableQuery,
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
-      queryInfo: MergeStrategy;
+      mergeStrategy: Cache.MergeStrategy;
       observableQuery: ObservableQuery<TData, TVars> | undefined;
     }
   ): ObservableAndInfo<TData> {
@@ -1624,7 +1635,7 @@ export class QueryManager {
         },
         {
           cacheWriteBehavior,
-          queryInfo,
+          mergeStrategy,
           observableQuery,
         }
       ).pipe(

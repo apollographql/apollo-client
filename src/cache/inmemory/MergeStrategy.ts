@@ -3,7 +3,7 @@ import type { DocumentNode } from "graphql";
 
 import type { ObservableQuery } from "@apollo/client";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link";
+import type { FetchResult, GraphQLRequest } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
   DeepMerger,
@@ -16,7 +16,6 @@ import {
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { QueryManager } from "../../core/QueryManager.js";
 import type {
   DefaultContext,
   InternalRefetchQueriesInclude,
@@ -83,38 +82,33 @@ function wrapDestructiveCacheMethod(
   }
 }
 
-const queryInfoIds = new WeakMap<QueryManager, number>();
+const idMap = new WeakMap<ApolloCache, number>();
 
 // A MergeStrategy object represents a single network request, either initiated
 // from the QueryManager or from an ObservableQuery.
 // It will only ever be used for a single network call.
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
-export class MergeStrategy {
+export class MergeStrategy implements Cache.MergeStrategy {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
 
   private cache: ApolloCache;
-  private queryManager: Pick<
-    QueryManager,
-    | "getObservableQueries"
-    | "refetchQueries"
-    | "getDocumentInfo"
-    | "broadcastQueries"
-  >;
+  private handler: Cache.MergeStrategyHandler;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
 
   constructor(
-    queryManager: QueryManager,
+    cache: ApolloCache,
+    handler: Cache.MergeStrategyHandler,
     observableQuery?: ObservableQuery<any, any>
   ) {
-    const cache = (this.cache = queryManager.cache);
-    const id = (queryInfoIds.get(queryManager) || 0) + 1;
-    queryInfoIds.set(queryManager, id);
+    this.cache = cache;
+    const id = (idMap.get(cache) || 0) + 1;
+    idMap.set(cache, id);
     this.id = id + "";
     this.observableQuery = observableQuery;
-    this.queryManager = queryManager;
+    this.handler = handler;
 
     // Track how often cache.evict is called, since we want eviction to
     // override the feud-stopping logic in the markQueryResult method, by
@@ -127,6 +121,9 @@ export class MergeStrategy {
       wrapDestructiveCacheMethod(cache, "modify");
       wrapDestructiveCacheMethod(cache, "reset");
     }
+  }
+  prepareRequest(request: GraphQLRequest) {
+    // TODO
   }
 
   /** @internal
@@ -336,7 +333,7 @@ export class MergeStrategy {
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
+          query: this.handler.getDocumentInfo(mutation.document).asQuery,
           variables: mutation.variables,
           optimistic: false,
           returnPartialData: true,
@@ -360,42 +357,40 @@ export class MergeStrategy {
 
       const { updateQueries } = mutation;
       if (updateQueries) {
-        this.queryManager
-          .getObservableQueries("all")
-          .forEach((observableQuery) => {
-            const queryName = observableQuery && observableQuery.queryName;
-            if (
-              !queryName ||
-              !Object.hasOwnProperty.call(updateQueries, queryName)
-            ) {
-              return;
-            }
-            const updater = updateQueries[queryName];
-            const { query: document, variables } = observableQuery;
+        this.handler.getObservableQueries("all").forEach((observableQuery) => {
+          const queryName = observableQuery && observableQuery.queryName;
+          if (
+            !queryName ||
+            !Object.hasOwnProperty.call(updateQueries, queryName)
+          ) {
+            return;
+          }
+          const updater = updateQueries[queryName];
+          const { query: document, variables } = observableQuery;
 
-            // Read the current query result from the store.
-            const { result: currentQueryResult, complete } =
-              observableQuery.getCacheDiff({ optimistic: false });
+          // Read the current query result from the store.
+          const { result: currentQueryResult, complete } =
+            observableQuery.getCacheDiff({ optimistic: false });
 
-            if (complete && currentQueryResult) {
-              // Run our reducer using the current query result and the mutation result.
-              const nextQueryResult = updater(currentQueryResult, {
-                mutationResult: result as FetchResult<Unmasked<TData>>,
-                queryName: (document && getOperationName(document)) || void 0,
-                queryVariables: variables!,
+          if (complete && currentQueryResult) {
+            // Run our reducer using the current query result and the mutation result.
+            const nextQueryResult = updater(currentQueryResult, {
+              mutationResult: result as FetchResult<Unmasked<TData>>,
+              queryName: (document && getOperationName(document)) || void 0,
+              queryVariables: variables!,
+            });
+
+            // Write the modified result back into the store if we got a new result.
+            if (nextQueryResult) {
+              cacheWrites.push({
+                result: nextQueryResult,
+                dataId: "ROOT_QUERY",
+                query: document!,
+                variables,
               });
-
-              // Write the modified result back into the store if we got a new result.
-              if (nextQueryResult) {
-                cacheWrites.push({
-                  result: nextQueryResult,
-                  dataId: "ROOT_QUERY",
-                  query: document!,
-                  variables,
-                });
-              }
             }
-          });
+          }
+        });
       }
     }
 
@@ -408,7 +403,7 @@ export class MergeStrategy {
     ) {
       const results: any[] = [];
 
-      this.queryManager
+      this.handler
         .refetchQueries({
           updateCache: (cache) => {
             if (!skipCache) {
@@ -436,7 +431,7 @@ export class MergeStrategy {
                   // The cache complains if passed a mutation where it expects a
                   // query, so we transform mutations and subscriptions to queries
                   // (only once, thanks to this.transformCache).
-                  query: this.queryManager.getDocumentInfo(mutation.document)
+                  query: this.handler.getDocumentInfo(mutation.document)
                     .asQuery,
                   variables: mutation.variables,
                   optimistic: false,
@@ -573,7 +568,7 @@ export class MergeStrategy {
         });
       }
 
-      this.queryManager.broadcastQueries();
+      this.handler.broadcastQueries();
     }
   }
 }

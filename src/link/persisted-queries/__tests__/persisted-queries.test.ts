@@ -515,6 +515,12 @@ describe("failure path", () => {
       operationName: "Test",
       query: queryString,
       variables,
+      extensions: {
+        clientLibrary: {
+          name: "@apollo/client",
+          version: "local",
+        },
+      },
     });
   });
 
@@ -551,7 +557,12 @@ describe("failure path", () => {
           expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
           expect(
             JSON.parse(success!.body!.toString()).extensions
-          ).toBeUndefined();
+          ).toStrictEqual({
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
+          });
           execute(link, { query, variables }).subscribe((secondResult) => {
             expect(secondResult.data).toEqual(data);
             const [, , [, success]] = fetchMock.calls();
@@ -560,7 +571,9 @@ describe("failure path", () => {
             );
             expect(
               JSON.parse(success!.body!.toString()).extensions
-            ).toBeUndefined();
+            ).toStrictEqual({
+              clientLibrary: { name: "@apollo/client", version: "local" },
+            });
             resolve();
           }, reject);
         }, reject);

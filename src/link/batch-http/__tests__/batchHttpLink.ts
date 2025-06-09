@@ -330,6 +330,12 @@ describe("SharedHttpTest", () => {
           usedByInlineFragment: "keep",
           usedByNamedFragment: "keep",
         },
+        extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
+        },
       },
     ]);
     expect(method).toBe("POST");
@@ -375,14 +381,14 @@ describe("SharedHttpTest", () => {
   };
 
   it("passes all arguments to multiple fetch body including extensions", async () => {
-    const link = new BatchHttpLink({ uri: "/data", includeExtensions: true });
+    const link = new BatchHttpLink({ uri: "/data" });
 
     await verifyRequest(link, true, false);
     await verifyRequest(link, true, false);
   });
 
   it("passes all arguments to multiple fetch body excluding extensions", async () => {
-    const link = new BatchHttpLink({ uri: "/data" });
+    const link = new BatchHttpLink({ uri: "/data", includeExtensions: false });
 
     await verifyRequest(link, false, false);
     await verifyRequest(link, false, false);

@@ -502,6 +502,21 @@ describe("enhanced client awareness", () => {
       const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
       expect(body.extensions).not.toBeDefined();
     });
+
+    test("can also be disabled by disabling `includeExtensions`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          includeExtensions: false,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
   });
 
   describe("BatchHttpLink integration", () => {
@@ -539,6 +554,26 @@ describe("enhanced client awareness", () => {
       const client = new ApolloClient({
         link: new BaseBatchHttpLink({
           uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      void client.query({ query, context: { queryDeduplication: false } });
+      await wait(10);
+
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      console.log(fetchMock.lastCall());
+      expect(body[0].extensions).not.toBeDefined();
+      expect(body[1].extensions).not.toBeDefined();
+    });
+
+    test("can be disabled by disabling `includeExtensions`", async () => {
+      fetchMock.postOnce(uri, [response, response]);
+      const client = new ApolloClient({
+        link: new BatchHttpLink({
+          uri,
+          includeExtensions: false,
         }),
         cache: new InMemoryCache(),
       });

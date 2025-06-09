@@ -223,6 +223,7 @@ export const createPersistedQueryLink = (
             // if the server doesn't support persisted queries, don't try anymore
             supportsPersistedQueries = !disable(disablePayload);
             if (!supportsPersistedQueries) {
+              delete operation.extensions.persistedQuery;
               // clear hashes from cache, we don't need them anymore
               resetHashCache();
             }

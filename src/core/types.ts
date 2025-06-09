@@ -27,7 +27,11 @@ export interface ClientAwareness {
 }
 
 export interface DefaultContext extends Record<string, any> {
+  /**
+   * Indicates whether `queryDeduplication` was enabled for the request.
+   */
   queryDeduplication?: boolean;
+  clientAwareness?: ClientAwareness;
 }
 
 export type QueryListener = (queryInfo: QueryInfo) => void;

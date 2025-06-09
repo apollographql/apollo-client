@@ -1162,7 +1162,6 @@ export namespace useLazyQuery {
     // (undocumented)
     export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         client?: ApolloClient;
-        context?: DefaultContext_2;
         errorPolicy?: ErrorPolicy_2;
         fetchPolicy?: WatchQueryFetchPolicy;
         nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);

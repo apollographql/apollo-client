@@ -5253,7 +5253,7 @@ describe("ObservableQuery", () => {
     });
   });
 
-  it("QueryInfo does not notify for !== but deep-equal results", async () => {
+  it("MergeStrategy does not notify for !== but deep-equal results", async () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new MockLink([

@@ -64,6 +64,10 @@ import {
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
+import {
+  CacheWriteBehavior,
+  MergeStrategy,
+} from "../cache/inmemory/MergeStrategy.js";
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
 import type {
@@ -73,7 +77,6 @@ import type {
 } from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
-import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
   DefaultContext,
@@ -284,7 +287,7 @@ export class QueryManager {
       "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
     );
 
-    const queryInfo = new QueryInfo(this);
+    const queryInfo = new MergeStrategy(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
@@ -799,7 +802,7 @@ export class QueryManager {
           extensions
         );
 
-        const queryInfo = new QueryInfo(this);
+        const queryInfo = new MergeStrategy(this);
 
         restart = res;
         return observable.pipe(
@@ -1022,7 +1025,7 @@ export class QueryManager {
       cacheWriteBehavior,
       observableQuery,
     }: {
-      queryInfo: QueryInfo;
+      queryInfo: MergeStrategy;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
@@ -1045,7 +1048,7 @@ export class QueryManager {
         const hasErrors = graphQLErrors.length > 0;
 
         // If we interrupted this request by calling getResultsFromLink again
-        // with the same QueryInfo object, we ignore the old results.
+        // with the same MergeStrategy object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.resetLastWrite();
@@ -1169,7 +1172,7 @@ export class QueryManager {
       context,
     });
 
-    const queryInfo = new QueryInfo(this, observableQuery);
+    const queryInfo = new MergeStrategy(this, observableQuery);
 
     const fromVariables = (variables: TVars) => {
       // Since normalized is always a fresh copy of options, it's safe to
@@ -1504,7 +1507,7 @@ export class QueryManager {
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
-      queryInfo: QueryInfo;
+      queryInfo: MergeStrategy;
       observableQuery: ObservableQuery<TData, TVars> | undefined;
     }
   ): ObservableAndInfo<TData> {

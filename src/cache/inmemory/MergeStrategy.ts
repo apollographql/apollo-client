@@ -1,6 +1,7 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
+import type { ObservableQuery } from "@apollo/client";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
@@ -15,10 +16,7 @@ import {
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { IgnoreModifier } from "../cache/core/types/common.js";
-
-import type { ObservableQuery } from "./ObservableQuery.js";
-import type { QueryManager } from "./QueryManager.js";
+import type { QueryManager } from "../../core/QueryManager.js";
 import type {
   DefaultContext,
   InternalRefetchQueriesInclude,
@@ -26,12 +24,13 @@ import type {
   OnQueryUpdated,
   OperationVariables,
   TypedDocumentNode,
-} from "./types.js";
+} from "../../core/types.js";
 import type {
   ErrorPolicy,
   MutationOptions,
   WatchQueryOptions,
-} from "./watchQueryOptions.js";
+} from "../../core/watchQueryOptions.js";
+import type { IgnoreModifier } from "../core/types/common.js";
 
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
@@ -86,12 +85,12 @@ function wrapDestructiveCacheMethod(
 
 const queryInfoIds = new WeakMap<QueryManager, number>();
 
-// A QueryInfo object represents a single network request, either initiated
+// A MergeStrategy object represents a single network request, either initiated
 // from the QueryManager or from an ObservableQuery.
 // It will only ever be used for a single network call.
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
-export class QueryInfo {
+export class MergeStrategy {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
 
@@ -131,8 +130,8 @@ export class QueryInfo {
   }
 
   /** @internal
-   * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
-   * In the case of a standalone `QueryInfo`, we will keep a local version.
+   * For feud-preventing behaviour, `lastWrite` should be shared by all `MergeStrategy` instances of an `ObservableQuery`.
+   * In the case of a standalone `MergeStrategy`, we will keep a local version.
    */
   public _lastWrite?: LastWrite;
   private get lastWrite(): LastWrite | undefined {

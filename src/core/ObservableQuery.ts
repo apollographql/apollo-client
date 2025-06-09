@@ -228,7 +228,7 @@ export class ObservableQuery<
   public readonly options: ObservableQuery.Options<TData, TVariables>;
   public readonly queryName?: string;
 
-  /** @internal will be read and written from `QueryInfo` */
+  /** @internal will be read and written from `MergeStrategy` */
   public _lastWrite?: unknown;
 
   // The `query` computed property will always reflect the document transformed
@@ -781,7 +781,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         if (isCached) {
           // Performing this cache update inside a cache.batch transaction ensures
           // any affected cache.watch watchers are notified at most once about any
-          // updates. Most watchers will be using the QueryInfo class, which
+          // updates. Most watchers will be using the MergeStrategy class, which
           // responds to notifications by calling reobserveCacheFirst to deliver
           // fetchMore cache results back to this ObservableQuery.
           this.queryManager.cache.batch({

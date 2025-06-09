@@ -2,11 +2,16 @@ import { expectTypeOf } from "expect-type";
 import type { FragmentDefinitionNode, InlineFragmentNode } from "graphql";
 import { gql } from "graphql-tag";
 
-import type { OperationVariables, Unmasked } from "@apollo/client";
+import type {
+  ObservableQuery,
+  OperationVariables,
+  Unmasked,
+} from "@apollo/client";
 import type { Cache, DataProxy } from "@apollo/client/cache";
 import { ApolloCache } from "@apollo/client/cache";
 
 import type { Reference } from "../../../utilities/graphql/storeUtils.js";
+import { MergeStrategy } from "../../inmemory/MergeStrategy.js";
 
 class TestCache extends ApolloCache {
   constructor() {
@@ -67,6 +72,13 @@ class TestCache extends ApolloCache {
     _: Cache.WriteOptions<TResult, TVariables>
   ): Reference | undefined {
     return;
+  }
+
+  public getMergeStrategy(
+    handler: Cache.MergeStrategyHandler,
+    observableQuery?: ObservableQuery<any, any>
+  ): Cache.MergeStrategy {
+    return new MergeStrategy(this, handler, observableQuery);
   }
 }
 const query = gql`

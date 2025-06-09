@@ -7363,7 +7363,6 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitNext();
 
       const context = link.operation!.getContext();
-      expect(context.headers).toBeDefined();
       expect(context.headers).toStrictEqual({
         "apollographql-client-name": "Test",
         "apollographql-client-version": "1.0.0",

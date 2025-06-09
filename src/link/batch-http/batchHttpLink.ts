@@ -19,6 +19,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
+import { compact } from "../../utilities/internal/compact.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<
@@ -79,7 +80,7 @@ export class BaseBatchHttpLink extends ApolloLink {
     }
 
     const linkConfig = {
-      http: { includeExtensions, preserveHeaderCase },
+      http: compact({ includeExtensions, preserveHeaderCase }),
       options: requestOptions.fetchOptions,
       credentials: requestOptions.credentials,
       headers: requestOptions.headers,

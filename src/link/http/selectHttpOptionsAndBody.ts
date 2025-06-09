@@ -87,6 +87,8 @@ export function selectHttpOptionsAndBodyInternal(
     };
   });
 
+  console.log(...configs, { final: http });
+
   if (options.headers) {
     options.headers = removeDuplicateHeaders(
       options.headers,

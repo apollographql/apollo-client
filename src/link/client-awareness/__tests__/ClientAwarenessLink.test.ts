@@ -1,6 +1,12 @@
 import fetchMock from "fetch-mock";
 
-import { ApolloClient, gql, HttpLink, InMemoryCache } from "@apollo/client";
+import {
+  ApolloClient,
+  gql,
+  HttpLink,
+  InMemoryCache,
+  version,
+} from "@apollo/client";
 import {
   BaseBatchHttpLink,
   BatchHttpLink,
@@ -18,6 +24,7 @@ const query = gql`
 const response = {
   data: { hello: "world" },
 };
+const uri = "https://example.com/graphql";
 
 afterEach(() => fetchMock.reset());
 
@@ -216,11 +223,10 @@ describe("client awareness", () => {
 
   describe("HttpLink integration", () => {
     test("is part of `HttpLink`", () => {
-      fetchMock.postOnce("https://example.com/graphql", response);
+      fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new HttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
         }),
         cache: new InMemoryCache(),
         name: "test-client",
@@ -238,11 +244,10 @@ describe("client awareness", () => {
     });
 
     test("is not part of `BaseHttpLink`", () => {
-      fetchMock.postOnce("https://example.com/graphql", response);
+      fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new BaseHttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
         }),
         cache: new InMemoryCache(),
         name: "test-client",
@@ -258,11 +263,11 @@ describe("client awareness", () => {
     });
 
     test("`HttpLink` options have priotity over `ApolloClient` options", () => {
-      fetchMock.postOnce("https://example.com/graphql", response);
+      fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new HttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
+
           name: "overridden-client",
           version: "2.0.0",
         }),
@@ -284,11 +289,10 @@ describe("client awareness", () => {
 
   describe("BatchHttpLink integration", () => {
     test("is part of `BatchHttpLink`", async () => {
-      fetchMock.postOnce("https://example.com/graphql", response);
+      fetchMock.postOnce(uri, [response, response]);
       const client = new ApolloClient({
         link: new BatchHttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
         }),
         cache: new InMemoryCache(),
         name: "test-client",
@@ -296,6 +300,7 @@ describe("client awareness", () => {
       });
 
       void client.query({ query });
+      void client.query({ query, context: { queryDeduplication: false } });
       await wait(10);
 
       const headers = fetchMock.lastCall()![1]?.headers;
@@ -308,11 +313,10 @@ describe("client awareness", () => {
     });
 
     test("is not part of `BaseBatchHttpLink`", async () => {
-      fetchMock.postOnce("https://example.com/graphql", response);
+      fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new BaseBatchHttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
         }),
         cache: new InMemoryCache(),
         name: "test-client",
@@ -330,11 +334,11 @@ describe("client awareness", () => {
     });
 
     test("`BatchHttpLink` options have priotity over `ApolloClient` options", async () => {
-      fetchMock.postOnce("https://example.com/graphql", response);
+      fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new BatchHttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
+
           name: "overridden-client",
           version: "2.0.0",
         }),
@@ -356,11 +360,10 @@ describe("client awareness", () => {
     });
 
     test("will batch requests with equal options", async () => {
-      fetchMock.postOnce("https://example.com/graphql", [response, response]);
+      fetchMock.postOnce(uri, [response, response]);
       const client = new ApolloClient({
         link: new BatchHttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
         }),
         cache: new InMemoryCache(),
         name: "test-client",
@@ -381,11 +384,10 @@ describe("client awareness", () => {
     });
 
     test("will not batch requests with different options", async () => {
-      fetchMock.post("https://example.com/graphql", [response], { repeat: 2 });
+      fetchMock.post(uri, [response], { repeat: 2 });
       const client = new ApolloClient({
         link: new BatchHttpLink({
-          uri: "https://example.com/graphql",
-          fetch,
+          uri,
         }),
         cache: new InMemoryCache(),
         name: "test-client",
@@ -421,4 +423,172 @@ describe("client awareness", () => {
   });
 });
 
-describe("enhanced client awareness", () => {});
+describe("enhanced client awareness", () => {
+  test("is enabled by default", () => {
+    const terminatingLink = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link: new ClientAwarenessLink().concat(terminatingLink),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query });
+    expect(terminatingLink.operation?.extensions).toStrictEqual({
+      clientLibrary: {
+        name: "@apollo/client",
+        version,
+      },
+    });
+  });
+
+  test("can be disabled from `ClientAwarenessLink` constructor", () => {
+    const terminatingLink = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link: new ClientAwarenessLink({
+        enhancedClientAwareness: false,
+      }).concat(terminatingLink),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query });
+    expect(terminatingLink.operation?.extensions).toStrictEqual({});
+  });
+
+  describe("HttpLink integration", () => {
+    test("is part of `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).toStrictEqual({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      });
+    });
+
+    test("is not part of `BaseHttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new BaseHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+
+    test("can be disabled from `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+
+          enhancedClientAwareness: false,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+  });
+
+  describe("BatchHttpLink integration", () => {
+    test("is part of `BatchHttpLink`", async () => {
+      fetchMock.postOnce(uri, [response, response]);
+      const client = new ApolloClient({
+        link: new BatchHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      void client.query({ query, context: { queryDeduplication: false } });
+      await wait(10);
+
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      console.log(fetchMock.lastCall());
+      expect(body[0].extensions).toStrictEqual({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      });
+      expect(body[1].extensions).toStrictEqual({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      });
+    });
+
+    test("is not part of `BaseBatchHttpLink`", async () => {
+      fetchMock.postOnce(uri, [response, response]);
+      const client = new ApolloClient({
+        link: new BaseBatchHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      void client.query({ query, context: { queryDeduplication: false } });
+      await wait(10);
+
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      console.log(fetchMock.lastCall());
+      expect(body[0].extensions).not.toBeDefined();
+      expect(body[1].extensions).not.toBeDefined();
+    });
+
+    test("can send mixed requests with ECA enabled and disabled", async () => {
+      fetchMock.postOnce(uri, [response, response]);
+      const client = new ApolloClient({
+        link: new BatchHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      void client.query({
+        query,
+        context: {
+          queryDeduplication: false,
+
+          clientAwareness: {
+            // this is not documented and we don't officially support it,
+            // but this feature can also be disabled from the `ApolloClient`
+            // constructor options or context key `clientAwareness.enhancedClientAwareness`
+            // for this test this is very useful
+            // @ts-expect-error
+            enhancedClientAwareness: false,
+          },
+        },
+      });
+      await wait(10);
+
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      console.log(fetchMock.lastCall());
+      expect(body[0].extensions).toStrictEqual({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      });
+      expect(body[1].extensions).not.toBeDefined();
+    });
+  });
+});

@@ -1690,6 +1690,69 @@ describe("useQuery Hook", () => {
     });
   });
 
+  it("does not rerender with cache updates when changing from skip: false to skip: true", async () => {
+    interface Data {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Data, { id: number }> = gql`
+      query ($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const renderStream = await renderHookToSnapshotStream(
+      ({ skip }) => useQuery(query, { skip, variables: { id: 1 } }),
+      {
+        initialProps: { skip: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+    const { takeSnapshot, rerender } = renderStream;
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: 1 },
+    });
+
+    await rerender({ skip: true });
+
+    await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1 (updated)" } },
+    });
+
+    await expect(renderStream).not.toRerender();
+  });
+
   it("can provide options.client without ApolloProvider", async () => {
     const query = gql`
       query {

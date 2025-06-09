@@ -1734,10 +1734,12 @@ describe("HttpLink", () => {
         expect(warningSpy).toHaveBeenCalledTimes(1);
         expect(warningSpy).toHaveBeenCalledWith(
           `Accept header value
-"multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json"
+"%s"
 is not supported with multipart subscriptions over HTTP and will be overwritten with
-"application/graphql-response+json,application/json;q=0.9".
-Are you trying to combine multipart subscriptions with @defer?`
+"%s".
+Are you trying to combine multipart subscriptions with @defer?`,
+          "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+          "application/graphql-response+json,application/json;q=0.9"
         );
         warningSpy.mockRestore();
       });

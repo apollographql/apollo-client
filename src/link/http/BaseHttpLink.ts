@@ -109,13 +109,9 @@ export class BaseHttpLink extends ApolloLink {
             !configuredAcceptHeader.includes("subscriptionSpec=1.0")
           ) {
             invariant.warn(
-              `
-Accept header value
-"${subscriptionAcceptHeader}"
-is not supported with multipart subscriptions over HTTP and will be overwritten with
-"${defaultAcceptHeader}".
-Are you trying to combine multipart subscriptions with @defer?
-`.trim()
+              'Accept header value\n"%s"\nis not supported with multipart subscriptions over HTTP and will be overwritten with\n"%s".\nAre you trying to combine multipart subscriptions with @defer?',
+              subscriptionAcceptHeader,
+              defaultAcceptHeader
             );
           }
         }

@@ -83,7 +83,7 @@ export declare namespace HttpLink {
     /**
      * Passes the extensions field to your graphql server.
      *
-     * Defaults to false.
+     * Defaults to true.
      */
     includeExtensions?: boolean;
 

@@ -5,6 +5,7 @@ import { ApolloLink } from "@apollo/client/link";
 import { filterOperationVariables } from "@apollo/client/link/utils";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
+  compact,
   getMainDefinition,
   hasDirectives,
 } from "@apollo/client/utilities/internal";
@@ -49,7 +50,7 @@ export class BaseHttpLink extends ApolloLink {
     }
 
     const linkConfig = {
-      http: { includeExtensions, preserveHeaderCase },
+      http: compact({ includeExtensions, preserveHeaderCase }),
       options: requestOptions.fetchOptions,
       credentials: requestOptions.credentials,
       headers: requestOptions.headers,

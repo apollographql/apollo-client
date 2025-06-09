@@ -267,7 +267,6 @@ describe("client awareness", () => {
       const client = new ApolloClient({
         link: new HttpLink({
           uri,
-
           name: "overridden-client",
           version: "2.0.0",
         }),
@@ -338,7 +337,6 @@ describe("client awareness", () => {
       const client = new ApolloClient({
         link: new BatchHttpLink({
           uri,
-
           name: "overridden-client",
           version: "2.0.0",
         }),
@@ -492,7 +490,6 @@ describe("enhanced client awareness", () => {
       const client = new ApolloClient({
         link: new HttpLink({
           uri,
-
           enhancedClientAwareness: false,
         }),
         cache: new InMemoryCache(),
@@ -602,7 +599,6 @@ describe("enhanced client awareness", () => {
         query,
         context: {
           queryDeduplication: false,
-
           clientAwareness: {
             // this is not documented and we don't officially support it,
             // but this feature can also be disabled from the `ApolloClient`

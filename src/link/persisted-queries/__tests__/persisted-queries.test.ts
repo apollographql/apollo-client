@@ -6,6 +6,7 @@ import { gql } from "graphql-tag";
 import { times } from "lodash";
 import { firstValueFrom, Observable } from "rxjs";
 
+import { version } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
@@ -17,7 +18,6 @@ import {
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
-import { version } from "@apollo/client";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -518,7 +518,7 @@ describe("failure path", () => {
       extensions: {
         clientLibrary: {
           name: "@apollo/client",
-          version: "local",
+          version,
         },
       },
     });
@@ -572,7 +572,7 @@ describe("failure path", () => {
             expect(
               JSON.parse(success!.body!.toString()).extensions
             ).toStrictEqual({
-              clientLibrary: { name: "@apollo/client", version: "local" },
+              clientLibrary: { name: "@apollo/client", version },
             });
             resolve();
           }, reject);

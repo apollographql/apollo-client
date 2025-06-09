@@ -191,7 +191,7 @@ test("Auto disposes of the query ref if not retained within the given time", asy
   // We don't start the dispose timer until the promise is initially resolved
   // so we need to wait for it
   jest.advanceTimersByTime(20);
-  await queryRef.toPromise();
+  await preloadQuery.toPromise(queryRef);
   jest.advanceTimersByTime(30_000);
 
   expect(queryRef).toBeDisposed();
@@ -223,7 +223,7 @@ test("Honors configured auto dispose timer on the client", async () => {
   // We don't start the dispose timer until the promise is initially resolved
   // so we need to wait for it
   jest.advanceTimersByTime(20);
-  await queryRef.toPromise();
+  await preloadQuery.toPromise(queryRef);
   jest.advanceTimersByTime(5_000);
 
   expect(queryRef).toBeDisposed();
@@ -247,7 +247,7 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
   // We don't start the dispose timer until the promise is initially resolved
   // so we need to wait for it
   jest.advanceTimersByTime(20);
-  await act(() => queryRef.toPromise());
+  await act(() => preloadQuery.toPromise(queryRef));
   jest.advanceTimersByTime(30_000);
 
   expect(queryRef).not.toBeDisposed();
@@ -1749,8 +1749,8 @@ test("creates unique query refs when calling preloadQuery with the same query", 
   expect(Object.is(queryRef1, queryRef2)).toBe(false);
   expect(Object.is(unwrappedQueryRef1, unwrappedQueryRef2)).toBe(false);
 
-  await expect(queryRef1.toPromise()).resolves.toBe(queryRef1);
-  await expect(queryRef2.toPromise()).resolves.toBe(queryRef2);
+  await expect(preloadQuery.toPromise(queryRef1)).resolves.toBe(queryRef1);
+  await expect(preloadQuery.toPromise(queryRef2)).resolves.toBe(queryRef2);
 });
 
 test("does not suspend and returns partial data when `returnPartialData` is `true`", async () => {

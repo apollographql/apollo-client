@@ -1,5 +1,116 @@
 # @apollo/client
 
+## 4.0.0-alpha.20
+
+### Major Changes
+
+- [#12675](https://github.com/apollographql/apollo-client/pull/12675) [`8f1d974`](https://github.com/apollographql/apollo-client/commit/8f1d974881ff54339b6b6593a219ba6d5fd013c0) Thanks [@phryneas](https://github.com/phryneas)! - `ObservableQuery` no longer has a `queryId` property.
+  `ApolloClient.getObservableQueries` no longer returns a `Map<string, ObservableQuery>`, but a `Set<ObservableQuery>`.
+
+- [#12647](https://github.com/apollographql/apollo-client/pull/12647) [`a70fac6`](https://github.com/apollographql/apollo-client/commit/a70fac6dd8f26b46c813723a7206e55bfb677690) Thanks [@phryneas](https://github.com/phryneas)! - `ObservableQuery`s will now only be registered with the `ApolloClient` while they
+  have subscribers.
+
+  That means that `ApolloClient.getObservableQueries` and `ApolloClient.refetchQueries`
+  will only be able to return/refetch queries that have at least one subscriber.
+
+  This changes the previous meaning of `active` and `inactive` queries:
+
+  - `inactive` queries are queries with a subscriber that are skipped from a
+    React hook or have a `fetchPolicy` of `standby`
+  - `active` queries are queries with at least one subscriber that are not skipped or in `standby`.
+
+  `ObservableQuery`s without subscribers but with an active ongoing network request
+  (e.g. caused by calling `reobserve`) will be handled as if they had a subscriber
+  for the duration of the query.
+
+- [#12678](https://github.com/apollographql/apollo-client/pull/12678) [`91a876b`](https://github.com/apollographql/apollo-client/commit/91a876b059042828e431931e7a3c2e0365c387b8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `queryRef`s created by `preloadQuery` no longer have a `.toPromise()` function. Instead `preloadQuery` now has a `toPromise` function that accepts a queryRef and will resolve when the underlying promise has been resolved.
+
+  ```diff
+  const queryRef = preloadQuery(query, options);
+
+  - await queryRef.toPromise();
+  + await preloadQuery.toPromise(queryRef);
+  ```
+
+- [#12647](https://github.com/apollographql/apollo-client/pull/12647) [`a70fac6`](https://github.com/apollographql/apollo-client/commit/a70fac6dd8f26b46c813723a7206e55bfb677690) Thanks [@phryneas](https://github.com/phryneas)! - `ApolloClient.stop()` now cleans up more agressively to prevent memory leaks:
+
+  - It will now unsubscribe all active `ObservableQuery` instances by emitting a `completed` event.
+  - It will now reject all currently running queries with `"QueryManager stopped while query was in flight"`.
+  - It will remove all queryRefs from the suspense cache.
+
+### Minor Changes
+
+- [#12647](https://github.com/apollographql/apollo-client/pull/12647) [`a70fac6`](https://github.com/apollographql/apollo-client/commit/a70fac6dd8f26b46c813723a7206e55bfb677690) Thanks [@phryneas](https://github.com/phryneas)! - Added a new `.stop` function on `ObservableQuery`.
+  Calling this method will unsubscribe all current subscribers by sending a `complete` event from the observable and tear down the `ObservableQuery`.
+
+## 4.0.0-alpha.19
+
+### Major Changes
+
+- [#12663](https://github.com/apollographql/apollo-client/pull/12663) [`01512f2`](https://github.com/apollographql/apollo-client/commit/01512f2429dd394fb72b8ba9284047a09ade666f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Unsubscribing from an `ObservableQuery` before a value has been emitted will remove the query from the tracked list of queries and will no longer be eligible for query deduplication.
+
+### Minor Changes
+
+- [#12663](https://github.com/apollographql/apollo-client/pull/12663) [`01512f2`](https://github.com/apollographql/apollo-client/commit/01512f2429dd394fb72b8ba9284047a09ade666f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Subscriptions created by `client.subscribe()` can now be restarted. Restarting a subscription will terminate the connection with the link chain and recreate the request. Restarts also work across deduplicated subscriptions so calling `restart` on an `observable` who's request is deduplicated will restart the connection for each observable.
+
+  ```ts
+  const observable = client.subscribe({ query: subscription });
+
+  // Restart the connection to the link
+  observable.restart();
+  ```
+
+- [#12663](https://github.com/apollographql/apollo-client/pull/12663) [`01512f2`](https://github.com/apollographql/apollo-client/commit/01512f2429dd394fb72b8ba9284047a09ade666f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deduplicating subscription operations is now supported. Previously it was possible to deduplicate a subscription only if the new subscription was created before a previously subscribed subscription emitted any values. As soon as a value was emitted from a subscription, new subscriptions would create new connections. Deduplication is now active for as long as a subscription connection is open (i.e. the source observable hasn't emitted a `complete` or `error` notification yet.)
+
+  To disable deduplication and force a new connection, use the `queryDeduplication` option in `context` like you would a query operation.
+
+  As a result of this change, calling the `restart` function returned from `useSubscription` will now restart the connection on deduplicated subscriptions.
+
+## 4.0.0-alpha.18
+
+### Minor Changes
+
+- [#12670](https://github.com/apollographql/apollo-client/pull/12670) [`0a880ea`](https://github.com/apollographql/apollo-client/commit/0a880ea4c2360a985fdd2edadb94fcc4b82bad73) Thanks [@phryneas](https://github.com/phryneas)! - Provide a mechanism to override the DataMasking types.
+
+  Up until now, our types `Masked`, `MaskedDocumentNode`, `FragmentType`, `MaybeMasked` and `Unmasked` would assume that you are stictly using the type output format of GraphQL Codegen.
+
+  With this change, you can now modify the behaviour of those types if you use a different form of codegen that produces different types for your queries.
+
+  A simple implementation that would override the `Masked` type to remove all fields starting with `_` from a type would look like this:
+
+  ```ts
+  // your actual implementation of `Masked`
+  type CustomMaskedImplementation<TData> = {
+    [K in keyof TData as K extends `_${string}` ? never : K]: TData[K];
+  };
+
+  import { HKT } from "@apollo/client/utilities";
+  // transform this type into a higher kinded type that can be evaulated at a later time
+  interface CustomMaskedType extends HKT {
+    arg1: unknown; // TData
+    return: CustomMaskedImplementation<this["arg1"]>;
+  }
+
+  // create an "implementation interface" for the types you want to override
+  export interface CustomDataMaskingImplementation {
+    Masked: CustomMaskedType;
+    // other possible keys: `MaskedDocumentNode`, `FragmentType`, `MaybeMasked` and `Unmasked`
+  }
+  ```
+
+  then you would use that `CustomDataMaskingImplementation` interface in your project to extend the `DataMasking` interface exported by `@apollo/client` with it's functionality:
+
+  ```ts
+  declare module "@apollo/client" {
+    export interface DataMasking extends CustomDataMaskingImplementation {}
+  }
+  ```
+
+  After that, all internal usage of `Masked` in Apollo Client as well as all usage in your code base will use the new `CustomMaskedType` implementation.
+
+  If you don't specify overrides, Apollo Client will still default to the GraphQL Codegen data masking implementation.
+  The types for that are also explicitly exported as the `GraphQLCodegenDataMasking` namespace in `@apollo/client/masking`.
+
 ## 4.0.0-alpha.17
 
 ### Major Changes

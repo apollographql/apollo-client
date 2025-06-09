@@ -1,6 +1,5 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import { Slot } from "optimism";
 import type {
   InteropObservable,
   MonoTypeOperatorFunction,
@@ -27,7 +26,6 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -227,18 +225,11 @@ export class ObservableQuery<
     Subscribable<ApolloQueryResult<MaybeMasked<TData>>>,
     InteropObservable<ApolloQueryResult<MaybeMasked<TData>>>
 {
-  /**
-   * @internal
-   * A slot used by the `useQuery` hook to indicate that `client.watchQuery`
-   * should not register the query immediately, but instead wait for the query to
-   * be started registered with the `QueryManager` when `useSyncExternalStore`
-   * actively subscribes to it.
-   */
-  private static inactiveOnCreation = new Slot<boolean>();
-
   public readonly options: ObservableQuery.Options<TData, TVariables>;
-  public readonly queryId: string;
   public readonly queryName?: string;
+
+  /** @internal will be read and written from `QueryInfo` */
+  public _lastWrite?: unknown;
 
   // The `query` computed property will always reflect the document transformed
   // by the last run query. `this.options.query` will always reflect the raw
@@ -260,18 +251,15 @@ export class ObservableQuery<
     query: TypedDocumentNode<TData, TVariables>;
     variables: TVariables;
   };
-  private input: Subject<
+  private input!: Subject<
     QueryNotification.Value<TData> & {
       query: DocumentNode | TypedDocumentNode<TData, TVariables>;
       variables: TVariables;
       meta: Meta;
     }
   >;
-  private subject: BehaviorSubject<
+  private subject!: BehaviorSubject<
     SubjectValue<MaybeMasked<TData>, TVariables>
-  >;
-  private readonly observable: Observable<
-    ApolloQueryResult<MaybeMasked<TData>>
   >;
 
   private isTornDown: boolean;
@@ -286,8 +274,6 @@ export class ObservableQuery<
   private waitForNetworkResult: boolean;
   private lastQuery: DocumentNode;
 
-  private queryInfo: QueryInfo;
-
   private linkSubscription?: Subscription;
 
   private pollingInfo?: {
@@ -301,17 +287,14 @@ export class ObservableQuery<
 
   constructor({
     queryManager,
-    queryInfo,
     options,
+    transformedQuery = queryManager.transform(options.query),
   }: {
     queryManager: QueryManager;
-    queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
+    transformedQuery?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    queryId?: string;
   }) {
-    let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
-
-    // related classes
-    this.queryInfo = queryInfo;
     this.queryManager = queryManager;
 
     // active state
@@ -333,7 +316,7 @@ export class ObservableQuery<
       ),
     } = options;
 
-    this.lastQuery = options.query;
+    this.lastQuery = transformedQuery;
 
     this.options = {
       ...options,
@@ -349,6 +332,18 @@ export class ObservableQuery<
       variables: this.getVariablesWithDefaults(options.variables),
     };
 
+    this.initializeObservablesQueue();
+
+    this["@@observable"] = () => this;
+    if (Symbol.observable) {
+      this[Symbol.observable] = () => this;
+    }
+
+    const opDef = getOperationDefinition(this.query);
+    this.queryName = opDef && opDef.name && opDef.name.value;
+  }
+
+  private initializeObservablesQueue() {
     this.subject = new BehaviorSubject<
       SubjectValue<MaybeMasked<TData>, TVariables>
     >({
@@ -357,13 +352,9 @@ export class ObservableQuery<
       result: uninitialized,
       meta: {},
     });
-    this.observable = this.subject.pipe(
+    const observable = this.subject.pipe(
       tap({
         subscribe: () => {
-          if (startedInactive) {
-            queryManager["queries"].set(this.queryId, queryInfo);
-            startedInactive = false;
-          }
           if (!this.subject.observed) {
             this.reobserve();
 
@@ -440,35 +431,26 @@ export class ObservableQuery<
       )
     );
 
-    this["@@observable"] = () => this;
-    if (Symbol.observable) {
-      this[Symbol.observable] = () => this;
-    }
-    this.pipe = this.observable.pipe.bind(this.observable);
-    this.subscribe = this.observable.subscribe.bind(this.observable);
+    this.pipe = observable.pipe.bind(observable);
+    this.subscribe = observable.subscribe.bind(observable);
 
     this.input = new Subject();
     // we want to feed many streams into `this.subject`, but none of them should
     // be able to close `this.input`
     this.input.complete = () => {};
     this.input.pipe(this.operator).subscribe(this.subject);
-
-    this.queryId = queryInfo.queryId || queryManager.generateQueryId();
-
-    const opDef = getOperationDefinition(this.query);
-    this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
   // We can't use Observable['subscribe'] here as the type as it conflicts with
   // the ability to infer T from Subscribable<T>. This limits the surface area
   // to the non-deprecated signature which works properly with type inference.
-  public subscribe: (
+  public subscribe!: (
     observer:
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) => Subscription;
 
-  public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
+  public pipe!: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
   public [Symbol.observable]!: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
@@ -477,12 +459,10 @@ export class ObservableQuery<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
 
-  /** @internal */
-  public resetDiff() {
-    this.queryInfo.resetDiff();
-  }
-
-  private getCacheDiff({ optimistic = true } = {}) {
+  /**
+   * @internal
+   */
+  public getCacheDiff({ optimistic = true } = {}) {
     return this.queryManager.cache.diff<TData>({
       query: this.query,
       variables: this.variables,
@@ -710,7 +690,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.getVariablesWithDefaults({ ...this.variables, ...variables });
     }
 
-    this.queryInfo.resetLastWrite();
+    this._lastWrite = undefined;
     return this._reobserve(reobserveOptions, {
       newNetworkStatus: NetworkStatus.refetch,
     });
@@ -756,8 +736,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     combinedOptions.query = this.transformDocument(combinedOptions.query);
 
-    const qid = this.queryManager.generateQueryId();
-
     // If a temporary query is passed to `fetchMore`, we don't want to store
     // it as the last query result since it may be an optimized query for
     // pagination. We will however run the transforms on the original document
@@ -792,10 +770,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       { shouldEmit: EmitBehavior.networkStatusChange }
     );
     return this.queryManager
-      .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
+      .fetchQuery(combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
-        this.queryManager.removeQuery(qid);
-
         // disable the `fetchMore` override that is currently active
         // the next updates caused by this should not be `fetchMore` anymore,
         // but `ready` or whatever other calculated loading state is currently
@@ -1117,8 +1093,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     const initialFetchPolicy = this.options.fetchPolicy;
-    const queryInfo = this.queryManager.getOrCreateQuery(this.queryId);
-    queryInfo.setObservableQuery(this);
     options.context ??= {};
 
     let synchronouslyEmitted = false;
@@ -1139,7 +1113,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               complete: () => subscriber.complete(),
             });
           } finally {
-            if (!synchronouslyEmitted && this.activeOperations.has(operation)) {
+            if (!synchronouslyEmitted) {
               operation.override = networkStatus;
               this.input.next({
                 kind: "N",
@@ -1166,15 +1140,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         });
 
     let { observable, fromLink } = this.queryManager.fetchObservableWithInfo(
-      queryInfo,
       options,
-      { networkStatus, query: fetchQuery, onCacheHit, fetchQueryOperator }
+      {
+        networkStatus,
+        query: fetchQuery,
+        onCacheHit,
+        fetchQueryOperator,
+        observableQuery: this,
+      }
     );
 
     // track query and variables from the start of the operation
     const { query, variables } = this;
     const operation: TrackedOperation = {
-      abort: () => subscription.unsubscribe(),
+      abort: () => {
+        subscription.unsubscribe();
+      },
       query,
       variables,
     };
@@ -1314,6 +1295,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.isTornDown = false;
     let { newNetworkStatus } = internalOptions || {};
 
+    this.queryManager.obsQueries.add(this);
+
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
       // options, without permanently altering the options of the
@@ -1441,7 +1424,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const ret = Object.assign(
       preventUnhandledRejection(
-        promise.then((result) => toQueryResult(this.maskResult(result)))
+        promise
+          .then((result) => toQueryResult(this.maskResult(result)))
+          .finally(() => {
+            if (!this.hasObservers() && this.activeOperations.size === 0) {
+              // If `reobserve` was called on a query without any obervers,
+              // the teardown logic would never be called, so we need to
+              // call it here to ensure the query is properly torn down.
+              this.tearDownQuery();
+            }
+          })
       ),
       {
         retain: () => {
@@ -1459,6 +1451,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.subject.observed;
   }
 
+  /**
+   * Tears down the `ObservableQuery` and stops all active operations by sending a `complete` notification.
+   */
+  public stop() {
+    this.subject.complete();
+    this.initializeObservablesQueue();
+    this.tearDownQuery();
+  }
+
   private tearDownQuery() {
     if (this.isTornDown) return;
 
@@ -1473,9 +1474,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
-    this.queryManager.removeQuery(this.queryId);
+    this.queryManager.obsQueries.delete(this);
     this.isTornDown = true;
     this.abortActiveOperations();
+    this._lastWrite = undefined;
   }
 
   private transformDocument(document: DocumentNode) {
@@ -1490,7 +1492,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             document: this.query,
             data: result.data,
             fetchPolicy: this.options.fetchPolicy,
-            id: this.queryId,
+            cause: this,
           }),
         }
       : result;

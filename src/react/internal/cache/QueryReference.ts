@@ -39,6 +39,7 @@ const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol.for(
 );
 const PROMISE_SYMBOL: unique symbol = Symbol.for("apollo.internal.refPromise");
 declare const QUERY_REF_BRAND: unique symbol;
+declare const PRELOADED_QUERY_REF_BRAND: unique symbol;
 /**
  * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
  * A child component reading the `QueryReference` via `useReadQuery` will
@@ -66,8 +67,6 @@ interface WrappedQueryRef<
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData, TStates>;
   /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData, TStates>;
-  /** @internal */
-  toPromise?(): Promise<unknown>;
 }
 
 /**
@@ -78,44 +77,8 @@ export interface PreloadedQueryRef<
   TVariables = unknown,
   TStates extends DataState<TData>["dataState"] = "complete" | "streaming",
 > extends QueryRef<TData, TVariables, TStates> {
-  /**
-   * A function that returns a promise that resolves when the query has finished
-   * loading. The promise resolves with the `QueryReference` itself.
-   *
-   * @remarks
-   * This method is useful for preloading queries in data loading routers, such
-   * as [React Router](https://reactrouter.com/en/main) or [TanStack Router](https://tanstack.com/router),
-   * to prevent routes from transitioning until the query has finished loading.
-   * `data` is not exposed on the promise to discourage using the data in
-   * `loader` functions and exposing it to your route components. Instead, we
-   * prefer you rely on `useReadQuery` to access the data to ensure your
-   * component can rerender with cache updates. If you need to access raw query
-   * data, use `client.query()` directly.
-   *
-   * @example
-   * Here's an example using React Router's `loader` function:
-   * ```ts
-   * import { createQueryPreloader } from "@apollo/client";
-   *
-   * const preloadQuery = createQueryPreloader(client);
-   *
-   * export async function loader() {
-   *   const queryRef = preloadQuery(GET_DOGS_QUERY);
-   *
-   *   return queryRef.toPromise();
-   * }
-   *
-   * export function RouteComponent() {
-   *   const queryRef = useLoaderData();
-   *   const { data } = useReadQuery(queryRef);
-   *
-   *   // ...
-   * }
-   * ```
-   *
-   * @since 3.9.0
-   */
-  toPromise(): Promise<PreloadedQueryRef<TData, TVariables, TStates>>;
+  /** @internal */
+  [PRELOADED_QUERY_REF_BRAND]: typeof PRELOADED_QUERY_REF_BRAND;
 }
 
 interface InternalQueryReferenceOptions {
@@ -128,26 +91,10 @@ export function wrapQueryRef<
   TVariables extends OperationVariables,
   TStates extends DataState<TData>["dataState"],
 >(internalQueryRef: InternalQueryReference<TData, TStates>) {
-  const ref: WrappedQueryRef<TData, TVariables, TStates> = {
-    toPromise() {
-      // We avoid resolving this promise with the query data because we want to
-      // discourage using the server data directly from the queryRef. Instead,
-      // the data should be accessed through `useReadQuery`. When the server
-      // data is needed, its better to use `client.query()` directly.
-      //
-      // Here we resolve with the ref itself to make using this in React Router
-      // or TanStack Router `loader` functions a bit more ergonomic e.g.
-      //
-      // function loader() {
-      //   return { queryRef: await preloadQuery(query).toPromise() }
-      // }
-      return getWrappedPromise(ref).then(() => ref);
-    },
+  return {
     [QUERY_REFERENCE_SYMBOL]: internalQueryRef,
     [PROMISE_SYMBOL]: internalQueryRef.promise,
-  };
-
-  return ref;
+  } as WrappedQueryRef<TData, TVariables, TStates>;
 }
 
 export function assertWrappedQueryRef<
@@ -315,7 +262,6 @@ export class InternalQueryReference<
       }
 
       if (!avoidNetworkRequests) {
-        observable.resetDiff();
         this.setResult();
       }
       this.subscribeToQuery();
@@ -410,7 +356,6 @@ export class InternalQueryReference<
 
   private dispose() {
     this.subscription.unsubscribe();
-    this.onDispose();
   }
 
   private onDispose() {
@@ -525,6 +470,10 @@ export class InternalQueryReference<
     this.subscription = this.observable
       .pipe(filter((result) => !equal(result, this.result)))
       .subscribe(this.handleNext as any);
+    // call `onDispose` when the subscription is finalized, either because it is
+    // unsubscribed as a consequence of a `dispose` call or because the
+    // ObservableQuery completes because of a `ApolloClient.stop()` call.
+    this.subscription.add(this.onDispose);
   }
 
   private setResult() {

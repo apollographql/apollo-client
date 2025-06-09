@@ -1,5 +1,9 @@
 import type { DocumentNode } from "graphql";
-import type { NextNotification, ObservableNotification } from "rxjs";
+import type {
+  NextNotification,
+  Observable,
+  ObservableNotification,
+} from "rxjs";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
@@ -318,4 +322,25 @@ export declare namespace QueryNotification {
     | FromNetwork<TData>
     | NewNetworkStatus<TData>
     | SetResult<TData>;
+}
+
+/** Observable created by initiating a subscription operation. */
+export interface SubscriptionObservable<T> extends Observable<T> {
+  /**
+   * Used to restart the connection to the link chain. Calling this on a
+   * deduplicated subscription will restart the connection for all observables
+   * that share the request.
+   *
+   * @example
+   *
+   * ```ts
+   * const observable = client.subscribe({ query: subscription });
+   * observable.subscribe((value) => {
+   *   // ...
+   * });
+   *
+   * observable.restart();
+   * ```
+   */
+  restart: () => void;
 }

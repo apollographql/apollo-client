@@ -2,7 +2,6 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import * as React from "react";
-import { Observable } from "rxjs";
 
 import type {
   ApolloClient,
@@ -11,7 +10,6 @@ import type {
   ErrorPolicy,
   FetchPolicy,
   OperationVariables,
-  SubscribeResult,
   SubscriptionOptions,
 } from "@apollo/client";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -301,6 +299,7 @@ export function useSubscription<
             }
           },
           complete() {
+            observable.__.completed = true;
             if (!subscriptionStopped && optionsRef.current.onComplete) {
               optionsRef.current.onComplete();
             }
@@ -312,9 +311,8 @@ export function useSubscription<
           // until after a short delay in case another useSubscription hook is
           // reusing the same underlying observable and is about to subscribe
           subscriptionStopped = true;
-          setTimeout(() => {
-            subscription.unsubscribe();
-          });
+
+          setTimeout(() => subscription.unsubscribe());
         };
       },
       [observable]
@@ -331,8 +329,12 @@ export function useSubscription<
       !optionsRef.current.skip,
       "A subscription that is skipped cannot be restarted."
     );
-    setObservable(recreateRef.current());
-  }, [optionsRef, recreateRef]);
+    if (observable?.__.completed) {
+      setObservable(recreateRef.current());
+    } else {
+      observable?.restart();
+    }
+  }, [optionsRef, recreateRef, observable]);
 
   return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }
@@ -362,6 +364,7 @@ function createSubscription<
   const __ = {
     ...options,
     client,
+    completed: false,
     result: {
       loading: true,
       data: void 0,
@@ -372,22 +375,10 @@ function createSubscription<
     },
   };
 
-  let observable: Observable<SubscribeResult<MaybeMasked<TData>>> | null = null;
-  return Object.assign(
-    new Observable<SubscribeResult<MaybeMasked<TData>>>((observer) => {
-      // lazily start the subscription when the first observer subscribes
-      // to get around strict mode
-      if (!observable) {
-        observable = client.subscribe(options);
-      }
-      const sub = observable.subscribe(observer);
-      return () => sub.unsubscribe();
-    }),
-    {
-      /**
-       * A tracking object to store details about the observable and the latest result of the subscription.
-       */
-      __,
-    }
-  );
+  return Object.assign(client.subscribe(options), {
+    /**
+     * A tracking object to store details about the observable and the latest result of the subscription.
+     */
+    __,
+  });
 }

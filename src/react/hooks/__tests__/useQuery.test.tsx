@@ -9217,8 +9217,8 @@ describe("useQuery Hook", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: undefined,
         variables: {},
       });
@@ -9331,8 +9331,8 @@ describe("useQuery Hook", () => {
           ],
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: undefined,
         variables: {},
       });
@@ -9369,8 +9369,8 @@ describe("useQuery Hook", () => {
           ],
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: {
           greetings: [
             { message: "Hello world", __typename: "Greeting" },
@@ -9527,8 +9527,8 @@ describe("useQuery Hook", () => {
           ],
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: undefined,
         variables: {},
       });
@@ -9585,8 +9585,8 @@ describe("useQuery Hook", () => {
           ],
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: {
           allProducts: [
             {
@@ -9673,8 +9673,8 @@ describe("useQuery Hook", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: undefined,
         variables: {},
       });
@@ -9807,8 +9807,8 @@ describe("useQuery Hook", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: undefined,
         variables: {},
       });
@@ -9958,8 +9958,8 @@ describe("useQuery Hook", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: undefined,
         variables: {},
       });
@@ -10136,8 +10136,8 @@ describe("useQuery Hook", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: {
           greeting: {
             __typename: "Greeting",
@@ -10266,8 +10266,8 @@ describe("useQuery Hook", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         previousData: {
           greeting: {
             __typename: "Greeting",

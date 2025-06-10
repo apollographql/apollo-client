@@ -1,5 +1,5 @@
 import { Trie } from "@wry/trie";
-import type { ASTNode, DirectiveNode, DocumentNode } from "graphql";
+import type { DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
 import { Observable } from "rxjs";
 import {

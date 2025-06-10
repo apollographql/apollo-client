@@ -2008,7 +2008,9 @@ describe("useLazyQuery Hook", () => {
       currentUser: { __typename: "User"; id: string } | null;
     }> = gql`
       query currentUser {
-        id
+        currentUser {
+          id
+        }
       }
     `;
 

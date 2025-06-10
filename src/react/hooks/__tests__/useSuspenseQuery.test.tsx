@@ -11531,7 +11531,6 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -11653,7 +11652,6 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -11772,7 +11770,6 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -11874,7 +11871,6 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -11993,7 +11989,6 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -12113,7 +12108,6 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });

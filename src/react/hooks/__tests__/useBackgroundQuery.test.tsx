@@ -4336,7 +4336,6 @@ it("masks queries updated by the cache", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
   });
@@ -4455,7 +4454,6 @@ it("does not rerender when updating field in named fragment", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
   });
@@ -4570,7 +4568,6 @@ it("masks result from cache when using with cache-first fetch policy", async () 
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
   });
@@ -4668,7 +4665,6 @@ it("masks cache and network result when using cache-and-network fetch policy", a
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
   });
@@ -4786,7 +4782,6 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
   });
@@ -4904,7 +4899,6 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
   });

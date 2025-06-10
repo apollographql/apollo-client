@@ -16,6 +16,7 @@ import type { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   checkDocument,
+  compact,
   getApolloClientMemoryInternals,
   mergeOptions,
 } from "@apollo/client/utilities/internal";
@@ -38,6 +39,8 @@ import type {
   SubscriptionObservable,
 } from "./types.js";
 import type {
+  ErrorPolicy,
+  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -489,8 +492,6 @@ export class ApolloClient implements DataProxy {
         !(options as any).notifyOnNetworkStatusChange,
         "notifyOnNetworkStatusChange option only supported on watchQuery."
       );
-
-      checkDocument(options.query, OperationTypeNode.QUERY);
     }
 
     return this.queryManager.query<TData, TVariables>(options);
@@ -509,11 +510,37 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
     TCache extends ApolloCache = ApolloCache,
   >(
-    options: MutationOptions<TData, TVariables, TCache>
+    _options: MutationOptions<TData, TVariables, TCache>
   ): Promise<MutateResult<MaybeMasked<TData>>> {
-    if (this.defaultOptions.mutate) {
-      options = mergeOptions(this.defaultOptions.mutate, options);
+    const options = mergeOptions(
+      compact(
+        {
+          fetchPolicy: "network-only" as MutationFetchPolicy,
+          errorPolicy: "none" as ErrorPolicy,
+        },
+        this.defaultOptions.mutate
+      ),
+      _options
+    ) as MutationOptions<TData, TVariables, TCache> & {
+      fetchPolicy: MutationFetchPolicy;
+      errorPolicy: ErrorPolicy;
+    };
+
+    if (__DEV__) {
+      invariant(
+        options.mutation,
+        "mutation option is required. You must specify your GraphQL document in the mutation option."
+      );
+
+      invariant(
+        options.fetchPolicy === "network-only" ||
+          options.fetchPolicy === "no-cache",
+        "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
+      );
     }
+
+    checkDocument(options.mutation, OperationTypeNode.MUTATION);
+
     return this.queryManager.mutate<TData, TVariables, TCache>(options);
   }
 

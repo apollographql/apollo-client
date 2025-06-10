@@ -89,6 +89,7 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
+  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -261,25 +262,14 @@ export class QueryManager {
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
     onQueryUpdated,
-    fetchPolicy = this.defaultOptions.mutate?.fetchPolicy || "network-only",
-    errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
+    fetchPolicy,
+    errorPolicy,
     keepRootFields,
     context,
-  }: MutationOptions<TData, TVariables, TCache>): Promise<
-    MutateResult<MaybeMasked<TData>>
-  > {
-    invariant(
-      mutation,
-      "mutation option is required. You must specify your GraphQL document in the mutation option."
-    );
-
-    checkDocument(mutation, OperationTypeNode.MUTATION);
-
-    invariant(
-      fetchPolicy === "network-only" || fetchPolicy === "no-cache",
-      "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
-    );
-
+  }: MutationOptions<TData, TVariables, TCache> & {
+    errorPolicy: ErrorPolicy;
+    fetchPolicy: MutationFetchPolicy;
+  }): Promise<MutateResult<MaybeMasked<TData>>> {
     const queryInfo = new QueryInfo(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
@@ -456,7 +446,12 @@ export class QueryManager {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
-    return lastValueFrom(
+    checkDocument(options.query, OperationTypeNode.QUERY);
+
+    // do the rest asynchronously to keep the same rejection timing as
+    // checks further in `.mutate`
+    return (async () =>
+      lastValueFrom(
       this.fetchObservableWithInfo(options, {
         networkStatus,
       }).observable.pipe(
@@ -476,7 +471,7 @@ export class QueryManager {
         // an EmptyError from rejecting this promise.
         defaultValue: { data: undefined },
       }
-    );
+      ))();
   }
 
   public transform(document: DocumentNode) {
@@ -620,10 +615,7 @@ export class QueryManager {
     return observable;
   }
 
-  public async query<
-    TData,
-    TVars extends OperationVariables = OperationVariables,
-  >(
+  public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
@@ -1768,8 +1760,6 @@ function isFullyUnmaskedOperation(document: DocumentNode) {
 }
 
 function addNonReactiveToNamedFragments(document: DocumentNode) {
-  checkDocument(document);
-
   return visit(document, {
     FragmentSpread: (node) => {
       // Do not add `@nonreactive` if the fragment is marked with `@unmask`

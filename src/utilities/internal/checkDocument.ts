@@ -2,6 +2,7 @@
 
 import type { DocumentNode, OperationTypeNode } from "graphql";
 
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   invariant,
   newInvariantError,
@@ -21,23 +22,28 @@ export function checkDocument(
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
   );
 
-  const operations = doc.definitions
-    .filter((d) => d.kind !== "FragmentDefinition")
-    .map((definition) => {
-      if (definition.kind !== "OperationDefinition") {
+  const operations = doc.definitions.filter(
+    (d) => d.kind === "OperationDefinition"
+  );
+  if (__DEV__) {
+    doc.definitions.forEach((definition) => {
+      if (
+        definition.kind !== "OperationDefinition" &&
+        definition.kind !== "FragmentDefinition"
+      ) {
         throw newInvariantError(
           `Schema type definitions not allowed in queries. Found: "%s"`,
           definition.kind
         );
       }
-      return definition;
     });
 
   invariant(
-    operations.length <= 1,
+      operations.length == 1,
     `Ambiguous GraphQL document: contains %s operations`,
     operations.length
   );
+  }
 
   if (expectedType) {
     invariant(

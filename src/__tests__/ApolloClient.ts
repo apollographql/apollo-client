@@ -2648,7 +2648,11 @@ describe("ApolloClient", () => {
 
     it("supports the @includes directive with `variables` - parallel cache modification", async () => {
       const cache = new InMemoryCache();
-      const client = new ApolloClient({ cache, link: ApolloLink.empty() });
+      const client = new ApolloClient({
+        cache,
+        dataMasking: false,
+        link: ApolloLink.empty(),
+      });
 
       const FullFragment = gql`
         fragment ItemFragment on Item {
@@ -2719,6 +2723,7 @@ describe("ApolloClient", () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
+        dataMasking: false,
         link: ApolloLink.empty(),
       });
 
@@ -2784,6 +2789,7 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         cache,
+        dataMasking: false,
         link: ApolloLink.empty(),
       });
 

@@ -30,6 +30,7 @@ const setupTestWithResolvers = ({
   delay?: number;
 }) => {
   const client = new ApolloClient({
+    dataMasking: false,
     cache: new InMemoryCache(),
     link: new MockLink([
       {
@@ -1025,6 +1026,7 @@ describe("Resolving field aliases", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      dataMasking: false,
       link,
       localState: new LocalState({
         resolvers: {

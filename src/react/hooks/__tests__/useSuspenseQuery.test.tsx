@@ -7877,10 +7877,15 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      { client }
     );
 
     expect(renders.suspenseCount).toBe(1);

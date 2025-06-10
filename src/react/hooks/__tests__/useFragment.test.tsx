@@ -1057,9 +1057,14 @@ describe("useFragment", () => {
         },
       },
     });
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache,
+      link: ApolloLink.empty(),
+    });
 
     const wrapper = ({ children }: any) => (
-      <MockedProvider cache={cache}>{children}</MockedProvider>
+      <ApolloProvider client={client}>{children}</ApolloProvider>
     );
 
     const ListAndItemFragments: TypedDocumentNode<QueryData> = gql`
@@ -1537,6 +1542,7 @@ describe("useFragment", () => {
     };
 
     const client = new ApolloClient({
+      dataMasking: false,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -2195,6 +2201,7 @@ describe("has the same timing as `useQuery`", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
+      dataMasking: false,
       link: new ApolloLink(
         (operation) => new Observable((o) => void (observer = o))
       ),
@@ -2264,6 +2271,7 @@ describe("has the same timing as `useQuery`", () => {
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
+      dataMasking: false,
       link: ApolloLink.empty(),
     });
     cache.writeQuery({ query, data: { items: [item1, item2] } });

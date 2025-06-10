@@ -1795,7 +1795,8 @@ export enum NetworkStatus {
     poll = 6,
     ready = 7,
     refetch = 4,
-    setVariables = 2
+    setVariables = 2,
+    streaming = 9
 }
 
 // @public (undocumented)

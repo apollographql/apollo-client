@@ -7498,8 +7498,8 @@ describe("ApolloClient", () => {
       const initialResult: ApolloQueryResult<typeof initialData> = {
         data: initialData,
         dataState: "streaming",
-        loading: false,
-        networkStatus: 7,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         partial: true,
       };
 
@@ -7543,11 +7543,9 @@ describe("ApolloClient", () => {
         ],
         hasNext: true,
       };
-      const resultAfterFirstChunk = {
-        ...structuredClone(initialResult),
-        dataState: "streaming",
-        partial: true,
-      } as ApolloQueryResult<any>;
+      const resultAfterFirstChunk = structuredClone(
+        initialResult
+      ) as ApolloQueryResult<any>;
       resultAfterFirstChunk.data.people.friends[0].name = "Leia";
 
       defer.enqueueSubsequentChunk(firstChunk);
@@ -7575,6 +7573,8 @@ describe("ApolloClient", () => {
       };
       const resultAfterSecondChunk = {
         ...structuredClone(resultAfterFirstChunk),
+        loading: false,
+        networkStatus: NetworkStatus.ready,
         dataState: "complete",
         partial: false,
       } as ApolloQueryResult<any>;

@@ -1851,7 +1851,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
       data: { greeting: { message: "Hello world", __typename: "Greeting" } },
       dataState: "streaming",
       error: undefined,
-      networkStatus: NetworkStatus.ready,
+      networkStatus: NetworkStatus.streaming,
     });
   }
 

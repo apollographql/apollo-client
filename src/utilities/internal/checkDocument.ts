@@ -22,7 +22,7 @@ import { getOperationName } from "./getOperationName.js";
  *
  * @internal */
 export const checkDocument = wrap(
-  (doc: DocumentNode, expectedType?: OperationTypeNode) => {
+  (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
     invariant(
       doc && doc.kind === "Document",
       `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
@@ -89,8 +89,6 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
         }
       },
     });
-
-    return doc;
   },
   {
     max: cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"],

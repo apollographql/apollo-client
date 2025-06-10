@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
 import { checkDocument } from "@apollo/client/utilities/internal";
 import { OperationTypeNode } from "graphql";
+import { InvariantError } from "../../invariant/index.js";
 
 test("should correctly check a document for correctness", () => {
   const multipleQueries = gql`
@@ -39,23 +40,57 @@ test("should correctly check a document for correctness", () => {
 });
 
 test("caches the result of checking a valid document", () => {
-  const query = gql`
-    query {
-      me
+  let kindLookupCount = 0;
+  const query = new Proxy(
+    gql`
+      query {
+        me
+      }
+    `,
+    {
+      get(target, prop) {
+        if (prop === "kind") {
+          kindLookupCount++;
+        }
+        return Reflect.get(target, prop);
+      },
     }
-  `;
+  );
   checkDocument(query, OperationTypeNode.QUERY);
-  expect(checkDocument.peek(query, OperationTypeNode.QUERY)).toBeDefined();
+  expect(kindLookupCount).toBeGreaterThan(0);
+  kindLookupCount = 0;
+  checkDocument(query, OperationTypeNode.QUERY);
+  expect(kindLookupCount).toBe(0);
 });
 
-test("does not cache the result of checking an invalid document", () => {
-  const query = gql`
-    query {
-      __typename: me
+test("caches thrown errors", () => {
+  let kindLookupCount = 0;
+  const query = new Proxy(
+    gql`
+      query {
+        __typename: me
+      }
+    `,
+    {
+      get(target, prop) {
+        if (prop === "kind") {
+          kindLookupCount++;
+        }
+        return Reflect.get(target, prop);
+      },
     }
-  `;
-  try {
-    checkDocument(query, OperationTypeNode.QUERY);
-  } catch {}
-  expect(checkDocument.peek(query, OperationTypeNode.QUERY)).not.toBeDefined();
+  );
+  expect(() => checkDocument(query, OperationTypeNode.QUERY)).toThrow(
+    new InvariantError(
+      '`__typename` is a forbidden field alias name in the selection set for field `__typename` in query "<undefined>".'
+    )
+  );
+  expect(kindLookupCount).toBeGreaterThan(0);
+  kindLookupCount = 0;
+  expect(() => checkDocument(query, OperationTypeNode.QUERY)).toThrow(
+    new InvariantError(
+      '`__typename` is a forbidden field alias name in the selection set for field `__typename` in query "<undefined>".'
+    )
+  );
+  expect(kindLookupCount).toBe(0);
 });

@@ -42,7 +42,7 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
     });
 
     invariant(
-      operations.length == 1,
+      operations.length <= 1,
       `Ambiguous GraphQL document: contains %s operations`,
       operations.length
     );

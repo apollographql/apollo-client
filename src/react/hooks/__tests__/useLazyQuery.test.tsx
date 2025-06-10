@@ -2023,14 +2023,6 @@ describe("useLazyQuery Hook", () => {
         },
         delay: 20,
       },
-      {
-        request: { query },
-        result: {
-          data: { currentUser: null },
-          errors: [{ message: "Not logged in 2" }],
-        },
-        delay: 20,
-      },
     ];
 
     using _disabledAct = disableActEnvironment();
@@ -2099,12 +2091,9 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
+    // Data is read from the cache the 2nd time
     await expect(execute()).resolves.toStrictEqualTyped({
       data: { currentUser: null },
-      error: new CombinedGraphQLErrors({
-        data: { currentUser: null },
-        errors: [{ message: "Not logged in 2" }],
-      }),
     });
 
     {
@@ -2116,27 +2105,9 @@ describe("useLazyQuery Hook", () => {
         },
         dataState: "complete",
         called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toStrictEqualTyped({
-        data: { currentUser: null },
-        dataState: "complete",
-        called: true,
         loading: false,
-        networkStatus: NetworkStatus.error,
+        networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        error: new CombinedGraphQLErrors({
-          data: { currentUser: null },
-          errors: [{ message: "Not logged in 2" }],
-        }),
         variables: {},
       });
     }

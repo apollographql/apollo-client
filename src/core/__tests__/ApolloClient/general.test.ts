@@ -8054,6 +8054,137 @@ describe("ApolloClient", () => {
       }
     );
   });
+
+  describe("forbidden field alias names", () => {
+    it("`ApolloClient.query` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          hello: __typename
+        }
+      `;
+      await expect(() => client.query({ query })).rejects.toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello` in query "Test".'
+        )
+      );
+    });
+
+    it("Aliasing `__typename` to `__typename` is, while weird, not forbidden.", async () => {
+      const query = gql`
+        query Test {
+          __typename: __typename
+        }
+      `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data: {} },
+          },
+        ]),
+      });
+
+      expect(await client.query({ query })).toStrictEqualTyped({
+        data: { __typename: "Query" },
+      });
+    });
+
+    it("`ApolloClient.watchQuery` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          hello {
+            world: __typename
+          }
+        }
+      `;
+      expect(() => client.watchQuery({ query }).subscribe({})).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in query "Test".'
+        )
+      );
+    });
+
+    it("calling `ObservableQuery.fetchMore` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          hello {
+            world
+          }
+        }
+      `;
+      const observable = client.watchQuery({ query });
+      observable.subscribe({});
+      expect(() =>
+        observable.fetchMore({
+          query: gql`
+            query Test {
+              hello {
+                world
+                fetchMore: __typename
+              }
+            }
+          `,
+        })
+      ).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.fetchMore` in query "Test".'
+        )
+      );
+    });
+
+    it("`ApolloClient.mutate` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const mutation = gql`
+        mutation AddTestUser {
+          addUser(id: 5) {
+            hello {
+              world: __typename
+            }
+          }
+        }
+      `;
+      await expect(() => client.mutate({ mutation })).rejects.toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.world` in mutation "AddTestUser".'
+        )
+      );
+    });
+
+    it("`ApolloClient.subscribe` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        subscription Test {
+          hello {
+            world: __typename
+          }
+        }
+      `;
+      expect(() => client.subscribe({ query }).subscribe({})).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in subscription "Test".'
+        )
+      );
+    });
+  });
 });
 
 describe.skip("type tests", () => {

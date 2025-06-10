@@ -1,5 +1,5 @@
 import { Trie } from "@wry/trie";
-import type { DirectiveNode, DocumentNode } from "graphql";
+import type { ASTNode, DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
 import { Observable } from "rxjs";
 import {
@@ -44,6 +44,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   AutoCleanedWeakCache,
   checkDocument,
+  checkViolations,
   filterMap,
   getDefaultValues,
   getGraphQLErrorsFromResult,
@@ -61,6 +62,7 @@ import {
 } from "@apollo/client/utilities/internal";
 import {
   invariant,
+  InvariantError,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
@@ -112,6 +114,7 @@ interface TransformCacheEntry {
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
   operationType: OperationTypeNode | undefined;
+  violation?: Error | undefined;
 }
 
 interface MaskFragmentOptions<TData> {
@@ -533,12 +536,47 @@ export class QueryManager {
             return def;
           }),
         },
+        violation: checkViolations(
+          {
+            Field(field, _, __, path) {
+              if (
+                field.alias &&
+                field.name.value === "__typename" &&
+                field.alias.value !== "__typename"
+              ) {
+                // not using `invariant` so path calculation only happens in error case
+                let current: ASTNode = document,
+                  fieldPath: string[] = [];
+                for (const key of path) {
+                  current = (current as any)[key];
+                  if (current.kind === Kind.FIELD) {
+                    fieldPath.push(current.alias?.value || current.name.value);
+                  }
+                }
+
+                throw newInvariantError(
+                  '`__typename` is a forbidden field alias name in the selection set for field `%s` in %s "%s".',
+                  fieldPath.join("."),
+                  operationDefinition?.operation,
+                  getOperationName(document)
+                );
+              }
+            },
+          },
+          document
+        ),
       };
+
+      console.log(cacheEntry.violation);
 
       transformCache.set(document, cacheEntry);
     }
 
-    return transformCache.get(document)!;
+    const entry = transformCache.get(document)!;
+    if (entry.violation) {
+      throw entry.violation;
+    }
+    return entry;
   }
 
   public getVariables<TVariables>(

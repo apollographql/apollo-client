@@ -143,7 +143,7 @@ export interface ApolloClientOptions {
   /**
    * Determines if data masking is enabled for the client.
    *
-   * @defaultValue false
+   * @defaultValue true
    */
   dataMasking?: boolean;
 }
@@ -246,7 +246,7 @@ export class ApolloClient implements DataProxy {
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
-      dataMasking,
+      dataMasking = true,
       link,
     } = options;
 
@@ -279,7 +279,7 @@ export class ApolloClient implements DataProxy {
       documentTransform,
       queryDeduplication,
       ssrMode,
-      dataMasking: !!dataMasking,
+      dataMasking,
       clientAwareness: {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,

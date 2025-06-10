@@ -10758,7 +10758,7 @@ describe("useQuery Hook", () => {
       await expect(renderStream).not.toRerender();
     });
 
-    it("does not mask query by default", async () => {
+    it("masks query by default", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -10772,10 +10772,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<
-        Unmasked<Query>,
-        Record<string, never>
-      > = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10811,9 +10808,7 @@ describe("useQuery Hook", () => {
       });
 
       const renderStream =
-        createRenderStream<
-          useQuery.Result<Unmasked<Query>, Record<string, never>>
-        >();
+        createRenderStream<useQuery.Result<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
@@ -10841,7 +10836,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            age: 30,
           },
         },
         dataState: "complete",

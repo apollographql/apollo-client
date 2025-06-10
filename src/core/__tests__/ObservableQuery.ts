@@ -2772,6 +2772,7 @@ describe("ObservableQuery", () => {
       };
 
       const client = new ApolloClient({
+        dataMasking: false,
         link: new MockLink([
           {
             request: { query: queryWithFragment, variables },

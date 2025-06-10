@@ -62,7 +62,6 @@ import {
 } from "@apollo/client/utilities/internal";
 import {
   invariant,
-  InvariantError,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 

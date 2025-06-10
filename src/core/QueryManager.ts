@@ -567,8 +567,6 @@ export class QueryManager {
         ),
       };
 
-      console.log(cacheEntry.violation);
-
       transformCache.set(document, cacheEntry);
     }
 

@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 4.0.0-alpha.21
+
+### Major Changes
+
+- [#12686](https://github.com/apollographql/apollo-client/pull/12686) [`dc4b1d0`](https://github.com/apollographql/apollo-client/commit/dc4b1d0d2479a37067113b7bd161a550fb8e4df6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - A `@defer` query that has not yet finished streaming is now considered loading and thus the `loading` flag will be `true` until the response has completed. A new `NetworkStatus.streaming` value has been introduced and will be set as the `networkStatus` while the response is streaming.
+
+- [#12685](https://github.com/apollographql/apollo-client/pull/12685) [`3b74800`](https://github.com/apollographql/apollo-client/commit/3b748003df89ec69a6ad045fb47bbe9c3e62104c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the check and warning for `cache.fragmentMatches` when applying data masking. `cache.fragmentMatches` is a required API and data masking may crash when `cache.fragmentMatches` does not exist.
+
+- [#12684](https://github.com/apollographql/apollo-client/pull/12684) [`e697431`](https://github.com/apollographql/apollo-client/commit/e697431a9995fd1900e625c30a9065edd71111d9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `context` from `useLazyQuery` hook options. If used, `context` must now be provided to the `execute` function. `context` will reset to `{}` if not provided as an option to `execute`.
+
 ## 4.0.0-alpha.20
 
 ### Major Changes

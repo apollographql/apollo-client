@@ -3193,7 +3193,6 @@ describe("client.watchFragment", () => {
     `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3256,7 +3255,6 @@ describe("client.watchFragment", () => {
     `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3341,7 +3339,6 @@ describe("client.watchFragment", () => {
     `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3440,7 +3437,6 @@ describe("client.watchFragment", () => {
       `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3566,7 +3562,6 @@ describe("client.watchFragment", () => {
       `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3687,7 +3682,6 @@ describe("client.watchFragment", () => {
       `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3811,7 +3805,6 @@ describe("client.watchFragment", () => {
     `;
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: ApolloLink.empty(),
     });
@@ -3877,7 +3870,6 @@ describe("client.watchFragment", () => {
     fragments.register(profileFieldsFragment);
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache({ fragments }),
       link: ApolloLink.empty(),
     });
@@ -4121,7 +4113,6 @@ describe("client.query", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -4157,7 +4148,6 @@ describe("client.query", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -4206,7 +4196,6 @@ describe("client.query", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -4280,7 +4269,6 @@ describe("client.query", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -4408,7 +4396,6 @@ describe("client.query", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -4478,7 +4465,6 @@ describe("client.query", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -4666,7 +4652,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link,
     });
@@ -4713,7 +4698,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link,
     });
@@ -4760,7 +4744,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link,
     });
@@ -4820,7 +4803,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link,
     });
@@ -4962,7 +4944,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link,
     });
@@ -5025,7 +5006,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link,
     });
@@ -5738,7 +5718,6 @@ describe("client.mutate", () => {
 
     const cache = new InMemoryCache();
     const client = new ApolloClient({
-      dataMasking: true,
       cache,
       link: new MockLink(mocks),
     });
@@ -5802,7 +5781,6 @@ describe("client.mutate", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -5856,7 +5834,6 @@ describe("client.mutate", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -5922,7 +5899,6 @@ describe("client.mutate", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -6001,7 +5977,6 @@ describe("client.mutate", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -6136,7 +6111,6 @@ describe("client.mutate", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
@@ -6213,7 +6187,6 @@ describe("client.mutate", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });

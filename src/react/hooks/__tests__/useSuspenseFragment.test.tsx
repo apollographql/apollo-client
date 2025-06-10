@@ -1232,7 +1232,6 @@ test("returns masked fragment when data masking is enabled", async () => {
   } & { " $fragmentName"?: "PostFields" };
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });
@@ -1303,7 +1302,6 @@ test("does not rerender for cache writes to masked fields", async () => {
   } & { " $fragmentName"?: "PostFields" };
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });
@@ -1385,7 +1383,6 @@ test("updates child fragments for cache updates to masked fields", async () => {
   } & { " $fragmentName"?: "PostFields" };
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });

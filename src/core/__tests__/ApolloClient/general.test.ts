@@ -8073,6 +8073,25 @@ describe("ApolloClient", () => {
       );
     });
 
+    it("`ApolloClient.query` throws when encountering a query that aliases another field to `__ac_*`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          foo {
+            __ac_foo: hello
+          }
+        }
+      `;
+      expect(() => client.query({ query })).toThrow(
+        new InvariantError(
+          '`__ac_foo` is a forbidden field alias name in the selection set for field `foo.__ac_foo` in query "Test".'
+        )
+      );
+    });
+
     it("Aliasing `__typename` to `__typename` is, while weird, not forbidden.", async () => {
       const query = gql`
         query Test {

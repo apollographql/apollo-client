@@ -3723,7 +3723,6 @@ describe("useLazyQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });
@@ -3859,7 +3858,6 @@ describe("useLazyQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });

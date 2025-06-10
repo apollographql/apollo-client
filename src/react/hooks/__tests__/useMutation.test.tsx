@@ -4518,7 +4518,6 @@ describe("data masking", () => {
 
     const cache = new InMemoryCache();
     const client = new ApolloClient({
-      dataMasking: true,
       cache,
       link: new MockLink(mocks),
     });

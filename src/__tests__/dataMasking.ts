@@ -2,16 +2,8 @@ import type { FragmentSpreadNode } from "graphql";
 import { Kind, visit } from "graphql";
 import { of } from "rxjs";
 
-import type {
-  Cache,
-  DataProxy,
-  FetchPolicy,
-  OperationVariables,
-  Reference,
-  TypedDocumentNode,
-} from "@apollo/client";
+import type { FetchPolicy, TypedDocumentNode } from "@apollo/client";
 import {
-  ApolloCache,
   ApolloClient,
   ApolloLink,
   DocumentTransform,
@@ -21,7 +13,7 @@ import {
 } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import type { MaskedDocumentNode } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -425,90 +417,6 @@ describe("client.watchQuery", () => {
         },
       });
     }
-  });
-
-  test("does not mask query when using a cache that does not support it", async () => {
-    using _ = spyOnConsole("warn");
-
-    type UserFieldsFragment = {
-      age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" };
-
-    interface Query {
-      currentUser: {
-        __typename: "User";
-        id: number;
-        name: string;
-      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
-    }
-
-    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
-      query MaskedQuery {
-        currentUser {
-          id
-          name
-          ...UserFields
-        }
-      }
-
-      fragment UserFields on User {
-        age
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query },
-        result: {
-          data: {
-            currentUser: {
-              __typename: "User",
-              id: 1,
-              name: "Test User",
-              age: 30,
-            },
-          },
-        },
-      },
-    ];
-
-    const client = new ApolloClient({
-      dataMasking: true,
-      cache: new TestCache(),
-      link: new MockLink(mocks),
-    });
-
-    const observable = client.watchQuery({ query });
-
-    const stream = new ObservableStream(observable);
-
-    await expect(stream).toEmitTypedValue({
-      data: undefined,
-      dataState: "empty",
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    });
-
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
-      });
-    }
-
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "The configured cache does not support data masking"
-      )
-    );
   });
 
   test("masks queries updated by the cache", async () => {
@@ -2206,9 +2114,8 @@ describe("client.watchQuery", () => {
         greeting: { message: "Hello world", __typename: "Greeting" },
       },
       dataState: "streaming",
-      // TODO: Is this loading state correct?
-      loading: false,
-      networkStatus: NetworkStatus.ready,
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
       partial: true,
     });
 
@@ -6247,51 +6154,3 @@ describe("client.mutate", () => {
     );
   });
 });
-
-// @ts-ignore intentionally don't implement fragmentMatches until we remove the
-// check for it
-class TestCache extends ApolloCache {
-  public diff<T>(query: Cache.DiffOptions<T>): DataProxy.DiffResult<T> {
-    return { result: null, complete: false };
-  }
-
-  public evict(): boolean {
-    return false;
-  }
-
-  public extract(optimistic?: boolean): unknown {
-    return undefined;
-  }
-
-  public performTransaction(transaction: (c: ApolloCache) => void): void {
-    transaction(this);
-  }
-
-  public read<T = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, T>
-  ): Unmasked<T> | null {
-    return null;
-  }
-
-  public removeOptimistic(id: string): void {}
-
-  public reset(): Promise<void> {
-    return new Promise<void>(() => null);
-  }
-
-  public restore(serializedState: unknown): this {
-    return this;
-  }
-
-  public watch<T, TVariables>(
-    watch: Cache.WatchOptions<T, TVariables>
-  ): () => void {
-    return function () {};
-  }
-
-  public write<TResult = unknown, TVariables = OperationVariables>(
-    _: Cache.WriteOptions<TResult, TVariables>
-  ): Reference | undefined {
-    return;
-  }
-}

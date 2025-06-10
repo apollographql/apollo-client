@@ -7167,7 +7167,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toStrictEqualTyped({
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -7208,7 +7208,7 @@ describe("useSuspenseQuery", () => {
       {
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -7271,7 +7271,7 @@ describe("useSuspenseQuery", () => {
             greeting: { message: "Hello world", __typename: "Greeting" },
           },
           dataState: "streaming",
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.streaming,
           error: undefined,
         });
       });
@@ -7314,7 +7314,7 @@ describe("useSuspenseQuery", () => {
             greeting: { message: "Hello world", __typename: "Greeting" },
           },
           dataState: "streaming",
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.streaming,
           error: undefined,
         },
         {
@@ -7465,7 +7465,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -7523,7 +7523,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -7605,7 +7605,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -7664,7 +7664,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -7726,7 +7726,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -7762,7 +7762,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -7815,7 +7815,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -7833,7 +7833,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -7934,7 +7934,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -7990,7 +7990,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -8035,7 +8035,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -8105,7 +8105,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -8169,7 +8169,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -8199,7 +8199,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -8270,7 +8270,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -8327,7 +8327,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -8410,7 +8410,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -8491,7 +8491,7 @@ describe("useSuspenseQuery", () => {
     //       ],
     //     },
     //     dataState: "streaming",
-    //     networkStatus: NetworkStatus.ready,
+    //     networkStatus: NetworkStatus.streaming,
     //     error: undefined,
     //   });
     // });
@@ -8569,7 +8569,7 @@ describe("useSuspenseQuery", () => {
           ],
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -8608,7 +8608,7 @@ describe("useSuspenseQuery", () => {
       //     ],
       //   },
       //   dataState: "streaming",
-      //   networkStatus: NetworkStatus.ready,
+      //   networkStatus: NetworkStatus.streaming,
       //   error: undefined,
       // },
       {
@@ -8697,7 +8697,7 @@ describe("useSuspenseQuery", () => {
             ],
           },
           dataState: "streaming",
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.streaming,
           error: undefined,
         });
       });
@@ -8779,7 +8779,7 @@ describe("useSuspenseQuery", () => {
             ],
           },
           dataState: "streaming",
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.streaming,
           error: undefined,
         });
       });
@@ -8860,7 +8860,7 @@ describe("useSuspenseQuery", () => {
             ],
           },
           dataState: "streaming",
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.streaming,
           error: undefined,
         },
         {
@@ -8898,7 +8898,7 @@ describe("useSuspenseQuery", () => {
             ],
           },
           dataState: "streaming",
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.streaming,
           error: undefined,
         },
         {
@@ -9131,7 +9131,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -9187,7 +9187,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
     ]);
@@ -9270,7 +9270,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -9373,7 +9373,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -9488,7 +9488,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -9564,7 +9564,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -9644,7 +9644,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -9744,7 +9744,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       });
     });
@@ -9839,7 +9839,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {
@@ -9884,7 +9884,7 @@ describe("useSuspenseQuery", () => {
           },
         },
         dataState: "streaming",
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.streaming,
         error: undefined,
       },
       {

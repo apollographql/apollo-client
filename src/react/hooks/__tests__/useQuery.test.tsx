@@ -10891,7 +10891,6 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });
@@ -11019,7 +11018,6 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });
@@ -11135,7 +11133,6 @@ describe("useQuery Hook", () => {
         ];
 
         const client = new ApolloClient({
-          dataMasking: true,
           cache: new InMemoryCache(),
           link: new MockLink(mocks),
         });
@@ -11235,7 +11232,6 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });
@@ -11361,7 +11357,6 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });
@@ -11490,7 +11485,6 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
         cache: new InMemoryCache(),
         link: new MockLink(mocks),
       });

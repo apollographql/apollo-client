@@ -857,7 +857,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           });
         }
 
-        return this.maskResult(fetchMoreResult);
+        return this.maskResult(
+          fetchMoreResult,
+          combinedOptions.query as DocumentNode
+        );
       })
       .finally(() => {
         // call `finalize` a second time in case the `.then` case above was not reached
@@ -1484,12 +1487,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.queryManager.transform(document);
   }
 
-  private maskResult<T extends { data: any }>(result: T): T {
+  private maskResult<T extends { data: any }>(
+    result: T,
+    query = this.query
+  ): T {
     return result && "data" in result ?
         {
           ...result,
           data: this.queryManager.maskOperation({
-            document: this.query,
+            document: query,
             data: result.data,
             fetchPolicy: this.options.fetchPolicy,
             cause: this,

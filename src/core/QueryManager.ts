@@ -44,7 +44,6 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   AutoCleanedWeakCache,
   checkDocument,
-  checkViolations,
   filterMap,
   getDefaultValues,
   getGraphQLErrorsFromResult,
@@ -452,25 +451,25 @@ export class QueryManager {
     // checks further in `.mutate`
     return (async () =>
       lastValueFrom(
-      this.fetchObservableWithInfo(options, {
-        networkStatus,
-      }).observable.pipe(
-        filterMap((value) => {
-          switch (value.kind) {
-            case "E":
-              throw value.error;
-            case "N": {
-              if (value.source !== "newNetworkStatus")
-                return toQueryResult(value.value);
+        this.fetchObservableWithInfo(options, {
+          networkStatus,
+        }).observable.pipe(
+          filterMap((value) => {
+            switch (value.kind) {
+              case "E":
+                throw value.error;
+              case "N": {
+                if (value.source !== "newNetworkStatus")
+                  return toQueryResult(value.value);
+              }
             }
-          }
-        })
-      ),
-      {
-        // This default is needed when a `standby` fetch policy is used to avoid
-        // an EmptyError from rejecting this promise.
-        defaultValue: { data: undefined },
-      }
+          })
+        ),
+        {
+          // This default is needed when a `standby` fetch policy is used to avoid
+          // an EmptyError from rejecting this promise.
+          defaultValue: { data: undefined },
+        }
       ))();
   }
 
@@ -530,35 +529,6 @@ export class QueryManager {
             return def;
           }),
         },
-        violation: checkViolations(
-          {
-            Field(field, _, __, path) {
-              if (
-                field.alias &&
-                field.name.value === "__typename" &&
-                field.alias.value !== "__typename"
-              ) {
-                // not using `invariant` so path calculation only happens in error case
-                let current: ASTNode = document,
-                  fieldPath: string[] = [];
-                for (const key of path) {
-                  current = (current as any)[key];
-                  if (current.kind === Kind.FIELD) {
-                    fieldPath.push(current.alias?.value || current.name.value);
-                  }
-                }
-
-                throw newInvariantError(
-                  '`__typename` is a forbidden field alias name in the selection set for field `%s` in %s "%s".',
-                  fieldPath.join("."),
-                  operationDefinition?.operation,
-                  getOperationName(document)
-                );
-              }
-            },
-          },
-          document
-        ),
       };
 
       transformCache.set(document, cacheEntry);

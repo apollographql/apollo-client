@@ -1,12 +1,16 @@
 // Checks the document for errors and throws an exception if there is an error.
 
+import type { ASTNode } from "graphql";
 import type { DocumentNode, OperationTypeNode } from "graphql";
+import { Kind, visit } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
+
+import { getOperationName } from "./getOperationName.js";
 
 /**
  * Checks the document for errors and throws an exception if there is an error.
@@ -21,7 +25,6 @@ export function checkDocument(
     `Expecting a parsed GraphQL document. Perhaps you need to wrap the query \
 string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
   );
-
   const operations = doc.definitions.filter(
     (d) => d.kind === "OperationDefinition"
   );
@@ -38,11 +41,11 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
       }
     });
 
-  invariant(
+    invariant(
       operations.length == 1,
-    `Ambiguous GraphQL document: contains %s operations`,
-    operations.length
-  );
+      `Ambiguous GraphQL document: contains %s operations`,
+      operations.length
+    );
   }
 
   if (expectedType) {
@@ -54,6 +57,35 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
       operations[0].operation
     );
   }
+
+  visit(doc, {
+    Field(field, _, __, path) {
+      if (
+        field.alias &&
+        (field.alias.value === "__typename" ||
+          field.alias.value.startsWith("__ac_")) &&
+        field.alias.value !== field.name.value
+      ) {
+        // not using `invariant` so path calculation only happens in error case
+        let current: ASTNode = doc,
+          fieldPath: string[] = [];
+        for (const key of path) {
+          current = (current as any)[key];
+          if (current.kind === Kind.FIELD) {
+            fieldPath.push(current.alias?.value || current.name.value);
+          }
+        }
+
+        throw newInvariantError(
+          '`%s` is a forbidden field alias name in the selection set for field `%s` in %s "%s".',
+          field.alias.value,
+          fieldPath.join("."),
+          operations[0].operation,
+          getOperationName(doc)
+        );
+      }
+    },
+  });
 
   return doc;
 }

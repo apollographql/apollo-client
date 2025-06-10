@@ -8063,12 +8063,12 @@ describe("ApolloClient", () => {
       });
       const query = gql`
         query Test {
-          hello: __typename
+          __typename: hello
         }
       `;
-      await expect(() => client.query({ query })).rejects.toThrow(
+      expect(() => client.query({ query })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello` in query "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `__typename` in query "Test".'
         )
       );
     });
@@ -8102,29 +8102,37 @@ describe("ApolloClient", () => {
       const query = gql`
         query Test {
           hello {
-            world: __typename
+            __typename: world
           }
         }
       `;
-      expect(() => client.watchQuery({ query }).subscribe({})).toThrow(
+      expect(() => client.watchQuery({ query })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in query "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.__typename` in query "Test".'
         )
       );
     });
 
     it("calling `ObservableQuery.fetchMore` throws when encountering a query that aliases another field to `__typename`", async () => {
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-      });
       const query = gql`
         query Test {
           hello {
+            __typename
             world
           }
         }
       `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: {
+              data: { hello: { world: "Hello World", __typename: "Hello" } },
+            },
+          },
+        ]),
+      });
       const observable = client.watchQuery({ query });
       observable.subscribe({});
       expect(() =>
@@ -8132,15 +8140,15 @@ describe("ApolloClient", () => {
           query: gql`
             query Test {
               hello {
+                __typename: fetchMore
                 world
-                fetchMore: __typename
               }
             }
           `,
         })
       ).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello.fetchMore` in query "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.__typename` in query "Test".'
         )
       );
     });
@@ -8154,14 +8162,14 @@ describe("ApolloClient", () => {
         mutation AddTestUser {
           addUser(id: 5) {
             hello {
-              world: __typename
+              __typename: world
             }
           }
         }
       `;
-      await expect(() => client.mutate({ mutation })).rejects.toThrow(
+      expect(() => client.mutate({ mutation })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.world` in mutation "AddTestUser".'
+          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.__typename` in mutation "AddTestUser".'
         )
       );
     });
@@ -8174,13 +8182,13 @@ describe("ApolloClient", () => {
       const query = gql`
         subscription Test {
           hello {
-            world: __typename
+            __typename: world
           }
         }
       `;
-      expect(() => client.subscribe({ query }).subscribe({})).toThrow(
+      expect(() => client.subscribe({ query })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in subscription "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.__typename` in subscription "Test".'
         )
       );
     });

@@ -3593,7 +3593,7 @@ describe("useLazyQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it("does not mask queries by default", async () => {
+    it("masks queries by default", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -3607,10 +3607,7 @@ describe("useLazyQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<
-        Unmasked<Query>,
-        Record<string, never>
-      > = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -3666,7 +3663,6 @@ describe("useLazyQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            age: 30,
           },
         },
       });
@@ -3694,7 +3690,6 @@ describe("useLazyQuery Hook", () => {
               __typename: "User",
               id: 1,
               name: "Test User",
-              age: 30,
             },
           },
           dataState: "complete",

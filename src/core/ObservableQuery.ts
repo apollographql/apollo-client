@@ -1629,6 +1629,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private calculateNetworkStatus(baseNetworkStatus: NetworkStatus) {
+    if (baseNetworkStatus === NetworkStatus.streaming) {
+      return baseNetworkStatus;
+    }
     // in the future, this could be more complex logic, e.g. "refetch" and
     // "fetchMore" having priority over "polling" or "loading" network statuses
     // as for now we just take the "latest" operation that is still active,

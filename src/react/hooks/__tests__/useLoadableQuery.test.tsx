@@ -1641,7 +1641,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
       },
       dataState: "streaming",
       error: undefined,
-      networkStatus: NetworkStatus.ready,
+      networkStatus: NetworkStatus.streaming,
     });
   }
 
@@ -4669,7 +4669,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
       },
       dataState: "streaming",
       error: undefined,
-      networkStatus: NetworkStatus.ready,
+      networkStatus: NetworkStatus.streaming,
     });
   }
 

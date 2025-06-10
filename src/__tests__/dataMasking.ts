@@ -2114,9 +2114,8 @@ describe("client.watchQuery", () => {
         greeting: { message: "Hello world", __typename: "Greeting" },
       },
       dataState: "streaming",
-      // TODO: Is this loading state correct?
-      loading: false,
-      networkStatus: NetworkStatus.ready,
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
       partial: true,
     });
 

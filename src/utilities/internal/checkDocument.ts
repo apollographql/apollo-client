@@ -93,9 +93,7 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
     return doc;
   },
   {
-    max:
-      cacheSizes["removeTypenameFromVariables.getVariableDefinitions"] ||
-      defaultCacheSizes["removeTypenameFromVariables.getVariableDefinitions"],
+    max: cacheSizes["checkDocument"] || defaultCacheSizes["checkDocument"],
     cache: WeakCache,
   }
 );

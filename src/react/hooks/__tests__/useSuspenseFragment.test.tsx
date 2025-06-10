@@ -854,6 +854,7 @@ it("does not rerender when fields with @nonreactive on nested fragment change", 
   `;
 
   const client = new ApolloClient({
+    dataMasking: false,
     cache: new InMemoryCache(),
     link: ApolloLink.empty(),
   });

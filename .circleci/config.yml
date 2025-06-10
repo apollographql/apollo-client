@@ -176,7 +176,7 @@ workflows:
             parameters:
               framework:
                 - cra5
-                - next
+                #- next
                 - node
                 - vite
                 - vite-swc

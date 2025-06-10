@@ -4207,7 +4207,7 @@ it("does not mask query when dataMasking is `false`", async () => {
   });
 });
 
-it("does not mask query by default", async () => {
+it("masks query by default", async () => {
   type UserFieldsFragment = {
     age: number;
   } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -4217,7 +4217,6 @@ it("does not mask query by default", async () => {
       __typename: "User";
       id: number;
       name: string;
-      age: number;
     } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
@@ -4285,7 +4284,6 @@ it("does not mask query by default", async () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        age: 30,
       },
     },
     dataState: "complete",

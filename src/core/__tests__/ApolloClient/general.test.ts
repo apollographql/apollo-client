@@ -2268,12 +2268,12 @@ describe("ApolloClient", () => {
       });
     }).toThrow(/wrap the query string in a "gql" tag/);
 
-    await expect(
+    await expect(() =>
       client.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: "string" as any as DocumentNode,
       })
-    ).rejects.toThrow(/wrap the query string in a "gql" tag/);
+    ).toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
       client.watchQuery({

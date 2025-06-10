@@ -184,7 +184,7 @@ describe("client.watchQuery", () => {
     }
   });
 
-  test("does not mask query by default", async () => {
+  test("masks query by default", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -252,7 +252,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          age: 30,
         },
       });
     }
@@ -3081,7 +3080,7 @@ describe("client.watchFragment", () => {
     }
   });
 
-  test("does not mask watched fragments by default", async () => {
+  test("masks watched fragments by default", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       id: number;
@@ -3146,8 +3145,6 @@ describe("client.watchFragment", () => {
       __typename: "User",
       id: 1,
       age: 30,
-      firstName: "Test",
-      lastName: "User",
     });
     expect(complete).toBe(true);
     invariant(complete, "Should never be incomplete");
@@ -4040,7 +4037,7 @@ describe("client.query", () => {
     });
   });
 
-  test("does not mask data returned from client.query by default", async () => {
+  test("masks data returned from client.query by default", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -4095,7 +4092,6 @@ describe("client.query", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        age: 30,
       },
     });
   });
@@ -4604,7 +4600,7 @@ describe("client.subscribe", () => {
     });
   });
 
-  test("does not mask data returned from subscriptions by default", async () => {
+  test("masks data returned from subscriptions by default", async () => {
     const subscription = gql`
       subscription NewCommentSubscription {
         addedComment {
@@ -4648,8 +4644,6 @@ describe("client.subscribe", () => {
       addedComment: {
         __typename: "Comment",
         id: 1,
-        comment: "Test comment",
-        author: "Test User",
       },
     });
   });
@@ -5363,7 +5357,7 @@ describe("observableQuery.subscribeToMore", () => {
     }
   });
 
-  test("does not mask data by default", async () => {
+  test("masks data by default", async () => {
     const fragment = gql`
       fragment CommentFields on Comment {
         comment
@@ -5435,8 +5429,6 @@ describe("observableQuery.subscribeToMore", () => {
         recentComment: {
           __typename: "Comment",
           id: 1,
-          comment: "Recent comment",
-          author: "Test User",
         },
       });
     }
@@ -5506,8 +5498,6 @@ describe("observableQuery.subscribeToMore", () => {
         recentComment: {
           __typename: "Comment",
           id: 2,
-          comment: "Most recent comment",
-          author: "Test User Jr.",
         },
       });
     }
@@ -5640,7 +5630,7 @@ describe("client.mutate", () => {
     });
   });
 
-  test("does not mask data returned from client.mutate by default", async () => {
+  test("masks data returned from client.mutate by default", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -5697,7 +5687,6 @@ describe("client.mutate", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        age: 30,
       },
     });
   });

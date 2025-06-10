@@ -1123,6 +1123,7 @@ describe("client", () => {
     ]);
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache(),
     });
 
@@ -1162,6 +1163,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache(),
     });
 
@@ -1209,6 +1211,7 @@ describe("client", () => {
     ]);
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache(),
     });
 
@@ -1247,6 +1250,7 @@ describe("client", () => {
     ]);
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache(),
     });
 
@@ -1295,6 +1299,7 @@ describe("client", () => {
     ]);
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         possibleTypes: {
           Item: ["ColorItem", "MonochromeItem"],
@@ -1347,6 +1352,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         possibleTypes: {
           Item: ["ColorItem", "MonochromeItem"],
@@ -3039,6 +3045,7 @@ describe("client", () => {
     ]);
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         // Passing an empty map enables the warning:
         possibleTypes: {},
@@ -4264,6 +4271,7 @@ describe("custom document transforms", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         fragments: createFragmentRegistry(gql`
           fragment ProductFields on Product {
@@ -4914,6 +4922,7 @@ describe("custom document transforms", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       documentTransform,
       cache: new InMemoryCache(),
     });
@@ -5210,6 +5219,7 @@ describe("custom document transforms", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         fragments: createFragmentRegistry(gql`
           fragment ProductFields on Product {
@@ -6107,6 +6117,7 @@ describe("custom document transforms", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         fragments: createFragmentRegistry(gql`
           fragment ProductFields on Product {
@@ -6183,6 +6194,7 @@ describe("custom document transforms", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         fragments: createFragmentRegistry(gql`
           fragment ProductFields on Product {
@@ -6272,6 +6284,7 @@ describe("custom document transforms", () => {
 
     const client = new ApolloClient({
       link,
+      dataMasking: false,
       cache: new InMemoryCache({
         fragments: createFragmentRegistry(gql`
           fragment ProductFields on Product {
@@ -6793,6 +6806,7 @@ async function clientRoundtrip(
 
   const client = new ApolloClient({
     link,
+    dataMasking: false,
     cache: new InMemoryCache({
       possibleTypes,
     }),

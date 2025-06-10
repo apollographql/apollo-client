@@ -5030,18 +5030,19 @@ describe("useQuery Hook", () => {
         },
       ];
 
+      const client = new ApolloClient({
+        dataMasking: false,
+        cache,
+        link: new MockLink([
+          {
+            request: { query: GET_COUNTRIES },
+            result: { data: { countries } },
+          },
+        ]),
+      });
+
       const wrapper = ({ children }: any) => (
-        <MockedProvider
-          mocks={[
-            {
-              request: { query: GET_COUNTRIES },
-              result: { data: { countries } },
-            },
-          ]}
-          cache={cache}
-        >
-          {children}
-        </MockedProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
       using _disabledAct = disableActEnvironment();
@@ -7916,10 +7917,13 @@ describe("useQuery Hook", () => {
       ];
 
       const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: new MockLink(mocks),
+        dataMasking: false,
+      });
       const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
       using _disabledAct = disableActEnvironment();
@@ -9455,6 +9459,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
+        dataMasking: false,
         cache: new InMemoryCache(),
       });
 

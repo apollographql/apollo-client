@@ -1,7 +1,8 @@
+import { OperationTypeNode } from "graphql";
+
 import { gql } from "@apollo/client";
 import { checkDocument } from "@apollo/client/utilities/internal";
-import { OperationTypeNode } from "graphql";
-import { InvariantError } from "../../invariant/index.js";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 test("should correctly check a document for correctness", () => {
   const multipleQueries = gql`

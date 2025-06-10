@@ -21,7 +21,10 @@ import { getOperationName } from "./getOperationName.js";
  * Checks the document for errors and throws an exception if there is an error.
  *
  * @internal */
-export const checkDocument = wrap(
+export const checkDocument: (
+  doc: DocumentNode,
+  expectedType?: OperationTypeNode
+) => void = wrap(
   (doc: DocumentNode, expectedType?: OperationTypeNode): void => {
     invariant(
       doc && doc.kind === "Document",

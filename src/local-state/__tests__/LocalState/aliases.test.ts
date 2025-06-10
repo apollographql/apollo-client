@@ -1,9 +1,4 @@
-import {
-  ApolloClient,
-  ApolloLink,
-  InMemoryCache,
-  LocalStateError,
-} from "@apollo/client";
+import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import { LocalState } from "@apollo/client/local-state";
 
 import { gql } from "./testUtils.js";

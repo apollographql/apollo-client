@@ -1968,8 +1968,8 @@ test("does not mask result when dataMasking is `false`", async () => {
   }
 });
 
-test("does not mask results by default", async () => {
-  const { query, mocks } = setupVariablesCase();
+test("masks results by default", async () => {
+  const { query, mocks } = setupMaskedVariablesCase();
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link: new MockLink(mocks),
@@ -1979,7 +1979,7 @@ test("does not mask results by default", async () => {
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
   using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp<VariablesCaseData>({
+  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
     client,
     queryRef,
   });
@@ -1995,7 +1995,7 @@ test("does not mask results by default", async () => {
 
     expect(snapshot.result).toStrictEqualTyped({
       data: {
-        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        character: { __typename: "Character", id: "1" },
       },
       dataState: "complete",
       error: undefined,

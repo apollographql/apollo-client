@@ -1,5 +1,6 @@
 import { gql } from "@apollo/client";
 import { checkDocument } from "@apollo/client/utilities/internal";
+import { OperationTypeNode } from "graphql";
 
 test("should correctly check a document for correctness", () => {
   const multipleQueries = gql`
@@ -35,4 +36,26 @@ test("should correctly check a document for correctness", () => {
   expect(() => {
     checkDocument(namedFragment);
   }).not.toThrow();
+});
+
+test("caches the result of checking a valid document", () => {
+  const query = gql`
+    query {
+      me
+    }
+  `;
+  checkDocument(query, OperationTypeNode.QUERY);
+  expect(checkDocument.peek(query, OperationTypeNode.QUERY)).toBeDefined();
+});
+
+test("does not cache the result of checking an invalid document", () => {
+  const query = gql`
+    query {
+      __typename: me
+    }
+  `;
+  try {
+    checkDocument(query, OperationTypeNode.QUERY);
+  } catch {}
+  expect(checkDocument.peek(query, OperationTypeNode.QUERY)).not.toBeDefined();
 });

@@ -11396,7 +11396,7 @@ describe("useSuspenseQuery", () => {
     });
   });
 
-  it("does not mask query by default", async () => {
+  it("masks query by default", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -11483,7 +11483,6 @@ describe("useSuspenseQuery", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        age: 30,
       },
     });
   });

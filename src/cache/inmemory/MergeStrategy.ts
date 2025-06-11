@@ -378,6 +378,21 @@ export class MergeStrategy implements Cache.MergeStrategy {
       }
     }
 
+    // Determine whether result is a SingleExecutionResult,
+    // or the final ExecutionPatchResult.
+    const isFinalResult =
+      !isExecutionPatchResult(result) ||
+      (isExecutionPatchIncrementalResult(result) && !result.hasNext);
+
+    const cleanupResult = (result: FetchResult<TData>) => {
+      if ("incremental" in result) {
+        delete result.incremental;
+      }
+      if ("hasNext" in result) {
+        delete result.hasNext;
+      }
+    };
+
     if (
       cacheWrites.length > 0 ||
       (mutation.refetchQueries || "").length > 0 ||
@@ -398,11 +413,6 @@ export class MergeStrategy implements Cache.MergeStrategy {
             // apply those writes to the store by running this reducer again with
             // a write action.
             const { update } = mutation;
-            // Determine whether result is a SingleExecutionResult,
-            // or the final ExecutionPatchResult.
-            const isFinalResult =
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext);
 
             if (update) {
               if (!skipCache) {
@@ -424,12 +434,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
 
                 if (diff.complete) {
                   result = { ...(result as FetchResult), data: diff.result };
-                  if ("incremental" in result) {
-                    delete result.incremental;
-                  }
-                  if ("hasNext" in result) {
-                    delete result.hasNext;
-                  }
+                  cleanupResult(result);
                 }
               }
 

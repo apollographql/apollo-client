@@ -2,7 +2,7 @@
 "@apollo/client": major
 ---
 
-New feature: Enhanced Client Awareness
+Adds enhanced client awareness to the client.
 
 `HttpLink` and `BatchHttpLink` will now per default send information about the
 client library you are using in `extensions`.

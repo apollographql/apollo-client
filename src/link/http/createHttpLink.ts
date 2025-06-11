@@ -172,7 +172,11 @@ export const createHttpLink = (linkOptions: HttpLink.Options = {}) => {
           const ctype = response.headers?.get("content-type");
 
           if (ctype !== null && /^multipart\/mixed/i.test(ctype)) {
-            return readMultipartBody(response, observerNext);
+            return readMultipartBody(
+              response,
+              operation.client.cache.incrementalStrategy,
+              observerNext
+            );
           } else {
             return parseAndCheckHttpResponse(operation)(response).then(
               observerNext

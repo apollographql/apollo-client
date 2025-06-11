@@ -1,3 +1,4 @@
+import type { Cache } from "@apollo/client/cache";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
@@ -21,7 +22,14 @@ function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult {
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>,
->(response: Response, nextValue: (value: T) => void) {
+>(
+  response: Response,
+  incremntalStrategy: Cache.IncrementalStrategy,
+  nextValue: (value: T) => void
+) {
+  // Use incrementalStrategy to possibly parse the response or ask if it has
+  // more data, etc.
+
   if (TextDecoder === undefined) {
     throw new Error(
       "TextDecoder must be defined in the environment: please import a polyfill."

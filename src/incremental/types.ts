@@ -1,10 +1,11 @@
 import type { GraphQLRequest } from "@apollo/client";
 
 export declare namespace Incremental {
-  export interface InitialChunk {}
-  export interface IncrementalChunk {}
+  export interface ExecutionResult {
+    Initial: unknown;
+    Subsequent: unknown;
+  }
 
-  export type Chunk = InitialChunk | IncrementalChunk;
   export type Path = Array<string | number>;
 
   export interface Pending {
@@ -13,12 +14,18 @@ export declare namespace Incremental {
     label?: string;
   }
 
-  export interface Strategy {
+  export interface Strategy<
+    TExecutionResult extends Incremental.ExecutionResult,
+  > {
+    isIncrementalPatchResult: (result: unknown) => result is TExecutionResult;
     prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
-    startRequest: () => IncrementalRequest;
+    startRequest: () => IncrementalRequest<TExecutionResult>;
   }
 
-  export interface IncrementalRequest {
+  export interface IncrementalRequest<
+    TExecutionResult extends Incremental.ExecutionResult,
+    Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"],
+  > {
     hasNext: boolean;
     append: (chunk: Chunk) => this;
     apply: <TData>(data: TData, chunk: Chunk) => TData;

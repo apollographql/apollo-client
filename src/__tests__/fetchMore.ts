@@ -9,7 +9,7 @@ import type {
   FieldMergeFunction,
   InMemoryCacheConfig,
 } from "@apollo/client/cache";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockDeferStream,
@@ -2261,7 +2261,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   const baseLink = new MockSubscriptionLink();
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
     link: split(
       (op) => op.operationName === "DeferQuery",
       defer.httpLink,

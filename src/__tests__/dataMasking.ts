@@ -11,7 +11,10 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import { createFragmentRegistry } from "@apollo/client/cache";
+import {
+  createFragmentRegistry,
+  MergeStrategy20220824,
+} from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaskedDocumentNode } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
@@ -2174,7 +2177,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -2283,7 +2286,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -2391,7 +2394,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -2512,7 +2515,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 

@@ -32,6 +32,7 @@ import {
 import type { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
+import { MergeStrategy20220824 } from "../../../cache/index.js";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -1519,7 +1520,7 @@ describe("HttpLink", () => {
 
         const client = new ApolloClient({
           link,
-          cache: new InMemoryCache(),
+          cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
         });
 
         void client.query({ query: sampleDeferredQuery });
@@ -1725,7 +1726,7 @@ describe("HttpLink", () => {
 
         const client = new ApolloClient({
           link,
-          cache: new InMemoryCache(),
+          cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
         });
 
         const warningSpy = jest

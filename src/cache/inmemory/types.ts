@@ -1,13 +1,18 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
-import type { OperationVariables } from "@apollo/client";
+import type {
+  Cache,
+  InMemoryCache,
+  ObservableQuery,
+  OperationVariables,
+} from "@apollo/client";
 import type {
   Reference,
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
 
-import type { Transaction } from "../core/cache.js";
+import type { ApolloCache, Transaction } from "../core/cache.js";
 import type {
   AllFieldsModifier,
   CanReadFunction,
@@ -133,6 +138,14 @@ export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
 };
 
+export type InMemoryCacheMergeStrategy = {
+  new (
+    cache: InMemoryCache,
+    handler: Cache.MergeStrategyHandler,
+    observableQuery?: ObservableQuery<any, any>
+  ): Cache.MergeStrategy;
+};
+
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
   resultCaching?: boolean;
   possibleTypes?: PossibleTypesMap;
@@ -143,6 +156,8 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
    */
   resultCacheMaxSize?: number;
   fragments?: FragmentRegistryAPI;
+
+  mergeStrategy?: InMemoryCacheMergeStrategy;
 }
 
 export interface MergeInfo {

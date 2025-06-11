@@ -7,7 +7,7 @@ import { Observable } from "rxjs";
 
 import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult, RequestHandler } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
@@ -7464,7 +7464,9 @@ describe("ApolloClient", () => {
         forward(operation)) satisfies RequestHandler);
       const defer = mockDeferStream();
       const client = new ApolloClient({
-        cache: new InMemoryCache({}),
+        cache: new InMemoryCache({
+          mergeStrategy: MergeStrategy20220824,
+        }),
         link: new ApolloLink(outgoingRequestSpy).concat(defer.httpLink),
       });
 

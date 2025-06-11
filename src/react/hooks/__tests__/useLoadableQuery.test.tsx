@@ -31,7 +31,7 @@ import {
   NetworkStatus,
   split,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import type { QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -1553,7 +1553,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   `;
 
   const link = new MockSubscriptionLink();
-  const cache = new InMemoryCache();
+  const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
   cache.writeQuery({
     query,
     data: {
@@ -4574,7 +4574,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   `;
 
   const link = new MockSubscriptionLink();
-  const cache = new InMemoryCache();
+  const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
 
   {
     // We are intentionally writing partial data to the cache. Supress console

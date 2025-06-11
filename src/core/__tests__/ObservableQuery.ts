@@ -13,7 +13,7 @@ import type {
   WatchQueryFetchPolicy,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
@@ -3450,7 +3450,7 @@ describe("ObservableQuery", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       const obs = client.watchQuery({ query });

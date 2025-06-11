@@ -43,6 +43,9 @@ export { Policies } from "./inmemory/policies.js";
 export type { FragmentRegistryAPI } from "./inmemory/fragmentRegistry.js";
 export { createFragmentRegistry } from "./inmemory/fragmentRegistry.js";
 
+export { MergeStrategy } from "./inmemory/MergeStrategy.js";
+export { MergeStrategy20220824 } from "./inmemory/MergeStrategy20220824.js";
+
 export type {
   ApolloReducerConfig,
   DiffQueryAgainstStoreOptions,

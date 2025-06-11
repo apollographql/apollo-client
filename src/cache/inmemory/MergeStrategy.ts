@@ -1,15 +1,13 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
-import type { HttpLink, ObservableQuery } from "@apollo/client";
+import type { ObservableQuery } from "@apollo/client";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult, GraphQLRequest } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
-  DeepMerger,
   getOperationName,
   graphQLResultHasError,
-  hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
   isNonEmptyArray,
@@ -50,7 +48,7 @@ interface LastWrite {
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
-interface OperationInfo<
+export interface OperationInfo<
   TData,
   TVariables extends OperationVariables,
   AllowedCacheWriteBehavior = CacheWriteBehavior,
@@ -94,10 +92,10 @@ export class MergeStrategy implements Cache.MergeStrategy {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
 
-  private cache: ApolloCache;
-  private handler: Cache.MergeStrategyHandler;
+  protected cache: ApolloCache;
+  protected handler: Cache.MergeStrategyHandler;
   public readonly id: string;
-  private readonly observableQuery?: ObservableQuery<any, any>;
+  protected readonly observableQuery?: ObservableQuery<any, any>;
 
   constructor(
     cache: ApolloCache,
@@ -124,16 +122,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
     }
   }
 
-  prepareRequest(request: GraphQLRequest) {
-    if (hasDirectives(["defer"], request.query)) {
-      const context = request.context as HttpLink.ContextOptions;
-      const http = (context.http ??= {});
-      http.accept = [
-        "multipart/mixed;deferSpec=20220824;q=1.1",
-        ...(http.accept || []),
-      ];
-    }
-  }
+  prepareRequest(request: GraphQLRequest) {}
 
   /** @internal
    * For feud-preventing behaviour, `lastWrite` should be shared by all `MergeStrategy` instances of an `ObservableQuery`.
@@ -167,11 +156,6 @@ export class MergeStrategy implements Cache.MergeStrategy {
     );
   }
 
-  private lastDiff?: {
-    diff: Cache.DiffResult<any>;
-    options: Cache.DiffOptions;
-  };
-
   public markQueryResult<TData, TVariables extends OperationVariables>(
     result: FetchResult<TData>,
     {
@@ -192,21 +176,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      const lastDiff =
-        this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
-          this.lastDiff.diff
-        : { result: null, complete: false };
-      handleIncrementalResult(result, lastDiff);
-
-      this.lastDiff = {
-        diff: { result: result.data, complete: true },
-        options: diffOptions,
-      };
-    } else {
-      const lastDiff = this.cache.diff<any>(diffOptions);
-      handleIncrementalResult(result, lastDiff);
-
+    if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
@@ -271,6 +241,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
               // mitigate the clobbering somehow, but that would make this
               // particular cache write even less important, and thus
               // skipping it would be even safer than it is today.
+              const lastDiff = this.cache.diff<any>(diffOptions);
               if (lastDiff && lastDiff.complete) {
                 // Reuse data from the last good (complete) diff that we
                 // received, when possible.
@@ -579,25 +550,6 @@ export class MergeStrategy implements Cache.MergeStrategy {
 
       this.handler.broadcastQueries();
     }
-  }
-}
-
-function handleIncrementalResult<T>(
-  result: FetchResult<T>,
-  lastDiff: Cache.DiffResult<any>
-) {
-  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-    const mergedData = mergeIncrementalData(lastDiff.result, result);
-    result.data = mergedData;
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-  } else if ("hasNext" in result && result.hasNext) {
-    const merger = new DeepMerger();
-    result.data = merger.merge(lastDiff.result, result.data);
   }
 }
 

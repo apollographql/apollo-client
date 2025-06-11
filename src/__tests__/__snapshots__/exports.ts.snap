@@ -54,6 +54,8 @@ Array [
   "ApolloCache",
   "EntityStore",
   "InMemoryCache",
+  "MergeStrategy",
+  "MergeStrategy20220824",
   "MissingFieldError",
   "Policies",
   "cacheSlot",

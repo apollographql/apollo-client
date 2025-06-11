@@ -59,3 +59,6 @@ export type {
   StoreObject,
   StoreValue,
 } from "./inmemory/types.js";
+
+export { DefaultStrategy } from "./strategies/DefaultStrategy.js";
+export { Defer20220824 } from "./strategies/Defer20220824.js";

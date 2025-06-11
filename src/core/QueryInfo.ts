@@ -192,15 +192,18 @@ export class QueryInfo {
         this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
           this.lastDiff.diff
         : { result: null, complete: false };
-      handleIncrementalResult(result, lastDiff);
+
+      const data = this.cache.incrementalStrategy.merge(
+        lastDiff.result,
+        result.data
+      );
 
       this.lastDiff = {
-        diff: { result: result.data, complete: true },
+        diff: { result: data, complete: true },
         options: diffOptions,
       };
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
-      handleIncrementalResult(result, lastDiff);
 
       if (shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
@@ -221,12 +224,23 @@ export class QueryInfo {
           },
           update: (cache) => {
             if (this.shouldWrite(result, variables)) {
-              cache.writeQuery({
-                query,
-                data: result.data as Unmasked<any>,
-                variables,
-                overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-              });
+              if (isExecutionPatchResult(result)) {
+                cache.writeIncremental({
+                  query,
+                  variables,
+                  overwrite:
+                    cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+                  chunk: result,
+                });
+              } else {
+                cache.writeQuery({
+                  query,
+                  data: result.data as Unmasked<any>,
+                  variables,
+                  overwrite:
+                    cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+                });
+              }
 
               this.lastWrite = {
                 result,
@@ -576,25 +590,6 @@ export class QueryInfo {
 
       this.queryManager.broadcastQueries();
     }
-  }
-}
-
-function handleIncrementalResult<T>(
-  result: FetchResult<T>,
-  lastDiff: Cache.DiffResult<any>
-) {
-  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-    const mergedData = mergeIncrementalData(lastDiff.result, result);
-    result.data = mergedData;
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-  } else if ("hasNext" in result && result.hasNext) {
-    const merger = new DeepMerger();
-    result.data = merger.merge(lastDiff.result, result.data);
   }
 }
 

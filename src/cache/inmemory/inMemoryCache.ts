@@ -28,6 +28,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
+import { DefaultStrategy } from "../strategies/DefaultStrategy.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { hasOwn, normalizeConfig } from "./helpers.js";
@@ -45,6 +46,7 @@ type BroadcastOptions = Pick<
 export class InMemoryCache extends ApolloCache {
   private data!: EntityStore;
   private optimisticData!: EntityStore;
+  public readonly incrementalStrategy: Cache.IncrementalStrategy;
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions<any, any>>();
@@ -80,6 +82,9 @@ export class InMemoryCache extends ApolloCache {
       possibleTypes: this.config.possibleTypes,
       typePolicies: this.config.typePolicies,
     });
+
+    this.incrementalStrategy =
+      config.incrementalStrategy ?? new DefaultStrategy();
 
     this.init();
   }

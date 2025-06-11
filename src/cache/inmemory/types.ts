@@ -8,6 +8,7 @@ import type {
 } from "@apollo/client/utilities";
 
 import type { Transaction } from "../core/cache.js";
+import type { Cache } from "../core/types/Cache.js";
 import type {
   AllFieldsModifier,
   CanReadFunction,
@@ -143,6 +144,7 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
    */
   resultCacheMaxSize?: number;
   fragments?: FragmentRegistryAPI;
+  incrementalStrategy?: Cache.IncrementalStrategy;
 }
 
 export interface MergeInfo {

@@ -7,7 +7,11 @@ import type {
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import type {
+  ExecutionPatchResult,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import type {
   FragmentType,
   MaybeMasked,
@@ -100,6 +104,7 @@ export type WatchFragmentResult<TData> =
 
 export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
+  public abstract readonly incrementalStrategy: Cache.IncrementalStrategy;
 
   // required to implement
   // core API
@@ -382,6 +387,28 @@ export abstract class ApolloCache implements DataProxy {
         result: data,
       })
     );
+  }
+
+  public writeIncremental<TData = unknown, TVariables = OperationVariables>({
+    query,
+    variables,
+    chunk,
+    ...options
+  }: {
+    id?: string;
+    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    variables?: TVariables;
+    chunk: ExecutionPatchResult<NoInfer<TData>>;
+    broadcast?: boolean;
+    overwrite?: boolean;
+  }) {
+    const diff = this.diff({
+      query,
+      variables: variables as OperationVariables,
+      optimistic: true,
+    });
+    const data = this.incrementalStrategy.merge(diff.result, chunk) as any;
+    return this.writeQuery({ ...options, query, variables, data });
   }
 
   public writeFragment<TData = unknown, TVariables = OperationVariables>({

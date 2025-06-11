@@ -1,4 +1,8 @@
-import type { OperationVariables } from "@apollo/client";
+import type {
+  ExecutionPatchResult,
+  GraphQLRequest,
+  OperationVariables,
+} from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 
 import type { ApolloCache } from "../cache.js";
@@ -7,6 +11,15 @@ import type { AllFieldsModifier, Modifiers } from "./common.js";
 import { DataProxy } from "./DataProxy.js";
 
 export namespace Cache {
+  export interface IncrementalStrategy {
+    prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+
+    merge: <TData>(
+      accumulated: TData,
+      chunk: ExecutionPatchResult<TData>
+    ) => TData;
+  }
+
   export type WatchCallback<TData = unknown> = (
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>

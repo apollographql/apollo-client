@@ -35,6 +35,7 @@
     "./core": "./src/core/index.ts",
     "./dev": "./src/dev/index.ts",
     "./errors": "./src/errors/index.ts",
+    "./incremental": "./src/incremental/index.ts",
     "./link": "./src/link/index.ts",
     "./link/batch": "./src/link/batch/index.ts",
     "./link/batch-http": "./src/link/batch-http/index.ts",

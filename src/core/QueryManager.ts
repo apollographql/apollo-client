@@ -104,6 +104,7 @@ interface MutationStoreValue {
 }
 
 interface TransformCacheEntry {
+  isIncremental: boolean;
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
@@ -510,6 +511,7 @@ export class QueryManager {
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
         nonReactiveQuery: addNonReactiveToNamedFragments(document),
         clientQuery: hasDirectives(["client"], document) ? document : null,
+        isIncremental: hasDirectives(["defer"], document),
         serverQuery: removeDirectivesFromDocument(
           [
             { name: "client", remove: true },

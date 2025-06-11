@@ -28,7 +28,7 @@ const uri = "https://example.com/graphql";
 
 afterEach(() => fetchMock.reset());
 
-describe("client awareness", () => {
+describe("feature: client awareness", () => {
   test("does not add headers without options", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({
@@ -421,7 +421,7 @@ describe("client awareness", () => {
   });
 });
 
-describe("enhanced client awareness", () => {
+describe("feature: enhanced client awareness", () => {
   test("is enabled by default", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({

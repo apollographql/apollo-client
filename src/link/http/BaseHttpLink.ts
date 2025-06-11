@@ -9,7 +9,6 @@ import {
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 import { checkFetcher } from "./checkFetcher.js";
 import type { HttpLink } from "./HttpLink.js";
@@ -60,6 +59,14 @@ export class BaseHttpLink extends ApolloLink {
 
       const context = operation.getContext();
 
+      if (isSubscriptionOperation(operation.query)) {
+        const http = (context.http ??= {});
+        http.accept = [
+          "multipart/mixed;boundary=graphql;subscriptionSpec=1.0;q=1.1",
+          ...(http.accept || []),
+        ];
+      }
+
       const contextConfig = {
         http: context.http,
         options: context.fetchOptions,
@@ -91,32 +98,8 @@ export class BaseHttpLink extends ApolloLink {
 
       // If requested, set method to GET if there are no mutations.
       const definitionIsMutation = isMutationOperation(operation.query);
-      const isSubscription = isSubscriptionOperation(operation.query);
       if (useGETForQueries && !definitionIsMutation) {
         options.method = "GET";
-      }
-
-      if (isSubscription) {
-        options.headers = options.headers || {};
-        const subscriptionAcceptHeader =
-          "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json";
-        if (true) {
-          const defaultAcceptHeader =
-            linkOptions.headers?.accept || fallbackHttpConfig.headers.accept;
-          const configuredAcceptHeader = options.headers.accept;
-          if (
-            configuredAcceptHeader !== defaultAcceptHeader &&
-            !configuredAcceptHeader.includes("subscriptionSpec=1.0")
-          ) {
-            invariant.warn(
-              'Accept header value\n"%s"\nis not supported with multipart subscriptions over HTTP and will be overwritten with\n"%s".\nAre you trying to combine multipart subscriptions with @defer?',
-              subscriptionAcceptHeader,
-              defaultAcceptHeader
-            );
-          }
-        }
-
-        options.headers.accept = subscriptionAcceptHeader;
       }
 
       return new Observable((observer) => {

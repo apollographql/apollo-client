@@ -126,11 +126,12 @@ export class MergeStrategy implements Cache.MergeStrategy {
 
   prepareRequest(request: GraphQLRequest) {
     if (hasDirectives(["defer"], request.query)) {
-      const typedContext = request.context as HttpLink.ContextOptions;
-      typedContext.headers = {
-        ...typedContext.headers,
-        accept: "multipart/mixed;deferSpec=20220824,application/json",
-      };
+      const context = request.context as HttpLink.ContextOptions;
+      const http = (context.http ??= {});
+      http.accept = [
+        "multipart/mixed;deferSpec=20220824;q=1.1",
+        ...(http.accept || []),
+      ];
     }
   }
 

@@ -1547,7 +1547,8 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               "content-type": "application/json",
-              accept: "multipart/mixed;deferSpec=20220824,application/json",
+              accept:
+                "multipart/mixed;deferSpec=20220824;q=1.1,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -1696,7 +1697,7 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      test("whatwg stream bodies, warns if combined with @defer", () => {
+      test("whatwg stream bodies combined with @defer, lets server handle erroring", () => {
         const stream = new ReadableStream({
           async start(controller) {
             const lines = subscriptionsBody.split("\r\n");
@@ -1712,6 +1713,8 @@ describe("HttpLink", () => {
         });
 
         const fetch = jest.fn(async () => {
+          // TODO: find out the exact response the server would send if we
+          // were to request a subscription with `@defer`
           return new Response(stream, {
             status: 200,
             headers: { "content-type": "multipart/mixed" },
@@ -1731,16 +1734,18 @@ describe("HttpLink", () => {
         void client
           .subscribe({ query: sampleSubscriptionWithDefer })
           .subscribe({});
-        expect(warningSpy).toHaveBeenCalledTimes(1);
-        expect(warningSpy).toHaveBeenCalledWith(
-          `Accept header value
-"%s"
-is not supported with multipart subscriptions over HTTP and will be overwritten with
-"%s".
-Are you trying to combine multipart subscriptions with @defer?`,
-          "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
-          "application/graphql-response+json,application/json;q=0.9"
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              accept:
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0;q=1.1,multipart/mixed;deferSpec=20220824;q=1.1,application/graphql-response+json,application/json;q=0.9",
+              "content-type": "application/json",
+            },
+          })
         );
+
+        expect(warningSpy).not.toHaveBeenCalled();
         warningSpy.mockRestore();
       });
 
@@ -1821,7 +1826,7 @@ Are you trying to combine multipart subscriptions with @defer?`,
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0;q=1.1,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );

@@ -902,17 +902,19 @@ export class QueryManager {
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation: GraphQLRequest = {
-        query: serverQuery,
-        variables,
-        operationName,
-        context: {
-          ...this.defaultContext,
-          ...context,
-          queryDeduplication: deduplication,
-        },
-        extensions,
-      };
+      const operation: GraphQLRequest = this.incrementalStrategy.prepareRequest(
+        {
+          query: serverQuery,
+          variables,
+          operationName,
+          context: {
+            ...this.defaultContext,
+            ...context,
+            queryDeduplication: deduplication,
+          },
+          extensions,
+        }
+      );
 
       context = operation.context;
 

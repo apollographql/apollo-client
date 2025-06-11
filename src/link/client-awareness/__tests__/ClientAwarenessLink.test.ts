@@ -332,7 +332,7 @@ describe("feature: client awareness", () => {
       });
     });
 
-    test("`BatchHttpLink` options have priotity over `ApolloClient` options", async () => {
+    test("`BatchHttpLink` options have priority over `ApolloClient` options", async () => {
       fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new BatchHttpLink({

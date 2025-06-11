@@ -8,6 +8,8 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
+import type { Incremental } from "@apollo/client/incremental";
+import { notImplementedStrategy } from "@apollo/client/incremental";
 import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { LocalState } from "@apollo/client/local-state";
@@ -146,6 +148,12 @@ export interface ApolloClientOptions {
    * @defaultValue false
    */
   dataMasking?: boolean;
+
+  /**
+   * Determines the strategy used to parse incremental chunks from `@defer`
+   * queries.
+   */
+  incrementalStrategy?: Incremental.Strategy;
 }
 
 /**
@@ -248,6 +256,7 @@ export class ApolloClient implements DataProxy {
       devtools,
       dataMasking,
       link,
+      incrementalStrategy = notImplementedStrategy(),
     } = options;
 
     this.link = link;
@@ -284,6 +293,7 @@ export class ApolloClient implements DataProxy {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,
       },
+      incrementalStrategy,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?

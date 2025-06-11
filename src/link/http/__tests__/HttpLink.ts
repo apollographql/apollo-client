@@ -15,6 +15,7 @@ import {
   ServerError,
   version,
 } from "@apollo/client";
+import { MergeStrategy20220824 } from "@apollo/client/cache";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
@@ -32,7 +33,6 @@ import {
 import type { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
-import { MergeStrategy20220824 } from "../../../cache/index.js";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -1698,28 +1698,22 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      test("whatwg stream bodies combined with @defer, lets server handle erroring", () => {
-        const stream = new ReadableStream({
-          async start(controller) {
-            const lines = subscriptionsBody.split("\r\n");
-            try {
-              for (const line of lines) {
-                await new Promise((resolve) => setTimeout(resolve, 10));
-                controller.enqueue(line + "\r\n");
-              }
-            } finally {
-              controller.close();
-            }
-          },
+      test("whatwg stream bodies combined with @defer, lets server handle erroring", async () => {
+        const error = {
+          errors: [
+            {
+              message:
+                "value retrieval failed: Federation error: @defer is not supported on subscriptions",
+              extensions: { code: "INTERNAL_SERVER_ERROR" },
+            },
+          ],
+        };
+        const response = new Response(JSON.stringify(error), {
+          status: 500,
+          headers: { "content-type": "application/json" },
         });
-
         const fetch = jest.fn(async () => {
-          // TODO: find out the exact response the server would send if we
-          // were to request a subscription with `@defer`
-          return new Response(stream, {
-            status: 200,
-            headers: { "content-type": "multipart/mixed" },
-          });
+          return response;
         });
 
         const link = new HttpLink({ fetch });
@@ -1729,12 +1723,9 @@ describe("HttpLink", () => {
           cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
         });
 
-        const warningSpy = jest
-          .spyOn(console, "warn")
-          .mockImplementation(() => {});
-        void client
-          .subscribe({ query: sampleSubscriptionWithDefer })
-          .subscribe({});
+        const stream = new ObservableStream(
+          client.subscribe({ query: sampleSubscriptionWithDefer })
+        );
         expect(fetch).toHaveBeenCalledWith(
           "/graphql",
           expect.objectContaining({
@@ -1746,8 +1737,16 @@ describe("HttpLink", () => {
           })
         );
 
-        expect(warningSpy).not.toHaveBeenCalled();
-        warningSpy.mockRestore();
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          error: new ServerError(
+            "Response not successful: Received status code 500",
+            {
+              bodyText: JSON.stringify(error),
+              response,
+            }
+          ),
+        });
       });
 
       it("with errors", async () => {

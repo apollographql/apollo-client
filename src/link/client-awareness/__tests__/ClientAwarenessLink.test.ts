@@ -531,7 +531,6 @@ describe("enhanced client awareness", () => {
       await wait(10);
 
       const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
-      console.log(fetchMock.lastCall());
       expect(body[0].extensions).toStrictEqual({
         clientLibrary: {
           name: "@apollo/client",
@@ -560,7 +559,6 @@ describe("enhanced client awareness", () => {
       await wait(10);
 
       const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
-      console.log(fetchMock.lastCall());
       expect(body[0].extensions).not.toBeDefined();
       expect(body[1].extensions).not.toBeDefined();
     });
@@ -580,7 +578,6 @@ describe("enhanced client awareness", () => {
       await wait(10);
 
       const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
-      console.log(fetchMock.lastCall());
       expect(body[0].extensions).not.toBeDefined();
       expect(body[1].extensions).not.toBeDefined();
     });
@@ -612,7 +609,6 @@ describe("enhanced client awareness", () => {
       await wait(10);
 
       const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
-      console.log(fetchMock.lastCall());
       expect(body[0].extensions).toStrictEqual({
         clientLibrary: {
           name: "@apollo/client",

@@ -30,7 +30,11 @@ import type {
 } from "../../core/watchQueryOptions.js";
 import type { IgnoreModifier } from "../core/types/common.js";
 
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
+export type UpdateQueries<TData> = MutationOptions<
+  TData,
+  any,
+  any
+>["updateQueries"];
 
 const IGNORE = {} as IgnoreModifier;
 
@@ -177,7 +181,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
     this.observableQuery?.["resetNotifications"]();
 
     if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
-      if (shouldWriteResult(result, errorPolicy)) {
+      if (this.shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
@@ -295,7 +299,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+    if (!skipCache && this.shouldWriteResult(result, mutation.errorPolicy)) {
       if (!isExecutionPatchIncrementalResult(result)) {
         cacheWrites.push({
           result: result.data,
@@ -539,7 +543,7 @@ export class MergeStrategy implements Cache.MergeStrategy {
     >
   ) {
     if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
-      if (shouldWriteResult(result, errorPolicy)) {
+      if (this.shouldWriteResult(result, errorPolicy)) {
         this.cache.write({
           query: document,
           result: result.data as any,
@@ -551,16 +555,16 @@ export class MergeStrategy implements Cache.MergeStrategy {
       this.handler.broadcastQueries();
     }
   }
-}
 
-function shouldWriteResult<T>(
-  result: FetchResult<T>,
-  errorPolicy: ErrorPolicy = "none"
-) {
-  const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";
-  let writeWithErrors = !graphQLResultHasError(result);
-  if (!writeWithErrors && ignoreErrors && result.data) {
-    writeWithErrors = true;
+  shouldWriteResult<T>(
+    result: FetchResult<T>,
+    errorPolicy: ErrorPolicy = "none"
+  ) {
+    const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";
+    let writeWithErrors = !graphQLResultHasError(result);
+    if (!writeWithErrors && ignoreErrors && result.data) {
+      writeWithErrors = true;
+    }
+    return writeWithErrors;
   }
-  return writeWithErrors;
 }

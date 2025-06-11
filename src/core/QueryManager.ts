@@ -29,6 +29,7 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import type { Incremental } from "@apollo/client/incremental";
 import type {
   ExecuteContext,
   FetchResult,
@@ -149,6 +150,7 @@ interface QueryManagerOptions {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
   localState: LocalState | undefined;
+  incrementalStrategy: Incremental.Strategy;
 }
 
 export class QueryManager {
@@ -164,6 +166,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
+  public readonly incrementalStrategy: Incremental.Strategy;
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
@@ -211,6 +214,7 @@ export class QueryManager {
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
     this.localState = options.localState;
+    this.incrementalStrategy = options.incrementalStrategy;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?

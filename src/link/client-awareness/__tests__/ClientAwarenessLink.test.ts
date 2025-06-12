@@ -1,5 +1,3 @@
-import fetchMock from "fetch-mock";
-
 import { ApolloClient, gql, InMemoryCache, version } from "@apollo/client";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import { MockSubscriptionLink } from "@apollo/client/testing";
@@ -9,8 +7,6 @@ const query = gql`
     hello
   }
 `;
-
-afterEach(() => fetchMock.reset());
 
 describe("feature: client awareness", () => {
   test("does not add headers without options", () => {
@@ -218,6 +214,82 @@ describe("feature: client awareness", () => {
       const headers = terminatingLink.operation?.getContext().headers;
       expect(headers).toStrictEqual({
         "apollographql-client-name": "overridden-client",
+        "apollographql-client-version": "2.0.0",
+      });
+    });
+
+    test("merge-overrides `ClientAwarenessLink` and `ApolloClient` options", () => {
+      const terminatingLink = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link: new ClientAwarenessLink({
+          clientAwareness: {
+            version: "2.0.0",
+          },
+        }).concat(terminatingLink),
+        cache: new InMemoryCache(),
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = terminatingLink.operation?.getContext().headers;
+      expect(headers).toStrictEqual({
+        "apollographql-client-name": "test-client",
+        "apollographql-client-version": "2.0.0",
+      });
+    });
+
+    test("merge-overrides `context` and `ApolloClient` options", () => {
+      const terminatingLink = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link: new ClientAwarenessLink().concat(terminatingLink),
+        cache: new InMemoryCache(),
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({
+        query,
+        context: {
+          clientAwareness: {
+            version: "2.0.0",
+          },
+        },
+      });
+      const headers = terminatingLink.operation?.getContext().headers;
+      expect(headers).toStrictEqual({
+        "apollographql-client-name": "test-client",
+        "apollographql-client-version": "2.0.0",
+      });
+    });
+
+    test("merge-overrides `ClientAwarenessLink` and `context` options", () => {
+      const terminatingLink = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link: new ClientAwarenessLink({
+          clientAwareness: {
+            name: "test-client",
+            version: "1.0.0",
+          },
+        }).concat(terminatingLink),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({
+        query,
+        context: {
+          clientAwareness: {
+            version: "2.0.0",
+          },
+        },
+      });
+      const headers = terminatingLink.operation?.getContext().headers;
+      expect(headers).toStrictEqual({
+        "apollographql-client-name": "test-client",
         "apollographql-client-version": "2.0.0",
       });
     });

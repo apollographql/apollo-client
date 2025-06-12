@@ -2064,6 +2064,7 @@ describe("HttpLink", () => {
       data: { hello: "world" },
     };
     const uri = "https://example.com/graphql";
+    afterEach(() => fetchMock.reset());
 
     test("is part of `HttpLink`", () => {
       fetchMock.postOnce(uri, response);
@@ -2148,6 +2149,7 @@ describe("HttpLink", () => {
       data: { hello: "world" },
     };
     const uri = "https://example.com/graphql";
+    afterEach(() => fetchMock.reset());
 
     test("is part of `HttpLink`", () => {
       fetchMock.postOnce(uri, response);

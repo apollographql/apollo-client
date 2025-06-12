@@ -1426,6 +1426,8 @@ describe("client awareness", () => {
   };
   const uri = "https://example.com/graphql";
 
+  afterEach(() => fetchMock.reset());
+
   test("is part of `BatchHttpLink`", async () => {
     fetchMock.postOnce(uri, [response, response]);
     const client = new ApolloClient({
@@ -1585,6 +1587,8 @@ describe("enhanced client awareness", () => {
     data: { hello: "world" },
   };
   const uri = "https://example.com/graphql";
+
+  afterEach(() => fetchMock.reset());
 
   test("is part of `BatchHttpLink`", async () => {
     fetchMock.postOnce(uri, [response, response]);

@@ -535,7 +535,7 @@ export class ApolloClient implements DataProxy {
       invariant(
         optionsWithDefaults.fetchPolicy === "network-only" ||
           optionsWithDefaults.fetchPolicy === "no-cache",
-        "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
+        "Mutations only support 'network-only' or 'no-cache' fetch policies. The default 'network-only' behavior automatically writes mutation results to the cache. Passing 'no-cache' skips the cache write."
       );
     }
 

@@ -178,12 +178,7 @@ export class QueryInfo {
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
   ) {
-    const { isIncremental } = this.queryManager.getDocumentInfo(query);
     const { incrementalStrategy } = this.queryManager;
-
-    if (isIncremental) {
-      this.incremental ??= incrementalStrategy.startRequest({ query });
-    }
 
     const diffOptions = {
       query,
@@ -196,14 +191,24 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
+    if (incrementalStrategy.isIncrementalInitialResult(result)) {
+      this.incremental = incrementalStrategy.startRequest({
+        query,
+        initialChunk: result,
+      });
+    }
+
+    if (incrementalStrategy.isIncrementalSubsequentResult(result)) {
+      this.incremental?.append(result);
+    }
+
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
       const lastDiff =
         this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
           this.lastDiff.diff
         : { result: null, complete: false };
 
-      if (incrementalStrategy.isIncrementalPatchResult(result)) {
-        this.incremental!.append(result);
+      if (incrementalStrategy.isIncrementalResult(result)) {
         result.data = this.incremental!.apply(lastDiff.result, result);
       }
 
@@ -214,8 +219,7 @@ export class QueryInfo {
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
 
-      if (incrementalStrategy.isIncrementalPatchResult(result)) {
-        this.incremental!.append(result);
+      if (incrementalStrategy.isIncrementalResult(result)) {
         result.data = this.incremental!.apply(lastDiff.result, result);
       }
 

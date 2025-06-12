@@ -8068,7 +8068,7 @@ describe("ApolloClient", () => {
       `;
       expect(() => client.query({ query })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `__typename` in query "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello` in query "Test".'
         )
       );
     });
@@ -8087,7 +8087,7 @@ describe("ApolloClient", () => {
       `;
       expect(() => client.query({ query })).toThrow(
         new InvariantError(
-          '`__ac_foo` is a forbidden field alias name in the selection set for field `foo.__ac_foo` in query "Test".'
+          '`__ac_foo` is a forbidden field alias name in the selection set for field `foo.hello` in query "Test".'
         )
       );
     });
@@ -8127,7 +8127,7 @@ describe("ApolloClient", () => {
       `;
       expect(() => client.watchQuery({ query })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello.__typename` in query "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in query "Test".'
         )
       );
     });
@@ -8167,7 +8167,7 @@ describe("ApolloClient", () => {
         })
       ).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello.__typename` in query "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.fetchMore` in query "Test".'
         )
       );
     });
@@ -8188,7 +8188,7 @@ describe("ApolloClient", () => {
       `;
       expect(() => client.mutate({ mutation })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.__typename` in mutation "AddTestUser".'
+          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.world` in mutation "AddTestUser".'
         )
       );
     });
@@ -8207,7 +8207,7 @@ describe("ApolloClient", () => {
       `;
       expect(() => client.subscribe({ query })).toThrow(
         new InvariantError(
-          '`__typename` is a forbidden field alias name in the selection set for field `hello.__typename` in subscription "Test".'
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in subscription "Test".'
         )
       );
     });

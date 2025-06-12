@@ -83,14 +83,14 @@ test("caches thrown errors", () => {
   );
   expect(() => checkDocument(query, OperationTypeNode.QUERY)).toThrow(
     new InvariantError(
-      '`__typename` is a forbidden field alias name in the selection set for field `__typename` in query "<undefined>".'
+      '`__typename` is a forbidden field alias name in the selection set for field `me` in query "(anonymous)".'
     )
   );
   expect(kindLookupCount).toBeGreaterThan(0);
   kindLookupCount = 0;
   expect(() => checkDocument(query, OperationTypeNode.QUERY)).toThrow(
     new InvariantError(
-      '`__typename` is a forbidden field alias name in the selection set for field `__typename` in query "<undefined>".'
+      '`__typename` is a forbidden field alias name in the selection set for field `me` in query "(anonymous)".'
     )
   );
   expect(kindLookupCount).toBe(0);

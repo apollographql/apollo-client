@@ -4014,7 +4014,7 @@ describe("writing to the store", () => {
       })
     ).toThrow(
       new InvariantError(
-        '`__typename` is a forbidden field alias name in the selection set for field `user.__typename` in query "<undefined>".'
+        '`__typename` is a forbidden field alias name in the selection set for field `user.firstName` in query "(anonymous)".'
       )
     );
 

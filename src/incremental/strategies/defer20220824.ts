@@ -51,7 +51,7 @@ class DeferRequest
   private chunks: Array<Chunk> = [];
   private pending: Incremental.Pending[];
 
-  constructor(query: DocumentNode) {
+  constructor(query: DocumentNode, initialChunk: defer20220824.InitialResult) {
     // You can imagine this would traverse the query and pull out the `@defer`
     // locations since we don't get this in the response info
     this.pending = [];
@@ -122,6 +122,7 @@ export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionRes
 
       return request;
     },
-    startRequest: ({ query }) => new DeferRequest(query),
+    startRequest: ({ query, initialChunk }) =>
+      new DeferRequest(query, initialChunk),
   };
 }

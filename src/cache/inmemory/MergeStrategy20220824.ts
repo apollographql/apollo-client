@@ -1,10 +1,15 @@
 import equal from "@wry/equality";
 
 import type {
+  ApolloCache,
   Cache,
+  DefaultContext,
   FetchResult,
   GraphQLRequest,
   HttpLink,
+  InternalRefetchQueriesInclude,
+  MutationUpdaterFunction,
+  OnQueryUpdated,
   OperationVariables,
 } from "@apollo/client";
 import { DeepMerger, hasDirectives } from "@apollo/client/utilities/internal";
@@ -13,7 +18,7 @@ import {
   mergeIncrementalData,
 } from "@apollo/client/utilities/internal";
 
-import type { OperationInfo } from "./MergeStrategy.js";
+import type { OperationInfo, UpdateQueries } from "./MergeStrategy.js";
 import { CacheWriteBehavior, MergeStrategy } from "./MergeStrategy.js";
 
 export class MergeStrategy20220824 extends MergeStrategy {
@@ -22,7 +27,7 @@ export class MergeStrategy20220824 extends MergeStrategy {
       const context = request.context as HttpLink.ContextOptions;
       const http = (context.http ??= {});
       http.accept = [
-        "multipart/mixed;deferSpec=20220824;q=1.1",
+        "multipart/mixed;deferSpec=20220824",
         ...(http.accept || []),
       ];
     }
@@ -65,6 +70,31 @@ export class MergeStrategy20220824 extends MergeStrategy {
     }
 
     super.markQueryResult(result, options);
+  }
+
+  public markMutationResult<
+    TData,
+    TVariables extends OperationVariables,
+    TCache extends ApolloCache,
+  >(
+    result: FetchResult<TData>,
+    mutation: OperationInfo<
+      TData,
+      TVariables,
+      CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE
+    > & {
+      context?: DefaultContext;
+      updateQueries: UpdateQueries<TData>;
+      update?: MutationUpdaterFunction<TData, TVariables, TCache>;
+      awaitRefetchQueries?: boolean;
+      refetchQueries?: InternalRefetchQueriesInclude;
+      removeOptimistic?: string;
+      onQueryUpdated?: OnQueryUpdated<any>;
+      keepRootFields?: boolean;
+    },
+    cache = this.cache
+  ): Promise<FetchResult<TData>> {
+    return super.markMutationResult(result, mutation, cache);
   }
 }
 

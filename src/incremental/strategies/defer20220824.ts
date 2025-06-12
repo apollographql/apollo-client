@@ -1,8 +1,10 @@
 import type { GraphQLFormattedError } from "graphql";
 
+import type { HttpLink } from "@apollo/client";
 import { IncrementalPayload } from "@apollo/client";
 import {
   DeepMerger,
+  hasDirectives,
   isNonEmptyArray,
   mergeIncrementalData,
 } from "@apollo/client/utilities/internal";
@@ -84,7 +86,18 @@ export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionRes
     isIncrementalPatchResult: (
       result: Record<string, any>
     ): result is defer20220824.ExecutionResult => "hasNext" in result,
-    prepareRequest: (request) => request,
+    prepareRequest: (request) => {
+      if (hasDirectives(["defer"], request.query)) {
+        const context = request.context ?? {};
+        const http = (context.http ??= {});
+        http.accept = [
+          "multipart/mixed;deferSpec=20220824;q=1.1",
+          ...(http.accept || []),
+        ];
+      }
+
+      return request;
+    },
     startRequest: () => new DeferRequest(),
   };
 }

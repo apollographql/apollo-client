@@ -31,10 +31,15 @@ import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { hasOwn, normalizeConfig } from "./helpers.js";
+import { MergeStrategy as DefaultMergeStrategy } from "./MergeStrategy.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
-import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
+import type {
+  InMemoryCacheConfig,
+  InMemoryCacheMergeStrategy,
+  NormalizedCacheObject,
+} from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
 type BroadcastOptions = Pick<
@@ -70,9 +75,13 @@ export class InMemoryCache extends ApolloCache {
 
   public readonly makeVar = makeVar;
 
+  private readonly MergeStrategy: InMemoryCacheMergeStrategy;
+
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = normalizeConfig(config);
+
+    this.MergeStrategy = this.config.mergeStrategy || DefaultMergeStrategy;
 
     this.policies = new Policies({
       cache: this,
@@ -578,6 +587,12 @@ export class InMemoryCache extends ApolloCache {
     if (!lastDiff || !equal(lastDiff.result, diff.result)) {
       c.callback((c.lastDiff = diff), lastDiff);
     }
+  }
+
+  public getMergeStrategy(
+    ...args: Parameters<ApolloCache["getMergeStrategy"]>
+  ): Cache.MergeStrategy {
+    return new this.MergeStrategy(this, ...args);
   }
 
   /**

@@ -10,7 +10,7 @@ import { gql } from "graphql-tag";
 import { assign, omit } from "lodash";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import type { Reference, StoreObject } from "@apollo/client/utilities";
 import { addTypenameToDocument, isReference } from "@apollo/client/utilities";
@@ -2303,6 +2303,7 @@ describe("writing to the store", () => {
       const writer = new StoreWriter(
         new InMemoryCache({
           dataIdFromObject: getIdField,
+          mergeStrategy: MergeStrategy20220824,
         })
       );
 

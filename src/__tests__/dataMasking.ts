@@ -2,16 +2,8 @@ import type { FragmentSpreadNode } from "graphql";
 import { Kind, visit } from "graphql";
 import { of } from "rxjs";
 
-import type {
-  Cache,
-  DataProxy,
-  FetchPolicy,
-  OperationVariables,
-  Reference,
-  TypedDocumentNode,
-} from "@apollo/client";
+import type { FetchPolicy, TypedDocumentNode } from "@apollo/client";
 import {
-  ApolloCache,
   ApolloClient,
   ApolloLink,
   DocumentTransform,
@@ -19,9 +11,12 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import { createFragmentRegistry } from "@apollo/client/cache";
+import {
+  createFragmentRegistry,
+  MergeStrategy20220824,
+} from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import type { MaskedDocumentNode } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
@@ -474,7 +469,10 @@ describe("client.watchQuery", () => {
 
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new TestCache(),
+      cache: Object.assign(new InMemoryCache(), {
+        // Simulate a cache that does not support data masking
+        fragmentMatches: undefined,
+      }),
       link: new MockLink(mocks),
     });
 
@@ -2179,7 +2177,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -2288,7 +2286,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -2396,7 +2394,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -2517,7 +2515,7 @@ describe("client.watchQuery", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       link,
     });
 
@@ -6247,51 +6245,3 @@ describe("client.mutate", () => {
     );
   });
 });
-
-// @ts-ignore intentionally don't implement fragmentMatches until we remove the
-// check for it
-class TestCache extends ApolloCache {
-  public diff<T>(query: Cache.DiffOptions<T>): DataProxy.DiffResult<T> {
-    return { result: null, complete: false };
-  }
-
-  public evict(): boolean {
-    return false;
-  }
-
-  public extract(optimistic?: boolean): unknown {
-    return undefined;
-  }
-
-  public performTransaction(transaction: (c: ApolloCache) => void): void {
-    transaction(this);
-  }
-
-  public read<T = unknown, TVariables = OperationVariables>(
-    query: Cache.ReadOptions<TVariables, T>
-  ): Unmasked<T> | null {
-    return null;
-  }
-
-  public removeOptimistic(id: string): void {}
-
-  public reset(): Promise<void> {
-    return new Promise<void>(() => null);
-  }
-
-  public restore(serializedState: unknown): this {
-    return this;
-  }
-
-  public watch<T, TVariables>(
-    watch: Cache.WatchOptions<T, TVariables>
-  ): () => void {
-    return function () {};
-  }
-
-  public write<TResult = unknown, TVariables = OperationVariables>(
-    _: Cache.WriteOptions<TResult, TVariables>
-  ): Reference | undefined {
-    return;
-  }
-}

@@ -1,6 +1,8 @@
-import type { OperationVariables } from "@apollo/client";
+import type { GraphQLRequest, OperationVariables } from "@apollo/client";
 import type { Unmasked } from "@apollo/client/masking";
 
+import type { QueryManager } from "../../../core/QueryManager.js";
+import type { MergeStrategy as MergeStrategyImpl } from "../../inmemory/MergeStrategy.js";
 import type { ApolloCache } from "../cache.js";
 
 import type { AllFieldsModifier, Modifiers } from "./common.js";
@@ -102,6 +104,23 @@ export namespace Cache {
       diff: Cache.DiffResult<any>,
       lastDiff?: Cache.DiffResult<any> | undefined
     ) => any;
+  }
+
+  export interface MergeStrategyHandler {
+    getObservableQueries: QueryManager["getObservableQueries"];
+    refetchQueries: QueryManager["refetchQueries"];
+    getDocumentInfo: QueryManager["getDocumentInfo"];
+    broadcastQueries: QueryManager["broadcastQueries"];
+  }
+
+  export interface MergeStrategy {
+    readonly id: string;
+    prepareRequest: (request: GraphQLRequest) => void;
+    markQueryResult: MergeStrategyImpl["markQueryResult"];
+    markMutationResult: MergeStrategyImpl["markMutationResult"];
+    markMutationOptimistic: MergeStrategyImpl["markMutationOptimistic"];
+    markSubscriptionResult: MergeStrategyImpl["markSubscriptionResult"];
+    resetLastWrite: MergeStrategyImpl["resetLastWrite"];
   }
 
   export import DiffResult = DataProxy.DiffResult;

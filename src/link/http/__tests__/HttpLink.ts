@@ -5,11 +5,17 @@ import type { ASTNode } from "graphql";
 import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
-import { map, Observable } from "rxjs";
+import { map, Observable, Subject, tap } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import type { FetchResult } from "@apollo/client";
-import { ServerError, version } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  ServerError,
+  version,
+} from "@apollo/client";
+import { MergeStrategy20220824 } from "@apollo/client/cache";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
@@ -1497,7 +1503,7 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      it("sets correct accept header on request with deferred query", async () => {
+      it("sets correct accept header on request with deferred query when used with InMemoryCache", async () => {
         const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
@@ -1507,9 +1513,17 @@ describe("HttpLink", () => {
             headers: { "content-type": "multipart/mixed" },
           });
         });
-        const link = new HttpLink({ fetch });
-        const observable = execute(link, { query: sampleDeferredQuery });
-        const observableStream = new ObservableStream(observable);
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+        });
+
+        void client.query({ query: sampleDeferredQuery });
 
         await expect(observableStream).toEmitTypedValue({
           data: { stub: { id: "0" } },
@@ -1534,7 +1548,8 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               "content-type": "application/json",
-              accept: "multipart/mixed;deferSpec=20220824,application/json",
+              accept:
+                "multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -1683,39 +1698,55 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      test("whatwg stream bodies, warns if combined with @defer", () => {
-        const stream = new ReadableStream({
-          async start(controller) {
-            const lines = subscriptionsBody.split("\r\n");
-            try {
-              for (const line of lines) {
-                await new Promise((resolve) => setTimeout(resolve, 10));
-                controller.enqueue(line + "\r\n");
-              }
-            } finally {
-              controller.close();
-            }
-          },
+      test("whatwg stream bodies combined with @defer, lets server handle erroring", async () => {
+        const error = {
+          errors: [
+            {
+              message:
+                "value retrieval failed: Federation error: @defer is not supported on subscriptions",
+              extensions: { code: "INTERNAL_SERVER_ERROR" },
+            },
+          ],
+        };
+        const response = new Response(JSON.stringify(error), {
+          status: 500,
+          headers: { "content-type": "application/json" },
         });
-
         const fetch = jest.fn(async () => {
-          return new Response(stream, {
-            status: 200,
-            headers: { "content-type": "multipart/mixed" },
-          });
+          return response;
         });
 
         const link = new HttpLink({ fetch });
 
-        const warningSpy = jest
-          .spyOn(console, "warn")
-          .mockImplementation(() => {});
-        execute(link, { query: sampleSubscriptionWithDefer });
-        expect(warningSpy).toHaveBeenCalledTimes(1);
-        expect(warningSpy).toHaveBeenCalledWith(
-          "Multipart-subscriptions do not support @defer"
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+        });
+
+        const stream = new ObservableStream(
+          client.subscribe({ query: sampleSubscriptionWithDefer })
         );
-        warningSpy.mockRestore();
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              accept:
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
+              "content-type": "application/json",
+            },
+          })
+        );
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          error: new ServerError(
+            "Response not successful: Received status code 500",
+            {
+              bodyText: JSON.stringify(error),
+              response,
+            }
+          ),
+        });
       });
 
       it("with errors", async () => {
@@ -1795,7 +1826,7 @@ describe("HttpLink", () => {
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -2080,3 +2111,23 @@ describe("HttpLink", () => {
     });
   });
 });
+
+function pipeLinkToObservableStream(link: ApolloLink) {
+  const sink = new Subject<FetchResult>();
+  const observableStream = new ObservableStream(sink);
+  const pipedLink = new ApolloLink((operation, forward) =>
+    forward(operation).pipe(
+      tap({
+        next: (result) => {
+          sink.next(structuredClone(result));
+        },
+        error: sink.error.bind(sink),
+        complete: sink.complete.bind(sink),
+      })
+    )
+  ).concat(link);
+  return {
+    observableStream,
+    link: pipedLink,
+  };
+}

@@ -16,10 +16,10 @@ import {
   serializeFetchParameter,
 } from "@apollo/client/link/http";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
-import { compact } from "../../utilities/internal/compact.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<

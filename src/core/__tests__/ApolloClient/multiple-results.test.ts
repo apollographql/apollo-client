@@ -6,6 +6,8 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
+// The `@defer` tests in this file actually just test multiple normal results,
+// not incremental results. What should we do about that?
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {
     const query = gql`

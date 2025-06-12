@@ -68,6 +68,7 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
+import { MergeStrategy20220824 } from "../../../cache/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -7151,7 +7152,10 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      {
+        link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+      }
     );
 
     expect(renders.suspenseCount).toBe(1);
@@ -7251,7 +7255,10 @@ describe("useSuspenseQuery", () => {
 
       const { result, renders } = await renderSuspenseHook(
         () => useSuspenseQuery(query, { fetchPolicy }),
-        { link }
+        {
+          link,
+          cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+        }
       );
 
       expect(renders.suspenseCount).toBe(1);
@@ -7347,7 +7354,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
 
     cache.writeQuery({
       query,
@@ -7410,7 +7417,7 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new MockSubscriptionLink();
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
 
     // We are intentionally writing partial data to the cache. Supress console
     // warnings to avoid unnecessary noise in the test.
@@ -7556,7 +7563,7 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new MockSubscriptionLink();
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
     const client = new ApolloClient({ cache, link });
 
     cache.writeQuery({
@@ -7700,7 +7707,10 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      {
+        link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+      }
     );
 
     expect(renders.suspenseCount).toBe(1);
@@ -7880,7 +7890,10 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      {
+        link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+      }
     );
 
     expect(renders.suspenseCount).toBe(1);
@@ -8010,7 +8023,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 
@@ -8234,7 +8247,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 
@@ -8374,6 +8387,7 @@ describe("useSuspenseQuery", () => {
     `;
 
     const cache = new InMemoryCache({
+      mergeStrategy: MergeStrategy20220824,
       typePolicies: {
         Query: {
           fields: {
@@ -8661,6 +8675,7 @@ describe("useSuspenseQuery", () => {
       `;
 
       const cache = new InMemoryCache({
+        mergeStrategy: MergeStrategy20220824,
         typePolicies: {
           Query: {
             fields: {
@@ -8952,6 +8967,7 @@ describe("useSuspenseQuery", () => {
       () => useSuspenseQuery(query),
       {
         link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       }
     );
 
@@ -8993,6 +9009,7 @@ describe("useSuspenseQuery", () => {
       () => useSuspenseQuery(query),
       {
         link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       }
     );
 
@@ -9040,6 +9057,7 @@ describe("useSuspenseQuery", () => {
       () => useSuspenseQuery(query),
       {
         link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       }
     );
 
@@ -9089,7 +9107,10 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      {
+        link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+      }
     );
 
     link.simulateResult({
@@ -9228,7 +9249,10 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
-      { link }
+      {
+        link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+      }
     );
 
     link.simulateResult({
@@ -9446,7 +9470,10 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
-      { link }
+      {
+        link,
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
+      }
     );
 
     link.simulateResult({
@@ -9608,7 +9635,7 @@ describe("useSuspenseQuery", () => {
       }
     `;
 
-    const cache = new InMemoryCache();
+    const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache });
 

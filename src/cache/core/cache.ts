@@ -7,7 +7,11 @@ import type {
 import { wrap } from "optimism";
 import { Observable } from "rxjs";
 
-import type { OperationVariables, TypedDocumentNode } from "@apollo/client";
+import type {
+  ObservableQuery,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client";
 import type {
   FragmentType,
   MaybeMasked,
@@ -438,6 +442,11 @@ export abstract class ApolloCache implements DataProxy {
    * Use at your own risk!
    */
   public getMemoryInternals?: typeof getApolloCacheMemoryInternals;
+
+  public abstract getMergeStrategy(
+    handler: Cache.MergeStrategyHandler,
+    observableQuery?: ObservableQuery<any, any>
+  ): Cache.MergeStrategy;
 }
 
 if (__DEV__) {

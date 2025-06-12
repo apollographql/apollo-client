@@ -1,11 +1,11 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
+import type { ObservableQuery } from "@apollo/client";
 import type { ApolloCache, Cache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link";
+import type { FetchResult, GraphQLRequest } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
-  DeepMerger,
   getOperationName,
   graphQLResultHasError,
   isExecutionPatchIncrementalResult,
@@ -15,10 +15,6 @@ import {
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { IgnoreModifier } from "../cache/core/types/common.js";
-
-import type { ObservableQuery } from "./ObservableQuery.js";
-import type { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
   InternalRefetchQueriesInclude,
@@ -26,14 +22,19 @@ import type {
   OnQueryUpdated,
   OperationVariables,
   TypedDocumentNode,
-} from "./types.js";
+} from "../../core/types.js";
 import type {
   ErrorPolicy,
   MutationOptions,
   WatchQueryOptions,
-} from "./watchQueryOptions.js";
+} from "../../core/watchQueryOptions.js";
+import type { IgnoreModifier } from "../core/types/common.js";
 
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
+export type UpdateQueries<TData> = MutationOptions<
+  TData,
+  any,
+  any
+>["updateQueries"];
 
 const IGNORE = {} as IgnoreModifier;
 
@@ -51,7 +52,7 @@ interface LastWrite {
 
 const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
-interface OperationInfo<
+export interface OperationInfo<
   TData,
   TVariables extends OperationVariables,
   AllowedCacheWriteBehavior = CacheWriteBehavior,
@@ -84,38 +85,33 @@ function wrapDestructiveCacheMethod(
   }
 }
 
-const queryInfoIds = new WeakMap<QueryManager, number>();
+const idMap = new WeakMap<ApolloCache, number>();
 
-// A QueryInfo object represents a single network request, either initiated
+// A MergeStrategy object represents a single network request, either initiated
 // from the QueryManager or from an ObservableQuery.
 // It will only ever be used for a single network call.
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
-export class QueryInfo {
+export class MergeStrategy implements Cache.MergeStrategy {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
 
-  private cache: ApolloCache;
-  private queryManager: Pick<
-    QueryManager,
-    | "getObservableQueries"
-    | "refetchQueries"
-    | "getDocumentInfo"
-    | "broadcastQueries"
-  >;
+  protected cache: ApolloCache;
+  protected handler: Cache.MergeStrategyHandler;
   public readonly id: string;
-  private readonly observableQuery?: ObservableQuery<any, any>;
+  protected readonly observableQuery?: ObservableQuery<any, any>;
 
   constructor(
-    queryManager: QueryManager,
+    cache: ApolloCache,
+    handler: Cache.MergeStrategyHandler,
     observableQuery?: ObservableQuery<any, any>
   ) {
-    const cache = (this.cache = queryManager.cache);
-    const id = (queryInfoIds.get(queryManager) || 0) + 1;
-    queryInfoIds.set(queryManager, id);
+    this.cache = cache;
+    const id = (idMap.get(cache) || 0) + 1;
+    idMap.set(cache, id);
     this.id = id + "";
     this.observableQuery = observableQuery;
-    this.queryManager = queryManager;
+    this.handler = handler;
 
     // Track how often cache.evict is called, since we want eviction to
     // override the feud-stopping logic in the markQueryResult method, by
@@ -130,9 +126,11 @@ export class QueryInfo {
     }
   }
 
+  prepareRequest(request: GraphQLRequest) {}
+
   /** @internal
-   * For feud-preventing behaviour, `lastWrite` should be shared by all `QueryInfo` instances of an `ObservableQuery`.
-   * In the case of a standalone `QueryInfo`, we will keep a local version.
+   * For feud-preventing behaviour, `lastWrite` should be shared by all `MergeStrategy` instances of an `ObservableQuery`.
+   * In the case of a standalone `MergeStrategy`, we will keep a local version.
    */
   public _lastWrite?: LastWrite;
   private get lastWrite(): LastWrite | undefined {
@@ -162,11 +160,6 @@ export class QueryInfo {
     );
   }
 
-  private lastDiff?: {
-    diff: Cache.DiffResult<any>;
-    options: Cache.DiffOptions;
-  };
-
   public markQueryResult<TData, TVariables extends OperationVariables>(
     result: FetchResult<TData>,
     {
@@ -187,22 +180,8 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      const lastDiff =
-        this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
-          this.lastDiff.diff
-        : { result: null, complete: false };
-      handleIncrementalResult(result, lastDiff);
-
-      this.lastDiff = {
-        diff: { result: result.data, complete: true },
-        options: diffOptions,
-      };
-    } else {
-      const lastDiff = this.cache.diff<any>(diffOptions);
-      handleIncrementalResult(result, lastDiff);
-
-      if (shouldWriteResult(result, errorPolicy)) {
+    if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
+      if (this.shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
         // back from the cache before the watch callback fires as a result
         // of writeQuery, so we can store the new diff quietly and ignore
@@ -266,6 +245,7 @@ export class QueryInfo {
               // mitigate the clobbering somehow, but that would make this
               // particular cache write even less important, and thus
               // skipping it would be even safer than it is today.
+              const lastDiff = this.cache.diff<any>(diffOptions);
               if (lastDiff && lastDiff.complete) {
                 // Reuse data from the last good (complete) diff that we
                 // received, when possible.
@@ -319,7 +299,7 @@ export class QueryInfo {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+    if (!skipCache && this.shouldWriteResult(result, mutation.errorPolicy)) {
       if (!isExecutionPatchIncrementalResult(result)) {
         cacheWrites.push({
           result: result.data,
@@ -337,7 +317,7 @@ export class QueryInfo {
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
           // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
+          query: this.handler.getDocumentInfo(mutation.document).asQuery,
           variables: mutation.variables,
           optimistic: false,
           returnPartialData: true,
@@ -361,44 +341,57 @@ export class QueryInfo {
 
       const { updateQueries } = mutation;
       if (updateQueries) {
-        this.queryManager
-          .getObservableQueries("all")
-          .forEach((observableQuery) => {
-            const queryName = observableQuery && observableQuery.queryName;
-            if (
-              !queryName ||
-              !Object.hasOwnProperty.call(updateQueries, queryName)
-            ) {
-              return;
-            }
-            const updater = updateQueries[queryName];
-            const { query: document, variables } = observableQuery;
+        this.handler.getObservableQueries("all").forEach((observableQuery) => {
+          const queryName = observableQuery && observableQuery.queryName;
+          if (
+            !queryName ||
+            !Object.hasOwnProperty.call(updateQueries, queryName)
+          ) {
+            return;
+          }
+          const updater = updateQueries[queryName];
+          const { query: document, variables } = observableQuery;
 
-            // Read the current query result from the store.
-            const { result: currentQueryResult, complete } =
-              observableQuery.getCacheDiff({ optimistic: false });
+          // Read the current query result from the store.
+          const { result: currentQueryResult, complete } =
+            observableQuery.getCacheDiff({ optimistic: false });
 
-            if (complete && currentQueryResult) {
-              // Run our reducer using the current query result and the mutation result.
-              const nextQueryResult = updater(currentQueryResult, {
-                mutationResult: result as FetchResult<Unmasked<TData>>,
-                queryName: (document && getOperationName(document)) || void 0,
-                queryVariables: variables!,
+          if (complete && currentQueryResult) {
+            // Run our reducer using the current query result and the mutation result.
+            const nextQueryResult = updater(currentQueryResult, {
+              mutationResult: result as FetchResult<Unmasked<TData>>,
+              queryName: (document && getOperationName(document)) || void 0,
+              queryVariables: variables!,
+            });
+
+            // Write the modified result back into the store if we got a new result.
+            if (nextQueryResult) {
+              cacheWrites.push({
+                result: nextQueryResult,
+                dataId: "ROOT_QUERY",
+                query: document!,
+                variables,
               });
-
-              // Write the modified result back into the store if we got a new result.
-              if (nextQueryResult) {
-                cacheWrites.push({
-                  result: nextQueryResult,
-                  dataId: "ROOT_QUERY",
-                  query: document!,
-                  variables,
-                });
-              }
             }
-          });
+          }
+        });
       }
     }
+
+    // Determine whether result is a SingleExecutionResult,
+    // or the final ExecutionPatchResult.
+    const isFinalResult =
+      !isExecutionPatchResult(result) ||
+      (isExecutionPatchIncrementalResult(result) && !result.hasNext);
+
+    const cleanupResult = (result: FetchResult<TData>) => {
+      if ("incremental" in result) {
+        delete result.incremental;
+      }
+      if ("hasNext" in result) {
+        delete result.hasNext;
+      }
+    };
 
     if (
       cacheWrites.length > 0 ||
@@ -409,7 +402,7 @@ export class QueryInfo {
     ) {
       const results: any[] = [];
 
-      this.queryManager
+      this.handler
         .refetchQueries({
           updateCache: (cache) => {
             if (!skipCache) {
@@ -420,11 +413,6 @@ export class QueryInfo {
             // apply those writes to the store by running this reducer again with
             // a write action.
             const { update } = mutation;
-            // Determine whether result is a SingleExecutionResult,
-            // or the final ExecutionPatchResult.
-            const isFinalResult =
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext);
 
             if (update) {
               if (!skipCache) {
@@ -437,7 +425,7 @@ export class QueryInfo {
                   // The cache complains if passed a mutation where it expects a
                   // query, so we transform mutations and subscriptions to queries
                   // (only once, thanks to this.transformCache).
-                  query: this.queryManager.getDocumentInfo(mutation.document)
+                  query: this.handler.getDocumentInfo(mutation.document)
                     .asQuery,
                   variables: mutation.variables,
                   optimistic: false,
@@ -446,12 +434,7 @@ export class QueryInfo {
 
                 if (diff.complete) {
                   result = { ...(result as FetchResult), data: diff.result };
-                  if ("incremental" in result) {
-                    delete result.incremental;
-                  }
-                  if ("hasNext" in result) {
-                    delete result.hasNext;
-                  }
+                  cleanupResult(result);
                 }
               }
 
@@ -565,7 +548,7 @@ export class QueryInfo {
     >
   ) {
     if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
-      if (shouldWriteResult(result, errorPolicy)) {
+      if (this.shouldWriteResult(result, errorPolicy)) {
         this.cache.write({
           query: document,
           result: result.data as any,
@@ -574,38 +557,19 @@ export class QueryInfo {
         });
       }
 
-      this.queryManager.broadcastQueries();
+      this.handler.broadcastQueries();
     }
   }
-}
 
-function handleIncrementalResult<T>(
-  result: FetchResult<T>,
-  lastDiff: Cache.DiffResult<any>
-) {
-  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-    const mergedData = mergeIncrementalData(lastDiff.result, result);
-    result.data = mergedData;
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-  } else if ("hasNext" in result && result.hasNext) {
-    const merger = new DeepMerger();
-    result.data = merger.merge(lastDiff.result, result.data);
+  shouldWriteResult<T>(
+    result: FetchResult<T>,
+    errorPolicy: ErrorPolicy = "none"
+  ) {
+    const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";
+    let writeWithErrors = !graphQLResultHasError(result);
+    if (!writeWithErrors && ignoreErrors && result.data) {
+      writeWithErrors = true;
+    }
+    return writeWithErrors;
   }
-}
-
-function shouldWriteResult<T>(
-  result: FetchResult<T>,
-  errorPolicy: ErrorPolicy = "none"
-) {
-  const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";
-  let writeWithErrors = !graphQLResultHasError(result);
-  if (!writeWithErrors && ignoreErrors && result.data) {
-    writeWithErrors = true;
-  }
-  return writeWithErrors;
 }

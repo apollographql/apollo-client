@@ -31,7 +31,7 @@ import {
   CombinedGraphQLErrors,
   NetworkStatus,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
@@ -9173,7 +9173,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9287,7 +9287,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9455,7 +9455,9 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({
+          mergeStrategy: MergeStrategy20220824,
+        }),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9629,7 +9631,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9745,7 +9747,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9896,7 +9898,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -10079,7 +10081,7 @@ describe("useQuery Hook", () => {
       `;
 
       const link = new MockSubscriptionLink();
-      const cache = new InMemoryCache();
+      const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
       const client = new ApolloClient({ cache, link });
 
       cache.writeQuery({
@@ -10201,7 +10203,7 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const cache = new InMemoryCache();
+      const cache = new InMemoryCache({ mergeStrategy: MergeStrategy20220824 });
       const link = new MockSubscriptionLink();
       const client = new ApolloClient({ cache, link });
 

@@ -30,7 +30,7 @@ import {
   CombinedGraphQLErrors,
   NetworkStatus,
 } from "@apollo/client";
-import { InMemoryCache } from "@apollo/client/cache";
+import { InMemoryCache, MergeStrategy20220824 } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { Masked } from "@apollo/client/masking";
@@ -3907,7 +3907,7 @@ describe("useMutation Hook", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ mergeStrategy: MergeStrategy20220824 }),
       });
 
       using _disabledAct = disableActEnvironment();

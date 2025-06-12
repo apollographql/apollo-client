@@ -96,7 +96,7 @@ describe("client", () => {
         `,
       } as any)
     ).toThrow(
-      "mutation option is required. You must specify your GraphQL document in the mutation option."
+      "The `mutation` option is required. Please provide a GraphQL document in the `mutation` option."
     );
   });
 

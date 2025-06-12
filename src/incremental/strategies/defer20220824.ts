@@ -1,7 +1,6 @@
 import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql-17-alpha2";
 
-import type { HttpLink } from "@apollo/client";
 import { IncrementalPayload } from "@apollo/client";
 import {
   DeepMerger,
@@ -48,7 +47,6 @@ class DeferRequest
   implements Incremental.IncrementalRequest<defer20220824.ExecutionResult>
 {
   public hasNext = true;
-  private chunks: Array<Chunk> = [];
   private pending: Incremental.Pending[];
 
   constructor(query: DocumentNode, initialChunk: defer20220824.InitialResult) {
@@ -57,16 +55,14 @@ class DeferRequest
     this.pending = [];
   }
 
-  append(chunk: Chunk) {
-    this.hasNext = chunk.hasNext;
-    this.chunks.push(chunk);
-    // TODO: reevaluate this.pending
-  }
-
   apply<TData>(
     data: TData,
     chunk: defer20220824.InitialResult | defer20220824.SubsequentResult
   ) {
+    this.hasNext = chunk.hasNext;
+    // TODO evaluate `this.pending` since this chunk might complete one of the
+    // `@defer` paths
+
     if ("incremental" in chunk) {
       return isNonEmptyArray(chunk.incremental) ?
           mergeIncrementalData(data as any, chunk as any)

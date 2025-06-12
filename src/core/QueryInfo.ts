@@ -198,10 +198,6 @@ export class QueryInfo {
       });
     }
 
-    if (incrementalStrategy.isIncrementalSubsequentResult(result)) {
-      this.incremental?.append(result);
-    }
-
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
       const lastDiff =
         this.lastDiff && equal(diffOptions, this.lastDiff.options) ?

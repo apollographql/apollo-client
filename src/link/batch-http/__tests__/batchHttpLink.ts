@@ -17,13 +17,13 @@ import {
   BaseBatchHttpLink,
   BatchHttpLink,
 } from "@apollo/client/link/batch-http";
+import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
-import { ClientAwarenessLink } from "../../client-awareness/ClientAwarenessLink.js";
 
 const sampleQuery = gql`
   query SampleQuery {

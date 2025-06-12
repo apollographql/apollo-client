@@ -5,15 +5,25 @@ import { gql } from "graphql-tag";
 import type { Subscription } from "rxjs";
 import { map, Observable, Subject } from "rxjs";
 
-import { ServerError, ServerParseError, version } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  ServerError,
+  ServerParseError,
+  version,
+} from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
-import { BatchHttpLink } from "@apollo/client/link/batch-http";
+import {
+  BaseBatchHttpLink,
+  BatchHttpLink,
+} from "@apollo/client/link/batch-http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
+import { ClientAwarenessLink } from "../../client-awareness/ClientAwarenessLink.js";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -1402,5 +1412,274 @@ describe("GraphQL over HTTP", () => {
       errors: [{ message: "Could not process request" }],
     });
     await expect(stream).toComplete();
+  });
+});
+
+describe("client awareness", () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const response = {
+    data: { hello: "world" },
+  };
+  const uri = "https://example.com/graphql";
+
+  test("is part of `BatchHttpLink`", async () => {
+    fetchMock.postOnce(uri, [response, response]);
+    const client = new ApolloClient({
+      link: new BatchHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
+    });
+
+    void client.query({ query });
+    void client.query({ query, context: { queryDeduplication: false } });
+    await wait(10);
+
+    const headers = fetchMock.lastCall()![1]?.headers;
+    expect(headers).toStrictEqual({
+      accept: "application/graphql-response+json,application/json;q=0.9",
+      "content-type": "application/json",
+      "apollographql-client-name": "test-client",
+      "apollographql-client-version": "1.0.0",
+    });
+  });
+
+  test("is not part of `BaseBatchHttpLink`", async () => {
+    fetchMock.postOnce(uri, response);
+    const client = new ApolloClient({
+      link: new BaseBatchHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
+    });
+
+    void client.query({ query });
+    await wait(10);
+
+    const headers = fetchMock.lastCall()![1]?.headers;
+    expect(headers).toStrictEqual({
+      accept: "application/graphql-response+json,application/json;q=0.9",
+      "content-type": "application/json",
+    });
+  });
+
+  test("`BatchHttpLink` options have priority over `ApolloClient` options", async () => {
+    fetchMock.postOnce(uri, response);
+    const client = new ApolloClient({
+      link: new BatchHttpLink({
+        uri,
+
+        clientAwareness: {
+          name: "overridden-client",
+          version: "2.0.0",
+        },
+      }),
+      cache: new InMemoryCache(),
+
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
+    });
+
+    void client.query({ query });
+    await wait(10);
+
+    const headers = fetchMock.lastCall()![1]?.headers;
+    expect(headers).toStrictEqual({
+      accept: "application/graphql-response+json,application/json;q=0.9",
+      "content-type": "application/json",
+      "apollographql-client-name": "overridden-client",
+      "apollographql-client-version": "2.0.0",
+    });
+  });
+
+  test("will batch requests with equal options", async () => {
+    fetchMock.postOnce(uri, [response, response]);
+    const client = new ApolloClient({
+      link: new BatchHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
+    });
+
+    void client.query({ query, context: { queryDeduplication: false } });
+    void client.query({ query, context: { queryDeduplication: false } });
+    await wait(10);
+
+    const headers = fetchMock.lastCall()![1]?.headers;
+    expect(headers).toStrictEqual({
+      accept: "application/graphql-response+json,application/json;q=0.9",
+      "content-type": "application/json",
+      "apollographql-client-name": "test-client",
+      "apollographql-client-version": "1.0.0",
+    });
+  });
+
+  test("will not batch requests with different options", async () => {
+    fetchMock.post(uri, [response], { repeat: 2 });
+    const client = new ApolloClient({
+      link: new BatchHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
+    });
+
+    void client.query({ query, context: { queryDeduplication: false } });
+    void client.query({
+      query,
+      context: {
+        queryDeduplication: false,
+        clientAwareness: {
+          name: "overridden-client",
+          version: "2.0.0",
+        },
+      },
+    });
+    await wait(10);
+
+    expect(fetchMock.calls()[0][1]?.headers).toStrictEqual({
+      accept: "application/graphql-response+json,application/json;q=0.9",
+      "content-type": "application/json",
+      "apollographql-client-name": "test-client",
+      "apollographql-client-version": "1.0.0",
+    });
+    expect(fetchMock.calls()[1][1]?.headers).toStrictEqual({
+      accept: "application/graphql-response+json,application/json;q=0.9",
+      "content-type": "application/json",
+      "apollographql-client-name": "overridden-client",
+      "apollographql-client-version": "2.0.0",
+    });
+  });
+});
+
+describe("enhanced client awareness", () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const response = {
+    data: { hello: "world" },
+  };
+  const uri = "https://example.com/graphql";
+
+  test("is part of `BatchHttpLink`", async () => {
+    fetchMock.postOnce(uri, [response, response]);
+    const client = new ApolloClient({
+      link: new BatchHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query });
+    void client.query({ query, context: { queryDeduplication: false } });
+    await wait(10);
+
+    const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+    expect(body[0].extensions).toStrictEqual({
+      clientLibrary: {
+        name: "@apollo/client",
+        version,
+      },
+    });
+    expect(body[1].extensions).toStrictEqual({
+      clientLibrary: {
+        name: "@apollo/client",
+        version,
+      },
+    });
+  });
+
+  test("is not part of `BaseBatchHttpLink`", async () => {
+    fetchMock.postOnce(uri, [response, response]);
+    const client = new ApolloClient({
+      link: new BaseBatchHttpLink({
+        uri,
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query });
+    void client.query({ query, context: { queryDeduplication: false } });
+    await wait(10);
+
+    const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+    expect(body[0].extensions).not.toBeDefined();
+    expect(body[1].extensions).not.toBeDefined();
+  });
+
+  test("can be disabled by disabling `includeExtensions`", async () => {
+    fetchMock.postOnce(uri, [response, response]);
+    const client = new ApolloClient({
+      link: new BatchHttpLink({
+        uri,
+        includeExtensions: false,
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query });
+    void client.query({ query, context: { queryDeduplication: false } });
+    await wait(10);
+
+    const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+    expect(body[0].extensions).not.toBeDefined();
+    expect(body[1].extensions).not.toBeDefined();
+  });
+
+  test("can send mixed requests with ECA enabled and disabled", async () => {
+    fetchMock.postOnce(uri, [response, response]);
+    const client = new ApolloClient({
+      link: ApolloLink.split(
+        (operation) => operation.variables.a === 1,
+        new ClientAwarenessLink({
+          enhancedClientAwareness: { transport: "extensions" },
+        }),
+        new ClientAwarenessLink({
+          enhancedClientAwareness: { transport: false },
+        })
+      ).concat(new BaseBatchHttpLink({ uri })),
+      cache: new InMemoryCache(),
+    });
+
+    void client.query({ query, variables: { a: 1 } });
+    void client.query({
+      query,
+      variables: { a: 2 },
+    });
+    await wait(10);
+
+    const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+    expect(body[0].extensions).toStrictEqual({
+      clientLibrary: {
+        name: "@apollo/client",
+        version,
+      },
+    });
+    expect(body[1].extensions).not.toBeDefined();
   });
 });

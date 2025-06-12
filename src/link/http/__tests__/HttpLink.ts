@@ -9,14 +9,23 @@ import { map, Observable } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import type { FetchResult } from "@apollo/client";
-import { ServerError, version } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  ServerError,
+  version,
+} from "@apollo/client";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link";
-import { createHttpLink, HttpLink } from "@apollo/client/link/http";
+import {
+  BaseHttpLink,
+  createHttpLink,
+  HttpLink,
+} from "@apollo/client/link/http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
@@ -339,41 +348,6 @@ describe("HttpLink", () => {
       });
       expect(method).toBe("POST");
       expect(uri).toBe("/data");
-    });
-
-    it("should add client awareness settings to request headers", async () => {
-      const variables = { params: "stub" };
-      const link = createHttpLink({
-        uri: "/data",
-      });
-
-      const clientAwareness = {
-        name: "Some Client Name",
-        version: "1.0.1",
-      };
-
-      const observable = execute(link, {
-        query: sampleQuery,
-        variables,
-        context: {
-          clientAwareness,
-        },
-      });
-      const stream = new ObservableStream(observable);
-
-      await expect(stream).toEmitTypedValue(data);
-      await expect(stream).toComplete();
-
-      const [, options] = fetchMock.lastCall()!;
-      const { headers } = options as any;
-      expect(headers["apollographql-client-name"]).toBeDefined();
-      expect(headers["apollographql-client-name"]).toEqual(
-        clientAwareness.name
-      );
-      expect(headers["apollographql-client-version"]).toBeDefined();
-      expect(headers["apollographql-client-version"]).toEqual(
-        clientAwareness.version
-      );
     });
 
     it("should not add empty client awareness settings to request headers", async () => {
@@ -2077,6 +2051,165 @@ describe("HttpLink", () => {
         errors: [{ message: "Could not process request" }],
       });
       await expect(stream).toComplete();
+    });
+  });
+
+  describe("client awareness", () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+    const response = {
+      data: { hello: "world" },
+    };
+    const uri = "https://example.com/graphql";
+
+    test("is part of `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = fetchMock.lastCall()![1]?.headers;
+      expect(headers).toStrictEqual({
+        accept: "application/graphql-response+json,application/json;q=0.9",
+        "content-type": "application/json",
+        "apollographql-client-name": "test-client",
+        "apollographql-client-version": "1.0.0",
+      });
+    });
+
+    test("is not part of `BaseHttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new BaseHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = fetchMock.lastCall()![1]?.headers;
+      expect(headers).toStrictEqual({
+        accept: "application/graphql-response+json,application/json;q=0.9",
+        "content-type": "application/json",
+      });
+    });
+
+    test("`HttpLink` options have priotity over `ApolloClient` options", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          clientAwareness: {
+            name: "overridden-client",
+            version: "2.0.0",
+          },
+        }),
+        cache: new InMemoryCache(),
+
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = fetchMock.lastCall()![1]?.headers;
+      expect(headers).toStrictEqual({
+        accept: "application/graphql-response+json,application/json;q=0.9",
+        "content-type": "application/json",
+        "apollographql-client-name": "overridden-client",
+        "apollographql-client-version": "2.0.0",
+      });
+    });
+  });
+
+  describe("enhanced client awareness", () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+    const response = {
+      data: { hello: "world" },
+    };
+    const uri = "https://example.com/graphql";
+
+    test("is part of `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).toStrictEqual({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      });
+    });
+
+    test("is not part of `BaseHttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new BaseHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+
+    test("can be disabled from `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          enhancedClientAwareness: { transport: false },
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+
+    test("can also be disabled by disabling `includeExtensions`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          includeExtensions: false,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
     });
   });
 });

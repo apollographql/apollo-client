@@ -8,6 +8,7 @@ import type {
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import type { IsAny } from "@apollo/client/utilities/internal";
@@ -23,19 +24,12 @@ export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
 
-export interface ClientAwareness {
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#name:member} */
-  name?: string;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#version:member} */
-  version?: string;
-}
-
 export interface DefaultContext extends Record<string, any> {
   /**
    * Indicates whether `queryDeduplication` was enabled for the request.
    */
   queryDeduplication?: boolean;
-  clientAwareness?: ClientAwareness;
+  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
 }
 
 export type QueryListener = (queryInfo: QueryInfo) => void;

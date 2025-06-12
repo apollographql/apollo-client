@@ -7350,8 +7350,10 @@ describe("ApolloClient", () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ClientAwarenessLink().concat(link),
-        name: "Test",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "Test",
+          version: "1.0.0",
+        },
       });
 
       const observable = client.watchQuery({

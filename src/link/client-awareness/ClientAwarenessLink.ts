@@ -2,7 +2,7 @@ import { ApolloLink } from "@apollo/client/link";
 import { compact } from "@apollo/client/utilities/internal";
 
 export declare namespace ClientAwarenessLink {
-  export interface Options {
+  export interface ClientAwarenessOptions {
     /**
      * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
      *
@@ -28,7 +28,9 @@ export declare namespace ClientAwarenessLink {
      *
      * @defaultValue "headers"
      */
-    clientAwareness?: "headers" | false;
+    transport?: "headers" | false;
+  }
+  export interface EnhancedClientAwarenessOptions {
     /**
      * Determines how the the version information of Apollo Client is sent in outgoing requests.
      *
@@ -37,54 +39,79 @@ export declare namespace ClientAwarenessLink {
      *
      * @defaultValue "extensions"
      */
-    enhancedClientAwareness?: "extensions" | false;
+    transport?: "extensions" | false;
+  }
+
+  export interface Options {
+    /**
+     * Configures the "client awareness" feature.
+     * This feature allows you to identify distinct applications in Apollo Studio
+     * and Apollo Server logs (and other monitoring or analytics tools) by adding
+     * information about the your application to outgoing requests.
+     */
+    clientAwareness?: ClientAwarenessOptions;
+    /**
+     * Configures the "enhanced client awareness" feature.
+     * This feature allows you to identify the version of the Apollo Client library
+     * used in your application in Apollo Studio (and other monitoring or analytics tools)
+     * by adding information about the Apollo Client library to outgoing requests.
+     */
+    enhancedClientAwareness?: EnhancedClientAwarenessOptions;
   }
 }
 
 export class ClientAwarenessLink extends ApolloLink {
-  constructor(constructorOptions?: ClientAwarenessLink.Options) {
+  constructor(constructorOptions: ClientAwarenessLink.Options = {}) {
     super((operation, forward) => {
       const client = operation.client;
 
       const clientOptions = client["queryManager"].clientOptions;
       const context = operation.getContext();
-
-      const {
-        name,
-        version,
-        clientAwareness = "headers",
-        enhancedClientAwareness = "extensions",
-      } = {
-        ...clientOptions,
-        ...constructorOptions,
-        ...context.clientAwareness,
-      };
-      if (clientAwareness === "headers") {
-        operation.setContext(({ headers, extensions }) => {
-          return {
-            headers: compact(
-              // setting these first so that they can be overridden by user-provided headers
-              {
-                "apollographql-client-name": name,
-                "apollographql-client-version": version,
-              },
-              headers
-            ),
-          };
-        });
-      }
-
-      if (enhancedClientAwareness === "extensions") {
-        operation.extensions = compact(
-          // setting these first so that it can be overridden by user-provided extensions
-          {
-            clientLibrary: {
-              name: "@apollo/client",
-              version: client.version,
-            },
-          },
-          operation.extensions
+      {
+        const {
+          name,
+          version,
+          transport = "headers",
+        } = compact(
+          {},
+          clientOptions.clientAwareness,
+          constructorOptions.clientAwareness,
+          context.clientAwareness
         );
+
+        if (transport === "headers") {
+          operation.setContext(({ headers, extensions }) => {
+            return {
+              headers: compact(
+                // setting these first so that they can be overridden by user-provided headers
+                {
+                  "apollographql-client-name": name,
+                  "apollographql-client-version": version,
+                },
+                headers
+              ),
+            };
+          });
+        }
+      }
+      {
+        const { transport = "extensions" } = compact(
+          {},
+          clientOptions.enhancedClientAwareness,
+          constructorOptions.enhancedClientAwareness
+        );
+        if (transport === "extensions") {
+          operation.extensions = compact(
+            // setting these first so that it can be overridden by user-provided extensions
+            {
+              clientLibrary: {
+                name: "@apollo/client",
+                version: client.version,
+              },
+            },
+            operation.extensions
+          );
+        }
       }
 
       return forward(operation);

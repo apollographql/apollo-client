@@ -2,6 +2,7 @@ import fetchMock from "fetch-mock";
 
 import {
   ApolloClient,
+  ApolloLink,
   gql,
   HttpLink,
   InMemoryCache,
@@ -48,8 +49,10 @@ describe("feature: client awareness", () => {
     const client = new ApolloClient({
       link: new ClientAwarenessLink().concat(terminatingLink),
       cache: new InMemoryCache(),
-      name: "test-client",
-      version: "1.0.0",
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
     });
 
     void client.query({ query });
@@ -87,8 +90,10 @@ describe("feature: client awareness", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({
       link: new ClientAwarenessLink({
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       }).concat(terminatingLink),
       cache: new InMemoryCache(),
     });
@@ -105,11 +110,13 @@ describe("feature: client awareness", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({
       link: new ClientAwarenessLink({
-        clientAwareness: false,
+        clientAwareness: { transport: false },
       }).concat(terminatingLink),
       cache: new InMemoryCache(),
-      name: "test-client",
-      version: "1.0.0",
+      clientAwareness: {
+        name: "test-client",
+        version: "1.0.0",
+      },
     });
 
     void client.query({ query });
@@ -122,7 +129,9 @@ describe("feature: client awareness", () => {
     const client = new ApolloClient({
       link: new ClientAwarenessLink().concat(terminatingLink),
       cache: new InMemoryCache(),
-      name: "test-client",
+      clientAwareness: {
+        name: "test-client",
+      },
     });
 
     void client.query({ query });
@@ -137,7 +146,9 @@ describe("feature: client awareness", () => {
     const client = new ApolloClient({
       link: new ClientAwarenessLink().concat(terminatingLink),
       cache: new InMemoryCache(),
-      version: "1.0.0",
+      clientAwareness: {
+        version: "1.0.0",
+      },
     });
 
     void client.query({ query });
@@ -153,8 +164,10 @@ describe("feature: client awareness", () => {
       const client = new ApolloClient({
         link: new ClientAwarenessLink().concat(terminatingLink),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({
@@ -178,8 +191,10 @@ describe("feature: client awareness", () => {
       const terminatingLink = new MockSubscriptionLink();
       const client = new ApolloClient({
         link: new ClientAwarenessLink({
-          name: "test-client",
-          version: "1.0.0",
+          clientAwareness: {
+            name: "test-client",
+            version: "1.0.0",
+          },
         }).concat(terminatingLink),
         cache: new InMemoryCache(),
       });
@@ -204,12 +219,16 @@ describe("feature: client awareness", () => {
       const terminatingLink = new MockSubscriptionLink();
       const client = new ApolloClient({
         link: new ClientAwarenessLink({
-          name: "overridden-client",
-          version: "2.0.0",
+          clientAwareness: {
+            name: "overridden-client",
+            version: "2.0.0",
+          },
         }).concat(terminatingLink),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -229,8 +248,10 @@ describe("feature: client awareness", () => {
           uri,
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -250,8 +271,10 @@ describe("feature: client awareness", () => {
           uri,
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -267,12 +290,17 @@ describe("feature: client awareness", () => {
       const client = new ApolloClient({
         link: new HttpLink({
           uri,
-          name: "overridden-client",
-          version: "2.0.0",
+          clientAwareness: {
+            name: "overridden-client",
+            version: "2.0.0",
+          },
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -294,8 +322,10 @@ describe("feature: client awareness", () => {
           uri,
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -318,8 +348,10 @@ describe("feature: client awareness", () => {
           uri,
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -337,12 +369,18 @@ describe("feature: client awareness", () => {
       const client = new ApolloClient({
         link: new BatchHttpLink({
           uri,
-          name: "overridden-client",
-          version: "2.0.0",
+
+          clientAwareness: {
+            name: "overridden-client",
+            version: "2.0.0",
+          },
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query });
@@ -364,8 +402,11 @@ describe("feature: client awareness", () => {
           uri,
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query, context: { queryDeduplication: false } });
@@ -388,8 +429,11 @@ describe("feature: client awareness", () => {
           uri,
         }),
         cache: new InMemoryCache(),
-        name: "test-client",
-        version: "1.0.0",
+
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
       });
 
       void client.query({ query, context: { queryDeduplication: false } });
@@ -438,11 +482,23 @@ describe("feature: enhanced client awareness", () => {
     });
   });
 
+  test("can be disabled from `ApolloClient` options", () => {
+    const terminatingLink = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link: new ClientAwarenessLink().concat(terminatingLink),
+      cache: new InMemoryCache(),
+      enhancedClientAwareness: { transport: false },
+    });
+
+    void client.query({ query });
+    expect(terminatingLink.operation?.extensions).toStrictEqual({});
+  });
+
   test("can be disabled from `ClientAwarenessLink` constructor", () => {
     const terminatingLink = new MockSubscriptionLink();
     const client = new ApolloClient({
       link: new ClientAwarenessLink({
-        enhancedClientAwareness: false,
+        enhancedClientAwareness: { transport: false },
       }).concat(terminatingLink),
       cache: new InMemoryCache(),
     });
@@ -490,7 +546,7 @@ describe("feature: enhanced client awareness", () => {
       const client = new ApolloClient({
         link: new HttpLink({
           uri,
-          enhancedClientAwareness: false,
+          enhancedClientAwareness: { transport: false },
         }),
         cache: new InMemoryCache(),
       });
@@ -585,26 +641,22 @@ describe("feature: enhanced client awareness", () => {
     test("can send mixed requests with ECA enabled and disabled", async () => {
       fetchMock.postOnce(uri, [response, response]);
       const client = new ApolloClient({
-        link: new BatchHttpLink({
-          uri,
-        }),
+        link: ApolloLink.split(
+          (operation) => operation.variables.a === 1,
+          new ClientAwarenessLink({
+            enhancedClientAwareness: { transport: "extensions" },
+          }),
+          new ClientAwarenessLink({
+            enhancedClientAwareness: { transport: false },
+          })
+        ).concat(new BaseBatchHttpLink({ uri })),
         cache: new InMemoryCache(),
       });
 
-      void client.query({ query });
+      void client.query({ query, variables: { a: 1 } });
       void client.query({
         query,
-        context: {
-          queryDeduplication: false,
-          clientAwareness: {
-            // this is not documented and we don't officially support it,
-            // but this feature can also be disabled from the `ApolloClient`
-            // constructor options or context key `clientAwareness.enhancedClientAwareness`
-            // for this test this is very useful
-            // @ts-expect-error
-            enhancedClientAwareness: false,
-          },
-        },
+        variables: { a: 2 },
       });
       await wait(10);
 

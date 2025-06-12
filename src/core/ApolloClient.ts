@@ -10,6 +10,7 @@ import type {
 } from "@apollo/client/cache";
 import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
@@ -121,10 +122,10 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   localState?: LocalState;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#name:member} */
-  name?: string;
-  /** {@inheritDoc @apollo/client!ClientAwarenessLink.Options#version:member} */
-  version?: string;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
+  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
+  enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
   documentTransform?: DocumentTransform;
 
   /**

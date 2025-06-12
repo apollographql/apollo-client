@@ -285,7 +285,7 @@ describe("feature: client awareness", () => {
       });
     });
 
-    test("`HttpLink` options have priotity over `ApolloClient` options", () => {
+    test("`HttpLink` options have priority over `ApolloClient` options", () => {
       fetchMock.postOnce(uri, response);
       const client = new ApolloClient({
         link: new HttpLink({

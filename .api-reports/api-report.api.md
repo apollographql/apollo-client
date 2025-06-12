@@ -151,6 +151,10 @@ export class ApolloClient implements DataProxy {
 export interface ApolloClientOptions {
     assumeImmutableResults?: boolean;
     cache: ApolloCache;
+    // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     // @deprecated
     connectToDevTools?: boolean;
     dataMasking?: boolean;
@@ -160,14 +164,14 @@ export interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
+    // (undocumented)
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
-    name?: string;
     queryDeduplication?: boolean;
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    version?: string;
 }
 
 // @public (undocumented)
@@ -367,19 +371,23 @@ type CanReadFunction = (value: StoreValue) => boolean;
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
 // @public (undocumented)
-export interface ClientAwareness {
-    name?: string;
-    version?: string;
-}
-
-// @public (undocumented)
 namespace ClientAwarenessLink {
     // (undocumented)
-    interface Options {
-        clientAwareness?: "headers" | false;
-        enhancedClientAwareness?: "extensions" | false;
+    interface ClientAwarenessOptions {
         name?: string;
+        transport?: "headers" | false;
         version?: string;
+    }
+    // (undocumented)
+    interface EnhancedClientAwarenessOptions {
+        transport?: "extensions" | false;
+    }
+    // (undocumented)
+    interface Options {
+        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
+        clientAwareness?: ClientAwarenessOptions;
+        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
+        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
     }
 }
 
@@ -468,8 +476,6 @@ export const concat: typeof ApolloLink.concat;
 // @public (undocumented)
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
-// Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
 
@@ -598,7 +604,7 @@ type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
     // (undocumented)
-    clientAwareness?: ClientAwareness;
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     queryDeduplication?: boolean;
 }
 

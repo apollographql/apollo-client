@@ -10,6 +10,7 @@ import type { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link';
 import type { ApolloQueryResult as ApolloQueryResult_2 } from '@apollo/client';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
+import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import type { DataProxy } from '@apollo/client/cache';
 import type { DataState as DataState_2 } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
@@ -153,6 +154,8 @@ class ApolloClient_2 implements DataProxy {
 interface ApolloClientOptions {
     assumeImmutableResults?: boolean;
     cache: ApolloCache;
+    // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     // @deprecated
     connectToDevTools?: boolean;
     dataMasking?: boolean;
@@ -162,14 +165,14 @@ interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
+    // (undocumented)
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
-    name?: string;
     queryDeduplication?: boolean;
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    version?: string;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ApolloConsumer_2" needs to be exported by the entry point index.d.ts
@@ -228,12 +231,6 @@ export type BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;
 // @public @deprecated (undocumented)
 export type BackgroundQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useBackgroundQuery.Options<TVariables>;
 
-// @public (undocumented)
-interface ClientAwareness {
-    name?: string;
-    version?: string;
-}
-
 // @public
 export function createQueryPreloader(client: ApolloClient): PreloadQueryFunction;
 
@@ -251,10 +248,8 @@ type DataState<TData> = {
 
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {
-    // Warning: (ae-forgotten-export) The symbol "ClientAwareness" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    clientAwareness?: ClientAwareness;
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     queryDeduplication?: boolean;
 }
 
@@ -1598,9 +1593,9 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:183:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:198:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:200:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:244:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:192:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:194:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts

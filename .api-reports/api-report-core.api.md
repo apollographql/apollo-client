@@ -10,6 +10,7 @@ import { ApolloPayloadResult } from '@apollo/client/link';
 import { ApolloReducerConfig } from '@apollo/client/cache';
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
+import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
@@ -172,6 +173,8 @@ export class ApolloClient implements DataProxy {
 export interface ApolloClientOptions {
     assumeImmutableResults?: boolean;
     cache: ApolloCache;
+    // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     // @deprecated
     connectToDevTools?: boolean;
     dataMasking?: boolean;
@@ -181,14 +184,14 @@ export interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
+    // (undocumented)
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
-    name?: string;
     queryDeduplication?: boolean;
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    version?: string;
 }
 
 export { ApolloLink }
@@ -218,12 +221,6 @@ const enum CacheWriteBehavior {
 }
 
 export { checkFetcher }
-
-// @public (undocumented)
-export interface ClientAwareness {
-    name?: string;
-    version?: string;
-}
 
 export { ClientParseError }
 
@@ -256,7 +253,7 @@ export type DataState<TData> = {
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
     // (undocumented)
-    clientAwareness?: ClientAwareness;
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     queryDeduplication?: boolean;
 }
 

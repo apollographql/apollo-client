@@ -41,7 +41,6 @@ export declare namespace Incremental {
     Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"],
   > {
     hasNext: boolean;
-    append: (chunk: Chunk) => void;
     apply: <TData>(data: TData, chunk: Chunk) => TData;
 
     // reservered for future

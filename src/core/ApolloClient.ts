@@ -529,7 +529,7 @@ export class ApolloClient implements DataProxy {
     if (__DEV__) {
       invariant(
         optionsWithDefaults.mutation,
-        "mutation option is required. You must specify your GraphQL document in the mutation option."
+        "The `mutation` option is required. Please provide a GraphQL document in the `mutation` option."
       );
 
       invariant(

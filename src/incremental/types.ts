@@ -20,12 +20,19 @@ export declare namespace Incremental {
     TExecutionResult extends
       Incremental.ExecutionResult = Incremental.ExecutionResult,
   > {
-    isIncrementalPatchResult: (
+    isIncrementalResult: (
       result: Record<string, any>
-    ) => result is TExecutionResult;
+    ) => result is TExecutionResult["Initial"] | TExecutionResult["Subsequent"];
+    isIncrementalSubsequentResult: (
+      result: Record<string, any>
+    ) => result is TExecutionResult["Subsequent"];
+    isIncrementalInitialResult: (
+      result: Record<string, any>
+    ) => result is TExecutionResult["Initial"];
     prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
     startRequest: (request: {
       query: DocumentNode;
+      initialChunk: TExecutionResult["Initial"];
     }) => IncrementalRequest<TExecutionResult>;
   }
 

@@ -4,7 +4,9 @@ import type { Incremental } from "../types.js";
 
 export function notImplementedStrategy(): Incremental.Strategy<never> {
   return {
-    isIncrementalPatchResult: (result): result is never => false,
+    isIncrementalResult: (result): result is never => false,
+    isIncrementalSubsequentResult: (result): result is never => false,
+    isIncrementalInitialResult: (result): result is never => false,
     prepareRequest: (request) => {
       if (hasDirectives(["defer"], request.query)) {
         throw new Error(

@@ -24,9 +24,5 @@ This could look like this:
 }
 ```
 
-This feature can be disabled by passing `enhancedClientAwareness: false` to your
-`HttpLink` or `BatchHttpLink` constructor options.
-
-If you want to save the bundle size of this feature, you can use `BaseHttpLink`
-or `BaseBatchHttpLink` instead - these links come without the `ClientAwarenessLink`
-included (keep in mind that this will also disable the "client awareness" feature).
+This feature can be disabled by passing `enhancedClientAwareness: { transport: false }` to your
+`ApolloClient`,  `HttpLink` or `BatchHttpLink` constructor options.

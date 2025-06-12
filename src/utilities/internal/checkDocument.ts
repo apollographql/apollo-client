@@ -81,14 +81,14 @@ string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql`
               fieldPath.push(current.alias?.value || current.name.value);
             }
           }
-          fieldPath.splice(-1,  1,field.name.value);
+          fieldPath.splice(-1, 1, field.name.value);
 
           throw newInvariantError(
             '`%s` is a forbidden field alias name in the selection set for field `%s` in %s "%s".',
             field.alias.value,
             fieldPath.join("."),
             operations[0].operation,
-            getOperationName(doc, '(anonymous)')
+            getOperationName(doc, "(anonymous)")
           );
         }
       },

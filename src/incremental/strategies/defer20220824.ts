@@ -1,4 +1,5 @@
 import type { GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql-17-alpha2";
 
 import type { HttpLink } from "@apollo/client";
 import { IncrementalPayload } from "@apollo/client";
@@ -48,6 +49,13 @@ class DeferRequest
 {
   public hasNext = true;
   private chunks: Array<Chunk> = [];
+  private pending: Incremental.Pending[];
+
+  constructor(query: DocumentNode) {
+    // You can imagine this would traverse the query and pull out the `@defer`
+    // locations since we don't get this in the response info
+    this.pending = [];
+  }
 
   append(chunk: Chunk) {
     this.hasNext = chunk.hasNext;
@@ -77,15 +85,31 @@ class DeferRequest
 
   // TODO when we are ready to implement this.
   getPending() {
-    return [];
+    return this.pending;
   }
 }
 
 export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionResult> {
+  function isIncrementalSubsequentResult(
+    result: Record<string, any>
+  ): result is defer20220824.SubsequentResult {
+    return "incremental" in result;
+  }
+
+  function isIncrementalInitialResult(
+    result: Record<string, any>
+  ): result is defer20220824.InitialResult {
+    return "hasNext" in result && "data" in result;
+  }
+
   return {
-    isIncrementalPatchResult: (
+    isIncrementalResult: (
       result: Record<string, any>
-    ): result is defer20220824.ExecutionResult => "hasNext" in result,
+    ): result is defer20220824.SubsequentResult | defer20220824.InitialResult =>
+      isIncrementalInitialResult(result) ||
+      isIncrementalSubsequentResult(result),
+    isIncrementalSubsequentResult,
+    isIncrementalInitialResult,
     prepareRequest: (request) => {
       if (hasDirectives(["defer"], request.query)) {
         const context = request.context ?? {};
@@ -98,6 +122,6 @@ export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionRes
 
       return request;
     },
-    startRequest: () => new DeferRequest(),
+    startRequest: ({ query }) => new DeferRequest(query),
   };
 }

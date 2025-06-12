@@ -1508,7 +1508,8 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               "content-type": "application/json",
-              accept: "multipart/mixed;deferSpec=20220824,application/json",
+              accept:
+                "multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -1657,39 +1658,55 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      test("whatwg stream bodies, warns if combined with @defer", () => {
-        const stream = new ReadableStream({
-          async start(controller) {
-            const lines = subscriptionsBody.split("\r\n");
-            try {
-              for (const line of lines) {
-                await new Promise((resolve) => setTimeout(resolve, 10));
-                controller.enqueue(line + "\r\n");
-              }
-            } finally {
-              controller.close();
-            }
-          },
+      test("whatwg stream bodies combined with @defer, lets server handle erroring", async () => {
+        const error = {
+          errors: [
+            {
+              message:
+                "value retrieval failed: Federation error: @defer is not supported on subscriptions",
+              extensions: { code: "INTERNAL_SERVER_ERROR" },
+            },
+          ],
+        };
+        const response = new Response(JSON.stringify(error), {
+          status: 500,
+          headers: { "content-type": "application/json" },
         });
-
         const fetch = jest.fn(async () => {
-          return new Response(stream, {
-            status: 200,
-            headers: { "content-type": "multipart/mixed" },
-          });
+          return response;
         });
 
         const link = new HttpLink({ fetch });
 
-        const warningSpy = jest
-          .spyOn(console, "warn")
-          .mockImplementation(() => {});
-        execute(link, { query: sampleSubscriptionWithDefer });
-        expect(warningSpy).toHaveBeenCalledTimes(1);
-        expect(warningSpy).toHaveBeenCalledWith(
-          "Multipart-subscriptions do not support @defer"
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+        });
+
+        const stream = new ObservableStream(
+          client.subscribe({ query: sampleSubscriptionWithDefer })
         );
-        warningSpy.mockRestore();
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              accept:
+                "multipart/mixed;deferSpec=20220824,multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
+              "content-type": "application/json",
+            },
+          })
+        );
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          error: new ServerError(
+            "Response not successful: Received status code 500",
+            {
+              bodyText: JSON.stringify(error),
+              response,
+            }
+          ),
+        });
       });
 
       it("with errors", async () => {
@@ -1769,7 +1786,7 @@ describe("HttpLink", () => {
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );

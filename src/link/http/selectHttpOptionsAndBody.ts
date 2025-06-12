@@ -81,18 +81,20 @@ export function selectHttpOptionsAndBodyInternal(
       options.credentials = config.credentials;
     }
 
+    options.headers!.accept = (config.http?.accept || [])
+      .concat(options.headers!.accept)
+      .join(",");
+
     http = {
       ...http,
       ...config.http,
     };
   });
 
-  if (options.headers) {
-    options.headers = removeDuplicateHeaders(
-      options.headers,
-      http.preserveHeaderCase
-    );
-  }
+  options.headers = removeDuplicateHeaders(
+    options.headers!,
+    http.preserveHeaderCase
+  );
 
   //The body depends on the http options
   const { operationName, extensions, variables, query } = operation;

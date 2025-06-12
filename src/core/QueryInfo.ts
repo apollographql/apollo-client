@@ -5,7 +5,6 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
-  DeepMerger,
   getOperationName,
   graphQLResultHasError,
   isExecutionPatchIncrementalResult,
@@ -16,6 +15,7 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
+import type { Incremental } from "../incremental/types.js";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -102,9 +102,11 @@ export class QueryInfo {
     | "refetchQueries"
     | "getDocumentInfo"
     | "broadcastQueries"
+    | "incrementalStrategy"
   >;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
+  private incremental?: Incremental.IncrementalRequest<Incremental.ExecutionResult>;
 
   constructor(
     queryManager: QueryManager,
@@ -176,6 +178,13 @@ export class QueryInfo {
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
   ) {
+    const { isIncremental } = this.queryManager.getDocumentInfo(query);
+    const { incrementalStrategy } = this.queryManager;
+
+    if (isIncremental) {
+      this.incremental ??= incrementalStrategy.startRequest();
+    }
+
     const diffOptions = {
       query,
       variables,
@@ -192,7 +201,11 @@ export class QueryInfo {
         this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
           this.lastDiff.diff
         : { result: null, complete: false };
-      handleIncrementalResult(result, lastDiff);
+
+      if (incrementalStrategy.isIncrementalPatchResult(result)) {
+        this.incremental!.append(result);
+        result.data = this.incremental!.apply(lastDiff.result, result);
+      }
 
       this.lastDiff = {
         diff: { result: result.data, complete: true },
@@ -200,7 +213,11 @@ export class QueryInfo {
       };
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
-      handleIncrementalResult(result, lastDiff);
+
+      if (incrementalStrategy.isIncrementalPatchResult(result)) {
+        this.incremental!.append(result);
+        result.data = this.incremental!.apply(lastDiff.result, result);
+      }
 
       if (shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
@@ -576,25 +593,6 @@ export class QueryInfo {
 
       this.queryManager.broadcastQueries();
     }
-  }
-}
-
-function handleIncrementalResult<T>(
-  result: FetchResult<T>,
-  lastDiff: Cache.DiffResult<any>
-) {
-  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-    const mergedData = mergeIncrementalData(lastDiff.result, result);
-    result.data = mergedData;
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-  } else if ("hasNext" in result && result.hasNext) {
-    const merger = new DeepMerger();
-    result.data = merger.merge(lastDiff.result, result.data);
   }
 }
 

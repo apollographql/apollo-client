@@ -141,6 +141,14 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/incremental 1`] = `
+Array [
+  "defer20220824",
+  "graphqlAlpha2",
+  "notImplementedStrategy",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link 1`] = `
 Array [
   "ApolloLink",

@@ -1,3 +1,5 @@
+import type { DocumentNode } from "graphql-17-alpha2";
+
 import type { GraphQLRequest } from "@apollo/client";
 
 export declare namespace Incremental {
@@ -22,7 +24,9 @@ export declare namespace Incremental {
       result: Record<string, any>
     ) => result is TExecutionResult;
     prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
-    startRequest: () => IncrementalRequest<TExecutionResult>;
+    startRequest: (request: {
+      query: DocumentNode;
+    }) => IncrementalRequest<TExecutionResult>;
   }
 
   export interface IncrementalRequest<

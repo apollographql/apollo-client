@@ -182,7 +182,7 @@ export class QueryInfo {
     const { incrementalStrategy } = this.queryManager;
 
     if (isIncremental) {
-      this.incremental ??= incrementalStrategy.startRequest();
+      this.incremental ??= incrementalStrategy.startRequest({ query });
     }
 
     const diffOptions = {

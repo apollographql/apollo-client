@@ -1065,16 +1065,20 @@ export class QueryManager {
 
         const aqr = {
           data: result.data as TData,
-          dataState: result.data ? "complete" : "empty",
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: !result.data,
+          ...(isExecutionPatchResult(result) && result.hasNext ?
+            {
+              loading: true,
+              networkStatus: NetworkStatus.streaming,
+              dataState: "streaming",
+              partial: true,
+            }
+          : {
+              dataState: result.data ? "complete" : "empty",
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              partial: !result.data,
+            }),
         } as ApolloQueryResult<TData>;
-
-        if (isExecutionPatchResult(result) && result.hasNext) {
-          aqr.dataState = "streaming";
-          aqr.partial = true;
-        }
 
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old

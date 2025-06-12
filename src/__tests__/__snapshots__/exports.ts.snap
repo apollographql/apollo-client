@@ -380,16 +380,13 @@ Array [
   "cacheSizes",
   "canonicalStringify",
   "concatPagination",
-  "hasDirectives",
   "isMutationOperation",
   "isQueryOperation",
   "isReference",
   "isSubscriptionOperation",
-  "mergeIncrementalData",
   "offsetLimitPagination",
   "print",
   "relayStylePagination",
-  "removeDirectivesFromDocument",
   "stripTypename",
 ]
 `;

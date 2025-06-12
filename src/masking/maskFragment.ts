@@ -15,7 +15,6 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { maskDefinition } from "./maskDefinition.js";
-import { warnOnImproperCacheImplementation } from "./utils.js";
 
 /** @internal */
 export function maskFragment<TData = unknown>(
@@ -24,14 +23,6 @@ export function maskFragment<TData = unknown>(
   cache: ApolloCache,
   fragmentName?: string
 ): TData {
-  if (!cache.fragmentMatches) {
-    if (__DEV__) {
-      warnOnImproperCacheImplementation();
-    }
-
-    return data;
-  }
-
   const fragments = document.definitions.filter(
     (node): node is FragmentDefinitionNode =>
       node.kind === Kind.FRAGMENT_DEFINITION

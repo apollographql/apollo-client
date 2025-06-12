@@ -15,6 +15,7 @@ import type {
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { defer20220824 } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
@@ -3451,6 +3452,7 @@ describe("ObservableQuery", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       const obs = client.watchQuery({ query });

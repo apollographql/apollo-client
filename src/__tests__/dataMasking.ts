@@ -13,6 +13,7 @@ import {
 } from "@apollo/client";
 import { createFragmentRegistry } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { defer20220824 } from "@apollo/client/incremental";
 import type { MaskedDocumentNode } from "@apollo/client/masking";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
@@ -2089,6 +2090,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache(),
       link,
+      incrementalStrategy: defer20220824(),
     });
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
@@ -2197,6 +2199,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache(),
       link,
+      incrementalStrategy: defer20220824(),
     });
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
@@ -2305,6 +2308,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache(),
       link,
+      incrementalStrategy: defer20220824(),
     });
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
@@ -2426,6 +2430,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache(),
       link,
+      incrementalStrategy: defer20220824(),
     });
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });

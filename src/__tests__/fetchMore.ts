@@ -10,6 +10,7 @@ import type {
   InMemoryCacheConfig,
 } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
+import { defer20220824 } from "@apollo/client/incremental";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   mockDeferStream,
@@ -2267,6 +2268,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
       defer.httpLink,
       baseLink
     ),
+    incrementalStrategy: defer20220824(),
   });
 
   const deferredQuery = gql`

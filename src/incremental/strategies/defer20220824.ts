@@ -60,6 +60,7 @@ class DeferRequest
   append(chunk: Chunk) {
     this.hasNext = chunk.hasNext;
     this.chunks.push(chunk);
+    // TODO: reevaluate this.pending
   }
 
   apply<TData>(

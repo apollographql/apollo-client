@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
-import { Observable } from "rxjs";
+import { Observable, throwError } from "rxjs";
 import {
   catchError,
   concat,
@@ -30,11 +30,7 @@ import {
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { Incremental } from "@apollo/client/incremental";
-import type {
-  ExecuteContext,
-  FetchResult,
-  GraphQLRequest,
-} from "@apollo/client/link";
+import type { ExecuteContext, FetchResult } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
@@ -900,8 +896,8 @@ export class QueryManager {
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation: GraphQLRequest = this.incrementalStrategy.prepareRequest(
-        {
+      try {
+        const operation = this.incrementalStrategy.prepareRequest({
           query: serverQuery,
           variables,
           operationName,
@@ -911,63 +907,65 @@ export class QueryManager {
             queryDeduplication: deduplication,
           },
           extensions,
-        }
-      );
-
-      context = operation.context;
-
-      function withRestart(source: Observable<FetchResult>) {
-        return new Observable<FetchResult>((observer) => {
-          function subscribe() {
-            return source.subscribe({
-              next: observer.next.bind(observer),
-              complete: observer.complete.bind(observer),
-              error: observer.error.bind(observer),
-            });
-          }
-          let subscription = subscribe();
-
-          entry.restart ||= () => {
-            subscription.unsubscribe();
-            subscription = subscribe();
-          };
-
-          return () => {
-            subscription.unsubscribe();
-            entry.restart = undefined;
-          };
         });
-      }
 
-      if (deduplication) {
-        const printedServerQuery = print(serverQuery);
-        const varJson = canonicalStringify(variables);
+        context = operation.context;
 
-        entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
+        function withRestart(source: Observable<FetchResult>) {
+          return new Observable<FetchResult>((observer) => {
+            function subscribe() {
+              return source.subscribe({
+                next: observer.next.bind(observer),
+                complete: observer.complete.bind(observer),
+                error: observer.error.bind(observer),
+              });
+            }
+            let subscription = subscribe();
 
-        if (!entry.observable) {
+            entry.restart ||= () => {
+              subscription.unsubscribe();
+              subscription = subscribe();
+            };
+
+            return () => {
+              subscription.unsubscribe();
+              entry.restart = undefined;
+            };
+          });
+        }
+
+        if (deduplication) {
+          const printedServerQuery = print(serverQuery);
+          const varJson = canonicalStringify(variables);
+
+          entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
+
+          if (!entry.observable) {
+            entry.observable = execute(link, operation, executeContext).pipe(
+              withRestart,
+              finalize(() => {
+                if (
+                  inFlightLinkObservables.peek(printedServerQuery, varJson) ===
+                  entry
+                ) {
+                  inFlightLinkObservables.remove(printedServerQuery, varJson);
+                }
+              }),
+              // We don't want to replay the last emitted value for
+              // subscriptions and instead opt to wait to receive updates until
+              // the subscription emits new values.
+              operationType === OperationTypeNode.SUBSCRIPTION ?
+                share()
+              : shareReplay({ refCount: true })
+            ) as Observable<FetchResult<TData>>;
+          }
+        } else {
           entry.observable = execute(link, operation, executeContext).pipe(
-            withRestart,
-            finalize(() => {
-              if (
-                inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                entry
-              ) {
-                inFlightLinkObservables.remove(printedServerQuery, varJson);
-              }
-            }),
-            // We don't want to replay the last emitted value for
-            // subscriptions and instead opt to wait to receive updates until
-            // the subscription emits new values.
-            operationType === OperationTypeNode.SUBSCRIPTION ?
-              share()
-            : shareReplay({ refCount: true })
+            withRestart
           ) as Observable<FetchResult<TData>>;
         }
-      } else {
-        entry.observable = execute(link, operation, executeContext).pipe(
-          withRestart
-        ) as Observable<FetchResult<TData>>;
+      } catch (error) {
+        entry.observable = throwError(() => error);
       }
     } else {
       entry.observable = of({ data: {} } as FetchResult<TData>);

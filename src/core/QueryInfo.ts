@@ -160,11 +160,6 @@ export class QueryInfo {
     );
   }
 
-  private lastDiff?: {
-    diff: Cache.DiffResult<any>;
-    options: Cache.DiffOptions;
-  };
-
   get hasNext() {
     return this.incremental ? this.incremental.hasNext : false;
   }
@@ -201,19 +196,9 @@ export class QueryInfo {
     }
 
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      const lastDiff =
-        this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
-          this.lastDiff.diff
-        : { result: null, complete: false };
-
       if (incrementalStrategy.isIncrementalResult(result)) {
-        result = this.incremental!.apply(lastDiff.result, result);
+        result = this.incremental!.apply(undefined, result);
       }
-
-      this.lastDiff = {
-        diff: { result: result.data, complete: true },
-        options: diffOptions,
-      };
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
 
@@ -560,7 +545,7 @@ export class QueryInfo {
   }
 
   public markSubscriptionResult<TData, TVariables extends OperationVariables>(
-    result: Readonly<FetchResult<Readonly<TData>>>,
+    result: Readonly<FetchResult<TData>>,
     {
       document,
       variables,

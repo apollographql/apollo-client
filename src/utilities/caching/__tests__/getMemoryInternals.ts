@@ -23,6 +23,7 @@ function sha256(data: string) {
 
 const defaultCacheSizesAsObject = {
   canonicalStringify: defaultCacheSizes["canonicalStringify"],
+  checkDocument: defaultCacheSizes["checkDocument"],
   print: defaultCacheSizes["print"],
   "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
   "queryManager.getDocumentInfo":

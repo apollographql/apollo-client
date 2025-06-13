@@ -14,7 +14,6 @@ import { cacheSizes, defaultCacheSizes } from "../caching/sizes.js";
 
 const globalCaches: {
   print?: () => number;
-  parser?: () => number;
   canonicalStringify?: () => number;
 } = {};
 
@@ -100,6 +99,7 @@ function getCurrentCacheSizes() {
   // `defaultCacheSizes` is a `const enum` that will be inlined during build, so we have to reconstruct it's shape here
   const defaults: Record<keyof CacheSizes, number> = {
     canonicalStringify: defaultCacheSizes["canonicalStringify"],
+    checkDocument: defaultCacheSizes["checkDocument"],
     print: defaultCacheSizes["print"],
     "documentTransform.cache": defaultCacheSizes["documentTransform.cache"],
     "queryManager.getDocumentInfo":

@@ -2269,12 +2269,12 @@ describe("ApolloClient", () => {
       });
     }).toThrow(/wrap the query string in a "gql" tag/);
 
-    await expect(
+    await expect(() =>
       client.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: "string" as any as DocumentNode,
       })
-    ).rejects.toThrow(/wrap the query string in a "gql" tag/);
+    ).toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
       client.watchQuery({
@@ -8053,6 +8053,164 @@ describe("ApolloClient", () => {
         expect(context.foo).toBeUndefined();
       }
     );
+  });
+
+  describe("forbidden field alias names", () => {
+    it("`ApolloClient.query` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          __typename: hello
+        }
+      `;
+      expect(() => client.query({ query })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello` in query "Test".'
+        )
+      );
+    });
+
+    it("`ApolloClient.query` throws when encountering a query that aliases another field to `__ac_*`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          foo {
+            __ac_foo: hello
+          }
+        }
+      `;
+      expect(() => client.query({ query })).toThrow(
+        new InvariantError(
+          '`__ac_foo` is a forbidden field alias name in the selection set for field `foo.hello` in query "Test".'
+        )
+      );
+    });
+
+    it("Aliasing `__typename` to `__typename` is, while weird, not forbidden.", async () => {
+      const query = gql`
+        query Test {
+          __typename: __typename
+        }
+      `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data: {} },
+          },
+        ]),
+      });
+
+      expect(await client.query({ query })).toStrictEqualTyped({
+        data: { __typename: "Query" },
+      });
+    });
+
+    it("`ApolloClient.watchQuery` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          hello {
+            __typename: world
+          }
+        }
+      `;
+      expect(() => client.watchQuery({ query })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in query "Test".'
+        )
+      );
+    });
+
+    it("calling `ObservableQuery.fetchMore` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const query = gql`
+        query Test {
+          hello {
+            __typename
+            world
+          }
+        }
+      `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: {
+              data: { hello: { world: "Hello World", __typename: "Hello" } },
+            },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query });
+      observable.subscribe({});
+      expect(() =>
+        observable.fetchMore({
+          query: gql`
+            query Test {
+              hello {
+                __typename: fetchMore
+                world
+              }
+            }
+          `,
+        })
+      ).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.fetchMore` in query "Test".'
+        )
+      );
+    });
+
+    it("`ApolloClient.mutate` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const mutation = gql`
+        mutation AddTestUser {
+          addUser(id: 5) {
+            hello {
+              __typename: world
+            }
+          }
+        }
+      `;
+      expect(() => client.mutate({ mutation })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.world` in mutation "AddTestUser".'
+        )
+      );
+    });
+
+    it("`ApolloClient.subscribe` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        subscription Test {
+          hello {
+            __typename: world
+          }
+        }
+      `;
+      expect(() => client.subscribe({ query })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in subscription "Test".'
+        )
+      );
+    });
   });
 });
 

@@ -706,7 +706,10 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables_2, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
+    mutate<TData, TVariables extends OperationVariables_2, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache> & {
+        errorPolicy: ErrorPolicy;
+        fetchPolicy: MutationFetchPolicy;
+    }): Promise<MutateResult<MaybeMasked<TData>>>;
     // (undocumented)
     mutationStore?: {
         [mutationId: string]: MutationStoreValue;
@@ -932,6 +935,8 @@ interface TransformCacheEntry {
     operationType: OperationTypeNode | undefined;
     // (undocumented)
     serverQuery: DocumentNode | null;
+    // (undocumented)
+    violation?: Error | undefined;
 }
 
 // @public (undocumented)

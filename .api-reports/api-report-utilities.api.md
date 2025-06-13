@@ -40,6 +40,7 @@ export interface CacheSizes {
     "queryManager.getDocumentInfo": number;
     "removeTypenameFromVariables.getVariableDefinitions": number;
     canonicalStringify: number;
+    checkDocument: number;
     print: number;
 }
 

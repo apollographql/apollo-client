@@ -70,6 +70,18 @@ export declare namespace HttpLink {
      * @defaultValue false
      */
     preserveHeaderCase?: boolean;
+
+    /**
+     * A list of additional `accept` headers to include in the request,
+     * as defined in
+     * https://datatracker.ietf.org/doc/html/rfc7231#section-5.3.2
+     *
+     * @example
+     * ```javascript
+     * ["application/custom+json;q=1.0"]
+     * ```
+     */
+    accept?: string[];
   }
 
   export interface Options {

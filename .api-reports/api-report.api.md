@@ -1222,6 +1222,7 @@ export namespace HttpLink {
     }
     // (undocumented)
     export interface HttpOptions {
+        accept?: string[];
         includeExtensions?: boolean;
         includeQuery?: boolean;
         preserveHeaderCase?: boolean;

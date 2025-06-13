@@ -78,7 +78,7 @@ export declare namespace HttpLink {
      *
      * @example
      * ```javascript
-     * ["application/custom+json;q=1.5"]
+     * ["application/custom+json;q=1.0"]
      * ```
      */
     accept?: string[];

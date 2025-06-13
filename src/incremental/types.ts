@@ -1,4 +1,4 @@
-import type { DocumentNode } from "graphql-17-alpha2";
+import type { DocumentNode } from "graphql";
 
 import type { FetchResult, GraphQLRequest } from "@apollo/client";
 

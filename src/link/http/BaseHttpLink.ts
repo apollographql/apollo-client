@@ -66,12 +66,6 @@ export class BaseHttpLink extends ApolloLink {
           ...(http.accept || []),
         ];
       }
-      if (hasDirectives(["defer"], operation.query)) {
-        http.accept = [
-          "multipart/mixed;deferSpec=20220824",
-          ...(http.accept || []),
-        ];
-      }
 
       const contextConfig = {
         http: context.http,

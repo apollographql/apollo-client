@@ -7,10 +7,6 @@ import type { Unmasked } from "@apollo/client/masking";
 import {
   getOperationName,
   graphQLResultHasError,
-  isExecutionPatchIncrementalResult,
-  isExecutionPatchResult,
-  isNonEmptyArray,
-  mergeIncrementalData,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -323,7 +319,7 @@ export class QueryInfo {
     TVariables extends OperationVariables,
     TCache extends ApolloCache,
   >(
-    result: FetchResult<TData>,
+    result: Readonly<FetchResult<Readonly<TData>>>,
     mutation: OperationInfo<
       TData,
       TVariables,
@@ -343,45 +339,42 @@ export class QueryInfo {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
-      if (!isExecutionPatchIncrementalResult(result)) {
-        cacheWrites.push({
-          result: result.data,
-          dataId: "ROOT_MUTATION",
+    const { incrementalStrategy } = this.queryManager;
+
+    if (incrementalStrategy.isIncrementalResult(result)) {
+      if (incrementalStrategy.isIncrementalInitialResult(result)) {
+        this.incremental = (
+          incrementalStrategy as Incremental.Strategy<any>
+        ).startRequest({
           query: mutation.document,
-          variables: mutation.variables,
+          initialChunk: result,
         });
       }
-      if (
-        isExecutionPatchIncrementalResult(result) &&
-        isNonEmptyArray(result.incremental)
-      ) {
-        const diff = cache.diff<TData>({
-          id: "ROOT_MUTATION",
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
-          variables: mutation.variables,
-          optimistic: false,
-          returnPartialData: true,
-        });
-        let mergedData;
-        if (diff.result) {
-          mergedData = mergeIncrementalData(diff.result, result);
-        }
-        if (typeof mergedData !== "undefined") {
-          // cast the ExecutionPatchResult to FetchResult here since
-          // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult).data = mergedData;
-          cacheWrites.push({
-            result: mergedData,
-            dataId: "ROOT_MUTATION",
-            query: mutation.document,
+
+      result = this.incremental!.apply(
+        skipCache ? undefined : (
+          cache.diff<TData>({
+            id: "ROOT_MUTATION",
+            // The cache complains if passed a mutation where it expects a
+            // query, so we transform mutations and subscriptions to queries
+            // (only once, thanks to this.transformCache).
+            query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
             variables: mutation.variables,
-          });
-        }
-      }
+            optimistic: false,
+            returnPartialData: true,
+          }).result
+        ),
+        result
+      ) as FetchResult<TData>;
+    }
+
+    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+      cacheWrites.push({
+        result: result.data,
+        dataId: "ROOT_MUTATION",
+        query: mutation.document,
+        variables: mutation.variables,
+      });
 
       const { updateQueries } = mutation;
       if (updateQueries) {
@@ -446,9 +439,6 @@ export class QueryInfo {
             const { update } = mutation;
             // Determine whether result is a SingleExecutionResult,
             // or the final ExecutionPatchResult.
-            const isFinalResult =
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext);
 
             if (update) {
               if (!skipCache) {
@@ -469,21 +459,14 @@ export class QueryInfo {
                 });
 
                 if (diff.complete) {
-                  // here!
                   result = { ...(result as FetchResult), data: diff.result };
-                  if ("incremental" in result) {
-                    delete result.incremental;
-                  }
-                  if ("hasNext" in result) {
-                    delete result.hasNext;
-                  }
                 }
               }
 
               // If we've received the whole response,
               // either a SingleExecutionResult or the final ExecutionPatchResult,
               // call the update function.
-              if (isFinalResult) {
+              if (!this.hasNext) {
                 update(
                   cache as TCache,
                   result as FetchResult<Unmasked<TData>>,
@@ -497,7 +480,7 @@ export class QueryInfo {
 
             // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
             // shallow to allow rolling back optimistic evictions.
-            if (!skipCache && !mutation.keepRootFields && isFinalResult) {
+            if (!skipCache && !mutation.keepRootFields && !this.hasNext) {
               cache.modify({
                 id: "ROOT_MUTATION",
                 fields(value, { fieldName, DELETE }) {
@@ -577,7 +560,7 @@ export class QueryInfo {
   }
 
   public markSubscriptionResult<TData, TVariables extends OperationVariables>(
-    result: FetchResult<TData>,
+    result: Readonly<FetchResult<Readonly<TData>>>,
     {
       document,
       variables,

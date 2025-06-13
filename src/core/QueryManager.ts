@@ -401,7 +401,7 @@ export class QueryManager {
             // we resolve with a SingleExecutionResult or after the final
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
-            if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
+            if (!queryInfo.hasNext) {
               const result: MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
@@ -411,11 +411,11 @@ export class QueryManager {
                 }) as any,
               };
 
-              if (graphQLResultHasError(storeResult)) {
+              if (storeResult.errors?.length) {
                 result.error = new CombinedGraphQLErrors(storeResult);
               }
 
-              if (storeResult.extensions) {
+              if (Object.keys(storeResult.extensions || {}).length) {
                 result.extensions = storeResult.extensions;
               }
 

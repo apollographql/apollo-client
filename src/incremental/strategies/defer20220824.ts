@@ -52,18 +52,19 @@ class DeferRequest
   private data: any = {};
 
   apply<TData>(
-    cacheData: TData | undefined,
+    // we'll get `undefined` here in case of a `no-cache` fetch policy,
+    // so we'll continue with the last value this request had accumulated
+    cacheData: TData = this.data,
     chunk: defer20220824.InitialResult | defer20220824.SubsequentResult
   ) {
     this.hasNext = chunk.hasNext;
     // TODO evaluate `this.pending` since this chunk might complete one of the
     // `@defer` paths
 
+    this.data = cacheData;
     if ("incremental" in chunk) {
-      this.data = cacheData;
-
       if (isNonEmptyArray(chunk.incremental)) {
-        this.data = mergeIncrementalData(cacheData as any, chunk as any);
+        this.data = mergeIncrementalData(this.data, chunk as any);
         for (const incremental of chunk.incremental) {
           this.errors.push(...(incremental.errors || []));
 
@@ -77,7 +78,7 @@ class DeferRequest
       // has full data in the cache does not complain when trying to merge the
       // initial deferred server data with existing cache data.
     } else if ("data" in chunk && chunk.hasNext) {
-      this.data = new DeepMerger().merge(cacheData, chunk.data);
+      this.data = new DeepMerger().merge(this.data, chunk.data);
       this.errors = [...(chunk.errors || [])];
       this.extensions = chunk.extensions || {};
     }

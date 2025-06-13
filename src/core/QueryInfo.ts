@@ -196,7 +196,9 @@ export class QueryInfo {
     this.observableQuery?.["resetNotifications"]();
 
     if (incrementalStrategy.isIncrementalInitialResult(result)) {
-      this.incremental = incrementalStrategy.startRequest({
+      this.incremental = (
+        incrementalStrategy as Incremental.Strategy<any>
+      ).startRequest({
         query,
         initialChunk: result,
       });
@@ -467,6 +469,7 @@ export class QueryInfo {
                 });
 
                 if (diff.complete) {
+                  // here!
                   result = { ...(result as FetchResult), data: diff.result };
                   if ("incremental" in result) {
                     delete result.incremental;

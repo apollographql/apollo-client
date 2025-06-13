@@ -223,6 +223,7 @@ export const createPersistedQueryLink = (
             // if the server doesn't support persisted queries, don't try anymore
             supportsPersistedQueries = !disable(disablePayload);
             if (!supportsPersistedQueries) {
+              delete operation.extensions.persistedQuery;
               // clear hashes from cache, we don't need them anymore
               resetHashCache();
             }
@@ -235,7 +236,9 @@ export const createPersistedQueryLink = (
               operation.setContext({
                 http: {
                   includeQuery: true,
-                  includeExtensions: supportsPersistedQueries,
+                  ...(supportsPersistedQueries ?
+                    { includeExtensions: true }
+                  : {}),
                 },
                 fetchOptions: {
                   // Since we're including the full query, which may be
@@ -266,10 +269,10 @@ export const createPersistedQueryLink = (
 
         // don't send the query the first time
         operation.setContext({
-          http: {
-            includeQuery: !supportsPersistedQueries,
-            includeExtensions: supportsPersistedQueries,
-          },
+          http:
+            supportsPersistedQueries ?
+              { includeQuery: false, includeExtensions: true }
+            : {},
         });
 
         // If requested, set method to GET if there are no mutations. Remember the

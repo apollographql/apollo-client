@@ -6,6 +6,7 @@ import { gql } from "graphql-tag";
 import { times } from "lodash";
 import { firstValueFrom, Observable } from "rxjs";
 
+import { version } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
@@ -104,6 +105,10 @@ describe("happy path", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: hash,
@@ -296,6 +301,10 @@ describe("happy path", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: sha256Hash,
@@ -357,6 +366,10 @@ describe("failure path", () => {
         id: 1,
       }),
       extensions: JSON.stringify({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
         persistedQuery: {
           version: 1,
           sha256Hash: hash,
@@ -422,6 +435,10 @@ describe("failure path", () => {
           version: VERSION,
           sha256Hash: hash,
         },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
       },
     });
 
@@ -433,6 +450,10 @@ describe("failure path", () => {
       query: queryString,
       variables,
       extensions: {
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
         persistedQuery: {
           version: VERSION,
           sha256Hash: hash,
@@ -480,6 +501,10 @@ describe("failure path", () => {
           version: VERSION,
           sha256Hash: hash,
         },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
       },
     });
 
@@ -490,6 +515,12 @@ describe("failure path", () => {
       operationName: "Test",
       query: queryString,
       variables,
+      extensions: {
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      },
     });
   });
 
@@ -526,7 +557,12 @@ describe("failure path", () => {
           expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
           expect(
             JSON.parse(success!.body!.toString()).extensions
-          ).toBeUndefined();
+          ).toStrictEqual({
+            clientLibrary: {
+              name: "@apollo/client",
+              version,
+            },
+          });
           execute(link, { query, variables }).subscribe((secondResult) => {
             expect(secondResult.data).toEqual(data);
             const [, , [, success]] = fetchMock.calls();
@@ -535,7 +571,9 @@ describe("failure path", () => {
             );
             expect(
               JSON.parse(success!.body!.toString()).extensions
-            ).toBeUndefined();
+            ).toStrictEqual({
+              clientLibrary: { name: "@apollo/client", version },
+            });
             resolve();
           }, reject);
         }, reject);

@@ -6,9 +6,15 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { ASTNode } from 'graphql';
+import { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import type { InvariantError } from '@apollo/client/utilities/invariant';
 import type { Operation } from '@apollo/client/link';
 import type { print as print_2 } from '@apollo/client/utilities';
+
+// @public (undocumented)
+export class BaseHttpLink extends ApolloLink {
+    constructor(linkOptions?: HttpLink.Options);
+}
 
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
@@ -19,7 +25,7 @@ export type ClientParseError = InvariantError & {
 };
 
 // @public (undocumented)
-export const createHttpLink: (linkOptions?: HttpLink.Options) => ApolloLink;
+export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -105,9 +111,7 @@ export namespace HttpLink {
 
 // @public (undocumented)
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpLink.Options);
-    // (undocumented)
-    options: HttpLink.Options;
+    constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
 }
 
 // @public (undocumented)

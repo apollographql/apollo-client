@@ -5,7 +5,6 @@
 ```ts
 
 import type { ApolloClient } from '@apollo/client';
-import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
@@ -158,9 +157,6 @@ export interface Operation {
 
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
-    // (undocumented)
-    clientAwareness?: ClientAwareness;
-    queryDeduplication?: boolean;
 }
 
 // @public (undocumented)

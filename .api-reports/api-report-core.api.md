@@ -10,6 +10,7 @@ import { ApolloPayloadResult } from '@apollo/client/link';
 import { ApolloReducerConfig } from '@apollo/client/cache';
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
+import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import { ClientParseError } from '@apollo/client/link/http';
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import { CombinedProtocolErrors } from '@apollo/client/errors';
@@ -172,6 +173,8 @@ export class ApolloClient implements DataProxy {
 export interface ApolloClientOptions {
     assumeImmutableResults?: boolean;
     cache: ApolloCache;
+    // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     // @deprecated
     connectToDevTools?: boolean;
     dataMasking?: boolean;
@@ -181,14 +184,14 @@ export interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
+    // (undocumented)
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
-    name?: string;
     queryDeduplication?: boolean;
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    version?: string;
 }
 
 export { ApolloLink }
@@ -218,14 +221,6 @@ const enum CacheWriteBehavior {
 }
 
 export { checkFetcher }
-
-// @public (undocumented)
-export interface ClientAwareness {
-    // (undocumented)
-    name?: string;
-    // (undocumented)
-    version?: string;
-}
 
 export { ClientParseError }
 
@@ -258,6 +253,7 @@ export type DataState<TData> = {
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
     // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     queryDeduplication?: boolean;
 }
 
@@ -743,6 +739,7 @@ class QueryManager {
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
     readonly client: ApolloClient;
+    readonly clientOptions: ApolloClientOptions;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -827,7 +824,7 @@ interface QueryManagerOptions {
     // (undocumented)
     client: ApolloClient;
     // (undocumented)
-    clientAwareness: ClientAwareness;
+    clientOptions: ApolloClientOptions;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -1098,7 +1095,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryInfo.ts:309:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:179:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

@@ -2,9 +2,10 @@ import type { ASTNode } from "graphql";
 
 import type { Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
+import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { print } from "@apollo/client/utilities";
 
-import { createHttpLink } from "./createHttpLink.js";
+import { BaseHttpLink } from "./BaseHttpLink.js";
 
 export declare namespace HttpLink {
   interface ContextOptions {
@@ -49,7 +50,7 @@ export declare namespace HttpLink {
      * If `true`, includes the `extensions` field in operations sent to your
      * GraphQL endpoint.
      *
-     * @defaultValue false
+     * @defaultValue true
      */
     includeExtensions?: boolean;
 
@@ -71,7 +72,7 @@ export declare namespace HttpLink {
     preserveHeaderCase?: boolean;
   }
 
-  interface Options {
+  export interface Options {
     /**
      * The URI to use when fetching operations.
      *
@@ -82,7 +83,7 @@ export declare namespace HttpLink {
     /**
      * Passes the extensions field to your graphql server.
      *
-     * Defaults to false.
+     * Defaults to true.
      */
     includeExtensions?: boolean;
 
@@ -149,7 +150,16 @@ export declare namespace HttpLink {
 }
 
 export class HttpLink extends ApolloLink {
-  constructor(public options: HttpLink.Options = {}) {
-    super(createHttpLink(options).request);
+  constructor(options: HttpLink.Options & ClientAwarenessLink.Options = {}) {
+    const { left, right, request } = ApolloLink.concat(
+      new ClientAwarenessLink(options),
+      new BaseHttpLink(options)
+    );
+    super(request);
+    Object.assign(this, { left, right });
   }
 }
+
+export const createHttpLink = (
+  linkOptions: HttpLink.Options & ClientAwarenessLink.Options = {}
+) => new HttpLink(linkOptions);

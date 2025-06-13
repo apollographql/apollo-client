@@ -66,13 +66,16 @@ import {
 
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
+import type {
+  ApolloClient,
+  ApolloClientOptions,
+  DefaultOptions,
+} from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
-  ClientAwareness,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -136,12 +139,12 @@ interface MaskOperationOptions<TData> {
 
 interface QueryManagerOptions {
   client: ApolloClient;
+  clientOptions: ApolloClientOptions;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
-  clientAwareness: ClientAwareness;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
@@ -152,6 +155,10 @@ export class QueryManager {
   public defaultOptions: DefaultOptions;
 
   public readonly client: ApolloClient;
+  /**
+   * The options that were passed to the ApolloClient constructor.
+   */
+  public readonly clientOptions: ApolloClientOptions;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -160,7 +167,6 @@ export class QueryManager {
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
-  private clientAwareness: ClientAwareness = {};
 
   /**
    * Whether to prioritize cache values over network results when
@@ -200,7 +206,7 @@ export class QueryManager {
     this.client = options.client;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
-    this.clientAwareness = options.clientAwareness;
+    this.clientOptions = options.clientOptions;
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
@@ -898,7 +904,6 @@ export class QueryManager {
           ...this.defaultContext,
           ...context,
           queryDeduplication: deduplication,
-          clientAwareness: this.clientAwareness,
         },
         extensions,
       };

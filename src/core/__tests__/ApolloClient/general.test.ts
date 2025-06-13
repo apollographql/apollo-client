@@ -11,6 +11,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult, RequestHandler } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
+import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import { MockLink } from "@apollo/client/testing";
 import {
   mockDeferStream,
@@ -7323,7 +7324,7 @@ describe("ApolloClient", () => {
   });
 
   describe("client awareness", () => {
-    it("should pass client awareness settings into the link chain via context", async () => {
+    it("ClientAwarenessLink should pick up configuration on `ApolloClientOptions`", async () => {
       const query = gql`
         query {
           author {
@@ -7346,16 +7347,13 @@ describe("ApolloClient", () => {
           result: { data },
         },
       ]);
-
-      const clientAwareness = {
-        name: "Test",
-        version: "1.0.0",
-      };
-
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link,
-        ...clientAwareness,
+        link: new ClientAwarenessLink().concat(link),
+        clientAwareness: {
+          name: "Test",
+          version: "1.0.0",
+        },
       });
 
       const observable = client.watchQuery({
@@ -7367,8 +7365,10 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitNext();
 
       const context = link.operation!.getContext();
-      expect(context.clientAwareness).toBeDefined();
-      expect(context.clientAwareness).toEqual(clientAwareness);
+      expect(context.headers).toStrictEqual({
+        "apollographql-client-name": "Test",
+        "apollographql-client-version": "1.0.0",
+      });
     });
   });
 

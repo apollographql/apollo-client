@@ -346,16 +346,6 @@ export class QueryManager {
         .observable.pipe(
           validateDidEmitValue(),
           mergeMap((result) => {
-            const hasErrors = graphQLResultHasError(result);
-            if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(result);
-            }
-
-            if (mutationStoreValue) {
-              mutationStoreValue.loading = false;
-              mutationStoreValue.error = null;
-            }
-
             const storeResult: typeof result = { ...result };
 
             if (typeof refetchQueries === "function") {
@@ -363,11 +353,6 @@ export class QueryManager {
                 storeResult as FetchResult<Unmasked<TData>>
               );
             }
-
-            if (errorPolicy === "ignore" && hasErrors) {
-              delete storeResult.errors;
-            }
-
             return from(
               queryInfo.markMutationResult<TData, TVariables, TCache>(
                 storeResult,
@@ -390,6 +375,21 @@ export class QueryManager {
                 }
               )
             );
+          })
+        )
+        .pipe(
+          map((storeResult) => {
+            const hasErrors = graphQLResultHasError(storeResult);
+            if (hasErrors && errorPolicy === "none") {
+              throw new CombinedGraphQLErrors(storeResult);
+            }
+
+            if (mutationStoreValue) {
+              mutationStoreValue.loading = false;
+              mutationStoreValue.error = null;
+            }
+
+            return storeResult;
           })
         )
         .subscribe({
@@ -1052,7 +1052,6 @@ export class QueryManager {
           document: linkDocument,
           cacheWriteBehavior,
         });
-
         const hasErrors = !!result.errors?.length;
 
         if (hasErrors && errorPolicy === "none") {

@@ -4106,6 +4106,7 @@ describe("useMutation Hook", () => {
         expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
+            data: { createTodo: { __typename: "Todo", id: 1 } },
             errors: [{ message: CREATE_TODO_ERROR }],
           }),
           loading: false,
@@ -4117,7 +4118,10 @@ describe("useMutation Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
-        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] }),
+        new CombinedGraphQLErrors({
+          data: { createTodo: { __typename: "Todo", id: 1 } },
+          errors: [{ message: CREATE_TODO_ERROR }],
+        }),
         expect.anything()
       );
       expect(consoleSpies.error).not.toHaveBeenCalled();

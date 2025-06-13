@@ -1,5 +1,108 @@
 # @apollo/client
 
+## 4.0.0-alpha.22
+
+### Major Changes
+
+- [#12673](https://github.com/apollographql/apollo-client/pull/12673) [`cee90ab`](https://github.com/apollographql/apollo-client/commit/cee90abcd2a9c91c5fdf872cf2d1c12deaa6593e) Thanks [@phryneas](https://github.com/phryneas)! - The `includeExtensions` option of `HttpLink` and `BatchHttpLink` now defaults
+  to `true`.
+
+  If `includeExtensions` is `true`, but `extensions` is not set or empty, extensions
+  will not be included in outgoing requests.
+
+- [#12673](https://github.com/apollographql/apollo-client/pull/12673) [`cee90ab`](https://github.com/apollographql/apollo-client/commit/cee90abcd2a9c91c5fdf872cf2d1c12deaa6593e) Thanks [@phryneas](https://github.com/phryneas)! - The `ApolloClient` constructor options `name` and `version` that are used to
+  configure the client awareness feature have moved onto a `clientAwareness` key.
+
+  ```diff
+  const client = new ApolloClient({
+    // ..
+  -  name: "my-app",
+  -  version: "1.0.0",
+  +  clientAwareness: {
+  +    name: "my-app",
+  +    version: "1.0.0",
+  +  },
+  });
+  ```
+
+- [#12690](https://github.com/apollographql/apollo-client/pull/12690) [`5812759`](https://github.com/apollographql/apollo-client/commit/5812759b6659df49277635e89492c0d72c3b57d6) Thanks [@phryneas](https://github.com/phryneas)! - Aliasing any other field to `__typename` is now forbidden.
+
+- [#12690](https://github.com/apollographql/apollo-client/pull/12690) [`5812759`](https://github.com/apollographql/apollo-client/commit/5812759b6659df49277635e89492c0d72c3b57d6) Thanks [@phryneas](https://github.com/phryneas)! - Aliasing a field to an alias beginning with `__ac_` is now forbidden - this namespace is now reserved for internal use.
+
+- [#12673](https://github.com/apollographql/apollo-client/pull/12673) [`cee90ab`](https://github.com/apollographql/apollo-client/commit/cee90abcd2a9c91c5fdf872cf2d1c12deaa6593e) Thanks [@phryneas](https://github.com/phryneas)! - Adds enhanced client awareness to the client.
+
+  `HttpLink` and `BatchHttpLink` will now per default send information about the
+  client library you are using in `extensions`.
+
+  This could look like this:
+
+  ```json
+  {
+    "query": "query GetUser($id: ID!) { user(id: $id) { __typename id name } }",
+    "variables": {
+      "id": 5
+    },
+    "extensions": {
+      "clientLibrary": {
+        "name": "@apollo/client",
+        "version": "4.0.0"
+      }
+    }
+  }
+  ```
+
+  This feature can be disabled by passing `enhancedClientAwareness: { transport: false }` to your
+  `ApolloClient`, `HttpLink` or `BatchHttpLink` constructor options.
+
+### Minor Changes
+
+- [#12698](https://github.com/apollographql/apollo-client/pull/12698) [`be77d1a`](https://github.com/apollographql/apollo-client/commit/be77d1a6ddf719cab4780a0679fcd98556ac7f22) Thanks [@phryneas](https://github.com/phryneas)! - Adjusted the accept header for multipart requests according to the new GraphQL over HTTP spec with these changes:
+
+  ```diff
+  -multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json
+  +multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9
+  ```
+
+  ```diff
+  -multipart/mixed;deferSpec=20220824,application/json
+  +multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9
+  ```
+
+- [#12673](https://github.com/apollographql/apollo-client/pull/12673) [`cee90ab`](https://github.com/apollographql/apollo-client/commit/cee90abcd2a9c91c5fdf872cf2d1c12deaa6593e) Thanks [@phryneas](https://github.com/phryneas)! - Add the new `ClientAwarenessLink`.
+
+  This link is already included in `HttpLink` and `BatchHttpLink` to enable the
+  "client awareness" and "enhanced client awareness" features, but you can also use
+  `ClientAwarenessLink` directly in your link chain to combine it with other
+  terminating links.
+
+  If you want to save the bundle size that `ClientAwarenessLink` adds to `HttpLink`
+  and `BatchHttpLink`, you can use `BaseHttpLink` or `BaseBatchHttpLink` instead.
+  These links come without the `ClientAwarenessLink` included.
+
+  For example:
+
+  ```diff
+  import {
+    ApolloClient,
+  -  HttpLink,
+  } from "@apollo/client";
+  +import { BaseHttpLink } from "@apollo/client/link/http";
+
+  const client = new ApolloClient({
+  -  link: new HttpLink({
+  +  link: new BaseHttpLink({
+      uri,
+    }),
+    cache: new InMemoryCache(),
+  });
+  ```
+
+- [#12698](https://github.com/apollographql/apollo-client/pull/12698) [`be77d1a`](https://github.com/apollographql/apollo-client/commit/be77d1a6ddf719cab4780a0679fcd98556ac7f22) Thanks [@phryneas](https://github.com/phryneas)! - Adds an `accept` option to `HttpOptions` that allows to add additional `Accept` headers to be merged in without overriding user-specified or default accept headers.
+
+### Patch Changes
+
+- [#12673](https://github.com/apollographql/apollo-client/pull/12673) [`cee90ab`](https://github.com/apollographql/apollo-client/commit/cee90abcd2a9c91c5fdf872cf2d1c12deaa6593e) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug in `PersistedQueryLink` where the `persistedQuery` extension would still be sent after a `PersistedQueryNotSupported` if `includeExtensions` was enabled on `HttpLink`.
+
 ## 4.0.0-alpha.21
 
 ### Major Changes

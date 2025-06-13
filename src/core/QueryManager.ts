@@ -1042,31 +1042,27 @@ export class QueryManager {
       options.variables
     ).observable.pipe(
       map((result) => {
-        const graphQLErrors = getGraphQLErrorsFromResult(result);
-        const hasErrors = graphQLErrors.length > 0;
+        // Use linkDocument rather than queryInfo.document so the
+        // operation/fragments used to write the result are the same as the
+        // ones used to obtain it from the link.
+        result = queryInfo.markQueryResult(result, {
+          ...options,
+          document: linkDocument,
+          cacheWriteBehavior,
+        });
 
-        // If we interrupted this request by calling getResultsFromLink again
-        // with the same QueryInfo object, we ignore the old results.
-        if (requestId >= queryInfo.lastRequestId) {
-          if (hasErrors && errorPolicy === "none") {
-            queryInfo.resetLastWrite();
-            observableQuery?.["resetNotifications"]();
-            // Throwing here effectively calls observer.error.
-            throw new CombinedGraphQLErrors(result);
-          }
-          // Use linkDocument rather than queryInfo.document so the
-          // operation/fragments used to write the result are the same as the
-          // ones used to obtain it from the link.
-          queryInfo.markQueryResult(result, {
-            ...options,
-            document: linkDocument,
-            cacheWriteBehavior,
-          });
+        const hasErrors = !!result.errors?.length;
+
+        if (hasErrors && errorPolicy === "none") {
+          queryInfo.resetLastWrite();
+          observableQuery?.["resetNotifications"]();
+          // Throwing here effectively calls observer.error.
+          throw new CombinedGraphQLErrors(result);
         }
 
         const aqr = {
           data: result.data as TData,
-          ...(isExecutionPatchResult(result) && result.hasNext ?
+          ...(queryInfo.hasNext ?
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,

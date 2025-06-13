@@ -41,22 +41,18 @@ export declare namespace defer20220824 {
   }
 }
 
-type Chunk = defer20220824.InitialResult | defer20220824.SubsequentResult;
-
 class DeferRequest
   implements Incremental.IncrementalRequest<defer20220824.ExecutionResult>
 {
   public hasNext = true;
-  private pending: Incremental.Pending[];
 
-  constructor(query: DocumentNode, initialChunk: defer20220824.InitialResult) {
-    // You can imagine this would traverse the query and pull out the `@defer`
-    // locations since we don't get this in the response info
-    this.pending = [];
-  }
+  constructor(query: DocumentNode, initialChunk: defer20220824.InitialResult) {}
+  private errors: Array<GraphQLFormattedError> = [];
+  private extensions: Record<string, any> = {};
+  private data: any = {};
 
   apply<TData>(
-    data: TData,
+    cacheData: TData | undefined,
     chunk: defer20220824.InitialResult | defer20220824.SubsequentResult
   ) {
     this.hasNext = chunk.hasNext;
@@ -64,9 +60,16 @@ class DeferRequest
     // `@defer` paths
 
     if ("incremental" in chunk) {
-      return isNonEmptyArray(chunk.incremental) ?
-          mergeIncrementalData(data as any, chunk as any)
-        : data;
+      this.data = cacheData;
+
+      if (isNonEmptyArray(chunk.incremental)) {
+        this.data = mergeIncrementalData(cacheData as any, chunk as any);
+        for (const incremental of chunk.incremental) {
+          this.errors.push(...(incremental.errors || []));
+
+          Object.assign(this.extensions, incremental.extensions);
+        }
+      }
 
       // Detect the first chunk of a deferred query and merge it with existing
       // cache data. This ensures a `cache-first` fetch policy that returns
@@ -74,15 +77,13 @@ class DeferRequest
       // has full data in the cache does not complain when trying to merge the
       // initial deferred server data with existing cache data.
     } else if ("data" in chunk && chunk.hasNext) {
-      return new DeepMerger().merge(data, chunk.data);
+      this.data = new DeepMerger().merge(cacheData, chunk.data);
+      this.errors = [...(chunk.errors || [])];
+      this.extensions = chunk.extensions || {};
     }
 
-    return data;
-  }
-
-  // TODO when we are ready to implement this.
-  getPending() {
-    return this.pending;
+    const { data, errors, extensions } = this;
+    return { data, errors, extensions };
   }
 }
 

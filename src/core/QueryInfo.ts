@@ -169,15 +169,19 @@ export class QueryInfo {
     options: Cache.DiffOptions;
   };
 
+  get hasNext() {
+    return this.incremental ? this.incremental.hasNext : false;
+  }
+
   public markQueryResult<TData, TVariables extends OperationVariables>(
-    result: FetchResult<TData>,
+    result: Readonly<FetchResult<Readonly<TData>>>,
     {
       document: query,
       variables,
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ) {
+  ): FetchResult<TData> {
     const { incrementalStrategy } = this.queryManager;
 
     const diffOptions = {
@@ -205,7 +209,7 @@ export class QueryInfo {
         : { result: null, complete: false };
 
       if (incrementalStrategy.isIncrementalResult(result)) {
-        result.data = this.incremental!.apply(lastDiff.result, result);
+        result = this.incremental!.apply(lastDiff.result, result);
       }
 
       this.lastDiff = {
@@ -216,7 +220,7 @@ export class QueryInfo {
       const lastDiff = this.cache.diff<any>(diffOptions);
 
       if (incrementalStrategy.isIncrementalResult(result)) {
-        result.data = this.incremental!.apply(lastDiff.result, result);
+        result = this.incremental!.apply(lastDiff.result, result);
       }
 
       if (shouldWriteResult(result, errorPolicy)) {
@@ -286,7 +290,7 @@ export class QueryInfo {
               if (lastDiff && lastDiff.complete) {
                 // Reuse data from the last good (complete) diff that we
                 // received, when possible.
-                result.data = lastDiff.result;
+                result = { ...result, data: lastDiff.result };
                 return;
               }
               // If the previous this.diff was incomplete, fall through to
@@ -301,7 +305,7 @@ export class QueryInfo {
             // Set without setDiff to avoid triggering a notify call, since
             // we have other ways of notifying for this result.
             if (diff.complete) {
-              result.data = diff.result;
+              result = { ...result, data: diff.result };
             }
           },
         });
@@ -309,6 +313,7 @@ export class QueryInfo {
         this.lastWrite = void 0;
       }
     }
+    return result;
   }
 
   public markMutationResult<

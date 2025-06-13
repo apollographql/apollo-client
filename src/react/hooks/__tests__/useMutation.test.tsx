@@ -39,6 +39,7 @@ import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
+import { defer20220824 } from "../../../incremental/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -3908,6 +3909,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -4023,6 +4025,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       const onError = jest.fn();
@@ -4127,6 +4130,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();

@@ -353,6 +353,14 @@ export class QueryInfo {
       ) as FetchResult<TData>;
     }
 
+    if (mutation.errorPolicy === "ignore") {
+      result = { ...result, errors: [] };
+    }
+
+    if (graphQLResultHasError(result) && mutation.errorPolicy === "none") {
+      return Promise.resolve(result);
+    }
+
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       cacheWrites.push({
         result: result.data,

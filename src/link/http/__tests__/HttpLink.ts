@@ -1668,7 +1668,7 @@ describe("HttpLink", () => {
             },
           ],
         };
-        const response = new Response(JSON.stringify(error), {
+        const response = Response.json(error, {
           status: 500,
           headers: { "content-type": "application/json" },
         });

@@ -3,6 +3,7 @@ import type { MatcherFunction } from "expect";
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
 import type { TakeOptions } from "../internal/ObservableStream.js";
+import { EventMismatchError } from "../internal/ObservableStream.js";
 
 export const toEmitNext: MatcherFunction<[options?: TakeOptions]> =
   async function (actual, options) {
@@ -31,6 +32,11 @@ export const toEmitNext: MatcherFunction<[options?: TakeOptions]> =
           pass: false,
           message: () =>
             hint + "\n\nExpected stream to emit a value but it did not.",
+        };
+      } else if (EventMismatchError.is(error)) {
+        return {
+          pass: false,
+          message: () => error.formatMessage("toEmitNext"),
         };
       } else {
         throw error;

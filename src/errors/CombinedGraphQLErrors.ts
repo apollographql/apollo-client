@@ -1,7 +1,6 @@
 import type { GraphQLFormattedError } from "graphql";
 
 import type { FetchResult } from "@apollo/client";
-import { getGraphQLErrorsFromResult } from "@apollo/client/utilities/internal";
 
 import { brand, isBranded } from "./utils.js";
 
@@ -57,7 +56,7 @@ export class CombinedGraphQLErrors extends Error {
   readonly data: Record<string, unknown> | null | undefined;
 
   constructor(result: FetchResult<unknown>) {
-    const errors = getGraphQLErrorsFromResult(result);
+    const errors = result.errors || [];
 
     super(
       CombinedGraphQLErrors.formatMessage(errors, {

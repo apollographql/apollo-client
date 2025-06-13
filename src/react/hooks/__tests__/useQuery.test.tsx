@@ -54,6 +54,7 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import type { DeepPartial, Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
+import { defer20220824 } from "../../../incremental/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -9174,6 +9175,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9288,6 +9290,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9456,6 +9459,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9630,6 +9634,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9746,6 +9751,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9859,6 +9865,23 @@ describe("useQuery Hook", () => {
         },
         dataState: "complete",
         error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker",
+                  homeWorld: null,
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa",
+                  homeWorld: "Alderaan",
+                },
+              ],
+              name: "R2-D2",
+            },
+          },
           errors: [
             {
               message:
@@ -9897,6 +9920,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalStrategy: defer20220824(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -10080,7 +10104,11 @@ describe("useQuery Hook", () => {
 
       const link = new MockSubscriptionLink();
       const cache = new InMemoryCache();
-      const client = new ApolloClient({ cache, link });
+      const client = new ApolloClient({
+        cache,
+        link,
+        incrementalStrategy: defer20220824(),
+      });
 
       cache.writeQuery({
         query,
@@ -10203,7 +10231,11 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const link = new MockSubscriptionLink();
-      const client = new ApolloClient({ cache, link });
+      const client = new ApolloClient({
+        cache,
+        link,
+        incrementalStrategy: defer20220824(),
+      });
 
       // We know we are writing partial data to the cache so suppress the console
       // warning.

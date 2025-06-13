@@ -72,6 +72,7 @@ import type {
   MaskedVariablesCaseData,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
+import { defer20220824 } from "../../../incremental/index.js";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -1425,7 +1426,11 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
       },
     },
   });
-  const client = new ApolloClient({ cache, link });
+  const client = new ApolloClient({
+    cache,
+    link,
+    incrementalStrategy: defer20220824(),
+  });
 
   const renderStream = createDefaultProfiler<Data>();
 
@@ -3852,7 +3857,11 @@ it('does not suspend deferred queries with partial data in the cache and using a
     });
   }
 
-  const client = new ApolloClient({ link, cache });
+  const client = new ApolloClient({
+    link,
+    cache,
+    incrementalStrategy: defer20220824(),
+  });
 
   const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();
   const { SuspenseFallback, ReadQueryHook } =

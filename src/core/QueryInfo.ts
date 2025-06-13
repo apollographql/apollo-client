@@ -5,17 +5,13 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
-  DeepMerger,
   getOperationName,
   graphQLResultHasError,
-  isExecutionPatchIncrementalResult,
-  isExecutionPatchResult,
-  isNonEmptyArray,
-  mergeIncrementalData,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
+import type { Incremental } from "../incremental/types.js";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -102,9 +98,11 @@ export class QueryInfo {
     | "refetchQueries"
     | "getDocumentInfo"
     | "broadcastQueries"
+    | "incrementalStrategy"
   >;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
+  private incremental?: Incremental.IncrementalRequest<Incremental.ExecutionResult>;
 
   constructor(
     queryManager: QueryManager,
@@ -162,20 +160,21 @@ export class QueryInfo {
     );
   }
 
-  private lastDiff?: {
-    diff: Cache.DiffResult<any>;
-    options: Cache.DiffOptions;
-  };
+  get hasNext() {
+    return this.incremental ? this.incremental.hasNext : false;
+  }
 
   public markQueryResult<TData, TVariables extends OperationVariables>(
-    result: FetchResult<TData>,
+    result: Readonly<FetchResult<Readonly<TData>>>,
     {
       document: query,
       variables,
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ) {
+  ): FetchResult<TData> {
+    const { incrementalStrategy } = this.queryManager;
+
     const diffOptions = {
       query,
       variables,
@@ -187,20 +186,25 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      const lastDiff =
-        this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
-          this.lastDiff.diff
-        : { result: null, complete: false };
-      handleIncrementalResult(result, lastDiff);
+    if (incrementalStrategy.isIncrementalInitialResult(result)) {
+      this.incremental = (
+        incrementalStrategy as Incremental.Strategy<any>
+      ).startRequest({
+        query,
+        initialChunk: result,
+      });
+    }
 
-      this.lastDiff = {
-        diff: { result: result.data, complete: true },
-        options: diffOptions,
-      };
+    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
+      if (incrementalStrategy.isIncrementalResult(result)) {
+        result = this.incremental!.apply(undefined, result);
+      }
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
-      handleIncrementalResult(result, lastDiff);
+
+      if (incrementalStrategy.isIncrementalResult(result)) {
+        result = this.incremental!.apply(lastDiff.result, result);
+      }
 
       if (shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
@@ -269,7 +273,7 @@ export class QueryInfo {
               if (lastDiff && lastDiff.complete) {
                 // Reuse data from the last good (complete) diff that we
                 // received, when possible.
-                result.data = lastDiff.result;
+                result = { ...result, data: lastDiff.result };
                 return;
               }
               // If the previous this.diff was incomplete, fall through to
@@ -284,7 +288,7 @@ export class QueryInfo {
             // Set without setDiff to avoid triggering a notify call, since
             // we have other ways of notifying for this result.
             if (diff.complete) {
-              result.data = diff.result;
+              result = { ...result, data: diff.result };
             }
           },
         });
@@ -292,6 +296,7 @@ export class QueryInfo {
         this.lastWrite = void 0;
       }
     }
+    return result;
   }
 
   public markMutationResult<
@@ -299,7 +304,7 @@ export class QueryInfo {
     TVariables extends OperationVariables,
     TCache extends ApolloCache,
   >(
-    result: FetchResult<TData>,
+    result: Readonly<FetchResult<Readonly<TData>>>,
     mutation: OperationInfo<
       TData,
       TVariables,
@@ -319,45 +324,50 @@ export class QueryInfo {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
-      if (!isExecutionPatchIncrementalResult(result)) {
-        cacheWrites.push({
-          result: result.data,
-          dataId: "ROOT_MUTATION",
+    const { incrementalStrategy } = this.queryManager;
+
+    if (incrementalStrategy.isIncrementalResult(result)) {
+      if (incrementalStrategy.isIncrementalInitialResult(result)) {
+        this.incremental = (
+          incrementalStrategy as Incremental.Strategy<any>
+        ).startRequest({
           query: mutation.document,
-          variables: mutation.variables,
+          initialChunk: result,
         });
       }
-      if (
-        isExecutionPatchIncrementalResult(result) &&
-        isNonEmptyArray(result.incremental)
-      ) {
-        const diff = cache.diff<TData>({
-          id: "ROOT_MUTATION",
-          // The cache complains if passed a mutation where it expects a
-          // query, so we transform mutations and subscriptions to queries
-          // (only once, thanks to this.transformCache).
-          query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
-          variables: mutation.variables,
-          optimistic: false,
-          returnPartialData: true,
-        });
-        let mergedData;
-        if (diff.result) {
-          mergedData = mergeIncrementalData(diff.result, result);
-        }
-        if (typeof mergedData !== "undefined") {
-          // cast the ExecutionPatchResult to FetchResult here since
-          // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult).data = mergedData;
-          cacheWrites.push({
-            result: mergedData,
-            dataId: "ROOT_MUTATION",
-            query: mutation.document,
+
+      result = this.incremental!.apply(
+        skipCache ? undefined : (
+          cache.diff<TData>({
+            id: "ROOT_MUTATION",
+            // The cache complains if passed a mutation where it expects a
+            // query, so we transform mutations and subscriptions to queries
+            // (only once, thanks to this.transformCache).
+            query: this.queryManager.getDocumentInfo(mutation.document).asQuery,
             variables: mutation.variables,
-          });
-        }
-      }
+            optimistic: false,
+            returnPartialData: true,
+          }).result
+        ),
+        result
+      ) as FetchResult<TData>;
+    }
+
+    if (mutation.errorPolicy === "ignore") {
+      result = { ...result, errors: [] };
+    }
+
+    if (graphQLResultHasError(result) && mutation.errorPolicy === "none") {
+      return Promise.resolve(result);
+    }
+
+    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+      cacheWrites.push({
+        result: result.data,
+        dataId: "ROOT_MUTATION",
+        query: mutation.document,
+        variables: mutation.variables,
+      });
 
       const { updateQueries } = mutation;
       if (updateQueries) {
@@ -422,9 +432,6 @@ export class QueryInfo {
             const { update } = mutation;
             // Determine whether result is a SingleExecutionResult,
             // or the final ExecutionPatchResult.
-            const isFinalResult =
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext);
 
             if (update) {
               if (!skipCache) {
@@ -446,19 +453,13 @@ export class QueryInfo {
 
                 if (diff.complete) {
                   result = { ...(result as FetchResult), data: diff.result };
-                  if ("incremental" in result) {
-                    delete result.incremental;
-                  }
-                  if ("hasNext" in result) {
-                    delete result.hasNext;
-                  }
                 }
               }
 
               // If we've received the whole response,
               // either a SingleExecutionResult or the final ExecutionPatchResult,
               // call the update function.
-              if (isFinalResult) {
+              if (!this.hasNext) {
                 update(
                   cache as TCache,
                   result as FetchResult<Unmasked<TData>>,
@@ -472,7 +473,7 @@ export class QueryInfo {
 
             // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
             // shallow to allow rolling back optimistic evictions.
-            if (!skipCache && !mutation.keepRootFields && isFinalResult) {
+            if (!skipCache && !mutation.keepRootFields && !this.hasNext) {
               cache.modify({
                 id: "ROOT_MUTATION",
                 fields(value, { fieldName, DELETE }) {
@@ -552,7 +553,7 @@ export class QueryInfo {
   }
 
   public markSubscriptionResult<TData, TVariables extends OperationVariables>(
-    result: FetchResult<TData>,
+    result: Readonly<FetchResult<TData>>,
     {
       document,
       variables,
@@ -576,25 +577,6 @@ export class QueryInfo {
 
       this.queryManager.broadcastQueries();
     }
-  }
-}
-
-function handleIncrementalResult<T>(
-  result: FetchResult<T>,
-  lastDiff: Cache.DiffResult<any>
-) {
-  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-    const mergedData = mergeIncrementalData(lastDiff.result, result);
-    result.data = mergedData;
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-  } else if ("hasNext" in result && result.hasNext) {
-    const merger = new DeepMerger();
-    result.data = merger.merge(lastDiff.result, result.data);
   }
 }
 

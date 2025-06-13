@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { BREAK, Kind, OperationTypeNode, visit } from "graphql";
-import { Observable } from "rxjs";
+import { Observable, throwError } from "rxjs";
 import {
   catchError,
   concat,
@@ -29,11 +29,8 @@ import {
   toErrorLike,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import type {
-  ExecuteContext,
-  FetchResult,
-  GraphQLRequest,
-} from "@apollo/client/link";
+import type { Incremental } from "@apollo/client/incremental";
+import type { ExecuteContext, FetchResult } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
@@ -46,14 +43,12 @@ import {
   checkDocument,
   filterMap,
   getDefaultValues,
-  getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
-  isExecutionPatchResult,
   isNonNullObject,
   makeUniqueId,
   removeDirectivesFromDocument,
@@ -147,6 +142,9 @@ interface QueryManagerOptions {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
   localState: LocalState | undefined;
+  incrementalStrategy:
+    | Incremental.Strategy<Incremental.ExecutionResult>
+    | Incremental.Strategy<never>;
 }
 
 export class QueryManager {
@@ -162,6 +160,9 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
+  public readonly incrementalStrategy:
+    | Incremental.Strategy<Incremental.ExecutionResult>
+    | Incremental.Strategy<never>;
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
@@ -209,6 +210,7 @@ export class QueryManager {
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
     this.localState = options.localState;
+    this.incrementalStrategy = options.incrementalStrategy;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
@@ -353,16 +355,6 @@ export class QueryManager {
         .observable.pipe(
           validateDidEmitValue(),
           mergeMap((result) => {
-            const hasErrors = graphQLResultHasError(result);
-            if (hasErrors && errorPolicy === "none") {
-              throw new CombinedGraphQLErrors(result);
-            }
-
-            if (mutationStoreValue) {
-              mutationStoreValue.loading = false;
-              mutationStoreValue.error = null;
-            }
-
             const storeResult: typeof result = { ...result };
 
             if (typeof refetchQueries === "function") {
@@ -370,11 +362,6 @@ export class QueryManager {
                 storeResult as FetchResult<Unmasked<TData>>
               );
             }
-
-            if (errorPolicy === "ignore" && hasErrors) {
-              delete storeResult.errors;
-            }
-
             return from(
               queryInfo.markMutationResult<TData, TVariables, TCache>(
                 storeResult,
@@ -399,6 +386,21 @@ export class QueryManager {
             );
           })
         )
+        .pipe(
+          map((storeResult) => {
+            const hasErrors = graphQLResultHasError(storeResult);
+            if (hasErrors && errorPolicy === "none") {
+              throw new CombinedGraphQLErrors(storeResult);
+            }
+
+            if (mutationStoreValue) {
+              mutationStoreValue.loading = false;
+              mutationStoreValue.error = null;
+            }
+
+            return storeResult;
+          })
+        )
         .subscribe({
           next: (storeResult) => {
             this.broadcastQueries();
@@ -408,7 +410,7 @@ export class QueryManager {
             // we resolve with a SingleExecutionResult or after the final
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
-            if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
+            if (!queryInfo.hasNext) {
               const result: MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
@@ -418,11 +420,11 @@ export class QueryManager {
                 }) as any,
               };
 
-              if (graphQLResultHasError(storeResult)) {
+              if (storeResult.errors?.length) {
                 result.error = new CombinedGraphQLErrors(storeResult);
               }
 
-              if (storeResult.extensions) {
+              if (Object.keys(storeResult.extensions || {}).length) {
                 result.extensions = storeResult.extensions;
               }
 
@@ -899,72 +901,76 @@ export class QueryManager {
     if (serverQuery) {
       const { inFlightLinkObservables, link } = this;
 
-      const operation: GraphQLRequest = {
-        query: serverQuery,
-        variables,
-        operationName,
-        context: {
-          ...this.defaultContext,
-          ...context,
-          queryDeduplication: deduplication,
-        },
-        extensions,
-      };
-
-      context = operation.context;
-
-      function withRestart(source: Observable<FetchResult>) {
-        return new Observable<FetchResult>((observer) => {
-          function subscribe() {
-            return source.subscribe({
-              next: observer.next.bind(observer),
-              complete: observer.complete.bind(observer),
-              error: observer.error.bind(observer),
-            });
-          }
-          let subscription = subscribe();
-
-          entry.restart ||= () => {
-            subscription.unsubscribe();
-            subscription = subscribe();
-          };
-
-          return () => {
-            subscription.unsubscribe();
-            entry.restart = undefined;
-          };
+      try {
+        const operation = this.incrementalStrategy.prepareRequest({
+          query: serverQuery,
+          variables,
+          operationName,
+          context: {
+            ...this.defaultContext,
+            ...context,
+            queryDeduplication: deduplication,
+          },
+          extensions,
         });
-      }
 
-      if (deduplication) {
-        const printedServerQuery = print(serverQuery);
-        const varJson = canonicalStringify(variables);
+        context = operation.context;
 
-        entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
+        function withRestart(source: Observable<FetchResult>) {
+          return new Observable<FetchResult>((observer) => {
+            function subscribe() {
+              return source.subscribe({
+                next: observer.next.bind(observer),
+                complete: observer.complete.bind(observer),
+                error: observer.error.bind(observer),
+              });
+            }
+            let subscription = subscribe();
 
-        if (!entry.observable) {
+            entry.restart ||= () => {
+              subscription.unsubscribe();
+              subscription = subscribe();
+            };
+
+            return () => {
+              subscription.unsubscribe();
+              entry.restart = undefined;
+            };
+          });
+        }
+
+        if (deduplication) {
+          const printedServerQuery = print(serverQuery);
+          const varJson = canonicalStringify(variables);
+
+          entry = inFlightLinkObservables.lookup(printedServerQuery, varJson);
+
+          if (!entry.observable) {
+            entry.observable = execute(link, operation, executeContext).pipe(
+              withRestart,
+              finalize(() => {
+                if (
+                  inFlightLinkObservables.peek(printedServerQuery, varJson) ===
+                  entry
+                ) {
+                  inFlightLinkObservables.remove(printedServerQuery, varJson);
+                }
+              }),
+              // We don't want to replay the last emitted value for
+              // subscriptions and instead opt to wait to receive updates until
+              // the subscription emits new values.
+              operationType === OperationTypeNode.SUBSCRIPTION ?
+                share()
+              : shareReplay({ refCount: true })
+            ) as Observable<FetchResult<TData>>;
+          }
+        } else {
           entry.observable = execute(link, operation, executeContext).pipe(
-            withRestart,
-            finalize(() => {
-              if (
-                inFlightLinkObservables.peek(printedServerQuery, varJson) ===
-                entry
-              ) {
-                inFlightLinkObservables.remove(printedServerQuery, varJson);
-              }
-            }),
-            // We don't want to replay the last emitted value for
-            // subscriptions and instead opt to wait to receive updates until
-            // the subscription emits new values.
-            operationType === OperationTypeNode.SUBSCRIPTION ?
-              share()
-            : shareReplay({ refCount: true })
+            withRestart
           ) as Observable<FetchResult<TData>>;
         }
-      } else {
-        entry.observable = execute(link, operation, executeContext).pipe(
-          withRestart
-        ) as Observable<FetchResult<TData>>;
+      } catch (error) {
+        entry.observable = throwError(() => error);
       }
     } else {
       entry.observable = of({ data: {} } as FetchResult<TData>);
@@ -1041,31 +1047,26 @@ export class QueryManager {
       options.variables
     ).observable.pipe(
       map((result) => {
-        const graphQLErrors = getGraphQLErrorsFromResult(result);
-        const hasErrors = graphQLErrors.length > 0;
+        // Use linkDocument rather than queryInfo.document so the
+        // operation/fragments used to write the result are the same as the
+        // ones used to obtain it from the link.
+        result = queryInfo.markQueryResult(result, {
+          ...options,
+          document: linkDocument,
+          cacheWriteBehavior,
+        });
+        const hasErrors = !!result.errors?.length;
 
-        // If we interrupted this request by calling getResultsFromLink again
-        // with the same QueryInfo object, we ignore the old results.
-        if (requestId >= queryInfo.lastRequestId) {
-          if (hasErrors && errorPolicy === "none") {
-            queryInfo.resetLastWrite();
-            observableQuery?.["resetNotifications"]();
-            // Throwing here effectively calls observer.error.
-            throw new CombinedGraphQLErrors(result);
-          }
-          // Use linkDocument rather than queryInfo.document so the
-          // operation/fragments used to write the result are the same as the
-          // ones used to obtain it from the link.
-          queryInfo.markQueryResult(result, {
-            ...options,
-            document: linkDocument,
-            cacheWriteBehavior,
-          });
+        if (hasErrors && errorPolicy === "none") {
+          queryInfo.resetLastWrite();
+          observableQuery?.["resetNotifications"]();
+          // Throwing here effectively calls observer.error.
+          throw new CombinedGraphQLErrors(result);
         }
 
         const aqr = {
           data: result.data as TData,
-          ...(isExecutionPatchResult(result) && result.hasNext ?
+          ...(queryInfo.hasNext ?
             {
               loading: true,
               networkStatus: NetworkStatus.streaming,

@@ -51,6 +51,7 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
+import { defer20220824 } from "../../../incremental/index.js";
 
 function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   return new ApolloClient({
@@ -1822,7 +1823,11 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   `;
 
   const link = new MockSubscriptionLink();
-  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link,
+    incrementalStrategy: defer20220824(),
+  });
 
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);

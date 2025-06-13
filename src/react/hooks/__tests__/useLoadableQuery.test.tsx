@@ -65,6 +65,7 @@ import type {
   FetchMoreFunction,
   RefetchFunction,
 } from "../../internal/types.js";
+import { defer20220824 } from "../../../incremental/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -1564,7 +1565,11 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
       },
     },
   });
-  const client = new ApolloClient({ cache, link });
+  const client = new ApolloClient({
+    cache,
+    link,
+    incrementalStrategy: defer20220824(),
+  });
 
   using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
@@ -4592,7 +4597,11 @@ it('does not suspend deferred queries with partial data in the cache and using a
     });
   }
 
-  const client = new ApolloClient({ link, cache });
+  const client = new ApolloClient({
+    link,
+    cache,
+    incrementalStrategy: defer20220824(),
+  });
 
   using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();

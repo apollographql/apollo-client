@@ -7,7 +7,7 @@ import {
   isSubscriptionOperation,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { compact, hasDirectives } from "@apollo/client/utilities/internal";
+import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { checkFetcher } from "./checkFetcher.js";
@@ -63,12 +63,6 @@ export class BaseHttpLink extends ApolloLink {
       if (isSubscriptionOperation(operation.query)) {
         http.accept = [
           "multipart/mixed;boundary=graphql;subscriptionSpec=1.0",
-          ...(http.accept || []),
-        ];
-      }
-      if (hasDirectives(["defer"], operation.query)) {
-        http.accept = [
-          "multipart/mixed;deferSpec=20220824",
           ...(http.accept || []),
         ];
       }

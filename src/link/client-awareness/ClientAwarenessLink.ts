@@ -1,0 +1,120 @@
+import { ApolloLink } from "@apollo/client/link";
+import { compact } from "@apollo/client/utilities/internal";
+
+export declare namespace ClientAwarenessLink {
+  export interface ClientAwarenessOptions {
+    /**
+     * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+     *
+     * This option can either be set as part of the Apollo Client constructor call or when manually constructing a `HttpLink`, `BatchHttpLink` or `ClientAwarenessLink`.
+     */
+    name?: string;
+    /**
+     * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
+     *
+     * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
+     *
+     * This option can either be set as part of the Apollo Client constructor call or when manually constructing a `HttpLink`, `BatchHttpLink` or `ClientAwarenessLink`.
+     */
+    version?: string;
+    /**
+     * Determines how `name` and `version` are sent in outgoing requests.
+     *
+     * If `name` and `version` are not provided, this option will be ignored.
+     * (These options can either be set as part of the Apollo Client constructor call or when manually constructing a `HttpLink`, `BatchHttpLink` or `ClientAwarenessLink`.)
+     *
+     * * If set to `"headers"`, `name` and `version` will be sent in the request headers as `apollographql-client-name` and `apollographql-client-version`, respectively.
+     * * If set to `false`, `name` and `version` will not be included in outgoing requests.
+     *
+     * @defaultValue "headers"
+     */
+    transport?: "headers" | false;
+  }
+  export interface EnhancedClientAwarenessOptions {
+    /**
+     * Determines how the the version information of Apollo Client is sent in outgoing requests.
+     *
+     * * If set to `"extensions"`, library `name` and `version` will be sent in an object in the request extensions as `clientLibrary`.
+     * * If set to `false`, library name and version will not be included in outgoing requests.
+     *
+     * @defaultValue "extensions"
+     */
+    transport?: "extensions" | false;
+  }
+
+  export interface Options {
+    /**
+     * Configures the "client awareness" feature.
+     * This feature allows you to identify distinct applications in Apollo Studio
+     * and Apollo Server logs (and other monitoring or analytics tools) by adding
+     * information about the your application to outgoing requests.
+     */
+    clientAwareness?: ClientAwarenessOptions;
+    /**
+     * Configures the "enhanced client awareness" feature.
+     * This feature allows you to identify the version of the Apollo Client library
+     * used in your application in Apollo Studio (and other monitoring or analytics tools)
+     * by adding information about the Apollo Client library to outgoing requests.
+     */
+    enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+  }
+}
+
+export class ClientAwarenessLink extends ApolloLink {
+  constructor(constructorOptions: ClientAwarenessLink.Options = {}) {
+    super((operation, forward) => {
+      const client = operation.client;
+
+      const clientOptions = client["queryManager"].clientOptions;
+      const context = operation.getContext();
+      {
+        const {
+          name,
+          version,
+          transport = "headers",
+        } = compact(
+          {},
+          clientOptions.clientAwareness,
+          constructorOptions.clientAwareness,
+          context.clientAwareness
+        );
+
+        if (transport === "headers") {
+          operation.setContext(({ headers, extensions }) => {
+            return {
+              headers: compact(
+                // setting these first so that they can be overridden by user-provided headers
+                {
+                  "apollographql-client-name": name,
+                  "apollographql-client-version": version,
+                },
+                headers
+              ),
+            };
+          });
+        }
+      }
+      {
+        const { transport = "extensions" } = compact(
+          {},
+          clientOptions.enhancedClientAwareness,
+          constructorOptions.enhancedClientAwareness
+        );
+        if (transport === "extensions") {
+          operation.extensions = compact(
+            // setting these first so that it can be overridden by user-provided extensions
+            {
+              clientLibrary: {
+                name: "@apollo/client",
+                version: client.version,
+              },
+            },
+            operation.extensions
+          );
+        }
+      }
+
+      return forward(operation);
+    });
+  }
+}

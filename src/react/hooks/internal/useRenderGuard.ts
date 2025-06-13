@@ -1,4 +1,4 @@
-import * as React from "rehackt";
+import * as React from "react";
 
 let Ctx: React.Context<null>;
 

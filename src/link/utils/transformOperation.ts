@@ -1,5 +1,5 @@
-import type { GraphQLRequest, Operation } from "../core/index.js";
-import { getOperationName } from "../../utilities/index.js";
+import type { GraphQLRequest, Operation } from "@apollo/client/link";
+import { getOperationName } from "@apollo/client/utilities/internal";
 
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   const transformedOperation: GraphQLRequest = {
@@ -13,7 +13,7 @@ export function transformOperation(operation: GraphQLRequest): GraphQLRequest {
   if (!transformedOperation.operationName) {
     transformedOperation.operationName =
       typeof transformedOperation.query !== "string" ?
-        getOperationName(transformedOperation.query) || undefined
+        getOperationName(transformedOperation.query)
       : "";
   }
 

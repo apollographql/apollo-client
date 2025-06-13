@@ -1,51 +1,56 @@
-import * as React from "rehackt";
+import * as React from "react";
+
+import type {
+  ApolloClient,
+  DataState,
+  ErrorLike,
+  GetDataState,
+  NetworkStatus,
+  ObservableQuery,
+} from "@apollo/client";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
-} from "../internal/index.js";
-import type { QueryRef } from "../internal/index.js";
-import { __use, wrapHook } from "./internal/index.js";
-import { toApolloError } from "./useSuspenseQuery.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloError } from "../../errors/index.js";
-import type {
-  ApolloClient,
-  NetworkStatus,
-  ObservableQuery,
-} from "../../core/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import type { MaybeMasked } from "../../masking/index.js";
+} from "@apollo/client/react/internal";
 
-export interface UseReadQueryResult<TData = unknown> {
-  /**
-   * An object containing the result of your GraphQL query after it completes.
-   *
-   * This value might be `undefined` if a query results in one or more errors
-   * (depending on the query's `errorPolicy`).
-   */
-  data: MaybeMasked<TData>;
-  /**
-   * If the query produces one or more errors, this object contains either an
-   * array of `graphQLErrors` or a single `networkError`. Otherwise, this value
-   * is `undefined`.
-   *
-   * This property can be ignored when using the default `errorPolicy` or an
-   * `errorPolicy` of `none`. The hook will throw the error instead of setting
-   * this property.
-   */
-  error: ApolloError | undefined;
-  /**
-   * A number indicating the current network state of the query's associated
-   * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.
-   */
-  networkStatus: NetworkStatus;
+import { __use, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
+
+export declare namespace useReadQuery {
+  export type Result<
+    TData = unknown,
+    TStates extends
+      DataState<TData>["dataState"] = DataState<TData>["dataState"],
+  > = {
+    /**
+     * If the query produces one or more errors, this object contains either an
+     * array of `graphQLErrors` or a single `networkError`. Otherwise, this value
+     * is `undefined`.
+     *
+     * This property can be ignored when using the default `errorPolicy` or an
+     * `errorPolicy` of `none`. The hook will throw the error instead of setting
+     * this property.
+     */
+    error: ErrorLike | undefined;
+    /**
+     * A number indicating the current network state of the query's associated
+     * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.
+     */
+    networkStatus: NetworkStatus;
+  } & GetDataState<MaybeMasked<TData>, TStates>;
 }
 
-export function useReadQuery<TData>(
-  queryRef: QueryRef<TData>
-): UseReadQueryResult<TData> {
+export function useReadQuery<
+  TData,
+  TStates extends DataState<TData>["dataState"],
+>(
+  queryRef: QueryRef<TData, any, TStates>
+): useReadQuery.Result<TData, TStates> {
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
     unwrapped ?
@@ -53,7 +58,7 @@ export function useReadQuery<TData>(
       // return any truthy value that is passed in as an override so we cast the result
       (unwrapped["observable"] as any)
     : undefined
-  ) as ApolloClient<any> | ObservableQuery<TData>;
+  ) as ApolloClient | ObservableQuery<TData>;
 
   return wrapHook(
     "useReadQuery",
@@ -63,9 +68,9 @@ export function useReadQuery<TData>(
   )(queryRef);
 }
 
-function useReadQuery_<TData>(
-  queryRef: QueryRef<TData>
-): UseReadQueryResult<TData> {
+function useReadQuery_<TData, TStates extends DataState<TData>["dataState"]>(
+  queryRef: QueryRef<TData, any, TStates>
+): useReadQuery.Result<TData, TStates> {
   assertWrappedQueryRef(queryRef);
   const internalQueryRef = React.useMemo(
     () => unwrapQueryRef(queryRef),
@@ -103,8 +108,9 @@ function useReadQuery_<TData>(
   return React.useMemo(() => {
     return {
       data: result.data,
+      dataState: result.dataState,
       networkStatus: result.networkStatus,
-      error: toApolloError(result),
-    };
+      error: result.error,
+    } as useReadQuery.Result<TData, TStates>;
   }, [result]);
 }

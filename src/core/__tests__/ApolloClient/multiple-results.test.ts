@@ -1,10 +1,10 @@
-import gql from "graphql-tag";
-import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
-import { MockSubscriptionLink, wait } from "../../../testing/core";
 import { GraphQLError } from "graphql";
-import { ObservableStream } from "../../../testing/internal";
-import { ApolloError } from "../../../errors";
-import { ApolloClient } from "../../ApolloClient";
+import { gql } from "graphql-tag";
+
+import { ApolloClient, NetworkStatus } from "@apollo/client";
+import { InMemoryCache } from "@apollo/client/cache";
+import { MockSubscriptionLink } from "@apollo/client/testing";
+import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {
@@ -35,7 +35,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -45,21 +45,33 @@ describe("mutiple results", () => {
     });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -91,7 +103,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -102,32 +114,46 @@ describe("mutiple results", () => {
     });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     link.simulateResult({
       result: { errors: [new GraphQLError("defer failed")] },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: undefined,
+      dataState: "empty",
       loading: false,
       networkStatus: 7,
+      partial: true,
     });
 
     await wait(20);
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -159,7 +185,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -170,13 +196,23 @@ describe("mutiple results", () => {
     });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     // this should fire the `next` event without this error
@@ -187,10 +223,12 @@ describe("mutiple results", () => {
       },
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -222,7 +260,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -236,10 +274,12 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     // this should fire the next event again
@@ -247,23 +287,27 @@ describe("mutiple results", () => {
       error: new Error("defer failed"),
     });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
-      errors: [new Error("defer failed")],
+      error: new Error("defer failed"),
+      partial: false,
     });
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
-  it("closes the observable if an error is set with the none policy", async () => {
+  it("emits error if an error is set with the none policy", async () => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {
@@ -284,7 +328,7 @@ describe("mutiple results", () => {
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -300,32 +344,51 @@ describe("mutiple results", () => {
       next: (result) => {
         // errors should never be passed since they are ignored
         count++;
+        // loading
         if (count === 1) {
-          expect(result.errors).toBeUndefined();
+          expect(result.error).toBeUndefined();
         }
+        // first result
         if (count === 2) {
-          console.log(new Error("result came after an error"));
+          expect(result.error).toBeUndefined();
+        }
+        // error
+        if (count === 3) {
+          expect(result.error).toBeDefined();
         }
       },
-      error: (e) => {
-        expect(e).toBeDefined();
-        expect(e.graphQLErrors).toBeDefined();
-      },
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitTypedValue({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     link.simulateResult({ error: new Error("defer failed") });
 
-    await expect(stream).toEmitError(
-      new ApolloError({ networkError: new Error("defer failed") })
-    );
+    await expect(stream).toEmitTypedValue({
+      data: initialData,
+      dataState: "complete",
+      error: new Error("defer failed"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 });

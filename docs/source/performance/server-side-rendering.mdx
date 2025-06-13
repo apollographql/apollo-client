@@ -73,12 +73,8 @@ First, here's an example `app.js` file, _without_ the code for rendering React t
 <ExpansionPanel title="Click to expand">
 
 ```jsx title="app.js"
-import {
-  ApolloProvider,
-  ApolloClient,
-  createHttpLink,
-  InMemoryCache
-} from '@apollo/client';
+import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import Express from 'express';
 import React from 'react';
 import { StaticRouter } from 'react-router';
@@ -124,7 +120,7 @@ app.listen(basePort, () => console.log(
 
 So far, whenever this example server receives a request, it first initializes Apollo Client and then creates a React tree that's wrapped with the `ApolloProvider` and `StaticRouter` components. The contents of that tree depend on the request's path and the `StaticRouter`'s defined routes.
 
-<Caution> 
+<Caution>
 
 It's important to create an _entirely new instance_ of Apollo Client for each request. Otherwise, your response to a request might include sensitive cached query results from a _previous_ request.
 

@@ -1,5 +1,5 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { gql } from "graphql-tag";
+import { gql } from "@apollo/client";
 import { SchemaLink } from "@apollo/client/link/schema";
 
 const typeDefs = gql`

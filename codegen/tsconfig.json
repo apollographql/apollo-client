@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "noEmit": false,
+    "target": "ESNext",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "lib": ["DOM", "ES2022"],
+    "paths": {},
+    "types": [],
+    "rootDir": "./",
+    "outDir": "./dist",
+    "declaration": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "strict": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

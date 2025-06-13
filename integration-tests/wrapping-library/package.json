@@ -1,0 +1,13 @@
+{
+  "name": "wrapping-library",
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@apollo/client": "3.13.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "true"
+  }
+}

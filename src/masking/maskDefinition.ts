@@ -1,20 +1,22 @@
-import { Kind } from "graphql";
 import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
+import { Kind } from "graphql";
+
+import type { ApolloCache } from "@apollo/client/cache";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { FragmentMap } from "@apollo/client/utilities/internal";
 import {
-  getFragmentMaskMode,
   maybeDeepFreeze,
   resultKeyNameFromField,
-} from "../utilities/index.js";
-import type { FragmentMap } from "../utilities/index.js";
-import type { ApolloCache } from "../cache/index.js";
-import { disableWarningsSlot } from "./utils.js";
-import { invariant } from "../utilities/globals/index.js";
+} from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { disableWarningsSlot, getFragmentMaskMode } from "./utils.js";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
   operationName: string | undefined;
   fragmentMap: FragmentMap;
-  cache: ApolloCache<unknown>;
+  cache: ApolloCache;
   mutableTargets: WeakMap<any, any>;
   knownChanged: WeakSet<any>;
 }
@@ -42,7 +44,7 @@ function getMutableTarget(
     return mutableTargets.get(data);
   }
 
-  const mutableTarget = Array.isArray(data) ? [] : Object.create(null);
+  const mutableTarget = Array.isArray(data) ? [] : {};
   mutableTargets.set(data, mutableTarget);
   return mutableTarget;
 }
@@ -148,7 +150,7 @@ function maskSelectionSet(
     if (
       selection.kind === Kind.INLINE_FRAGMENT &&
       (!selection.typeCondition ||
-        context.cache.fragmentMatches!(selection, data.__typename))
+        context.cache.fragmentMatches(selection, data.__typename))
     ) {
       value = maskSelectionSet(
         data,

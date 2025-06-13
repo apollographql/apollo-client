@@ -1,30 +1,32 @@
 import type { OptimisticDependencyFunction } from "optimism";
 import { dep, Slot } from "optimism";
+
+import type { ApolloCache } from "@apollo/client";
+
 import type { InMemoryCache } from "./inMemoryCache.js";
-import type { ApolloCache } from "../../core/index.js";
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
   onNextChange(listener: ReactiveListener<T>): () => void;
-  attachCache(cache: ApolloCache<any>): this;
-  forgetCache(cache: ApolloCache<any>): boolean;
+  attachCache(cache: ApolloCache): this;
+  forgetCache(cache: ApolloCache): boolean;
 }
 
-export type ReactiveListener<T> = (value: T) => any;
+type ReactiveListener<T> = (value: T) => any;
 
 // Contextual Slot that acquires its value when custom read functions are
 // called in Policies#readField.
-export const cacheSlot = new Slot<ApolloCache<any>>();
+export const cacheSlot = new Slot<ApolloCache>();
 
 const cacheInfoMap = new WeakMap<
-  ApolloCache<any>,
+  ApolloCache,
   {
     vars: Set<ReactiveVar<any>>;
     dep: OptimisticDependencyFunction<ReactiveVar<any>>;
   }
 >();
 
-function getCacheInfo(cache: ApolloCache<any>) {
+function getCacheInfo(cache: ApolloCache) {
   let info = cacheInfoMap.get(cache)!;
   if (!info) {
     cacheInfoMap.set(
@@ -38,7 +40,7 @@ function getCacheInfo(cache: ApolloCache<any>) {
   return info;
 }
 
-export function forgetCache(cache: ApolloCache<any>) {
+export function forgetCache(cache: ApolloCache) {
   getCacheInfo(cache).vars.forEach((rv) => rv.forgetCache(cache));
 }
 
@@ -50,12 +52,12 @@ export function forgetCache(cache: ApolloCache<any>) {
 // garbage collected in the meantime, because it is no longer reachable,
 // you won't be able to call recallCache(cache), and the cache will
 // automatically disappear from the varsByCache WeakMap.
-export function recallCache(cache: ApolloCache<any>) {
+export function recallCache(cache: ApolloCache) {
   getCacheInfo(cache).vars.forEach((rv) => rv.attachCache(cache));
 }
 
 export function makeVar<T>(value: T): ReactiveVar<T> {
-  const caches = new Set<ApolloCache<any>>();
+  const caches = new Set<ApolloCache>();
   const listeners = new Set<ReactiveListener<T>>();
 
   const rv: ReactiveVar<T> = function (newValue) {
@@ -108,7 +110,7 @@ export function makeVar<T>(value: T): ReactiveVar<T> {
   return rv;
 }
 
-type Broadcastable = ApolloCache<any> & {
+type Broadcastable = ApolloCache & {
   // This method is protected in InMemoryCache, which we are ignoring, but
   // we still want some semblance of type safety when we call it.
   broadcastWatches?: InMemoryCache["broadcastWatches"];

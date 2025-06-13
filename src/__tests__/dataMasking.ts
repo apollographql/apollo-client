@@ -1,30 +1,27 @@
-import { FragmentSpreadNode, Kind, visit } from "graphql";
+import type { FragmentSpreadNode } from "graphql";
+import { Kind, visit } from "graphql";
+import { of } from "rxjs";
+
+import type { FetchPolicy, TypedDocumentNode } from "@apollo/client";
 import {
-  ApolloCache,
   ApolloClient,
-  ApolloError,
   ApolloLink,
-  Cache,
-  DataProxy,
   DocumentTransform,
-  FetchPolicy,
   gql,
   InMemoryCache,
-  Observable,
-  Reference,
-  TypedDocumentNode,
-} from "../core";
+  NetworkStatus,
+} from "@apollo/client";
+import { createFragmentRegistry } from "@apollo/client/cache";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import type { MaskedDocumentNode } from "@apollo/client/masking";
+import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
+  ObservableStream,
+  spyOnConsole,
   wait,
-} from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { invariant } from "../utilities/globals";
-import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
-import { isSubscriptionOperation } from "../utilities";
-import { MaskedDocumentNode } from "../masking";
+} from "@apollo/client/testing/internal";
+import { isSubscriptionOperation } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';
@@ -43,7 +40,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -83,6 +80,14 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -109,7 +114,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -149,6 +154,14 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -176,7 +189,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -215,6 +228,14 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -243,7 +264,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -282,6 +303,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -327,7 +356,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -368,75 +397,14 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
-      });
-    }
-  });
-
-  test("does not mask query when using a cache that does not support it", async () => {
-    using _ = spyOnConsole("warn");
-
-    type UserFieldsFragment = {
-      age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" };
-
-    interface Query {
-      currentUser: {
-        __typename: "User";
-        id: number;
-        name: string;
-      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
-    }
-
-    const query: TypedDocumentNode<Query, never> = gql`
-      query MaskedQuery {
-        currentUser {
-          id
-          name
-          ...UserFields
-        }
-      }
-
-      fragment UserFields on User {
-        age
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query },
-        result: {
-          data: {
-            currentUser: {
-              __typename: "User",
-              id: 1,
-              name: "Test User",
-              age: 30,
-            },
-          },
-        },
-      },
-    ];
-
-    const client = new ApolloClient({
-      dataMasking: true,
-      cache: new TestCache(),
-      link: new MockLink(mocks),
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
     });
 
-    const observable = client.watchQuery({ query });
-
-    const stream = new ObservableStream(observable);
-
     {
       const { data } = await stream.takeNext();
 
@@ -449,13 +417,6 @@ describe("client.watchQuery", () => {
         },
       });
     }
-
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "The configured cache does not support data masking"
-      )
-    );
   });
 
   test("masks queries updated by the cache", async () => {
@@ -471,7 +432,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -510,6 +471,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -561,7 +530,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -600,6 +569,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
 
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await stream.takeNext();
@@ -654,7 +631,7 @@ describe("client.watchQuery", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -731,7 +708,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -826,7 +803,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -920,11 +897,11 @@ describe("client.watchQuery", () => {
       currentUser: {
         __typename: "User";
         id: number;
-        name: string;
+        name: string | null;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -966,19 +943,38 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const { data, errors } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: null,
         },
-      });
-
-      expect(errors).toEqual([{ message: "Couldn't get name" }]);
-    }
+      },
+      dataState: "complete",
+      error: new CombinedGraphQLErrors({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: null,
+            age: 34,
+          },
+        },
+        errors: [{ message: "Couldn't get name" }],
+      }),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
   });
 
   it.each([
@@ -1000,7 +996,7 @@ describe("client.watchQuery", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -1040,6 +1036,14 @@ describe("client.watchQuery", () => {
       const observable = client.watchQuery({ query, fetchPolicy });
       const stream = new ObservableStream(observable);
 
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
       {
         const { data } = await stream.takeNext();
 
@@ -1053,7 +1057,7 @@ describe("client.watchQuery", () => {
       }
 
       {
-        const { data } = observable.getCurrentResult(false);
+        const { data } = observable.getCurrentResult();
 
         expect(data).toEqual({
           currentUser: {
@@ -1083,7 +1087,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -1124,8 +1128,19 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
-      const { data } = await stream.takeNext();
+      const { data, dataState } = await stream.takeNext();
+
+      invariant(dataState === "complete", "dataState should be complete");
+
       data.currentUser.__typename;
       data.currentUser.id;
       data.currentUser.name;
@@ -1165,7 +1180,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -1206,7 +1221,17 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    const { data, dataState } = await stream.takeNext();
+
+    invariant(dataState === "complete", "dataState should be complete");
 
     const id = client.cache.identify(data.currentUser);
 
@@ -1227,13 +1252,16 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         age
       }
     `;
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1269,7 +1297,18 @@ describe("client.watchQuery", () => {
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
 
-    const { data } = await queryStream.takeNext();
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    const { data, dataState } = await queryStream.takeNext();
+
+    invariant(dataState === "complete", "dataState should be complete");
+
     const fragmentObservable = client.watchFragment({
       fragment,
       from: data.currentUser,
@@ -1300,14 +1339,17 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: MaskedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         id
         age
       }
     `;
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           name
@@ -1342,7 +1384,18 @@ describe("client.watchQuery", () => {
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
 
-    const { data } = await queryStream.takeNext();
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    const { data, dataState } = await queryStream.takeNext();
+
+    invariant(dataState === "complete", "dataState should be complete");
+
     const fragmentObservable = client.watchFragment({
       fragment,
       from: data.currentUser,
@@ -1379,13 +1432,16 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const fragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    const fragment: TypedDocumentNode<
+      UserFieldsFragment,
+      Record<string, never>
+    > = gql`
       fragment UserFields on User {
         age
       }
     `;
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           name
@@ -1419,7 +1475,18 @@ describe("client.watchQuery", () => {
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
 
-    const { data } = await queryStream.takeNext();
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
+    const { data, dataState } = await queryStream.takeNext();
+
+    invariant(dataState === "complete", "dataState should be complete");
+
     const fragmentObservable = client.watchFragment({
       fragment,
       from: data.currentUser,
@@ -1458,7 +1525,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1478,7 +1545,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache({ fragments }),
       link: new ApolloLink(() => {
-        return Observable.of({
+        return of({
           data: {
             currentUser: {
               __typename: "User",
@@ -1520,7 +1587,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -1569,20 +1636,25 @@ describe("client.watchQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const observable = client.watchQuery({ query });
+    const observable = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
+    });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     const result = await observable.refetch();
 
@@ -1603,11 +1675,23 @@ describe("client.watchQuery", () => {
       },
     });
 
+    await expect(stream).toEmitTypedValue({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
     // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
     // see another result since the masked data did not change
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("masks result of setVariables", async () => {
@@ -1679,6 +1763,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -1693,7 +1785,7 @@ describe("client.watchQuery", () => {
 
     const result = await observable.setVariables({ id: 2 });
 
-    expect(result?.data).toEqual({
+    expect(result.data).toEqual({
       user: {
         __typename: "User",
         id: 2,
@@ -1701,24 +1793,32 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         user: {
           __typename: "User",
           id: 2,
           name: "User 2",
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
-  test("masks result of setOptions", async () => {
+  test("masks result of reobserve", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -1787,6 +1887,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     {
       const { data } = await stream.takeNext();
 
@@ -1799,9 +1907,9 @@ describe("client.watchQuery", () => {
       });
     }
 
-    const result = await observable.setOptions({ variables: { id: 2 } });
+    const result = await observable.reobserve({ variables: { id: 2 } });
 
-    expect(result?.data).toEqual({
+    expect(result.data).toEqual({
       user: {
         __typename: "User",
         id: 2,
@@ -1809,21 +1917,29 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         user: {
           __typename: "User",
           id: 2,
           name: "User 2",
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
   });
 
   test("does not mask data passed to updateQuery", async () => {
@@ -1860,6 +1976,7 @@ describe("client.watchQuery", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeQuery({
@@ -1977,6 +2094,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     link.simulateResult({
       result: {
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
@@ -1984,13 +2109,15 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         greeting: { message: "Hello world", __typename: "Greeting" },
-      });
-    }
+      },
+      dataState: "streaming",
+      loading: true,
+      networkStatus: NetworkStatus.streaming,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -2007,10 +2134,18 @@ describe("client.watchQuery", () => {
       },
     });
 
-    // Since the fragment data is masked, we don't expect to get another result
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    // Even though `data` didn't change, the `dataStatus` is updated to reflect
+    // that the full result has been stremed in so we expect another render
+    // value.
+    await expect(stream).toEmitTypedValue({
+      data: {
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(client.readQuery({ query })).toEqual({
       greeting: {
@@ -2066,6 +2201,14 @@ describe("client.watchQuery", () => {
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -2166,6 +2309,14 @@ describe("client.watchQuery", () => {
 
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -2280,6 +2431,14 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, variables: { id: 1 } });
     const stream = new ObservableStream(observable);
 
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+
     link.simulateResult({
       result: {
         data: { greeting: { message: "Hello world", __typename: "Greeting" } },
@@ -2350,7 +2509,7 @@ describe("client.watchQuery", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2389,17 +2548,27 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
@@ -2416,10 +2585,11 @@ describe("client.watchQuery", () => {
         __typename: "User";
         id: number;
         name: string;
+        age: number;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2458,37 +2628,45 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).not.toHaveBeenCalled();
   });
 
   test("does not warn on no-cache queries when all fragments use `@unmask`", async () => {
     using _ = spyOnConsole("warn");
-    type UserFieldsFragment = {
-      age: number;
-    } & { " $fragmentName"?: "UserFieldsFragment" };
 
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+        age: number;
+      };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2527,18 +2705,28 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).not.toHaveBeenCalled();
   });
@@ -2554,10 +2742,11 @@ describe("client.watchQuery", () => {
         __typename: "User";
         id: number;
         name: string;
+        age: number;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2602,18 +2791,28 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
     const stream = new ObservableStream(observable);
 
-    {
-      const { data } = await stream.takeNext();
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
-      expect(data).toEqual({
+    await expect(stream).toEmitTypedValue({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
           age: 30,
         },
-      });
-    }
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
@@ -2656,6 +2855,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -2737,6 +2937,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: false,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -2823,6 +3024,7 @@ describe("client.watchFragment", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -2903,6 +3105,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -2965,6 +3168,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3049,6 +3253,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3147,6 +3352,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3272,6 +3478,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3392,6 +3599,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3515,6 +3723,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3580,6 +3789,7 @@ describe("client.watchFragment", () => {
     const client = new ApolloClient({
       dataMasking: true,
       cache: new InMemoryCache({ fragments }),
+      link: ApolloLink.empty(),
     });
 
     client.writeFragment({
@@ -3629,7 +3839,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -3689,7 +3899,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -3750,7 +3960,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: TypedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -3828,9 +4038,7 @@ describe("client.query", () => {
     });
 
     await expect(client.query({ query, errorPolicy: "none" })).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      })
+      new CombinedGraphQLErrors({ errors: [{ message: "User not logged in" }] })
     );
   });
 
@@ -3865,13 +4073,15 @@ describe("client.query", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+    const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(data).toEqual({
-      currentUser: null,
+    expect(result).toStrictEqualTyped({
+      data: { currentUser: null },
+      error: new CombinedGraphQLErrors({
+        data: { currentUser: null },
+        errors: [{ message: "User not logged in" }],
+      }),
     });
-
-    expect(errors).toEqual([{ message: "User not logged in" }]);
   });
 
   test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
@@ -3912,17 +4122,28 @@ describe("client.query", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+    const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(data).toEqual({
-      currentUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
+    expect(result).toStrictEqualTyped({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
       },
+      error: new CombinedGraphQLErrors({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: null,
+          },
+        },
+        errors: [{ message: "Could not determine age" }],
+      }),
     });
-
-    expect(errors).toEqual([{ message: "Could not determine age" }]);
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {
@@ -3939,7 +4160,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4003,7 +4224,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4067,7 +4288,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4131,7 +4352,7 @@ describe("client.query", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: MaskedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, Record<string, never>> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -4378,11 +4599,13 @@ describe("client.subscribe", () => {
       },
     });
 
-    const error = await stream.takeError();
-
-    expect(error).toEqual(
-      new ApolloError({ graphQLErrors: [{ message: "Something went wrong" }] })
-    );
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      error: new CombinedGraphQLErrors({
+        data: { addedComment: null },
+        errors: [{ message: "Something went wrong" }],
+      }),
+    });
   });
 
   test("handles errors returned from the subscription when errorPolicy is `all`", async () => {
@@ -4423,10 +4646,13 @@ describe("client.subscribe", () => {
       },
     });
 
-    const { data, errors } = await stream.takeNext();
-
-    expect(data).toEqual({ addedComment: null });
-    expect(errors).toEqual([{ message: "Something went wrong" }]);
+    await expect(stream).toEmitTypedValue({
+      data: { addedComment: null },
+      error: new CombinedGraphQLErrors({
+        data: { addedComment: null },
+        errors: [{ message: "Something went wrong" }],
+      }),
+    });
   });
 
   test("masks partial data for errors returned from the subscription when errorPolicy is `all`", async () => {
@@ -4472,10 +4698,20 @@ describe("client.subscribe", () => {
       },
     });
 
-    const { data, errors } = await stream.takeNext();
-
-    expect(data).toEqual({ addedComment: { __typename: "Comment", id: 1 } });
-    expect(errors).toEqual([{ message: "Could not get author" }]);
+    await expect(stream).toEmitTypedValue({
+      data: { addedComment: { __typename: "Comment", id: 1 } },
+      error: new CombinedGraphQLErrors({
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: null,
+          },
+        },
+        errors: [{ message: "Could not get author" }],
+      }),
+    });
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {
@@ -4776,7 +5012,7 @@ describe("observableQuery.subscribeToMore", () => {
       ${fragment}
     `;
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: { query },
         result: {
@@ -4807,6 +5043,14 @@ describe("observableQuery.subscribeToMore", () => {
 
     const observable = client.watchQuery({ query });
     const queryStream = new ObservableStream(observable);
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await queryStream.takeNext();
@@ -4905,7 +5149,7 @@ describe("observableQuery.subscribeToMore", () => {
       ${fragment}
     `;
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: { query },
         result: {
@@ -4936,6 +5180,14 @@ describe("observableQuery.subscribeToMore", () => {
 
     const observable = client.watchQuery({ query });
     const queryStream = new ObservableStream(observable);
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await queryStream.takeNext();
@@ -5048,7 +5300,7 @@ describe("observableQuery.subscribeToMore", () => {
       ${fragment}
     `;
 
-    const mocks: MockedResponse[] = [
+    const mocks: MockLink.MockedResponse[] = [
       {
         request: { query },
         result: {
@@ -5074,6 +5326,14 @@ describe("observableQuery.subscribeToMore", () => {
     const client = new ApolloClient({ cache: new InMemoryCache(), link });
     const observable = client.watchQuery({ query });
     const queryStream = new ObservableStream(observable);
+
+    await expect(queryStream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
 
     {
       const { data } = await queryStream.takeNext();
@@ -5177,7 +5437,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5239,7 +5499,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5302,7 +5562,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: TypedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5364,7 +5624,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5436,7 +5696,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5468,9 +5728,7 @@ describe("client.mutate", () => {
     await expect(
       client.mutate({ mutation, errorPolicy: "none" })
     ).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      })
+      new CombinedGraphQLErrors({ errors: [{ message: "User not logged in" }] })
     );
   });
 
@@ -5491,7 +5749,7 @@ describe("client.mutate", () => {
         | null;
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5521,13 +5779,18 @@ describe("client.mutate", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.mutate({
-      mutation,
-      errorPolicy: "all",
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "all",
+      })
+    ).resolves.toStrictEqualTyped({
+      data: { updateUser: null },
+      error: new CombinedGraphQLErrors({
+        data: { updateUser: null },
+        errors: [{ message: "User not logged in" }],
+      }),
     });
-
-    expect(data).toEqual({ updateUser: null });
-    expect(errors).toEqual([{ message: "User not logged in" }]);
   });
 
   test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
@@ -5545,7 +5808,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5582,20 +5845,31 @@ describe("client.mutate", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.mutate({
-      mutation,
-      errorPolicy: "all",
-    });
-
-    expect(data).toEqual({
-      updateUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "all",
+      })
+    ).resolves.toStrictEqualTyped({
+      data: {
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
       },
+      error: new CombinedGraphQLErrors({
+        data: {
+          updateUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: null,
+          },
+        },
+        errors: [{ message: "Could not determine age" }],
+      }),
     });
-
-    expect(errors).toEqual([{ message: "Could not determine age" }]);
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {
@@ -5614,7 +5888,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5683,7 +5957,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5749,7 +6023,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5820,7 +6094,7 @@ describe("client.mutate", () => {
       };
     }
 
-    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, Record<string, never>> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -5880,49 +6154,3 @@ describe("client.mutate", () => {
     );
   });
 });
-
-class TestCache extends ApolloCache<unknown> {
-  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return {};
-  }
-
-  public evict(): boolean {
-    return false;
-  }
-
-  public extract(optimistic?: boolean): unknown {
-    return undefined;
-  }
-
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
-    transaction(this);
-  }
-
-  public read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>
-  ): T | null {
-    return null;
-  }
-
-  public removeOptimistic(id: string): void {}
-
-  public reset(): Promise<void> {
-    return new Promise<void>(() => null);
-  }
-
-  public restore(serializedState: unknown): ApolloCache<unknown> {
-    return this;
-  }
-
-  public watch(watch: Cache.WatchOptions): () => void {
-    return function () {};
-  }
-
-  public write<TResult = any, TVariables = any>(
-    _: Cache.WriteOptions<TResult, TVariables>
-  ): Reference | undefined {
-    return;
-  }
-}

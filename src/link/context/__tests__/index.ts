@@ -1,11 +1,13 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { Observable, of } from "rxjs";
 
-import { ApolloLink } from "../../core";
-import { Observable } from "../../../utilities/observables/Observable";
-import { execute } from "../../core/execute";
-import { setContext } from "../index";
-import { wait } from "../../../testing";
-import { ObservableStream } from "../../../testing/internal";
+import { ApolloLink } from "@apollo/client/link";
+import { setContext } from "@apollo/client/link/context";
+import {
+  executeWithDefaultContext as execute,
+  ObservableStream,
+  wait,
+} from "@apollo/client/testing/internal";
 
 const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));
 const query = gql`
@@ -24,13 +26,13 @@ it("can be used to set the context with a simple function", async () => {
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("can be used to set the context with a function returning a promise", async () => {
@@ -40,13 +42,13 @@ it("can be used to set the context with a function returning a promise", async (
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("can be used to set the context with a function returning a promise that is delayed", async () => {
@@ -56,13 +58,13 @@ it("can be used to set the context with a function returning a promise that is d
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
   const stream = new ObservableStream(execute(link, { query }));
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("handles errors in the lookup correclty", async () => {
@@ -73,7 +75,7 @@ it("handles errors in the lookup correclty", async () => {
   );
 
   const mockLink = new ApolloLink((operation) => {
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -89,7 +91,7 @@ it("handles errors in the lookup correctly with a normal function", async () => 
   });
 
   const mockLink = new ApolloLink((operation) => {
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -114,7 +116,7 @@ it("has access to the request information", async () => {
     expect(variables).toBe(true);
     expect(operation).toBe(true);
     expect(operationName).toBe("TEST");
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -122,7 +124,7 @@ it("has access to the request information", async () => {
     execute(link, { query, variables: { id: 1 } })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("has access to the context at execution time", async () => {
@@ -133,7 +135,7 @@ it("has access to the context at execution time", async () => {
   const mockLink = new ApolloLink((operation) => {
     const { count } = operation.getContext();
     expect(count).toEqual(2);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -141,7 +143,7 @@ it("has access to the context at execution time", async () => {
     execute(link, { query, context: { count: 1 } })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
 });
 
 it("unsubscribes correctly", async () => {
@@ -152,7 +154,7 @@ it("unsubscribes correctly", async () => {
   const mockLink = new ApolloLink((operation) => {
     const { count } = operation.getContext();
     expect(count).toEqual(2);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -164,7 +166,7 @@ it("unsubscribes correctly", async () => {
     })
   );
 
-  await expect(stream).toEmitValue({ data });
+  await expect(stream).toEmitTypedValue({ data });
   stream.unsubscribe();
 });
 

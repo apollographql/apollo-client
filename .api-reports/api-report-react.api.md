@@ -1597,7 +1597,7 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:183:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:192:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:194:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

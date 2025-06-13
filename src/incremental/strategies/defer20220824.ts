@@ -112,7 +112,7 @@ export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionRes
         const context = request.context ?? {};
         const http = (context.http ??= {});
         http.accept = [
-          "multipart/mixed;deferSpec=20220824;q=1.1",
+          "multipart/mixed;deferSpec=20220824",
           ...(http.accept || []),
         ];
       }

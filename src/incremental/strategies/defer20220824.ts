@@ -1,7 +1,7 @@
 import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql-17-alpha2";
 
-import { IncrementalPayload } from "@apollo/client";
+import type { IncrementalPayload } from "@apollo/client";
 import {
   DeepMerger,
   hasDirectives,

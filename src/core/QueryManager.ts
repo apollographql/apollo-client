@@ -43,14 +43,12 @@ import {
   checkDocument,
   filterMap,
   getDefaultValues,
-  getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
   graphQLResultHasError,
   hasDirectives,
   hasForcedResolvers,
   isDocumentNode,
-  isExecutionPatchResult,
   isNonNullObject,
   makeUniqueId,
   removeDirectivesFromDocument,
@@ -146,7 +144,9 @@ interface QueryManagerOptions {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
   localState: LocalState | undefined;
-  incrementalStrategy: Incremental.Strategy;
+  incrementalStrategy:
+    | Incremental.Strategy<Incremental.ExecutionResult>
+    | Incremental.Strategy<never>;
 }
 
 export class QueryManager {
@@ -162,7 +162,9 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly incrementalStrategy: Incremental.Strategy;
+  public readonly incrementalStrategy:
+    | Incremental.Strategy<Incremental.ExecutionResult>
+    | Incremental.Strategy<never>;
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;

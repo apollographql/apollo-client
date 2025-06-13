@@ -68,6 +68,11 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
+import type { Incremental } from "../../../incremental/index.js";
+import {
+  defer20220824,
+  notImplementedStrategy,
+} from "../../../incremental/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -76,6 +81,7 @@ type RenderSuspenseHookOptions<Props> = Omit<
   "wrapper"
 > & {
   client?: ApolloClient;
+  incrementalStrategy?: Incremental.Strategy<any>;
   link?: ApolloLink;
   cache?: ApolloCache;
   mocks?: MockLink.MockedResponse[];
@@ -119,6 +125,8 @@ async function renderSuspenseHook<Result, Props>(
     new ApolloClient({
       cache: options.cache || new InMemoryCache(),
       link: options.link || new MockLink(mocks),
+      incrementalStrategy:
+        options.incrementalStrategy || notImplementedStrategy(),
     });
 
   const { rerender, ...view } = await renderHookAsync(
@@ -7151,7 +7159,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      { link, incrementalStrategy: defer20220824() }
     );
 
     expect(renders.suspenseCount).toBe(1);
@@ -7251,7 +7259,7 @@ describe("useSuspenseQuery", () => {
 
       const { result, renders } = await renderSuspenseHook(
         () => useSuspenseQuery(query, { fetchPolicy }),
-        { link }
+        { link, incrementalStrategy: defer20220824() }
       );
 
       expect(renders.suspenseCount).toBe(1);
@@ -7362,7 +7370,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { fetchPolicy: "cache-first" }),
-      { cache }
+      { cache, incrementalStrategy: defer20220824() }
     );
 
     expect(result.current).toStrictEqualTyped({
@@ -7433,7 +7441,7 @@ describe("useSuspenseQuery", () => {
           fetchPolicy: "cache-first",
           returnPartialData: true,
         }),
-      { cache, link }
+      { cache, link, incrementalStrategy: defer20220824() }
     );
 
     expect(result.current).toStrictEqualTyped({
@@ -7557,7 +7565,11 @@ describe("useSuspenseQuery", () => {
 
     const link = new MockSubscriptionLink();
     const cache = new InMemoryCache();
-    const client = new ApolloClient({ cache, link });
+    const client = new ApolloClient({
+      cache,
+      link,
+      incrementalStrategy: defer20220824(),
+    });
 
     cache.writeQuery({
       query,
@@ -7700,7 +7712,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      { link, incrementalStrategy: defer20220824() }
     );
 
     expect(renders.suspenseCount).toBe(1);
@@ -7880,7 +7892,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      { link, incrementalStrategy: defer20220824() }
     );
 
     expect(renders.suspenseCount).toBe(1);
@@ -8012,7 +8024,11 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
     const link = new MockSubscriptionLink();
-    const client = new ApolloClient({ link, cache });
+    const client = new ApolloClient({
+      link,
+      cache,
+      incrementalStrategy: defer20220824(),
+    });
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
@@ -8236,7 +8252,11 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
     const link = new MockSubscriptionLink();
-    const client = new ApolloClient({ link, cache });
+    const client = new ApolloClient({
+      link,
+      cache,
+      incrementalStrategy: defer20220824(),
+    });
 
     const { result, rerenderAsync, renders } = await renderSuspenseHook(
       ({ skip }) => useSuspenseQuery(query, { skip }),
@@ -8383,7 +8403,11 @@ describe("useSuspenseQuery", () => {
       },
     });
     const link = new MockSubscriptionLink();
-    const client = new ApolloClient({ link, cache });
+    const client = new ApolloClient({
+      link,
+      cache,
+      incrementalStrategy: defer20220824(),
+    });
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { variables: { offset: 0 } }),
@@ -8670,7 +8694,11 @@ describe("useSuspenseQuery", () => {
         },
       });
       const link = new MockSubscriptionLink();
-      const client = new ApolloClient({ link, cache });
+      const client = new ApolloClient({
+        link,
+        cache,
+        incrementalStrategy: defer20220824(),
+      });
 
       const { result, renders } = await renderSuspenseHook(
         () => useSuspenseQuery(query, { variables: { offset: 0 } }),
@@ -8952,6 +8980,7 @@ describe("useSuspenseQuery", () => {
       () => useSuspenseQuery(query),
       {
         link,
+        incrementalStrategy: defer20220824(),
       }
     );
 
@@ -8993,6 +9022,7 @@ describe("useSuspenseQuery", () => {
       () => useSuspenseQuery(query),
       {
         link,
+        incrementalStrategy: defer20220824(),
       }
     );
 
@@ -9040,6 +9070,7 @@ describe("useSuspenseQuery", () => {
       () => useSuspenseQuery(query),
       {
         link,
+        incrementalStrategy: defer20220824(),
       }
     );
 
@@ -9089,7 +9120,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query),
-      { link }
+      { link, incrementalStrategy: defer20220824() }
     );
 
     link.simulateResult({
@@ -9228,7 +9259,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
-      { link }
+      { link, incrementalStrategy: defer20220824() }
     );
 
     link.simulateResult({
@@ -9446,7 +9477,7 @@ describe("useSuspenseQuery", () => {
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
-      { link }
+      { link, incrementalStrategy: defer20220824() }
     );
 
     link.simulateResult({
@@ -9610,7 +9641,11 @@ describe("useSuspenseQuery", () => {
 
     const cache = new InMemoryCache();
     const link = new MockSubscriptionLink();
-    const client = new ApolloClient({ link, cache });
+    const client = new ApolloClient({
+      link,
+      cache,
+      incrementalStrategy: defer20220824(),
+    });
 
     const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),

@@ -217,7 +217,7 @@
     "**/*.json"
   ],
   "overrides": {
-    "pretty-format": "^29.7.0",
+    "pretty-format": "^30.0.0",
     "@testing-library/dom": "$@testing-library/dom"
   }
 }

@@ -415,7 +415,6 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
             }
 
             if (
-              previousResult &&
               previousResult.data &&
               !equal(previousResult.data, result.data)
             ) {

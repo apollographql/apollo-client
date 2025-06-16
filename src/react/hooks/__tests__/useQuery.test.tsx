@@ -17,7 +17,7 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import type { ReactNode } from "react";
 import React, { Fragment, useEffect, useState } from "react";
-import { asapScheduler, Observable, observeOn, of } from "rxjs";
+import { asapScheduler, delay, Observable, observeOn, of } from "rxjs";
 
 import type {
   FetchPolicy,
@@ -7626,7 +7626,7 @@ describe("useQuery Hook", () => {
       let linkCount = 0;
       const link = new ApolloLink(() =>
         // Emit the value  async so we can observe the loading state
-        of({ data: { hello: ++linkCount } }).pipe(observeOn(asapScheduler))
+        of({ data: { hello: ++linkCount } }).pipe(delay(100))
       );
 
       const client = new ApolloClient({

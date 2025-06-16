@@ -199,12 +199,12 @@ export const createPersistedQueryLink = (
             // but we don't pass any unexpected data to userland callbacks
             response = undefined;
           }
-          if ((response && response.errors) || networkError) {
+          if (response?.errors || networkError) {
             retried = true;
 
             const graphQLErrors: GraphQLFormattedError[] = [];
 
-            const responseErrors = response && response.errors;
+            const responseErrors = response?.errors;
             if (isNonEmptyArray(responseErrors)) {
               graphQLErrors.push(...responseErrors);
             }
@@ -216,7 +216,7 @@ export const createPersistedQueryLink = (
               try {
                 const result = JSON.parse(networkError.bodyText);
                 const networkErrors: GraphQLFormattedError[] | undefined =
-                  result && (result.errors as GraphQLFormattedError[]);
+                  result?.errors as GraphQLFormattedError[];
 
                 if (isNonEmptyArray(networkErrors)) {
                   graphQLErrors.push(...networkErrors);

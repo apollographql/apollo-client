@@ -12,7 +12,7 @@ import { ApolloClient, version } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
-  createPersistedQueryLink as createPersistedQuery,
+  createPersistedQueryLink,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import { ApolloProvider, useQuery } from "@apollo/client/react";
@@ -85,7 +85,7 @@ describe("react application", () => {
       { repeat: 1 }
     );
 
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
 
     const client = new ApolloClient({
       link,

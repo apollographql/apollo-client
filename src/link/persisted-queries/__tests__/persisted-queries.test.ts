@@ -537,67 +537,60 @@ describe("failure path", () => {
     ["error code", giveUpResponseWithCode],
   ] as const)(
     "does not try again after receiving NotSupported error (%s)",
-    (_description, failingResponse) =>
-      new Promise<void>((resolve, reject) => {
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: failingResponse })),
-          { repeat: 1 }
-        );
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
-        // mock it again so we can verify it doesn't try anymore
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
-        const link = createPersistedQueryLink({ sha256 }).concat(
-          createHttpLink()
+    async (_description, failingResponse) => {
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
+        { repeat: 1 }
+      );
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+      // mock it again so we can verify it doesn't try anymore
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+      const link = createPersistedQueryLink({ sha256 }).concat(
+        createHttpLink()
+      );
+
+      {
+        const stream = new ObservableStream(
+          execute(link, { query, variables })
         );
 
-        (
-          execute(link, {
-            query,
-            variables,
-          }) as Observable<FormattedExecutionResult>
-        ).subscribe((result) => {
-          expect(result.data).toEqual(data);
-          const [[, failure]] = fetchMock.calls();
-          expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
-          const [, [, success]] = fetchMock.calls();
-          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-          expect(
-            JSON.parse(success!.body!.toString()).extensions
-          ).toStrictEqual({
-            clientLibrary: {
-              name: "@apollo/client",
-              version,
-            },
-          });
-          (
-            execute(link, {
-              query,
-              variables,
-            }) as Observable<FormattedExecutionResult>
-          ).subscribe((secondResult) => {
-            expect(secondResult.data).toEqual(data);
-            const [, , [, success]] = fetchMock.calls();
-            expect(JSON.parse(success!.body!.toString()).query).toBe(
-              queryString
-            );
-            expect(
-              JSON.parse(success!.body!.toString()).extensions
-            ).toStrictEqual({
-              clientLibrary: { name: "@apollo/client", version },
-            });
-            resolve();
-          }, reject);
-        }, reject);
-      })
+        await expect(stream).toEmitTypedValue({ data });
+
+        const [[, failure]] = fetchMock.calls();
+        expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
+        const [, [, success]] = fetchMock.calls();
+        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+        expect(JSON.parse(success!.body!.toString()).extensions).toStrictEqual({
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
+        });
+      }
+
+      {
+        const stream = new ObservableStream(
+          execute(link, { query, variables })
+        );
+
+        await expect(stream).toEmitTypedValue({ data });
+
+        const [, , [, success]] = fetchMock.calls();
+        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+        expect(JSON.parse(success!.body!.toString()).extensions).toStrictEqual({
+          clientLibrary: { name: "@apollo/client", version },
+        });
+      }
+    }
   );
 
   it.each([

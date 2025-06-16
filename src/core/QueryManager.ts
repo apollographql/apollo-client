@@ -1053,7 +1053,6 @@ export class QueryManager {
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();
           observableQuery?.["resetNotifications"]();
-          // Throwing here effectively calls observer.error.
           throw new CombinedGraphQLErrors(result);
         }
 

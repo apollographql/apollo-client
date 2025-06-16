@@ -408,18 +408,15 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
           // new value.
           .pipe(observeOn(asapScheduler))
           .subscribe((result) => {
-            const previousResult = resultData.current;
+            const previous = resultData.current;
             // Make sure we're not attempting to re-render similar results
-            if (equal(previousResult, result)) {
+            if (equal(previous, result)) {
               return;
             }
 
-            if (
-              previousResult.data &&
-              !equal(previousResult.data, result.data)
-            ) {
+            if (previous.data && !equal(previous.data, result.data)) {
               // eslint-disable-next-line react-compiler/react-compiler
-              resultData.previousData = previousResult.data as TData;
+              resultData.previousData = previous.data as TData;
             }
 
             resultData.current = result;

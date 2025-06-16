@@ -1222,6 +1222,74 @@ test("retries when `retry` returns true", async () => {
   );
 });
 
+test("only retries query once", async () => {
+  const fetch = jest.fn(async () =>
+    Response.json({
+      errors: [
+        {
+          message: "Not found",
+          extensions: {
+            code: "PERSISTED_QUERY_NOT_FOUND",
+          },
+        },
+      ],
+    })
+  );
+
+  const link = createPersistedQueryLink({
+    sha256,
+    retry: () => true,
+  }).concat(createHttpLink({ fetch }));
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({
+    errors: [
+      {
+        message: "Not found",
+        extensions: { code: "PERSISTED_QUERY_NOT_FOUND" },
+      },
+    ],
+  });
+
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenNthCalledWith(
+    1,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+      }),
+    })
+  );
+  expect(fetch).toHaveBeenNthCalledWith(
+    2,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+        query: queryString,
+      }),
+    })
+  );
+});
+
 test("does not retry when `retry` returns false", async () => {
   const fetch = jest.fn(async () =>
     Response.json({

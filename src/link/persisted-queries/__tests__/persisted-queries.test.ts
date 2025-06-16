@@ -326,45 +326,45 @@ describe("failure path", () => {
     ["error code", errorResponseWithCode],
   ] as const)(
     "correctly identifies the error shape from the server (%s)",
-    (_description, failingResponse) =>
-      new Promise<void>((resolve, reject) => {
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: failingResponse })),
-          { repeat: 1 }
-        );
-        // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
-        // it limits the number of times the route can be used,
-        // after which the call to `fetch()` will fall through to be
-        // handled by any other routes defined...
-        // With `overwriteRoutes = false`, this means
-        // subsequent /graphql mocks will be used
-        // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
-        const link = createPersistedQueryLink({ sha256 }).concat(
-          createHttpLink()
-        );
-        (
-          execute(link, {
-            query,
-            variables,
-          }) as Observable<FormattedExecutionResult>
-        ).subscribe((result) => {
-          expect(result.data).toEqual(data);
-          const [[, failure], [, success]] = fetchMock.calls();
-          expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
-          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-          expect(
-            JSON.parse(success!.body!.toString()).extensions.persistedQuery
-              .sha256Hash
-          ).toBe(hash);
-          resolve();
-        }, reject);
-      })
+    async (_description, failingResponse) => {
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
+        { repeat: 1 }
+      );
+      // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
+      // it limits the number of times the route can be used,
+      // after which the call to `fetch()` will fall through to be
+      // handled by any other routes defined...
+      // With `overwriteRoutes = false`, this means
+      // subsequent /graphql mocks will be used
+      // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+      const link = createPersistedQueryLink({ sha256 }).concat(
+        createHttpLink()
+      );
+
+      const stream = new ObservableStream(
+        execute(link, {
+          query,
+          variables,
+        }) as Observable<FormattedExecutionResult>
+      );
+
+      await expect(stream).toEmitTypedValue({ data });
+
+      const [[, failure], [, success]] = fetchMock.calls();
+      expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
+      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+      expect(
+        JSON.parse(success!.body!.toString()).extensions.persistedQuery
+          .sha256Hash
+      ).toBe(hash);
+    }
   );
 
   it("sends GET for the first response only with useGETForHashedQueries", async () => {

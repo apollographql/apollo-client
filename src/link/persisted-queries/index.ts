@@ -189,13 +189,17 @@ export const createPersistedQueryLink = (
           },
           cb: () => void
         ) => {
+          if (retried) {
+            return cb();
+          }
+
           if (!isFormattedExecutionResult(response)) {
             // if the response is not an expected format, we set it to `undefined`
             // network errors will still be handled correctly,
             // but we don't pass any unexpected data to userland callbacks
             response = undefined;
           }
-          if (!retried && ((response && response.errors) || networkError)) {
+          if ((response && response.errors) || networkError) {
             retried = true;
 
             const graphQLErrors: GraphQLFormattedError[] = [];

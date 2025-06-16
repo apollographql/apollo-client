@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql-17-alpha2";
+import type { DocumentNode } from "graphql-17-alpha2";
 import {
   experimentalExecuteIncrementally,
   GraphQLID,
@@ -23,7 +23,6 @@ import {
   mockDeferStream,
   ObservableStream,
 } from "@apollo/client/testing/internal";
-import { error } from "console";
 
 // This is the test setup of the `graphql-js` v17.0.0-alpha.2 release:
 // https://github.com/graphql/graphql-js/blob/364cd71d1a26eb6f62661efd7fa399e91332d30d/src/execution/__tests__/defer-test.ts
@@ -790,9 +789,8 @@ test("merges cache updates that happen concurrently", async () => {
 });
 
 test("returns error on initial result", async () => {
-  const stream = mockDeferStream();
   const client = new ApolloClient({
-    link: stream.httpLink,
+    link: schemaLink,
     cache: new InMemoryCache(),
     incrementalStrategy: defer20220824(),
   });
@@ -804,11 +802,14 @@ test("returns error on initial result", async () => {
         ... @defer {
           name
         }
+        errorField
       }
     }
   `;
 
-  const observableStream = new ObservableStream(client.watchQuery({ query }));
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
@@ -818,35 +819,67 @@ test("returns error on initial result", async () => {
     partial: true,
   });
 
-  stream.enqueueInitialChunk({
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
     data: {
-      hero: null,
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        errorField: null,
+      },
     },
-    errors: [
-      {
-        message: "HeroNotFoundError",
-      } satisfies GraphQLFormattedError as any,
-    ],
-    hasNext: true,
+    error: new CombinedGraphQLErrors({
+      data: {
+        hero: {
+          __typename: "Hero",
+          id: "1",
+          errorField: null,
+        },
+      },
+      errors: [
+        {
+          message: "bad",
+          path: ["hero", "errorField"],
+        },
+      ],
+    }),
+    dataState: "complete",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
   });
 
   await expect(observableStream).toEmitTypedValue({
     loading: false,
-    data: undefined,
+    data: {
+      hero: {
+        __typename: "Hero",
+        id: "1",
+        errorField: null,
+        name: "Luke",
+      },
+    },
     error: new CombinedGraphQLErrors({
       data: {
-        hero: null,
+        hero: {
+          __typename: "Hero",
+          id: "1",
+          errorField: null,
+          name: "Luke",
+        },
       },
       errors: [
         {
-          message: "HeroNotFoundError",
-        } satisfies GraphQLFormattedError as any,
+          message: "bad",
+          path: ["hero", "errorField"],
+        },
       ],
     }),
-    dataState: "empty",
+    dataState: "complete",
     networkStatus: NetworkStatus.error,
-    partial: true,
+    partial: false,
   });
+
+  await expect(observableStream).not.toEmitAnything();
 });
 
 test("stream that returns an error but continues to stream", async () => {

@@ -478,13 +478,6 @@ export class ObservableQuery<
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
       : initialFetchPolicy || this.options.fetchPolicy;
-    const defaultResult: ApolloQueryResult<TData> = {
-      data: undefined,
-      dataState: "empty",
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    };
 
     const cacheResult = (): ApolloQueryResult<TData> => {
       const diff = this.getCacheDiff();
@@ -528,7 +521,7 @@ export class ObservableQuery<
         return empty;
 
       default:
-        return defaultResult;
+        return uninitialized;
     }
   }
 

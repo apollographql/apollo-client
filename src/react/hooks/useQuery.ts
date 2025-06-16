@@ -410,8 +410,6 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
           .subscribe((result) => {
             const previousResult = resultData.current;
             // Make sure we're not attempting to re-render similar results
-            // TODO: Eventually move this check inside ObservableQuery. We should
-            // probably not emit a new result if the result is the same.
             if (equal(previousResult, result)) {
               return;
             }

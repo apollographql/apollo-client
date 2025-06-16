@@ -20,7 +20,6 @@ export function notImplementedStrategy(): Incremental.Strategy<NonIncrementalRes
         !hasDirectives(["defer"], request.query),
         "`@defer` is not supported without specifying an incremental strategy. Please pass one as the `incrementalStrategy` option to `ApolloClient`."
       );
-      // TODO: throwing behavior needs a test - does this end up in the stream correctly?
 
       return request;
     },

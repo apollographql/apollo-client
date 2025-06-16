@@ -1,6 +1,7 @@
 import crypto from "crypto";
 
 import fetchMock from "fetch-mock";
+import type { FormattedExecutionResult } from "graphql";
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { times } from "lodash";
@@ -345,7 +346,12 @@ describe("failure path", () => {
           { repeat: 1 }
         );
         const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
-        execute(link, { query, variables }).subscribe((result) => {
+        (
+          execute(link, {
+            query,
+            variables,
+          }) as Observable<FormattedExecutionResult>
+        ).subscribe((result) => {
           expect(result.data).toEqual(data);
           const [[, failure], [, success]] = fetchMock.calls();
           expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
@@ -549,7 +555,12 @@ describe("failure path", () => {
         );
         const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
-        execute(link, { query, variables }).subscribe((result) => {
+        (
+          execute(link, {
+            query,
+            variables,
+          }) as Observable<FormattedExecutionResult>
+        ).subscribe((result) => {
           expect(result.data).toEqual(data);
           const [[, failure]] = fetchMock.calls();
           expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
@@ -563,7 +574,12 @@ describe("failure path", () => {
               version,
             },
           });
-          execute(link, { query, variables }).subscribe((secondResult) => {
+          (
+            execute(link, {
+              query,
+              variables,
+            }) as Observable<FormattedExecutionResult>
+          ).subscribe((secondResult) => {
             expect(secondResult.data).toEqual(data);
             const [, , [, success]] = fetchMock.calls();
             expect(JSON.parse(success!.body!.toString()).query).toBe(

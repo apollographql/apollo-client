@@ -40,6 +40,13 @@ export declare namespace defer20220824 {
   }
 }
 
+declare module "@apollo/client/link" {
+  export interface AdditionalFetchResultTypes {
+    defer20220824_InitialResult: defer20220824.InitialResult;
+    defer20220824_SubsequentResult: defer20220824.SubsequentResult;
+  }
+}
+
 class DeferRequest
   implements Incremental.IncrementalRequest<defer20220824.ExecutionResult>
 {

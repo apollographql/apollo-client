@@ -1,4 +1,3 @@
-import type { FormattedExecutionResult } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
@@ -10,7 +9,11 @@ import type {
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
 import { notImplementedStrategy } from "@apollo/client/incremental";
-import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
+import type {
+  ApolloLink,
+  FetchResult,
+  GraphQLRequest,
+} from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
@@ -685,7 +688,7 @@ export class ApolloClient implements DataProxy {
 
   public __requestRaw(
     payload: GraphQLRequest
-  ): Observable<FormattedExecutionResult> {
+  ): Observable<FetchResult<unknown>> {
     return execute(this.link, payload, { client: this });
   }
 

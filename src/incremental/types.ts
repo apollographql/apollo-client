@@ -1,6 +1,6 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "@apollo/client";
+import type { GraphQLRequest } from "@apollo/client";
 
 export declare namespace Incremental {
   export interface ExecutionResult {
@@ -10,12 +10,7 @@ export declare namespace Incremental {
 
   export type Path = ReadonlyArray<string | number>;
 
-  export interface Pending {
-    id: string;
-    path: Path;
-    label?: string;
-  }
-
+  /** @internal */
   export interface Strategy<
     TExecutionResult extends
       Incremental.ExecutionResult = Incremental.ExecutionResult,
@@ -40,6 +35,9 @@ export declare namespace Incremental {
     Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"],
   > {
     hasNext: boolean;
-    handle: <TData>(cacheData: TData, chunk: Chunk) => FetchResult<TData>;
+    handle: <TData>(
+      cacheData: TData | undefined,
+      chunk: Chunk
+    ) => FormattedExecutionResult<TData>;
   }
 }

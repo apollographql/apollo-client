@@ -37,7 +37,6 @@ export type {
   MutateResult,
   MutationQueryReducer,
   MutationQueryReducersMap,
-  MutationUpdaterFn,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
@@ -126,7 +125,6 @@ export type {
   OperationContext,
   Path,
   RequestHandler,
-  SingleExecutionResult,
 } from "@apollo/client/link";
 
 export {

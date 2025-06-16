@@ -1,5 +1,5 @@
 import { equal } from "@wry/equality";
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
@@ -40,7 +40,7 @@ export const enum CacheWriteBehavior {
 }
 
 interface LastWrite {
-  result: FetchResult<any>;
+  result: FormattedExecutionResult<any>;
   variables: WatchQueryOptions["variables"];
   dmCount: number | undefined;
 }
@@ -145,7 +145,7 @@ export class QueryInfo {
   }
 
   private shouldWrite(
-    result: FetchResult<any>,
+    result: FormattedExecutionResult<any>,
     variables: WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
@@ -165,14 +165,14 @@ export class QueryInfo {
   }
 
   public markQueryResult<TData, TVariables extends OperationVariables>(
-    result: Readonly<FetchResult<Readonly<TData>>>,
+    incoming: FetchResult<TData>,
     {
       document: query,
       variables,
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ): FetchResult<TData> {
+  ): FormattedExecutionResult<TData> {
     const { incrementalStrategy } = this.queryManager;
 
     const diffOptions = {
@@ -186,7 +186,7 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if (incrementalStrategy.isIncrementalInitialResult(result)) {
+    if (incrementalStrategy.isIncrementalInitialResult(incoming)) {
       this.incremental = (
         incrementalStrategy as Incremental.Strategy<any>
       ).startRequest({
@@ -194,16 +194,20 @@ export class QueryInfo {
       });
     }
 
+    let result: FormattedExecutionResult<TData>;
+
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      if (incrementalStrategy.isIncrementalResult(result)) {
-        result = this.incremental!.handle(undefined, result);
-      }
+      result =
+        incrementalStrategy.isIncrementalResult(incoming) ?
+          this.incremental!.handle<TData>(undefined, incoming)
+        : incoming;
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
 
-      if (incrementalStrategy.isIncrementalResult(result)) {
-        result = this.incremental!.handle(lastDiff.result, result);
-      }
+      result =
+        incrementalStrategy.isIncrementalResult(incoming) ?
+          this.incremental!.handle(lastDiff.result, incoming)
+        : incoming;
 
       if (shouldWriteResult(result, errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
@@ -303,7 +307,7 @@ export class QueryInfo {
     TVariables extends OperationVariables,
     TCache extends ApolloCache,
   >(
-    result: Readonly<FetchResult<Readonly<TData>>>,
+    result: any, //temporarily Readonly<FetchResult<Readonly<TData>>>,
     mutation: OperationInfo<
       TData,
       TVariables,
@@ -319,7 +323,7 @@ export class QueryInfo {
       keepRootFields?: boolean;
     },
     cache = this.cache
-  ): Promise<FetchResult<TData>> {
+  ): Promise<FormattedExecutionResult<TData>> {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
@@ -389,7 +393,7 @@ export class QueryInfo {
             if (complete && currentQueryResult) {
               // Run our reducer using the current query result and the mutation result.
               const nextQueryResult = updater(currentQueryResult, {
-                mutationResult: result as FetchResult<Unmasked<TData>>,
+                mutationResult: result,
                 queryName: (document && getOperationName(document)) || void 0,
                 queryVariables: variables!,
               });
@@ -450,7 +454,10 @@ export class QueryInfo {
                 });
 
                 if (diff.complete) {
-                  result = { ...(result as FetchResult), data: diff.result };
+                  result = {
+                    ...(result as FormattedExecutionResult),
+                    data: diff.result,
+                  };
                 }
               }
 
@@ -458,14 +465,10 @@ export class QueryInfo {
               // either a SingleExecutionResult or the final ExecutionPatchResult,
               // call the update function.
               if (!this.hasNext) {
-                update(
-                  cache as TCache,
-                  result as FetchResult<Unmasked<TData>>,
-                  {
-                    context: mutation.context,
-                    variables: mutation.variables,
-                  }
-                );
+                update(cache as TCache, result, {
+                  context: mutation.context,
+                  variables: mutation.variables,
+                });
               }
             }
 
@@ -551,7 +554,7 @@ export class QueryInfo {
   }
 
   public markSubscriptionResult<TData, TVariables extends OperationVariables>(
-    result: Readonly<FetchResult<TData>>,
+    result: FormattedExecutionResult<TData>,
     {
       document,
       variables,
@@ -579,7 +582,7 @@ export class QueryInfo {
 }
 
 function shouldWriteResult<T>(
-  result: FetchResult<T>,
+  result: FormattedExecutionResult<T>,
   errorPolicy: ErrorPolicy = "none"
 ) {
   const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";

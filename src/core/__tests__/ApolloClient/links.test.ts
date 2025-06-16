@@ -1,5 +1,5 @@
 import { gql } from "graphql-tag";
-import type { Subscription } from "rxjs";
+import type { Observable, Subscription } from "rxjs";
 import { map, of } from "rxjs";
 
 import type { NextLink, Operation, Reference } from "@apollo/client";
@@ -8,6 +8,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing";
+import { FormattedExecutionResult } from "graphql";
 
 describe("Link interactions", () => {
   it("includes the client on the operation for eviction links", (done) => {
@@ -33,7 +34,7 @@ describe("Link interactions", () => {
     const evictionLink = (operation: Operation, forward: NextLink) => {
       const { client } = operation;
       expect(client).toBeDefined();
-      return forward(operation).pipe(
+      return (forward(operation) as Observable<FormattedExecutionResult>).pipe(
         map((result) => {
           setTimeout(() => {
             const cacheResult = client.cache.read({ query, optimistic: true });

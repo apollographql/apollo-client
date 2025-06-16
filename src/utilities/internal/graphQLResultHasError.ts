@@ -1,6 +1,8 @@
-import type { FetchResult } from "@apollo/client/link";
+import type { FormattedExecutionResult } from "graphql";
 
 /** @internal */
-export function graphQLResultHasError(result: FetchResult<any>): boolean {
+export function graphQLResultHasError(
+  result: FormattedExecutionResult<any>
+): boolean {
   return !!result.errors?.length;
 }

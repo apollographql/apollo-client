@@ -1,4 +1,4 @@
-import { print } from "graphql";
+import { FormattedExecutionResult, print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 
@@ -607,7 +607,7 @@ describe("OperationBatcher", () => {
       throw new Error("next should never be called");
     });
     batcher.enqueueRequest({ operation: operation2 }).subscribe((result) => {
-      expect(result.data).toBe(data2);
+      expect((result as FormattedExecutionResult).data).toBe(data2);
 
       // The batch should've been fired by now.
       expect(batcher["batchesByKey"].get("")).toBeUndefined();

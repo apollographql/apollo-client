@@ -144,7 +144,6 @@ describe("graphql-js test cases", () => {
     const incoming = run(query);
     {
       const chunk = (await incoming.next()).value!;
-      console.log("chunk", chunk);
       expect(strategy.isIncrementalResult(chunk)).toBe(true);
       expect(strategy.isIncrementalInitialResult(chunk)).toBe(true);
       expect(strategy.isIncrementalSubsequentResult(chunk)).toBe(false);

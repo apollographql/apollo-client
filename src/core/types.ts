@@ -1,4 +1,4 @@
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 import type {
   NextNotification,
   Observable,
@@ -7,7 +7,6 @@ import type {
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
@@ -228,7 +227,7 @@ export type GetDataState<
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FetchResult<Unmasked<T>>;
+    mutationResult: FormattedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }
@@ -238,24 +237,13 @@ export type MutationQueryReducersMap<T = { [key: string]: any }> = {
   [queryName: string]: MutationQueryReducer<T>;
 };
 
-/**
- * @deprecated Use `MutationUpdaterFunction` instead.
- */
-export type MutationUpdaterFn<T = { [key: string]: any }> = (
-  // The MutationUpdaterFn type is broken because it mistakenly uses the same
-  // type parameter T for both the cache and the mutationResult. Do not use this
-  // type unless you absolutely need it for backwards compatibility.
-  cache: ApolloCache,
-  mutationResult: FetchResult<T>
-) => void;
-
 export type MutationUpdaterFunction<
   TData,
   TVariables,
   TCache extends ApolloCache,
 > = (
   cache: TCache,
-  result: Omit<FetchResult<Unmasked<TData>>, "context">,
+  result: Omit<FormattedExecutionResult<Unmasked<TData>>, "context">,
   options: {
     context?: DefaultContext;
     variables?: TVariables;

@@ -11,6 +11,7 @@ import {
 } from "@apollo/client/errors";
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
+import { isFormattedExecutionResult } from "@apollo/client/utilities/internal";
 
 export interface ErrorResponse {
   /**
@@ -27,7 +28,7 @@ export namespace ErrorLink {
    * Callback to be triggered when an error occurs within the link stack.
    */
   export interface ErrorHandler {
-    (error: ErrorResponse): Observable<FetchResult> | void;
+    (error: ErrorResponse): Observable<FormattedExecutionResult> | void;
   }
 }
 
@@ -44,7 +45,8 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
       try {
         sub = forward(operation).subscribe({
           next: (result) => {
-            if (result.errors) {
+            // TODO: We currently don't have a way to handle errors in incremental results
+            if (isFormattedExecutionResult(result) && result.errors) {
               retriedResult = errorHandler({
                 error: new CombinedGraphQLErrors(result),
                 response: result,

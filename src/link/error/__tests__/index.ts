@@ -240,9 +240,6 @@ describe("error handling", () => {
     await expect(stream).toEmitTypedValue({
       hasNext: true,
       incremental: [
-        // @ts-expect-error Our defer type and GraphQL incremental type do not
-        // line up. Our type request data and path but enqueueErrorChunk does
-        // not emit those values
         {
           errors: [
             {

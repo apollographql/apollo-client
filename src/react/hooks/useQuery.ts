@@ -368,8 +368,8 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     return {
       data, // Ensure always defined, even if result.data is missing.
       ...rest,
-      client: client,
-      observable: observable,
+      client,
+      observable,
       variables: observable.variables,
       previousData,
       ...obsQueryFields,

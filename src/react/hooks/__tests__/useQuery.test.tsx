@@ -3042,6 +3042,81 @@ describe("useQuery Hook", () => {
       await expect(renderStream).not.toRerender();
     });
 
+    it("starts polling when rerendering with pollInterval > 0", async () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+      let count = 0;
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query },
+              result: () => ({ data: { hello: `world ${++count}` } }),
+              delay: 10,
+              maxUsageCount: Number.POSITIVE_INFINITY,
+            },
+          ]}
+        >
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        ({ pollInterval }) => useQuery(query, { pollInterval }),
+        {
+          initialProps: { pollInterval: undefined as number | undefined },
+          wrapper,
+        }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ pollInterval: 50 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      getCurrentSnapshot().stopPolling();
+    });
+
     describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
       it("when defined as a global default option", async () => {
         using _ = enableFakeTimers();

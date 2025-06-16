@@ -363,10 +363,9 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   const previousData = resultData.previousData;
   return React.useMemo(() => {
-    const { data, partial, ...rest } = result;
+    const { partial, ...rest } = result;
 
     return {
-      data, // Ensure always defined, even if result.data is missing.
       ...rest,
       client,
       observable,

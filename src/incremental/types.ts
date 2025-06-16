@@ -32,7 +32,6 @@ export declare namespace Incremental {
     prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
     startRequest: (request: {
       query: DocumentNode;
-      initialChunk: TExecutionResult["Initial"];
     }) => IncrementalRequest<TExecutionResult>;
   }
 
@@ -41,6 +40,6 @@ export declare namespace Incremental {
     Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"],
   > {
     hasNext: boolean;
-    apply: <TData>(cacheData: TData, chunk: Chunk) => FetchResult<TData>;
+    handle: <TData>(cacheData: TData, chunk: Chunk) => FetchResult<TData>;
   }
 }

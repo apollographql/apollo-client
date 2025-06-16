@@ -45,21 +45,18 @@ class DeferRequest
 {
   public hasNext = true;
 
-  constructor(query: DocumentNode, initialChunk: defer20220824.InitialResult) {}
+  constructor(query: DocumentNode) {}
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
 
-  apply<TData>(
+  handle<TData>(
     // we'll get `undefined` here in case of a `no-cache` fetch policy,
     // so we'll continue with the last value this request had accumulated
     cacheData: TData = this.data,
     chunk: defer20220824.InitialResult | defer20220824.SubsequentResult
   ) {
     this.hasNext = chunk.hasNext;
-    // TODO evaluate `this.pending` since this chunk might complete one of the
-    // `@defer` paths
-
     this.data = cacheData;
     if ("incremental" in chunk) {
       if (isNonEmptyArray(chunk.incremental)) {
@@ -104,8 +101,7 @@ export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionRes
 
       return request;
     },
-    startRequest: ({ query, initialChunk }) =>
-      new DeferRequest(query, initialChunk),
+    startRequest: ({ query }) => new DeferRequest(query),
   };
 }
 

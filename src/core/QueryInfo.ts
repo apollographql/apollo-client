@@ -2,6 +2,7 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { Incremental } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import {
@@ -11,7 +12,6 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { Incremental } from "../incremental/types.js";
 
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -191,19 +191,18 @@ export class QueryInfo {
         incrementalStrategy as Incremental.Strategy<any>
       ).startRequest({
         query,
-        initialChunk: result,
       });
     }
 
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
       if (incrementalStrategy.isIncrementalResult(result)) {
-        result = this.incremental!.apply(undefined, result);
+        result = this.incremental!.handle(undefined, result);
       }
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
 
       if (incrementalStrategy.isIncrementalResult(result)) {
-        result = this.incremental!.apply(lastDiff.result, result);
+        result = this.incremental!.handle(lastDiff.result, result);
       }
 
       if (shouldWriteResult(result, errorPolicy)) {
@@ -332,11 +331,10 @@ export class QueryInfo {
           incrementalStrategy as Incremental.Strategy<any>
         ).startRequest({
           query: mutation.document,
-          initialChunk: result,
         });
       }
 
-      result = this.incremental!.apply(
+      result = this.incremental!.handle(
         skipCache ? undefined : (
           cache.diff<TData>({
             id: "ROOT_MUTATION",

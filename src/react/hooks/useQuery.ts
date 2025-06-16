@@ -490,8 +490,9 @@ function shouldReobserve<TData, TVariables extends OperationVariables>(
   return (
     previousOptions.query !== options.query ||
     !equal(previousOptions.variables, options.variables) ||
-    (previousOptions.fetchPolicy === "standby" &&
-      options.fetchPolicy !== "standby")
+    (previousOptions.fetchPolicy !== options.fetchPolicy &&
+      (options.fetchPolicy === "standby" ||
+        previousOptions.fetchPolicy === "standby"))
   );
 }
 

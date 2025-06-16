@@ -2875,6 +2875,101 @@ describe("useQuery Hook", () => {
       getCurrentSnapshot().stopPolling();
     });
 
+    it("updates poll interval when rerendering with different pollInterval", async () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+      let count = 0;
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query },
+              result: () => ({ data: { hello: `world ${++count}` } }),
+              delay: 10,
+              maxUsageCount: Number.POSITIVE_INFINITY,
+            },
+          ]}
+        >
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        ({ pollInterval }) => useQuery(query, { pollInterval }),
+        { initialProps: { pollInterval: 50 }, wrapper }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      await rerender({ pollInterval: 100 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+      await expect(renderStream).not.toRerender({ timeout: 50 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        // We waited 50ms before, so waiting another 50ms + 50ms = 100ms
+        timeout: 50,
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 3" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
+
+      getCurrentSnapshot().stopPolling();
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {
       it("when defined as a global default option", async () => {
         using _ = enableFakeTimers();

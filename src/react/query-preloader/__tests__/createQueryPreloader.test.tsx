@@ -24,6 +24,7 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
+import { defer20220824 } from "@apollo/client/incremental";
 import type { Masked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -51,7 +52,6 @@ import {
   wait,
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { defer20220824 } from "../../../incremental/index.js";
 
 function createDefaultClient(mocks: MockLink.MockedResponse[]) {
   return new ApolloClient({

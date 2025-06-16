@@ -29,6 +29,7 @@ import {
   split,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { defer20220824 } from "@apollo/client/incremental";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -72,7 +73,6 @@ import type {
   MaskedVariablesCaseData,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
-import { defer20220824 } from "../../../incremental/index.js";
 
 afterEach(() => {
   jest.useRealTimers();

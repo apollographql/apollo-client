@@ -32,6 +32,7 @@ import {
   split,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { defer20220824 } from "@apollo/client/incremental";
 import type { QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -65,7 +66,6 @@ import type {
   FetchMoreFunction,
   RefetchFunction,
 } from "../../internal/types.js";
-import { defer20220824 } from "../../../incremental/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

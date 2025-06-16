@@ -20,6 +20,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
+import { defer20220824 } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import {
   BaseHttpLink,
@@ -36,7 +37,6 @@ import {
 import type { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
-import { defer20220824 } from "../../../incremental/index.js";
 
 const sampleQuery = gql`
   query SampleQuery {

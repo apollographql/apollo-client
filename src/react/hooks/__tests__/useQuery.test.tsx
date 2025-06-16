@@ -32,6 +32,7 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { defer20220824 } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
@@ -54,7 +55,6 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import type { DeepPartial, Reference } from "@apollo/client/utilities";
 import { concatPagination } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import { defer20220824 } from "../../../incremental/index.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

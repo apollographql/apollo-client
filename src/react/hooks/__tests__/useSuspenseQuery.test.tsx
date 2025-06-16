@@ -32,6 +32,11 @@ import {
   NetworkStatus,
   split,
 } from "@apollo/client";
+import type { Incremental } from "@apollo/client/incremental";
+import {
+  defer20220824,
+  notImplementedStrategy,
+} from "@apollo/client/incremental";
 import type {
   Masked,
   MaskedDocumentNode,
@@ -68,11 +73,6 @@ import type {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
 } from "../../../core/watchQueryOptions.js";
-import type { Incremental } from "../../../incremental/index.js";
-import {
-  defer20220824,
-  notImplementedStrategy,
-} from "../../../incremental/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

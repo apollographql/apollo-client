@@ -1491,17 +1491,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private maskResult<T extends { data: any }>(result: T): T {
-    return result && "data" in result ?
-        {
-          ...result,
-          data: this.queryManager.maskOperation({
-            document: this.query,
-            data: result.data,
-            fetchPolicy: this.options.fetchPolicy,
-            cause: this,
-          }),
-        }
-      : result;
+    return {
+      ...result,
+      data: this.queryManager.maskOperation({
+        document: this.query,
+        data: result.data,
+        fetchPolicy: this.options.fetchPolicy,
+        cause: this,
+      }),
+    };
   }
 
   private dirty: boolean = false;

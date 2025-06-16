@@ -32,6 +32,7 @@ import type { GetDataState as GetDataState_2 } from '@apollo/client';
 import { gql } from '@apollo/client';
 import type { GraphQLRequest } from '@apollo/client/link';
 import type { HookWrappers } from '@apollo/client/react/internal';
+import type { Incremental } from '@apollo/client/incremental';
 import type { InternalRefetchQueriesInclude as InternalRefetchQueriesInclude_2 } from '@apollo/client';
 import type { InteropObservable } from 'rxjs';
 import type { IsAny } from '@apollo/client/utilities/internal';
@@ -167,6 +168,7 @@ interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+    incrementalStrategy?: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
@@ -689,6 +691,8 @@ class QueryManager {
     // (undocumented)
     getVariables<TVariables>(document: DocumentNode, variables?: TVariables): TVariables;
     // (undocumented)
+    readonly incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
+    // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable<FetchResult<any>>;
         restart?: () => void;
@@ -752,6 +756,8 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
+    // (undocumented)
+    incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     // (undocumented)
     localState: LocalState | undefined;
     // (undocumented)
@@ -1597,7 +1603,7 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:186:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:192:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:194:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

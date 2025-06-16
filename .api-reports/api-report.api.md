@@ -166,6 +166,8 @@ export interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+    // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
+    incrementalStrategy?: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
@@ -1276,6 +1278,54 @@ interface IgnoreModifier {
 const _ignoreModifier: unique symbol;
 
 // @public (undocumented)
+namespace Incremental {
+    // (undocumented)
+    interface ExecutionResult {
+        // (undocumented)
+        Initial: any;
+        // (undocumented)
+        Subsequent: any;
+    }
+    // (undocumented)
+    interface IncrementalRequest<TExecutionResult extends Incremental.ExecutionResult, Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"]> {
+        // (undocumented)
+        handle: <TData>(cacheData: TData, chunk: Chunk) => FetchResult<TData>;
+        // (undocumented)
+        hasNext: boolean;
+    }
+    // (undocumented)
+    type Path = ReadonlyArray<string | number>;
+    // (undocumented)
+    interface Pending {
+        // (undocumented)
+        id: string;
+        // (undocumented)
+        label?: string;
+        // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        path: Path;
+    }
+    // (undocumented)
+    interface Strategy<TExecutionResult extends Incremental.ExecutionResult = Incremental.ExecutionResult> {
+        // (undocumented)
+        isIncrementalInitialResult: (result: Record<string, any>) => result is TExecutionResult["Initial"];
+        // (undocumented)
+        isIncrementalResult: (result: Record<string, any>) => result is TExecutionResult["Initial"] | TExecutionResult["Subsequent"];
+        // (undocumented)
+        isIncrementalSubsequentResult: (result: Record<string, any>) => result is TExecutionResult["Subsequent"];
+        // (undocumented)
+        prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+        // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        startRequest: (request: {
+            query: DocumentNode;
+        }) => IncrementalRequest<TExecutionResult>;
+    }
+}
+
+// @public (undocumented)
 export interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
@@ -2098,6 +2148,8 @@ const print_2: ((ast: ASTNode) => string) & {
 class QueryInfo {
     constructor(queryManager: QueryManager, observableQuery?: ObservableQuery<any, any>);
     // (undocumented)
+    get hasNext(): boolean;
+    // (undocumented)
     readonly id: string;
     // (undocumented)
     lastRequestId: number;
@@ -2113,7 +2165,7 @@ class QueryInfo {
         keepRootFields?: boolean;
     }): boolean;
     // (undocumented)
-    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: FetchResult<TData>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
+    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: Readonly<FetchResult<Readonly<TData>>>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
         context?: DefaultContext;
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -2126,9 +2178,9 @@ class QueryInfo {
     // Warning: (ae-forgotten-export) The symbol "OperationInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markQueryResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): void;
+    markQueryResult<TData, TVariables extends OperationVariables>(result: Readonly<FetchResult<Readonly<TData>>>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): FetchResult<TData>;
     // (undocumented)
-    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
+    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: Readonly<FetchResult<TData>>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
     // (undocumented)
     resetLastWrite(): void;
 }
@@ -2185,6 +2237,8 @@ class QueryManager {
     getObservableQueries(include?: InternalRefetchQueriesInclude): Set<ObservableQuery<any, OperationVariables>>;
     // (undocumented)
     getVariables<TVariables>(document: DocumentNode, variables?: TVariables): TVariables;
+    // (undocumented)
+    readonly incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable<FetchResult<any>>;
@@ -2246,6 +2300,8 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
+    // (undocumented)
+    incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     // (undocumented)
     localState: LocalState | undefined;
     // (undocumented)
@@ -2772,8 +2828,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryInfo.ts:309:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryInfo.ts:313:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:186:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

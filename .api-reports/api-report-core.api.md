@@ -50,6 +50,7 @@ import { GraphQLRequest } from '@apollo/client/link';
 import { HttpLink } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
+import type { Incremental } from '@apollo/client/incremental';
 import { IncrementalPayload } from '@apollo/client/link';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
@@ -186,6 +187,7 @@ export interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+    incrementalStrategy?: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
@@ -685,6 +687,8 @@ export { PossibleTypesMap }
 class QueryInfo {
     constructor(queryManager: QueryManager, observableQuery?: ObservableQuery<any, any>);
     // (undocumented)
+    get hasNext(): boolean;
+    // (undocumented)
     readonly id: string;
     // (undocumented)
     lastRequestId: number;
@@ -700,7 +704,7 @@ class QueryInfo {
         keepRootFields?: boolean;
     }): boolean;
     // (undocumented)
-    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: FetchResult<TData>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
+    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: Readonly<FetchResult<Readonly<TData>>>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
         context?: DefaultContext;
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -713,9 +717,9 @@ class QueryInfo {
     // Warning: (ae-forgotten-export) The symbol "OperationInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markQueryResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): void;
+    markQueryResult<TData, TVariables extends OperationVariables>(result: Readonly<FetchResult<Readonly<TData>>>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): FetchResult<TData>;
     // (undocumented)
-    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
+    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: Readonly<FetchResult<TData>>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
     // (undocumented)
     resetLastWrite(): void;
 }
@@ -772,6 +776,8 @@ class QueryManager {
     getObservableQueries(include?: InternalRefetchQueriesInclude): Set<ObservableQuery<any, OperationVariables>>;
     // (undocumented)
     getVariables<TVariables>(document: DocumentNode_2, variables?: TVariables): TVariables;
+    // (undocumented)
+    readonly incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable_2<FetchResult<any>>;
@@ -833,6 +839,8 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
+    // (undocumented)
+    incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
     // (undocumented)
     localState: LocalState | undefined;
     // (undocumented)
@@ -1094,8 +1102,8 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 //
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryInfo.ts:309:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryInfo.ts:313:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:186:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

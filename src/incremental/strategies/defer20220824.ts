@@ -58,10 +58,22 @@ class DeferRequest
   ) {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-    if ("incremental" in chunk) {
+    if (isIncrementalSubsequentResult(chunk)) {
       if (isNonEmptyArray(chunk.incremental)) {
-        this.data = mergeIncrementalData(this.data, chunk as any);
+        const merger = new DeepMerger();
         for (const incremental of chunk.incremental) {
+          let { data, path } = incremental;
+          if (data && path) {
+            for (let i = path.length - 1; i >= 0; --i) {
+              const key = path[i];
+              const isNumericKey = !isNaN(+key);
+              const parent: Record<string | number, any> =
+                isNumericKey ? [] : {};
+              parent[key] = data;
+              data = parent as typeof data;
+            }
+            this.data = merger.merge(this.data, data);
+          }
           this.errors.push(...getGraphQLErrorsFromResult(incremental));
           Object.assign(this.extensions, incremental.extensions);
         }
@@ -122,31 +134,4 @@ function isIncrementalResult(
   return (
     isIncrementalInitialResult(result) || isIncrementalSubsequentResult(result)
   );
-}
-
-function mergeIncrementalData<TData extends object>(
-  prevResult: TData,
-  result:
-    | defer20220824.InitialResult<TData>
-    | defer20220824.SubsequentResult<TData>
-) {
-  let mergedData = prevResult;
-  const merger = new DeepMerger();
-  if (
-    isIncrementalSubsequentResult(result) &&
-    isNonEmptyArray(result.incremental)
-  ) {
-    result.incremental.forEach(({ data, path }) => {
-      if (!data || !path) return;
-      for (let i = path.length - 1; i >= 0; --i) {
-        const key = path[i];
-        const isNumericKey = !isNaN(+key);
-        const parent: Record<string | number, any> = isNumericKey ? [] : {};
-        parent[key] = data;
-        data = parent as typeof data;
-      }
-      mergedData = merger.merge(mergedData, data);
-    });
-  }
-  return mergedData as TData;
 }

@@ -12661,6 +12661,71 @@ test("unsubscribes from cache when changing from non-standby -> standby fetch po
   expect(cache["watches"].size).toBe(0);
 });
 
+test("rerenders with latest cache value when in standby changing to non-standby", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
+    {
+      initialProps: {
+        fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
+      },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      greeting: "Hello",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await rerender({ fetchPolicy: "standby" });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.writeQuery({ query, data: { greeting: "Hello updated" } });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  await rerender({ fetchPolicy: "cache-first" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      greeting: "Hello updated",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello" },
+    variables: {},
+  });
+});
+
 test("renders loading states at appropriate times on next fetch after updating `notifyOnNetworkStatusChange`", async () => {
   const { query } = setupSimpleCase();
 

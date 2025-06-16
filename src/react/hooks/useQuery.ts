@@ -343,16 +343,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const resultOverride = useSyncExternalStore(
-    () => () => {},
-    () => void 0,
-    () => (ssr === false ? useQuery.ssrDisabledResult : void 0)
-  );
-
   const result = useResultSubscription<TData, TVariables>(
     observable,
     resultData,
-    resultOverride
+    options.ssr
   );
 
   const obsQueryFields = React.useMemo(
@@ -399,7 +393,7 @@ function useInitialFetchPolicyIfNecessary<
 function useResultSubscription<TData, TVariables extends OperationVariables>(
   observable: ObsQueryWithMeta<TData, TVariables>,
   resultData: InternalResult<TData>,
-  resultOverride: ApolloQueryResult<any> | undefined
+  ssr: boolean | undefined
 ) {
   "use no memo";
   return useSyncExternalStore(
@@ -452,8 +446,8 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
 
       [observable, resultData]
     ),
-    () => resultOverride || resultData.current,
-    () => resultOverride || resultData.current
+    () => resultData.current,
+    () => (ssr === false ? useQuery.ssrDisabledResult : resultData.current)
   );
 }
 

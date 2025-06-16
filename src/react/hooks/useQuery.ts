@@ -412,13 +412,7 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
             // Make sure we're not attempting to re-render similar results
             // TODO: Eventually move this check inside ObservableQuery. We should
             // probably not emit a new result if the result is the same.
-            if (
-              previousResult &&
-              previousResult.loading === result.loading &&
-              previousResult.networkStatus === result.networkStatus &&
-              equal(previousResult.data, result.data) &&
-              equal(previousResult.error, result.error)
-            ) {
+            if (equal(previousResult, result)) {
               return;
             }
 

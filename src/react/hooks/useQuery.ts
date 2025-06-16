@@ -342,7 +342,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const result = useResultSubscription<TData, TVariables>(
+  const result = useResult<TData, TVariables>(
     observable,
     resultData,
     options.ssr
@@ -375,7 +375,7 @@ function useQuery_<TData, TVariables extends OperationVariables>(
   }, [result, client, observable, previousData, obsQueryFields]);
 }
 
-function useResultSubscription<TData, TVariables extends OperationVariables>(
+function useResult<TData, TVariables extends OperationVariables>(
   observable: ObsQueryWithMeta<TData, TVariables>,
   resultData: InternalResult<TData>,
   ssr: boolean | undefined

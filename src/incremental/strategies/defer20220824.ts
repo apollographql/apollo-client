@@ -1,5 +1,4 @@
 import type { GraphQLFormattedError } from "graphql";
-import type { DocumentNode } from "graphql-17-alpha2";
 
 import type { IncrementalPayload } from "@apollo/client";
 import {
@@ -45,7 +44,7 @@ class DeferRequest
 {
   public hasNext = true;
 
-  constructor(query: DocumentNode) {}
+  constructor() {}
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
@@ -101,7 +100,7 @@ export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionRes
 
       return request;
     },
-    startRequest: ({ query }) => new DeferRequest(query),
+    startRequest: () => new DeferRequest(),
   };
 }
 

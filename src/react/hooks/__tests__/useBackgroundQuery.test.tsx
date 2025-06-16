@@ -29,7 +29,7 @@ import {
   split,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -1429,7 +1429,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   const client = new ApolloClient({
     cache,
     link,
-    incrementalStrategy: defer20220824(),
+    incrementalHandler: new Defer20220824Handler(),
   });
 
   const renderStream = createDefaultProfiler<Data>();
@@ -3860,7 +3860,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   const client = new ApolloClient({
     link,
     cache,
-    incrementalStrategy: defer20220824(),
+    incrementalHandler: new Defer20220824Handler(),
   });
 
   const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();

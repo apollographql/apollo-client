@@ -24,7 +24,7 @@ import {
   InMemoryCache,
   NetworkStatus,
 } from "@apollo/client";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { Masked } from "@apollo/client/masking";
 import {
   ApolloProvider,
@@ -1826,7 +1826,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   const client = new ApolloClient({
     cache: new InMemoryCache(),
     link,
-    incrementalStrategy: defer20220824(),
+    incrementalHandler: new Defer20220824Handler(),
   });
 
   const preloadQuery = createQueryPreloader(client);

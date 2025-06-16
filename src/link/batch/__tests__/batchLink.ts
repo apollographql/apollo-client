@@ -1,4 +1,5 @@
-import { FormattedExecutionResult, print } from "graphql";
+import type { FormattedExecutionResult } from "graphql";
+import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
 

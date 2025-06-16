@@ -1,3 +1,4 @@
+import type { FormattedExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observable, Subscription } from "rxjs";
 import { map, of } from "rxjs";
@@ -8,7 +9,6 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockSubscriptionLink } from "@apollo/client/testing";
-import { FormattedExecutionResult } from "graphql";
 
 describe("Link interactions", () => {
   it("includes the client on the operation for eviction links", (done) => {

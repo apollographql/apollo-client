@@ -3081,7 +3081,7 @@ describe("ApolloClient", () => {
 
     await expect(() => client.query({ query })).rejects.toThrow(
       new InvariantError(
-        "`@defer` is not supported without specifying an incremental strategy. Please pass one as the `incrementalStrategy` option to `ApolloClient`."
+        "`@defer` is not supported without specifying an incremental handler. Please pass one as the `incrementalHandler` option to `ApolloClient`."
       )
     );
   });

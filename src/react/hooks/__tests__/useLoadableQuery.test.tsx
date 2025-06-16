@@ -32,7 +32,7 @@ import {
   split,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { QueryRef } from "@apollo/client/react";
 import {
   ApolloProvider,
@@ -1568,7 +1568,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   const client = new ApolloClient({
     cache,
     link,
-    incrementalStrategy: defer20220824(),
+    incrementalHandler: new Defer20220824Handler(),
   });
 
   using _disabledAct = disableActEnvironment();
@@ -4600,7 +4600,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   const client = new ApolloClient({
     link,
     cache,
-    incrementalStrategy: defer20220824(),
+    incrementalHandler: new Defer20220824Handler(),
   });
 
   using _disabledAct = disableActEnvironment();

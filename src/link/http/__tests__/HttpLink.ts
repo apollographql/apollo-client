@@ -20,7 +20,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import {
   BaseHttpLink,
@@ -1490,7 +1490,7 @@ describe("HttpLink", () => {
         const client = new ApolloClient({
           link,
           cache: new InMemoryCache(),
-          incrementalStrategy: defer20220824(),
+          incrementalHandler: new Defer20220824Handler(),
         });
         void client.query({ query: sampleDeferredQuery });
 
@@ -1690,7 +1690,7 @@ describe("HttpLink", () => {
         const client = new ApolloClient({
           link,
           cache: new InMemoryCache(),
-          incrementalStrategy: defer20220824(),
+          incrementalHandler: new Defer20220824Handler(),
         });
 
         const stream = new ObservableStream(

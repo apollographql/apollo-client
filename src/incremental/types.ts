@@ -11,7 +11,7 @@ export declare namespace Incremental {
   export type Path = ReadonlyArray<string | number>;
 
   /** @internal */
-  export interface Strategy<
+  export interface Handler<
     TExecutionResult extends
       Incremental.ExecutionResult = Incremental.ExecutionResult,
   > {

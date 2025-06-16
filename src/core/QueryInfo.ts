@@ -98,7 +98,7 @@ export class QueryInfo {
     | "refetchQueries"
     | "getDocumentInfo"
     | "broadcastQueries"
-    | "incrementalStrategy"
+    | "incrementalHandler"
   >;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
@@ -173,7 +173,7 @@ export class QueryInfo {
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
   ): FormattedExecutionResult<TData> {
-    const { incrementalStrategy } = this.queryManager;
+    const { incrementalHandler } = this.queryManager;
 
     const diffOptions = {
       query,
@@ -186,9 +186,9 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if (incrementalStrategy.isIncrementalInitialResult(incoming)) {
+    if (incrementalHandler.isIncrementalInitialResult(incoming)) {
       this.incremental = (
-        incrementalStrategy as Incremental.Strategy<any>
+        incrementalHandler as Incremental.Handler<any>
       ).startRequest({
         query,
       });
@@ -198,14 +198,14 @@ export class QueryInfo {
 
     if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
       result =
-        incrementalStrategy.isIncrementalResult(incoming) ?
+        incrementalHandler.isIncrementalResult(incoming) ?
           this.incremental!.handle<TData>(undefined, incoming)
         : incoming;
     } else {
       const lastDiff = this.cache.diff<any>(diffOptions);
 
       result =
-        incrementalStrategy.isIncrementalResult(incoming) ?
+        incrementalHandler.isIncrementalResult(incoming) ?
           this.incremental!.handle(lastDiff.result, incoming)
         : incoming;
 
@@ -327,12 +327,12 @@ export class QueryInfo {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    const { incrementalStrategy } = this.queryManager;
+    const { incrementalHandler } = this.queryManager;
 
-    if (incrementalStrategy.isIncrementalResult(result)) {
-      if (incrementalStrategy.isIncrementalInitialResult(result)) {
+    if (incrementalHandler.isIncrementalResult(result)) {
+      if (incrementalHandler.isIncrementalInitialResult(result)) {
         this.incremental = (
-          incrementalStrategy as Incremental.Strategy<any>
+          incrementalHandler as Incremental.Handler<any>
         ).startRequest({
           query: mutation.document,
         });

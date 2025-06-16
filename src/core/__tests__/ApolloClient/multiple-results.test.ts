@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockSubscriptionLink } from "@apollo/client/testing";
 import { ObservableStream, wait } from "@apollo/client/testing/internal";
 
@@ -38,7 +38,7 @@ describe("mutiple results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      incrementalStrategy: defer20220824(),
+      incrementalHandler: new Defer20220824Handler(),
     });
 
     const observable = client.watchQuery({
@@ -107,7 +107,7 @@ describe("mutiple results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      incrementalStrategy: defer20220824(),
+      incrementalHandler: new Defer20220824Handler(),
     });
 
     const observable = client.watchQuery({
@@ -190,7 +190,7 @@ describe("mutiple results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      incrementalStrategy: defer20220824(),
+      incrementalHandler: new Defer20220824Handler(),
     });
 
     const observable = client.watchQuery({
@@ -266,7 +266,7 @@ describe("mutiple results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      incrementalStrategy: defer20220824(),
+      incrementalHandler: new Defer20220824Handler(),
     });
 
     const observable = client.watchQuery({
@@ -335,7 +335,7 @@ describe("mutiple results", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
-      incrementalStrategy: defer20220824(),
+      incrementalHandler: new Defer20220824Handler(),
     });
 
     const observable = client.watchQuery({

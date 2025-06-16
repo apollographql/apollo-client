@@ -149,7 +149,7 @@ interface QueryManagerOptions {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
   localState: LocalState | undefined;
-  incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult>;
+  incrementalHandler: Incremental.Handler<Incremental.ExecutionResult>;
 }
 
 export class QueryManager {
@@ -165,7 +165,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult>;
+  public readonly incrementalHandler: Incremental.Handler<Incremental.ExecutionResult>;
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
@@ -213,7 +213,7 @@ export class QueryManager {
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
     this.localState = options.localState;
-    this.incrementalStrategy = options.incrementalStrategy;
+    this.incrementalHandler = options.incrementalHandler;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
@@ -900,7 +900,7 @@ export class QueryManager {
       const { inFlightLinkObservables, link } = this;
 
       try {
-        const operation = this.incrementalStrategy.prepareRequest({
+        const operation = this.incrementalHandler.prepareRequest({
           query: serverQuery,
           variables,
           operationName,

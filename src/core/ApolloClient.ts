@@ -8,7 +8,7 @@ import type {
   WatchFragmentResult,
 } from "@apollo/client/cache";
 import type { Incremental } from "@apollo/client/incremental";
-import { notImplementedStrategy } from "@apollo/client/incremental";
+import { NotImplementedHandler } from "@apollo/client/incremental";
 import type {
   ApolloLink,
   FetchResult,
@@ -154,7 +154,7 @@ export interface ApolloClientOptions {
    * Determines the strategy used to parse incremental chunks from `@defer`
    * queries.
    */
-  incrementalStrategy?: Incremental.Strategy<Incremental.ExecutionResult>;
+  incrementalHandler?: Incremental.Handler<Incremental.ExecutionResult>;
 }
 
 /**
@@ -255,7 +255,7 @@ export class ApolloClient implements DataProxy {
       devtools,
       dataMasking,
       link,
-      incrementalStrategy = notImplementedStrategy(),
+      incrementalHandler = new NotImplementedHandler(),
     } = options;
 
     this.link = link;
@@ -289,7 +289,7 @@ export class ApolloClient implements DataProxy {
       ssrMode,
       dataMasking: !!dataMasking,
       clientOptions: options,
-      incrementalStrategy,
+      incrementalHandler,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?

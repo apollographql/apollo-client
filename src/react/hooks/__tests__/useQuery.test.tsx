@@ -32,7 +32,7 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
@@ -9175,7 +9175,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9290,7 +9290,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9459,7 +9459,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9634,7 +9634,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9751,7 +9751,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9920,7 +9920,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -10107,7 +10107,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         cache,
         link,
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       cache.writeQuery({
@@ -10234,7 +10234,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         cache,
         link,
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       // We know we are writing partial data to the cache so suppress the console

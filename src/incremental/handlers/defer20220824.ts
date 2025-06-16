@@ -1,6 +1,6 @@
-import type { GraphQLFormattedError } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 
-import type { IncrementalPayload } from "@apollo/client";
+import type { GraphQLRequest, IncrementalPayload } from "@apollo/client";
 import {
   DeepMerger,
   getGraphQLErrorsFromResult,
@@ -10,7 +10,7 @@ import {
 
 import type { Incremental } from "../types.js";
 
-export declare namespace defer20220824 {
+export declare namespace Defer20220824Handler {
   export interface InitialResult<TData = Record<string, unknown>> {
     data: TData | null | undefined;
     errors?: ReadonlyArray<GraphQLFormattedError>;
@@ -42,17 +42,18 @@ export declare namespace defer20220824 {
 
 declare module "@apollo/client/link" {
   export interface AdditionalFetchResultTypes {
-    defer20220824_InitialResult: defer20220824.InitialResult;
-    defer20220824_SubsequentResult: defer20220824.SubsequentResult;
+    Defer20220824Handler_InitialResult: Defer20220824Handler.InitialResult;
+    Defer20220824Handler_SubsequentResult: Defer20220824Handler.SubsequentResult;
   }
 }
 
 class DeferRequest
-  implements Incremental.IncrementalRequest<defer20220824.ExecutionResult>
+  implements
+    Incremental.IncrementalRequest<Defer20220824Handler.ExecutionResult>
 {
   public hasNext = true;
 
-  constructor() {}
+  constructor(private strategy: Defer20220824Handler) {}
   private errors: Array<GraphQLFormattedError> = [];
   private extensions: Record<string, any> = {};
   private data: any = {};
@@ -61,11 +62,13 @@ class DeferRequest
     // we'll get `undefined` here in case of a `no-cache` fetch policy,
     // so we'll continue with the last value this request had accumulated
     cacheData: TData = this.data,
-    chunk: defer20220824.InitialResult | defer20220824.SubsequentResult
+    chunk:
+      | Defer20220824Handler.InitialResult
+      | Defer20220824Handler.SubsequentResult
   ) {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-    if (isIncrementalSubsequentResult(chunk)) {
+    if (this.strategy.isIncrementalSubsequentResult(chunk)) {
       if (isNonEmptyArray(chunk.incremental)) {
         const merger = new DeepMerger();
         for (const incremental of chunk.incremental) {
@@ -91,7 +94,7 @@ class DeferRequest
       // partial cache data or a `cache-and-network` fetch policy that already
       // has full data in the cache does not complain when trying to merge the
       // initial deferred server data with existing cache data.
-    } else if ("data" in chunk && chunk.hasNext) {
+    } else if (this.strategy.isIncrementalResult(chunk)) {
       this.data = new DeepMerger().merge(this.data, chunk.data);
       this.errors = getGraphQLErrorsFromResult(chunk);
       this.extensions = { ...chunk.extensions };
@@ -102,43 +105,45 @@ class DeferRequest
   }
 }
 
-export function defer20220824(): Incremental.Strategy<defer20220824.ExecutionResult> {
-  return {
-    isIncrementalResult,
-    isIncrementalSubsequentResult,
-    isIncrementalInitialResult,
-    prepareRequest: (request) => {
-      if (hasDirectives(["defer"], request.query)) {
-        const context = request.context ?? {};
-        const http = (context.http ??= {});
-        http.accept = [
-          "multipart/mixed;deferSpec=20220824",
-          ...(http.accept || []),
-        ];
-      }
+export class Defer20220824Handler
+  implements Incremental.Handler<Defer20220824Handler.ExecutionResult>
+{
+  isIncrementalSubsequentResult(
+    result: Record<string, any>
+  ): result is Defer20220824Handler.SubsequentResult {
+    return "incremental" in result;
+  }
 
-      return request;
-    },
-    startRequest: () => new DeferRequest(),
-  };
-}
+  isIncrementalInitialResult(
+    result: Record<string, any>
+  ): result is Defer20220824Handler.InitialResult {
+    return "hasNext" in result && "data" in result;
+  }
 
-function isIncrementalSubsequentResult(
-  result: Record<string, any>
-): result is defer20220824.SubsequentResult {
-  return "incremental" in result;
-}
+  isIncrementalResult(
+    result: Record<string, any>
+  ): result is
+    | Defer20220824Handler.SubsequentResult
+    | Defer20220824Handler.InitialResult {
+    return (
+      this.isIncrementalInitialResult(result) ||
+      this.isIncrementalSubsequentResult(result)
+    );
+  }
 
-function isIncrementalInitialResult(
-  result: Record<string, any>
-): result is defer20220824.InitialResult {
-  return "hasNext" in result && "data" in result;
-}
+  prepareRequest(request: GraphQLRequest): GraphQLRequest {
+    if (hasDirectives(["defer"], request.query)) {
+      const context = request.context ?? {};
+      const http = (context.http ??= {});
+      http.accept = [
+        "multipart/mixed;deferSpec=20220824",
+        ...(http.accept || []),
+      ];
+    }
 
-function isIncrementalResult(
-  result: Record<string, any>
-): result is defer20220824.SubsequentResult | defer20220824.InitialResult {
-  return (
-    isIncrementalInitialResult(result) || isIncrementalSubsequentResult(result)
-  );
+    return request;
+  }
+  startRequest(_: { query: DocumentNode }) {
+    return new DeferRequest(this);
+  }
 }

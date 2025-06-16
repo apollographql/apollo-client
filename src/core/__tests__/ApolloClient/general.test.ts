@@ -9,7 +9,7 @@ import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { FetchResult, RequestHandler } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
@@ -7469,7 +7469,7 @@ describe("ApolloClient", () => {
       const client = new ApolloClient({
         cache: new InMemoryCache({}),
         link: new ApolloLink(outgoingRequestSpy).concat(defer.httpLink),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       const query1 = new ObservableStream(

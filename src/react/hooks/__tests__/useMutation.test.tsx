@@ -31,7 +31,7 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
-import { defer20220824 } from "@apollo/client/incremental";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { Masked } from "@apollo/client/masking";
@@ -3909,7 +3909,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -4025,7 +4025,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       const onError = jest.fn();
@@ -4134,7 +4134,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
-        incrementalStrategy: defer20220824(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();

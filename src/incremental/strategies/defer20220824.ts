@@ -3,6 +3,7 @@ import type { GraphQLFormattedError } from "graphql";
 import type { IncrementalPayload } from "@apollo/client";
 import {
   DeepMerger,
+  getGraphQLErrorsFromResult,
   hasDirectives,
   isNonEmptyArray,
 } from "@apollo/client/utilities/internal";
@@ -61,8 +62,7 @@ class DeferRequest
       if (isNonEmptyArray(chunk.incremental)) {
         this.data = mergeIncrementalData(this.data, chunk as any);
         for (const incremental of chunk.incremental) {
-          this.errors.push(...(incremental.errors || []));
-
+          this.errors.push(...getGraphQLErrorsFromResult(incremental));
           Object.assign(this.extensions, incremental.extensions);
         }
       }
@@ -74,8 +74,8 @@ class DeferRequest
       // initial deferred server data with existing cache data.
     } else if ("data" in chunk && chunk.hasNext) {
       this.data = new DeepMerger().merge(this.data, chunk.data);
-      this.errors = [...(chunk.errors || [])];
-      this.extensions = chunk.extensions || {};
+      this.errors = getGraphQLErrorsFromResult(chunk);
+      this.extensions = { ...chunk.extensions };
     }
 
     const { data, errors, extensions } = this;

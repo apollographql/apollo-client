@@ -411,7 +411,7 @@ export class QueryManager {
                 }) as any,
               };
 
-              if (storeResult.errors?.length) {
+              if (graphQLResultHasError(storeResult)) {
                 result.error = new CombinedGraphQLErrors(storeResult);
               }
 
@@ -1052,7 +1052,7 @@ export class QueryManager {
           document: linkDocument,
           cacheWriteBehavior,
         });
-        const hasErrors = !!result.errors?.length;
+        const hasErrors = graphQLResultHasError(result);
 
         if (hasErrors && errorPolicy === "none") {
           queryInfo.resetLastWrite();

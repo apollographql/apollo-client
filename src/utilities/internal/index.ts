@@ -28,6 +28,7 @@ export { getFragmentFromSelection } from "./getFragmentFromSelection.js";
 export { getFragmentQueryDocument } from "./getFragmentQueryDocument.js";
 export { getFragmentDefinition } from "./getFragmentDefinition.js";
 export { getFragmentDefinitions } from "./getFragmentDefinitions.js";
+export { getGraphQLErrorsFromResult } from "./getGraphQLErrorsFromResult.js";
 export { getMainDefinition } from "./getMainDefinition.js";
 export { getOperationDefinition } from "./getOperationDefinition.js";
 export { getOperationName } from "./getOperationName.js";

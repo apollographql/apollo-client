@@ -23,7 +23,7 @@ import {
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { makeReference } from "@apollo/client/utilities/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -3063,6 +3063,27 @@ describe("ApolloClient", () => {
         new Error("refetch failed")
       );
     });
+  });
+
+  test("will error when used with `@defer` in a without specifying an incremental strategy", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    const query = gql`
+      query {
+        foo @defer {
+          bar
+        }
+      }
+    `;
+
+    await expect(() => client.query({ query })).rejects.toThrow(
+      new InvariantError(
+        "`@defer` is not supported without specifying an incremental strategy. Please pass one as the `incrementalStrategy` option to `ApolloClient`."
+      )
+    );
   });
 
   describe.skip("type tests", () => {

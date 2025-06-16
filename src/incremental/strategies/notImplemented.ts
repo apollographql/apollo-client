@@ -18,18 +18,13 @@ export function notImplementedStrategy(): Incremental.Strategy<NonIncrementalRes
     prepareRequest: (request) => {
       invariant(
         !hasDirectives(["defer"], request.query),
-        "`@defer` is not supported. Please use a different strategy."
+        "`@defer` is not supported without specifying an incremental strategy. Please pass one as the `incrementalStrategy` option to `ApolloClient`."
       );
       // TODO: throwing behavior needs a test - does this end up in the stream correctly?
 
       return request;
     },
-    startRequest: () => {
-      // TODO: throwing behavior needs a test - does this end up in the stream correctly?
-      invariant(
-        false,
-        "`@defer` is not supported. Please use a different strategy."
-      );
-    },
+    // This code path can never be reached, so we won't implement it.
+    startRequest: undefined as any,
   };
 }

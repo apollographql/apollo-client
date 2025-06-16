@@ -144,9 +144,7 @@ interface QueryManagerOptions {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
   localState: LocalState | undefined;
-  incrementalStrategy:
-    | Incremental.Strategy<Incremental.ExecutionResult>
-    | Incremental.Strategy<never>;
+  incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult>;
 }
 
 export class QueryManager {
@@ -162,9 +160,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly incrementalStrategy:
-    | Incremental.Strategy<Incremental.ExecutionResult>
-    | Incremental.Strategy<never>;
+  public readonly incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult>;
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;

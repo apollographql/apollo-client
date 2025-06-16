@@ -151,9 +151,7 @@ export interface ApolloClientOptions {
    * Determines the strategy used to parse incremental chunks from `@defer`
    * queries.
    */
-  incrementalStrategy?:
-    | Incremental.Strategy<Incremental.ExecutionResult>
-    | Incremental.Strategy<never>;
+  incrementalStrategy?: Incremental.Strategy<Incremental.ExecutionResult>;
 }
 
 /**

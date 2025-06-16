@@ -5,7 +5,12 @@ import type { Incremental } from "../types.js";
 
 const no = (_result: unknown): _result is never => false;
 
-export function notImplementedStrategy(): Incremental.Strategy<never> {
+interface NonIncrementalResult extends Incremental.ExecutionResult {
+  Initial: unknown;
+  Subsequent: unknown;
+}
+
+export function notImplementedStrategy(): Incremental.Strategy<NonIncrementalResult> {
   return {
     isIncrementalResult: no,
     isIncrementalSubsequentResult: no,

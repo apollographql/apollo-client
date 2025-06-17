@@ -30,6 +30,7 @@ import {
   ApolloClient,
   CombinedGraphQLErrors,
   NetworkStatus,
+  Streaming,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
@@ -46,6 +47,7 @@ import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type { SimpleCaseData } from "@apollo/client/testing/internal";
 import {
   enableFakeTimers,
+  markAsStreaming,
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
@@ -9212,12 +9214,12 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9327,12 +9329,12 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greetings: [
             { message: "Hello world", __typename: "Greeting" },
             { message: "Hello again", __typename: "Greeting" },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9361,7 +9363,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greetings: [
             {
               message: "Hello world",
@@ -9370,7 +9372,7 @@ describe("useQuery Hook", () => {
             },
             { message: "Hello again", __typename: "Greeting" },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9510,7 +9512,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           allProducts: [
             {
               __typename: "Product",
@@ -9529,7 +9531,7 @@ describe("useQuery Hook", () => {
               sku: "studio",
             },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9564,7 +9566,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           allProducts: [
             {
               __typename: "Product",
@@ -9587,7 +9589,7 @@ describe("useQuery Hook", () => {
               sku: "studio",
             },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9671,12 +9673,12 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9797,7 +9799,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           hero: {
             heroFriends: [
               {
@@ -9811,7 +9813,7 @@ describe("useQuery Hook", () => {
             ],
             name: "R2-D2",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9966,7 +9968,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           hero: {
             name: "R2-D2",
             heroFriends: [
@@ -9980,7 +9982,7 @@ describe("useQuery Hook", () => {
               },
             ],
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -10156,13 +10158,13 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -10290,13 +10292,13 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -11595,7 +11597,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {
@@ -11621,7 +11623,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {

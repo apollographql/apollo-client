@@ -13,6 +13,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
+  markAsStreaming,
   mockDeferStream,
   ObservableStream,
   setupPaginatedCase,
@@ -2323,7 +2324,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   defer.enqueueInitialChunk({ data: initialData, hasNext: true });
 
   await expect(stream).toEmitTypedValue({
-    data: initialData,
+    data: markAsStreaming(initialData),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -2343,7 +2344,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   });
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       people: [
         {
           __typename: "Person",
@@ -2355,7 +2356,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
           id: 2,
         },
       ],
-    },
+    }),
     dataState: "streaming",
     loading: true,
     networkStatus: NetworkStatus.streaming,
@@ -2399,7 +2400,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   );
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       people: [
         {
           __typename: "Person",
@@ -2416,7 +2417,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
           name: "Charles",
         },
       ],
-    },
+    }),
     dataState: "streaming",
     loading: true,
     // TODO: This should be streaming. Should be fixed with

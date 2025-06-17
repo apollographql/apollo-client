@@ -20,6 +20,7 @@ import {
 } from "@apollo/client";
 import { Defer20220824Handler } from "@apollo/client/incremental";
 import {
+  markAsStreaming,
   mockDeferStream,
   ObservableStream,
 } from "@apollo/client/testing/internal";
@@ -666,12 +667,12 @@ test("Defer20220824Handler can be used with `ApolloClient`", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
       },
-    },
+    }),
     dataState: "streaming",
     networkStatus: NetworkStatus.streaming,
     partial: true,
@@ -735,13 +736,13 @@ test("merges cache updates that happen concurrently", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
         job: "Farmer",
       },
-    },
+    }),
     dataState: "streaming",
     networkStatus: NetworkStatus.streaming,
     partial: true,
@@ -916,12 +917,12 @@ test("stream that returns an error but continues to stream", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
       },
-    },
+    }),
     dataState: "streaming",
     networkStatus: NetworkStatus.streaming,
     partial: true,

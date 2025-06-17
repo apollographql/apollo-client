@@ -21,6 +21,7 @@ import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
+  markAsStreaming,
   ObservableStream,
   spyOnConsole,
   wait,
@@ -3482,12 +3483,12 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitTypedValue({
-        data: {
+        data: markAsStreaming({
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,

@@ -18,10 +18,12 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
+  FormattedExecutionResultWithDataState,
   InternalRefetchQueriesInclude,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  Streaming,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -169,7 +171,7 @@ export class QueryInfo {
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: FetchResult<TData>,
     query: DocumentNode
-  ): FormattedExecutionResult<TData | DeepPartial<TData>> {
+  ): FormattedExecutionResult<TData | Streaming<TData>> {
     const { incrementalHandler } = this.queryManager;
 
     if (incrementalHandler.isIncrementalResult(incoming)) {
@@ -177,7 +179,7 @@ export class QueryInfo {
         query,
       });
 
-      return this.incremental!.handle<DeepPartial<TData> | TData>(
+      return this.incremental!.handle<Streaming<TData> | TData>(
         cacheData,
         incoming
       );
@@ -193,7 +195,7 @@ export class QueryInfo {
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ): FormattedExecutionResult<TData | DeepPartial<TData>> {
+  ): FormattedExecutionResult<TData | Streaming<TData>> {
     const diffOptions = {
       query,
       variables,
@@ -326,13 +328,17 @@ export class QueryInfo {
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
       awaitRefetchQueries?: boolean;
-      refetchQueries?: InternalRefetchQueriesInclude;
+      refetchQueries?:
+        | ((
+            result: FormattedExecutionResultWithDataState<Unmasked<TData>>
+          ) => InternalRefetchQueriesInclude)
+        | InternalRefetchQueriesInclude;
       removeOptimistic?: string;
       onQueryUpdated?: OnQueryUpdated<any>;
       keepRootFields?: boolean;
     },
     cache = this.cache
-  ): Promise<FormattedExecutionResult<TData | DeepPartial<TData>>> {
+  ): Promise<FormattedExecutionResult<TData | Streaming<TData>>> {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
@@ -360,6 +366,12 @@ export class QueryInfo {
     if (graphQLResultHasError(result) && mutation.errorPolicy === "none") {
       return Promise.resolve(result);
     }
+
+    const getResultWithDataState = () =>
+      ({
+        ...result,
+        dataState: this.hasNext ? "streaming" : "complete",
+      }) as FormattedExecutionResultWithDataState<Unmasked<TData>>;
 
     if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
       cacheWrites.push({
@@ -391,12 +403,9 @@ export class QueryInfo {
             if (complete && currentQueryResult) {
               // Run our reducer using the current query result and the mutation result.
               const nextQueryResult = updater(currentQueryResult, {
-                mutationResult: result satisfies FormattedExecutionResult<
-                  TData | DeepPartial<TData>
-                > as FormattedExecutionResult<any>,
+                mutationResult: getResultWithDataState(),
                 queryName: (document && getOperationName(document)) || void 0,
                 queryVariables: variables!,
-                dataState: this.hasNext ? "streaming" : "complete",
               });
 
               // Write the modified result back into the store if we got a new result.
@@ -413,9 +422,14 @@ export class QueryInfo {
       }
     }
 
+    let refetchQueries = mutation.refetchQueries;
+    if (typeof refetchQueries === "function") {
+      refetchQueries = refetchQueries(getResultWithDataState());
+    }
+
     if (
       cacheWrites.length > 0 ||
-      (mutation.refetchQueries || "").length > 0 ||
+      (refetchQueries || "").length > 0 ||
       mutation.update ||
       mutation.onQueryUpdated ||
       mutation.removeOptimistic
@@ -487,7 +501,7 @@ export class QueryInfo {
             }
           },
 
-          include: mutation.refetchQueries,
+          include: refetchQueries,
 
           // Write the final mutation.result to the root layer of the cache.
           optimistic: false,

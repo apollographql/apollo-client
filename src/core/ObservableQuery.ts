@@ -1727,7 +1727,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         : notification.value;
 
       if (result.error && result.dataState === "streaming") {
-        result.dataState = "complete";
+        // TODO
+        result.dataState = "complete" as any;
       }
 
       if (result.error) {

@@ -1,6 +1,7 @@
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { GraphQLRequest } from "@apollo/client";
+import type { DeepPartial } from "@apollo/client/utilities";
 
 export declare namespace Incremental {
   export type Path = ReadonlyArray<string | number>;
@@ -19,7 +20,7 @@ export declare namespace Incremental {
   export interface IncrementalRequest<Chunk extends Record<string, unknown>> {
     hasNext: boolean;
     handle: <TData>(
-      cacheData: TData | undefined | null,
+      cacheData: TData | DeepPartial<TData> | undefined | null,
       chunk: Chunk
     ) => FormattedExecutionResult<TData>;
   }

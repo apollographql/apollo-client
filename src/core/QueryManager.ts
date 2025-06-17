@@ -349,10 +349,6 @@ export class QueryManager {
           mergeMap((result) => {
             const storeResult: typeof result = { ...result };
 
-            // TODO: do we need to move this after `markMutationResult`?
-            if (typeof refetchQueries === "function") {
-              refetchQueries = refetchQueries(storeResult as any);
-            }
             return from(
               queryInfo.markMutationResult<TData, TVariables, TCache>(
                 storeResult,

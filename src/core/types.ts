@@ -9,8 +9,11 @@ import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { Unmasked } from "@apollo/client/masking";
-import type { DeepPartial } from "@apollo/client/utilities";
-import type { IsAny } from "@apollo/client/utilities/internal";
+import type { DeepPartial, HKT } from "@apollo/client/utilities";
+import type {
+  ApplyHKTImplementationWithDefault,
+  IsAny,
+} from "@apollo/client/utilities/internal";
 
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -22,6 +25,47 @@ export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;
 }[keyof T];
+
+export interface TypeOverrides {}
+
+namespace OverridableTypes {
+  export interface Defaults {
+    Streaming: Streaming;
+  }
+
+  interface Streaming extends HKT {
+    arg1: unknown; // TData
+    return: this["arg1"];
+  }
+}
+
+/**
+ * Returns a representation of `TData` while it is streaming.
+ *
+ * @defaultValue `TData` if no overrides are provided.
+ *
+ * @example
+ * You can override this type globally - this example shows how to override it
+ * with `DeepPartial<TData>`:
+ * ```ts
+ * import { HKT, DeepPartial } from "@apollo/client/utilities";
+ * type StreamingOverride<TData> = DeepPartial<TData>
+ * interface StreamingOverrideHKT extends HKT {
+ *   return: StreamingOverride<this["arg1"]>;
+ * }
+ * declare module "@apollo/client" {
+ *   export interface TypeOverrides {
+ *     Streaming: StreamingOverrideHKT;
+ *   }
+ * }
+ * ```
+ */
+export type Streaming<TData> = ApplyHKTImplementationWithDefault<
+  TypeOverrides,
+  "Streaming",
+  OverridableTypes.Defaults,
+  TData
+>;
 
 export interface DefaultContext extends Record<string, any> {
   /**
@@ -205,7 +249,13 @@ export type DataState<TData> =
       // Defer to the passed in type to properly type the `@defer` fields.
       data: TData;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
-      dataState: "complete" | "streaming";
+      dataState: "complete";
+    }
+  | {
+      // Defer to the passed in type to properly type the `@defer` fields.
+      data: Streaming<TData>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+      dataState: "streaming";
     }
   | {
       data: DeepPartial<TData>;
@@ -223,24 +273,31 @@ export type GetDataState<
   TState extends DataState<TData>["dataState"],
 > = Extract<DataState<TData>, { dataState: TState }>;
 
-// This is part of the public API, people write these functions in `updateQueries`.
-export type MutationQueryReducer<T> = (
-  previousResult: Record<string, any>,
-  options: {
-    queryName: string | undefined;
-    queryVariables: Record<string, any>;
-  } & (
+export type FormattedExecutionResultWithDataState<
+  TData = Record<string, unknown>,
+  TExtensions = Record<string, unknown>,
+> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> &
+  (
     | {
-        mutationResult: FormattedExecutionResult<Unmasked<T>>;
+        data?: TData | null;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "complete";
       }
     | {
-        mutationResult: FormattedExecutionResult<DeepPartial<Unmasked<T>>>;
+        data?: Streaming<TData> | null;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "streaming";
       }
-  )
+  );
+
+// This is part of the public API, people write these functions in `updateQueries`.
+export type MutationQueryReducer<T> = (
+  previousResult: Record<string, any>,
+  options: {
+    mutationResult: FormattedExecutionResultWithDataState<Unmasked<T>>;
+    queryName: string | undefined;
+    queryVariables: Record<string, any>;
+  }
 ) => Record<string, any>;
 
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {

@@ -27,6 +27,7 @@ export type {
   DataState,
   DefaultContext,
   ErrorLike,
+  FormattedExecutionResultWithDataState,
   GetDataState,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -47,9 +48,11 @@ export type {
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
+  Streaming,
   SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
+  TypeOverrides,
 } from "./types.js";
 export {
   CombinedGraphQLErrors,

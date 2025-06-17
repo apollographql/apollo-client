@@ -3167,17 +3167,17 @@ describe("ApolloClient", () => {
           updateUser: { __typename: "User", id: "1", age: 30 },
         },
         updateQueries: {
-          TestQuery: (_, { mutationResult, dataState }) => {
+          TestQuery: (_, { mutationResult }) => {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
               DeepPartial<Mutation> | null | undefined
             >();
 
-            if (dataState === "streaming") {
+            if (mutationResult.dataState === "streaming") {
               expectTypeOf(mutationResult.data).toMatchTypeOf<
                 DeepPartial<Mutation> | null | undefined
               >();
             }
-            if (dataState === "complete") {
+            if (mutationResult.dataState === "complete") {
               expectTypeOf(mutationResult.data).toMatchTypeOf<
                 Mutation | null | undefined
               >();
@@ -3188,8 +3188,18 @@ describe("ApolloClient", () => {
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<
-            Mutation | null | undefined
+            Mutation | DeepPartial<Mutation> | null | undefined
           >();
+          if (result.dataState === "streaming") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              DeepPartial<Mutation> | null | undefined
+            >();
+          }
+          if (result.dataState === "complete") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              Mutation | null | undefined
+            >();
+          }
 
           return "active";
         },
@@ -3265,8 +3275,18 @@ describe("ApolloClient", () => {
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<
-            UnmaskedMutation | null | undefined
+            UnmaskedMutation | DeepPartial<UnmaskedMutation> | null | undefined
           >();
+          if (result.dataState === "streaming") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              DeepPartial<UnmaskedMutation> | null | undefined
+            >();
+          }
+          if (result.dataState === "complete") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              UnmaskedMutation | null | undefined
+            >();
+          }
 
           return "active";
         },

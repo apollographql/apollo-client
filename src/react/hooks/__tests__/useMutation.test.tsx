@@ -4664,16 +4664,16 @@ describe.skip("Type Tests", () => {
         updateUser: { __typename: "User", id: "1", age: 30 },
       },
       updateQueries: {
-        TestQuery: (_, { mutationResult, dataState }) => {
+        TestQuery: (_, { mutationResult }) => {
           expectTypeOf(mutationResult.data).toMatchTypeOf<
             Mutation | DeepPartial<Mutation> | null | undefined
           >();
-          if (dataState === "streaming") {
+          if (mutationResult.dataState === "streaming") {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
               DeepPartial<Mutation> | null | undefined
             >();
           }
-          if (dataState === "complete") {
+          if (mutationResult.dataState === "complete") {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
               Mutation | null | undefined
             >();
@@ -4742,17 +4742,17 @@ describe.skip("Type Tests", () => {
         updateUser: { __typename: "User", id: "1", age: 30 },
       },
       updateQueries: {
-        TestQuery: (_, { mutationResult, dataState }) => {
+        TestQuery: (_, { mutationResult }) => {
           expectTypeOf(mutationResult.data).toMatchTypeOf<
             UnmaskedMutation | DeepPartial<UnmaskedMutation> | null | undefined
           >();
 
-          if (dataState === "streaming") {
+          if (mutationResult.dataState === "streaming") {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
               DeepPartial<UnmaskedMutation> | null | undefined
             >();
           }
-          if (dataState === "complete") {
+          if (mutationResult.dataState === "complete") {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
               UnmaskedMutation | null | undefined
             >();

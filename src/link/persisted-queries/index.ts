@@ -273,20 +273,13 @@ export const createPersistedQueryLink = (
             return cb();
           }
 
-          const graphQLErrors: GraphQLFormattedError[] = [];
-
-          const responseErrors = response.errors;
-          if (isNonEmptyArray(responseErrors)) {
-            graphQLErrors.push(...responseErrors);
-          }
-
           handleRetry(
             {
               response,
               operation,
               graphQLErrors:
-                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-              meta: processErrors(graphQLErrors),
+                isNonEmptyArray(response.errors) ? response.errors : void 0,
+              meta: processErrors(response.errors),
             },
             cb
           );

@@ -10556,6 +10556,39 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender({ timeout: 200 });
   });
 
+  test("initializes with loading: false on an empty cache when using `cache-only`", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useQuery(query, { fetchPolicy: "cache-only" }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   describe("data masking", () => {
     it("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {

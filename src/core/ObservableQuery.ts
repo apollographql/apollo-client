@@ -509,7 +509,11 @@ export class ObservableQuery<
     };
 
     switch (fetchPolicy) {
-      case "cache-only":
+      case "cache-only": {
+        const result = cacheResult();
+
+        return result.dataState === "empty" ? empty : result;
+      }
       case "cache-first":
         return cacheResult();
       case "cache-and-network":

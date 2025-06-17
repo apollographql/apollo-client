@@ -124,6 +124,7 @@
     "graphql-ws": "^5.5.5 || ^6.0.3",
     "react": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
     "react-dom": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
+    "react-compiler-runtime": "19.1.0-rc.2",
     "rxjs": "^7.8.0",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
   },
@@ -148,7 +149,6 @@
     "@wry/trie": "^0.5.0",
     "graphql-tag": "^2.12.6",
     "optimism": "^0.18.0",
-    "react-compiler-runtime": "19.1.0-rc.2",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

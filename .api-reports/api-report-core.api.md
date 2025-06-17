@@ -205,6 +205,9 @@ export type ApolloQueryResult<TData, TStates extends DataState<TData>["dataState
 
 export { ApolloReducerConfig }
 
+// @public (undocumented)
+export const build: "source" | "esm" | "cjs";
+
 export { Cache_2 as Cache }
 
 // @public (undocumented)

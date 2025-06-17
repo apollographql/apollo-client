@@ -142,7 +142,7 @@ export const createPersistedQueryLink = (
     useGETForHashedQueries,
   } = compact(defaultOptions, options);
 
-  let supportsPersistedQueries = true;
+  let enabled = true;
 
   const getHashPromise = (query: DocumentNode) =>
     new Promise<string>((resolve) => resolve(generateHash(query)));
@@ -234,8 +234,8 @@ export const createPersistedQueryLink = (
             };
 
             // if the server doesn't support persisted queries, don't try anymore
-            supportsPersistedQueries = !disable(disablePayload);
-            if (!supportsPersistedQueries) {
+            enabled = !disable(disablePayload);
+            if (!enabled) {
               delete operation.extensions.persistedQuery;
               // clear hashes from cache, we don't need them anymore
               resetHashCache();
@@ -249,9 +249,7 @@ export const createPersistedQueryLink = (
               operation.setContext({
                 http: {
                   includeQuery: true,
-                  ...(supportsPersistedQueries ?
-                    { includeExtensions: true }
-                  : {}),
+                  ...(enabled ? { includeExtensions: true } : {}),
                 },
                 fetchOptions: {
                   // Since we're including the full query, which may be
@@ -282,10 +280,7 @@ export const createPersistedQueryLink = (
 
         // don't send the query the first time
         operation.setContext({
-          http:
-            supportsPersistedQueries ?
-              { includeQuery: false, includeExtensions: true }
-            : {},
+          http: enabled ? { includeQuery: false, includeExtensions: true } : {},
         });
 
         // If requested, set method to GET if there are no mutations. Remember the
@@ -293,7 +288,7 @@ export const createPersistedQueryLink = (
         // non-hashed request.
         if (
           useGETForHashedQueries &&
-          supportsPersistedQueries &&
+          enabled &&
           !operationDefinesMutation(operation)
         ) {
           operation.setContext(
@@ -310,7 +305,7 @@ export const createPersistedQueryLink = (
           setFetchOptions = true;
         }
 
-        if (supportsPersistedQueries) {
+        if (enabled) {
           getQueryHash(query)
             .then((sha256Hash) => {
               operation.extensions.persistedQuery = {

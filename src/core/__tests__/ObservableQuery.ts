@@ -3431,7 +3431,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("returns loading: false on cache-only fetchPolicy queries when calling getCurrentResult with no data in the cache", async () => {
+    it("returns loading: false on cache-only queries when calling getCurrentResult with no data in the cache", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: ApolloLink.empty(),
@@ -3471,7 +3471,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("returns loading: false on cache-only fetchPolicy queries when calling getCurrentResult with data in the cache", async () => {
+    it("returns loading: false on cache-only queries when calling getCurrentResult with data in the cache", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: ApolloLink.empty(),

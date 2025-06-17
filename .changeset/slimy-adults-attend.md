@@ -13,9 +13,9 @@ Usage looks like this:
 import {
   // this is the default
   NotImplementedHandler,
-  // this implements the `@defer` transport format that shipped with GraphQL 17.0.0-alpha.2
+  // this implements the `@defer` transport format that ships with Apollo Router
   Defer20220824Handler,
-  // this is an alias to Defer20220824Handler
+  // this implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
   DeferAlpha2Handler,
 } from "@apollo/client/incremental";
 

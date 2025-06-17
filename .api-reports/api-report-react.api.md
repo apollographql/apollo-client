@@ -26,6 +26,7 @@ import type { FetchMoreQueryOptions as FetchMoreQueryOptions_2 } from '@apollo/c
 import type { FetchPolicy as FetchPolicy_2 } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
 import type { FormattedExecutionResult } from 'graphql';
+import type { FormattedExecutionResultWithDataState as FormattedExecutionResultWithDataState_2 } from '@apollo/client';
 import type { FragmentType } from '@apollo/client/masking';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import type { GetDataState as GetDataState_2 } from '@apollo/client';
@@ -1341,7 +1342,7 @@ export namespace useMutation {
         optimisticResponse?: Unmasked_2<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
             IGNORE: IgnoreModifier;
         }) => Unmasked_2<NoInfer_2<TData>> | IgnoreModifier);
-        refetchQueries?: ((result: FormattedExecutionResult<Unmasked_2<TData>>) => InternalRefetchQueriesInclude_2) | InternalRefetchQueriesInclude_2;
+        refetchQueries?: ((result: FormattedExecutionResultWithDataState_2<Unmasked_2<TData>>) => InternalRefetchQueriesInclude_2) | InternalRefetchQueriesInclude_2;
         update?: MutationUpdaterFunction_2<TData, TVariables, TCache>;
         updateQueries?: MutationQueryReducersMap_2<TData>;
         variables?: TConfiguredVariables;
@@ -1645,8 +1646,8 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:235:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:237:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:256:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:304:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:254:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:302:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts

@@ -1015,7 +1015,6 @@ test("calls `disable` with error emitted from link chain", async () => {
       },
     },
     error: new Error("Something went wrong"),
-    response: undefined,
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1057,7 +1056,6 @@ test("calls `disable` with ServerError when response has non-2xx status code", a
       },
     },
     error: serverError,
-    response: undefined,
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1095,9 +1093,6 @@ test("calls `disable` with GraphQL errors when returned in response", async () =
     error: new CombinedGraphQLErrors({
       errors: [{ message: "Something went wrong" }],
     }),
-    response: {
-      errors: [{ message: "Something went wrong" }],
-    },
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1146,7 +1141,6 @@ test("calls `disable` with GraphQL errors when parsed from non-2xx response", as
     error: new CombinedGraphQLErrors({
       errors: [{ message: "Something went wrong" }],
     }),
-    response: undefined,
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1366,7 +1360,6 @@ test("calls `retry` with error emitted from link chain", async () => {
       },
     },
     error: new Error("Something went wrong"),
-    response: undefined,
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1408,7 +1401,6 @@ test("calls `retry` with ServerError when response has non-2xx status code", asy
       },
     },
     error: serverError,
-    response: undefined,
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1446,9 +1438,6 @@ test("calls `retry` with GraphQL errors when returned in response", async () => 
     error: new CombinedGraphQLErrors({
       errors: [{ message: "Something went wrong" }],
     }),
-    response: {
-      errors: [{ message: "Something went wrong" }],
-    },
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,
@@ -1497,7 +1486,6 @@ test("calls `retry` with GraphQL errors when parsed from non-2xx response", asyn
     error: new CombinedGraphQLErrors({
       errors: [{ message: "Something went wrong" }],
     }),
-    response: undefined,
     meta: {
       persistedQueryNotFound: false,
       persistedQueryNotSupported: false,

@@ -33,7 +33,6 @@ export const VERSION = 1;
 
 export interface ErrorResponse {
   error: ErrorLike;
-  response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;
 }
@@ -242,7 +241,6 @@ export const createPersistedQueryLink = (
 
             handleRetry(
               {
-                response,
                 operation,
                 error: new CombinedGraphQLErrors(response),
                 meta: processErrors(response.errors),

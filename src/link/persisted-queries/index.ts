@@ -272,14 +272,14 @@ export const createPersistedQueryLink = (
         };
         const handler = {
           next: (response: FetchResult) => {
-            maybeRetry({ response }, () => observer.next!(response));
+            maybeRetry({ response }, () => observer.next(response));
           },
           error: (error: unknown) => {
             maybeRetry({ networkError: toErrorLike(error) }, () =>
-              observer.error!(error)
+              observer.error(error)
             );
           },
-          complete: observer.complete!.bind(observer),
+          complete: observer.complete.bind(observer),
         };
 
         // don't send the query the first time

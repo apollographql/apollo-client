@@ -182,41 +182,7 @@ export const createPersistedQueryLink = (
         let originalFetchOptions: any;
         let setFetchOptions = false;
 
-        function maybeRetryNetworkError(
-          networkError: ErrorLike,
-          cb: () => void
-        ) {
-          if (retried) {
-            return cb();
-          }
-
-          retried = true;
-
-          const graphQLErrors: GraphQLFormattedError[] = [];
-
-          // This is persisted-query specific (see #9410) and deviates from the
-          // GraphQL-over-HTTP spec for application/json responses.
-          // This is intentional.
-          if (ServerError.is(networkError) && networkError.bodyText) {
-            try {
-              const result = JSON.parse(networkError.bodyText);
-              const networkErrors: GraphQLFormattedError[] | undefined =
-                result?.errors as GraphQLFormattedError[];
-
-              if (isNonEmptyArray(networkErrors)) {
-                graphQLErrors.push(...networkErrors);
-              }
-            } catch {}
-          }
-
-          const errorResponse: ErrorResponse = {
-            networkError,
-            operation,
-            graphQLErrors:
-              isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-            meta: processErrors(graphQLErrors),
-          };
-
+        function handleRetry(errorResponse: ErrorResponse, cb: () => void) {
           // if the server doesn't support persisted queries, don't try anymore
           enabled = !disable(errorResponse);
           if (!enabled) {
@@ -253,6 +219,45 @@ export const createPersistedQueryLink = (
           cb();
         }
 
+        function maybeRetryNetworkError(
+          networkError: ErrorLike,
+          cb: () => void
+        ) {
+          if (retried) {
+            return cb();
+          }
+
+          retried = true;
+
+          const graphQLErrors: GraphQLFormattedError[] = [];
+
+          // This is persisted-query specific (see #9410) and deviates from the
+          // GraphQL-over-HTTP spec for application/json responses.
+          // This is intentional.
+          if (ServerError.is(networkError) && networkError.bodyText) {
+            try {
+              const result = JSON.parse(networkError.bodyText);
+              const networkErrors: GraphQLFormattedError[] | undefined =
+                result?.errors as GraphQLFormattedError[];
+
+              if (isNonEmptyArray(networkErrors)) {
+                graphQLErrors.push(...networkErrors);
+              }
+            } catch {}
+          }
+
+          handleRetry(
+            {
+              networkError,
+              operation,
+              graphQLErrors:
+                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
+              meta: processErrors(graphQLErrors),
+            },
+            cb
+          );
+        }
+
         const maybeRetry = (
           response: FetchResult | undefined,
           cb: () => void
@@ -277,46 +282,16 @@ export const createPersistedQueryLink = (
               graphQLErrors.push(...responseErrors);
             }
 
-            const errorResponse: ErrorResponse = {
-              response,
-              operation,
-              graphQLErrors:
-                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-              meta: processErrors(graphQLErrors),
-            };
-
-            // if the server doesn't support persisted queries, don't try anymore
-            enabled = !disable(errorResponse);
-            if (!enabled) {
-              delete operation.extensions.persistedQuery;
-              // clear hashes from cache, we don't need them anymore
-              resetHashCache();
-            }
-
-            // if its not found, we can try it again, otherwise just report the error
-            if (retry(errorResponse)) {
-              // need to recall the link chain
-              if (subscription) subscription.unsubscribe();
-              // actually send the query this time
-              operation.setContext({
-                http: {
-                  includeQuery: true,
-                  ...(enabled ? { includeExtensions: true } : {}),
-                },
-                fetchOptions: {
-                  // Since we're including the full query, which may be
-                  // large, we should send it in the body of a POST request.
-                  // See issue #7456.
-                  method: "POST",
-                },
-              });
-              if (setFetchOptions) {
-                operation.setContext({ fetchOptions: originalFetchOptions });
-              }
-              subscription = forward(operation).subscribe(handler);
-
-              return;
-            }
+            return handleRetry(
+              {
+                response,
+                operation,
+                graphQLErrors:
+                  isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
+                meta: processErrors(graphQLErrors),
+              },
+              cb
+            );
           }
           cb();
         };

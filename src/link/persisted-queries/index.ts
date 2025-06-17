@@ -224,7 +224,7 @@ export const createPersistedQueryLink = (
               } catch {}
             }
 
-            const disablePayload: ErrorResponse = {
+            const errorResponse: ErrorResponse = {
               response,
               networkError,
               operation,
@@ -234,7 +234,7 @@ export const createPersistedQueryLink = (
             };
 
             // if the server doesn't support persisted queries, don't try anymore
-            enabled = !disable(disablePayload);
+            enabled = !disable(errorResponse);
             if (!enabled) {
               delete operation.extensions.persistedQuery;
               // clear hashes from cache, we don't need them anymore
@@ -242,7 +242,7 @@ export const createPersistedQueryLink = (
             }
 
             // if its not found, we can try it again, otherwise just report the error
-            if (retry(disablePayload)) {
+            if (retry(errorResponse)) {
               // need to recall the link chain
               if (subscription) subscription.unsubscribe();
               // actually send the query this time

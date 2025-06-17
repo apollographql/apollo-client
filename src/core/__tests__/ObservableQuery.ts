@@ -2896,8 +2896,6 @@ describe("ObservableQuery", () => {
 
       const observable = client.watchQuery({ query, variables });
 
-      // TODO: Should this be the initial loading state until we've attempted to
-      // execute the query?
       expect(observable.getCurrentResult()).toStrictEqualTyped({
         data: dataOne,
         dataState: "complete",

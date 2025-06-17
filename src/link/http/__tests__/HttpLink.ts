@@ -1466,6 +1466,10 @@ describe("HttpLink", () => {
           hasNext: true,
         });
 
+        await expect(observableStream).toEmitTypedValue({
+          hasNext: false,
+        });
+
         // the second chunk contains only hasNext: false which is not emitted as
         // a `next` event so the link completes.
 

@@ -1,11 +1,7 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { FormattedExecutionResult } from "graphql";
 
-import type {
-  FetchResult,
-  GraphQLRequest,
-  IncrementalPayload,
-} from "@apollo/client";
+import type { FetchResult, GraphQLRequest } from "@apollo/client";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   DeepMerger,
@@ -107,6 +103,10 @@ class DeferRequest<TData>
   }
 }
 
+/**
+ * This handler implements the `@defer` directive as specified in this historical commit:
+ * https://github.com/graphql/graphql-spec/tree/48cf7263a71a683fab03d45d309fd42d8d9a6659/spec
+ */
 export class Defer20220824Handler
   implements Incremental.Handler<Defer20220824Handler.Chunk>
 {
@@ -117,7 +117,8 @@ export class Defer20220824Handler
     | Defer20220824Handler.InitialResult {
     return (
       isIncrementalInitialResult(result) ||
-      isIncrementalSubsequentResult(result)
+      isIncrementalSubsequentResult(result) ||
+      (Object.keys(result).length === 1 && "hasNext" in result) // hasNext-only chunk
     );
   }
 
@@ -171,5 +172,5 @@ export function isIncrementalSubsequentResult(
 export function isIncrementalInitialResult(
   result: Record<string, any>
 ): result is Defer20220824Handler.InitialResult {
-  return "hasNext" in result && "data" in result;
+  return "hasNext" in result && ("data" in result || "errors" in result);
 }

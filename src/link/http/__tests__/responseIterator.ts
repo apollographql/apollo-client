@@ -140,13 +140,18 @@ describe("multipart responses", () => {
       },
     });
 
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body: stream,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
+    const fetch = jest.fn(async () => {
+      const val = {
+        status: 200,
+        body: stream,
+        headers: new Headers({
+          "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+        }),
+      };
+
+      console.log(val);
+      return val;
+    });
 
     const link = new HttpLink({
       fetch: fetch as any,
@@ -239,9 +244,7 @@ describe("multipart responses", () => {
       });
       const observable = execute(link, { query: sampleDeferredQuery });
       const mockError = {
-        throws: new Error(
-          "TextDecoder must be defined in the environment: please import a polyfill."
-        ),
+        throws: new TypeError("TextDecoder is not a constructor"),
       };
 
       const observableStream = new ObservableStream(observable);

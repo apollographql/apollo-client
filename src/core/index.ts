@@ -116,16 +116,11 @@ export {
 export type {
   ApolloPayloadResult,
   DocumentNode,
-  ExecutionPatchIncrementalResult,
-  ExecutionPatchInitialResult,
-  ExecutionPatchResult,
   FetchResult,
   GraphQLRequest,
-  IncrementalPayload,
   NextLink,
   Operation,
   OperationContext,
-  Path,
   RequestHandler,
 } from "@apollo/client/link";
 

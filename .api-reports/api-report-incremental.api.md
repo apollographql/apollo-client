@@ -44,7 +44,7 @@ namespace Defer20220824Handler {
     };
 }
 
-// @public (undocumented)
+// @public
 class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk> {
     // (undocumented)
     extractErrors(result: FetchResult<any>): GraphQLFormattedError[] | undefined;

@@ -1028,3 +1028,99 @@ test("stream that returns an error but continues to stream", async () => {
     partial: false,
   });
 });
+
+test("handles final chunk of { hasNext: false } correctly in usage with Apollo Client", async () => {
+  const stream = mockDeferStream();
+  const client = new ApolloClient({
+    link: stream.httpLink,
+    cache: new InMemoryCache(),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+
+  const query = gql`
+    query ProductsQuery {
+      allProducts {
+        id
+        nonNullErrorField
+      }
+    }
+  `;
+
+  const observableStream = new ObservableStream(
+    client.watchQuery({ query, errorPolicy: "all" })
+  );
+  stream.enqueueInitialChunk({
+    data: {
+      allProducts: [null, null, null],
+    },
+    errors: [
+      {
+        message:
+          "Cannot return null for non-nullable field Product.nonNullErrorField.",
+      },
+      {
+        message:
+          "Cannot return null for non-nullable field Product.nonNullErrorField.",
+      },
+      {
+        message:
+          "Cannot return null for non-nullable field Product.nonNullErrorField.",
+      },
+    ],
+    hasNext: true,
+  });
+
+  stream.enqueueSubsequentChunk({
+    hasNext: false,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: undefined,
+    dataState: "empty",
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitTypedValue({
+    loading: true,
+    data: markAsStreaming({
+      allProducts: [null, null, null],
+    }),
+    error: new CombinedGraphQLErrors({
+      data: {
+        allProducts: [null, null, null],
+      },
+      errors: [
+        {
+          message:
+            "Cannot return null for non-nullable field Product.nonNullErrorField.",
+        },
+        {
+          message:
+            "Cannot return null for non-nullable field Product.nonNullErrorField.",
+        },
+        {
+          message:
+            "Cannot return null for non-nullable field Product.nonNullErrorField.",
+        },
+      ],
+    }),
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
+    partial: true,
+  });
+
+  await expect(observableStream).toEmitSimilarValue({
+    expected: (previous) => ({
+      ...previous,
+      // we are in an error state, should this be "complete" or "partial"/stay "streaming"?
+      // how would the types hold up to that?
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    }),
+  });
+  await expect(observableStream).not.toEmitAnything();
+});

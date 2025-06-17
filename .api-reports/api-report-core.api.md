@@ -33,9 +33,6 @@ import { DocumentTransformCacheKey } from '@apollo/client/utilities';
 import { empty } from '@apollo/client/link';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
 import { execute } from '@apollo/client/link';
-import { ExecutionPatchIncrementalResult } from '@apollo/client/link';
-import { ExecutionPatchInitialResult } from '@apollo/client/link';
-import { ExecutionPatchResult } from '@apollo/client/link';
 import { fallbackHttpConfig } from '@apollo/client/link/http';
 import { FetchResult } from '@apollo/client/link';
 import { FieldFunctionOptions } from '@apollo/client/cache';
@@ -53,7 +50,6 @@ import { HttpLink } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
 import type { Incremental } from '@apollo/client/incremental';
-import { IncrementalPayload } from '@apollo/client/link';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
 import type { InteropObservable } from 'rxjs';
@@ -83,7 +79,6 @@ import { OperationContext } from '@apollo/client/link';
 import { OperationTypeNode } from 'graphql';
 import { OptimisticStoreItem } from '@apollo/client/cache';
 import { parseAndCheckHttpResponse } from '@apollo/client/link/http';
-import { Path } from '@apollo/client/link';
 import { PossibleTypesMap } from '@apollo/client/cache';
 import { ReactiveVar } from '@apollo/client/cache';
 import { ReadMergeModifyContext } from '@apollo/client/cache';
@@ -304,12 +299,6 @@ export type ErrorPolicy = "none" | "ignore" | "all";
 
 export { execute }
 
-export { ExecutionPatchIncrementalResult }
-
-export { ExecutionPatchInitialResult }
-
-export { ExecutionPatchResult }
-
 export { fallbackHttpConfig }
 
 // @public (undocumented)
@@ -369,8 +358,6 @@ interface IgnoreModifier {
 
 // @public (undocumented)
 const _ignoreModifier: unique symbol;
-
-export { IncrementalPayload }
 
 export { InMemoryCache }
 
@@ -671,8 +658,6 @@ namespace OverridableTypes {
 }
 
 export { parseAndCheckHttpResponse }
-
-export { Path }
 
 export { PossibleTypesMap }
 

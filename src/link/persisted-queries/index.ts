@@ -258,35 +258,29 @@ export const createPersistedQueryLink = (
           );
         }
 
-        const maybeRetry = (
-          response: FetchResult | undefined,
-          cb: () => void
-        ) => {
-          if (!isFormattedExecutionResult(response)) {
-            // if the response is not an expected format, we set it to `undefined`
-            // network errors will still be handled correctly,
-            // but we don't pass any unexpected data to userland callbacks
-            response = undefined;
-          }
-
-          if (!response?.errors) {
-            return cb();
-          }
-
-          handleRetry(
-            {
-              response,
-              operation,
-              graphQLErrors:
-                isNonEmptyArray(response.errors) ? response.errors : void 0,
-              meta: processErrors(response.errors),
-            },
-            cb
-          );
-        };
         const handler = {
           next: (response: FetchResult) => {
-            maybeRetry(response, () => observer.next(response));
+            if (!isFormattedExecutionResult(response)) {
+              // if the response is not an expected format, we ignore it.
+              // Network errors will still be handled correctly,
+              // but we don't pass any unexpected data to userland callbacks
+              return;
+            }
+
+            if (!response.errors) {
+              return observer.next(response);
+            }
+
+            handleRetry(
+              {
+                response,
+                operation,
+                graphQLErrors:
+                  isNonEmptyArray(response.errors) ? response.errors : void 0,
+                meta: processErrors(response.errors),
+              },
+              () => observer.next(response)
+            );
           },
           error: (error: unknown) => {
             maybeRetryNetworkError(toErrorLike(error), () =>

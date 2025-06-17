@@ -63,7 +63,7 @@ export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 export const canUseDOM: boolean;
 
 // @internal @deprecated
-export function checkDocument(doc: DocumentNode, expectedType?: OperationTypeNode): DocumentNode;
+export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode) => void;
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
@@ -256,7 +256,6 @@ export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | 
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;
-    parser?: () => number;
     canonicalStringify?: () => number;
 };
 

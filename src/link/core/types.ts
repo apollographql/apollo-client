@@ -2,11 +2,7 @@ import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
-import type {
-  ApolloClient,
-  ClientAwareness,
-  DefaultContext,
-} from "@apollo/client";
+import type { ApolloClient, DefaultContext } from "@apollo/client";
 
 export type { DocumentNode };
 
@@ -100,13 +96,7 @@ export interface ExecuteContext {
   client: ApolloClient;
 }
 
-export interface OperationContext extends DefaultContext {
-  /**
-   * Indicates whether `queryDeduplication` was enabled for the request.
-   */
-  queryDeduplication?: boolean;
-  clientAwareness?: ClientAwareness;
-}
+export interface OperationContext extends DefaultContext {}
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,

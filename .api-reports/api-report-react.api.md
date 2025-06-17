@@ -10,6 +10,7 @@ import type { ApolloClient } from '@apollo/client';
 import { ApolloLink } from '@apollo/client/link';
 import type { ApolloQueryResult as ApolloQueryResult_2 } from '@apollo/client';
 import type { Cache as Cache_2 } from '@apollo/client/cache';
+import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
 import type { DataProxy } from '@apollo/client/cache';
 import type { DataState as DataState_2 } from '@apollo/client';
 import type { DeepPartial } from '@apollo/client/utilities';
@@ -153,6 +154,8 @@ class ApolloClient_2 implements DataProxy {
 interface ApolloClientOptions {
     assumeImmutableResults?: boolean;
     cache: ApolloCache;
+    // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     // @deprecated
     connectToDevTools?: boolean;
     dataMasking?: boolean;
@@ -162,14 +165,14 @@ interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
+    // (undocumented)
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
-    name?: string;
     queryDeduplication?: boolean;
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    version?: string;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ApolloConsumer_2" needs to be exported by the entry point index.d.ts
@@ -228,14 +231,6 @@ export type BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;
 // @public @deprecated (undocumented)
 export type BackgroundQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useBackgroundQuery.Options<TVariables>;
 
-// @public (undocumented)
-interface ClientAwareness {
-    // (undocumented)
-    name?: string;
-    // (undocumented)
-    version?: string;
-}
-
 // @public
 export function createQueryPreloader(client: ApolloClient): PreloadQueryFunction;
 
@@ -254,6 +249,7 @@ type DataState<TData> = {
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {
     // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     queryDeduplication?: boolean;
 }
 
@@ -481,7 +477,8 @@ enum NetworkStatus {
     poll = 6,
     ready = 7,
     refetch = 4,
-    setVariables = 2
+    setVariables = 2,
+    streaming = 9
 }
 
 // @public (undocumented)
@@ -656,6 +653,7 @@ class QueryManager {
     //
     // (undocumented)
     readonly client: ApolloClient_2;
+    readonly clientOptions: ApolloClientOptions;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -708,7 +706,10 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables_2, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
+    mutate<TData, TVariables extends OperationVariables_2, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache> & {
+        errorPolicy: ErrorPolicy;
+        fetchPolicy: MutationFetchPolicy;
+    }): Promise<MutateResult<MaybeMasked<TData>>>;
     // (undocumented)
     mutationStore?: {
         [mutationId: string]: MutationStoreValue;
@@ -741,10 +742,8 @@ interface QueryManagerOptions {
     assumeImmutableResults: boolean;
     // (undocumented)
     client: ApolloClient_2;
-    // Warning: (ae-forgotten-export) The symbol "ClientAwareness" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    clientAwareness: ClientAwareness;
+    clientOptions: ApolloClientOptions;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -936,6 +935,8 @@ interface TransformCacheEntry {
     operationType: OperationTypeNode | undefined;
     // (undocumented)
     serverQuery: DocumentNode | null;
+    // (undocumented)
+    violation?: Error | undefined;
 }
 
 // @public (undocumented)
@@ -1162,7 +1163,6 @@ export namespace useLazyQuery {
     // (undocumented)
     export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
         client?: ApolloClient;
-        context?: DefaultContext_2;
         errorPolicy?: ErrorPolicy_2;
         fetchPolicy?: WatchQueryFetchPolicy;
         nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
@@ -1597,7 +1597,7 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:145:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:177:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:192:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:194:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

@@ -45,7 +45,6 @@ test("allows custom context", async () => {
   expect(operation.getContext()).toStrictEqualTyped({
     foo: true,
     queryDeduplication: true,
-    clientAwareness: { name: undefined, version: undefined },
   });
 });
 
@@ -73,7 +72,6 @@ test("uses context from defaultContext", async () => {
   expect(operation.getContext()).toStrictEqualTyped({
     foo: true,
     queryDeduplication: true,
-    clientAwareness: { name: undefined, version: undefined },
   });
 });
 
@@ -101,6 +99,5 @@ test("can override global default", async () => {
   expect(operation.getContext()).toStrictEqualTyped({
     foo: false,
     queryDeduplication: true,
-    clientAwareness: { name: undefined, version: undefined },
   });
 });

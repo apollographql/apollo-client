@@ -2323,8 +2323,8 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   await expect(stream).toEmitTypedValue({
     data: initialData,
     dataState: "streaming",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
@@ -2355,8 +2355,8 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
       ],
     },
     dataState: "streaming",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
@@ -2416,8 +2416,10 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
       ],
     },
     dataState: "streaming",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
+    loading: true,
+    // TODO: This should be streaming. Should be fixed with
+    // https://github.com/apollographql/apollo-client/issues/12668
+    networkStatus: NetworkStatus.loading,
     partial: true,
   });
 });

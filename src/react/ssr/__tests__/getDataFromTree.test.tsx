@@ -24,7 +24,9 @@ describe("SSR", () => {
   describe("`getDataFromTree`", () => {
     it("should support passing a root context", async () => {
       const client = new ApolloClient({
-        name: "oyez",
+        clientAwareness: {
+          name: "oyez",
+        },
         cache: new Cache(),
         link: ApolloLink.empty(),
       });
@@ -35,7 +37,10 @@ describe("SSR", () => {
           <ApolloContext.Consumer>
             {(context) => (
               <div>
-                {context?.client?.["queryManager"]["clientAwareness"].name}
+                {
+                  context?.client?.["queryManager"].clientOptions
+                    .clientAwareness?.name
+                }
               </div>
             )}
           </ApolloContext.Consumer>

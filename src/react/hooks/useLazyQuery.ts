@@ -76,9 +76,6 @@ export declare namespace useLazyQuery {
 
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client?: ApolloClient;
-
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-    context?: DefaultContext;
   }
 
   export type Result<
@@ -373,7 +370,6 @@ export function useLazyQuery<
       {
         query,
         errorPolicy: stableOptions?.errorPolicy,
-        context: stableOptions?.context,
         refetchWritePolicy: stableOptions?.refetchWritePolicy,
         returnPartialData: stableOptions?.returnPartialData,
         notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
@@ -420,11 +416,11 @@ export function useLazyQuery<
         }
 
         return observable.reobserve({
-          ...executeOptions,
           fetchPolicy,
           // If `variables` is not given, reset back to empty variables by
           // ensuring the key exists in options
           variables: executeOptions?.variables,
+          context: executeOptions?.context ?? {},
         });
       },
       [observable, calledDuringRender]

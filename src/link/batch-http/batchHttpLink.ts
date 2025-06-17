@@ -4,6 +4,7 @@ import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
+import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { HttpLink } from "@apollo/client/link/http";
 import {
   checkFetcher,
@@ -15,6 +16,7 @@ import {
   serializeFetchParameter,
 } from "@apollo/client/link/http";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { compact } from "@apollo/client/utilities/internal";
 import { maybe } from "@apollo/client/utilities/internal/globals";
 
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
@@ -36,6 +38,18 @@ const backupFetch = maybe(() => fetch);
  * context can include the headers property, which will be passed to the fetch function
  */
 export class BatchHttpLink extends ApolloLink {
+  constructor(
+    options: BatchHttpLink.Options & ClientAwarenessLink.Options = {}
+  ) {
+    const { left, right, request } = ApolloLink.concat(
+      new ClientAwarenessLink(options),
+      new BaseBatchHttpLink(options)
+    );
+    super(request);
+    Object.assign(this, { left, right });
+  }
+}
+export class BaseBatchHttpLink extends ApolloLink {
   private batchDebounce?: boolean;
   private batchInterval: number;
   private batchMax: number;
@@ -66,7 +80,7 @@ export class BatchHttpLink extends ApolloLink {
     }
 
     const linkConfig = {
-      http: { includeExtensions, preserveHeaderCase },
+      http: compact({ includeExtensions, preserveHeaderCase }),
       options: requestOptions.fetchOptions,
       credentials: requestOptions.credentials,
       headers: requestOptions.headers,
@@ -81,25 +95,11 @@ export class BatchHttpLink extends ApolloLink {
 
       const context = operations[0].getContext();
 
-      const clientAwarenessHeaders: {
-        "apollographql-client-name"?: string;
-        "apollographql-client-version"?: string;
-      } = {};
-      if (context.clientAwareness) {
-        const { name, version } = context.clientAwareness;
-        if (name) {
-          clientAwarenessHeaders["apollographql-client-name"] = name;
-        }
-        if (version) {
-          clientAwarenessHeaders["apollographql-client-version"] = version;
-        }
-      }
-
       const contextConfig = {
         http: context.http,
         options: context.fetchOptions,
         credentials: context.credentials,
-        headers: { ...clientAwarenessHeaders, ...context.headers },
+        headers: context.headers,
       };
 
       //uses fallback, link, and then context to build options

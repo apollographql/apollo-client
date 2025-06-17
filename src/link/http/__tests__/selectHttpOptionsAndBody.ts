@@ -52,7 +52,7 @@ describe("selectHttpOptionsAndBody", () => {
     );
 
     expect(body).toHaveProperty("query");
-    expect(body).not.toHaveProperty("extensions");
+    expect(body.extensions).toStrictEqual(extensions);
 
     expect(options.headers).toEqual(defaultHeaders);
     expect(options.method).toEqual(defaultOptions.method);
@@ -80,6 +80,40 @@ describe("selectHttpOptionsAndBody", () => {
       createOperation({}, { query, extensions }),
       fallbackHttpConfig,
       config
+    );
+
+    expect(body).toHaveProperty("query");
+    expect(body.extensions).toStrictEqual(extensions);
+
+    expect(options.headers).toEqual(headers);
+    expect(options.credentials).toEqual(credentials);
+    expect(options.opt).toEqual("hi");
+    expect(options.method).toEqual("POST"); //from default
+  });
+
+  it("can explicitly disable `includeExtensions`", () => {
+    const headers = {
+      accept: "application/json",
+      "content-type": "application/graphql",
+    };
+
+    const credentials = {
+      "X-Secret": "djmashko",
+    };
+
+    const extensions = { yo: "what up" };
+
+    const { options, body } = selectHttpOptionsAndBody(
+      createOperation({}, { query, extensions }),
+      fallbackHttpConfig,
+      {
+        headers,
+        credentials,
+        http: {
+          includeExtensions: false,
+        },
+        options: { opt: "hi" },
+      }
     );
 
     expect(body).toHaveProperty("query");

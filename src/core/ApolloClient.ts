@@ -10,12 +10,14 @@ import type {
 } from "@apollo/client/cache";
 import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   checkDocument,
+  compact,
   getApolloClientMemoryInternals,
   mergeOptions,
 } from "@apollo/client/utilities/internal";
@@ -38,6 +40,8 @@ import type {
   SubscriptionObservable,
 } from "./types.js";
 import type {
+  ErrorPolicy,
+  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -121,16 +125,10 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   localState?: LocalState;
-  /**
-   * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
-   */
-  name?: string;
-  /**
-   * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
-   *
-   * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
-   */
-  version?: string;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
+  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
+  enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
   documentTransform?: DocumentTransform;
 
   /**
@@ -243,8 +241,6 @@ export class ApolloClient implements DataProxy {
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       localState,
-      name: clientAwarenessName,
-      version: clientAwarenessVersion,
       devtools,
       dataMasking,
       link,
@@ -280,10 +276,7 @@ export class ApolloClient implements DataProxy {
       queryDeduplication,
       ssrMode,
       dataMasking: !!dataMasking,
-      clientAwareness: {
-        name: clientAwarenessName!,
-        version: clientAwarenessVersion!,
-      },
+      clientOptions: options,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?
@@ -489,8 +482,6 @@ export class ApolloClient implements DataProxy {
         !(options as any).notifyOnNetworkStatusChange,
         "notifyOnNetworkStatusChange option only supported on watchQuery."
       );
-
-      checkDocument(options.query, OperationTypeNode.QUERY);
     }
 
     return this.queryManager.query<TData, TVariables>(options);
@@ -511,10 +502,38 @@ export class ApolloClient implements DataProxy {
   >(
     options: MutationOptions<TData, TVariables, TCache>
   ): Promise<MutateResult<MaybeMasked<TData>>> {
-    if (this.defaultOptions.mutate) {
-      options = mergeOptions(this.defaultOptions.mutate, options);
+    const optionsWithDefaults = mergeOptions(
+      compact(
+        {
+          fetchPolicy: "network-only" as MutationFetchPolicy,
+          errorPolicy: "none" as ErrorPolicy,
+        },
+        this.defaultOptions.mutate
+      ),
+      options
+    ) as MutationOptions<TData, TVariables, TCache> & {
+      fetchPolicy: MutationFetchPolicy;
+      errorPolicy: ErrorPolicy;
+    };
+
+    if (__DEV__) {
+      invariant(
+        optionsWithDefaults.mutation,
+        "The `mutation` option is required. Please provide a GraphQL document in the `mutation` option."
+      );
+
+      invariant(
+        optionsWithDefaults.fetchPolicy === "network-only" ||
+          optionsWithDefaults.fetchPolicy === "no-cache",
+        "Mutations only support 'network-only' or 'no-cache' fetch policies. The default 'network-only' behavior automatically writes mutation results to the cache. Passing 'no-cache' skips the cache write."
+      );
     }
-    return this.queryManager.mutate<TData, TVariables, TCache>(options);
+
+    checkDocument(optionsWithDefaults.mutation, OperationTypeNode.MUTATION);
+
+    return this.queryManager.mutate<TData, TVariables, TCache>(
+      optionsWithDefaults
+    );
   }
 
   /**

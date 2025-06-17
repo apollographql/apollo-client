@@ -10,6 +10,6 @@ export {
 export { checkFetcher } from "./checkFetcher.js";
 export { createSignalIfSupported } from "./createSignalIfSupported.js";
 export { selectURI } from "./selectURI.js";
-export { createHttpLink } from "./createHttpLink.js";
-export { HttpLink } from "./HttpLink.js";
+export { BaseHttpLink } from "./BaseHttpLink.js";
+export { createHttpLink, HttpLink } from "./HttpLink.js";
 export { rewriteURIForGET } from "./rewriteURIForGET.js";

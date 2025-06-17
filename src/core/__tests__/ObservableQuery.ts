@@ -3487,8 +3487,8 @@ describe("ObservableQuery", () => {
           },
         },
         dataState: "streaming",
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         partial: true,
       });
 

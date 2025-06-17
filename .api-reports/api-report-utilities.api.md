@@ -10,12 +10,9 @@ import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
-import { hasDirectives } from '@apollo/client/utilities/internal';
-import { mergeIncrementalData } from '@apollo/client/utilities/internal';
 import { Observable } from 'rxjs';
 import type { Primitive } from '@apollo/client/utilities/internal';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
-import { removeDirectivesFromDocument } from '@apollo/client/utilities/internal';
 
 // @public
 export const addTypenameToDocument: (<TNode extends ASTNode>(doc: TNode) => TNode) & {
@@ -43,6 +40,7 @@ export interface CacheSizes {
     "queryManager.getDocumentInfo": number;
     "removeTypenameFromVariables.getVariableDefinitions": number;
     canonicalStringify: number;
+    checkDocument: number;
     print: number;
 }
 
@@ -121,8 +119,6 @@ interface DocumentTransformOptions {
     getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey | undefined;
 }
 
-export { hasDirectives }
-
 // @beta
 export interface HKT {
     // (undocumented)
@@ -152,8 +148,6 @@ export function isSubscriptionOperation(document: DocumentNode_2): boolean;
 // @public (undocumented)
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
-export { mergeIncrementalData }
-
 export { Observable }
 
 // @public
@@ -181,8 +175,6 @@ type RelayFieldPolicy<TNode> = FieldPolicy<TExistingRelay<TNode> | null, TIncomi
 //
 // @public
 export function relayStylePagination<TNode extends Reference_2 = Reference_2>(keyArgs?: KeyArgs): RelayFieldPolicy<TNode>;
-
-export { removeDirectivesFromDocument }
 
 // @public
 export interface StoreObject {

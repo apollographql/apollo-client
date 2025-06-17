@@ -151,6 +151,10 @@ export class ApolloClient implements DataProxy {
 export interface ApolloClientOptions {
     assumeImmutableResults?: boolean;
     cache: ApolloCache;
+    // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     // @deprecated
     connectToDevTools?: boolean;
     dataMasking?: boolean;
@@ -160,14 +164,14 @@ export interface ApolloClientOptions {
     devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
+    // (undocumented)
+    enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
-    name?: string;
     queryDeduplication?: boolean;
     ssrForceFetchDelay?: number;
     ssrMode?: boolean;
-    version?: string;
 }
 
 // @public (undocumented)
@@ -370,11 +374,29 @@ type CanReadFunction = (value: StoreValue) => boolean;
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
 // @public (undocumented)
-export interface ClientAwareness {
+namespace ClientAwarenessLink {
     // (undocumented)
-    name?: string;
+    interface ClientAwarenessOptions {
+        name?: string;
+        transport?: "headers" | false;
+        version?: string;
+    }
     // (undocumented)
-    version?: string;
+    interface EnhancedClientAwarenessOptions {
+        transport?: "extensions" | false;
+    }
+    // (undocumented)
+    interface Options {
+        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
+        clientAwareness?: ClientAwarenessOptions;
+        // Warning: (ae-forgotten-export) The symbol "ClientAwarenessLink" needs to be exported by the entry point index.d.ts
+        enhancedClientAwareness?: EnhancedClientAwarenessOptions;
+    }
+}
+
+// @public (undocumented)
+class ClientAwarenessLink extends ApolloLink {
+    constructor(constructorOptions?: ClientAwarenessLink.Options);
 }
 
 // Warning: (ae-forgotten-export) The symbol "InvariantError" needs to be exported by the entry point index.d.ts
@@ -458,7 +480,7 @@ export const concat: typeof ApolloLink.concat;
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public (undocumented)
-export const createHttpLink: (linkOptions?: HttpLink.Options) => ApolloLink;
+export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)
 export const createSignalIfSupported: () => {
@@ -585,6 +607,7 @@ type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
 // @public (undocumented)
 export interface DefaultContext extends Record<string, any> {
     // (undocumented)
+    clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
     queryDeduplication?: boolean;
 }
 
@@ -1202,6 +1225,7 @@ export namespace HttpLink {
     }
     // (undocumented)
     export interface HttpOptions {
+        accept?: string[];
         includeExtensions?: boolean;
         includeQuery?: boolean;
         preserveHeaderCase?: boolean;
@@ -1229,9 +1253,7 @@ export namespace HttpLink {
 
 // @public (undocumented)
 export class HttpLink extends ApolloLink {
-    constructor(options?: HttpLink.Options);
-    // (undocumented)
-    options: HttpLink.Options;
+    constructor(options?: HttpLink.Options & ClientAwarenessLink.Options);
 }
 
 // @public (undocumented)
@@ -1798,7 +1820,8 @@ export enum NetworkStatus {
     poll = 6,
     ready = 7,
     refetch = 4,
-    setVariables = 2
+    setVariables = 2,
+    streaming = 9
 }
 
 // @public (undocumented)
@@ -1982,9 +2005,6 @@ export interface Operation {
 
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
-    // (undocumented)
-    clientAwareness?: ClientAwareness;
-    queryDeduplication?: boolean;
 }
 
 // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
@@ -2135,6 +2155,7 @@ class QueryManager {
     clearStore(options?: Cache_2.ResetOptions): Promise<void>;
     // (undocumented)
     readonly client: ApolloClient;
+    readonly clientOptions: ApolloClientOptions;
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
@@ -2185,7 +2206,10 @@ class QueryManager {
     // (undocumented)
     maskOperation<TData = unknown>(options: MaskOperationOptions<TData>): MaybeMasked<TData>;
     // (undocumented)
-    mutate<TData, TVariables extends OperationVariables, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache>): Promise<MutateResult<MaybeMasked<TData>>>;
+    mutate<TData, TVariables extends OperationVariables, TCache extends ApolloCache>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TCache> & {
+        errorPolicy: ErrorPolicy;
+        fetchPolicy: MutationFetchPolicy;
+    }): Promise<MutateResult<MaybeMasked<TData>>>;
     // (undocumented)
     mutationStore?: {
         [mutationId: string]: MutationStoreValue;
@@ -2216,7 +2240,7 @@ interface QueryManagerOptions {
     // (undocumented)
     client: ApolloClient;
     // (undocumented)
-    clientAwareness: ClientAwareness;
+    clientOptions: ApolloClientOptions;
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
@@ -2588,6 +2612,8 @@ interface TransformCacheEntry {
     operationType: OperationTypeNode | undefined;
     // (undocumented)
     serverQuery: DocumentNode | null;
+    // (undocumented)
+    violation?: Error | undefined;
 }
 
 // @public (undocumented)
@@ -2750,7 +2776,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryInfo.ts:309:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:177:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

@@ -14,6 +14,46 @@ type ObservableEvent<T> =
   | { type: "error"; error: any }
   | { type: "complete" };
 
+function formatMessage(
+  matcherName: string,
+  expected: ObservableEvent<any>,
+  actual: ObservableEvent<any>
+) {
+  return (
+    matcherUtils.matcherHint(matcherName, "stream", "expected") +
+    "\n\n" +
+    matcherUtils.printDiffOrStringify(
+      expected,
+      actual,
+      "Expected",
+      "Received",
+      true
+    )
+  );
+}
+
+export class EventMismatchError extends Error {
+  private actual: ObservableEvent<any>;
+  private expected: ObservableEvent<any>;
+
+  static is(error: unknown): error is EventMismatchError {
+    return error instanceof Error && error.name === "EventMismatchError";
+  }
+
+  constructor(expected: ObservableEvent<any>, actual: ObservableEvent<any>) {
+    super(formatMessage("toEqual", expected, actual));
+    this.name = "EventMismatchError";
+    this.actual = actual;
+    this.expected = expected;
+
+    Object.setPrototypeOf(this, EventMismatchError.prototype);
+  }
+
+  formatMessage(matcherName: string) {
+    return formatMessage(matcherName, this.expected, this.actual);
+  }
+}
+
 export class ObservableStream<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;
   private subscription!: Unsubscribable;
@@ -130,19 +170,7 @@ function validateEquals(
     return;
   }
 
-  const hint = matcherUtils.matcherHint("toEqual", "stream", "expected");
-
-  throw new Error(
-    hint +
-      "\n\n" +
-      matcherUtils.printDiffOrStringify(
-        expectedEvent,
-        actualEvent,
-        "Expected",
-        "Received",
-        true
-      )
-  );
+  throw new EventMismatchError(expectedEvent, actualEvent);
 }
 
 function getCustomMatchers(): Array<Tester> {

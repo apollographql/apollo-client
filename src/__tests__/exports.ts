@@ -17,6 +17,7 @@ import * as errors from "@apollo/client/errors";
 import * as linkCore from "@apollo/client/link";
 import * as linkBatch from "@apollo/client/link/batch";
 import * as linkBatchHTTP from "@apollo/client/link/batch-http";
+import * as linkClientAwareness from "@apollo/client/link/client-awareness";
 import * as linkContext from "@apollo/client/link/context";
 import * as linkError from "@apollo/client/link/error";
 import * as linkHTTP from "@apollo/client/link/http";
@@ -75,6 +76,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/errors", errors);
   check("@apollo/client/link/batch", linkBatch);
   check("@apollo/client/link/batch-http", linkBatchHTTP);
+  check("@apollo/client/link/client-awareness", linkClientAwareness);
   check("@apollo/client/link/context", linkContext);
   check("@apollo/client/link", linkCore);
   check("@apollo/client/link/error", linkError);

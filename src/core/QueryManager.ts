@@ -66,13 +66,16 @@ import {
 
 import { defaultCacheSizes } from "../utilities/caching/sizes.js";
 
-import type { ApolloClient, DefaultOptions } from "./ApolloClient.js";
+import type {
+  ApolloClient,
+  ApolloClientOptions,
+  DefaultOptions,
+} from "./ApolloClient.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
 import { CacheWriteBehavior, QueryInfo } from "./QueryInfo.js";
 import type {
   ApolloQueryResult,
-  ClientAwareness,
   DefaultContext,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -88,6 +91,7 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
+  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -112,6 +116,7 @@ interface TransformCacheEntry {
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
   operationType: OperationTypeNode | undefined;
+  violation?: Error | undefined;
 }
 
 interface MaskFragmentOptions<TData> {
@@ -134,12 +139,12 @@ interface MaskOperationOptions<TData> {
 
 interface QueryManagerOptions {
   client: ApolloClient;
+  clientOptions: ApolloClientOptions;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
   queryDeduplication: boolean;
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
-  clientAwareness: ClientAwareness;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
@@ -150,6 +155,10 @@ export class QueryManager {
   public defaultOptions: DefaultOptions;
 
   public readonly client: ApolloClient;
+  /**
+   * The options that were passed to the ApolloClient constructor.
+   */
+  public readonly clientOptions: ApolloClientOptions;
   public readonly assumeImmutableResults: boolean;
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
@@ -158,7 +167,6 @@ export class QueryManager {
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;
-  private clientAwareness: ClientAwareness = {};
 
   /**
    * Whether to prioritize cache values over network results when
@@ -198,7 +206,7 @@ export class QueryManager {
     this.client = options.client;
     this.defaultOptions = options.defaultOptions;
     this.queryDeduplication = options.queryDeduplication;
-    this.clientAwareness = options.clientAwareness;
+    this.clientOptions = options.clientOptions;
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
     this.dataMasking = options.dataMasking;
@@ -259,25 +267,14 @@ export class QueryManager {
     awaitRefetchQueries = false,
     update: updateWithProxyFn,
     onQueryUpdated,
-    fetchPolicy = this.defaultOptions.mutate?.fetchPolicy || "network-only",
-    errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
+    fetchPolicy,
+    errorPolicy,
     keepRootFields,
     context,
-  }: MutationOptions<TData, TVariables, TCache>): Promise<
-    MutateResult<MaybeMasked<TData>>
-  > {
-    invariant(
-      mutation,
-      "mutation option is required. You must specify your GraphQL document in the mutation option."
-    );
-
-    checkDocument(mutation, OperationTypeNode.MUTATION);
-
-    invariant(
-      fetchPolicy === "network-only" || fetchPolicy === "no-cache",
-      "Mutations support only 'network-only' or 'no-cache' fetchPolicy strings. The default `network-only` behavior automatically writes mutation results to the cache. Passing `no-cache` skips the cache write."
-    );
-
+  }: MutationOptions<TData, TVariables, TCache> & {
+    errorPolicy: ErrorPolicy;
+    fetchPolicy: MutationFetchPolicy;
+  }): Promise<MutateResult<MaybeMasked<TData>>> {
     const queryInfo = new QueryInfo(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
@@ -454,27 +451,32 @@ export class QueryManager {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<QueryResult<TData>> {
-    return lastValueFrom(
-      this.fetchObservableWithInfo(options, {
-        networkStatus,
-      }).observable.pipe(
-        filterMap((value) => {
-          switch (value.kind) {
-            case "E":
-              throw value.error;
-            case "N": {
-              if (value.source !== "newNetworkStatus")
-                return toQueryResult(value.value);
+    checkDocument(options.query, OperationTypeNode.QUERY);
+
+    // do the rest asynchronously to keep the same rejection timing as
+    // checks further in `.mutate`
+    return (async () =>
+      lastValueFrom(
+        this.fetchObservableWithInfo(options, {
+          networkStatus,
+        }).observable.pipe(
+          filterMap((value) => {
+            switch (value.kind) {
+              case "E":
+                throw value.error;
+              case "N": {
+                if (value.source !== "newNetworkStatus")
+                  return toQueryResult(value.value);
+              }
             }
-          }
-        })
-      ),
-      {
-        // This default is needed when a `standby` fetch policy is used to avoid
-        // an EmptyError from rejecting this promise.
-        defaultValue: { data: undefined },
-      }
-    );
+          })
+        ),
+        {
+          // This default is needed when a `standby` fetch policy is used to avoid
+          // an EmptyError from rejecting this promise.
+          defaultValue: { data: undefined },
+        }
+      ))();
   }
 
   public transform(document: DocumentNode) {
@@ -538,7 +540,11 @@ export class QueryManager {
       transformCache.set(document, cacheEntry);
     }
 
-    return transformCache.get(document)!;
+    const entry = transformCache.get(document)!;
+    if (entry.violation) {
+      throw entry.violation;
+    }
+    return entry;
   }
 
   public getVariables<TVariables>(
@@ -585,10 +591,7 @@ export class QueryManager {
     return observable;
   }
 
-  public async query<
-    TData,
-    TVars extends OperationVariables = OperationVariables,
-  >(
+  public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>
   ): Promise<QueryResult<MaybeMasked<TData>>> {
     const query = this.transform(options.query);
@@ -901,7 +904,6 @@ export class QueryManager {
           ...this.defaultContext,
           ...context,
           queryDeduplication: deduplication,
-          clientAwareness: this.clientAwareness,
         },
         extensions,
       };
@@ -1060,16 +1062,20 @@ export class QueryManager {
 
         const aqr = {
           data: result.data as TData,
-          dataState: result.data ? "complete" : "empty",
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: !result.data,
+          ...(isExecutionPatchResult(result) && result.hasNext ?
+            {
+              loading: true,
+              networkStatus: NetworkStatus.streaming,
+              dataState: "streaming",
+              partial: true,
+            }
+          : {
+              dataState: result.data ? "complete" : "empty",
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              partial: !result.data,
+            }),
         } as ApolloQueryResult<TData>;
-
-        if (isExecutionPatchResult(result) && result.hasNext) {
-          aqr.dataState = "streaming";
-          aqr.partial = true;
-        }
 
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old
@@ -1733,8 +1739,6 @@ function isFullyUnmaskedOperation(document: DocumentNode) {
 }
 
 function addNonReactiveToNamedFragments(document: DocumentNode) {
-  checkDocument(document);
-
   return visit(document, {
     FragmentSpread: (node) => {
       // Do not add `@nonreactive` if the fragment is marked with `@unmask`

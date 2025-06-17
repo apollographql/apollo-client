@@ -5,6 +5,7 @@ import type { MatcherHintOptions } from "jest-matcher-utils";
 import type { ObservableStream } from "@apollo/client/testing/internal";
 
 import type { TakeOptions } from "../internal/ObservableStream.js";
+import { EventMismatchError } from "../internal/ObservableStream.js";
 
 import { getSerializableProperties } from "./utils/getSerializableProperties.js";
 
@@ -70,6 +71,11 @@ export const toEmitTypedValue: MatcherFunction<
         pass: false,
         message: () =>
           hint + "\n\nExpected stream to emit a value but it did not.",
+      };
+    } else if (EventMismatchError.is(error)) {
+      return {
+        pass: false,
+        message: () => error.formatMessage("toEmitTypedValue"),
       };
     } else {
       throw error;

@@ -3167,10 +3167,21 @@ describe("ApolloClient", () => {
           updateUser: { __typename: "User", id: "1", age: 30 },
         },
         updateQueries: {
-          TestQuery: (_, { mutationResult }) => {
+          TestQuery: (_, { mutationResult, dataState }) => {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
-              Mutation | null | undefined
+              DeepPartial<Mutation> | null | undefined
             >();
+
+            if (dataState === "streaming") {
+              expectTypeOf(mutationResult.data).toMatchTypeOf<
+                DeepPartial<Mutation> | null | undefined
+              >();
+            }
+            if (dataState === "complete") {
+              expectTypeOf(mutationResult.data).toMatchTypeOf<
+                Mutation | null | undefined
+              >();
+            }
 
             return {};
           },
@@ -3246,7 +3257,7 @@ describe("ApolloClient", () => {
         updateQueries: {
           TestQuery: (_, { mutationResult }) => {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
-              UnmaskedMutation | null | undefined
+              DeepPartial<UnmaskedMutation> | null | undefined
             >();
 
             return {};

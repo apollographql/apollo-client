@@ -11,22 +11,21 @@ import {
 import type { Incremental } from "../types.js";
 
 export declare namespace Defer20220824Handler {
-  export interface InitialResult<TData = Record<string, unknown>> {
+  export type InitialResult<TData = Record<string, unknown>> = {
     data: TData | null | undefined;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, any>;
     hasNext: boolean;
-  }
+  };
 
-  export interface SubsequentResult<TData = Record<string, unknown>> {
+  export type SubsequentResult<TData = Record<string, unknown>> = {
     hasNext: boolean;
     incremental?: Array<IncrementalPayload<TData>>;
-  }
+  };
 
-  export interface ExecutionResult<TData = Record<string, unknown>> {
-    Initial: InitialResult<TData>;
-    Subsequent: SubsequentResult<TData>;
-  }
+  export type Chunk<TData = Record<string, unknown>> =
+    | InitialResult<TData>
+    | SubsequentResult<TData>;
 
   export type IncrementalPayload<TData = Record<string, unknown>> =
     IncrementalDeferPayload<TData>;
@@ -42,14 +41,12 @@ export declare namespace Defer20220824Handler {
 
 declare module "@apollo/client/link" {
   export interface AdditionalFetchResultTypes {
-    Defer20220824Handler_InitialResult: Defer20220824Handler.InitialResult;
-    Defer20220824Handler_SubsequentResult: Defer20220824Handler.SubsequentResult;
+    Defer20220824Handler: Defer20220824Handler.Chunk;
   }
 }
 
 class DeferRequest
-  implements
-    Incremental.IncrementalRequest<Defer20220824Handler.ExecutionResult>
+  implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk>
 {
   public hasNext = true;
 
@@ -106,7 +103,7 @@ class DeferRequest
 }
 
 export class Defer20220824Handler
-  implements Incremental.Handler<Defer20220824Handler.ExecutionResult>
+  implements Incremental.Handler<Defer20220824Handler.Chunk>
 {
   isIncrementalSubsequentResult(
     result: Record<string, any>

@@ -227,10 +227,20 @@ export type GetDataState<
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FormattedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
-  }
+  } & (
+    | {
+        mutationResult: FormattedExecutionResult<Unmasked<T>>;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "complete";
+      }
+    | {
+        mutationResult: FormattedExecutionResult<DeepPartial<Unmasked<T>>>;
+        /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
+        dataState: "streaming";
+      }
+  )
 ) => Record<string, any>;
 
 export type MutationQueryReducersMap<T = { [key: string]: any }> = {

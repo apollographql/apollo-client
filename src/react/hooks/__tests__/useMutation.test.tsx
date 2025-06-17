@@ -41,6 +41,8 @@ import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type { DeepPartial } from "../../../utilities/DeepPartial.js";
+
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
 const IS_REACT_19 = React.version.startsWith("19");
@@ -4662,10 +4664,20 @@ describe.skip("Type Tests", () => {
         updateUser: { __typename: "User", id: "1", age: 30 },
       },
       updateQueries: {
-        TestQuery: (_, { mutationResult }) => {
+        TestQuery: (_, { mutationResult, dataState }) => {
           expectTypeOf(mutationResult.data).toMatchTypeOf<
-            Mutation | null | undefined
+            Mutation | DeepPartial<Mutation> | null | undefined
           >();
+          if (dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              DeepPartial<Mutation> | null | undefined
+            >();
+          }
+          if (dataState === "complete") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              Mutation | null | undefined
+            >();
+          }
 
           return {};
         },
@@ -4730,10 +4742,21 @@ describe.skip("Type Tests", () => {
         updateUser: { __typename: "User", id: "1", age: 30 },
       },
       updateQueries: {
-        TestQuery: (_, { mutationResult }) => {
+        TestQuery: (_, { mutationResult, dataState }) => {
           expectTypeOf(mutationResult.data).toMatchTypeOf<
-            UnmaskedMutation | null | undefined
+            UnmaskedMutation | DeepPartial<UnmaskedMutation> | null | undefined
           >();
+
+          if (dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              DeepPartial<UnmaskedMutation> | null | undefined
+            >();
+          }
+          if (dataState === "complete") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              UnmaskedMutation | null | undefined
+            >();
+          }
 
           return {};
         },

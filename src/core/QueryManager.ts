@@ -149,7 +149,7 @@ interface QueryManagerOptions {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
   localState: LocalState | undefined;
-  incrementalHandler: Incremental.Handler<Incremental.ExecutionResult>;
+  incrementalHandler: Incremental.Handler;
 }
 
 export class QueryManager {
@@ -165,7 +165,7 @@ export class QueryManager {
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
   public readonly dataMasking: boolean;
-  public readonly incrementalHandler: Incremental.Handler<Incremental.ExecutionResult>;
+  public readonly incrementalHandler: Incremental.Handler;
   public localState: LocalState | undefined;
 
   private queryDeduplication: boolean;

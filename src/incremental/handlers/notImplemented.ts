@@ -4,19 +4,10 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { Incremental } from "../types.js";
 
-const no = (_result: unknown): _result is never => false;
-
-interface NonIncrementalResult extends Incremental.ExecutionResult {
-  Initial: unknown;
-  Subsequent: unknown;
-}
-
-export class NotImplementedHandler
-  implements Incremental.Handler<NonIncrementalResult>
-{
-  isIncrementalResult = no;
-  isIncrementalSubsequentResult = no;
-  isIncrementalInitialResult = no;
+export class NotImplementedHandler implements Incremental.Handler<never> {
+  isIncrementalResult(_: any): _ is never {
+    return false;
+  }
   prepareRequest(request: GraphQLRequest) {
     invariant(
       !hasDirectives(["defer"], request.query),

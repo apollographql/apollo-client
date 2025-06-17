@@ -225,39 +225,6 @@ export const createPersistedQueryLink = (
           cb();
         }
 
-        function maybeRetryNetworkError(
-          networkError: ErrorLike,
-          cb: () => void
-        ) {
-          let graphQLErrors: GraphQLFormattedError[] = [];
-
-          // This is persisted-query specific (see #9410) and deviates from the
-          // GraphQL-over-HTTP spec for application/json responses.
-          // This is intentional.
-          if (ServerError.is(networkError) && networkError.bodyText) {
-            try {
-              const result = JSON.parse(networkError.bodyText);
-              const errors: GraphQLFormattedError[] | undefined =
-                result?.errors as GraphQLFormattedError[];
-
-              if (isNonEmptyArray(errors)) {
-                graphQLErrors = errors;
-              }
-            } catch {}
-          }
-
-          handleRetry(
-            {
-              networkError,
-              operation,
-              graphQLErrors:
-                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-              meta: processErrors(graphQLErrors),
-            },
-            cb
-          );
-        }
-
         const handler = {
           next: (response: FetchResult) => {
             if (!isFormattedExecutionResult(response)) {
@@ -283,8 +250,33 @@ export const createPersistedQueryLink = (
             );
           },
           error: (error: unknown) => {
-            maybeRetryNetworkError(toErrorLike(error), () =>
-              observer.error(error)
+            const networkError = toErrorLike(error);
+            let graphQLErrors: GraphQLFormattedError[] = [];
+
+            // This is persisted-query specific (see #9410) and deviates from the
+            // GraphQL-over-HTTP spec for application/json responses.
+            // This is intentional.
+            if (ServerError.is(networkError) && networkError.bodyText) {
+              try {
+                const result = JSON.parse(networkError.bodyText);
+                const errors: GraphQLFormattedError[] | undefined =
+                  result?.errors as GraphQLFormattedError[];
+
+                if (isNonEmptyArray(errors)) {
+                  graphQLErrors = errors;
+                }
+              } catch {}
+            }
+
+            handleRetry(
+              {
+                networkError,
+                operation,
+                graphQLErrors:
+                  isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
+                meta: processErrors(graphQLErrors),
+              },
+              () => observer.error(networkError)
             );
           },
           complete: observer.complete.bind(observer),

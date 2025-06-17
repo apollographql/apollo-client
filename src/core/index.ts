@@ -196,4 +196,4 @@ export {
   gql,
   resetCaches,
 } from "graphql-tag";
-export { version } from "../version.js";
+export { build, version } from "../version.js";

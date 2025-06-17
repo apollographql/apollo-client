@@ -262,38 +262,36 @@ export const createPersistedQueryLink = (
           response: FetchResult | undefined,
           cb: () => void
         ) => {
-          if (retried) {
-            return cb();
-          }
-
           if (!isFormattedExecutionResult(response)) {
             // if the response is not an expected format, we set it to `undefined`
             // network errors will still be handled correctly,
             // but we don't pass any unexpected data to userland callbacks
             response = undefined;
           }
-          if (response?.errors) {
-            retried = true;
 
-            const graphQLErrors: GraphQLFormattedError[] = [];
-
-            const responseErrors = response.errors;
-            if (isNonEmptyArray(responseErrors)) {
-              graphQLErrors.push(...responseErrors);
-            }
-
-            return handleRetry(
-              {
-                response,
-                operation,
-                graphQLErrors:
-                  isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-                meta: processErrors(graphQLErrors),
-              },
-              cb
-            );
+          if (!response?.errors || retried) {
+            return cb();
           }
-          cb();
+
+          retried = true;
+
+          const graphQLErrors: GraphQLFormattedError[] = [];
+
+          const responseErrors = response.errors;
+          if (isNonEmptyArray(responseErrors)) {
+            graphQLErrors.push(...responseErrors);
+          }
+
+          handleRetry(
+            {
+              response,
+              operation,
+              graphQLErrors:
+                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
+              meta: processErrors(graphQLErrors),
+            },
+            cb
+          );
         };
         const handler = {
           next: (response: FetchResult) => {

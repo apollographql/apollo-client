@@ -1726,8 +1726,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           } as ApolloQueryResult<TData>)
         : notification.value;
 
-      if (result.error && result.dataState === "streaming") {
-        // TODO
+      if (notification.kind === "E" && result.dataState === "streaming") {
         result.dataState = "complete" as any;
       }
 

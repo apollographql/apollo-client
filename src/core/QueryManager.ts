@@ -1084,17 +1084,16 @@ export class QueryManager {
         // want to ensure we properly set `data` if we're reporting on an old
         // result which will not be caught by the conditional above that ends up
         // throwing the markError result.
-        if (hasErrors && errorPolicy === "none") {
-          aqr.data = void 0 as TData;
-          aqr.dataState = "empty";
-        }
-
-        if (hasErrors && errorPolicy !== "ignore") {
-          aqr.error = new CombinedGraphQLErrors(result);
-          aqr.networkStatus = NetworkStatus.error;
-
-          if (aqr.data) {
-            aqr.dataState = "complete";
+        if (hasErrors) {
+          if (errorPolicy === "none") {
+            aqr.data = void 0 as TData;
+            aqr.dataState = "empty";
+          }
+          if (errorPolicy !== "ignore") {
+            aqr.error = new CombinedGraphQLErrors(result);
+            if (aqr.dataState !== "streaming") {
+              aqr.networkStatus = NetworkStatus.error;
+            }
           }
         }
 

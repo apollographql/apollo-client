@@ -821,13 +821,13 @@ test("returns error on initial result", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
         errorField: null,
       },
-    },
+    }),
     error: new CombinedGraphQLErrors({
       data: {
         hero: {
@@ -843,8 +843,8 @@ test("returns error on initial result", async () => {
         },
       ],
     }),
-    dataState: "complete",
-    networkStatus: NetworkStatus.loading,
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
@@ -930,13 +930,13 @@ test("stream that returns an error but continues to stream", async () => {
 
   await expect(observableStream).toEmitTypedValue({
     loading: true,
-    data: {
+    data: markAsStreaming({
       hero: {
         __typename: "Hero",
         id: "1",
         errorField: null,
       },
-    },
+    }),
     error: new CombinedGraphQLErrors({
       data: {
         hero: {
@@ -952,9 +952,8 @@ test("stream that returns an error but continues to stream", async () => {
         },
       ],
     }),
-    // this seems weird
-    dataState: "complete",
-    networkStatus: NetworkStatus.loading,
+    dataState: "streaming",
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 

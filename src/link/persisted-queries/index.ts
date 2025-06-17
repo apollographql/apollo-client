@@ -183,6 +183,12 @@ export const createPersistedQueryLink = (
         let setFetchOptions = false;
 
         function handleRetry(errorResponse: ErrorResponse, cb: () => void) {
+          if (retried) {
+            return cb();
+          }
+
+          retried = true;
+
           // if the server doesn't support persisted queries, don't try anymore
           enabled = !disable(errorResponse);
           if (!enabled) {
@@ -223,12 +229,6 @@ export const createPersistedQueryLink = (
           networkError: ErrorLike,
           cb: () => void
         ) {
-          if (retried) {
-            return cb();
-          }
-
-          retried = true;
-
           const graphQLErrors: GraphQLFormattedError[] = [];
 
           // This is persisted-query specific (see #9410) and deviates from the
@@ -269,11 +269,9 @@ export const createPersistedQueryLink = (
             response = undefined;
           }
 
-          if (!response?.errors || retried) {
+          if (!response?.errors) {
             return cb();
           }
-
-          retried = true;
 
           const graphQLErrors: GraphQLFormattedError[] = [];
 

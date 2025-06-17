@@ -237,11 +237,11 @@ export const createPersistedQueryLink = (
           if (ServerError.is(networkError) && networkError.bodyText) {
             try {
               const result = JSON.parse(networkError.bodyText);
-              const networkErrors: GraphQLFormattedError[] | undefined =
+              const errors: GraphQLFormattedError[] | undefined =
                 result?.errors as GraphQLFormattedError[];
 
-              if (isNonEmptyArray(networkErrors)) {
-                graphQLErrors.push(...networkErrors);
+              if (isNonEmptyArray(errors)) {
+                graphQLErrors.push(...errors);
               }
             } catch {}
           }

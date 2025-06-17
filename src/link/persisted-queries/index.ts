@@ -229,7 +229,7 @@ export const createPersistedQueryLink = (
           networkError: ErrorLike,
           cb: () => void
         ) {
-          const graphQLErrors: GraphQLFormattedError[] = [];
+          let graphQLErrors: GraphQLFormattedError[] = [];
 
           // This is persisted-query specific (see #9410) and deviates from the
           // GraphQL-over-HTTP spec for application/json responses.
@@ -241,7 +241,7 @@ export const createPersistedQueryLink = (
                 result?.errors as GraphQLFormattedError[];
 
               if (isNonEmptyArray(errors)) {
-                graphQLErrors.push(...errors);
+                graphQLErrors = errors;
               }
             } catch {}
           }

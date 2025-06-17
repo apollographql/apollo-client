@@ -28,6 +28,7 @@ import type {
 } from "@apollo/client";
 import {
   ApolloClient,
+  build,
   CombinedGraphQLErrors,
   NetworkStatus,
 } from "@apollo/client";
@@ -57,6 +58,12 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
+
+test("test is running against source or (compiler-compiled) ESM build", () => {
+  // We want to ensure that in CI, these tests run against the
+  // React Compiler-compiled ESM build
+  expect(build).toBe(process.env.CI ? "esm" : "source");
+});
 
 describe("useQuery Hook", () => {
   describe("General use", () => {

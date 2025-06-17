@@ -14,8 +14,3 @@ declare module "@apollo/client" {
     Streaming: StreamingOverrideHKT;
   }
 }
-type Foo =
-  | Streaming<VariablesCaseData>
-  | Streaming<Masked<MaskedVariablesCaseData>>
-  | Streaming<MaskedVariablesCaseData>
-  | false;

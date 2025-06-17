@@ -22,15 +22,15 @@ import { asapScheduler, Observable, observeOn, of } from "rxjs";
 import type {
   FetchPolicy,
   OperationVariables,
+
+  Streaming,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "@apollo/client";
+  WatchQueryOptions} from "@apollo/client";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
-  NetworkStatus,
-  Streaming,
+  NetworkStatus
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { Defer20220824Handler } from "@apollo/client/incremental";

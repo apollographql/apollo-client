@@ -358,6 +358,7 @@ Array [
   "createOperationWithDefaultContext",
   "enableFakeTimers",
   "executeWithDefaultContext",
+  "markAsStreaming",
   "mockDeferStream",
   "mockMultipartSubscriptionStream",
   "renderAsync",

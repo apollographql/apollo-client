@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
@@ -91,7 +92,7 @@ export namespace Incremental {
     // (undocumented)
     export interface IncrementalRequest<Chunk extends Record<string, unknown>> {
         // (undocumented)
-        handle: <TData>(cacheData: TData | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
+        handle: <TData>(cacheData: TData | DeepPartial<TData> | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
         // (undocumented)
         hasNext: boolean;
     }

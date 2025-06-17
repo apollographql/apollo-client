@@ -8,6 +8,7 @@ import { ApolloCache } from '@apollo/client/cache';
 import { ApolloLink } from '@apollo/client/link';
 import { ApolloPayloadResult } from '@apollo/client/link';
 import { ApolloReducerConfig } from '@apollo/client/cache';
+import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
@@ -47,6 +48,7 @@ import { from } from '@apollo/client/link';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import { gql } from 'graphql-tag';
 import { GraphQLRequest } from '@apollo/client/link';
+import type { HKT } from '@apollo/client/utilities';
 import { HttpLink } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
@@ -242,7 +244,10 @@ export { DataProxy }
 // @public (undocumented)
 export type DataState<TData> = {
     data: TData;
-    dataState: "complete" | "streaming";
+    dataState: "complete";
+} | {
+    data: Streaming<TData>;
+    dataState: "streaming";
 } | {
     data: DeepPartial<TData>;
     dataState: "partial";
@@ -346,6 +351,15 @@ export { FieldMergeFunction }
 export { FieldPolicy }
 
 export { FieldReadFunction }
+
+// @public (undocumented)
+export type FormattedExecutionResultWithDataState<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
+    data?: TData | null;
+    dataState: "complete";
+} | {
+    data?: Streaming<TData> | null;
+    dataState: "streaming";
+});
 
 export { FragmentType }
 
@@ -478,7 +492,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
     updateQueries?: MutationQueryReducersMap<TData>;
-    refetchQueries?: ((result: FormattedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    refetchQueries?: ((result: FormattedExecutionResultWithDataState<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     awaitRefetchQueries?: boolean;
     update?: MutationUpdaterFunction<TData, TVariables, TCache>;
     onQueryUpdated?: OnQueryUpdated<any>;
@@ -491,15 +505,10 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
+    mutationResult: FormattedExecutionResultWithDataState<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
-} & ({
-    mutationResult: FormattedExecutionResult<Unmasked<T>>;
-    dataState: "complete";
-} | {
-    mutationResult: FormattedExecutionResult<DeepPartial<Unmasked<T>>>;
-    dataState: "streaming";
-})) => Record<string, any>;
+}) => Record<string, any>;
 
 // @public (undocumented)
 export type MutationQueryReducersMap<T = {
@@ -676,6 +685,25 @@ export type OperationVariables = Record<string, any>;
 
 export { OptimisticStoreItem }
 
+// @public (undocumented)
+namespace OverridableTypes {
+    // (undocumented)
+    interface Defaults {
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        Streaming: Streaming;
+    }
+    // (undocumented)
+    interface Streaming extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: this["arg1"];
+    }
+        {};
+}
+
 export { parseAndCheckHttpResponse }
 
 export { Path }
@@ -708,15 +736,15 @@ class QueryInfo {
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
         awaitRefetchQueries?: boolean;
-        refetchQueries?: InternalRefetchQueriesInclude;
+        refetchQueries?: ((result: FormattedExecutionResultWithDataState<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
         removeOptimistic?: string;
         onQueryUpdated?: OnQueryUpdated<any>;
         keepRootFields?: boolean;
-    }, cache?: ApolloCache): Promise<FormattedExecutionResult<TData | DeepPartial<TData>>>;
+    }, cache?: ApolloCache): Promise<FormattedExecutionResult<TData | Streaming<TData>>>;
     // Warning: (ae-forgotten-export) The symbol "OperationInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markQueryResult<TData, TVariables extends OperationVariables>(incoming: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): FormattedExecutionResult<TData | DeepPartial<TData>>;
+    markQueryResult<TData, TVariables extends OperationVariables>(incoming: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): FormattedExecutionResult<TData | Streaming<TData>>;
     // (undocumented)
     markSubscriptionResult<TData, TVariables extends OperationVariables>(result: FormattedExecutionResult<TData>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
     // (undocumented)
@@ -962,6 +990,11 @@ export { StoreObject }
 
 export { StoreValue }
 
+// Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
+
 // @public (undocumented)
 export interface SubscribeResult<TData = unknown> {
     data: TData | undefined;
@@ -1043,6 +1076,10 @@ interface TransformCacheEntry {
 
 export { TypedDocumentNode }
 
+// @public (undocumented)
+export interface TypeOverrides {
+}
+
 export { TypePolicies }
 
 export { TypePolicy }
@@ -1101,9 +1138,9 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 //
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryInfo.ts:326:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryInfo.ts:328:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:260:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

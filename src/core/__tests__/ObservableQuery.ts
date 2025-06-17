@@ -3431,6 +3431,46 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    it("returns loading: false on cache-only fetchPolicy queries when calling getCurrentResult with no data in the cache", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+
+      const observable = client.watchQuery({
+        query,
+        variables,
+        fetchPolicy: "cache-only",
+      });
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+
+      await expect(stream).not.toEmitAnything();
+    });
+
     it("handles multiple calls to getCurrentResult without losing data", async () => {
       const query = gql`
         {

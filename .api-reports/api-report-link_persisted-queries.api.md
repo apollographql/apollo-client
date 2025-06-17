@@ -6,11 +6,8 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
-import type { FormattedExecutionResult } from 'graphql';
-import type { GraphQLFormattedError } from 'graphql';
+import type { ErrorLike } from '@apollo/client';
 import type { Operation } from '@apollo/client/link';
-import type { ServerError } from '@apollo/client/errors';
-import type { ServerParseError } from '@apollo/client/errors';
 
 // @public (undocumented)
 interface BaseOptions {
@@ -44,17 +41,13 @@ type ErrorMeta = {
 // @public (undocumented)
 export interface ErrorResponse {
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
+    error: ErrorLike;
     // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     meta: ErrorMeta;
     // (undocumented)
-    networkError?: Error | ServerParseError | ServerError | null;
-    // (undocumented)
     operation: Operation;
-    // (undocumented)
-    response?: FormattedExecutionResult;
 }
 
 // @public (undocumented)

@@ -254,11 +254,7 @@ export const createPersistedQueryLink = (
         }
 
         const maybeRetry = (
-          {
-            response,
-          }: {
-            response?: FetchResult;
-          },
+          response: FetchResult | undefined,
           cb: () => void
         ) => {
           if (retried) {
@@ -326,7 +322,7 @@ export const createPersistedQueryLink = (
         };
         const handler = {
           next: (response: FetchResult) => {
-            maybeRetry({ response }, () => observer.next(response));
+            maybeRetry(response, () => observer.next(response));
           },
           error: (error: unknown) => {
             maybeRetryNetworkError(toErrorLike(error), () =>

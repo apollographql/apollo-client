@@ -6,7 +6,6 @@ import type {
 import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ErrorLike } from "@apollo/client";
 import type { ServerParseError } from "@apollo/client/errors";
 import { ServerError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link";
@@ -225,8 +224,8 @@ export const createPersistedQueryLink = (
           cb();
         }
 
-        const handler = {
-          next: (response: FetchResult) => {
+        const handler: Observer<FetchResult> = {
+          next: (response) => {
             if (!isFormattedExecutionResult(response)) {
               // if the response is not an expected format, we ignore it.
               // Network errors will still be handled correctly,
@@ -249,7 +248,7 @@ export const createPersistedQueryLink = (
               () => observer.next(response)
             );
           },
-          error: (error: unknown) => {
+          error: (error) => {
             const networkError = toErrorLike(error);
             let graphQLErrors: GraphQLFormattedError[] = [];
 

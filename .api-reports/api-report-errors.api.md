@@ -5,8 +5,7 @@
 ```ts
 
 import { ErrorLike } from '@apollo/client';
-import type { FetchResult } from '@apollo/client/link';
-import type { FetchResult as FetchResult_2 } from '@apollo/client';
+import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 
 // @public (undocumented)
@@ -18,13 +17,13 @@ export namespace CombinedGraphQLErrors {
         // (undocumented)
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
         // (undocumented)
-        result: FetchResult_2<unknown>;
+        result: FormattedExecutionResult<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
-    constructor(result: FetchResult_2<unknown>);
+    constructor(result: FormattedExecutionResult<any>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     static formatMessage: CombinedGraphQLErrors.MessageFormatter;
@@ -53,14 +52,9 @@ export class CombinedProtocolErrors extends Error {
 }
 
 // @public (undocumented)
-type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
+export function graphQLResultHasProtocolErrors<T extends {}>(result: T): result is T & {
     extensions: Record<string | symbol, any>;
 };
-
-// Warning: (ae-forgotten-export) The symbol "FetchResultWithSymbolExtensions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function graphQLResultHasProtocolErrors<T>(result: FetchResult<T>): result is FetchResultWithSymbolExtensions<T>;
 
 // @public (undocumented)
 export function isErrorLike(error: unknown): error is ErrorLike;

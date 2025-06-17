@@ -7,8 +7,13 @@
 import type { ApolloClient } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { Observable } from 'rxjs';
+
+// @public (undocumented)
+export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
+}
 
 // @public (undocumented)
 export class ApolloLink {
@@ -42,7 +47,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
+    payload: FormattedExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -98,7 +103,7 @@ interface ExecutionPatchResultBase {
 }
 
 // @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
 
 // @public (undocumented)
 export const from: typeof ApolloLink.from;
@@ -164,18 +169,6 @@ export type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
-
-// @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    data?: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-}
 
 // @public (undocumented)
 export const split: typeof ApolloLink.split;

@@ -5,22 +5,14 @@
 ```ts
 
 import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client';
+import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { GraphQLRequest } from '@apollo/client';
 
 // @public (undocumented)
-function defer20220824(): Incremental.Strategy<defer20220824.ExecutionResult>;
-
-// @public (undocumented)
-namespace defer20220824 {
+namespace Defer20220824Handler {
     // (undocumented)
-    interface ExecutionResult<TData = Record<string, unknown>> {
-        // (undocumented)
-        Initial: InitialResult<TData>;
-        // (undocumented)
-        Subsequent: SubsequentResult<TData>;
-    }
+    type Chunk<TData = Record<string, unknown>> = InitialResult<TData> | SubsequentResult<TData>;
     // (undocumented)
     interface IncrementalDeferPayload<TData = Record<string, unknown>> {
         // (undocumented)
@@ -37,73 +29,85 @@ namespace defer20220824 {
     // (undocumented)
     type IncrementalPayload<TData = Record<string, unknown>> = IncrementalDeferPayload<TData>;
     // (undocumented)
-    interface InitialResult<TData = Record<string, unknown>> {
-        // (undocumented)
+    type InitialResult<TData = Record<string, unknown>> = {
         data: TData | null | undefined;
-        // (undocumented)
         errors?: ReadonlyArray<GraphQLFormattedError>;
-        // (undocumented)
         extensions?: Record<string, any>;
-        // (undocumented)
         hasNext: boolean;
-    }
+    };
     // (undocumented)
-    interface SubsequentResult<TData = Record<string, unknown>> {
-        // (undocumented)
+    type SubsequentResult<TData = Record<string, unknown>> = {
         hasNext: boolean;
-        // (undocumented)
         incremental?: Array<IncrementalPayload<TData>>;
-    }
+    };
 }
-export { defer20220824 }
-export { defer20220824 as graphqlAlpha2 }
+
+// @public (undocumented)
+class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk> {
+    // (undocumented)
+    isIncrementalInitialResult(result: Record<string, any>): result is Defer20220824Handler.InitialResult;
+    // (undocumented)
+    isIncrementalResult(result: Record<string, any>): result is Defer20220824Handler.SubsequentResult | Defer20220824Handler.InitialResult;
+    // (undocumented)
+    isIncrementalSubsequentResult(result: Record<string, any>): result is Defer20220824Handler.SubsequentResult;
+    // (undocumented)
+    prepareRequest(request: GraphQLRequest): GraphQLRequest;
+    // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    startRequest(_: {
+        query: DocumentNode;
+    }): DeferRequest;
+}
+export { Defer20220824Handler }
+export { Defer20220824Handler as DeferAlpha2Handler }
+
+// @public (undocumented)
+class DeferRequest implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk> {
+    constructor(strategy: Defer20220824Handler);
+    // (undocumented)
+    handle<TData>(cacheData: TData | undefined, chunk: Defer20220824Handler.InitialResult | Defer20220824Handler.SubsequentResult): {
+        data: any;
+        errors: GraphQLFormattedError[];
+        extensions: Record<string, any>;
+    };
+    // (undocumented)
+    hasNext: boolean;
+}
 
 // @public (undocumented)
 export namespace Incremental {
-    // (undocumented)
-    export interface ExecutionResult {
+    // @internal @deprecated (undocumented)
+    export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        Initial: any;
-        // (undocumented)
-        Subsequent: any;
-    }
-    // (undocumented)
-    export interface IncrementalRequest<TExecutionResult extends Incremental.ExecutionResult, Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"]> {
-        // (undocumented)
-        handle: <TData>(cacheData: TData, chunk: Chunk) => FetchResult<TData>;
-        // (undocumented)
-        hasNext: boolean;
-    }
-    // (undocumented)
-    export type Path = ReadonlyArray<string | number>;
-    // (undocumented)
-    export interface Pending {
-        // (undocumented)
-        id: string;
-        // (undocumented)
-        label?: string;
-        // (undocumented)
-        path: Path;
-    }
-    // (undocumented)
-    export interface Strategy<TExecutionResult extends Incremental.ExecutionResult = Incremental.ExecutionResult> {
-        // (undocumented)
-        isIncrementalInitialResult: (result: Record<string, any>) => result is TExecutionResult["Initial"];
-        // (undocumented)
-        isIncrementalResult: (result: Record<string, any>) => result is TExecutionResult["Initial"] | TExecutionResult["Subsequent"];
-        // (undocumented)
-        isIncrementalSubsequentResult: (result: Record<string, any>) => result is TExecutionResult["Subsequent"];
+        isIncrementalResult: (result: Record<string, any>) => result is Chunk;
         // (undocumented)
         prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
         // (undocumented)
         startRequest: (request: {
             query: DocumentNode;
-        }) => IncrementalRequest<TExecutionResult>;
+        }) => IncrementalRequest<Chunk>;
     }
+    // (undocumented)
+    export interface IncrementalRequest<Chunk extends Record<string, unknown>> {
+        // (undocumented)
+        handle: <TData>(cacheData: TData | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
+        // (undocumented)
+        hasNext: boolean;
+    }
+    // (undocumented)
+    export type Path = ReadonlyArray<string | number>;
 }
 
 // @public (undocumented)
-export function notImplementedStrategy(): Incremental.Strategy<never>;
+export class NotImplementedHandler implements Incremental.Handler<never> {
+    // (undocumented)
+    isIncrementalResult(_: any): _ is never;
+    // (undocumented)
+    prepareRequest(request: GraphQLRequest): GraphQLRequest<Record<string, any>>;
+    // (undocumented)
+    startRequest: any;
+}
 
 // (No @packageDocumentation comment for this package)
 

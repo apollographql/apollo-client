@@ -98,7 +98,7 @@ export class ApolloClient implements DataProxy {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClientOptions);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
+    __requestRaw(payload: GraphQLRequest): Observable<FetchResult<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -167,7 +167,7 @@ export interface ApolloClientOptions {
     // (undocumented)
     enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
     // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
-    incrementalStrategy?: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
+    incrementalHandler?: Incremental.Handler<any>;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
@@ -210,7 +210,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
+    payload: FormattedExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -425,13 +425,13 @@ export namespace CombinedGraphQLErrors {
         // (undocumented)
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
         // (undocumented)
-        result: FetchResult<unknown>;
+        result: FormattedExecutionResult<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
-    constructor(result: FetchResult<unknown>);
+    constructor(result: FormattedExecutionResult<any>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     static formatMessage: CombinedGraphQLErrors.MessageFormatter;
@@ -900,7 +900,7 @@ export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
 export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
 
 // @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
 
 // @public (undocumented)
 export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Record<string, any>> {
@@ -1279,41 +1279,10 @@ const _ignoreModifier: unique symbol;
 
 // @public (undocumented)
 namespace Incremental {
-    // (undocumented)
-    interface ExecutionResult {
+    // @internal @deprecated (undocumented)
+    interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        Initial: any;
-        // (undocumented)
-        Subsequent: any;
-    }
-    // (undocumented)
-    interface IncrementalRequest<TExecutionResult extends Incremental.ExecutionResult, Chunk = TExecutionResult["Initial"] | TExecutionResult["Subsequent"]> {
-        // (undocumented)
-        handle: <TData>(cacheData: TData, chunk: Chunk) => FetchResult<TData>;
-        // (undocumented)
-        hasNext: boolean;
-    }
-    // (undocumented)
-    type Path = ReadonlyArray<string | number>;
-    // (undocumented)
-    interface Pending {
-        // (undocumented)
-        id: string;
-        // (undocumented)
-        label?: string;
-        // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
-        //
-        // (undocumented)
-        path: Path;
-    }
-    // (undocumented)
-    interface Strategy<TExecutionResult extends Incremental.ExecutionResult = Incremental.ExecutionResult> {
-        // (undocumented)
-        isIncrementalInitialResult: (result: Record<string, any>) => result is TExecutionResult["Initial"];
-        // (undocumented)
-        isIncrementalResult: (result: Record<string, any>) => result is TExecutionResult["Initial"] | TExecutionResult["Subsequent"];
-        // (undocumented)
-        isIncrementalSubsequentResult: (result: Record<string, any>) => result is TExecutionResult["Subsequent"];
+        isIncrementalResult: (result: Record<string, any>) => result is Chunk;
         // (undocumented)
         prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
         // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
@@ -1321,8 +1290,17 @@ namespace Incremental {
         // (undocumented)
         startRequest: (request: {
             query: DocumentNode;
-        }) => IncrementalRequest<TExecutionResult>;
+        }) => IncrementalRequest<Chunk>;
     }
+    // (undocumented)
+    interface IncrementalRequest<Chunk extends Record<string, unknown>> {
+        // (undocumented)
+        handle: <TData>(cacheData: TData | undefined | null, chunk: Chunk) => FormattedExecutionResult<TData>;
+        // (undocumented)
+        hasNext: boolean;
+    }
+    // (undocumented)
+    type Path = ReadonlyArray<string | number>;
 }
 
 // @public (undocumented)
@@ -1501,7 +1479,7 @@ interface LastWrite {
     // (undocumented)
     dmCount: number | undefined;
     // (undocumented)
-    result: FetchResult<any>;
+    result: FormattedExecutionResult<any>;
     // (undocumented)
     variables: WatchQueryOptions["variables"];
 }
@@ -1617,11 +1595,11 @@ class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
-        remoteResult: FetchResult<any> | undefined;
+        remoteResult: FormattedExecutionResult<any> | undefined;
         variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
         returnPartialData?: boolean;
-    }): Promise<FetchResult<TData>>;
+    }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
     getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
         document: DocumentNode | TypedDocumentNode<any, TVariables>;
@@ -1811,7 +1789,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
     updateQueries?: MutationQueryReducersMap<TData>;
-    refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    refetchQueries?: ((result: FormattedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     awaitRefetchQueries?: boolean;
     update?: MutationUpdaterFunction<TData, TVariables, TCache>;
     onQueryUpdated?: OnQueryUpdated<any>;
@@ -1824,10 +1802,15 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: FetchResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
-}) => Record<string, any>;
+} & ({
+    mutationResult: FormattedExecutionResult<Unmasked<T>>;
+    dataState: "complete";
+} | {
+    mutationResult: FormattedExecutionResult<DeepPartial<Unmasked<T>>>;
+    dataState: "streaming";
+})) => Record<string, any>;
 
 // @public (undocumented)
 export type MutationQueryReducersMap<T = {
@@ -1848,13 +1831,8 @@ interface MutationStoreValue {
     variables: Record<string, any>;
 }
 
-// @public @deprecated (undocumented)
-export type MutationUpdaterFn<T = {
-    [key: string]: any;
-}> = (cache: ApolloCache, mutationResult: FetchResult<T>) => void;
-
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: Omit<FetchResult<Unmasked<TData>>, "context">, options: {
+export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: Omit<FormattedExecutionResult<Unmasked<TData>>, "context">, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -2165,7 +2143,7 @@ class QueryInfo {
         keepRootFields?: boolean;
     }): boolean;
     // (undocumented)
-    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: Readonly<FetchResult<Readonly<TData>>>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
+    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(incoming: FetchResult<TData>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
         context?: DefaultContext;
         updateQueries: UpdateQueries<TData>;
         update?: MutationUpdaterFunction<TData, TVariables, TCache>;
@@ -2174,13 +2152,13 @@ class QueryInfo {
         removeOptimistic?: string;
         onQueryUpdated?: OnQueryUpdated<any>;
         keepRootFields?: boolean;
-    }, cache?: ApolloCache): Promise<FetchResult<TData>>;
+    }, cache?: ApolloCache): Promise<FormattedExecutionResult<TData | DeepPartial<TData>>>;
     // Warning: (ae-forgotten-export) The symbol "OperationInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    markQueryResult<TData, TVariables extends OperationVariables>(result: Readonly<FetchResult<Readonly<TData>>>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): FetchResult<TData>;
+    markQueryResult<TData, TVariables extends OperationVariables>(incoming: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): FormattedExecutionResult<TData | DeepPartial<TData>>;
     // (undocumented)
-    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: Readonly<FetchResult<TData>>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
+    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: FormattedExecutionResult<TData>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
     // (undocumented)
     resetLastWrite(): void;
 }
@@ -2238,7 +2216,7 @@ class QueryManager {
     // (undocumented)
     getVariables<TVariables>(document: DocumentNode, variables?: TVariables): TVariables;
     // (undocumented)
-    readonly incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
+    readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable<FetchResult<any>>;
@@ -2301,7 +2279,7 @@ interface QueryManagerOptions {
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
     // (undocumented)
-    incrementalStrategy: Incremental.Strategy<Incremental.ExecutionResult> | Incremental.Strategy<never>;
+    incrementalHandler: Incremental.Handler;
     // (undocumented)
     localState: LocalState | undefined;
     // (undocumented)
@@ -2539,18 +2517,6 @@ interface ServerParseErrorOptions {
 export function setLogVerbosity(level: VerbosityLevel): VerbosityLevel;
 
 // @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    data?: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-}
-
-// @public (undocumented)
 export const split: typeof ApolloLink.split;
 
 // @public (undocumented)
@@ -2657,6 +2623,8 @@ interface TransformCacheEntry {
     hasClientExports: boolean;
     // (undocumented)
     hasForcedResolvers: boolean;
+    // (undocumented)
+    hasIncrementalDirective: boolean;
     // (undocumented)
     hasNonreactiveDirective: boolean;
     // (undocumented)
@@ -2828,9 +2796,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryInfo.ts:313:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:186:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/QueryInfo.ts:326:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:260:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:194:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

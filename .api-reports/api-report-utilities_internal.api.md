@@ -8,8 +8,8 @@ import type { ApolloQueryResult } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
@@ -259,7 +259,7 @@ const globalCaches: {
 };
 
 // @internal @deprecated (undocumented)
-export function graphQLResultHasError(result: FetchResult<any>): boolean;
+export function graphQLResultHasError(result: FormattedExecutionResult<any>): boolean;
 
 // @internal @deprecated (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
@@ -278,6 +278,9 @@ export function isDocumentNode(value: unknown): value is DocumentNode;
 
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
+
+// @public (undocumented)
+export function isFormattedExecutionResult(result?: object): result is FormattedExecutionResult;
 
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;

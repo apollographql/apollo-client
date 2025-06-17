@@ -14,14 +14,14 @@ import type { Operation } from '@apollo/client/link';
 
 export interface ErrorHandler {
     // (undocumented)
-    (error: ErrorResponse): Observable<FetchResult> | void;
+    (error: ErrorResponse): Observable<FormattedExecutionResult> | void;
 }
 
 // @public (undocumented)
 export namespace ErrorLink {
     export interface ErrorHandler {
         // (undocumented)
-        (error: ErrorResponse): Observable<FetchResult> | void;
+        (error: ErrorResponse): Observable<FormattedExecutionResult> | void;
     }
 }
 

@@ -176,7 +176,7 @@ export const createPersistedQueryLink = (
       const { query } = operation;
 
       return new Observable((observer: Observer<FetchResult>) => {
-        let subscription: Subscription;
+        let subscription: Subscription | undefined;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;

@@ -19,7 +19,7 @@ function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult {
   return isNonNullObject(value) && "payload" in value;
 }
 
-export async function* consumeMultipartBody(
+async function* consumeMultipartBody(
   response: Response
 ): AsyncGenerator<string, void, void> {
   const decoder = new TextDecoder("utf-8");

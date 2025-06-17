@@ -272,7 +272,7 @@ export const createPersistedQueryLink = (
 
             const graphQLErrors: GraphQLFormattedError[] = [];
 
-            const responseErrors = response?.errors;
+            const responseErrors = response.errors;
             if (isNonEmptyArray(responseErrors)) {
               graphQLErrors.push(...responseErrors);
             }

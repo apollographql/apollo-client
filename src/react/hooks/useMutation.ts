@@ -1,6 +1,5 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
-import type { FormattedExecutionResult } from "graphql";
 import * as React from "react";
 
 import type {
@@ -10,6 +9,7 @@ import type {
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
+  FormattedExecutionResultWithDataState,
   InternalRefetchQueriesInclude,
   MaybeMasked,
   MutateResult,
@@ -60,7 +60,7 @@ export declare namespace useMutation {
     /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
     refetchQueries?:
       | ((
-          result: FormattedExecutionResult<Unmasked<TData>>
+          result: FormattedExecutionResultWithDataState<Unmasked<TData>>
         ) => InternalRefetchQueriesInclude)
       | InternalRefetchQueriesInclude;
 

@@ -246,13 +246,11 @@ export type ApolloQueryResult<
 
 export type DataState<TData> =
   | {
-      // Defer to the passed in type to properly type the `@defer` fields.
       data: TData;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "complete";
     }
   | {
-      // Defer to the passed in type to properly type the `@defer` fields.
       data: Streaming<TData>;
       /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
       dataState: "streaming";

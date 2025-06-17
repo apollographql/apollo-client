@@ -21,6 +21,7 @@ import { LocalState } from "@apollo/client/local-state";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
   ObservableStream,
+  setupVariablesCase,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
@@ -7454,4 +7455,57 @@ test("does not return partial cache data when `returnPartialData` is false and n
   });
 
   expect(observable.getCurrentResult()).toBe(stream.getCurrent());
+});
+
+test("emits data: undefined when changing variables and an error is returned with notifyOnNetworkStatusChange: false", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      mocks[0],
+      {
+        request: { query, variables: { id: "2" } },
+        result: { errors: [{ message: "Something went wrong" }] },
+      },
+    ]),
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { id: "1" },
+    notifyOnNetworkStatusChange: false,
+  });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(
+    observable.reobserve({ variables: { id: "2" } })
+  ).rejects.toEqual(
+    new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
 });

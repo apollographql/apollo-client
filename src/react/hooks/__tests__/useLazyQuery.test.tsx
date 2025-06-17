@@ -5988,6 +5988,98 @@ test("uses default variables in query", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("rerenders with data: undefined when changing variables and an error is returned with notifyOnNetworkStatusChange: false", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      mocks[0],
+      {
+        request: { query, variables: { id: "2" } },
+        result: { errors: [{ message: "Something went wrong" }] },
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query, { notifyOnNetworkStatusChange: false }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute({ variables: { id: "1" } })).resolves.toStrictEqualTyped(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      dataState: "complete",
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  await expect(execute({ variables: { id: "2" } })).rejects.toEqual(
+    new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    })
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      error: new CombinedGraphQLErrors({
+        errors: [{ message: "Something went wrong" }],
+      }),
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      variables: { id: "2" },
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 describe.skip("Type Tests", () => {
   test("returns narrowed TData in default case", () => {
     const { query } = setupSimpleCase();

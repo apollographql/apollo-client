@@ -6,8 +6,12 @@ import type {
 import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ServerParseError } from "@apollo/client/errors";
-import { ServerError, toErrorLike } from "@apollo/client/errors";
+import type { ErrorLike } from "@apollo/client";
+import {
+  CombinedGraphQLErrors,
+  ServerError,
+  toErrorLike,
+} from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
@@ -28,8 +32,7 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 export const VERSION = 1;
 
 export interface ErrorResponse {
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  networkError?: Error | ServerParseError | ServerError | null;
+  error: ErrorLike;
   response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;
@@ -241,8 +244,7 @@ export const createPersistedQueryLink = (
               {
                 response,
                 operation,
-                graphQLErrors:
-                  isNonEmptyArray(response.errors) ? response.errors : void 0,
+                error: new CombinedGraphQLErrors(response),
                 meta: processErrors(response.errors),
               },
               () => observer.next(response)
@@ -250,29 +252,28 @@ export const createPersistedQueryLink = (
           },
           error: (error) => {
             const networkError = toErrorLike(error);
-            let graphQLErrors: GraphQLFormattedError[] = [];
+            let graphQLErrors: ReadonlyArray<GraphQLFormattedError> | undefined;
 
             // This is persisted-query specific (see #9410) and deviates from the
             // GraphQL-over-HTTP spec for application/json responses.
             // This is intentional.
             if (ServerError.is(networkError) && networkError.bodyText) {
               try {
-                const result = JSON.parse(networkError.bodyText);
-                const errors: GraphQLFormattedError[] | undefined =
-                  result?.errors as GraphQLFormattedError[];
+                const result = JSON.parse(networkError.bodyText) as
+                  | FormattedExecutionResult
+                  | undefined;
 
-                if (isNonEmptyArray(errors)) {
-                  graphQLErrors = errors;
-                }
+                graphQLErrors = result?.errors;
               } catch {}
             }
 
             handleRetry(
               {
-                networkError,
+                error:
+                  isNonEmptyArray(graphQLErrors) ?
+                    new CombinedGraphQLErrors({ errors: graphQLErrors })
+                  : networkError,
                 operation,
-                graphQLErrors:
-                  isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
                 meta: processErrors(graphQLErrors),
               },
               () => observer.error(networkError)

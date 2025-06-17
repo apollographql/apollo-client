@@ -7,7 +7,7 @@ import { gql } from "graphql-tag";
 import { times } from "lodash";
 import { firstValueFrom, Observable, of, throwError } from "rxjs";
 
-import { ServerError, version } from "@apollo/client";
+import { CombinedGraphQLErrors, ServerError, version } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
@@ -1014,8 +1014,7 @@ test("calls `disable` with error emitted from link chain", async () => {
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: new Error("Something went wrong"),
-    graphQLErrors: undefined,
+    error: new Error("Something went wrong"),
     response: undefined,
     meta: {
       persistedQueryNotFound: false,
@@ -1057,8 +1056,7 @@ test("calls `disable` with ServerError when response has non-2xx status code", a
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: serverError,
-    graphQLErrors: undefined,
+    error: serverError,
     response: undefined,
     meta: {
       persistedQueryNotFound: false,
@@ -1094,8 +1092,9 @@ test("calls `disable` with GraphQL errors when returned in response", async () =
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: undefined,
-    graphQLErrors: [{ message: "Something went wrong" }],
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
     response: {
       errors: [{ message: "Something went wrong" }],
     },
@@ -1144,8 +1143,9 @@ test("calls `disable` with GraphQL errors when parsed from non-2xx response", as
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: serverError,
-    graphQLErrors: [{ message: "Something went wrong" }],
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
     response: undefined,
     meta: {
       persistedQueryNotFound: false,
@@ -1365,8 +1365,7 @@ test("calls `retry` with error emitted from link chain", async () => {
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: new Error("Something went wrong"),
-    graphQLErrors: undefined,
+    error: new Error("Something went wrong"),
     response: undefined,
     meta: {
       persistedQueryNotFound: false,
@@ -1408,8 +1407,7 @@ test("calls `retry` with ServerError when response has non-2xx status code", asy
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: serverError,
-    graphQLErrors: undefined,
+    error: serverError,
     response: undefined,
     meta: {
       persistedQueryNotFound: false,
@@ -1445,8 +1443,9 @@ test("calls `retry` with GraphQL errors when returned in response", async () => 
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: undefined,
-    graphQLErrors: [{ message: "Something went wrong" }],
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
     response: {
       errors: [{ message: "Something went wrong" }],
     },
@@ -1495,8 +1494,9 @@ test("calls `retry` with GraphQL errors when parsed from non-2xx response", asyn
         persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
       },
     },
-    networkError: serverError,
-    graphQLErrors: [{ message: "Something went wrong" }],
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
     response: undefined,
     meta: {
       persistedQueryNotFound: false,

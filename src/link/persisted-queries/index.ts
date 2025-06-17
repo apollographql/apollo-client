@@ -6,7 +6,9 @@ import type {
 import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ServerError, ServerParseError } from "@apollo/client/errors";
+import type { ErrorLike } from "@apollo/client";
+import type { ServerParseError } from "@apollo/client/errors";
+import { ServerError, toErrorLike } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
@@ -185,7 +187,7 @@ export const createPersistedQueryLink = (
             networkError,
           }: {
             response?: FetchResult;
-            networkError?: ServerError;
+            networkError?: ErrorLike;
           },
           cb: () => void
         ) => {
@@ -212,7 +214,7 @@ export const createPersistedQueryLink = (
             // This is persisted-query specific (see #9410) and deviates from the
             // GraphQL-over-HTTP spec for application/json responses.
             // This is intentional.
-            if (networkError?.bodyText) {
+            if (ServerError.is(networkError) && networkError.bodyText) {
               try {
                 const result = JSON.parse(networkError.bodyText);
                 const networkErrors: GraphQLFormattedError[] | undefined =
@@ -272,8 +274,10 @@ export const createPersistedQueryLink = (
           next: (response: FetchResult) => {
             maybeRetry({ response }, () => observer.next!(response));
           },
-          error: (networkError: ServerError) => {
-            maybeRetry({ networkError }, () => observer.error!(networkError));
+          error: (error: unknown) => {
+            maybeRetry({ networkError: toErrorLike(error) }, () =>
+              observer.error!(error)
+            );
           },
           complete: observer.complete!.bind(observer),
         };

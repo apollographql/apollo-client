@@ -149,7 +149,6 @@ describe("multipart responses", () => {
         }),
       };
 
-      console.log(val);
       return val;
     });
 

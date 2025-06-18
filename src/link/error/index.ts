@@ -1,4 +1,3 @@
-import type { FormattedExecutionResult } from "graphql";
 import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 

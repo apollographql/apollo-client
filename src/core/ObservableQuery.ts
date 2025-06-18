@@ -649,6 +649,14 @@ export class ObservableQuery<
   public refetch(
     variables?: Partial<TVariables>
   ): ObservableQuery.ResultPromise<QueryResult<TData>> {
+    const { fetchPolicy } = this.options;
+
+    invariant(
+      fetchPolicy !== "cache-only" && fetchPolicy !== "standby",
+      "Cannot execute `refetch` for a '%s' query. Please use a different fetch policy.",
+      fetchPolicy
+    );
+
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {
@@ -659,7 +667,6 @@ export class ObservableQuery<
     // Unless the provided fetchPolicy always consults the network
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
-    const { fetchPolicy } = this.options;
     if (fetchPolicy === "no-cache") {
       reobserveOptions.fetchPolicy = "no-cache";
     } else {
@@ -708,6 +715,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) => Unmasked<TData>;
     }
   ): Promise<QueryResult<TFetchData>> {
+    const { fetchPolicy } = this.options;
+
+    invariant(
+      fetchPolicy !== "cache-only" && fetchPolicy !== "standby",
+      "Cannot execute `fetchMore` for a '%s' query. Please use a different fetch policy.",
+      fetchPolicy
+    );
+
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -1207,7 +1222,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const {
       pollingInfo,
-      options: { pollInterval },
+      options: { fetchPolicy, pollInterval },
     } = this;
 
     if (!pollInterval || !this.hasObservers()) {
@@ -1215,13 +1230,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return;
     }
 
-    if (pollingInfo && pollingInfo.interval === pollInterval) {
+    if (pollingInfo && pollingInfo?.interval === pollInterval) {
       return;
     }
 
     invariant(
       pollInterval,
       "Attempted to start a polling query without a polling interval."
+    );
+
+    invariant(
+      fetchPolicy !== "cache-only" && fetchPolicy !== "standby",
+      "Cannot begin polling on a '%s' query. Please use a different fetch policy.",
+      fetchPolicy
     );
 
     const info = pollingInfo || (this.pollingInfo = {} as any);

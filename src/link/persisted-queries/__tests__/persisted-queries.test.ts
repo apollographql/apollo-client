@@ -348,12 +348,7 @@ describe("failure path", () => {
         createHttpLink()
       );
 
-      const stream = new ObservableStream(
-        execute(link, {
-          query,
-          variables,
-        }) as Observable<FormattedExecutionResult>
-      );
+      const stream = new ObservableStream(execute(link, { query, variables }));
 
       await expect(stream).toEmitTypedValue({ data });
 

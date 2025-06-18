@@ -656,21 +656,6 @@ export class ObservableQuery<
   ): ObservableQuery.ResultPromise<QueryResult<TData>> {
     const { fetchPolicy } = this.options;
 
-    if (fetchPolicy === "cache-only") {
-      const error = newInvariantError(
-        "Cannot execute `refetch` for 'cache-only' query '%s'. Please use a different fetch policy.",
-        getOperationName(this.query, "(anonymous)")
-      );
-
-      this.setError(error);
-
-      const promise = Object.assign(Promise.reject(error), {
-        retain: () => promise,
-      });
-
-      return promise;
-    }
-
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {

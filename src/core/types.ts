@@ -283,12 +283,12 @@ export type NormalizedExecutionResult<
 > = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> &
   (
     | {
-        data?: TData | null;
+        data: TData;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "complete";
       }
     | {
-        data?: Streaming<TData> | null;
+        data: Streaming<TData>;
         /** {@inheritDoc @apollo/client!QueryResultDocumentation#dataState:member} */
         dataState: "streaming";
       }
@@ -314,7 +314,7 @@ export type MutationUpdaterFunction<
   TCache extends ApolloCache,
 > = (
   cache: TCache,
-  result: Omit<FormattedExecutionResult<Unmasked<TData>>, "context">,
+  result: FormattedExecutionResult<Unmasked<TData>>,
   options: {
     context?: DefaultContext;
     variables?: TVariables;

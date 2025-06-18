@@ -90,11 +90,15 @@ const queryInfoIds = new WeakMap<QueryManager, number>();
 // It will only ever be used for a single network call.
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
-export class QueryInfo {
+export class QueryInfo<
+  TData,
+  TVariables extends OperationVariables = OperationVariables,
+  TCache extends ApolloCache = ApolloCache,
+> {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
 
-  private cache: ApolloCache;
+  private cache: TCache;
   private queryManager: Pick<
     QueryManager,
     | "getObservableQueries"
@@ -105,13 +109,16 @@ export class QueryInfo {
   >;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
-  private incremental?: Incremental.IncrementalRequest<Record<string, unknown>>;
+  private incremental?: Incremental.IncrementalRequest<
+    Record<string, unknown>,
+    TData | Streaming<TData>
+  >;
 
   constructor(
     queryManager: QueryManager,
     observableQuery?: ObservableQuery<any, any>
   ) {
-    const cache = (this.cache = queryManager.cache);
+    const cache = (this.cache = queryManager.cache as TCache);
     const id = (queryInfoIds.get(queryManager) || 0) + 1;
     queryInfoIds.set(queryManager, id);
     this.id = id + "";
@@ -167,7 +174,7 @@ export class QueryInfo {
     return this.incremental ? this.incremental.hasNext : false;
   }
 
-  private maybeHandleIncrementalResult<TData>(
+  private maybeHandleIncrementalResult(
     cacheData: TData | DeepPartial<TData> | undefined | null,
     incoming: FetchResult<TData>,
     query: DocumentNode
@@ -179,15 +186,12 @@ export class QueryInfo {
         query,
       });
 
-      return this.incremental!.handle<Streaming<TData> | TData>(
-        cacheData,
-        incoming
-      );
+      return this.incremental.handle(cacheData, incoming);
     }
     return incoming;
   }
 
-  public markQueryResult<TData, TVariables extends OperationVariables>(
+  public markQueryResult(
     incoming: FetchResult<TData>,
     {
       document: query,
@@ -211,7 +215,7 @@ export class QueryInfo {
     const lastDiff =
       skipCache ? undefined : this.cache.diff<TData>(diffOptions);
 
-    let result = this.maybeHandleIncrementalResult<TData>(
+    let result = this.maybeHandleIncrementalResult(
       lastDiff?.result,
       incoming,
       query
@@ -313,11 +317,7 @@ export class QueryInfo {
     return result;
   }
 
-  public markMutationResult<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
+  public markMutationResult(
     incoming: FetchResult<TData>,
     mutation: OperationInfo<
       TData,
@@ -529,11 +529,7 @@ export class QueryInfo {
     return Promise.resolve(result);
   }
 
-  public markMutationOptimistic<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
+  public markMutationOptimistic(
     optimisticResponse: any,
     mutation: OperationInfo<
       TData,
@@ -557,11 +553,7 @@ export class QueryInfo {
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult<TData, TVariables, TCache>(
-          { data },
-          mutation,
-          cache
-        );
+        this.markMutationResult({ data }, mutation, cache as TCache);
       } catch (error) {
         invariant.error(error);
       }
@@ -570,7 +562,7 @@ export class QueryInfo {
     return true;
   }
 
-  public markSubscriptionResult<TData, TVariables extends OperationVariables>(
+  public markSubscriptionResult(
     result: FormattedExecutionResult<TData>,
     {
       document,

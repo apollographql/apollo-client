@@ -19,14 +19,17 @@ export declare namespace Incremental {
     extractErrors: (
       result: FetchResult<any>
     ) => readonly GraphQLFormattedError[] | undefined | void;
-    startRequest: (request: {
+    startRequest: <TData>(request: {
       query: DocumentNode;
-    }) => IncrementalRequest<Chunk>;
+    }) => IncrementalRequest<Chunk, TData>;
   }
 
-  export interface IncrementalRequest<Chunk extends Record<string, unknown>> {
+  export interface IncrementalRequest<
+    Chunk extends Record<string, unknown>,
+    TData,
+  > {
     hasNext: boolean;
-    handle: <TData>(
+    handle: (
       cacheData: TData | DeepPartial<TData> | undefined | null,
       chunk: Chunk
     ) => FormattedExecutionResult<TData>;

@@ -17,7 +17,6 @@ import type {
 
 import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
-import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
@@ -74,8 +73,6 @@ export interface DefaultContext extends Record<string, any> {
   queryDeduplication?: boolean;
   clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
 }
-
-export type QueryListener = (queryInfo: QueryInfo) => void;
 
 /**
  * Represents an `Error` type, but used throughout Apollo Client to represent

@@ -278,7 +278,7 @@ export class QueryManager {
     errorPolicy: ErrorPolicy;
     fetchPolicy: MutationFetchPolicy;
   }): Promise<MutateResult<MaybeMasked<TData>>> {
-    const queryInfo = new QueryInfo(this);
+    const queryInfo = new QueryInfo<TData, TVariables, TCache>(this);
 
     mutation = this.cache.transformForLink(this.transform(mutation));
     const { hasClientExports } = this.getDocumentInfo(mutation);
@@ -313,22 +313,19 @@ export class QueryManager {
 
     const isOptimistic =
       optimisticResponse &&
-      queryInfo.markMutationOptimistic<TData, TVariables, TCache>(
-        optimisticResponse,
-        {
-          document: mutation,
-          variables,
-          cacheWriteBehavior:
-            fetchPolicy === "no-cache" ?
-              CacheWriteBehavior.FORBID
-            : CacheWriteBehavior.MERGE,
-          errorPolicy,
-          context,
-          updateQueries,
-          update: updateWithProxyFn,
-          keepRootFields,
-        }
-      );
+      queryInfo.markMutationOptimistic(optimisticResponse, {
+        document: mutation,
+        variables,
+        cacheWriteBehavior:
+          fetchPolicy === "no-cache" ?
+            CacheWriteBehavior.FORBID
+          : CacheWriteBehavior.MERGE,
+        errorPolicy,
+        context,
+        updateQueries,
+        update: updateWithProxyFn,
+        keepRootFields,
+      });
 
     this.broadcastQueries();
 
@@ -350,26 +347,23 @@ export class QueryManager {
             const storeResult: typeof result = { ...result };
 
             return from(
-              queryInfo.markMutationResult<TData, TVariables, TCache>(
-                storeResult,
-                {
-                  document: mutation,
-                  variables,
-                  cacheWriteBehavior:
-                    fetchPolicy === "no-cache" ?
-                      CacheWriteBehavior.FORBID
-                    : CacheWriteBehavior.MERGE,
-                  errorPolicy,
-                  context,
-                  update: updateWithProxyFn,
-                  updateQueries,
-                  awaitRefetchQueries,
-                  refetchQueries,
-                  removeOptimistic: isOptimistic ? queryInfo.id : void 0,
-                  onQueryUpdated,
-                  keepRootFields,
-                }
-              )
+              queryInfo.markMutationResult(storeResult, {
+                document: mutation,
+                variables,
+                cacheWriteBehavior:
+                  fetchPolicy === "no-cache" ?
+                    CacheWriteBehavior.FORBID
+                  : CacheWriteBehavior.MERGE,
+                errorPolicy,
+                context,
+                update: updateWithProxyFn,
+                updateQueries,
+                awaitRefetchQueries,
+                refetchQueries,
+                removeOptimistic: isOptimistic ? queryInfo.id : void 0,
+                onQueryUpdated,
+                keepRootFields,
+              })
             );
           })
         )
@@ -795,7 +789,7 @@ export class QueryManager {
           extensions
         );
 
-        const queryInfo = new QueryInfo(this);
+        const queryInfo = new QueryInfo<TData>(this);
 
         restart = res;
         return (observable as Observable<FormattedExecutionResult<TData>>).pipe(
@@ -1028,7 +1022,7 @@ export class QueryManager {
       cacheWriteBehavior,
       observableQuery,
     }: {
-      queryInfo: QueryInfo;
+      queryInfo: QueryInfo<TData, TVariables>;
       cacheWriteBehavior: CacheWriteBehavior;
       observableQuery: ObservableQuery<TData, TVariables> | undefined;
     }
@@ -1172,7 +1166,7 @@ export class QueryManager {
       context,
     });
 
-    const queryInfo = new QueryInfo(this, observableQuery);
+    const queryInfo = new QueryInfo<TData, TVars>(this, observableQuery);
 
     const fromVariables = (variables: TVars) => {
       // Since normalized is always a fresh copy of options, it's safe to
@@ -1507,7 +1501,7 @@ export class QueryManager {
     }: {
       cacheWriteBehavior: CacheWriteBehavior;
       onCacheHit: () => void;
-      queryInfo: QueryInfo;
+      queryInfo: QueryInfo<TData, TVars>;
       observableQuery: ObservableQuery<TData, TVars> | undefined;
     }
   ): ObservableAndInfo<TData> {

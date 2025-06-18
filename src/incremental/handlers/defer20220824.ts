@@ -1,10 +1,12 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { FormattedExecutionResult } from "graphql-17-alpha2";
 
 import type {
   FetchResult,
   GraphQLRequest,
   IncrementalPayload,
 } from "@apollo/client";
+import type { DeepPartial } from "@apollo/client/utilities";
 import {
   DeepMerger,
   getGraphQLErrorsFromResult,
@@ -49,8 +51,8 @@ declare module "@apollo/client/link" {
   }
 }
 
-class DeferRequest
-  implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk>
+class DeferRequest<TData>
+  implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk, TData>
 {
   public hasNext = true;
 
@@ -58,14 +60,14 @@ class DeferRequest
   private extensions: Record<string, any> = {};
   private data: any = {};
 
-  handle<TData>(
+  handle(
     // we'll get `undefined` here in case of a `no-cache` fetch policy,
     // so we'll continue with the last value this request had accumulated
-    cacheData: TData = this.data,
+    cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
     chunk:
       | Defer20220824Handler.InitialResult
       | Defer20220824Handler.SubsequentResult
-  ) {
+  ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
     if (isIncrementalSubsequentResult(chunk)) {
@@ -153,8 +155,8 @@ export class Defer20220824Handler
 
     return request;
   }
-  startRequest(_: { query: DocumentNode }) {
-    return new DeferRequest();
+  startRequest<TData>(_: { query: DocumentNode }) {
+    return new DeferRequest<TData>();
   }
 }
 

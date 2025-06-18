@@ -6739,6 +6739,64 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it("does not allow refetch on a cache-only query", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const link = new ApolloLink(() =>
+        of({
+          data: { hello: "world" },
+        })
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { fetchPolicy: "cache-only" }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      const expectedError = new InvariantError(
+        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+      );
+
+      await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
+        expectedError
+      );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        error: expectedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     describe("refetchWritePolicy", () => {
       const query = gql`
         query GetPrimes($min: number, $max: number) {

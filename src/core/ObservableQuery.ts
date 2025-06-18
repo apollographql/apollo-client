@@ -22,7 +22,10 @@ import {
   preventUnhandledRejection,
   toQueryResult,
 } from "@apollo/client/utilities/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
@@ -30,6 +33,7 @@ import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
   DefaultContext,
+  ErrorLike,
   OperationVariables,
   QueryNotification,
   QueryResult,
@@ -651,11 +655,23 @@ export class ObservableQuery<
   ): ObservableQuery.ResultPromise<QueryResult<TData>> {
     const { fetchPolicy } = this.options;
 
-    invariant(
-      fetchPolicy !== "cache-only" && fetchPolicy !== "standby",
-      "Cannot execute `refetch` for a '%s' query. Please use a different fetch policy.",
-      fetchPolicy
-    );
+    if (fetchPolicy === "cache-only") {
+      const error = newInvariantError(
+        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+      );
+
+      this.setResult(
+        {
+          ...this.getCurrentResult(),
+          error,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+        },
+        { shouldEmit: EmitBehavior.force }
+      );
+
+      return this.toRejectedResultPromise(error);
+    }
 
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
@@ -1814,6 +1830,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private getVariablesWithDefaults(variables: TVariables | undefined) {
     return this.queryManager.getVariables(this.query, variables);
+  }
+
+  private toRejectedResultPromise(
+    error: ErrorLike
+  ): ObservableQuery.ResultPromise<never> {
+    const promise = Object.assign(Promise.reject(error), {
+      retain: () => promise,
+    });
+
+    return promise;
   }
 }
 

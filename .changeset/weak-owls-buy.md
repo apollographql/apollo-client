@@ -2,7 +2,7 @@
 "@apollo/client": major
 ---
 
-All Links are now available as classes. The old creator functions have been deprecated.
+All links are now available as classes. The old creator functions have been deprecated.
 
 Please migrate these function calls to class creations:
 

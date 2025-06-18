@@ -211,11 +211,11 @@
   }
   ```
 
-  then you would use that `CustomDataMaskingImplementation` interface in your project to extend the `DataMasking` interface exported by `@apollo/client` with it's functionality:
+  then you would use that `CustomDataMaskingImplementation` interface in your project to extend the `TypeOverrides` interface exported by `@apollo/client` with it's functionality:
 
   ```ts
   declare module "@apollo/client" {
-    export interface DataMasking extends CustomDataMaskingImplementation {}
+    export interface TypeOverrides extends CustomDataMaskingImplementation {}
   }
   ```
 

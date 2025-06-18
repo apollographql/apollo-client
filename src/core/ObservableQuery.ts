@@ -509,7 +509,13 @@ export class ObservableQuery<
     };
 
     switch (fetchPolicy) {
-      case "cache-only":
+      case "cache-only": {
+        return {
+          ...cacheResult(),
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
+      }
       case "cache-first":
         return cacheResult();
       case "cache-and-network":
@@ -849,7 +855,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               networkStatus: NetworkStatus.ready,
               // will be overwritten anyways, just here for types sake
               loading: false,
-              data: data as TData,
+              data: data as any,
               dataState:
                 lastResult.dataState === "streaming" ? "streaming" : "complete",
             },
@@ -1726,8 +1732,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           } as ApolloQueryResult<TData>)
         : notification.value;
 
-      if (result.error && result.dataState === "streaming") {
-        result.dataState = "complete";
+      if (notification.kind === "E" && result.dataState === "streaming") {
+        result.dataState = "complete" as any;
       }
 
       if (result.error) {

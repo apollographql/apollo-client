@@ -1,3 +1,4 @@
+import type { FormattedExecutionResult } from "graphql";
 import { firstValueFrom, of } from "rxjs";
 
 import { gql } from "@apollo/client";
@@ -21,9 +22,9 @@ async function execute(link: ApolloLink, operation: PartialOperation) {
     return of({ data: operation });
   }
 
-  const { data } = await firstValueFrom(
+  const { data } = (await firstValueFrom(
     link.request(createOperation({}, operation), forward)!
-  );
+  )) as { data: FormattedExecutionResult };
 
   return data as Operation;
 }

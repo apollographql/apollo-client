@@ -10,6 +10,7 @@ import type { DocumentNode } from 'graphql';
 import type { DocumentNode as DocumentNode_2 } from '@apollo/client';
 import type { FieldNode } from 'graphql';
 import type { FieldPolicy } from '@apollo/client/cache';
+import type { FormattedExecutionResult } from 'graphql';
 import { Observable } from 'rxjs';
 import type { Primitive } from '@apollo/client/utilities/internal';
 import type { Reference as Reference_2 } from '@apollo/client/cache';
@@ -132,6 +133,9 @@ export interface HKT {
     // (undocumented)
     return: unknown;
 }
+
+// @public (undocumented)
+export function isFormattedExecutionResult(result?: object): result is FormattedExecutionResult;
 
 // @public
 export function isMutationOperation(document: DocumentNode_2): boolean;

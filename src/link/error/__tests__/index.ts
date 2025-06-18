@@ -19,6 +19,7 @@ import {
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
+import { isFormattedExecutionResult } from "@apollo/client/utilities";
 
 describe("error handling", () => {
   it("calls onError when GraphQL errors are returned", async () => {
@@ -240,9 +241,6 @@ describe("error handling", () => {
     await expect(stream).toEmitTypedValue({
       hasNext: true,
       incremental: [
-        // @ts-expect-error Our defer type and GraphQL incremental type do not
-        // line up. Our type request data and path but enqueueErrorChunk does
-        // not emit those values
         {
           errors: [
             {
@@ -322,7 +320,7 @@ describe("error handling", () => {
             message: "Error field",
           },
         ]),
-      },
+      } as Record<string, unknown>,
     });
 
     expect(callback).toHaveBeenCalledTimes(1);
@@ -468,7 +466,9 @@ describe("error handling", () => {
 
     const errorLink = onError(({ response }) => {
       // ignore errors
-      delete response!.errors;
+      if (isFormattedExecutionResult(response)) {
+        delete response!.errors;
+      }
     });
 
     const mockLink = new ApolloLink(() => {
@@ -672,7 +672,7 @@ describe("error handling with class", () => {
             message: "Error field",
           },
         ]),
-      },
+      } as Record<string, unknown>,
     });
 
     expect(callback).toHaveBeenCalledTimes(1);

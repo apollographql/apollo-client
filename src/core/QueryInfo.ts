@@ -1,17 +1,14 @@
 import { equal } from "@wry/equality";
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { Incremental } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
 import {
-  DeepMerger,
   getOperationName,
   graphQLResultHasError,
-  isExecutionPatchIncrementalResult,
-  isExecutionPatchResult,
-  isNonEmptyArray,
-  mergeIncrementalData,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -22,9 +19,12 @@ import type { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
   InternalRefetchQueriesInclude,
+  MutationQueryReducer,
   MutationUpdaterFunction,
+  NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
+  Streaming,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -44,7 +44,7 @@ export const enum CacheWriteBehavior {
 }
 
 interface LastWrite {
-  result: FetchResult<any>;
+  result: FormattedExecutionResult<any>;
   variables: WatchQueryOptions["variables"];
   dmCount: number | undefined;
 }
@@ -91,26 +91,35 @@ const queryInfoIds = new WeakMap<QueryManager, number>();
 // It will only ever be used for a single network call.
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
-export class QueryInfo {
+export class QueryInfo<
+  TData,
+  TVariables extends OperationVariables = OperationVariables,
+  TCache extends ApolloCache = ApolloCache,
+> {
   // TODO remove soon - this should be able to be handled by cancelling old operations before starting new ones
   lastRequestId = 1;
 
-  private cache: ApolloCache;
+  private cache: TCache;
   private queryManager: Pick<
     QueryManager,
     | "getObservableQueries"
     | "refetchQueries"
     | "getDocumentInfo"
     | "broadcastQueries"
+    | "incrementalHandler"
   >;
   public readonly id: string;
   private readonly observableQuery?: ObservableQuery<any, any>;
+  private incremental?: Incremental.IncrementalRequest<
+    Record<string, unknown>,
+    TData | Streaming<TData>
+  >;
 
   constructor(
     queryManager: QueryManager,
     observableQuery?: ObservableQuery<any, any>
   ) {
-    const cache = (this.cache = queryManager.cache);
+    const cache = (this.cache = queryManager.cache as TCache);
     const id = (queryInfoIds.get(queryManager) || 0) + 1;
     queryInfoIds.set(queryManager, id);
     this.id = id + "";
@@ -147,7 +156,7 @@ export class QueryInfo {
   }
 
   private shouldWrite(
-    result: FetchResult<any>,
+    result: FormattedExecutionResult<any>,
     variables: WatchQueryOptions["variables"]
   ) {
     const { lastWrite } = this;
@@ -162,20 +171,41 @@ export class QueryInfo {
     );
   }
 
-  private lastDiff?: {
-    diff: Cache.DiffResult<any>;
-    options: Cache.DiffOptions;
-  };
+  get hasNext() {
+    return this.incremental ? this.incremental.hasNext : false;
+  }
 
-  public markQueryResult<TData, TVariables extends OperationVariables>(
-    result: FetchResult<TData>,
+  private maybeHandleIncrementalResult(
+    cacheData: TData | DeepPartial<TData> | undefined | null,
+    incoming: FetchResult<TData>,
+    query: DocumentNode
+  ): FormattedExecutionResult<TData | Streaming<TData>> {
+    const { incrementalHandler } = this.queryManager;
+
+    if (incrementalHandler.isIncrementalResult(incoming)) {
+      this.incremental ||= incrementalHandler.startRequest<
+        TData & Record<string, unknown>
+      >({
+        query,
+      }) as Incremental.IncrementalRequest<
+        Record<string, unknown>,
+        TData | Streaming<TData>
+      >;
+
+      return this.incremental.handle(cacheData, incoming);
+    }
+    return incoming;
+  }
+
+  public markQueryResult(
+    incoming: FetchResult<TData>,
     {
       document: query,
       variables,
       errorPolicy,
       cacheWriteBehavior,
     }: OperationInfo<TData, TVariables>
-  ) {
+  ): FormattedExecutionResult<TData | Streaming<TData>> {
     const diffOptions = {
       query,
       variables,
@@ -187,119 +217,114 @@ export class QueryInfo {
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
     this.observableQuery?.["resetNotifications"]();
 
-    if (cacheWriteBehavior === CacheWriteBehavior.FORBID) {
-      const lastDiff =
-        this.lastDiff && equal(diffOptions, this.lastDiff.options) ?
-          this.lastDiff.diff
-        : { result: null, complete: false };
-      handleIncrementalResult(result, lastDiff);
+    const skipCache = cacheWriteBehavior === CacheWriteBehavior.FORBID;
+    const lastDiff =
+      skipCache ? undefined : this.cache.diff<TData>(diffOptions);
 
-      this.lastDiff = {
-        diff: { result: result.data, complete: true },
-        options: diffOptions,
-      };
-    } else {
-      const lastDiff = this.cache.diff<any>(diffOptions);
-      handleIncrementalResult(result, lastDiff);
-
-      if (shouldWriteResult(result, errorPolicy)) {
-        // Using a transaction here so we have a chance to read the result
-        // back from the cache before the watch callback fires as a result
-        // of writeQuery, so we can store the new diff quietly and ignore
-        // it when we receive it redundantly from the watch callback.
-        this.cache.batch({
-          onWatchUpdated: (
-            // all additional options on ObservableQuery.CacheWatchOptions are
-            // optional so we can use the type here
-            watch: ObservableQuery.CacheWatchOptions,
-            diff
-          ) => {
-            if (watch.watcher === this.observableQuery) {
-              // see comment on `lastOwnDiff` for explanation
-              watch.lastOwnDiff = diff;
-            }
-          },
-          update: (cache) => {
-            if (this.shouldWrite(result, variables)) {
-              cache.writeQuery({
-                query,
-                data: result.data as Unmasked<any>,
-                variables,
-                overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-              });
-
-              this.lastWrite = {
-                result,
-                variables,
-                dmCount: destructiveMethodCounts.get(this.cache),
-              };
-            } else {
-              // If result is the same as the last result we received from
-              // the network (and the variables match too), avoid writing
-              // result into the cache again. The wisdom of skipping this
-              // cache write is far from obvious, since any cache write
-              // could be the one that puts the cache back into a desired
-              // state, fixing corruption or missing data. However, if we
-              // always write every network result into the cache, we enable
-              // feuds between queries competing to update the same data in
-              // incompatible ways, which can lead to an endless cycle of
-              // cache broadcasts and useless network requests. As with any
-              // feud, eventually one side must step back from the brink,
-              // letting the other side(s) have the last word(s). There may
-              // be other points where we could break this cycle, such as
-              // silencing the broadcast for cache.writeQuery (not a good
-              // idea, since it just delays the feud a bit) or somehow
-              // avoiding the network request that just happened (also bad,
-              // because the server could return useful new data). All
-              // options considered, skipping this cache write seems to be
-              // the least damaging place to break the cycle, because it
-              // reflects the intuition that we recently wrote this exact
-              // result into the cache, so the cache *should* already/still
-              // contain this data. If some other query has clobbered that
-              // data in the meantime, that's too bad, but there will be no
-              // winners if every query blindly reverts to its own version
-              // of the data. This approach also gives the network a chance
-              // to return new data, which will be written into the cache as
-              // usual, notifying only those queries that are directly
-              // affected by the cache updates, as usual. In the future, an
-              // even more sophisticated cache could perhaps prevent or
-              // mitigate the clobbering somehow, but that would make this
-              // particular cache write even less important, and thus
-              // skipping it would be even safer than it is today.
-              if (lastDiff && lastDiff.complete) {
-                // Reuse data from the last good (complete) diff that we
-                // received, when possible.
-                result.data = lastDiff.result;
-                return;
-              }
-              // If the previous this.diff was incomplete, fall through to
-              // re-reading the latest data with cache.diff, below.
-            }
-
-            const diff = cache.diff<TData>(diffOptions);
-
-            // If we're allowed to write to the cache, and we can read a
-            // complete result from the cache, update result.data to be the
-            // result from the cache, rather than the raw network result.
-            // Set without setDiff to avoid triggering a notify call, since
-            // we have other ways of notifying for this result.
-            if (diff.complete) {
-              result.data = diff.result;
-            }
-          },
-        });
-      } else {
-        this.lastWrite = void 0;
-      }
+    let result = this.maybeHandleIncrementalResult(
+      lastDiff?.result,
+      incoming,
+      query
+    );
+    if (skipCache) {
+      return result;
     }
+
+    if (shouldWriteResult(result, errorPolicy)) {
+      // Using a transaction here so we have a chance to read the result
+      // back from the cache before the watch callback fires as a result
+      // of writeQuery, so we can store the new diff quietly and ignore
+      // it when we receive it redundantly from the watch callback.
+      this.cache.batch({
+        onWatchUpdated: (
+          // all additional options on ObservableQuery.CacheWatchOptions are
+          // optional so we can use the type here
+          watch: ObservableQuery.CacheWatchOptions,
+          diff
+        ) => {
+          if (watch.watcher === this.observableQuery) {
+            // see comment on `lastOwnDiff` for explanation
+            watch.lastOwnDiff = diff;
+          }
+        },
+        update: (cache) => {
+          if (this.shouldWrite(result, variables)) {
+            cache.writeQuery({
+              query,
+              data: result.data as Unmasked<any>,
+              variables,
+              overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
+            });
+
+            this.lastWrite = {
+              result,
+              variables,
+              dmCount: destructiveMethodCounts.get(this.cache),
+            };
+          } else {
+            // If result is the same as the last result we received from
+            // the network (and the variables match too), avoid writing
+            // result into the cache again. The wisdom of skipping this
+            // cache write is far from obvious, since any cache write
+            // could be the one that puts the cache back into a desired
+            // state, fixing corruption or missing data. However, if we
+            // always write every network result into the cache, we enable
+            // feuds between queries competing to update the same data in
+            // incompatible ways, which can lead to an endless cycle of
+            // cache broadcasts and useless network requests. As with any
+            // feud, eventually one side must step back from the brink,
+            // letting the other side(s) have the last word(s). There may
+            // be other points where we could break this cycle, such as
+            // silencing the broadcast for cache.writeQuery (not a good
+            // idea, since it just delays the feud a bit) or somehow
+            // avoiding the network request that just happened (also bad,
+            // because the server could return useful new data). All
+            // options considered, skipping this cache write seems to be
+            // the least damaging place to break the cycle, because it
+            // reflects the intuition that we recently wrote this exact
+            // result into the cache, so the cache *should* already/still
+            // contain this data. If some other query has clobbered that
+            // data in the meantime, that's too bad, but there will be no
+            // winners if every query blindly reverts to its own version
+            // of the data. This approach also gives the network a chance
+            // to return new data, which will be written into the cache as
+            // usual, notifying only those queries that are directly
+            // affected by the cache updates, as usual. In the future, an
+            // even more sophisticated cache could perhaps prevent or
+            // mitigate the clobbering somehow, but that would make this
+            // particular cache write even less important, and thus
+            // skipping it would be even safer than it is today.
+            if (lastDiff && lastDiff.complete) {
+              // Reuse data from the last good (complete) diff that we
+              // received, when possible.
+              result = { ...result, data: lastDiff.result };
+              return;
+            }
+            // If the previous this.diff was incomplete, fall through to
+            // re-reading the latest data with cache.diff, below.
+          }
+
+          const diff = cache.diff<TData>(diffOptions);
+
+          // If we're allowed to write to the cache, and we can read a
+          // complete result from the cache, update result.data to be the
+          // result from the cache, rather than the raw network result.
+          // Set without setDiff to avoid triggering a notify call, since
+          // we have other ways of notifying for this result.
+          if (diff.complete) {
+            result = { ...result, data: diff.result };
+          }
+        },
+      });
+    } else {
+      this.lastWrite = void 0;
+    }
+
+    return result;
   }
 
-  public markMutationResult<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
-    result: FetchResult<TData>,
+  public markMutationResult(
+    incoming: FetchResult<TData>,
     mutation: OperationInfo<
       TData,
       TVariables,
@@ -309,30 +334,23 @@ export class QueryInfo {
       updateQueries: UpdateQueries<TData>;
       update?: MutationUpdaterFunction<TData, TVariables, TCache>;
       awaitRefetchQueries?: boolean;
-      refetchQueries?: InternalRefetchQueriesInclude;
+      refetchQueries?:
+        | ((
+            result: NormalizedExecutionResult<Unmasked<TData>>
+          ) => InternalRefetchQueriesInclude)
+        | InternalRefetchQueriesInclude;
       removeOptimistic?: string;
       onQueryUpdated?: OnQueryUpdated<any>;
       keepRootFields?: boolean;
     },
     cache = this.cache
-  ): Promise<FetchResult<TData>> {
+  ): Promise<FormattedExecutionResult<TData | Streaming<TData>>> {
     const cacheWrites: Cache.WriteOptions[] = [];
     const skipCache = mutation.cacheWriteBehavior === CacheWriteBehavior.FORBID;
 
-    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
-      if (!isExecutionPatchIncrementalResult(result)) {
-        cacheWrites.push({
-          result: result.data,
-          dataId: "ROOT_MUTATION",
-          query: mutation.document,
-          variables: mutation.variables,
-        });
-      }
-      if (
-        isExecutionPatchIncrementalResult(result) &&
-        isNonEmptyArray(result.incremental)
-      ) {
-        const diff = cache.diff<TData>({
+    let result = this.maybeHandleIncrementalResult(
+      skipCache ? undefined : (
+        cache.diff<TData>({
           id: "ROOT_MUTATION",
           // The cache complains if passed a mutation where it expects a
           // query, so we transform mutations and subscriptions to queries
@@ -341,23 +359,33 @@ export class QueryInfo {
           variables: mutation.variables,
           optimistic: false,
           returnPartialData: true,
-        });
-        let mergedData;
-        if (diff.result) {
-          mergedData = mergeIncrementalData(diff.result, result);
-        }
-        if (typeof mergedData !== "undefined") {
-          // cast the ExecutionPatchResult to FetchResult here since
-          // ExecutionPatchResult never has `data` when returned from the server
-          (result as FetchResult).data = mergedData;
-          cacheWrites.push({
-            result: mergedData,
-            dataId: "ROOT_MUTATION",
-            query: mutation.document,
-            variables: mutation.variables,
-          });
-        }
-      }
+        }).result
+      ),
+      incoming,
+      mutation.document
+    );
+
+    if (mutation.errorPolicy === "ignore") {
+      result = { ...result, errors: [] };
+    }
+
+    if (graphQLResultHasError(result) && mutation.errorPolicy === "none") {
+      return Promise.resolve(result);
+    }
+
+    const getResultWithDataState = () =>
+      ({
+        ...result,
+        dataState: this.hasNext ? "streaming" : "complete",
+      }) as NormalizedExecutionResult<Unmasked<TData>>;
+
+    if (!skipCache && shouldWriteResult(result, mutation.errorPolicy)) {
+      cacheWrites.push({
+        result: result.data,
+        dataId: "ROOT_MUTATION",
+        query: mutation.document,
+        variables: mutation.variables,
+      });
 
       const { updateQueries } = mutation;
       if (updateQueries) {
@@ -380,11 +408,14 @@ export class QueryInfo {
 
             if (complete && currentQueryResult) {
               // Run our reducer using the current query result and the mutation result.
-              const nextQueryResult = updater(currentQueryResult, {
-                mutationResult: result as FetchResult<Unmasked<TData>>,
-                queryName: (document && getOperationName(document)) || void 0,
-                queryVariables: variables!,
-              });
+              const nextQueryResult = (updater as MutationQueryReducer<any>)(
+                currentQueryResult,
+                {
+                  mutationResult: getResultWithDataState(),
+                  queryName: (document && getOperationName(document)) || void 0,
+                  queryVariables: variables!,
+                }
+              );
 
               // Write the modified result back into the store if we got a new result.
               if (nextQueryResult) {
@@ -400,9 +431,14 @@ export class QueryInfo {
       }
     }
 
+    let refetchQueries = mutation.refetchQueries;
+    if (typeof refetchQueries === "function") {
+      refetchQueries = refetchQueries(getResultWithDataState());
+    }
+
     if (
       cacheWrites.length > 0 ||
-      (mutation.refetchQueries || "").length > 0 ||
+      (refetchQueries || "").length > 0 ||
       mutation.update ||
       mutation.onQueryUpdated ||
       mutation.removeOptimistic
@@ -422,9 +458,6 @@ export class QueryInfo {
             const { update } = mutation;
             // Determine whether result is a SingleExecutionResult,
             // or the final ExecutionPatchResult.
-            const isFinalResult =
-              !isExecutionPatchResult(result) ||
-              (isExecutionPatchIncrementalResult(result) && !result.hasNext);
 
             if (update) {
               if (!skipCache) {
@@ -445,23 +478,18 @@ export class QueryInfo {
                 });
 
                 if (diff.complete) {
-                  result = { ...(result as FetchResult), data: diff.result };
-                  if ("incremental" in result) {
-                    delete result.incremental;
-                  }
-                  if ("hasNext" in result) {
-                    delete result.hasNext;
-                  }
+                  result = {
+                    ...result,
+                    data: diff.result,
+                  };
                 }
               }
 
-              // If we've received the whole response,
-              // either a SingleExecutionResult or the final ExecutionPatchResult,
-              // call the update function.
-              if (isFinalResult) {
+              // If we've received the whole response, call the update function.
+              if (!this.hasNext) {
                 update(
                   cache as TCache,
-                  result as FetchResult<Unmasked<TData>>,
+                  result as FormattedExecutionResult<Unmasked<TData>>,
                   {
                     context: mutation.context,
                     variables: mutation.variables,
@@ -472,7 +500,7 @@ export class QueryInfo {
 
             // TODO Do this with cache.evict({ id: 'ROOT_MUTATION' }) but make it
             // shallow to allow rolling back optimistic evictions.
-            if (!skipCache && !mutation.keepRootFields && isFinalResult) {
+            if (!skipCache && !mutation.keepRootFields && !this.hasNext) {
               cache.modify({
                 id: "ROOT_MUTATION",
                 fields(value, { fieldName, DELETE }) {
@@ -482,7 +510,7 @@ export class QueryInfo {
             }
           },
 
-          include: mutation.refetchQueries,
+          include: refetchQueries,
 
           // Write the final mutation.result to the root layer of the cache.
           optimistic: false,
@@ -510,11 +538,7 @@ export class QueryInfo {
     return Promise.resolve(result);
   }
 
-  public markMutationOptimistic<
-    TData,
-    TVariables extends OperationVariables,
-    TCache extends ApolloCache,
-  >(
+  public markMutationOptimistic(
     optimisticResponse: any,
     mutation: OperationInfo<
       TData,
@@ -538,11 +562,7 @@ export class QueryInfo {
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult<TData, TVariables, TCache>(
-          { data },
-          mutation,
-          cache
-        );
+        this.markMutationResult({ data }, mutation, cache as TCache);
       } catch (error) {
         invariant.error(error);
       }
@@ -551,8 +571,8 @@ export class QueryInfo {
     return true;
   }
 
-  public markSubscriptionResult<TData, TVariables extends OperationVariables>(
-    result: FetchResult<TData>,
+  public markSubscriptionResult(
+    result: FormattedExecutionResult<TData>,
     {
       document,
       variables,
@@ -579,27 +599,8 @@ export class QueryInfo {
   }
 }
 
-function handleIncrementalResult<T>(
-  result: FetchResult<T>,
-  lastDiff: Cache.DiffResult<any>
-) {
-  if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-    const mergedData = mergeIncrementalData(lastDiff.result, result);
-    result.data = mergedData;
-
-    // Detect the first chunk of a deferred query and merge it with existing
-    // cache data. This ensures a `cache-first` fetch policy that returns
-    // partial cache data or a `cache-and-network` fetch policy that already
-    // has full data in the cache does not complain when trying to merge the
-    // initial deferred server data with existing cache data.
-  } else if ("hasNext" in result && result.hasNext) {
-    const merger = new DeepMerger();
-    result.data = merger.merge(lastDiff.result, result.data);
-  }
-}
-
 function shouldWriteResult<T>(
-  result: FetchResult<T>,
+  result: FormattedExecutionResult<T>,
   errorPolicy: ErrorPolicy = "none"
 ) {
   const ignoreErrors = errorPolicy === "ignore" || errorPolicy === "all";

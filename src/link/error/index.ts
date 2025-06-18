@@ -1,4 +1,3 @@
-import type { FormattedExecutionResult } from "graphql";
 import type { Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
@@ -17,7 +16,7 @@ export interface ErrorResponse {
    * Error that caused the callback to be triggered.
    */
   error: ErrorLike;
-  response?: FormattedExecutionResult;
+  response?: FetchResult;
   operation: Operation;
   forward: NextLink;
 }
@@ -44,9 +43,14 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
       try {
         sub = forward(operation).subscribe({
           next: (result) => {
-            if (result.errors) {
+            const handler = operation.client["queryManager"].incrementalHandler;
+            const errors =
+              handler.isIncrementalResult(result) ?
+                handler.extractErrors(result)
+              : result.errors;
+            if (errors) {
               retriedResult = errorHandler({
-                error: new CombinedGraphQLErrors(result),
+                error: new CombinedGraphQLErrors(result, errors),
                 response: result,
                 operation,
                 forward,

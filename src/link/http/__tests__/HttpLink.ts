@@ -5,7 +5,7 @@ import type { ASTNode } from "graphql";
 import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
-import { map, Observable } from "rxjs";
+import { map, Observable, Subject, tap } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import type { FetchResult } from "@apollo/client";
@@ -20,6 +20,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import {
   BaseHttpLink,
@@ -1465,6 +1466,10 @@ describe("HttpLink", () => {
           hasNext: true,
         });
 
+        await expect(observableStream).toEmitTypedValue({
+          hasNext: false,
+        });
+
         // the second chunk contains only hasNext: false which is not emitted as
         // a `next` event so the link completes.
 
@@ -1481,9 +1486,17 @@ describe("HttpLink", () => {
             headers: { "content-type": "multipart/mixed" },
           });
         });
-        const link = new HttpLink({ fetch });
-        const observable = execute(link, { query: sampleDeferredQuery });
-        const observableStream = new ObservableStream(observable);
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          incrementalHandler: new Defer20220824Handler(),
+        });
+        void client.query({ query: sampleDeferredQuery });
 
         await expect(observableStream).toEmitTypedValue({
           data: { stub: { id: "0" } },
@@ -1681,6 +1694,7 @@ describe("HttpLink", () => {
         const client = new ApolloClient({
           link,
           cache: new InMemoryCache(),
+          incrementalHandler: new Defer20220824Handler(),
         });
 
         const stream = new ObservableStream(
@@ -1691,7 +1705,7 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               accept:
-                "multipart/mixed;deferSpec=20220824,multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
               "content-type": "application/json",
             },
           })
@@ -1748,7 +1762,7 @@ describe("HttpLink", () => {
                 message: "Error field",
               },
             ]),
-          },
+          } as Record<string, unknown>,
         });
 
         await expect(observableStream).toComplete();
@@ -2232,3 +2246,23 @@ describe("HttpLink", () => {
     });
   });
 });
+
+function pipeLinkToObservableStream(link: ApolloLink) {
+  const sink = new Subject<FetchResult>();
+  const observableStream = new ObservableStream(sink);
+  const pipedLink = new ApolloLink((operation, forward) =>
+    forward(operation).pipe(
+      tap({
+        next: (result) => {
+          sink.next(structuredClone(result));
+        },
+        error: sink.error.bind(sink),
+        complete: sink.complete.bind(sink),
+      })
+    )
+  ).concat(link);
+  return {
+    observableStream,
+    link: pipedLink,
+  };
+}

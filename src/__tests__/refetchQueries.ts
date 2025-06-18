@@ -716,7 +716,7 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
-  it("includes named cache-only queries in refetchQueries but returns error", async () => {
+  it("does not include named cache-only queries in refetchQueries", async () => {
     const cQuery = gql`
       query C {
         c
@@ -761,33 +761,15 @@ describe("client.refetchQueries", () => {
         include: [aQuery, cQuery],
         onQueryUpdated: activeOQU.onQueryUpdated,
       })
-    ).rejects.toEqual(
-      new InvariantError(
-        "Cannot execute `refetch` for 'cache-only' query 'C'. Please use a different fetch policy."
-      )
-    );
+    ).resolves.toEqual([{ data: { a: "A" } }]);
 
-    await activeOQU.check([
-      [aObs, { a: "A" }],
-      [cObs, { c: "C" }],
-    ]);
+    await activeOQU.check([[aObs, { a: "A" }]]);
 
     await expect(aStream).toEmitTypedValue({
       data: { a: "A" },
       dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
-
-    await expect(cStream).toEmitTypedValue({
-      data: { c: "C" },
-      dataState: "complete",
-      error: new InvariantError(
-        "Cannot execute `refetch` for 'cache-only' query 'C'. Please use a different fetch policy."
-      ),
-      loading: false,
-      networkStatus: NetworkStatus.error,
       partial: false,
     });
 

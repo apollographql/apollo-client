@@ -708,29 +708,30 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public fetchMore<
     TFetchData = TData,
     TFetchVars extends OperationVariables = TVariables,
-  >(
-    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-      updateQuery?: (
-        previousQueryResult: Unmasked<TData>,
-        options: {
-          fetchMoreResult: Unmasked<TFetchData>;
-          variables: TFetchVars;
-        }
-      ) => Unmasked<TData>;
-    }
-  ): Promise<QueryResult<TFetchData>> {
+  >({
+    query,
+    variables,
+    context,
+    errorPolicy,
+    fetchPolicy,
+    updateQuery,
+  }: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+    updateQuery?: (
+      previousQueryResult: Unmasked<TData>,
+      options: {
+        fetchMoreResult: Unmasked<TData>;
+        variables: NoInfer<TVariables>;
+      }
+    ) => Unmasked<TData>;
+  }): Promise<QueryResult<TFetchData>> {
     const combinedOptions = {
-      ...(fetchMoreOptions.query ? fetchMoreOptions : (
-        {
-          ...this.options,
-          query: this.options.query,
-          ...fetchMoreOptions,
-          variables: {
-            ...this.variables,
-            ...fetchMoreOptions.variables,
-          },
-        }
-      )),
+      ...compact(this.options, {
+        query,
+        variables,
+        context,
+        errorPolicy,
+        fetchPolicy,
+      }),
       // The fetchMore request goes immediately to the network and does
       // not automatically write its result to the cache (hence no-cache
       // instead of network-only), because we allow the caller of
@@ -748,13 +749,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // as well as the document passed in `fetchMoreOptions` to ensure the cache
     // uses the most up-to-date document which may rely on runtime conditionals.
     this.lastQuery =
-      fetchMoreOptions.query ?
+      query ?
         this.transformDocument(this.options.query)
       : combinedOptions.query;
 
     let wasUpdated = false;
 
-    const updateQuery = fetchMoreOptions?.updateQuery;
     const isCached = this.options.fetchPolicy !== "no-cache";
 
     if (!isCached) {
@@ -792,7 +792,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // fetchMore cache results back to this ObservableQuery.
           this.queryManager.cache.batch({
             update: (cache) => {
-              const { updateQuery } = fetchMoreOptions;
               if (updateQuery) {
                 cache.updateQuery(
                   {

@@ -21,6 +21,7 @@ import type {
   OnQueryUpdated,
   OperationVariables,
 } from "./types.js";
+import { Watch } from "typescript";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -135,13 +136,22 @@ export interface NextFetchPolicyContext<
   initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
-export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
+export type FetchMoreQueryOptions<
+  TVariables extends OperationVariables = OperationVariables,
+  TData = unknown,
+> = {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: Partial<NoInfer<TVariables>>;
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-}
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: FetchPolicy;
+} & VariablesOption<NoInfer<TVariables>>;
 
 export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;

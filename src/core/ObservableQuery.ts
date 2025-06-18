@@ -1229,7 +1229,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
           getOperationName(this.query, "(anonymous)")
         );
-        this.didWarnCacheOnlyPolling = true;
+      if (__DEV__) {
+        if (
+          !this.didWarnCacheOnlyPolling &&
+          pollInterval &&
+          fetchPolicy === "cache-only"
+        ) {
+          invariant.warn(
+            "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+            getOperationName(this.query, "(anonymous)")
+          );
+          this.didWarnCacheOnlyPolling = true;
+        }
       }
 
       this.cancelPolling();

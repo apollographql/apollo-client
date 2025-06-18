@@ -1706,12 +1706,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private setError(error: ErrorLike) {
-    this.setResult({
-      ...this.getCurrentResult(),
-      error,
-      loading: false,
-      networkStatus: NetworkStatus.error,
-    });
+    this.setResult(
+      {
+        ...this.getCurrentResult(),
+        error,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      },
+      { shouldEmit: EmitBehavior.force }
+    );
   }
 
   private operator: OperatorFunction<

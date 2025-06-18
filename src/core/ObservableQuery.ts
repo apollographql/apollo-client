@@ -714,15 +714,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) => Unmasked<TData>;
     }
   ): Promise<QueryResult<TFetchData>> {
-    if (this.options.fetchPolicy === "cache-only") {
-      const error = newInvariantError(
-        "Cannot execute `fetchMore` for 'cache-only' query '%s'. Please use a different fetch policy.",
-        getOperationName(this.query, "(anonymous)")
-      );
-
-      this.setError(error);
-      return Promise.reject(error);
-    }
+    invariant(
+      this.options.fetchPolicy !== "cache-only",
+      "Cannot execute `fetchMore` for 'cache-only' query '%s'. Please use a different fetch policy.",
+      getOperationName(this.query, "(anonymous)")
+    );
 
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (

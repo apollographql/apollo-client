@@ -2457,21 +2457,13 @@ test("does not allow fetchMore on a cache-only query", async () => {
     partial: true,
   });
 
-  const expectedError = new InvariantError(
-    "Cannot execute `fetchMore` for 'cache-only' query 'Comment'. Please use a different fetch policy."
-  );
-
-  await expect(
+  expect(() =>
     observable.fetchMore({ variables: { start: 10, limit: 10 } })
-  ).rejects.toEqual(expectedError);
-
-  await expect(stream).toEmitSimilarValue({
-    expected: (previous) => ({
-      ...previous,
-      error: expectedError,
-      networkStatus: NetworkStatus.error,
-    }),
-  });
+  ).toThrow(
+    new InvariantError(
+      "Cannot execute `fetchMore` for 'cache-only' query 'Comment'. Please use a different fetch policy."
+    )
+  );
 
   await expect(stream).not.toEmitAnything();
 });

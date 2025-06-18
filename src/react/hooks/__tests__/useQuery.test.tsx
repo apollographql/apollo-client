@@ -5306,23 +5306,13 @@ describe("useQuery Hook", () => {
         variables: { limit: 2 },
       });
 
-      const expectedError = new InvariantError(
-        "Cannot execute `fetchMore` for 'cache-only' query 'letters'. Please use a different fetch policy."
-      );
-
-      await expect(
+      expect(() =>
         getCurrentSnapshot().fetchMore({ variables: { limit: 2 } })
-      ).rejects.toEqual(expectedError);
-
-      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: undefined,
-        dataState: "empty",
-        error: expectedError,
-        loading: false,
-        networkStatus: NetworkStatus.error,
-        previousData: undefined,
-        variables: { limit: 2 },
-      });
+      ).toThrow(
+        new InvariantError(
+          "Cannot execute `fetchMore` for 'cache-only' query 'letters'. Please use a different fetch policy."
+        )
+      );
 
       await expect(takeSnapshot).not.toRerender();
     });

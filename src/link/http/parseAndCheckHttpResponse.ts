@@ -103,14 +103,11 @@ export async function readMultipartBody<
       }
       let next = { ...result.payload };
       if ("errors" in result) {
-        next = {
-          ...next,
-          extensions: {
-            ...("extensions" in next ? next.extensions : (null as any)),
-            [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
-              result.errors ?? []
-            ),
-          },
+        next.extensions = {
+          ...next.extensions,
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
+            result.errors ?? []
+          ),
         };
       }
       nextValue(next as T);

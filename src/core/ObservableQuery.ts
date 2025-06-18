@@ -1235,7 +1235,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const {
       pollingInfo,
-      options: { fetchPolicy, pollInterval },
+      options: { pollInterval },
     } = this;
 
     if (!pollInterval || !this.hasObservers()) {
@@ -1250,12 +1250,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     invariant(
       pollInterval,
       "Attempted to start a polling query without a polling interval."
-    );
-
-    invariant(
-      fetchPolicy !== "cache-only" && fetchPolicy !== "standby",
-      "Cannot begin polling on a '%s' query. Please use a different fetch policy.",
-      fetchPolicy
     );
 
     const info = pollingInfo || (this.pollingInfo = {} as any);

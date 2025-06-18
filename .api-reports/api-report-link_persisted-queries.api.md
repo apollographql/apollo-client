@@ -13,9 +13,9 @@ import type { Operation } from '@apollo/client/link';
 // @public (undocumented)
 interface BaseOptions {
     // (undocumented)
-    disable?: (error: PersistedQueryLink.DisableFunctionOptions) => boolean;
+    disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
     // (undocumented)
-    retry?: (error: PersistedQueryLink.RetryFunctionOptions) => boolean;
+    retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
     // (undocumented)
     useGETForHashedQueries?: boolean;
 }

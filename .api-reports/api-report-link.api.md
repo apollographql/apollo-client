@@ -47,7 +47,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: FormattedExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
+    payload: FormattedExecutionResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -65,41 +65,6 @@ export const execute: typeof ApolloLink.execute;
 export interface ExecuteContext {
     // (undocumented)
     client: ApolloClient;
-}
-
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data?: never;
-    // (undocumented)
-    errors?: never;
-    // (undocumented)
-    extensions?: never;
-    // (undocumented)
-    incremental?: IncrementalPayload<TData, TExtensions>[];
-}
-
-// @public (undocumented)
-export interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data: TData | null | undefined;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    incremental?: never;
-}
-
-// @public (undocumented)
-export type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
-
-// @public (undocumented)
-interface ExecutionPatchResultBase {
-    // (undocumented)
-    hasNext?: boolean;
 }
 
 // @public (undocumented)
@@ -120,20 +85,6 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
     query: DocumentNode;
     // (undocumented)
     variables?: TVariables;
-}
-
-// @public (undocumented)
-export interface IncrementalPayload<TData, TExtensions> {
-    // (undocumented)
-    data: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    label?: string;
-    // (undocumented)
-    path: Path;
 }
 
 // @public (undocumented)
@@ -163,9 +114,6 @@ export interface Operation {
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
 }
-
-// @public (undocumented)
-export type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;

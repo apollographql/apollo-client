@@ -19,7 +19,7 @@ export declare namespace Incremental {
     extractErrors: (
       result: FetchResult<any>
     ) => readonly GraphQLFormattedError[] | undefined | void;
-    startRequest: <TData>(request: {
+    startRequest: <TData extends Record<string, unknown>>(request: {
       query: DocumentNode;
     }) => IncrementalRequest<Chunk, TData>;
   }

@@ -14,38 +14,34 @@ import type { GraphQLRequest } from '@apollo/client';
 // @public (undocumented)
 namespace Defer20220824Handler {
     // (undocumented)
-    type Chunk<TData = Record<string, unknown>> = InitialResult<TData> | SubsequentResult<TData>;
+    type Chunk<TData extends Record<string, unknown>> = InitialResult<TData> | SubsequentResult<TData>;
     // (undocumented)
-    interface IncrementalDeferPayload<TData = Record<string, unknown>> {
-        // (undocumented)
-        data?: TData | null;
-        // (undocumented)
+    type IncrementalDeferPayload<TData = Record<string, unknown>> = {
+        data?: TData | null | undefined;
         errors?: ReadonlyArray<GraphQLFormattedError>;
-        // (undocumented)
         extensions?: Record<string, unknown>;
-        // (undocumented)
-        label?: string;
-        // (undocumented)
         path?: Incremental.Path;
-    }
-    // (undocumented)
-    type IncrementalPayload<TData = Record<string, unknown>> = IncrementalDeferPayload<TData>;
+        label?: string;
+    };
     // (undocumented)
     type InitialResult<TData = Record<string, unknown>> = {
         data?: TData | null | undefined;
         errors?: ReadonlyArray<GraphQLFormattedError>;
-        extensions?: Record<string, any>;
+        extensions?: Record<string, unknown>;
         hasNext: boolean;
     };
     // (undocumented)
     type SubsequentResult<TData = Record<string, unknown>> = {
+        data?: TData | null | undefined;
+        errors?: ReadonlyArray<GraphQLFormattedError>;
+        extensions?: Record<string, unknown>;
         hasNext: boolean;
-        incremental?: Array<IncrementalPayload<TData>>;
+        incremental?: Array<IncrementalDeferPayload<TData>>;
     };
 }
 
-// @public (undocumented)
-class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk> {
+// @public
+class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk<any>> {
     // (undocumented)
     extractErrors(result: FetchResult<any>): GraphQLFormattedError[] | undefined;
     // (undocumented)
@@ -55,7 +51,7 @@ class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.C
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    startRequest<TData>(_: {
+    startRequest<TData extends Record<string, unknown>>(_: {
         query: DocumentNode;
     }): DeferRequest<TData>;
 }
@@ -63,9 +59,9 @@ export { Defer20220824Handler }
 export { Defer20220824Handler as GraphQL17Alpha2Handler }
 
 // @public (undocumented)
-class DeferRequest<TData> implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk, TData> {
+class DeferRequest<TData extends Record<string, unknown>> implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData> {
     // (undocumented)
-    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.InitialResult | Defer20220824Handler.SubsequentResult): FormattedExecutionResult<TData>;
+    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.Chunk<TData>): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
 }
@@ -81,7 +77,7 @@ export namespace Incremental {
         // (undocumented)
         prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
         // (undocumented)
-        startRequest: <TData>(request: {
+        startRequest: <TData extends Record<string, unknown>>(request: {
             query: DocumentNode;
         }) => IncrementalRequest<Chunk, TData>;
     }

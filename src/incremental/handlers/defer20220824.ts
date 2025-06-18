@@ -1,15 +1,10 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { FormattedExecutionResult } from "graphql";
 
-import type {
-  FetchResult,
-  GraphQLRequest,
-  IncrementalPayload,
-} from "@apollo/client";
+import type { FetchResult, GraphQLRequest } from "@apollo/client";
 import type { DeepPartial } from "@apollo/client/utilities";
 import {
   DeepMerger,
-  getGraphQLErrorsFromResult,
   hasDirectives,
   isNonEmptyArray,
 } from "@apollo/client/utilities/internal";
@@ -20,39 +15,40 @@ export declare namespace Defer20220824Handler {
   export type InitialResult<TData = Record<string, unknown>> = {
     data?: TData | null | undefined;
     errors?: ReadonlyArray<GraphQLFormattedError>;
-    extensions?: Record<string, any>;
+    extensions?: Record<string, unknown>;
     hasNext: boolean;
   };
 
   export type SubsequentResult<TData = Record<string, unknown>> = {
+    data?: TData | null | undefined;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    extensions?: Record<string, unknown>;
     hasNext: boolean;
-    incremental?: Array<IncrementalPayload<TData>>;
+    incremental?: Array<IncrementalDeferPayload<TData>>;
   };
 
-  export type Chunk<TData = Record<string, unknown>> =
+  export type Chunk<TData extends Record<string, unknown>> =
     | InitialResult<TData>
     | SubsequentResult<TData>;
 
-  export type IncrementalPayload<TData = Record<string, unknown>> =
-    IncrementalDeferPayload<TData>;
-
-  export interface IncrementalDeferPayload<TData = Record<string, unknown>> {
-    data?: TData | null;
+  export type IncrementalDeferPayload<TData = Record<string, unknown>> = {
+    data?: TData | null | undefined;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, unknown>;
     path?: Incremental.Path;
     label?: string;
-  }
+  };
 }
 
 declare module "@apollo/client/link" {
   export interface AdditionalFetchResultTypes {
-    Defer20220824Handler: Defer20220824Handler.Chunk;
+    Defer20220824Handler: Defer20220824Handler.Chunk<Record<string, unknown>>;
   }
 }
 
-class DeferRequest<TData>
-  implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk, TData>
+class DeferRequest<TData extends Record<string, unknown>>
+  implements
+    Incremental.IncrementalRequest<Defer20220824Handler.Chunk<TData>, TData>
 {
   public hasNext = true;
 
@@ -60,46 +56,52 @@ class DeferRequest<TData>
   private extensions: Record<string, any> = {};
   private data: any = {};
 
+  private mergeIn(
+    normalized: FormattedExecutionResult<TData>,
+    merger: DeepMerger<any[]>
+  ) {
+    if (normalized.data !== undefined) {
+      this.data = merger.merge(this.data, normalized.data);
+    }
+    if (normalized.errors) {
+      this.errors.push(...normalized.errors);
+    }
+    Object.assign(this.extensions, normalized.extensions);
+  }
+
   handle(
     // we'll get `undefined` here in case of a `no-cache` fetch policy,
     // so we'll continue with the last value this request had accumulated
     cacheData: TData | DeepPartial<TData> | null | undefined = this.data,
-    chunk:
-      | Defer20220824Handler.InitialResult
-      | Defer20220824Handler.SubsequentResult
+    chunk: Defer20220824Handler.Chunk<TData>
   ): FormattedExecutionResult<TData> {
     this.hasNext = chunk.hasNext;
     this.data = cacheData;
-    if (isIncrementalSubsequentResult(chunk)) {
-      if (isNonEmptyArray(chunk.incremental)) {
-        const merger = new DeepMerger();
-        for (const incremental of chunk.incremental) {
-          let { data, path } = incremental;
-          if (data && path) {
-            for (let i = path.length - 1; i >= 0; --i) {
-              const key = path[i];
-              const isNumericKey = !isNaN(+key);
-              const parent: Record<string | number, any> =
-                isNumericKey ? [] : {};
-              parent[key] = data;
-              data = parent as typeof data;
-            }
-            this.data = merger.merge(this.data, data);
-          }
-          this.errors.push(...getGraphQLErrorsFromResult(incremental));
-          Object.assign(this.extensions, incremental.extensions);
-        }
-      }
 
-      // Detect the first chunk of a deferred query and merge it with existing
-      // cache data. This ensures a `cache-first` fetch policy that returns
-      // partial cache data or a `cache-and-network` fetch policy that already
-      // has full data in the cache does not complain when trying to merge the
-      // initial deferred server data with existing cache data.
-    } else if (isIncrementalInitialResult(chunk)) {
-      this.data = new DeepMerger().merge(this.data, chunk.data);
-      this.errors = getGraphQLErrorsFromResult(chunk);
-      this.extensions = { ...chunk.extensions };
+    this.mergeIn(chunk, new DeepMerger());
+
+    if (hasIncrementalChunks(chunk)) {
+      const merger = new DeepMerger();
+      for (const incremental of chunk.incremental) {
+        let { data, path, errors, extensions } = incremental;
+        if (data && path) {
+          for (let i = path.length - 1; i >= 0; --i) {
+            const key = path[i];
+            const isNumericKey = !isNaN(+key);
+            const parent: Record<string | number, any> = isNumericKey ? [] : {};
+            parent[key] = data;
+            data = parent as typeof data;
+          }
+        }
+        this.mergeIn(
+          {
+            errors,
+            extensions,
+            data: data ? (data as TData) : undefined,
+          },
+          merger
+        );
+      }
     }
 
     const { data, errors, extensions } = this;
@@ -107,18 +109,19 @@ class DeferRequest<TData>
   }
 }
 
+/**
+ * This handler implements the `@defer` directive as specified in this historical commit:
+ * https://github.com/graphql/graphql-spec/tree/48cf7263a71a683fab03d45d309fd42d8d9a6659/spec
+ */
 export class Defer20220824Handler
-  implements Incremental.Handler<Defer20220824Handler.Chunk>
+  implements Incremental.Handler<Defer20220824Handler.Chunk<any>>
 {
   isIncrementalResult(
     result: Record<string, any>
   ): result is
     | Defer20220824Handler.SubsequentResult
     | Defer20220824Handler.InitialResult {
-    return (
-      isIncrementalInitialResult(result) ||
-      isIncrementalSubsequentResult(result)
-    );
+    return "hasNext" in result;
   }
 
   extractErrors(result: FetchResult<any>) {
@@ -132,11 +135,11 @@ export class Defer20220824Handler
         acc.push(...errors);
       }
     };
-    if (isIncrementalInitialResult(result)) {
+    if (this.isIncrementalResult(result)) {
       push(result);
-    }
-    if (isIncrementalSubsequentResult(result)) {
-      result.incremental.forEach(push);
+      if (hasIncrementalChunks(result)) {
+        result.incremental.forEach(push);
+      }
     }
     if (acc.length) {
       return acc;
@@ -155,21 +158,16 @@ export class Defer20220824Handler
 
     return request;
   }
-  startRequest<TData>(_: { query: DocumentNode }) {
+  startRequest<TData extends Record<string, unknown>>(_: {
+    query: DocumentNode;
+  }) {
     return new DeferRequest<TData>();
   }
 }
 
 // only exported for use in tests
-export function isIncrementalSubsequentResult(
+export function hasIncrementalChunks(
   result: Record<string, any>
 ): result is Required<Defer20220824Handler.SubsequentResult> {
-  return Array.isArray(result.incremental);
-}
-
-// only exported for use in tests
-export function isIncrementalInitialResult(
-  result: Record<string, any>
-): result is Defer20220824Handler.InitialResult {
-  return "hasNext" in result && "data" in result;
+  return isNonEmptyArray(result.incremental);
 }

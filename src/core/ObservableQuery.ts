@@ -509,7 +509,13 @@ export class ObservableQuery<
     };
 
     switch (fetchPolicy) {
-      case "cache-only":
+      case "cache-only": {
+        return {
+          ...cacheResult(),
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
+      }
       case "cache-first":
         return cacheResult();
       case "cache-and-network":

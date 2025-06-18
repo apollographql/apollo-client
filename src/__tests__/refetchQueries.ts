@@ -541,6 +541,55 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
+  it('does not include cache-only queries when options.include === "all"', async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    const [aObs, bObs, abObs] = await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    const activeResults = await client.refetchQueries({
+      include: "all",
+      onQueryUpdated: activeOQU.onQueryUpdated,
+    });
+
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { data: { a: "A" } },
+      { data: { b: "B" } },
+      { data: { a: "A", b: "B" } },
+    ]);
+
+    unsubscribe();
+  });
+
   it("includes queries named in refetchQueries even if they have `standby` fetchPolicy", async () => {
     const client = makeClient();
 

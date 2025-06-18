@@ -5070,6 +5070,43 @@ describe("ApolloClient", () => {
       expect(refetchCount).toEqual(1);
     });
 
+    it("should not call refetch on a cache-only Observable if the observed queries are refetched and the includeStandby parameter is set to true", async () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([]),
+      });
+
+      const options = {
+        query,
+        fetchPolicy: "cache-only",
+      } as WatchQueryOptions;
+
+      let refetchCount = 0;
+
+      const obs = client.watchQuery(options);
+      obs.subscribe({});
+      obs.refetch = () => {
+        ++refetchCount;
+        return null as never;
+      };
+
+      const includeStandBy = true;
+      void client.reFetchObservableQueries(includeStandBy);
+
+      await wait(50);
+
+      expect(refetchCount).toEqual(0);
+    });
+
     it("should not call refetch on a non-subscribed Observable", async () => {
       const query = gql`
         query {

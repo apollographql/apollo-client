@@ -5281,6 +5281,42 @@ describe("useQuery Hook", () => {
       expect(client.extract()).toStrictEqual({});
     });
 
+    it("does not allow fetchMore for cache-only queries", async () => {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              fetchPolicy: "cache-only",
+              variables: { limit: 2 },
+            }),
+          {
+            wrapper: ({ children }: any) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { limit: 2 },
+      });
+
+      expect(() =>
+        getCurrentSnapshot().fetchMore({ variables: { limit: 2 } })
+      ).toThrow(
+        new InvariantError(
+          "Cannot execute `fetchMore` for 'cache-only' query 'letters'. Please use a different fetch policy."
+        )
+      );
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     it("regression test for issue #8600", async () => {
       const cache = new InMemoryCache({
         typePolicies: {
@@ -6735,6 +6771,59 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("allows refetch on a cache-only query", async () => {
+      const query = gql`
+        query Greeting {
+          hello
+        }
+      `;
+      const link = new ApolloLink(() =>
+        of({
+          data: { hello: "world" },
+        })
+      );
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { fetchPolicy: "cache-only" }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
       await expect(takeSnapshot).not.toRerender();
     });

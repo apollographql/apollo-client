@@ -18,6 +18,7 @@ import {
   compact,
   filterMap,
   getOperationDefinition,
+  getOperationName,
   getQueryDefinition,
   preventUnhandledRejection,
   toQueryResult,
@@ -659,6 +660,8 @@ export class ObservableQuery<
   public refetch(
     variables?: Partial<TVariables>
   ): ObservableQuery.ResultPromise<QueryResult<TData>> {
+    const { fetchPolicy } = this.options;
+
     const reobserveOptions: Partial<
       ObservableQuery.Options<TData, TVariables>
     > = {
@@ -669,7 +672,6 @@ export class ObservableQuery<
     // Unless the provided fetchPolicy always consults the network
     // (no-cache, network-only, or cache-and-network), override it with
     // network-only to force the refetch for this fetchQuery call.
-    const { fetchPolicy } = this.options;
     if (fetchPolicy === "no-cache") {
       reobserveOptions.fetchPolicy = "no-cache";
     } else {
@@ -716,6 +718,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<
     QueryResult<TFetchData>
   > {
+    invariant(
+      this.options.fetchPolicy !== "cache-only",
+      "Cannot execute `fetchMore` for 'cache-only' query '%s'. Please use a different fetch policy.",
+      getOperationName(this.query, "(anonymous)")
+    );
     const combinedOptions = {
       ...compact(
         this.options,
@@ -1209,6 +1216,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   // Turns polling on or off based on this.options.pollInterval.
+  private didWarnCacheOnlyPolling = false;
   private updatePolling() {
     // Avoid polling in SSR mode
     if (this.queryManager.ssrMode) {
@@ -1217,22 +1225,31 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const {
       pollingInfo,
-      options: { pollInterval },
+      options: { fetchPolicy, pollInterval },
     } = this;
 
-    if (!pollInterval || !this.hasObservers()) {
+    if (!pollInterval || !this.hasObservers() || fetchPolicy === "cache-only") {
+      if (__DEV__) {
+        if (
+          !this.didWarnCacheOnlyPolling &&
+          pollInterval &&
+          fetchPolicy === "cache-only"
+        ) {
+          invariant.warn(
+            "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
+            getOperationName(this.query, "(anonymous)")
+          );
+          this.didWarnCacheOnlyPolling = true;
+        }
+      }
+
       this.cancelPolling();
       return;
     }
 
-    if (pollingInfo && pollingInfo.interval === pollInterval) {
+    if (pollingInfo?.interval === pollInterval) {
       return;
     }
-
-    invariant(
-      pollInterval,
-      "Attempted to start a polling query without a polling interval."
-    );
 
     const info = pollingInfo || (this.pollingInfo = {} as any);
     info.interval = pollInterval;

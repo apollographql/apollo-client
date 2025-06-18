@@ -731,8 +731,8 @@ export class QueryManager {
       (observableQuery) => {
         const { fetchPolicy } = observableQuery.options;
         if (
-          includeStandby ||
-          (fetchPolicy !== "standby" && fetchPolicy !== "cache-only")
+          (includeStandby || fetchPolicy !== "standby") &&
+          fetchPolicy !== "cache-only"
         ) {
           observableQueryPromises.push(observableQuery.refetch());
         }
@@ -1292,6 +1292,10 @@ export class QueryManager {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq) => {
+        if (oq.options.fetchPolicy === "cache-only") {
+          return;
+        }
+
         const current = oq.getCurrentResult();
         includedQueriesByOq.set(oq, {
           oq,
@@ -1386,7 +1390,10 @@ export class QueryManager {
               return result;
             }
 
-            if (onQueryUpdated !== null) {
+            if (
+              onQueryUpdated !== null &&
+              oq.options.fetchPolicy !== "cache-only"
+            ) {
               // If we don't have an onQueryUpdated function, and onQueryUpdated
               // was not disabled by passing null, make sure this query is
               // "included" like any other options.include-specified query.

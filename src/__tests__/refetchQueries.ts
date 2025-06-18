@@ -491,6 +491,154 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
+  it('does not include cache-only queries when options.include === "active"', async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    const [aObs, bObs, abObs] = await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    const activeResults = await client.refetchQueries({
+      include: "active",
+      onQueryUpdated: activeOQU.onQueryUpdated,
+    });
+
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { data: { a: "A" } },
+      { data: { b: "B" } },
+      { data: { a: "A", b: "B" } },
+    ]);
+
+    unsubscribe();
+  });
+
+  it('does not include cache-only queries when options.include === "all"', async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    const [aObs, bObs, abObs] = await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    const activeResults = await client.refetchQueries({
+      include: "all",
+      onQueryUpdated: activeOQU.onQueryUpdated,
+    });
+
+    await activeOQU.check([
+      [aObs, { a: "A" }],
+      [bObs, { b: "B" }],
+      [abObs, { a: "A", b: "B" }],
+    ]);
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([
+      { data: { a: "A" } },
+      { data: { b: "B" } },
+      { data: { a: "A", b: "B" } },
+    ]);
+
+    unsubscribe();
+  });
+
+  it("does not include cache-only queries when affected by updateCache", async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeResults = await client.refetchQueries({
+      updateCache(cache) {
+        cache.writeQuery({
+          query: cQuery,
+          data: { c: "See" },
+        });
+      },
+    });
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([]);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "See" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    unsubscribe();
+  });
+
   it("includes queries named in refetchQueries even if they have `standby` fetchPolicy", async () => {
     const client = makeClient();
 
@@ -565,6 +713,67 @@ describe("client.refetchQueries", () => {
     expect(resultsAfterSubscribe).toEqual([{ a: "A" }, { b: "B" }]);
 
     unsubscribe();
+  });
+
+  it("does not include named cache-only queries in refetchQueries", async () => {
+    const cQuery = gql`
+      query C {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    const aObs = client.watchQuery({
+      query: aQuery,
+      notifyOnNetworkStatusChange: false,
+    });
+
+    using aStream = new ObservableStream(aObs);
+
+    await expect(aStream).toEmitTypedValue({
+      data: { a: "A" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    using cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeOQU = obsUpdatedCheck(() => true);
+    await expect(
+      client.refetchQueries({
+        include: [aQuery, cQuery],
+        onQueryUpdated: activeOQU.onQueryUpdated,
+      })
+    ).resolves.toEqual([{ data: { a: "A" } }]);
+
+    await activeOQU.check([[aObs, { a: "A" }]]);
+
+    await expect(aStream).toEmitTypedValue({
+      data: { a: "A" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(aStream).not.toEmitAnything();
+    await expect(cStream).not.toEmitAnything();
   });
 
   it("should not include unwatched single queries", async () => {

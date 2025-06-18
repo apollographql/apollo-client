@@ -649,10 +649,14 @@ describe("cache-only", () => {
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
-    await observable.refetch();
+    await expect(observable.refetch()).resolves.toStrictEqualTyped({
+      data: { count: 2 },
+    });
 
     await expect(stream).toEmitTypedValue({
-      data: { count: 1 },
+      data: {
+        count: 1,
+      },
       dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
@@ -660,12 +664,12 @@ describe("cache-only", () => {
     });
 
     await expect(stream).toEmitTypedValue({
-      loading: false,
-      networkStatus: NetworkStatus.ready,
       data: {
         count: 2,
       },
       dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
       partial: false,
     });
 

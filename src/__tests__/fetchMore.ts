@@ -28,6 +28,7 @@ import {
   concatPagination,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`
@@ -2644,6 +2645,46 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
     networkStatus: NetworkStatus.loading,
     partial: true,
   });
+});
+
+test("does not allow fetchMore on a cache-only query", async () => {
+  const query = gql`
+    query Comment($repoName: String!, $start: Int!, $limit: Int!) {
+      entry(repoFullName: $repoName) {
+        comments(start: $start, limit: $limit) {
+          text
+          __typename
+        }
+        __typename
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    link: ApolloLink.empty(),
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchQuery({ query, fetchPolicy: "cache-only" });
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  expect(() =>
+    observable.fetchMore({ variables: { start: 10, limit: 10 } })
+  ).toThrow(
+    new InvariantError(
+      "Cannot execute `fetchMore` for 'cache-only' query 'Comment'. Please use a different fetch policy."
+    )
+  );
+
+  await expect(stream).not.toEmitAnything();
 });
 
 function commentsInRange(

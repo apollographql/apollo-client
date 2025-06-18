@@ -46,7 +46,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
           next: (result) => {
             const handler = operation.client["queryManager"].incrementalHandler;
             const errors =
-              handler?.isIncrementalResult(result) ?
+              handler.isIncrementalResult(result) ?
                 handler.extractErrors(result)
               : (result as FormattedExecutionResult).errors;
             if (errors) {

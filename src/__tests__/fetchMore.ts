@@ -3,7 +3,13 @@ import { assign, cloneDeep } from "lodash";
 import { Observable } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, NetworkStatus, split } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+  split,
+} from "@apollo/client";
 import type {
   ApolloCache,
   FieldMergeFunction,
@@ -1795,7 +1801,14 @@ describe("fetchMore on an observable query", () => {
     `;
     const observable = setup({
       request: { query },
-      error: new Error("This is an error"),
+      result: {
+        data: {
+          entry: {
+            __typename: "Entry",
+          },
+        },
+        errors: [{ message: "This is an error" }],
+      },
     });
     const stream = new ObservableStream(observable);
     await expect(stream).toEmitTypedValue({
@@ -1832,12 +1845,27 @@ describe("fetchMore on an observable query", () => {
       errorPolicy: "all",
     });
     await expect(promise).resolves.toStrictEqual({
-      data: undefined,
-      error: new Error("This is an error"),
+      data: {
+        entry: {
+          __typename: "Entry",
+        },
+      },
+      error: new CombinedGraphQLErrors({
+        data: {
+          entry: {
+            __typename: "Entry",
+          },
+        },
+        errors: [{ message: "This is an error" }],
+      }),
     });
     expect(updateQuery).toHaveBeenCalledTimes(1);
     expect(updateQuery).toHaveBeenNthCalledWith(1, result.data, {
-      fetchMoreResult: undefined,
+      fetchMoreResult: {
+        entry: {
+          __typename: "Entry",
+        },
+      },
       variables: undefined,
     });
     await expect(stream).toEmitSimilarValue({

@@ -6081,6 +6081,80 @@ test("rerenders with data: undefined when changing variables and an error is ret
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("throws when calling `refetch` on a cache-only query", async () => {
+  const { query } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query, { fetchPolicy: "cache-only" }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute()).resolves.toStrictEqualTyped({ data: undefined });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  const [, { refetch }] = getCurrentSnapshot();
+
+  const expectedError = new InvariantError(
+    "Cannot execute `refetch` for 'cache-only' query 'GreetingQuery'. Please use a different fetch policy."
+  );
+
+  await expect(refetch()).rejects.toEqual(expectedError);
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: undefined,
+      dataState: "empty",
+      error: expectedError,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+});
+
 describe.skip("Type Tests", () => {
   test("returns narrowed TData in default case", () => {
     const { query } = setupSimpleCase();

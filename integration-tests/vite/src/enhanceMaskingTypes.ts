@@ -14,7 +14,7 @@ export interface CustomDataMaskingImplementation {
 }
 
 declare module "@apollo/client" {
-  export interface DataMasking extends CustomDataMaskingImplementation {}
+  export interface TypeOverrides extends CustomDataMaskingImplementation {}
 }
 
 import { Masked } from "@apollo/client";

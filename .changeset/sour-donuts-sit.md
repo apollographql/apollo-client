@@ -9,7 +9,10 @@ cause inconsistencies.
 
 * `FetchResult` is now used to refer to an unhandled "raw" result as returned from
   a link.
-  This can also include incremental results that might have an unexpected shape.
+  This can also include incremental results that use a different format.
 * `FormattedExecutionResult` from the `graphql` package is now used to represent
-  a "handled" response and will always have the expected shape with the possible
-  properties `data`, `errors` and `extensions`.
+  the execution of a standard GraphQL request without incremental results.
+
+If your custom links access the `data` property, you might need to first check if
+the result is a standard GraphQL result by using the `isFormattedExecutionResult`
+helper from `@apollo/client/utilities`.

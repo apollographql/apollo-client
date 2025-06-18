@@ -842,22 +842,16 @@ export const fallbackHttpConfig: {
 };
 
 // @public (undocumented)
-export interface FetchMoreOptions<TData = unknown, TVariables = OperationVariables> {
-    // (undocumented)
-    updateQuery?: (previousQueryResult: TData, options: {
-        fetchMoreResult?: TData;
-        variables?: TVariables;
-    }) => TData;
-}
-
-// @public (undocumented)
-export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
-    // (undocumented)
+export type FetchMoreOptions<TData, TVariables extends OperationVariables, TFetchData = TData, TFetchVars extends OperationVariables = TVariables> = {
+    query?: DocumentNode | TypedDocumentNode<TFetchData, TFetchVars>;
+    variables?: Partial<NoInfer<TFetchVars>>;
+    errorPolicy?: ErrorPolicy;
     context?: DefaultContext;
-    query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
-    variables?: Partial<NoInfer_2<TVariables>>;
-}
+    updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+        fetchMoreResult: Unmasked<TFetchData>;
+        variables: TFetchVars;
+    }) => Unmasked<TData>;
+};
 
 // @public
 export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
@@ -1522,6 +1516,7 @@ namespace LocalState {
 //
 // @public (undocumented)
 class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Resolvers<DefaultContext>, TContext = InferContextValueFromResolvers<TResolvers>> {
+    // Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
     constructor(...[options]: {} extends TResolvers ? [
     options?: LocalState.Options<TResolvers, NoInfer_2<TContext>>
     ] : [
@@ -1908,12 +1903,7 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     });
     // @internal @deprecated (undocumented)
     applyOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
-    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-        }) => Unmasked<TData>;
-    }): Promise<QueryResult<TFetchData>>;
+    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>({ query, variables, context, errorPolicy, updateQuery, }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<QueryResult<TFetchData>>;
     // @internal @deprecated (undocumented)
     getCacheDiff({ optimistic }?: {
         optimistic?: boolean | undefined;
@@ -2701,10 +2691,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:143:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:303:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:253:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:140:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:174:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/local-state/LocalState.ts:194:7 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts

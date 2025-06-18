@@ -161,7 +161,13 @@ workflows:
           matrix:
             parameters:
               project:
-                ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
+                [
+                  "Core Tests",
+                  "Core Tests - RxJS min version",
+                  "ReactDOM 17",
+                  "ReactDOM 18",
+                  "ReactDOM 19",
+                ]
       - Circularity
       - Publint
       - Attest

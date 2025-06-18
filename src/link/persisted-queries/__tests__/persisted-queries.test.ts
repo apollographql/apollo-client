@@ -1,7 +1,6 @@
 import crypto from "crypto";
 
 import fetchMock from "fetch-mock";
-import type { FormattedExecutionResult } from "graphql";
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { times } from "lodash";

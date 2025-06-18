@@ -18,7 +18,7 @@ import type { Incremental } from "../types.js";
 
 export declare namespace Defer20220824Handler {
   export type InitialResult<TData = Record<string, unknown>> = {
-    data: TData | null | undefined;
+    data?: TData | null | undefined;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     extensions?: Record<string, any>;
     hasNext: boolean;

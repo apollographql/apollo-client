@@ -1474,3 +1474,149 @@ describe("Async resolvers", () => {
     });
   });
 });
+
+test("does not execute resolver when using cache-only fetch policy with no data in the cache", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        name
+      }
+      isLoggedIn @client
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+    localState: new LocalState({
+      resolvers: {
+        Query: {
+          isLoggedIn: () => {
+            return true;
+          },
+        },
+      },
+    }),
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("does not execute resolver if client field is not in the cache when using cache-only fetch policy", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+    localState: new LocalState({
+      resolvers: {
+        Query: {
+          isLoggedIn: () => {
+            return true;
+          },
+        },
+      },
+    }),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      user: { __typename: "User", id: "1", name: "Test User" },
+    },
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: undefined,
+    dataState: "empty",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});
+
+test("returns cache @client field data when using cache-only fetch policy", async () => {
+  const query = gql`
+    query {
+      user {
+        id
+        name
+        isLoggedIn @client
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: ApolloLink.empty(),
+    localState: new LocalState({
+      resolvers: {
+        Query: {
+          isLoggedIn: () => {
+            return true;
+          },
+        },
+      },
+    }),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: "Test User",
+        isLoggedIn: false,
+      },
+    },
+  });
+
+  const stream = new ObservableStream(
+    client.watchQuery({ query, fetchPolicy: "cache-only" })
+  );
+
+  await expect(stream).toEmitTypedValue({
+    data: {
+      user: {
+        __typename: "User",
+        id: "1",
+        name: "Test User",
+        isLoggedIn: false,
+      },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+});

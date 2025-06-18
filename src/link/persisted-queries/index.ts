@@ -7,10 +7,13 @@ import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
 import type { ServerError, ServerParseError } from "@apollo/client/errors";
-import type { Operation } from "@apollo/client/link";
+import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
-import { cacheSizes } from "@apollo/client/utilities";
+import {
+  cacheSizes,
+  isFormattedExecutionResult,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   AutoCleanedWeakCache,
@@ -171,7 +174,7 @@ export const createPersistedQueryLink = (
 
       const { query } = operation;
 
-      return new Observable((observer: Observer<FormattedExecutionResult>) => {
+      return new Observable((observer: Observer<FetchResult>) => {
         let subscription: Subscription;
         let retried = false;
         let originalFetchOptions: any;
@@ -181,11 +184,17 @@ export const createPersistedQueryLink = (
             response,
             networkError,
           }: {
-            response?: FormattedExecutionResult;
+            response?: FetchResult;
             networkError?: ServerError;
           },
           cb: () => void
         ) => {
+          if (!isFormattedExecutionResult(response)) {
+            // if the response is not an expected format, we set it to `undefined`
+            // network errors will still be handled correctly,
+            // but we don't pass any unexpected data to userland callbacks
+            response = undefined;
+          }
           if (!retried && ((response && response.errors) || networkError)) {
             retried = true;
 
@@ -258,7 +267,7 @@ export const createPersistedQueryLink = (
           cb();
         };
         const handler = {
-          next: (response: FormattedExecutionResult) => {
+          next: (response: FetchResult) => {
             maybeRetry({ response }, () => observer.next!(response));
           },
           error: (networkError: ServerError) => {

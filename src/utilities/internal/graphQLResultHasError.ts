@@ -1,10 +1,8 @@
-import type { FetchResult } from "@apollo/client/link";
-
-import { getGraphQLErrorsFromResult } from "./getGraphQLErrorsFromResult.js";
-import { isNonEmptyArray } from "./isNonEmptyArray.js";
+import type { FormattedExecutionResult } from "graphql";
 
 /** @internal */
-export function graphQLResultHasError(result: FetchResult<any>): boolean {
-  const errors = getGraphQLErrorsFromResult(result);
-  return isNonEmptyArray(errors);
+export function graphQLResultHasError(
+  result: FormattedExecutionResult<any>
+): boolean {
+  return !!result.errors?.length;
 }

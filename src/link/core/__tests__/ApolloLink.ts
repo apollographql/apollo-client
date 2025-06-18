@@ -1,3 +1,4 @@
+import type { FormattedExecutionResult } from "graphql";
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { EMPTY, map, Observable, of } from "rxjs";
@@ -563,7 +564,9 @@ describe("ApolloClient", () => {
 
       const chain = ApolloLink.from([
         new ApolloLink((op, forward) => {
-          const observable = forward(op);
+          const observable = forward(
+            op
+          ) as Observable<FormattedExecutionResult>;
 
           return new Observable((observer) => {
             observable.subscribe({
@@ -967,7 +970,9 @@ describe("ApolloClient", () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
         (operation, forward) =>
-          forward(operation).pipe(
+          (
+            forward(operation) as Observable<FormattedExecutionResult<any>>
+          ).pipe(
             map((data) => ({
               data: { count: data.data!.count + 1 },
             }))

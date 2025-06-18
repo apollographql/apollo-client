@@ -15,11 +15,13 @@ import type {
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
+  markAsStreaming,
   ObservableStream,
   setupVariablesCase,
   spyOnConsole,
@@ -3591,6 +3593,7 @@ describe("ObservableQuery", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       const obs = client.watchQuery({ query });
@@ -3620,12 +3623,12 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitTypedValue({
-        data: {
+        data: markAsStreaming({
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,

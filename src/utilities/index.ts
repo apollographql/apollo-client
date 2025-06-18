@@ -6,6 +6,7 @@ export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
 export { print } from "./graphql/print.js";
+export { isFormattedExecutionResult } from "./graphql/isFormattedExecutionResult.js";
 
 export type {
   AsStoreObject,

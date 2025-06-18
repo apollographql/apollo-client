@@ -7,7 +7,6 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { ErrorLike } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
-import type { FormattedExecutionResult } from 'graphql';
 import type { NextLink } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
@@ -40,7 +39,7 @@ export interface ErrorResponse {
     // (undocumented)
     operation: Operation;
     // (undocumented)
-    response?: FormattedExecutionResult;
+    response?: FetchResult;
 }
 
 // @public (undocumented)

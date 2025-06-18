@@ -10,6 +10,7 @@ import type {
   MutateResult,
   ObservableQuery,
   QueryOptions,
+  Streaming,
 } from "@apollo/client";
 import { ApolloClient, NetworkStatus, setLogVerbosity } from "@apollo/client";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
@@ -23,7 +24,7 @@ import {
 } from "@apollo/client/testing/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { makeReference } from "@apollo/client/utilities/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -3065,6 +3066,27 @@ describe("ApolloClient", () => {
     });
   });
 
+  test("will error when used with `@defer` in a without specifying an incremental strategy", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+    });
+
+    const query = gql`
+      query {
+        foo @defer {
+          bar
+        }
+      }
+    `;
+
+    await expect(() => client.query({ query })).rejects.toThrow(
+      new InvariantError(
+        "`@defer` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
+      )
+    );
+  });
+
   describe.skip("type tests", () => {
     test("client.mutate uses any as masked and unmasked type when using plain DocumentNode", () => {
       const mutation = gql`
@@ -3148,16 +3170,37 @@ describe("ApolloClient", () => {
         updateQueries: {
           TestQuery: (_, { mutationResult }) => {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
-              Mutation | null | undefined
+              DeepPartial<Mutation> | null | undefined
             >();
+
+            if (mutationResult.dataState === "streaming") {
+              expectTypeOf(mutationResult.data).toMatchTypeOf<
+                DeepPartial<Mutation> | null | undefined
+              >();
+            }
+            if (mutationResult.dataState === "complete") {
+              expectTypeOf(mutationResult.data).toMatchTypeOf<
+                Mutation | null | undefined
+              >();
+            }
 
             return {};
           },
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<
-            Mutation | null | undefined
+            Mutation | DeepPartial<Mutation> | null | undefined
           >();
+          if (result.dataState === "streaming") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              DeepPartial<Mutation> | null | undefined
+            >();
+          }
+          if (result.dataState === "complete") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              Mutation | null | undefined
+            >();
+          }
 
           return "active";
         },
@@ -3225,7 +3268,7 @@ describe("ApolloClient", () => {
         updateQueries: {
           TestQuery: (_, { mutationResult }) => {
             expectTypeOf(mutationResult.data).toMatchTypeOf<
-              UnmaskedMutation | null | undefined
+              DeepPartial<UnmaskedMutation> | null | undefined
             >();
 
             return {};
@@ -3233,8 +3276,18 @@ describe("ApolloClient", () => {
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<
-            UnmaskedMutation | null | undefined
+            UnmaskedMutation | DeepPartial<UnmaskedMutation> | null | undefined
           >();
+          if (result.dataState === "streaming") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              DeepPartial<UnmaskedMutation> | null | undefined
+            >();
+          }
+          if (result.dataState === "complete") {
+            expectTypeOf(result.data).toMatchTypeOf<
+              UnmaskedMutation | null | undefined
+            >();
+          }
 
           return "active";
         },
@@ -3384,7 +3437,7 @@ describe("ApolloClient", () => {
           }
 
           if (result.dataState === "streaming") {
-            expectTypeOf(result.data).toEqualTypeOf<Masked<Query>>();
+            expectTypeOf(result.data).toEqualTypeOf<Streaming<Masked<Query>>>();
           }
 
           if (result.dataState === "empty") {

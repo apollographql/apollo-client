@@ -1,4 +1,4 @@
-import type { GraphQLFormattedError } from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { Observable } from "rxjs";
 
@@ -52,7 +52,7 @@ export interface ApolloPayloadResult<
   TExtensions = Record<string, any>,
 > {
   payload:
-    | SingleExecutionResult<TData, TExtensions>
+    | FormattedExecutionResult<TData, TExtensions>
     | ExecutionPatchResult<TData, TExtensions>
     | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
@@ -98,23 +98,20 @@ export interface ExecuteContext {
 
 export interface OperationContext extends DefaultContext {}
 
-export interface SingleExecutionResult<
-  TData = Record<string, any>,
-  TExtensions = Record<string, any>,
-> {
-  // data might be undefined if errorPolicy was set to 'ignore'
-  data?: TData | null;
-  context?: DefaultContext;
-  errors?: ReadonlyArray<GraphQLFormattedError>;
-  extensions?: TExtensions;
-}
-
 export type FetchResult<
   TData = Record<string, any>,
   TExtensions = Record<string, any>,
 > =
-  | SingleExecutionResult<TData, TExtensions>
-  | ExecutionPatchResult<TData, TExtensions>;
+  | FormattedExecutionResult<TData, TExtensions>
+  | AdditionalFetchResultTypes<
+      TData,
+      TExtensions
+    >[keyof AdditionalFetchResultTypes<TData, TExtensions>];
+
+export interface AdditionalFetchResultTypes<
+  TData = Record<string, any>,
+  TExtensions = Record<string, any>,
+> {}
 
 export type NextLink = (operation: Operation) => Observable<FetchResult>;
 

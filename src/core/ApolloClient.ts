@@ -1,4 +1,3 @@
-import type { FormattedExecutionResult } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
@@ -8,7 +7,13 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
+import type { Incremental } from "@apollo/client/incremental";
+import { NotImplementedHandler } from "@apollo/client/incremental";
+import type {
+  ApolloLink,
+  FetchResult,
+  GraphQLRequest,
+} from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
 import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
@@ -144,6 +149,12 @@ export interface ApolloClientOptions {
    * @defaultValue false
    */
   dataMasking?: boolean;
+
+  /**
+   * Determines the strategy used to parse incremental chunks from `@defer`
+   * queries.
+   */
+  incrementalHandler?: Incremental.Handler<any>;
 }
 
 /**
@@ -244,6 +255,7 @@ export class ApolloClient implements DataProxy {
       devtools,
       dataMasking,
       link,
+      incrementalHandler = new NotImplementedHandler(),
     } = options;
 
     this.link = link;
@@ -277,6 +289,7 @@ export class ApolloClient implements DataProxy {
       ssrMode,
       dataMasking: !!dataMasking,
       clientOptions: options,
+      incrementalHandler,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?
@@ -675,7 +688,7 @@ export class ApolloClient implements DataProxy {
 
   public __requestRaw(
     payload: GraphQLRequest
-  ): Observable<FormattedExecutionResult> {
+  ): Observable<FetchResult<unknown>> {
     return execute(this.link, payload, { client: this });
   }
 

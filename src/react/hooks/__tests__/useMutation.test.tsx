@@ -31,6 +31,7 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { FetchResult } from "@apollo/client/link";
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import type { Masked } from "@apollo/client/masking";
@@ -39,6 +40,8 @@ import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import { spyOnConsole } from "@apollo/client/testing/internal";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { DeepPartial } from "@apollo/client/utilities";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -3908,6 +3911,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -4023,6 +4027,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       const onError = jest.fn();
@@ -4103,6 +4108,7 @@ describe("useMutation Hook", () => {
         expect(result).toStrictEqualTyped({
           data: undefined,
           error: new CombinedGraphQLErrors({
+            data: { createTodo: { __typename: "Todo", id: 1 } },
             errors: [{ message: CREATE_TODO_ERROR }],
           }),
           loading: false,
@@ -4114,7 +4120,10 @@ describe("useMutation Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
-        new CombinedGraphQLErrors({ errors: [{ message: CREATE_TODO_ERROR }] }),
+        new CombinedGraphQLErrors({
+          data: { createTodo: { __typename: "Todo", id: 1 } },
+          errors: [{ message: CREATE_TODO_ERROR }],
+        }),
         expect.anything()
       );
       expect(consoleSpies.error).not.toHaveBeenCalled();
@@ -4127,6 +4136,7 @@ describe("useMutation Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -4656,8 +4666,18 @@ describe.skip("Type Tests", () => {
       updateQueries: {
         TestQuery: (_, { mutationResult }) => {
           expectTypeOf(mutationResult.data).toMatchTypeOf<
-            Mutation | null | undefined
+            Mutation | DeepPartial<Mutation> | null | undefined
           >();
+          if (mutationResult.dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              DeepPartial<Mutation> | null | undefined
+            >();
+          }
+          if (mutationResult.dataState === "complete") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              Mutation | null | undefined
+            >();
+          }
 
           return {};
         },
@@ -4724,8 +4744,19 @@ describe.skip("Type Tests", () => {
       updateQueries: {
         TestQuery: (_, { mutationResult }) => {
           expectTypeOf(mutationResult.data).toMatchTypeOf<
-            UnmaskedMutation | null | undefined
+            UnmaskedMutation | DeepPartial<UnmaskedMutation> | null | undefined
           >();
+
+          if (mutationResult.dataState === "streaming") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              DeepPartial<UnmaskedMutation> | null | undefined
+            >();
+          }
+          if (mutationResult.dataState === "complete") {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              UnmaskedMutation | null | undefined
+            >();
+          }
 
           return {};
         },

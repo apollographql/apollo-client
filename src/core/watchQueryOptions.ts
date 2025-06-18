@@ -2,7 +2,6 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
-import type { FetchResult } from "@apollo/client/link";
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";
 import type {
@@ -15,6 +14,7 @@ import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
+  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
@@ -270,7 +270,9 @@ export type MutationOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
   refetchQueries?:
-    | ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude)
+    | ((
+        result: NormalizedExecutionResult<Unmasked<TData>>
+      ) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */

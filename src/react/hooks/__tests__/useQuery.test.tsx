@@ -22,6 +22,7 @@ import { asapScheduler, Observable, observeOn, of } from "rxjs";
 import type {
   FetchPolicy,
   OperationVariables,
+  Streaming,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -32,6 +33,7 @@ import {
   NetworkStatus,
 } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
 import { LocalState } from "@apollo/client/local-state";
 import type { Unmasked } from "@apollo/client/masking";
@@ -45,6 +47,7 @@ import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import type { SimpleCaseData } from "@apollo/client/testing/internal";
 import {
   enableFakeTimers,
+  markAsStreaming,
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
@@ -9174,6 +9177,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9210,12 +9214,12 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9288,6 +9292,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9324,12 +9329,12 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greetings: [
             { message: "Hello world", __typename: "Greeting" },
             { message: "Hello again", __typename: "Greeting" },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9358,7 +9363,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greetings: [
             {
               message: "Hello world",
@@ -9367,7 +9372,7 @@ describe("useQuery Hook", () => {
             },
             { message: "Hello again", __typename: "Greeting" },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9456,6 +9461,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9506,7 +9512,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           allProducts: [
             {
               __typename: "Product",
@@ -9525,7 +9531,7 @@ describe("useQuery Hook", () => {
               sku: "studio",
             },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9560,7 +9566,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           allProducts: [
             {
               __typename: "Product",
@@ -9583,7 +9589,7 @@ describe("useQuery Hook", () => {
               sku: "studio",
             },
           ],
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9630,6 +9636,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9666,12 +9673,12 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9746,6 +9753,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9791,7 +9799,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           hero: {
             heroFriends: [
               {
@@ -9805,7 +9813,7 @@ describe("useQuery Hook", () => {
             ],
             name: "R2-D2",
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -9859,6 +9867,23 @@ describe("useQuery Hook", () => {
         },
         dataState: "complete",
         error: new CombinedGraphQLErrors({
+          data: {
+            hero: {
+              heroFriends: [
+                {
+                  id: "1000",
+                  name: "Luke Skywalker",
+                  homeWorld: null,
+                },
+                {
+                  id: "1003",
+                  name: "Leia Organa",
+                  homeWorld: "Alderaan",
+                },
+              ],
+              name: "R2-D2",
+            },
+          },
           errors: [
             {
               message:
@@ -9897,6 +9922,7 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       using _disabledAct = disableActEnvironment();
@@ -9942,7 +9968,7 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           hero: {
             name: "R2-D2",
             heroFriends: [
@@ -9956,7 +9982,7 @@ describe("useQuery Hook", () => {
               },
             ],
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -10080,7 +10106,11 @@ describe("useQuery Hook", () => {
 
       const link = new MockSubscriptionLink();
       const cache = new InMemoryCache();
-      const client = new ApolloClient({ cache, link });
+      const client = new ApolloClient({
+        cache,
+        link,
+        incrementalHandler: new Defer20220824Handler(),
+      });
 
       cache.writeQuery({
         query,
@@ -10128,13 +10158,13 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -10203,7 +10233,11 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const link = new MockSubscriptionLink();
-      const client = new ApolloClient({ cache, link });
+      const client = new ApolloClient({
+        cache,
+        link,
+        incrementalHandler: new Defer20220824Handler(),
+      });
 
       // We know we are writing partial data to the cache so suppress the console
       // warning.
@@ -10258,13 +10292,13 @@ describe("useQuery Hook", () => {
       });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: {
+        data: markAsStreaming({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
-        },
+        }),
         dataState: "streaming",
         loading: true,
         networkStatus: NetworkStatus.streaming,
@@ -11644,7 +11678,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {
@@ -11670,7 +11704,7 @@ describe.skip("Type Tests", () => {
     }
 
     if (dataState === "streaming") {
-      expectTypeOf(data).toEqualTypeOf<SimpleCaseData>();
+      expectTypeOf(data).toEqualTypeOf<Streaming<SimpleCaseData>>();
     }
 
     if (dataState === "empty") {

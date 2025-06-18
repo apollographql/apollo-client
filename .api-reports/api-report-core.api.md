@@ -8,6 +8,7 @@ import { ApolloCache } from '@apollo/client/cache';
 import { ApolloLink } from '@apollo/client/link';
 import { ApolloPayloadResult } from '@apollo/client/link';
 import { ApolloReducerConfig } from '@apollo/client/cache';
+import type { ApplyHKTImplementationWithDefault } from '@apollo/client/utilities/internal';
 import { Cache as Cache_2 } from '@apollo/client/cache';
 import { checkFetcher } from '@apollo/client/link/http';
 import type { ClientAwarenessLink } from '@apollo/client/link/client-awareness';
@@ -47,9 +48,11 @@ import { from } from '@apollo/client/link';
 import { getApolloClientMemoryInternals } from '@apollo/client/utilities/internal';
 import { gql } from 'graphql-tag';
 import { GraphQLRequest } from '@apollo/client/link';
+import type { HKT } from '@apollo/client/utilities';
 import { HttpLink } from '@apollo/client/link/http';
 import { IdGetter } from '@apollo/client/cache';
 import { IdGetterObj } from '@apollo/client/cache';
+import type { Incremental } from '@apollo/client/incremental';
 import { IncrementalPayload } from '@apollo/client/link';
 import { InMemoryCache } from '@apollo/client/cache';
 import { InMemoryCacheConfig } from '@apollo/client/cache';
@@ -97,7 +100,6 @@ import { serializeFetchParameter } from '@apollo/client/link/http';
 import { ServerError } from '@apollo/client/errors';
 import { ServerParseError } from '@apollo/client/errors';
 import { setVerbosity as setLogVerbosity } from '@apollo/client/utilities/invariant';
-import { SingleExecutionResult } from '@apollo/client/link';
 import { split } from '@apollo/client/link';
 import { StoreObject } from '@apollo/client/utilities';
 import { StoreValue } from '@apollo/client/cache';
@@ -122,7 +124,7 @@ export class ApolloClient implements DataProxy {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClientOptions);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable_2<FormattedExecutionResult>;
+    __requestRaw(payload: GraphQLRequest): Observable_2<FetchResult<unknown>>;
     // (undocumented)
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
@@ -186,6 +188,7 @@ export interface ApolloClientOptions {
     documentTransform?: DocumentTransform;
     // (undocumented)
     enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
+    incrementalHandler?: Incremental.Handler<any>;
     link: ApolloLink;
     // (undocumented)
     localState?: LocalState;
@@ -210,16 +213,6 @@ export { ApolloReducerConfig }
 
 export { Cache_2 as Cache }
 
-// @public (undocumented)
-const enum CacheWriteBehavior {
-    // (undocumented)
-    FORBID = 0,
-    // (undocumented)
-    MERGE = 2,
-    // (undocumented)
-    OVERWRITE = 1
-}
-
 export { checkFetcher }
 
 export { ClientParseError }
@@ -241,7 +234,10 @@ export { DataProxy }
 // @public (undocumented)
 export type DataState<TData> = {
     data: TData;
-    dataState: "complete" | "streaming";
+    dataState: "complete";
+} | {
+    data: Streaming<TData>;
+    dataState: "streaming";
 } | {
     data: DeepPartial<TData>;
     dataState: "partial";
@@ -407,16 +403,6 @@ export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
 export { isReference }
 
-// @public (undocumented)
-interface LastWrite {
-    // (undocumented)
-    dmCount: number | undefined;
-    // (undocumented)
-    result: FetchResult<any>;
-    // (undocumented)
-    variables: WatchQueryOptions["variables"];
-}
-
 export { LinkError }
 
 export { LocalStateError }
@@ -477,7 +463,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
         IGNORE: IgnoreModifier;
     }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
     updateQueries?: MutationQueryReducersMap<TData>;
-    refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    refetchQueries?: ((result: NormalizedExecutionResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     awaitRefetchQueries?: boolean;
     update?: MutationUpdaterFunction<TData, TVariables, TCache>;
     onQueryUpdated?: OnQueryUpdated<any>;
@@ -490,7 +476,7 @@ export type MutationOptions<TData = unknown, TVariables extends OperationVariabl
 
 // @public (undocumented)
 export type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: FetchResult<Unmasked<T>>;
+    mutationResult: NormalizedExecutionResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
 }) => Record<string, any>;
@@ -514,13 +500,8 @@ interface MutationStoreValue {
     variables: Record<string, any>;
 }
 
-// @public @deprecated (undocumented)
-export type MutationUpdaterFn<T = {
-    [key: string]: any;
-}> = (cache: ApolloCache, mutationResult: FetchResult<T>) => void;
-
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: Omit<FetchResult<Unmasked<TData>>, "context">, options: {
+export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -554,6 +535,15 @@ export { NextLink }
 export { NormalizedCache }
 
 export { NormalizedCacheObject }
+
+// @public
+export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
+    data: TData;
+    dataState: "complete";
+} | {
+    data: Streaming<TData>;
+    dataState: "streaming";
+});
 
 export { Observable }
 
@@ -656,74 +646,35 @@ export { Operation }
 
 export { OperationContext }
 
-// Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-interface OperationInfo<TData, TVariables extends OperationVariables, AllowedCacheWriteBehavior = CacheWriteBehavior> {
-    // (undocumented)
-    cacheWriteBehavior: AllowedCacheWriteBehavior;
-    // (undocumented)
-    document: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
-    // (undocumented)
-    errorPolicy: ErrorPolicy;
-    // (undocumented)
-    variables: TVariables;
-}
-
 // @public (undocumented)
 export type OperationVariables = Record<string, any>;
 
 export { OptimisticStoreItem }
+
+// @public (undocumented)
+namespace OverridableTypes {
+    // (undocumented)
+    interface Defaults {
+        // Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+        //
+        // (undocumented)
+        Streaming: Streaming;
+    }
+    // (undocumented)
+    interface Streaming extends HKT {
+        // (undocumented)
+        arg1: unknown;
+        // (undocumented)
+        return: this["arg1"];
+    }
+        {};
+}
 
 export { parseAndCheckHttpResponse }
 
 export { Path }
 
 export { PossibleTypesMap }
-
-// @public (undocumented)
-class QueryInfo {
-    constructor(queryManager: QueryManager, observableQuery?: ObservableQuery<any, any>);
-    // (undocumented)
-    readonly id: string;
-    // (undocumented)
-    lastRequestId: number;
-    // Warning: (ae-forgotten-export) The symbol "LastWrite" needs to be exported by the entry point index.d.ts
-    //
-    // @internal @deprecated
-    _lastWrite?: LastWrite;
-    // (undocumented)
-    markMutationOptimistic<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(optimisticResponse: any, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
-        context?: DefaultContext;
-        updateQueries: UpdateQueries<TData>;
-        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-        keepRootFields?: boolean;
-    }): boolean;
-    // (undocumented)
-    markMutationResult<TData, TVariables extends OperationVariables, TCache extends ApolloCache>(result: FetchResult<TData>, mutation: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE> & {
-        context?: DefaultContext;
-        updateQueries: UpdateQueries<TData>;
-        update?: MutationUpdaterFunction<TData, TVariables, TCache>;
-        awaitRefetchQueries?: boolean;
-        refetchQueries?: InternalRefetchQueriesInclude;
-        removeOptimistic?: string;
-        onQueryUpdated?: OnQueryUpdated<any>;
-        keepRootFields?: boolean;
-    }, cache?: ApolloCache): Promise<FetchResult<TData>>;
-    // Warning: (ae-forgotten-export) The symbol "OperationInfo" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    markQueryResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document: query, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables>): void;
-    // (undocumented)
-    markSubscriptionResult<TData, TVariables extends OperationVariables>(result: FetchResult<TData>, { document, variables, errorPolicy, cacheWriteBehavior, }: OperationInfo<TData, TVariables, CacheWriteBehavior.FORBID | CacheWriteBehavior.MERGE>): void;
-    // (undocumented)
-    resetLastWrite(): void;
-}
-
-// Warning: (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager {
@@ -772,6 +723,8 @@ class QueryManager {
     getObservableQueries(include?: InternalRefetchQueriesInclude): Set<ObservableQuery<any, OperationVariables>>;
     // (undocumented)
     getVariables<TVariables>(document: DocumentNode_2, variables?: TVariables): TVariables;
+    // (undocumented)
+    readonly incrementalHandler: Incremental.Handler;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable_2<FetchResult<any>>;
@@ -833,6 +786,8 @@ interface QueryManagerOptions {
     defaultOptions: DefaultOptions;
     // (undocumented)
     documentTransform: DocumentTransform | null | undefined;
+    // (undocumented)
+    incrementalHandler: Incremental.Handler;
     // (undocumented)
     localState: LocalState | undefined;
     // (undocumented)
@@ -949,13 +904,16 @@ export { ServerParseError }
 
 export { setLogVerbosity }
 
-export { SingleExecutionResult }
-
 export { split }
 
 export { StoreObject }
 
 export { StoreValue }
+
+// Warning: (ae-forgotten-export) The symbol "OverridableTypes" needs to be exported by the entry point index.d.ts
+//
+// @public
+export type Streaming<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Streaming", OverridableTypes.Defaults, TData>;
 
 // @public (undocumented)
 export interface SubscribeResult<TData = unknown> {
@@ -1023,6 +981,8 @@ interface TransformCacheEntry {
     // (undocumented)
     hasForcedResolvers: boolean;
     // (undocumented)
+    hasIncrementalDirective: boolean;
+    // (undocumented)
     hasNonreactiveDirective: boolean;
     // (undocumented)
     nonReactiveQuery: DocumentNode_2;
@@ -1036,6 +996,10 @@ interface TransformCacheEntry {
 
 export { TypedDocumentNode }
 
+// @public (undocumented)
+export interface TypeOverrides {
+}
+
 export { TypePolicies }
 
 export { TypePolicy }
@@ -1043,9 +1007,6 @@ export { TypePolicy }
 export { UnconventionalError }
 
 export { Unmasked }
-
-// @public (undocumented)
-type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = unknown, TVariables = OperationVariables> {
@@ -1094,8 +1055,7 @@ export type WatchQueryOptions<TVariables extends OperationVariables = OperationV
 //
 // src/core/ObservableQuery.ts:133:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:293:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/QueryInfo.ts:309:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:185:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

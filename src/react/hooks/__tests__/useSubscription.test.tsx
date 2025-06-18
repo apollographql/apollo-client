@@ -1986,15 +1986,15 @@ followed by new in-flight setup", async () => {
           wrapper,
         }
       );
-      const graphQlErrorResult: MockSubscriptionLink.Result = {
+      const graphQlErrorResult = {
         result: {
           data: { totalLikes: 42 },
           errors: [{ message: "test" }],
         },
-      };
-      const protocolErrorResult: MockSubscriptionLink.Result = {
+      } satisfies MockSubscriptionLink.Result;
+      const protocolErrorResult = {
         error: new Error("Socket closed with event -1: I'm a test!"),
-      };
+      } satisfies MockSubscriptionLink.Result;
       return {
         client,
         link,

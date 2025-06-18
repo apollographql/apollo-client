@@ -27,6 +27,7 @@ export type {
   DataState,
   DefaultContext,
   ErrorLike,
+  NormalizedExecutionResult,
   GetDataState,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -37,20 +38,20 @@ export type {
   MutateResult,
   MutationQueryReducer,
   MutationQueryReducersMap,
-  MutationUpdaterFn,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
-  QueryListener,
   QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
+  Streaming,
   SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
+  TypeOverrides,
 } from "./types.js";
 export {
   CombinedGraphQLErrors,
@@ -126,7 +127,6 @@ export type {
   OperationContext,
   Path,
   RequestHandler,
-  SingleExecutionResult,
 } from "@apollo/client/link";
 
 export {

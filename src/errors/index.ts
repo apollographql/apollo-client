@@ -1,5 +1,3 @@
-import type { FetchResult } from "@apollo/client/link";
-
 import { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 import { isErrorLike } from "./isErrorLike.js";
 import { UnconventionalError } from "./UnconventionalError.js";
@@ -9,18 +7,18 @@ import { UnconventionalError } from "./UnconventionalError.js";
 // extensions (which implementers can use as they see fit).
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol = Symbol();
 
-type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
+type WithSymbolExtensions<T> = T & {
   extensions: Record<string | symbol, any>;
 };
 
-export function graphQLResultHasProtocolErrors<T>(
-  result: FetchResult<T>
-): result is FetchResultWithSymbolExtensions<T> {
-  if (result.extensions) {
+export function graphQLResultHasProtocolErrors<T extends {}>(
+  result: T
+): result is T & {
+  extensions: Record<string | symbol, any>;
+} {
+  if ("extensions" in result) {
     return CombinedProtocolErrors.is(
-      (result as FetchResultWithSymbolExtensions<T>).extensions[
-        PROTOCOL_ERRORS_SYMBOL
-      ]
+      (result as WithSymbolExtensions<T>).extensions[PROTOCOL_ERRORS_SYMBOL]
     );
   }
   return false;

@@ -12120,6 +12120,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
@@ -12128,6 +12129,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: { greeting: "Hello, Bob" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
@@ -12138,6 +12140,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       previousData: { greeting: "Hello, Bob" },
@@ -12146,6 +12149,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: { greeting: "Hello, Sally" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello, Bob" },
@@ -12156,6 +12160,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: undefined,
+      dataState: "empty",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       previousData: { greeting: "Hello, Sally" },
@@ -12164,6 +12169,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toStrictEqualTyped({
       data: { greeting: "Hello again, Bob" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: { greeting: "Hello, Sally" },

@@ -49,8 +49,8 @@ type GenerateHashFunction = (
 ) => string | PromiseLike<string>;
 
 interface BaseOptions {
-  disable?: (error: PersistedQueryLink.DisableFunctionOptions) => boolean;
-  retry?: (error: PersistedQueryLink.RetryFunctionOptions) => boolean;
+  disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+  retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
   useGETForHashedQueries?: boolean;
 }
 

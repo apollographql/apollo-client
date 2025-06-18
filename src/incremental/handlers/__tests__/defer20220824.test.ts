@@ -1114,8 +1114,6 @@ test("handles final chunk of { hasNext: false } correctly in usage with Apollo C
   await expect(observableStream).toEmitSimilarValue({
     expected: (previous) => ({
       ...previous,
-      // we are in an error state, should this be "complete" or "partial"/stay "streaming"?
-      // how would the types hold up to that?
       dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.error,

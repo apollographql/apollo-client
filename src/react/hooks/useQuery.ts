@@ -332,9 +332,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   const { observable, resultData } = state;
 
-  if (!watchQueryOptions.fetchPolicy) {
-    watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;
-  }
+  useInitialFetchPolicyIfNecessary<TData, TVariables>(
+    watchQueryOptions,
+    observable
+  );
 
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render
@@ -373,6 +374,19 @@ function useQuery_<TData, TVariables extends OperationVariables>(
       ...obsQueryFields,
     };
   }, [result, client, observable, previousData, obsQueryFields]);
+}
+
+function useInitialFetchPolicyIfNecessary<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
+  observable: ObsQueryWithMeta<TData, TVariables>
+) {
+  "use no memo";
+  if (!watchQueryOptions.fetchPolicy) {
+    watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;
+  }
 }
 
 function useResult<TData, TVariables extends OperationVariables>(

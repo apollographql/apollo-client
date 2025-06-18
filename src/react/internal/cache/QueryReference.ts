@@ -347,7 +347,7 @@ export class InternalQueryReference<
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData, any>) {
+  fetchMore(options: FetchMoreOptions<TData, any, any, any>) {
     return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 

@@ -10,14 +10,13 @@ import type { createQueryPreloader } from '@apollo/client/react';
 import type { DataState } from '@apollo/client';
 import type { DecoratedPromise } from '@apollo/client/utilities/internal';
 import type { DocumentNode } from 'graphql';
-import type { FetchMoreQueryOptions } from '@apollo/client';
+import type { FetchMoreOptions } from '@apollo/client';
 import type { MaybeMasked } from '@apollo/client/masking';
 import type { MaybeMasked as MaybeMasked_2 } from '@apollo/client';
 import type { Observable } from 'rxjs';
 import type { ObservableQuery } from '@apollo/client';
 import type { OperationVariables } from '@apollo/client';
 import type { QueryResult } from '@apollo/client';
-import type { Unmasked } from '@apollo/client';
 import type { useBackgroundQuery } from '@apollo/client/react';
 import type { useFragment } from '@apollo/client/react';
 import type { useQuery } from '@apollo/client/react';
@@ -46,15 +45,7 @@ stringifiedVariables: string,
 ];
 
 // @public (undocumented)
-export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
-    updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-        fetchMoreResult: Unmasked<TData>;
-        variables: TVariables;
-    }) => Unmasked<TData>;
-}) => Promise<QueryResult<MaybeMasked_2<TData>>>;
-
-// @public (undocumented)
-type FetchMoreOptions<TData> = Parameters<ObservableQuery<TData>["fetchMore"]>[0];
+export type FetchMoreFunction<TData, TVariables extends OperationVariables> = <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>) => Promise<QueryResult<MaybeMasked_2<TData>>>;
 
 // @public (undocumented)
 type FragmentCacheKey = [
@@ -138,10 +129,8 @@ export class InternalQueryReference<TData = unknown, TStates extends DataState<T
     didChangeOptions(watchQueryOptions: ObservedOptions): boolean;
     // (undocumented)
     get disposed(): boolean;
-    // Warning: (ae-forgotten-export) The symbol "FetchMoreOptions" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    fetchMore(options: FetchMoreOptions<TData>): Promise<QueryResult<TData>>;
+    fetchMore(options: FetchMoreOptions<TData, any, any, any>): Promise<QueryResult<TData>>;
     // (undocumented)
     readonly key: QueryKey;
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts

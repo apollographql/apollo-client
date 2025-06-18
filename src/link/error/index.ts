@@ -16,7 +16,7 @@ export namespace ErrorLink {
    * Callback to be triggered when an error occurs within the link stack.
    */
   export interface ErrorHandler {
-    (error: ErrorHandlerOptions): Observable<FetchResult> | void;
+    (options: ErrorHandlerOptions): Observable<FetchResult> | void;
   }
 
   export interface ErrorHandlerOptions {

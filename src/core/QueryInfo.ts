@@ -92,7 +92,7 @@ const queryInfoIds = new WeakMap<QueryManager, number>();
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
 export class QueryInfo<
-  TData extends Record<string, any>,
+  TData,
   TVariables extends OperationVariables = OperationVariables,
   TCache extends ApolloCache = ApolloCache,
 > {
@@ -183,9 +183,14 @@ export class QueryInfo<
     const { incrementalHandler } = this.queryManager;
 
     if (incrementalHandler.isIncrementalResult(incoming)) {
-      this.incremental ||= incrementalHandler.startRequest<TData>({
+      this.incremental ||= incrementalHandler.startRequest<
+        TData & Record<string, unknown>
+      >({
         query,
-      });
+      }) as Incremental.IncrementalRequest<
+        Record<string, unknown>,
+        TData | Streaming<TData>
+      >;
 
       return this.incremental.handle(cacheData, incoming);
     }

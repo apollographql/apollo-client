@@ -1762,7 +1762,7 @@ describe("HttpLink", () => {
                 message: "Error field",
               },
             ]),
-          },
+          } as Record<string, unknown>,
         });
 
         await expect(observableStream).toComplete();

@@ -320,7 +320,7 @@ describe("error handling", () => {
             message: "Error field",
           },
         ]),
-      },
+      } as Record<string, unknown>,
     });
 
     expect(callback).toHaveBeenCalledTimes(1);
@@ -672,7 +672,7 @@ describe("error handling with class", () => {
             message: "Error field",
           },
         ]),
-      },
+      } as Record<string, unknown>,
     });
 
     expect(callback).toHaveBeenCalledTimes(1);

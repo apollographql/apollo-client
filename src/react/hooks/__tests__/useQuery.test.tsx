@@ -10074,6 +10074,10 @@ describe("useQuery Hook", () => {
               path: ["hero", "heroFriends", 0, "homeWorld"],
             },
           ],
+          extensions: {
+            thing1: "foo",
+            thing2: "bar",
+          },
         }),
         loading: false,
         networkStatus: NetworkStatus.error,

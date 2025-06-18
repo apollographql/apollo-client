@@ -1,5 +1,8 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
-import type { FormattedExecutionResult } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+} from "graphql";
 
 import type { FetchResult, GraphQLRequest } from "@apollo/client";
 import type { DeepPartial } from "@apollo/client/utilities";
@@ -104,8 +107,17 @@ class DeferRequest<TData extends Record<string, unknown>>
       }
     }
 
-    const { data, errors, extensions } = this;
-    return { data, errors, extensions };
+    const result: FormattedExecutionResult<TData> = { data: this.data };
+
+    if (isNonEmptyArray(this.errors)) {
+      result.errors = this.errors;
+    }
+
+    if (Object.keys(this.extensions).length > 0) {
+      result.extensions = this.extensions;
+    }
+
+    return result;
   }
 }
 

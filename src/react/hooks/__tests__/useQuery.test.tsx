@@ -9835,10 +9835,11 @@ describe("useQuery Hook", () => {
               {
                 path: ["hero", "heroFriends", 0],
                 errors: [
-                  new GraphQLError(
-                    "homeWorld for character with ID 1000 could not be fetched.",
-                    { path: ["hero", "heroFriends", 0, "homeWorld"] }
-                  ),
+                  {
+                    message:
+                      "homeWorld for character with ID 1000 could not be fetched.",
+                    path: ["hero", "heroFriends", 0, "homeWorld"],
+                  },
                 ],
                 data: {
                   homeWorld: null,
@@ -10073,6 +10074,10 @@ describe("useQuery Hook", () => {
               path: ["hero", "heroFriends", 0, "homeWorld"],
             },
           ],
+          extensions: {
+            thing1: "foo",
+            thing2: "bar",
+          },
         }),
         loading: false,
         networkStatus: NetworkStatus.error,

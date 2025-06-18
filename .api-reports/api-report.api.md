@@ -428,6 +428,7 @@ export class CombinedGraphQLErrors extends Error {
     constructor(result: FetchResult<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
+    readonly extensions: Record<string, unknown> | undefined;
     static formatMessage: CombinedGraphQLErrors.MessageFormatter;
     static is(error: unknown): error is CombinedGraphQLErrors;
 }

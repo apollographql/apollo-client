@@ -478,13 +478,6 @@ export class ObservableQuery<
       this.queryManager.prioritizeCacheValues ?
         "cache-first"
       : initialFetchPolicy || this.options.fetchPolicy;
-    const defaultResult: ApolloQueryResult<TData> = {
-      data: undefined,
-      dataState: "empty",
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      partial: true,
-    };
 
     const cacheResult = (): ApolloQueryResult<TData> => {
       const diff = this.getCacheDiff();
@@ -525,14 +518,10 @@ export class ObservableQuery<
           networkStatus: NetworkStatus.loading,
         };
       case "standby":
-        return {
-          ...defaultResult,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        };
+        return empty;
 
       default:
-        return defaultResult;
+        return uninitialized;
     }
   }
 
@@ -1491,17 +1480,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private maskResult<T extends { data: any }>(result: T): T {
-    return result && "data" in result ?
-        {
-          ...result,
-          data: this.queryManager.maskOperation({
-            document: this.query,
-            data: result.data,
-            fetchPolicy: this.options.fetchPolicy,
-            cause: this,
-          }),
-        }
-      : result;
+    const masked = this.queryManager.maskOperation({
+      document: this.query,
+      data: result.data,
+      fetchPolicy: this.options.fetchPolicy,
+      cause: this,
+    });
+
+    // Maintain object identity as much as possible
+    return masked === result.data ? result : { ...result, data: masked };
   }
 
   private dirty: boolean = false;

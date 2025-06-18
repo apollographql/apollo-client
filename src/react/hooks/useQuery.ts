@@ -343,16 +343,10 @@ function useQuery_<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  const resultOverride = useSyncExternalStore(
-    () => () => {},
-    () => void 0,
-    () => (ssr === false ? useQuery.ssrDisabledResult : void 0)
-  );
-
-  const result = useResultSubscription<TData, TVariables>(
+  const result = useResult<TData, TVariables>(
     observable,
     resultData,
-    resultOverride
+    options.ssr
   );
 
   const obsQueryFields = React.useMemo(
@@ -369,13 +363,12 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 
   const previousData = resultData.previousData;
   return React.useMemo(() => {
-    const { data, partial, ...rest } = result;
+    const { partial, ...rest } = result;
 
     return {
-      data, // Ensure always defined, even if result.data is missing.
       ...rest,
-      client: client,
-      observable: observable,
+      client,
+      observable,
       variables: observable.variables,
       previousData,
       ...obsQueryFields,
@@ -396,10 +389,10 @@ function useInitialFetchPolicyIfNecessary<
   }
 }
 
-function useResultSubscription<TData, TVariables extends OperationVariables>(
+function useResult<TData, TVariables extends OperationVariables>(
   observable: ObsQueryWithMeta<TData, TVariables>,
   resultData: InternalResult<TData>,
-  resultOverride: ApolloQueryResult<any> | undefined
+  ssr: boolean | undefined
 ) {
   "use no memo";
   return useSyncExternalStore(
@@ -414,27 +407,15 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
           // new value.
           .pipe(observeOn(asapScheduler))
           .subscribe((result) => {
-            const previousResult = resultData.current;
+            const previous = resultData.current;
             // Make sure we're not attempting to re-render similar results
-            // TODO: Eventually move this check inside ObservableQuery. We should
-            // probably not emit a new result if the result is the same.
-            if (
-              previousResult &&
-              previousResult.loading === result.loading &&
-              previousResult.networkStatus === result.networkStatus &&
-              equal(previousResult.data, result.data) &&
-              equal(previousResult.error, result.error)
-            ) {
+            if (equal(previous, result)) {
               return;
             }
 
-            if (
-              previousResult &&
-              previousResult.data &&
-              !equal(previousResult.data, result.data)
-            ) {
+            if (previous.data && !equal(previous.data, result.data)) {
               // eslint-disable-next-line react-compiler/react-compiler
-              resultData.previousData = previousResult.data as TData;
+              resultData.previousData = previous.data as TData;
             }
 
             resultData.current = result;
@@ -452,8 +433,8 @@ function useResultSubscription<TData, TVariables extends OperationVariables>(
 
       [observable, resultData]
     ),
-    () => resultOverride || resultData.current,
-    () => resultOverride || resultData.current
+    () => resultData.current,
+    () => (ssr === false ? useQuery.ssrDisabledResult : resultData.current)
   );
 }
 

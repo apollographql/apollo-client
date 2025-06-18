@@ -23,8 +23,8 @@ import type {
   ErrorPolicy,
   FetchPolicy,
   OperationVariables,
-  Streaming,
   RefetchWritePolicy,
+  Streaming,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -2947,8 +2947,8 @@ describe("useQuery Hook", () => {
       await expect(renderStream).not.toRerender({ timeout: 50 });
 
       await expect(renderStream).toRerenderWithSimilarSnapshot({
-        // We waited 50ms before, so waiting another 50ms + 50ms = 100ms
-        timeout: 50,
+        // We waited 50ms before, so waiting another 55ms + 50ms = 105ms
+        timeout: 55,
         expected: (previous) => ({
           ...previous,
           loading: true,

@@ -174,8 +174,6 @@ describe("graphql-js test cases", () => {
             id: "1",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -191,8 +189,6 @@ describe("graphql-js test cases", () => {
             name: "Luke",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -242,8 +238,6 @@ describe("graphql-js test cases", () => {
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -258,8 +252,6 @@ describe("graphql-js test cases", () => {
             id: "1",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -287,8 +279,6 @@ describe("graphql-js test cases", () => {
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: {},
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -309,7 +299,6 @@ describe("graphql-js test cases", () => {
             path: ["hero", "errorField"],
           },
         ],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -348,8 +337,6 @@ describe("graphql-js test cases", () => {
             id: "1",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -367,8 +354,6 @@ describe("graphql-js test cases", () => {
             name: "Luke",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -401,8 +386,6 @@ describe("graphql-js test cases", () => {
         data: {
           hero: { id: "1", name: "Luke" },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -419,8 +402,6 @@ describe("graphql-js test cases", () => {
             name: "Luke",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -456,8 +437,6 @@ describe("graphql-js test cases", () => {
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: { hero: { id: "1" } },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -479,7 +458,6 @@ describe("graphql-js test cases", () => {
             path: ["hero", "errorField"],
           },
         ],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -508,8 +486,6 @@ describe("graphql-js test cases", () => {
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: { hero: { id: "1" } },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -533,7 +509,6 @@ describe("graphql-js test cases", () => {
             path: ["hero", "nonNullErrorField"],
           },
         ],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }
@@ -592,8 +567,6 @@ describe("graphql-js test cases", () => {
       expect(hasIncrementalChunks(chunk)).toBe(false);
       expect(request.handle(undefined, chunk)).toStrictEqualTyped({
         data: { hero: { id: "1" } },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -610,8 +583,6 @@ describe("graphql-js test cases", () => {
             slowField: "slow",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(true);
     }
@@ -638,8 +609,6 @@ describe("graphql-js test cases", () => {
             slowField: "slow",
           },
         },
-        errors: [],
-        extensions: {},
       });
       expect(request.hasNext).toBe(false);
     }

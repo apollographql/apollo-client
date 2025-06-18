@@ -4850,7 +4850,11 @@ describe("ObservableQuery", () => {
             },
             resultAfterRefetchCall: {
               emit: {
-                ...loadingStates.refetching,
+                loading: false,
+                networkStatus: NetworkStatus.error,
+                error: new InvariantError(
+                  "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+                ),
                 data: cacheValues.update2,
                 dataState: "complete",
                 partial: false,
@@ -4858,20 +4862,13 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 dataState: "complete",
                 partial: false,
               },
             },
-            resultAfterRefetchNext: {
-              emit: {
-                ...loadingStates.done,
-                data: cacheValues.refetch,
-                dataState: "complete",
-                partial: false,
-              },
-            },
+            resultAfterRefetchNext: undefined,
             resultAfterCacheUpdate4: {
               emit: {
                 ...loadingStates.done,
@@ -4921,8 +4918,12 @@ describe("ObservableQuery", () => {
               },
             },
             resultAfterRefetchCall: {
-              currentResult: {
-                ...loadingStates.refetching,
+              emit: {
+                loading: false,
+                networkStatus: NetworkStatus.error,
+                error: new InvariantError(
+                  "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+                ),
                 data: cacheValues.update2,
                 dataState: "complete",
                 partial: false,
@@ -4930,20 +4931,13 @@ describe("ObservableQuery", () => {
             },
             resultAfterCacheUpdate3: {
               emit: {
-                ...loadingStates.refetching,
+                ...loadingStates.done,
                 data: cacheValues.update3,
                 dataState: "complete",
                 partial: false,
               },
             },
-            resultAfterRefetchNext: {
-              emit: {
-                ...loadingStates.done,
-                data: cacheValues.refetch,
-                dataState: "complete",
-                partial: false,
-              },
-            },
+            resultAfterRefetchNext: undefined,
             resultAfterCacheUpdate4: {
               emit: {
                 ...loadingStates.done,

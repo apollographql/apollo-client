@@ -19,6 +19,7 @@ Array [
   "ServerError",
   "ServerParseError",
   "UnconventionalError",
+  "build",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -85,6 +86,7 @@ Array [
   "ServerError",
   "ServerParseError",
   "UnconventionalError",
+  "build",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -141,6 +143,14 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/incremental 1`] = `
+Array [
+  "Defer20220824Handler",
+  "GraphQL17Alpha2Handler",
+  "NotImplementedHandler",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/link 1`] = `
 Array [
   "ApolloLink",
@@ -161,12 +171,20 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/batch-http 1`] = `
 Array [
+  "BaseBatchHttpLink",
   "BatchHttpLink",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/link/client-awareness 1`] = `
+Array [
+  "ClientAwarenessLink",
 ]
 `;
 
 exports[`exports of public entry points @apollo/client/link/context 1`] = `
 Array [
+  "SetContextLink",
   "setContext",
 ]
 `;
@@ -180,6 +198,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/http 1`] = `
 Array [
+  "BaseHttpLink",
   "HttpLink",
   "checkFetcher",
   "createHttpLink",
@@ -197,6 +216,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/link/persisted-queries 1`] = `
 Array [
+  "PersistedQueryLink",
   "VERSION",
   "createPersistedQueryLink",
 ]
@@ -205,6 +225,7 @@ Array [
 exports[`exports of public entry points @apollo/client/link/remove-typename 1`] = `
 Array [
   "KEEP",
+  "RemoveTypenameFromVariablesLink",
   "removeTypenameFromVariables",
 ]
 `;
@@ -342,6 +363,7 @@ Array [
   "createOperationWithDefaultContext",
   "enableFakeTimers",
   "executeWithDefaultContext",
+  "markAsStreaming",
   "mockDeferStream",
   "mockMultipartSubscriptionStream",
   "renderAsync",
@@ -372,16 +394,14 @@ Array [
   "cacheSizes",
   "canonicalStringify",
   "concatPagination",
-  "hasDirectives",
+  "isFormattedExecutionResult",
   "isMutationOperation",
   "isQueryOperation",
   "isReference",
   "isSubscriptionOperation",
-  "mergeIncrementalData",
   "offsetLimitPagination",
   "print",
   "relayStylePagination",
-  "removeDirectivesFromDocument",
   "stripTypename",
 ]
 `;
@@ -427,9 +447,6 @@ Array [
   "hasForcedResolvers",
   "isArray",
   "isDocumentNode",
-  "isExecutionPatchIncrementalResult",
-  "isExecutionPatchInitialResult",
-  "isExecutionPatchResult",
   "isField",
   "isNonEmptyArray",
   "isNonNullObject",
@@ -439,7 +456,6 @@ Array [
   "maybeDeepFreeze",
   "mergeDeep",
   "mergeDeepArray",
-  "mergeIncrementalData",
   "mergeOptions",
   "omitDeep",
   "preventUnhandledRejection",

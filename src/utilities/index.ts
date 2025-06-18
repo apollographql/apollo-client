@@ -6,6 +6,7 @@ export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";
 export { DocumentTransform } from "./graphql/DocumentTransform.js";
 
 export { print } from "./graphql/print.js";
+export { isFormattedExecutionResult } from "./graphql/isFormattedExecutionResult.js";
 
 export type {
   AsStoreObject,
@@ -34,22 +35,5 @@ export { stripTypename } from "./common/stripTypename.js";
 
 export { cacheSizes } from "./caching/index.js";
 export type { CacheSizes } from "./caching/index.js";
-
-// THESE SHOULD BE REMOVED BEFORE 4.0 PUBLIC RELEASE.
-// These exports are strictly for compatibility with our streaming integration.
-export {
-  /**
-   * @deprecated Use `hasDirectives` from `@apollo/client/utilities/internal` instead.
-   * */
-  hasDirectives,
-  /**
-   * @deprecated Use `mergeIncrementalData` from `@apollo/client/utilities/internal` instead.
-   * */
-  mergeIncrementalData,
-  /**
-   * @deprecated Use `removeDirectivesFromDocument` from `@apollo/client/utilities/internal` instead.
-   * */
-  removeDirectivesFromDocument,
-} from "@apollo/client/utilities/internal";
 
 export type { HKT } from "./HKT.js";

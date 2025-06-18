@@ -7,44 +7,40 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { ErrorLike } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
-import type { FormattedExecutionResult } from 'graphql';
 import type { NextLink } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
 
 export interface ErrorHandler {
     // (undocumented)
-    (error: ErrorResponse): Observable<FetchResult> | void;
+    (options: ErrorHandlerOptions): Observable<FetchResult> | void;
 }
 
 // @public (undocumented)
 export namespace ErrorLink {
     export interface ErrorHandler {
         // (undocumented)
-        (error: ErrorResponse): Observable<FetchResult> | void;
+        (options: ErrorHandlerOptions): Observable<FetchResult> | void;
+    }
+    // (undocumented)
+    export interface ErrorHandlerOptions {
+        error: ErrorLike;
+        // (undocumented)
+        forward: NextLink;
+        // (undocumented)
+        operation: Operation;
+        // (undocumented)
+        result?: FetchResult;
     }
 }
 
 // @public (undocumented)
 export class ErrorLink extends ApolloLink {
     constructor(errorHandler: ErrorLink.ErrorHandler);
-    // (undocumented)
-    request(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
 }
 
-// @public (undocumented)
-export interface ErrorResponse {
-    error: ErrorLike;
-    // (undocumented)
-    forward: NextLink;
-    // (undocumented)
-    operation: Operation;
-    // (undocumented)
-    response?: FormattedExecutionResult;
-}
-
-// @public (undocumented)
-export function onError(errorHandler: ErrorHandler): ApolloLink;
+// @public @deprecated (undocumented)
+export function onError(errorHandler: ErrorHandler): ErrorLink;
 
 // (No @packageDocumentation comment for this package)
 

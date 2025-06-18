@@ -12,7 +12,6 @@ import {
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { maskDefinition } from "./maskDefinition.js";
-import { warnOnImproperCacheImplementation } from "./utils.js";
 
 /** @internal */
 export function maskOperation<TData = unknown>(
@@ -20,14 +19,6 @@ export function maskOperation<TData = unknown>(
   document: DocumentNode | TypedDocumentNode<TData>,
   cache: ApolloCache
 ): TData {
-  if (!cache.fragmentMatches) {
-    if (__DEV__) {
-      warnOnImproperCacheImplementation();
-    }
-
-    return data;
-  }
-
   const definition = getOperationDefinition(document);
 
   invariant(

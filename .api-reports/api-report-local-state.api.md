@@ -7,8 +7,8 @@
 import type { ApolloClient } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
-import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentMap } from '@apollo/client/utilities/internal';
 import type { NoInfer as NoInfer_2 } from '@apollo/client/utilities/internal';
 import type { OperationVariables } from '@apollo/client';
@@ -100,11 +100,11 @@ export class LocalState<TResolvers extends LocalState.Resolvers = LocalState.Res
         document: DocumentNode | TypedDocumentNode<TData, TVariables>;
         client: ApolloClient;
         context: DefaultContext | undefined;
-        remoteResult: FetchResult<any> | undefined;
+        remoteResult: FormattedExecutionResult<any> | undefined;
         variables: TVariables | undefined;
         onlyRunForcedResolvers?: boolean;
         returnPartialData?: boolean;
-    }): Promise<FetchResult<TData>>;
+    }): Promise<FormattedExecutionResult<TData>>;
     // (undocumented)
     getExportedVariables<TVariables extends OperationVariables = OperationVariables>({ document, client, context, variables, }: {
         document: DocumentNode | TypedDocumentNode<any, TVariables>;

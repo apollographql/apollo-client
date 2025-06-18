@@ -60,6 +60,7 @@ export function useQueryRefHandlers<
 >(
   queryRef: QueryRef<TData, TVariables, DataState<TData>["dataState"]>
 ): useQueryRefHandlers.Result<TData, TVariables> {
+  "use no memo";
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
     unwrapped ?

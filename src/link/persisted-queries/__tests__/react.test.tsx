@@ -8,11 +8,11 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
 import type { OperationVariables } from "@apollo/client";
-import { ApolloClient } from "@apollo/client";
+import { ApolloClient, version } from "@apollo/client";
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
-  createPersistedQueryLink as createPersistedQuery,
+  createPersistedQueryLink,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import { ApolloProvider, useQuery } from "@apollo/client/react";
@@ -85,7 +85,7 @@ describe("react application", () => {
       { repeat: 1 }
     );
 
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
 
     const client = new ApolloClient({
       link,
@@ -127,6 +127,10 @@ describe("react application", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: hash,
@@ -162,6 +166,10 @@ describe("react application", () => {
         operationName: "Test",
         variables: variables2,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: hash,

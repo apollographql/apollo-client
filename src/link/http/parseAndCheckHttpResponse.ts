@@ -19,45 +19,46 @@ function isApolloPayloadResult(value: unknown): value is ApolloPayloadResult {
   return isNonNullObject(value) && "payload" in value;
 }
 
-export async function readMultipartBody<
-  T extends object = Record<string, unknown>,
->(response: Response, nextValue: (value: T) => void) {
-  if (TextDecoder === undefined) {
-    throw new Error(
-      "TextDecoder must be defined in the environment: please import a polyfill."
-    );
-  }
+async function* consumeMultipartBody(
+  response: Response
+): AsyncGenerator<string, void, void> {
   const decoder = new TextDecoder("utf-8");
   const contentType = response.headers?.get("content-type");
-  const delimiter = "boundary=";
 
   // parse boundary value and ignore any subsequent name/value pairs after ;
   // https://www.rfc-editor.org/rfc/rfc9110.html#name-parameters
   // e.g. multipart/mixed;boundary="graphql";deferSpec=20220824
   // if no boundary is specified, default to -
-  const boundaryVal =
-    contentType?.includes(delimiter) ?
-      contentType
-        ?.substring(contentType?.indexOf(delimiter) + delimiter.length)
-        .replace(/['"]/g, "")
-        .replace(/\;(.*)/gm, "")
-        .trim()
-    : "-";
-
-  const boundary = `\r\n--${boundaryVal}`;
+  const match = contentType?.match(
+    /*
+      ;\s*boundary=                # Match the boundary parameter
+      (?:                          # either
+        '([^']*)'                  # a string starting with ' doesn't contain ', ends with '
+        |                          # or
+        "([^"]*)"                  # a string starting with " doesn't contain ", ends with "
+        |                          # or
+        ([^"'].*?)                 # a string that doesn't start with ' or ", parsed non-greedily
+        )                          # end of the group
+      \s*                          # optional whitespace
+      (?:;|$)                        # match a semicolon or end of string
+    */
+    /;\s*boundary=(?:'([^']+)'|"([^"]+)"|([^"'].+?))\s*(?:;|$)/i
+  );
+  const boundary = "\r\n--" + (match?.findLast((val) => !!val) || "-");
   let buffer = "";
   invariant(
     response.body && typeof response.body.getReader === "function",
     "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
   );
-  const iterator = response.body.getReader();
-  let running = true;
 
-  while (running) {
-    const { value, done } = await iterator.read();
+  const reader = response.body.getReader();
+  let done = false;
+  let value: Uint8Array<ArrayBufferLike> | string | undefined;
+
+  while (!done) {
+    ({ value, done } = await reader.read());
     const chunk = typeof value === "string" ? value : decoder.decode(value);
     const searchFrom = buffer.length - boundary.length + 1;
-    running = !done;
     buffer += chunk;
     let bi = buffer.indexOf(boundary, searchFrom);
 
@@ -83,50 +84,35 @@ export async function readMultipartBody<
       const body = message.slice(i);
 
       if (body) {
-        const result = parseJsonEncoding(response, body);
-        if (
-          Object.keys(result).length > 1 ||
-          "data" in result ||
-          "incremental" in result ||
-          "errors" in result ||
-          "payload" in result
-        ) {
-          if (isApolloPayloadResult(result)) {
-            let next = {};
-            if ("payload" in result) {
-              if (Object.keys(result).length === 1 && result.payload === null) {
-                return;
-              }
-              next = { ...result.payload };
-            }
-            if ("errors" in result) {
-              next = {
-                ...next,
-                extensions: {
-                  ...("extensions" in next ? next.extensions : (null as any)),
-                  [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
-                    result.errors ?? []
-                  ),
-                },
-              };
-            }
-            nextValue(next as T);
-          } else {
-            // for the last chunk with only `hasNext: false`
-            // we don't need to call observer.next as there is no data/errors
-            nextValue(result);
-          }
-        } else if (
-          // If the chunk contains only a "hasNext: false", we can call
-          // observer.complete() immediately.
-          Object.keys(result).length === 1 &&
-          "hasNext" in result &&
-          !result.hasNext
-        ) {
-          return;
-        }
+        yield body;
       }
       bi = buffer.indexOf(boundary);
+    }
+  }
+}
+
+export async function readMultipartBody<
+  T extends object = Record<string, unknown>,
+>(response: Response, nextValue: (value: T) => void) {
+  for await (const body of consumeMultipartBody(response)) {
+    const result = parseJsonEncoding(response, body);
+    if (Object.keys(result).length == 0) continue;
+    if (isApolloPayloadResult(result)) {
+      if (Object.keys(result).length === 1 && result.payload === null) {
+        return;
+      }
+      let next = { ...result.payload };
+      if ("errors" in result) {
+        next.extensions = {
+          ...next.extensions,
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
+            result.errors ?? []
+          ),
+        };
+      }
+      nextValue(next as T);
+    } else {
+      nextValue(result);
     }
   }
 }

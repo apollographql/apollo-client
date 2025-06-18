@@ -257,6 +257,11 @@ export interface CacheSizes {
    * recommended to set this to a high value.
    */
   "inMemoryCache.executeSubSelectedArray": number;
+  /**
+   * Used by the internal `checkDocument` that traverses GraphQL documents and throws an error if the document is invalid.
+   * if they are not valid.
+   */
+  checkDocument: number;
 }
 
 const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
@@ -285,6 +290,7 @@ const cacheSizeSymbol = Symbol.for("apollo.cacheSize");
 export const cacheSizes: Partial<CacheSizes> = { ...global[cacheSizeSymbol] };
 
 export const enum defaultCacheSizes {
+  checkDocument = 2000,
   canonicalStringify = 1000,
   print = 2000,
   "documentTransform.cache" = 2000,

@@ -5,18 +5,28 @@ import type { ASTNode } from "graphql";
 import { print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import type { Observer, Subscription } from "rxjs";
-import { map, Observable } from "rxjs";
+import { map, Observable, Subject, tap } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import type { FetchResult } from "@apollo/client";
-import { ServerError } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  ServerError,
+  version,
+} from "@apollo/client";
 import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { ApolloLink } from "@apollo/client/link";
-import { createHttpLink, HttpLink } from "@apollo/client/link/http";
+import {
+  BaseHttpLink,
+  createHttpLink,
+  HttpLink,
+} from "@apollo/client/link/http";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
@@ -177,8 +187,9 @@ describe("HttpLink", () => {
 
       expect(body).toBeUndefined();
       expect(method).toBe("GET");
+
       expect(uri).toBe(
-        "/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D&extensions=%7B%22myExtension%22%3A%22foo%22%7D"
+        `/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%22params%22%3A%22stub%22%7D&extensions=%7B%22clientLibrary%22%3A%7B%22name%22%3A%22%40apollo%2Fclient%22%2C%22version%22%3A%22${version}%22%7D%2C%22myExtension%22%3A%22foo%22%7D`
       );
     });
 
@@ -201,7 +212,7 @@ describe("HttpLink", () => {
       expect(body).toBeUndefined();
       expect(method).toBe("GET");
       expect(uri).toBe(
-        "/data?foo=bar&query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%7D"
+        `/data?foo=bar&query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%7D&extensions=%7B%22clientLibrary%22%3A%7B%22name%22%3A%22%40apollo%2Fclient%22%2C%22version%22%3A%22${version}%22%7D%7D`
       );
     });
 
@@ -229,7 +240,7 @@ describe("HttpLink", () => {
       expect(body).toBeUndefined();
       expect(method).toBe("GET");
       expect(uri).toBe(
-        "/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%7D"
+        `/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%7D&extensions=%7B%22clientLibrary%22%3A%7B%22name%22%3A%22%40apollo%2Fclient%22%2C%22version%22%3A%22${version}%22%7D%7D`
       );
     });
 
@@ -254,7 +265,7 @@ describe("HttpLink", () => {
       expect(body).toBeUndefined();
       expect(method).toBe("GET");
       expect(uri).toBe(
-        "/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%7D"
+        `/data?query=query%20SampleQuery%20%7B%0A%20%20stub%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D&operationName=SampleQuery&variables=%7B%7D&extensions=%7B%22clientLibrary%22%3A%7B%22name%22%3A%22%40apollo%2Fclient%22%2C%22version%22%3A%22${version}%22%7D%7D`
       );
     });
 
@@ -329,44 +340,15 @@ describe("HttpLink", () => {
           usedByInlineFragment: "keep",
           usedByNamedFragment: "keep",
         },
+        extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
+        },
       });
       expect(method).toBe("POST");
       expect(uri).toBe("/data");
-    });
-
-    it("should add client awareness settings to request headers", async () => {
-      const variables = { params: "stub" };
-      const link = createHttpLink({
-        uri: "/data",
-      });
-
-      const clientAwareness = {
-        name: "Some Client Name",
-        version: "1.0.1",
-      };
-
-      const observable = execute(link, {
-        query: sampleQuery,
-        variables,
-        context: {
-          clientAwareness,
-        },
-      });
-      const stream = new ObservableStream(observable);
-
-      await expect(stream).toEmitTypedValue(data);
-      await expect(stream).toComplete();
-
-      const [, options] = fetchMock.lastCall()!;
-      const { headers } = options as any;
-      expect(headers["apollographql-client-name"]).toBeDefined();
-      expect(headers["apollographql-client-name"]).toEqual(
-        clientAwareness.name
-      );
-      expect(headers["apollographql-client-version"]).toBeDefined();
-      expect(headers["apollographql-client-version"]).toEqual(
-        clientAwareness.version
-      );
     });
 
     it("should not add empty client awareness settings to request headers", async () => {
@@ -555,7 +537,7 @@ describe("HttpLink", () => {
     });
 
     it("passes all arguments to multiple fetch body excluding extensions", async () => {
-      const link = createHttpLink({ uri: "data" });
+      const link = createHttpLink({ uri: "data", includeExtensions: false });
 
       await verifyRequest(link, false);
       await verifyRequest(link, false);
@@ -938,7 +920,7 @@ describe("HttpLink", () => {
       expect(customPrinter).toHaveBeenCalledTimes(1);
       const [uri] = fetchMock.lastCall()!;
       expect(uri).toBe(
-        "/data?query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%7D"
+        `/data?query=query%20SampleQuery%7Bstub%7Bid%7D%7D&operationName=SampleQuery&variables=%7B%7D&extensions=%7B%22clientLibrary%22%3A%7B%22name%22%3A%22%40apollo%2Fclient%22%2C%22version%22%3A%22${version}%22%7D%7D`
       );
     });
 
@@ -989,6 +971,10 @@ describe("HttpLink", () => {
       expect(body.query).not.toBeDefined();
       expect(body.extensions).toEqual({
         persistedQuery: { hash: "1234" },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
       });
     });
 
@@ -1480,6 +1466,10 @@ describe("HttpLink", () => {
           hasNext: true,
         });
 
+        await expect(observableStream).toEmitTypedValue({
+          hasNext: false,
+        });
+
         // the second chunk contains only hasNext: false which is not emitted as
         // a `next` event so the link completes.
 
@@ -1496,9 +1486,17 @@ describe("HttpLink", () => {
             headers: { "content-type": "multipart/mixed" },
           });
         });
-        const link = new HttpLink({ fetch });
-        const observable = execute(link, { query: sampleDeferredQuery });
-        const observableStream = new ObservableStream(observable);
+
+        const { link, observableStream } = pipeLinkToObservableStream(
+          new HttpLink({ fetch })
+        );
+
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          incrementalHandler: new Defer20220824Handler(),
+        });
+        void client.query({ query: sampleDeferredQuery });
 
         await expect(observableStream).toEmitTypedValue({
           data: { stub: { id: "0" } },
@@ -1523,7 +1521,8 @@ describe("HttpLink", () => {
           expect.objectContaining({
             headers: {
               "content-type": "application/json",
-              accept: "multipart/mixed;deferSpec=20220824,application/json",
+              accept:
+                "multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -1672,39 +1671,56 @@ describe("HttpLink", () => {
         await expect(observableStream).toComplete();
       });
 
-      test("whatwg stream bodies, warns if combined with @defer", () => {
-        const stream = new ReadableStream({
-          async start(controller) {
-            const lines = subscriptionsBody.split("\r\n");
-            try {
-              for (const line of lines) {
-                await new Promise((resolve) => setTimeout(resolve, 10));
-                controller.enqueue(line + "\r\n");
-              }
-            } finally {
-              controller.close();
-            }
-          },
+      test("whatwg stream bodies combined with @defer, lets server handle erroring", async () => {
+        const error = {
+          errors: [
+            {
+              message:
+                "value retrieval failed: Federation error: @defer is not supported on subscriptions",
+              extensions: { code: "INTERNAL_SERVER_ERROR" },
+            },
+          ],
+        };
+        const response = Response.json(error, {
+          status: 500,
+          headers: { "content-type": "application/json" },
         });
-
         const fetch = jest.fn(async () => {
-          return new Response(stream, {
-            status: 200,
-            headers: { "content-type": "multipart/mixed" },
-          });
+          return response;
         });
 
         const link = new HttpLink({ fetch });
 
-        const warningSpy = jest
-          .spyOn(console, "warn")
-          .mockImplementation(() => {});
-        execute(link, { query: sampleSubscriptionWithDefer });
-        expect(warningSpy).toHaveBeenCalledTimes(1);
-        expect(warningSpy).toHaveBeenCalledWith(
-          "Multipart-subscriptions do not support @defer"
+        const client = new ApolloClient({
+          link,
+          cache: new InMemoryCache(),
+          incrementalHandler: new Defer20220824Handler(),
+        });
+
+        const stream = new ObservableStream(
+          client.subscribe({ query: sampleSubscriptionWithDefer })
         );
-        warningSpy.mockRestore();
+        expect(fetch).toHaveBeenCalledWith(
+          "/graphql",
+          expect.objectContaining({
+            headers: {
+              accept:
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,multipart/mixed;deferSpec=20220824,application/graphql-response+json,application/json;q=0.9",
+              "content-type": "application/json",
+            },
+          })
+        );
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          error: new ServerError(
+            "Response not successful: Received status code 500",
+            {
+              bodyText: JSON.stringify(error),
+              response,
+            }
+          ),
+        });
       });
 
       it("with errors", async () => {
@@ -1746,7 +1762,7 @@ describe("HttpLink", () => {
                 message: "Error field",
               },
             ]),
-          },
+          } as Record<string, unknown>,
         });
 
         await expect(observableStream).toComplete();
@@ -1784,7 +1800,7 @@ describe("HttpLink", () => {
             headers: {
               "content-type": "application/json",
               accept:
-                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+                "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/graphql-response+json,application/json;q=0.9",
             },
           })
         );
@@ -2068,4 +2084,185 @@ describe("HttpLink", () => {
       await expect(stream).toComplete();
     });
   });
+
+  describe("client awareness", () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+    const response = {
+      data: { hello: "world" },
+    };
+    const uri = "https://example.com/graphql";
+    afterEach(() => fetchMock.reset());
+
+    test("is part of `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = fetchMock.lastCall()![1]?.headers;
+      expect(headers).toStrictEqual({
+        accept: "application/graphql-response+json,application/json;q=0.9",
+        "content-type": "application/json",
+        "apollographql-client-name": "test-client",
+        "apollographql-client-version": "1.0.0",
+      });
+    });
+
+    test("is not part of `BaseHttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new BaseHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = fetchMock.lastCall()![1]?.headers;
+      expect(headers).toStrictEqual({
+        accept: "application/graphql-response+json,application/json;q=0.9",
+        "content-type": "application/json",
+      });
+    });
+
+    test("`HttpLink` options have priority over `ApolloClient` options", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          clientAwareness: {
+            name: "overridden-client",
+            version: "2.0.0",
+          },
+        }),
+        cache: new InMemoryCache(),
+
+        clientAwareness: {
+          name: "test-client",
+          version: "1.0.0",
+        },
+      });
+
+      void client.query({ query });
+      const headers = fetchMock.lastCall()![1]?.headers;
+      expect(headers).toStrictEqual({
+        accept: "application/graphql-response+json,application/json;q=0.9",
+        "content-type": "application/json",
+        "apollographql-client-name": "overridden-client",
+        "apollographql-client-version": "2.0.0",
+      });
+    });
+  });
+
+  describe("enhanced client awareness", () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+    const response = {
+      data: { hello: "world" },
+    };
+    const uri = "https://example.com/graphql";
+    afterEach(() => fetchMock.reset());
+
+    test("is part of `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).toStrictEqual({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      });
+    });
+
+    test("is not part of `BaseHttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new BaseHttpLink({
+          uri,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+
+    test("can be disabled from `HttpLink`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          enhancedClientAwareness: { transport: false },
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+
+    test("can also be disabled by disabling `includeExtensions`", () => {
+      fetchMock.postOnce(uri, response);
+      const client = new ApolloClient({
+        link: new HttpLink({
+          uri,
+          includeExtensions: false,
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      void client.query({ query });
+      const body = JSON.parse(fetchMock.lastCall()![1]?.body as string);
+      expect(body.extensions).not.toBeDefined();
+    });
+  });
 });
+
+function pipeLinkToObservableStream(link: ApolloLink) {
+  const sink = new Subject<FetchResult>();
+  const observableStream = new ObservableStream(sink);
+  const pipedLink = new ApolloLink((operation, forward) =>
+    forward(operation).pipe(
+      tap({
+        next: (result) => {
+          sink.next(structuredClone(result));
+        },
+        error: sink.error.bind(sink),
+        complete: sink.complete.bind(sink),
+      })
+    )
+  ).concat(link);
+  return {
+    observableStream,
+    link: pipedLink,
+  };
+}

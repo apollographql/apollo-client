@@ -60,6 +60,8 @@ const config = {
     "terser",
     // used as a reporter by the `test:coverage` script
     "jest-junit",
+    "babel-plugin-react-compiler",
+    "react-compiler-runtime",
   ],
   jest: {
     config: "config/jest.config.js",

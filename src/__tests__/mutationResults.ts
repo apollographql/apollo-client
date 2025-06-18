@@ -550,6 +550,7 @@ describe("mutation results", () => {
       error: new CombinedGraphQLErrors({
         data: { newPerson: null },
         errors: [{ message: "Oops" }],
+        extensions: { requestLimit: 10 },
       }),
       extensions: {
         requestLimit: 10,

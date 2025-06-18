@@ -276,6 +276,10 @@ describe("multipart responses", () => {
       await expect(observableStream).toEmitTypedValue(result);
     }
 
+    await expect(observableStream).toEmitTypedValue({
+      hasNext: false,
+    });
+
     await expect(observableStream).toComplete();
   });
 });

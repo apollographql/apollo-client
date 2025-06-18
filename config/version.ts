@@ -20,7 +20,7 @@ assert.strictEqual(
 
 export const updateVersion: BuildStep = async (options) => {
   await applyRecast({
-    glob: `version.{${options.jsExt},d.${options.tsExt}}`,
+    glob: `version.${options.jsExt}`,
     cwd: options.targetDir,
     transformStep({ ast }) {
       return {
@@ -29,6 +29,9 @@ export const updateVersion: BuildStep = async (options) => {
             const node = path.node;
             if (node.value === "local") {
               node.value = version;
+            }
+            if (node.value === "source") {
+              node.value = options.type;
             }
             this.traverse(path);
           },

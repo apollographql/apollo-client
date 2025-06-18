@@ -8,13 +8,10 @@ import type { ApolloQueryResult } from '@apollo/client';
 import type { ASTNode } from 'graphql';
 import type { DirectiveNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { ExecutionPatchIncrementalResult } from '@apollo/client/link';
-import type { ExecutionPatchInitialResult } from '@apollo/client/link';
-import type { ExecutionPatchResult } from '@apollo/client/link';
-import type { FetchResult } from '@apollo/client/link';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
-import { GraphQLFormattedError } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import type { HKT } from '@apollo/client/utilities';
 import type { InlineFragmentNode } from 'graphql';
 import type { MutationOptions } from '@apollo/client';
@@ -63,7 +60,7 @@ export type AutoCleanedWeakCache<K extends object, V> = WeakCache<K, V>;
 export const canUseDOM: boolean;
 
 // @internal @deprecated
-export function checkDocument(doc: DocumentNode, expectedType?: OperationTypeNode): DocumentNode;
+export const checkDocument: (doc: DocumentNode, expectedType?: OperationTypeNode) => void;
 
 // @internal @deprecated
 export function cloneDeep<T>(value: T): T;
@@ -212,7 +209,9 @@ export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?:
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
 
 // @internal @deprecated (undocumented)
-export function getGraphQLErrorsFromResult<T>(result: FetchResult<T>): GraphQLFormattedError[];
+export function getGraphQLErrorsFromResult(result: {
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+}): Array<GraphQLFormattedError>;
 
 // @internal @deprecated
 export const getInMemoryCacheMemoryInternals: (() => {
@@ -256,12 +255,11 @@ export const getStoreKeyName: ((fieldName: string, args?: Record<string, any> | 
 // @public (undocumented)
 const globalCaches: {
     print?: () => number;
-    parser?: () => number;
     canonicalStringify?: () => number;
 };
 
 // @internal @deprecated (undocumented)
-export function graphQLResultHasError(result: FetchResult<any>): boolean;
+export function graphQLResultHasError(result: FormattedExecutionResult<any>): boolean;
 
 // @internal @deprecated (undocumented)
 export function hasDirectives(names: string[], root: ASTNode, all?: boolean): boolean;
@@ -277,15 +275,6 @@ export const isArray: (a: any) => a is any[] | readonly any[];
 
 // @internal @deprecated (undocumented)
 export function isDocumentNode(value: unknown): value is DocumentNode;
-
-// @internal @deprecated (undocumented)
-export function isExecutionPatchIncrementalResult<T>(value: FetchResult<T>): value is ExecutionPatchIncrementalResult;
-
-// @internal @deprecated (undocumented)
-export function isExecutionPatchInitialResult<T>(value: FetchResult<T>): value is ExecutionPatchInitialResult<T>;
-
-// @internal @deprecated (undocumented)
-export function isExecutionPatchResult<T>(value: FetchResult<T>): value is ExecutionPatchResult<T>;
 
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
@@ -313,9 +302,6 @@ export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T
 
 // @internal @deprecated (undocumented)
 export function mergeDeepArray<T>(sources: T[]): T;
-
-// @internal @deprecated (undocumented)
-export function mergeIncrementalData<TData extends object>(prevResult: TData, result: ExecutionPatchResult<TData>): TData;
 
 // Warning: (ae-forgotten-export) The symbol "OptionsUnion" needs to be exported by the entry point index.d.ts
 //

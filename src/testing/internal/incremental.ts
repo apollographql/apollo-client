@@ -4,11 +4,10 @@ import {
   TransformStream,
 } from "node:stream/web";
 
-import type { GraphQLError } from "graphql";
 import type {
+  FormattedInitialIncrementalExecutionResult,
+  FormattedSubsequentIncrementalExecutionResult,
   GraphQLFormattedError,
-  InitialIncrementalExecutionResult,
-  SubsequentIncrementalExecutionResult,
 } from "graphql-17-alpha2";
 
 import type { ApolloPayloadResult } from "@apollo/client";
@@ -115,8 +114,8 @@ export function mockDeferStream<
   TExtensions = Record<string, unknown>,
 >() {
   const { httpLink, enqueue } = mockIncrementalStream<
-    | InitialIncrementalExecutionResult<TData, TExtensions>
-    | SubsequentIncrementalExecutionResult<TData, TExtensions>
+    | FormattedInitialIncrementalExecutionResult<TData, TExtensions>
+    | FormattedSubsequentIncrementalExecutionResult<TData, TExtensions>
   >({
     responseHeaders: new Headers({
       "Content-Type": 'multipart/mixed; boundary="-"; deferSpec=20220824',
@@ -125,12 +124,12 @@ export function mockDeferStream<
   return {
     httpLink,
     enqueueInitialChunk(
-      chunk: InitialIncrementalExecutionResult<TData, TExtensions>
+      chunk: FormattedInitialIncrementalExecutionResult<TData, TExtensions>
     ) {
       enqueue(chunk, chunk.hasNext);
     },
     enqueueSubsequentChunk(
-      chunk: SubsequentIncrementalExecutionResult<TData, TExtensions>
+      chunk: FormattedSubsequentIncrementalExecutionResult<TData, TExtensions>
     ) {
       enqueue(chunk, chunk.hasNext);
     },
@@ -140,11 +139,10 @@ export function mockDeferStream<
           hasNext: true,
           incremental: [
             {
-              // eslint-disable-next-line @typescript-eslint/no-restricted-types
-              errors: errors as GraphQLError[],
+              errors,
             },
           ],
-        } satisfies SubsequentIncrementalExecutionResult<TData, TExtensions>,
+        },
         true
       );
     },

@@ -34,5 +34,5 @@ export {
   createOperationWithDefaultContext,
   executeWithDefaultContext,
 } from "./link.js";
-
+export { markAsStreaming } from "./markAsStreaming.js";
 export { wait } from "./wait.js";

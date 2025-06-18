@@ -20,7 +20,7 @@ import {
   makeReference,
   storeKeyNameFromField,
 } from "@apollo/client/utilities/internal";
-import { invariant } from "@apollo/client/utilities/invariant";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 
 // not exported
 // eslint-disable-next-line local-rules/no-relative-imports
@@ -3997,20 +3997,26 @@ describe("writing to the store", () => {
         }
       }
     `;
-    cache.write({
-      query: injectingQuery,
-      variables: { id: 5 },
-      dataId: "ROOT_QUERY",
-      result: {
-        user: {
-          __typename: "Post",
-          id: "1",
-          title: "Incorrect!",
-          ignore: "User",
-          ignore2: "5",
+    expect(() =>
+      cache.write({
+        query: injectingQuery,
+        variables: { id: 5 },
+        dataId: "ROOT_QUERY",
+        result: {
+          user: {
+            __typename: "Post",
+            id: "1",
+            title: "Incorrect!",
+            ignore: "User",
+            ignore2: "5",
+          },
         },
-      },
-    });
+      })
+    ).toThrow(
+      new InvariantError(
+        '`__typename` is a forbidden field alias name in the selection set for field `user.firstName` in query "(anonymous)".'
+      )
+    );
 
     expect(cache.extract()["Post:1"]).toMatchInlineSnapshot(`
       Object {
@@ -4020,14 +4026,6 @@ describe("writing to the store", () => {
       }
     `);
 
-    expect(cache.extract()["User:5"]).toMatchInlineSnapshot(`
-      Object {
-        "__typename": "User",
-        "firstName": "Post",
-        "id": "5",
-        "lastName": "1",
-        "title": "Incorrect!",
-      }
-    `);
+    expect(cache.extract()["User:5"]).toBeUndefined();
   });
 });

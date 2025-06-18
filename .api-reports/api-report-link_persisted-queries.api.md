@@ -6,34 +6,31 @@
 
 import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
+import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
-import type { GraphQLFormattedError } from 'graphql';
 import type { Operation } from '@apollo/client/link';
-import type { ServerError } from '@apollo/client/errors';
-import type { ServerParseError } from '@apollo/client/errors';
+import type { Prettify } from '@apollo/client/utilities/internal';
 
 // @public (undocumented)
 interface BaseOptions {
     // (undocumented)
-    disable?: (error: ErrorResponse) => boolean;
+    disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
     // (undocumented)
-    retry?: (error: ErrorResponse) => boolean;
+    retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
     // (undocumented)
     useGETForHashedQueries?: boolean;
 }
 
 // @public (undocumented)
-export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & ({
-    resetHashCache: () => void;
-} & ({
-    getMemoryInternals(): {
-        PersistedQueryLink: {
-            persistedQueryHashes: number;
-        };
-    };
-} | {
-    getMemoryInternals?: undefined;
-}));
+type CallbackOptions = {
+    error: ErrorLike;
+    operation: Operation;
+    meta: ErrorMeta;
+    result?: FormattedExecutionResult;
+};
+
+// @public @deprecated (undocumented)
+export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => PersistedQueryLink;
 
 // @public (undocumented)
 type ErrorMeta = {
@@ -42,26 +39,12 @@ type ErrorMeta = {
 };
 
 // @public (undocumented)
-export interface ErrorResponse {
-    // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-    // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    meta: ErrorMeta;
-    // (undocumented)
-    networkError?: Error | ServerParseError | ServerError | null;
-    // (undocumented)
-    operation: Operation;
-    // (undocumented)
-    response?: FormattedExecutionResult;
-}
-
-// @public (undocumented)
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
 // @public (undocumented)
 export namespace PersistedQueryLink {
+    // (undocumented)
+    export type DisableFunctionOptions = Prettify<CallbackOptions>;
     // (undocumented)
     export interface GenerateHashOptions extends BaseOptions {
         // Warning: (ae-forgotten-export) The symbol "GenerateHashFunction" needs to be exported by the entry point index.d.ts
@@ -73,6 +56,10 @@ export namespace PersistedQueryLink {
     }
     // (undocumented)
     export type Options = SHA256Options | GenerateHashOptions;
+    // Warning: (ae-forgotten-export) The symbol "CallbackOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type RetryFunctionOptions = Prettify<CallbackOptions>;
     // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -88,10 +75,21 @@ export namespace PersistedQueryLink {
 }
 
 // @public (undocumented)
+export class PersistedQueryLink extends ApolloLink {
+    constructor(options: PersistedQueryLink.Options);
+    // (undocumented)
+    resetHashCache: () => void;
+}
+
+// @public (undocumented)
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 
 // @public (undocumented)
 export const VERSION = 1;
+
+// Warnings were encountered during analysis:
+//
+// src/link/persisted-queries/index.ts:38:3 - (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

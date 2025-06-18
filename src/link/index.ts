@@ -6,19 +6,14 @@ export { execute } from "./core/execute.js";
 export { ApolloLink } from "./core/ApolloLink.js";
 
 export type {
+  AdditionalFetchResultTypes,
   ApolloPayloadResult,
   DocumentNode,
   ExecuteContext,
-  ExecutionPatchIncrementalResult,
-  ExecutionPatchInitialResult,
-  ExecutionPatchResult,
   FetchResult,
   GraphQLRequest,
-  IncrementalPayload,
   NextLink,
   Operation,
   OperationContext,
-  Path,
   RequestHandler,
-  SingleExecutionResult,
 } from "./core/types.js";

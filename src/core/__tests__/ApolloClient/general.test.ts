@@ -9,8 +9,10 @@ import type { ApolloQueryResult, TypedDocumentNode } from "@apollo/client";
 import { ApolloClient, NetworkStatus } from "@apollo/client";
 import { InMemoryCache } from "@apollo/client/cache";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import type { FetchResult, RequestHandler } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
+import { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import { MockLink } from "@apollo/client/testing";
 import {
   mockDeferStream,
@@ -2268,12 +2270,12 @@ describe("ApolloClient", () => {
       });
     }).toThrow(/wrap the query string in a "gql" tag/);
 
-    await expect(
+    await expect(() =>
       client.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: "string" as any as DocumentNode,
       })
-    ).rejects.toThrow(/wrap the query string in a "gql" tag/);
+    ).toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
       client.watchQuery({
@@ -4318,47 +4320,6 @@ describe("ApolloClient", () => {
       expect(timesFired).toBe(2);
     });
 
-    it("should not error on a stopped query()", async () => {
-      const query = gql`
-        query {
-          author {
-            firstName
-            lastName
-          }
-        }
-      `;
-
-      const data = {
-        author: {
-          firstName: "John",
-          lastName: "Smith",
-        },
-      };
-
-      const link = new ApolloLink(
-        () =>
-          new Observable((observer) => {
-            observer.next({ data });
-          })
-      );
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-      });
-
-      const queryId = "1";
-      // TODO: Determine if there is a better way to test this without digging
-      // into implementation details
-      const promise = client["queryManager"].fetchQuery(queryId, { query });
-
-      client["queryManager"].removeQuery(queryId);
-
-      await client.resetStore();
-      // Ensure the promise doesn't reject
-      await Promise.race([wait(50), promise]);
-    });
-
     it("should throw an error on an inflight fetch query if the store is reset", async () => {
       const query = gql`
         query {
@@ -4385,7 +4346,7 @@ describe("ApolloClient", () => {
         ]),
       });
       // TODO: Determine if there is a better way to test this.
-      const promise = client["queryManager"].fetchQuery("made up id", {
+      const promise = client["queryManager"].fetchQuery({
         query,
       });
 
@@ -4571,6 +4532,41 @@ describe("ApolloClient", () => {
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
       await expect(client.query({ query })).rejects.toThrow(
+        new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        )
+      );
+    });
+
+    it("should throw an error on an inflight ObservableQuery if the store is reset", async () => {
+      const query = gql`
+        query {
+          author {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const link = new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            // reset the store as soon as we hear about the query
+            void client.resetStore();
+            observer.next({ data });
+            return;
+          })
+      );
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      await expect(client.watchQuery({ query }).reobserve()).rejects.toThrow(
         new InvariantError(
           "Store reset while query was in flight (not completed in link chain)"
         )
@@ -4921,7 +4917,7 @@ describe("ApolloClient", () => {
         ]),
       });
       // TODO: Determine if there is a better way to test this
-      const promise = client["queryManager"].fetchQuery("made up id", {
+      const promise = client["queryManager"].fetchQuery({
         query,
       });
       void client.reFetchObservableQueries();
@@ -7329,7 +7325,7 @@ describe("ApolloClient", () => {
   });
 
   describe("client awareness", () => {
-    it("should pass client awareness settings into the link chain via context", async () => {
+    it("ClientAwarenessLink should pick up configuration on `ApolloClientOptions`", async () => {
       const query = gql`
         query {
           author {
@@ -7352,16 +7348,13 @@ describe("ApolloClient", () => {
           result: { data },
         },
       ]);
-
-      const clientAwareness = {
-        name: "Test",
-        version: "1.0.0",
-      };
-
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link,
-        ...clientAwareness,
+        link: new ClientAwarenessLink().concat(link),
+        clientAwareness: {
+          name: "Test",
+          version: "1.0.0",
+        },
       });
 
       const observable = client.watchQuery({
@@ -7373,8 +7366,10 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitNext();
 
       const context = link.operation!.getContext();
-      expect(context.clientAwareness).toBeDefined();
-      expect(context.clientAwareness).toEqual(clientAwareness);
+      expect(context.headers).toStrictEqual({
+        "apollographql-client-name": "Test",
+        "apollographql-client-version": "1.0.0",
+      });
     });
   });
 
@@ -7474,6 +7469,7 @@ describe("ApolloClient", () => {
       const client = new ApolloClient({
         cache: new InMemoryCache({}),
         link: new ApolloLink(outgoingRequestSpy).concat(defer.httpLink),
+        incrementalHandler: new Defer20220824Handler(),
       });
 
       const query1 = new ObservableStream(
@@ -7504,8 +7500,8 @@ describe("ApolloClient", () => {
       const initialResult: ApolloQueryResult<typeof initialData> = {
         data: initialData,
         dataState: "streaming",
-        loading: false,
-        networkStatus: 7,
+        loading: true,
+        networkStatus: NetworkStatus.streaming,
         partial: true,
       };
 
@@ -7549,11 +7545,9 @@ describe("ApolloClient", () => {
         ],
         hasNext: true,
       };
-      const resultAfterFirstChunk = {
-        ...structuredClone(initialResult),
-        dataState: "streaming",
-        partial: true,
-      } as ApolloQueryResult<any>;
+      const resultAfterFirstChunk = structuredClone(
+        initialResult
+      ) as ApolloQueryResult<any>;
       resultAfterFirstChunk.data.people.friends[0].name = "Leia";
 
       defer.enqueueSubsequentChunk(firstChunk);
@@ -7581,6 +7575,8 @@ describe("ApolloClient", () => {
       };
       const resultAfterSecondChunk = {
         ...structuredClone(resultAfterFirstChunk),
+        loading: false,
+        networkStatus: NetworkStatus.ready,
         dataState: "complete",
         partial: false,
       } as ApolloQueryResult<any>;
@@ -8059,6 +8055,164 @@ describe("ApolloClient", () => {
         expect(context.foo).toBeUndefined();
       }
     );
+  });
+
+  describe("forbidden field alias names", () => {
+    it("`ApolloClient.query` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          __typename: hello
+        }
+      `;
+      expect(() => client.query({ query })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello` in query "Test".'
+        )
+      );
+    });
+
+    it("`ApolloClient.query` throws when encountering a query that aliases another field to `__ac_*`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          foo {
+            __ac_foo: hello
+          }
+        }
+      `;
+      expect(() => client.query({ query })).toThrow(
+        new InvariantError(
+          '`__ac_foo` is a forbidden field alias name in the selection set for field `foo.hello` in query "Test".'
+        )
+      );
+    });
+
+    it("Aliasing `__typename` to `__typename` is, while weird, not forbidden.", async () => {
+      const query = gql`
+        query Test {
+          __typename: __typename
+        }
+      `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data: {} },
+          },
+        ]),
+      });
+
+      expect(await client.query({ query })).toStrictEqualTyped({
+        data: { __typename: "Query" },
+      });
+    });
+
+    it("`ApolloClient.watchQuery` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        query Test {
+          hello {
+            __typename: world
+          }
+        }
+      `;
+      expect(() => client.watchQuery({ query })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in query "Test".'
+        )
+      );
+    });
+
+    it("calling `ObservableQuery.fetchMore` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const query = gql`
+        query Test {
+          hello {
+            __typename
+            world
+          }
+        }
+      `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query },
+            result: {
+              data: { hello: { world: "Hello World", __typename: "Hello" } },
+            },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query });
+      observable.subscribe({});
+      expect(() =>
+        observable.fetchMore({
+          query: gql`
+            query Test {
+              hello {
+                __typename: fetchMore
+                world
+              }
+            }
+          `,
+        })
+      ).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.fetchMore` in query "Test".'
+        )
+      );
+    });
+
+    it("`ApolloClient.mutate` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const mutation = gql`
+        mutation AddTestUser {
+          addUser(id: 5) {
+            hello {
+              __typename: world
+            }
+          }
+        }
+      `;
+      expect(() => client.mutate({ mutation })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `addUser.hello.world` in mutation "AddTestUser".'
+        )
+      );
+    });
+
+    it("`ApolloClient.subscribe` throws when encountering a query that aliases another field to `__typename`", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const query = gql`
+        subscription Test {
+          hello {
+            __typename: world
+          }
+        }
+      `;
+      expect(() => client.subscribe({ query })).toThrow(
+        new InvariantError(
+          '`__typename` is a forbidden field alias name in the selection set for field `hello.world` in subscription "Test".'
+        )
+      );
+    });
   });
 });
 

@@ -5,11 +5,15 @@
 ```ts
 
 import type { ApolloClient } from '@apollo/client';
-import type { ClientAwareness } from '@apollo/client';
 import type { DefaultContext } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { Observable } from 'rxjs';
+
+// @public (undocumented)
+export interface AdditionalFetchResultTypes<TData = Record<string, any>, TExtensions = Record<string, any>> {
+}
 
 // @public (undocumented)
 export class ApolloLink {
@@ -43,7 +47,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
+    payload: FormattedExecutionResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -63,43 +67,8 @@ export interface ExecuteContext {
     client: ApolloClient;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export interface ExecutionPatchIncrementalResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data?: never;
-    // (undocumented)
-    errors?: never;
-    // (undocumented)
-    extensions?: never;
-    // (undocumented)
-    incremental?: IncrementalPayload<TData, TExtensions>[];
-}
-
-// @public (undocumented)
-export interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions = Record<string, any>> extends ExecutionPatchResultBase {
-    // (undocumented)
-    data: TData | null | undefined;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    incremental?: never;
-}
-
-// @public (undocumented)
-export type ExecutionPatchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = ExecutionPatchInitialResult<TData, TExtensions> | ExecutionPatchIncrementalResult<TData, TExtensions>;
-
-// @public (undocumented)
-interface ExecutionPatchResultBase {
-    // (undocumented)
-    hasNext?: boolean;
-}
-
-// @public (undocumented)
-export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
+export type FetchResult<TData = Record<string, any>, TExtensions = Record<string, any>> = FormattedExecutionResult<TData, TExtensions> | AdditionalFetchResultTypes<TData, TExtensions>[keyof AdditionalFetchResultTypes<TData, TExtensions>];
 
 // @public (undocumented)
 export const from: typeof ApolloLink.from;
@@ -116,20 +85,6 @@ export interface GraphQLRequest<TVariables = Record<string, any>> {
     query: DocumentNode;
     // (undocumented)
     variables?: TVariables;
-}
-
-// @public (undocumented)
-export interface IncrementalPayload<TData, TExtensions> {
-    // (undocumented)
-    data: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-    // (undocumented)
-    label?: string;
-    // (undocumented)
-    path: Path;
 }
 
 // @public (undocumented)
@@ -158,28 +113,10 @@ export interface Operation {
 
 // @public (undocumented)
 export interface OperationContext extends DefaultContext {
-    // (undocumented)
-    clientAwareness?: ClientAwareness;
-    queryDeduplication?: boolean;
 }
-
-// @public (undocumented)
-export type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 export type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
-
-// @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    data?: TData | null;
-    // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    extensions?: TExtensions;
-}
 
 // @public (undocumented)
 export const split: typeof ApolloLink.split;

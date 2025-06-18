@@ -4,12 +4,14 @@ import fetchMock from "fetch-mock";
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { times } from "lodash";
-import { firstValueFrom, Observable } from "rxjs";
+import { firstValueFrom, Observable, of, throwError } from "rxjs";
 
+import { CombinedGraphQLErrors, ServerError, version } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
-  createPersistedQueryLink as createPersistedQuery,
+  createPersistedQueryLink,
+  PersistedQueryLink,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import {
@@ -90,7 +92,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -104,6 +106,44 @@ describe("happy path", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: hash,
+          },
+        },
+      })
+    );
+  });
+
+  test("`createPersistedQueryLink` creates a `PersistedQueryLink`", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response }))
+    );
+    const pqLink = createPersistedQueryLink({ sha256 });
+    expect(pqLink).toBeInstanceOf(PersistedQueryLink);
+    const link = pqLink.concat(createHttpLink());
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    const [uri, request] = fetchMock.lastCall()!;
+
+    expect(uri).toEqual("/graphql");
+    expect(request!.body!).toBe(
+      JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: hash,
@@ -118,7 +158,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -143,7 +183,7 @@ describe("happy path", () => {
       { repeat: 1 }
     );
     const hashSpy = jest.fn(sha256);
-    const link = createPersistedQuery({ sha256: hashSpy }).concat(
+    const link = new PersistedQueryLink({ sha256: hashSpy }).concat(
       createHttpLink()
     );
 
@@ -179,7 +219,7 @@ describe("happy path", () => {
       hashRefs.push(new WeakRef(newHash));
       return newHash as string;
     }
-    const persistedLink = createPersistedQuery({ sha256: hash });
+    const persistedLink = new PersistedQueryLink({ sha256: hash });
     await new Promise<void>((complete) =>
       execute(persistedLink.concat(createHttpLink()), {
         query,
@@ -198,7 +238,7 @@ describe("happy path", () => {
       () => new Promise((resolve) => resolve({ body: response }))
     );
     const generateHash = (query: any) => Promise.resolve("foo");
-    const link = createPersistedQuery({ generateHash }).concat(
+    const link = new PersistedQueryLink({ generateHash }).concat(
       createHttpLink()
     );
 
@@ -219,7 +259,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
 
     const observable = execute(link, { query: "1234", variables } as any);
     const stream = new ObservableStream(observable);
@@ -238,7 +278,7 @@ describe("happy path", () => {
         }, 100);
       });
     });
-    const link = createPersistedQuery({ sha256 }).concat(delay);
+    const link = new PersistedQueryLink({ sha256 }).concat(delay);
 
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
@@ -251,9 +291,8 @@ describe("happy path", () => {
   });
 
   it("should error if `sha256` and `generateHash` options are both missing", async () => {
-    const createPersistedQueryFn = createPersistedQuery as any;
-
-    expect(() => createPersistedQueryFn()).toThrow(
+    // @ts-expect-error
+    expect(() => new PersistedQueryLink()).toThrow(
       'Missing/invalid "sha256" or "generateHash" function'
     );
   });
@@ -261,9 +300,8 @@ describe("happy path", () => {
   it.each(["sha256", "generateHash"])(
     "should error if `%s` option is not a function",
     async (option) => {
-      const createPersistedQueryFn = createPersistedQuery as any;
-
-      expect(() => createPersistedQueryFn({ [option]: "ooops" })).toThrow(
+      // @ts-expect-error
+      expect(() => new PersistedQueryLink({ [option]: "ooops" })).toThrow(
         'Missing/invalid "sha256" or "generateHash" function'
       );
     }
@@ -277,7 +315,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQuery({
+    const link = new PersistedQueryLink({
       sha256(data) {
         return crypto.createHmac("sha256", data).digest("hex");
       },
@@ -296,6 +334,10 @@ describe("happy path", () => {
         operationName: "Test",
         variables,
         extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
           persistedQuery: {
             version: VERSION,
             sha256Hash: sha256Hash,
@@ -316,38 +358,38 @@ describe("failure path", () => {
     ["error code", errorResponseWithCode],
   ] as const)(
     "correctly identifies the error shape from the server (%s)",
-    (_description, failingResponse) =>
-      new Promise<void>((resolve, reject) => {
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: failingResponse })),
-          { repeat: 1 }
-        );
-        // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
-        // it limits the number of times the route can be used,
-        // after which the call to `fetch()` will fall through to be
-        // handled by any other routes defined...
-        // With `overwriteRoutes = false`, this means
-        // subsequent /graphql mocks will be used
-        // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
-        const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
-        execute(link, { query, variables }).subscribe((result) => {
-          expect(result.data).toEqual(data);
-          const [[, failure], [, success]] = fetchMock.calls();
-          expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
-          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-          expect(
-            JSON.parse(success!.body!.toString()).extensions.persistedQuery
-              .sha256Hash
-          ).toBe(hash);
-          resolve();
-        }, reject);
-      })
+    async (_description, failingResponse) => {
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
+        { repeat: 1 }
+      );
+      // `repeat: 1` simulates a `mockResponseOnce` API with fetch-mock:
+      // it limits the number of times the route can be used,
+      // after which the call to `fetch()` will fall through to be
+      // handled by any other routes defined...
+      // With `overwriteRoutes = false`, this means
+      // subsequent /graphql mocks will be used
+      // see: http://www.wheresrhys.co.uk/fetch-mock/#usageconfiguration
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+      const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
+
+      const stream = new ObservableStream(execute(link, { query, variables }));
+
+      await expect(stream).toEmitTypedValue({ data });
+
+      const [[, failure], [, success]] = fetchMock.calls();
+      expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
+      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+      expect(
+        JSON.parse(success!.body!.toString()).extensions.persistedQuery
+          .sha256Hash
+      ).toBe(hash);
+    }
   );
 
   it("sends GET for the first response only with useGETForHashedQueries", async () => {
@@ -357,6 +399,10 @@ describe("failure path", () => {
         id: 1,
       }),
       extensions: JSON.stringify({
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
         persistedQuery: {
           version: 1,
           sha256Hash: hash,
@@ -371,7 +417,7 @@ describe("failure path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQuery({
+    const link = new PersistedQueryLink({
       sha256,
       useGETForHashedQueries: true,
     }).concat(createHttpLink());
@@ -405,7 +451,7 @@ describe("failure path", () => {
       () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -422,6 +468,10 @@ describe("failure path", () => {
           version: VERSION,
           sha256Hash: hash,
         },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
       },
     });
 
@@ -433,6 +483,10 @@ describe("failure path", () => {
       query: queryString,
       variables,
       extensions: {
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
         persistedQuery: {
           version: VERSION,
           sha256Hash: hash,
@@ -453,7 +507,7 @@ describe("failure path", () => {
       () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
-    const link = createPersistedQuery({
+    const link = new PersistedQueryLink({
       sha256,
       disable({ operation }) {
         operation.setContext({
@@ -480,6 +534,10 @@ describe("failure path", () => {
           version: VERSION,
           sha256Hash: hash,
         },
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
       },
     });
 
@@ -490,6 +548,12 @@ describe("failure path", () => {
       operationName: "Test",
       query: queryString,
       variables,
+      extensions: {
+        clientLibrary: {
+          name: "@apollo/client",
+          version,
+        },
+      },
     });
   });
 
@@ -498,48 +562,58 @@ describe("failure path", () => {
     ["error code", giveUpResponseWithCode],
   ] as const)(
     "does not try again after receiving NotSupported error (%s)",
-    (_description, failingResponse) =>
-      new Promise<void>((resolve, reject) => {
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: failingResponse })),
-          { repeat: 1 }
-        );
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
-        // mock it again so we can verify it doesn't try anymore
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
-        const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    async (_description, failingResponse) => {
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: failingResponse })),
+        { repeat: 1 }
+      );
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+      // mock it again so we can verify it doesn't try anymore
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
+      const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
 
-        execute(link, { query, variables }).subscribe((result) => {
-          expect(result.data).toEqual(data);
-          const [[, failure]] = fetchMock.calls();
-          expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
-          const [, [, success]] = fetchMock.calls();
-          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-          expect(
-            JSON.parse(success!.body!.toString()).extensions
-          ).toBeUndefined();
-          execute(link, { query, variables }).subscribe((secondResult) => {
-            expect(secondResult.data).toEqual(data);
-            const [, , [, success]] = fetchMock.calls();
-            expect(JSON.parse(success!.body!.toString()).query).toBe(
-              queryString
-            );
-            expect(
-              JSON.parse(success!.body!.toString()).extensions
-            ).toBeUndefined();
-            resolve();
-          }, reject);
-        }, reject);
-      })
+      {
+        const stream = new ObservableStream(
+          execute(link, { query, variables })
+        );
+
+        await expect(stream).toEmitTypedValue({ data });
+
+        const [[, failure]] = fetchMock.calls();
+        expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
+        const [, [, success]] = fetchMock.calls();
+        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+        expect(JSON.parse(success!.body!.toString()).extensions).toStrictEqual({
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
+        });
+      }
+
+      {
+        const stream = new ObservableStream(
+          execute(link, { query, variables })
+        );
+
+        await expect(stream).toEmitTypedValue({ data });
+
+        const [, , [, success]] = fetchMock.calls();
+        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+        expect(JSON.parse(success!.body!.toString()).extensions).toStrictEqual({
+          clientLibrary: { name: "@apollo/client", version },
+        });
+      }
+    }
   );
 
   it.each([
@@ -566,7 +640,7 @@ describe("failure path", () => {
         hashRefs.push(new WeakRef(newHash));
         return newHash as string;
       }
-      const persistedLink = createPersistedQuery({ sha256: hash });
+      const persistedLink = new PersistedQueryLink({ sha256: hash });
       await new Promise<void>((complete) =>
         execute(persistedLink.concat(createHttpLink()), {
           query,
@@ -593,7 +667,7 @@ describe("failure path", () => {
       () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
-    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -636,7 +710,7 @@ describe("failure path", () => {
         // @ts-expect-error
         return global.fetch.apply(null, args);
       };
-      const link = createPersistedQuery({ sha256 }).concat(
+      const link = new PersistedQueryLink({ sha256 }).concat(
         createHttpLink({ fetch: fetcher } as any)
       );
 
@@ -694,7 +768,7 @@ describe("failure path", () => {
         // @ts-expect-error
         return global.fetch.apply(null, args);
       };
-      const link = createPersistedQuery({ sha256 }).concat(
+      const link = new PersistedQueryLink({ sha256 }).concat(
         createHttpLink({ fetch: fetcher } as any)
       );
 
@@ -733,7 +807,7 @@ describe("failure path", () => {
         return global.fetch.apply(null, args);
       };
 
-      const link = createPersistedQuery({ sha256 }).concat(
+      const link = new PersistedQueryLink({ sha256 }).concat(
         createHttpLink({ fetch: fetcher } as any)
       );
 
@@ -749,5 +823,707 @@ describe("failure path", () => {
         JSON.parse(success!.body!.toString()).extensions
       ).not.toBeUndefined();
     });
+  });
+});
+
+test("disables persisted queries from future requests when `disable` returns true", async () => {
+  const fetch = jest.fn(async () => Response.json({ data }));
+
+  fetch.mockImplementationOnce(async () =>
+    Promise.resolve(
+      Response.json(
+        {
+          errors: [
+            {
+              message: "Not found",
+              extensions: {
+                code: "PERSISTED_QUERY_NOT_FOUND",
+              },
+            },
+          ],
+        },
+        { status: 500 }
+      )
+    )
+  );
+
+  const link = new PersistedQueryLink({ sha256, disable: () => true }).concat(
+    createHttpLink({ fetch })
+  );
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      "/graphql",
+      expect.objectContaining({
+        body: JSON.stringify({
+          operationName: "Test",
+          variables,
+          extensions: {
+            clientLibrary: { name: "@apollo/client", version },
+            persistedQuery: {
+              version: VERSION,
+              sha256Hash: sha256(queryString),
+            },
+          },
+        }),
+      })
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/graphql",
+      expect.objectContaining({
+        body: JSON.stringify({
+          operationName: "Test",
+          variables,
+          extensions: {
+            clientLibrary: { name: "@apollo/client", version },
+          },
+          query: queryString,
+        }),
+      })
+    );
+  }
+
+  fetch.mockClear();
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      "/graphql",
+      expect.objectContaining({
+        body: JSON.stringify({
+          operationName: "Test",
+          variables,
+          extensions: {
+            clientLibrary: { name: "@apollo/client", version },
+          },
+          query: queryString,
+        }),
+      })
+    );
+  }
+});
+
+test("continues working with persisted queries for future requests when `disable` returns false", async () => {
+  const fetch = jest.fn(async () => Response.json({ data }));
+
+  fetch.mockImplementationOnce(async () =>
+    Promise.resolve(
+      Response.json(
+        {
+          errors: [
+            {
+              message: "Not found",
+              extensions: {
+                code: "PERSISTED_QUERY_NOT_FOUND",
+              },
+            },
+          ],
+        },
+        { status: 500 }
+      )
+    )
+  );
+
+  const link = new PersistedQueryLink({
+    sha256,
+    disable: () => false,
+  }).concat(createHttpLink({ fetch }));
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      "/graphql",
+      expect.objectContaining({
+        body: JSON.stringify({
+          operationName: "Test",
+          variables,
+          extensions: {
+            clientLibrary: { name: "@apollo/client", version },
+            persistedQuery: {
+              version: VERSION,
+              sha256Hash: sha256(queryString),
+            },
+          },
+        }),
+      })
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/graphql",
+      expect.objectContaining({
+        body: JSON.stringify({
+          operationName: "Test",
+          variables,
+          extensions: {
+            clientLibrary: { name: "@apollo/client", version },
+            persistedQuery: {
+              version: VERSION,
+              sha256Hash: sha256(queryString),
+            },
+          },
+          query: queryString,
+        }),
+      })
+    );
+  }
+
+  fetch.mockClear();
+
+  {
+    const stream = new ObservableStream(execute(link, { query, variables }));
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      "/graphql",
+      expect.objectContaining({
+        body: JSON.stringify({
+          operationName: "Test",
+          variables,
+          extensions: {
+            clientLibrary: { name: "@apollo/client", version },
+            persistedQuery: {
+              version: VERSION,
+              sha256Hash: sha256(queryString),
+            },
+          },
+        }),
+      })
+    );
+  }
+});
+
+test("calls `disable` with error emitted from link chain", async () => {
+  const terminatingLink = new ApolloLink(() => {
+    return throwError(() => new Error("Something went wrong"));
+  });
+
+  const disable = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
+    terminatingLink
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitError(new Error("Something went wrong"));
+
+  expect(disable).toHaveBeenCalledTimes(1);
+  expect(disable).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: new Error("Something went wrong"),
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+  });
+});
+
+test("calls `disable` with ServerError when response has non-2xx status code", async () => {
+  const response = new Response("Something went wrong", { status: 500 });
+  const fetch = jest.fn(async () => response);
+
+  const disable = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
+    createHttpLink({ fetch })
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  const serverError = new ServerError(
+    "Response not successful: Received status code 500",
+    {
+      response,
+      bodyText: "Something went wrong",
+    }
+  );
+
+  await expect(stream).toEmitError(serverError);
+
+  expect(disable).toHaveBeenCalledTimes(1);
+  expect(disable).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        clientLibrary: { name: "@apollo/client", version },
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: serverError,
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+  });
+});
+
+test("calls `disable` with GraphQL errors when returned in response", async () => {
+  const terminatingLink = new ApolloLink(() => {
+    return of({ errors: [{ message: "Something went wrong" }] });
+  });
+
+  const disable = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
+    terminatingLink
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({
+    errors: [{ message: "Something went wrong" }],
+  });
+
+  expect(disable).toHaveBeenCalledTimes(1);
+  expect(disable).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+    result: {
+      errors: [{ message: "Something went wrong" }],
+    },
+  });
+});
+
+test("calls `disable` with GraphQL errors when parsed from non-2xx response", async () => {
+  const response = Response.json(
+    { errors: [{ message: "Something went wrong" }] },
+    { status: 500 }
+  );
+  const fetch = jest.fn(async () => response);
+
+  const disable = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
+    createHttpLink({ fetch })
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  const serverError = new ServerError(
+    "Response not successful: Received status code 500",
+    {
+      response,
+      bodyText: JSON.stringify({
+        errors: [{ message: "Something went wrong" }],
+      }),
+    }
+  );
+
+  await expect(stream).toEmitError(serverError);
+
+  expect(disable).toHaveBeenCalledTimes(1);
+  expect(disable).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        clientLibrary: { name: "@apollo/client", version },
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+    result: {
+      errors: [{ message: "Something went wrong" }],
+    },
+  });
+});
+
+test("retries when `retry` returns true", async () => {
+  const fetch = jest.fn(async () => Response.json({ data }));
+
+  fetch.mockImplementationOnce(async () =>
+    Promise.resolve(
+      Response.json(
+        {
+          errors: [
+            {
+              message: "Not found",
+              extensions: {
+                code: "PERSISTED_QUERY_NOT_FOUND",
+              },
+            },
+          ],
+        },
+        { status: 500 }
+      )
+    )
+  );
+
+  const link = new PersistedQueryLink({
+    sha256,
+    retry: () => true,
+  }).concat(createHttpLink({ fetch }));
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({ data });
+
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenNthCalledWith(
+    1,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+      }),
+    })
+  );
+  expect(fetch).toHaveBeenNthCalledWith(
+    2,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+        query: queryString,
+      }),
+    })
+  );
+});
+
+test("only retries query once", async () => {
+  const fetch = jest.fn(async () =>
+    Response.json({
+      errors: [
+        {
+          message: "Not found",
+          extensions: {
+            code: "PERSISTED_QUERY_NOT_FOUND",
+          },
+        },
+      ],
+    })
+  );
+
+  const link = new PersistedQueryLink({
+    sha256,
+    retry: () => true,
+  }).concat(createHttpLink({ fetch }));
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({
+    errors: [
+      {
+        message: "Not found",
+        extensions: { code: "PERSISTED_QUERY_NOT_FOUND" },
+      },
+    ],
+  });
+
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenNthCalledWith(
+    1,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+      }),
+    })
+  );
+  expect(fetch).toHaveBeenNthCalledWith(
+    2,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+        query: queryString,
+      }),
+    })
+  );
+});
+
+test("does not retry when `retry` returns false", async () => {
+  const fetch = jest.fn(async () =>
+    Response.json({
+      errors: [
+        {
+          message: "Not found",
+          extensions: {
+            code: "PERSISTED_QUERY_NOT_FOUND",
+          },
+        },
+      ],
+    })
+  );
+
+  const link = new PersistedQueryLink({
+    sha256,
+    retry: () => false,
+  }).concat(createHttpLink({ fetch }));
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({
+    errors: [
+      {
+        message: "Not found",
+        extensions: { code: "PERSISTED_QUERY_NOT_FOUND" },
+      },
+    ],
+  });
+
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenNthCalledWith(
+    1,
+    "/graphql",
+    expect.objectContaining({
+      body: JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: { name: "@apollo/client", version },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256(queryString),
+          },
+        },
+      }),
+    })
+  );
+});
+
+test("calls `retry` with error emitted from link chain", async () => {
+  const terminatingLink = new ApolloLink(() => {
+    return throwError(() => new Error("Something went wrong"));
+  });
+
+  const retry = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
+    terminatingLink
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitError(new Error("Something went wrong"));
+
+  expect(retry).toHaveBeenCalledTimes(1);
+  expect(retry).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: new Error("Something went wrong"),
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+  });
+});
+
+test("calls `retry` with ServerError when response has non-2xx status code", async () => {
+  const response = new Response("Something went wrong", { status: 500 });
+  const fetch = jest.fn(async () => response);
+
+  const retry = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
+    createHttpLink({ fetch })
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  const serverError = new ServerError(
+    "Response not successful: Received status code 500",
+    {
+      response,
+      bodyText: "Something went wrong",
+    }
+  );
+
+  await expect(stream).toEmitError(serverError);
+
+  expect(retry).toHaveBeenCalledTimes(1);
+  expect(retry).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        clientLibrary: { name: "@apollo/client", version },
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: serverError,
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+  });
+});
+
+test("calls `retry` with GraphQL errors when returned in response", async () => {
+  const terminatingLink = new ApolloLink(() => {
+    return of({ errors: [{ message: "Something went wrong" }] });
+  });
+
+  const retry = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
+    terminatingLink
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  await expect(stream).toEmitTypedValue({
+    errors: [{ message: "Something went wrong" }],
+  });
+
+  expect(retry).toHaveBeenCalledTimes(1);
+  expect(retry).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+    result: {
+      errors: [{ message: "Something went wrong" }],
+    },
+  });
+});
+
+test("calls `retry` with GraphQL errors when parsed from non-2xx response", async () => {
+  const response = Response.json(
+    { errors: [{ message: "Something went wrong" }] },
+    { status: 500 }
+  );
+  const fetch = jest.fn(async () => response);
+
+  const retry = jest.fn(() => false);
+
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
+    createHttpLink({ fetch })
+  );
+
+  const stream = new ObservableStream(execute(link, { query, variables }));
+
+  const serverError = new ServerError(
+    "Response not successful: Received status code 500",
+    {
+      response,
+      bodyText: JSON.stringify({
+        errors: [{ message: "Something went wrong" }],
+      }),
+    }
+  );
+
+  await expect(stream).toEmitError(serverError);
+
+  expect(retry).toHaveBeenCalledTimes(1);
+  expect(retry).toHaveBeenCalledWith({
+    operation: {
+      query,
+      variables,
+      operationName: "Test",
+      extensions: {
+        clientLibrary: { name: "@apollo/client", version },
+        persistedQuery: { version: VERSION, sha256Hash: sha256(queryString) },
+      },
+    },
+    error: new CombinedGraphQLErrors({
+      errors: [{ message: "Something went wrong" }],
+    }),
+    meta: {
+      persistedQueryNotFound: false,
+      persistedQueryNotSupported: false,
+    },
+    result: {
+      errors: [{ message: "Something went wrong" }],
+    },
   });
 });

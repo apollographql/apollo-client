@@ -15,6 +15,7 @@ import type { Primitive } from '@apollo/client/utilities/internal';
 import type { RemoveIndexSignature } from '@apollo/client/utilities/internal';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { TypedDocumentNode as TypedDocumentNode_2 } from '@apollo/client';
+import type { TypeOverrides } from '@apollo/client';
 
 // Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts
@@ -71,7 +72,7 @@ type ExtractByMatchingTypeNames<Union extends {
 // Warning: (ae-forgotten-export) The symbol "DefaultImplementation" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type FragmentType<TData> = ApplyHKTImplementationWithDefault<DataMasking, "FragmentType", DefaultImplementation, TData>;
+export type FragmentType<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "FragmentType", DefaultImplementation, TData>;
 
 // @public (undocumented)
 export namespace GraphQLCodegenDataMasking {
@@ -162,14 +163,14 @@ export namespace GraphQLCodegenDataMasking {
 }
 
 // @public
-export type Masked<TData> = ApplyHKTImplementationWithDefault<DataMasking, "Masked", DefaultImplementation, TData>;
+export type Masked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Masked", DefaultImplementation, TData>;
 
 // @public
 export type MaskedDocumentNode<TData = {
     [key: string]: any;
 }, TVariables = {
     [key: string]: any;
-}> = ApplyHKTImplementationWithDefault<DataMasking, "MaskedDocumentNode", DefaultImplementation, TData, TVariables>;
+}> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaskedDocumentNode", DefaultImplementation, TData, TVariables>;
 
 // @internal @deprecated (undocumented)
 export function maskFragment<TData = unknown>(data: TData, document: TypedDocumentNode_2<TData> | DocumentNode, cache: ApolloCache, fragmentName?: string): TData;
@@ -178,7 +179,7 @@ export function maskFragment<TData = unknown>(data: TData, document: TypedDocume
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode_2<TData>, cache: ApolloCache): TData;
 
 // @public
-export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<DataMasking, "MaybeMasked", DefaultImplementation, TData>;
+export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "MaybeMasked", DefaultImplementation, TData>;
 
 // Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -224,7 +225,7 @@ type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
 
 // @public
-export type Unmasked<TData> = ApplyHKTImplementationWithDefault<DataMasking, "Unmasked", DefaultImplementation, TData>;
+export type Unmasked<TData> = ApplyHKTImplementationWithDefault<TypeOverrides, "Unmasked", DefaultImplementation, TData>;
 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {

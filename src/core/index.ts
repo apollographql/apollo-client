@@ -24,10 +24,10 @@ export type {
 export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type {
   ApolloQueryResult,
-  ClientAwareness,
   DataState,
   DefaultContext,
   ErrorLike,
+  NormalizedExecutionResult,
   GetDataState,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -38,20 +38,20 @@ export type {
   MutateResult,
   MutationQueryReducer,
   MutationQueryReducersMap,
-  MutationUpdaterFn,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
-  QueryListener,
   QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesPromiseResults,
   RefetchQueriesResult,
   RefetchQueryDescriptor,
+  Streaming,
   SubscribeResult,
   SubscriptionObservable,
   TypedDocumentNode,
+  TypeOverrides,
 } from "./types.js";
 export {
   CombinedGraphQLErrors,
@@ -116,18 +116,12 @@ export {
 export type {
   ApolloPayloadResult,
   DocumentNode,
-  ExecutionPatchIncrementalResult,
-  ExecutionPatchInitialResult,
-  ExecutionPatchResult,
   FetchResult,
   GraphQLRequest,
-  IncrementalPayload,
   NextLink,
   Operation,
   OperationContext,
-  Path,
   RequestHandler,
-  SingleExecutionResult,
 } from "@apollo/client/link";
 
 export {
@@ -196,4 +190,4 @@ export {
   gql,
   resetCaches,
 } from "graphql-tag";
-export { version } from "../version.js";
+export { build, version } from "../version.js";

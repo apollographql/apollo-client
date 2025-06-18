@@ -1,6 +1,8 @@
+import type { TypeOverrides } from "@apollo/client";
 import type { ApplyHKTImplementationWithDefault } from "@apollo/client/utilities/internal";
 
 import type { GraphQLCodegenDataMasking } from "./GraphQLCodegenDataMasking.js";
+
 type DefaultImplementation = GraphQLCodegenDataMasking.Implementation;
 
 export interface DataMasking {}
@@ -10,7 +12,7 @@ export interface DataMasking {}
  * enabled.
  */
 export type Masked<TData> = ApplyHKTImplementationWithDefault<
-  DataMasking,
+  TypeOverrides,
   "Masked",
   DefaultImplementation,
   TData
@@ -24,7 +26,7 @@ export type MaskedDocumentNode<
   TData = { [key: string]: any },
   TVariables = { [key: string]: any },
 > = ApplyHKTImplementationWithDefault<
-  DataMasking,
+  TypeOverrides,
   "MaskedDocumentNode",
   DefaultImplementation,
   TData,
@@ -32,7 +34,7 @@ export type MaskedDocumentNode<
 >;
 
 export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
-  DataMasking,
+  TypeOverrides,
   "FragmentType",
   DefaultImplementation,
   TData
@@ -43,7 +45,7 @@ export type FragmentType<TData> = ApplyHKTImplementationWithDefault<
  * enabled.
  */
 export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
-  DataMasking,
+  TypeOverrides,
   "MaybeMasked",
   DefaultImplementation,
   TData
@@ -53,7 +55,7 @@ export type MaybeMasked<TData> = ApplyHKTImplementationWithDefault<
  * Unmasks a type to provide its full result.
  */
 export type Unmasked<TData> = ApplyHKTImplementationWithDefault<
-  DataMasking,
+  TypeOverrides,
   "Unmasked",
   DefaultImplementation,
   TData

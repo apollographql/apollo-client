@@ -1,1 +1,1 @@
-export { BatchHttpLink } from "./batchHttpLink.js";
+export { BaseBatchHttpLink, BatchHttpLink } from "./batchHttpLink.js";

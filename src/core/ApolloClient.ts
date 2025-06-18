@@ -1,4 +1,3 @@
-import type { FormattedExecutionResult } from "graphql";
 import { OperationTypeNode } from "graphql";
 import type { Observable } from "rxjs";
 import { map } from "rxjs";
@@ -8,14 +7,22 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { ApolloLink, GraphQLRequest } from "@apollo/client/link";
+import type { Incremental } from "@apollo/client/incremental";
+import { NotImplementedHandler } from "@apollo/client/incremental";
+import type {
+  ApolloLink,
+  FetchResult,
+  GraphQLRequest,
+} from "@apollo/client/link";
 import { execute } from "@apollo/client/link";
+import type { ClientAwarenessLink } from "@apollo/client/link/client-awareness";
 import type { LocalState } from "@apollo/client/local-state";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   checkDocument,
+  compact,
   getApolloClientMemoryInternals,
   mergeOptions,
 } from "@apollo/client/utilities/internal";
@@ -38,6 +45,8 @@ import type {
   SubscriptionObservable,
 } from "./types.js";
 import type {
+  ErrorPolicy,
+  MutationFetchPolicy,
   MutationOptions,
   QueryOptions,
   SubscriptionOptions,
@@ -121,16 +130,10 @@ export interface ApolloClientOptions {
    */
   assumeImmutableResults?: boolean;
   localState?: LocalState;
-  /**
-   * A custom name (e.g., `iOS`) that identifies this particular client among your set of clients. Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
-   */
-  name?: string;
-  /**
-   * A custom version that identifies the current version of this particular client (e.g., `1.2`). Apollo Server and Apollo Studio use this property as part of the [client awareness](https://www.apollographql.com/docs/apollo-server/monitoring/metrics#identifying-distinct-clients) feature.
-   *
-   * This is **not** the version of Apollo Client that you are using, but rather any version string that helps you differentiate between versions of your client.
-   */
-  version?: string;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.ClientAwarenessOptions:interface} */
+  clientAwareness?: ClientAwarenessLink.ClientAwarenessOptions;
+  /** {@inheritDoc @apollo/client!ClientAwarenessLink.EnhancedClientAwarenessOptions:interface} */
+  enhancedClientAwareness?: ClientAwarenessLink.EnhancedClientAwarenessOptions;
   documentTransform?: DocumentTransform;
 
   /**
@@ -146,6 +149,12 @@ export interface ApolloClientOptions {
    * @defaultValue false
    */
   dataMasking?: boolean;
+
+  /**
+   * Determines the strategy used to parse incremental chunks from `@defer`
+   * queries.
+   */
+  incrementalHandler?: Incremental.Handler<any>;
 }
 
 /**
@@ -243,11 +252,10 @@ export class ApolloClient implements DataProxy {
       defaultContext,
       assumeImmutableResults = cache.assumeImmutableResults,
       localState,
-      name: clientAwarenessName,
-      version: clientAwarenessVersion,
       devtools,
       dataMasking,
       link,
+      incrementalHandler = new NotImplementedHandler(),
     } = options;
 
     this.link = link;
@@ -280,10 +288,8 @@ export class ApolloClient implements DataProxy {
       queryDeduplication,
       ssrMode,
       dataMasking: !!dataMasking,
-      clientAwareness: {
-        name: clientAwarenessName!,
-        version: clientAwarenessVersion!,
-      },
+      clientOptions: options,
+      incrementalHandler,
       assumeImmutableResults,
       onBroadcast:
         this.devtoolsConfig.enabled ?
@@ -489,8 +495,6 @@ export class ApolloClient implements DataProxy {
         !(options as any).notifyOnNetworkStatusChange,
         "notifyOnNetworkStatusChange option only supported on watchQuery."
       );
-
-      checkDocument(options.query, OperationTypeNode.QUERY);
     }
 
     return this.queryManager.query<TData, TVariables>(options);
@@ -511,10 +515,38 @@ export class ApolloClient implements DataProxy {
   >(
     options: MutationOptions<TData, TVariables, TCache>
   ): Promise<MutateResult<MaybeMasked<TData>>> {
-    if (this.defaultOptions.mutate) {
-      options = mergeOptions(this.defaultOptions.mutate, options);
+    const optionsWithDefaults = mergeOptions(
+      compact(
+        {
+          fetchPolicy: "network-only" as MutationFetchPolicy,
+          errorPolicy: "none" as ErrorPolicy,
+        },
+        this.defaultOptions.mutate
+      ),
+      options
+    ) as MutationOptions<TData, TVariables, TCache> & {
+      fetchPolicy: MutationFetchPolicy;
+      errorPolicy: ErrorPolicy;
+    };
+
+    if (__DEV__) {
+      invariant(
+        optionsWithDefaults.mutation,
+        "The `mutation` option is required. Please provide a GraphQL document in the `mutation` option."
+      );
+
+      invariant(
+        optionsWithDefaults.fetchPolicy === "network-only" ||
+          optionsWithDefaults.fetchPolicy === "no-cache",
+        "Mutations only support 'network-only' or 'no-cache' fetch policies. The default 'network-only' behavior automatically writes mutation results to the cache. Passing 'no-cache' skips the cache write."
+      );
     }
-    return this.queryManager.mutate<TData, TVariables, TCache>(options);
+
+    checkDocument(optionsWithDefaults.mutation, OperationTypeNode.MUTATION);
+
+    return this.queryManager.mutate<TData, TVariables, TCache>(
+      optionsWithDefaults
+    );
   }
 
   /**
@@ -527,7 +559,7 @@ export class ApolloClient implements DataProxy {
   >(
     options: SubscriptionOptions<TVariables, TData>
   ): SubscriptionObservable<SubscribeResult<MaybeMasked<TData>>> {
-    const id = this.queryManager.generateQueryId();
+    const cause = {};
 
     const observable =
       this.queryManager.startGraphQLSubscription<TData>(options);
@@ -539,7 +571,7 @@ export class ApolloClient implements DataProxy {
           document: options.query,
           data: result.data,
           fetchPolicy: options.fetchPolicy,
-          id,
+          cause,
         }),
       }))
     );
@@ -656,7 +688,7 @@ export class ApolloClient implements DataProxy {
 
   public __requestRaw(
     payload: GraphQLRequest
-  ): Observable<FormattedExecutionResult> {
+  ): Observable<FetchResult<unknown>> {
     return execute(this.link, payload, { client: this });
   }
 
@@ -810,7 +842,7 @@ export class ApolloClient implements DataProxy {
    */
   public getObservableQueries(
     include: RefetchQueriesInclude = "active"
-  ): Map<string, ObservableQuery<any>> {
+  ): Set<ObservableQuery<any>> {
     return this.queryManager.getObservableQueries(include);
   }
 

@@ -81,13 +81,13 @@ describe("client", () => {
     }).toThrow('You must wrap the query string in a "gql" tag.');
   });
 
-  it("should throw an error if mutation option is missing", async () => {
+  it("should throw an error if mutation option is missing", () => {
     const client = new ApolloClient({
       link: ApolloLink.empty(),
       cache: new InMemoryCache(),
     });
 
-    return await expect(
+    expect(() =>
       client.mutate({
         query: gql`
           {
@@ -95,8 +95,8 @@ describe("client", () => {
           }
         `,
       } as any)
-    ).rejects.toThrow(
-      "mutation option is required. You must specify your GraphQL document in the mutation option."
+    ).toThrow(
+      "The `mutation` option is required. Please provide a GraphQL document in the `mutation` option."
     );
   });
 
@@ -6441,8 +6441,11 @@ describe("custom document transforms", () => {
 
     client.watchQuery({ query: aQuery }).subscribe(jest.fn());
     client.watchQuery({ query: bQuery }).subscribe(jest.fn());
-    // purposely avoid subscribing to prevent it from being an "active" query
-    client.watchQuery({ query: abQuery });
+    client
+      // set `fetchPolicy` to `"standby"` to prevent it from being an "active" query
+      .watchQuery({ query: abQuery, fetchPolicy: "standby" })
+      // need to subscribe to it to ensure it is registered with `QueryManager`
+      .subscribe(jest.fn());
 
     await waitFor(() => {
       return (

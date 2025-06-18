@@ -10,8 +10,10 @@ import type {
   InMemoryCacheConfig,
 } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
+import { Defer20220824Handler } from "@apollo/client/incremental";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
 import {
+  markAsStreaming,
   mockDeferStream,
   ObservableStream,
   setupPaginatedCase,
@@ -1560,14 +1562,19 @@ describe("fetchMore on an observable query", () => {
     });
 
     function count(): number {
-      return (observable as any).queryManager.queries.size;
+      const qm = observable["queryManager"];
+      return qm.obsQueries.size + qm["fetchCancelFns"].size;
     }
 
     const beforeQueryCount = count();
 
-    await observable.fetchMore({
+    const promise = observable.fetchMore({
       variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
     });
+
+    expect(count()).toBeGreaterThan(beforeQueryCount);
+
+    await promise;
 
     expect(count()).toBe(beforeQueryCount);
   });
@@ -2262,6 +2269,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
       defer.httpLink,
       baseLink
     ),
+    incrementalHandler: new Defer20220824Handler(),
   });
 
   const deferredQuery = gql`
@@ -2316,10 +2324,10 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   defer.enqueueInitialChunk({ data: initialData, hasNext: true });
 
   await expect(stream).toEmitTypedValue({
-    data: initialData,
+    data: markAsStreaming(initialData),
     dataState: "streaming",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
@@ -2336,7 +2344,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   });
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       people: [
         {
           __typename: "Person",
@@ -2348,10 +2356,10 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
           id: 2,
         },
       ],
-    },
+    }),
     dataState: "streaming",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
+    loading: true,
+    networkStatus: NetworkStatus.streaming,
     partial: true,
   });
 
@@ -2392,7 +2400,7 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
   );
 
   await expect(stream).toEmitTypedValue({
-    data: {
+    data: markAsStreaming({
       people: [
         {
           __typename: "Person",
@@ -2409,10 +2417,12 @@ test("calling `fetchMore` on an ObservableQuery that hasn't finished deferring y
           name: "Charles",
         },
       ],
-    },
+    }),
     dataState: "streaming",
-    loading: false,
-    networkStatus: NetworkStatus.ready,
+    loading: true,
+    // TODO: This should be streaming. Should be fixed with
+    // https://github.com/apollographql/apollo-client/issues/12668
+    networkStatus: NetworkStatus.loading,
     partial: true,
   });
 });

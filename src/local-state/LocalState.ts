@@ -4,6 +4,7 @@ import type {
   DocumentNode,
   ExecutableDefinitionNode,
   FieldNode,
+  FormattedExecutionResult,
   FragmentSpreadNode,
   GraphQLError,
   GraphQLFormattedError,
@@ -24,7 +25,6 @@ import type {
 } from "@apollo/client";
 import { cacheSlot } from "@apollo/client/cache";
 import { LocalStateError, toErrorLike } from "@apollo/client/errors";
-import type { FetchResult } from "@apollo/client/link";
 import { stripTypename } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
@@ -246,11 +246,11 @@ export class LocalState<
     client: ApolloClient;
     context: DefaultContext | undefined;
     // undefined is meant for client-only queries where there is no remote result
-    remoteResult: FetchResult<any> | undefined;
+    remoteResult: FormattedExecutionResult<any> | undefined;
     variables: TVariables | undefined;
     onlyRunForcedResolvers?: boolean;
     returnPartialData?: boolean;
-  }): Promise<FetchResult<TData>> {
+  }): Promise<FormattedExecutionResult<TData>> {
     if (__DEV__) {
       invariant(
         hasDirectives(["client"], document),
@@ -318,7 +318,7 @@ export class LocalState<
 
     const errors = (remoteResult?.errors ?? []).concat(execContext.errors);
 
-    const result: FetchResult<any> = {
+    const result: FormattedExecutionResult<any> = {
       ...remoteResult,
       data: mergeDeep(rootValue, localResult),
     };
@@ -433,15 +433,6 @@ export class LocalState<
           isClientFieldDescendant ||
           (selection.directives?.some((d) => d.name.value === "client") ??
             false);
-
-        if (isClientField && hasAliasedTypename(selectionSet)) {
-          throw new LocalStateError(
-            `'__typename' is a forbidden field alias name in the selection set for field '${path.at(
-              -1
-            )}' when using local resolvers.`,
-            { path }
-          );
-        }
 
         const fieldResult =
           isClientField ?
@@ -1082,13 +1073,4 @@ function toQueryOperation(document: DocumentNode): DocumentNode {
     },
   });
   return modifiedDoc;
-}
-
-function hasAliasedTypename(selectionSet: SelectionSetNode) {
-  return selectionSet.selections.some(
-    (selection) =>
-      selection.kind === Kind.FIELD &&
-      selection.alias &&
-      selection.name.value === "__typename"
-  );
 }

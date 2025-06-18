@@ -713,7 +713,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     variables,
     context,
     errorPolicy,
-    fetchPolicy,
     updateQuery,
   }: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
     updateQuery?: (
@@ -725,13 +724,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     ) => Unmasked<TData>;
   }): Promise<QueryResult<TFetchData>> {
     const combinedOptions = {
-      ...compact(this.options, {
-        query,
-        variables,
-        context,
-        errorPolicy,
-        fetchPolicy,
-      }),
+      ...compact(
+        this.options,
+        { errorPolicy: "none" },
+        {
+          query,
+          context,
+          errorPolicy,
+        }
+      ),
+      variables:
+        query ? variables : (
+          {
+            ...this.variables,
+            ...variables,
+          }
+        ),
       // The fetchMore request goes immediately to the network and does
       // not automatically write its result to the cache (hence no-cache
       // instead of network-only), because we allow the caller of

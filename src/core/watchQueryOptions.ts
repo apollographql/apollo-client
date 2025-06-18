@@ -148,9 +148,6 @@ export type FetchMoreQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: FetchPolicy;
 } & VariablesOption<NoInfer<TVariables>>;
 
 export type UpdateQueryOptions<TData, TVariables> = {

@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "4.0.0-alpha.23",
+  "version": "3.13.8",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -125,9 +125,9 @@
     "graphql": "^16.0.0",
     "graphql-ws": "^5.5.5 || ^6.0.3",
     "react": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
+    "react-compiler-runtime": "19.1.0-rc.2",
     "react-dom": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
     "rxjs": "^7.3.0",
-    "react-compiler-runtime": "19.1.0-rc.2",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
   },
   "peerDependenciesMeta": {

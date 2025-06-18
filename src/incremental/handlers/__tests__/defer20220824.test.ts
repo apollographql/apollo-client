@@ -444,7 +444,7 @@ describe("graphql-js test cases", () => {
   });
 
   it.skip("Can defer an inline fragment", async () => {
-    // from client perspective, a repeat of the last one
+    // from client perspective, a repeat of a previous test
   });
   it("Handles errors thrown in deferred fragments", async () => {
     const query = gql`

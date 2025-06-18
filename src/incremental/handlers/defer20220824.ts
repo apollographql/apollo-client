@@ -107,7 +107,7 @@ class DeferRequest<TData extends Record<string, unknown>>
       }
     }
 
-    const result = { data: this.data } as FormattedExecutionResult<TData>;
+    const result: FormattedExecutionResult<TData> = { data: this.data };
 
     if (isNonEmptyArray(this.errors)) {
       result.errors = this.errors;

@@ -9,6 +9,7 @@ import type { DocumentNode } from 'graphql';
 import type { ErrorLike } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 import type { Operation } from '@apollo/client/link';
+import type { Prettify } from '@apollo/client/utilities/internal';
 
 // @public (undocumented)
 interface BaseOptions {
@@ -53,7 +54,7 @@ type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<str
 // @public (undocumented)
 export namespace PersistedQueryLink {
     // (undocumented)
-    export type DisableFunctionOptions = CallbackOptions;
+    export type DisableFunctionOptions = Prettify<CallbackOptions>;
     // (undocumented)
     export interface GenerateHashOptions extends BaseOptions {
         // Warning: (ae-forgotten-export) The symbol "GenerateHashFunction" needs to be exported by the entry point index.d.ts
@@ -68,7 +69,7 @@ export namespace PersistedQueryLink {
     // Warning: (ae-forgotten-export) The symbol "CallbackOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    export type RetryFunctionOptions = CallbackOptions;
+    export type RetryFunctionOptions = Prettify<CallbackOptions>;
     // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -91,7 +92,7 @@ export const VERSION = 1;
 
 // Warnings were encountered during analysis:
 //
-// src/link/persisted-queries/index.ts:37:3 - (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
+// src/link/persisted-queries/index.ts:38:3 - (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

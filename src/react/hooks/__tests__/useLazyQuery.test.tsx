@@ -6081,12 +6081,12 @@ test("rerenders with data: undefined when changing variables and an error is ret
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("throws when calling `refetch` on a cache-only query", async () => {
-  const { query } = setupSimpleCase();
+test("executes network request when calling `refetch` on a cache-only query", async () => {
+  const { query, mocks } = setupSimpleCase();
 
   const client = new ApolloClient({
     cache: new InMemoryCache(),
-    link: ApolloLink.empty(),
+    link: new MockLink(mocks),
   });
 
   using _disabledAct = disableActEnvironment();
@@ -6133,11 +6133,9 @@ test("throws when calling `refetch` on a cache-only query", async () => {
 
   const [, { refetch }] = getCurrentSnapshot();
 
-  const expectedError = new InvariantError(
-    "Cannot execute `refetch` for 'cache-only' query 'GreetingQuery'. Please use a different fetch policy."
-  );
-
-  await expect(refetch()).rejects.toEqual(expectedError);
+  await expect(refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello" },
+  });
 
   {
     const [, result] = await takeSnapshot();
@@ -6145,10 +6143,23 @@ test("throws when calling `refetch` on a cache-only query", async () => {
     expect(result).toStrictEqualTyped({
       data: undefined,
       dataState: "empty",
-      error: expectedError,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toStrictEqualTyped({
+      data: { greeting: "Hello" },
+      dataState: "complete",
       called: true,
       loading: false,
-      networkStatus: NetworkStatus.error,
+      networkStatus: NetworkStatus.ready,
       previousData: undefined,
       variables: {},
     });

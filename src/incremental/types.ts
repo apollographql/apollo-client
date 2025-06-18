@@ -1,6 +1,10 @@
-import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type {
+  DocumentNode,
+  FormattedExecutionResult,
+  GraphQLFormattedError,
+} from "graphql";
 
-import type { GraphQLRequest } from "@apollo/client";
+import type { FetchResult, GraphQLRequest } from "@apollo/client";
 import type { DeepPartial } from "@apollo/client/utilities";
 
 export declare namespace Incremental {
@@ -10,8 +14,11 @@ export declare namespace Incremental {
   export interface Handler<
     Chunk extends Record<string, unknown> = Record<string, unknown>,
   > {
-    isIncrementalResult: (result: Record<string, any>) => result is Chunk;
+    isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
     prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
+    extractErrors: (
+      result: FetchResult<any>
+    ) => readonly GraphQLFormattedError[] | undefined | void;
     startRequest: (request: {
       query: DocumentNode;
     }) => IncrementalRequest<Chunk>;

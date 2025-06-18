@@ -10,12 +10,14 @@ import type { ServerError, ServerParseError } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
-import { cacheSizes } from "@apollo/client/utilities";
+import {
+  cacheSizes,
+  isFormattedExecutionResult,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   AutoCleanedWeakCache,
   compact,
-  isFormattedExecutionResult,
   isNonEmptyArray,
 } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";

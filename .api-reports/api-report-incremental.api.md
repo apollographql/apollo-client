@@ -6,6 +6,7 @@
 
 import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
+import type { FetchResult } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { GraphQLRequest } from '@apollo/client';
@@ -46,11 +47,9 @@ namespace Defer20220824Handler {
 // @public (undocumented)
 class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.Chunk> {
     // (undocumented)
-    isIncrementalInitialResult(result: Record<string, any>): result is Defer20220824Handler.InitialResult;
+    extractErrors(result: FetchResult<any>): GraphQLFormattedError[] | undefined;
     // (undocumented)
     isIncrementalResult(result: Record<string, any>): result is Defer20220824Handler.SubsequentResult | Defer20220824Handler.InitialResult;
-    // (undocumented)
-    isIncrementalSubsequentResult(result: Record<string, any>): result is Defer20220824Handler.SubsequentResult;
     // (undocumented)
     prepareRequest(request: GraphQLRequest): GraphQLRequest;
     // Warning: (ae-forgotten-export) The symbol "DeferRequest" needs to be exported by the entry point index.d.ts
@@ -65,7 +64,6 @@ export { Defer20220824Handler as GraphQL17Alpha2Handler }
 
 // @public (undocumented)
 class DeferRequest implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk> {
-    constructor(strategy: Defer20220824Handler);
     // (undocumented)
     handle<TData>(cacheData: TData | undefined, chunk: Defer20220824Handler.InitialResult | Defer20220824Handler.SubsequentResult): {
         data: any;
@@ -81,7 +79,9 @@ export namespace Incremental {
     // @internal @deprecated (undocumented)
     export interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        isIncrementalResult: (result: Record<string, any>) => result is Chunk;
+        extractErrors: (result: FetchResult<any>) => readonly GraphQLFormattedError[] | undefined | void;
+        // (undocumented)
+        isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
         // (undocumented)
         prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
         // (undocumented)
@@ -102,6 +102,8 @@ export namespace Incremental {
 
 // @public (undocumented)
 export class NotImplementedHandler implements Incremental.Handler<never> {
+    // (undocumented)
+    extractErrors(): void;
     // (undocumented)
     isIncrementalResult(_: any): _ is never;
     // (undocumented)

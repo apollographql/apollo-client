@@ -16,6 +16,7 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
 
     return request;
   }
+  extractErrors() {}
   // This code path can never be reached, so we won't implement it.
   startRequest = undefined as any;
 }

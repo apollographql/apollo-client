@@ -5,6 +5,7 @@
 ```ts
 
 import { ErrorLike } from '@apollo/client';
+import type { FetchResult } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 
@@ -17,13 +18,14 @@ export namespace CombinedGraphQLErrors {
         // (undocumented)
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
         // (undocumented)
-        result: FormattedExecutionResult<unknown>;
+        result: FetchResult<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FormattedExecutionResult<any>);
+    constructor(result: FetchResult<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     static formatMessage: CombinedGraphQLErrors.MessageFormatter;

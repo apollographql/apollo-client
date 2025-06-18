@@ -279,9 +279,6 @@ export function isDocumentNode(value: unknown): value is DocumentNode;
 // @internal @deprecated (undocumented)
 export function isField(selection: SelectionNode): selection is FieldNode;
 
-// @public (undocumented)
-export function isFormattedExecutionResult(result?: object): result is FormattedExecutionResult;
-
 // @internal @deprecated (undocumented)
 export function isNonEmptyArray<T>(value: ArrayLike<T> | null | undefined): value is Array<T>;
 

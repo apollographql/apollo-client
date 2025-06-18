@@ -1,10 +1,12 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
+import type { FetchResult } from "@apollo/client";
+
 import { brand, isBranded } from "./utils.js";
 
 export declare namespace CombinedGraphQLErrors {
   export interface MessageFormatterOptions {
-    result: FormattedExecutionResult<unknown>;
+    result: FetchResult<unknown>;
     defaultFormatMessage: (
       errors: ReadonlyArray<GraphQLFormattedError>
     ) => string;
@@ -53,9 +55,16 @@ export class CombinedGraphQLErrors extends Error {
    */
   readonly data: Record<string, unknown> | null | undefined;
 
-  constructor(result: FormattedExecutionResult<any>) {
-    const errors = result.errors || [];
+  constructor(result: FormattedExecutionResult<any>);
+  constructor(
+    result: FetchResult<any>,
+    errors: ReadonlyArray<GraphQLFormattedError>
+  );
 
+  constructor(
+    result: FetchResult<any> | FormattedExecutionResult<any>,
+    errors = (result as FormattedExecutionResult<any>).errors || []
+  ) {
     super(
       CombinedGraphQLErrors.formatMessage(errors, {
         result,
@@ -63,7 +72,7 @@ export class CombinedGraphQLErrors extends Error {
       })
     );
     this.errors = errors;
-    this.data = result.data as Record<string, unknown>;
+    this.data = (result as Partial<FormattedExecutionResult>).data;
     this.name = "CombinedGraphQLErrors";
 
     brand(this);

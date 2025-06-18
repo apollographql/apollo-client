@@ -425,13 +425,14 @@ export namespace CombinedGraphQLErrors {
         // (undocumented)
         defaultFormatMessage: (errors: ReadonlyArray<GraphQLFormattedError>) => string;
         // (undocumented)
-        result: FormattedExecutionResult<unknown>;
+        result: FetchResult<unknown>;
     }
 }
 
 // @public
 export class CombinedGraphQLErrors extends Error {
     constructor(result: FormattedExecutionResult<any>);
+    constructor(result: FetchResult<any>, errors: ReadonlyArray<GraphQLFormattedError>);
     readonly data: Record<string, unknown> | null | undefined;
     readonly errors: ReadonlyArray<GraphQLFormattedError>;
     static formatMessage: CombinedGraphQLErrors.MessageFormatter;
@@ -1294,7 +1295,9 @@ namespace Incremental {
     // @internal @deprecated (undocumented)
     interface Handler<Chunk extends Record<string, unknown> = Record<string, unknown>> {
         // (undocumented)
-        isIncrementalResult: (result: Record<string, any>) => result is Chunk;
+        extractErrors: (result: FetchResult<any>) => readonly GraphQLFormattedError[] | undefined | void;
+        // (undocumented)
+        isIncrementalResult: (result: FetchResult<any>) => result is Chunk;
         // (undocumented)
         prepareRequest: (request: GraphQLRequest) => GraphQLRequest;
         // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts

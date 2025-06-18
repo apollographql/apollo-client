@@ -7,21 +7,20 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { ErrorLike } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
-import type { FormattedExecutionResult } from 'graphql';
 import type { NextLink } from '@apollo/client/link';
 import { Observable } from 'rxjs';
 import type { Operation } from '@apollo/client/link';
 
 export interface ErrorHandler {
     // (undocumented)
-    (error: ErrorResponse): Observable<FormattedExecutionResult> | void;
+    (error: ErrorResponse): Observable<FetchResult> | void;
 }
 
 // @public (undocumented)
 export namespace ErrorLink {
     export interface ErrorHandler {
         // (undocumented)
-        (error: ErrorResponse): Observable<FormattedExecutionResult> | void;
+        (error: ErrorResponse): Observable<FetchResult> | void;
     }
 }
 
@@ -40,7 +39,7 @@ export interface ErrorResponse {
     // (undocumented)
     operation: Operation;
     // (undocumented)
-    response?: FormattedExecutionResult;
+    response?: FetchResult;
 }
 
 // @public (undocumented)

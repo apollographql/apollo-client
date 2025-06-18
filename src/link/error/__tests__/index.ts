@@ -19,6 +19,7 @@ import {
   ObservableStream,
   wait,
 } from "@apollo/client/testing/internal";
+import { isFormattedExecutionResult } from "@apollo/client/utilities";
 
 describe("error handling", () => {
   it("calls onError when GraphQL errors are returned", async () => {
@@ -465,7 +466,9 @@ describe("error handling", () => {
 
     const errorLink = onError(({ response }) => {
       // ignore errors
-      delete response!.errors;
+      if (isFormattedExecutionResult(response)) {
+        delete response!.errors;
+      }
     });
 
     const mockLink = new ApolloLink(() => {

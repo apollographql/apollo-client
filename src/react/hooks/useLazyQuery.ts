@@ -383,7 +383,7 @@ export function useLazyQuery<
       updatedOptions.fetchPolicy = stableOptions.fetchPolicy;
     }
 
-    observable.silentSetOptions(updatedOptions);
+    observable.applyOptions(updatedOptions);
   }, [
     query,
     observable,

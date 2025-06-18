@@ -6,7 +6,12 @@ import type {
 import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { ServerError, ServerParseError } from "@apollo/client/errors";
+import type { ErrorLike } from "@apollo/client";
+import {
+  CombinedGraphQLErrors,
+  ServerError,
+  toErrorLike,
+} from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 import { print } from "@apollo/client/utilities";
@@ -15,6 +20,7 @@ import {
   isFormattedExecutionResult,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { Prettify } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   compact,
@@ -26,13 +32,12 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
-export interface ErrorResponse {
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  networkError?: Error | ServerParseError | ServerError | null;
-  response?: FormattedExecutionResult;
+type CallbackOptions = {
+  error: ErrorLike;
   operation: Operation;
   meta: ErrorMeta;
-}
+  result?: FormattedExecutionResult;
+};
 
 type ErrorMeta = {
   persistedQueryNotSupported: boolean;
@@ -45,8 +50,8 @@ type GenerateHashFunction = (
 ) => string | PromiseLike<string>;
 
 interface BaseOptions {
-  disable?: (error: ErrorResponse) => boolean;
-  retry?: (error: ErrorResponse) => boolean;
+  disable?: (options: PersistedQueryLink.DisableFunctionOptions) => boolean;
+  retry?: (options: PersistedQueryLink.RetryFunctionOptions) => boolean;
   useGETForHashedQueries?: boolean;
 }
 
@@ -62,6 +67,9 @@ export namespace PersistedQueryLink {
   }
 
   export type Options = SHA256Options | GenerateHashOptions;
+
+  export type RetryFunctionOptions = Prettify<CallbackOptions>;
+  export type DisableFunctionOptions = Prettify<CallbackOptions>;
 }
 
 function processErrors(
@@ -142,7 +150,7 @@ export const createPersistedQueryLink = (
     useGETForHashedQueries,
   } = compact(defaultOptions, options);
 
-  let supportsPersistedQueries = true;
+  let enabled = true;
 
   const getHashPromise = (query: DocumentNode) =>
     new Promise<string>((resolve) => resolve(generateHash(query)));
@@ -174,114 +182,114 @@ export const createPersistedQueryLink = (
 
       const { query } = operation;
 
-      return new Observable((observer: Observer<FetchResult>) => {
-        let subscription: Subscription;
+      return new Observable((observer) => {
+        let subscription: Subscription | undefined;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;
-        const maybeRetry = (
-          {
-            response,
-            networkError,
-          }: {
-            response?: FetchResult;
-            networkError?: ServerError;
-          },
-          cb: () => void
-        ) => {
-          if (!isFormattedExecutionResult(response)) {
-            // if the response is not an expected format, we set it to `undefined`
-            // network errors will still be handled correctly,
-            // but we don't pass any unexpected data to userland callbacks
-            response = undefined;
+
+        function handleRetry(options: CallbackOptions, cb: () => void) {
+          if (retried) {
+            return cb();
           }
-          if (!retried && ((response && response.errors) || networkError)) {
-            retried = true;
 
-            const graphQLErrors: GraphQLFormattedError[] = [];
+          retried = true;
 
-            const responseErrors = response && response.errors;
-            if (isNonEmptyArray(responseErrors)) {
-              graphQLErrors.push(...responseErrors);
+          // if the server doesn't support persisted queries, don't try anymore
+          enabled = !disable(options);
+          if (!enabled) {
+            delete operation.extensions.persistedQuery;
+            // clear hashes from cache, we don't need them anymore
+            resetHashCache();
+          }
+
+          // if its not found, we can try it again, otherwise just report the error
+          if (retry(options)) {
+            // need to recall the link chain
+            if (subscription) subscription.unsubscribe();
+            // actually send the query this time
+            operation.setContext({
+              http: {
+                includeQuery: true,
+                ...(enabled ? { includeExtensions: true } : {}),
+              },
+              fetchOptions: {
+                // Since we're including the full query, which may be
+                // large, we should send it in the body of a POST request.
+                // See issue #7456.
+                method: "POST",
+              },
+            });
+            if (setFetchOptions) {
+              operation.setContext({ fetchOptions: originalFetchOptions });
             }
+            subscription = forward(operation).subscribe(handler);
+
+            return;
+          }
+
+          cb();
+        }
+
+        const handler: Observer<FetchResult> = {
+          next: (result) => {
+            if (!isFormattedExecutionResult(result) || !result.errors) {
+              return observer.next(result);
+            }
+
+            handleRetry(
+              {
+                operation,
+                error: new CombinedGraphQLErrors(result),
+                meta: processErrors(result.errors),
+                result,
+              },
+              () => observer.next(result)
+            );
+          },
+          error: (incomingError) => {
+            const error = toErrorLike(incomingError);
+            const callback = () => observer.error(incomingError);
 
             // This is persisted-query specific (see #9410) and deviates from the
             // GraphQL-over-HTTP spec for application/json responses.
             // This is intentional.
-            if (networkError?.bodyText) {
+            if (ServerError.is(error) && error.bodyText) {
               try {
-                const result = JSON.parse(networkError.bodyText);
-                const networkErrors: GraphQLFormattedError[] | undefined =
-                  result && (result.errors as GraphQLFormattedError[]);
+                const result = JSON.parse(error.bodyText);
 
-                if (isNonEmptyArray(networkErrors)) {
-                  graphQLErrors.push(...networkErrors);
+                if (isFormattedExecutionResult(result)) {
+                  return handleRetry(
+                    {
+                      error: new CombinedGraphQLErrors(result),
+                      result,
+                      operation,
+                      meta: processErrors(result.errors),
+                    },
+                    callback
+                  );
                 }
               } catch {}
             }
 
-            const disablePayload: ErrorResponse = {
-              response,
-              networkError,
-              operation,
-              graphQLErrors:
-                isNonEmptyArray(graphQLErrors) ? graphQLErrors : void 0,
-              meta: processErrors(graphQLErrors),
-            };
-
-            // if the server doesn't support persisted queries, don't try anymore
-            supportsPersistedQueries = !disable(disablePayload);
-            if (!supportsPersistedQueries) {
-              delete operation.extensions.persistedQuery;
-              // clear hashes from cache, we don't need them anymore
-              resetHashCache();
-            }
-
-            // if its not found, we can try it again, otherwise just report the error
-            if (retry(disablePayload)) {
-              // need to recall the link chain
-              if (subscription) subscription.unsubscribe();
-              // actually send the query this time
-              operation.setContext({
-                http: {
-                  includeQuery: true,
-                  ...(supportsPersistedQueries ?
-                    { includeExtensions: true }
-                  : {}),
+            handleRetry(
+              {
+                error,
+                operation,
+                meta: {
+                  persistedQueryNotSupported: false,
+                  persistedQueryNotFound: false,
                 },
-                fetchOptions: {
-                  // Since we're including the full query, which may be
-                  // large, we should send it in the body of a POST request.
-                  // See issue #7456.
-                  method: "POST",
-                },
-              });
-              if (setFetchOptions) {
-                operation.setContext({ fetchOptions: originalFetchOptions });
-              }
-              subscription = forward(operation).subscribe(handler);
-
-              return;
-            }
-          }
-          cb();
-        };
-        const handler = {
-          next: (response: FetchResult) => {
-            maybeRetry({ response }, () => observer.next!(response));
+              },
+              callback
+            );
           },
-          error: (networkError: ServerError) => {
-            maybeRetry({ networkError }, () => observer.error!(networkError));
-          },
-          complete: observer.complete!.bind(observer),
+          complete: observer.complete.bind(observer),
         };
 
         // don't send the query the first time
         operation.setContext({
-          http:
-            supportsPersistedQueries ?
-              { includeQuery: false, includeExtensions: true }
-            : {},
+          http: enabled ? { includeQuery: false, includeExtensions: true } : {},
         });
 
         // If requested, set method to GET if there are no mutations. Remember the
@@ -289,7 +297,7 @@ export const createPersistedQueryLink = (
         // non-hashed request.
         if (
           useGETForHashedQueries &&
-          supportsPersistedQueries &&
+          enabled &&
           !operationDefinesMutation(operation)
         ) {
           operation.setContext(
@@ -306,7 +314,7 @@ export const createPersistedQueryLink = (
           setFetchOptions = true;
         }
 
-        if (supportsPersistedQueries) {
+        if (enabled) {
           getQueryHash(query)
             .then((sha256Hash) => {
               operation.extensions.persistedQuery = {

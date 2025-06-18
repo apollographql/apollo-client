@@ -252,10 +252,10 @@ export class InternalQueryReference<
 
     try {
       if (avoidNetworkRequests) {
-        observable.silentSetOptions({ fetchPolicy: "standby" });
+        observable.applyOptions({ fetchPolicy: "standby" });
       } else {
         observable.reset();
-        observable.silentSetOptions({ fetchPolicy: "cache-first" });
+        observable.applyOptions({ fetchPolicy: "cache-first" });
       }
 
       if (!avoidNetworkRequests) {
@@ -263,7 +263,7 @@ export class InternalQueryReference<
       }
       this.subscribeToQuery();
     } finally {
-      observable.silentSetOptions({ fetchPolicy: originalFetchPolicy });
+      observable.applyOptions({ fetchPolicy: originalFetchPolicy });
     }
   }
 
@@ -329,7 +329,7 @@ export class InternalQueryReference<
     ) {
       this.initiateFetch(this.observable.reobserve(watchQueryOptions));
     } else {
-      this.observable.silentSetOptions(watchQueryOptions);
+      this.observable.applyOptions(watchQueryOptions);
     }
 
     return this.promise;

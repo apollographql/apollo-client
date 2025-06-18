@@ -13,14 +13,24 @@ import type { Operation } from '@apollo/client/link';
 
 export interface ErrorHandler {
     // (undocumented)
-    (error: ErrorResponse): Observable<FetchResult> | void;
+    (options: ErrorHandlerOptions): Observable<FetchResult> | void;
 }
 
 // @public (undocumented)
 export namespace ErrorLink {
     export interface ErrorHandler {
         // (undocumented)
-        (error: ErrorResponse): Observable<FetchResult> | void;
+        (options: ErrorHandlerOptions): Observable<FetchResult> | void;
+    }
+    // (undocumented)
+    export interface ErrorHandlerOptions {
+        error: ErrorLike;
+        // (undocumented)
+        forward: NextLink;
+        // (undocumented)
+        operation: Operation;
+        // (undocumented)
+        result?: FetchResult;
     }
 }
 
@@ -29,17 +39,6 @@ export class ErrorLink extends ApolloLink {
     constructor(errorHandler: ErrorLink.ErrorHandler);
     // (undocumented)
     request(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
-}
-
-// @public (undocumented)
-export interface ErrorResponse {
-    error: ErrorLike;
-    // (undocumented)
-    forward: NextLink;
-    // (undocumented)
-    operation: Operation;
-    // (undocumented)
-    response?: FetchResult;
 }
 
 // @public (undocumented)

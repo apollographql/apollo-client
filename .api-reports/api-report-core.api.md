@@ -581,6 +581,8 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
         transformedQuery?: DocumentNode_2 | TypedDocumentNode<TData, TVariables>;
         queryId?: string;
     });
+    // @internal @deprecated (undocumented)
+    applyOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>({ query, variables, context, errorPolicy, updateQuery, }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<QueryResult<TFetchData>>;
     // @internal @deprecated (undocumented)
     getCacheDiff({ optimistic }?: {
@@ -607,8 +609,6 @@ export class ObservableQuery<TData = unknown, TVariables extends OperationVariab
     // @internal @deprecated
     reset(): void;
     setVariables(variables: TVariables): Promise<QueryResult<TData>>;
-    // @internal @deprecated (undocumented)
-    silentSetOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
     startPolling(pollInterval: number): void;
     stop(): void;
     stopPolling(): void;

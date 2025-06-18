@@ -1243,7 +1243,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return;
     }
 
-    if (pollingInfo && pollingInfo?.interval === pollInterval) {
+    if (pollingInfo?.interval === pollInterval) {
       return;
     }
 

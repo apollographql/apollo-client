@@ -660,15 +660,7 @@ export class ObservableQuery<
         "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
       );
 
-      this.setResult(
-        {
-          ...this.getCurrentResult(),
-          error,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-        },
-        { shouldEmit: EmitBehavior.force }
-      );
+      this.setError(error);
 
       const promise = Object.assign(Promise.reject(error), {
         retain: () => promise,

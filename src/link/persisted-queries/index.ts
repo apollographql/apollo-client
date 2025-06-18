@@ -20,6 +20,7 @@ import {
   isFormattedExecutionResult,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import type { Prettify } from "@apollo/client/utilities/internal";
 import {
   AutoCleanedWeakCache,
   compact,
@@ -67,8 +68,8 @@ export namespace PersistedQueryLink {
 
   export type Options = SHA256Options | GenerateHashOptions;
 
-  export type RetryFunctionOptions = CallbackOptions;
-  export type DisableFunctionOptions = CallbackOptions;
+  export type RetryFunctionOptions = Prettify<CallbackOptions>;
+  export type DisableFunctionOptions = Prettify<CallbackOptions>;
 }
 
 function processErrors(

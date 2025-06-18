@@ -600,7 +600,7 @@ describe("cache-first", () => {
 });
 
 describe("cache-only", () => {
-  it("does not allow refetch", async () => {
+  it("allows explicit refetch to happen", async () => {
     let counter = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -620,7 +620,7 @@ describe("cache-only", () => {
     });
 
     const query = gql`
-      query CountQuery {
+      query {
         count
       }
     `;
@@ -650,20 +650,27 @@ describe("cache-only", () => {
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
-    const expectedError = new InvariantError(
-      "Cannot execute `refetch` for 'cache-only' query 'CountQuery'. Please use a different fetch policy."
-    );
-
-    await expect(observable.refetch()).rejects.toEqual(expectedError);
+    await expect(observable.refetch()).resolves.toStrictEqualTyped({
+      data: { count: 2 },
+    });
 
     await expect(stream).toEmitTypedValue({
       data: {
         count: 1,
       },
       dataState: "complete",
-      error: expectedError,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      partial: false,
+    });
+
+    await expect(stream).toEmitTypedValue({
+      data: {
+        count: 2,
+      },
+      dataState: "complete",
       loading: false,
-      networkStatus: NetworkStatus.error,
+      networkStatus: NetworkStatus.ready,
       partial: false,
     });
 

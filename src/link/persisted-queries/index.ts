@@ -31,11 +31,11 @@ import { defaultCacheSizes } from "../../utilities/caching/sizes.js";
 
 export const VERSION = 1;
 
-export interface ErrorResponse {
+type CallbackOptions = {
   error: ErrorLike;
   operation: Operation;
   meta: ErrorMeta;
-}
+};
 
 type ErrorMeta = {
   persistedQueryNotSupported: boolean;
@@ -48,8 +48,8 @@ type GenerateHashFunction = (
 ) => string | PromiseLike<string>;
 
 interface BaseOptions {
-  disable?: (error: ErrorResponse) => boolean;
-  retry?: (error: ErrorResponse) => boolean;
+  disable?: (error: PersistedQueryLink.DisableFunctionOptions) => boolean;
+  retry?: (error: PersistedQueryLink.RetryFunctionOptions) => boolean;
   useGETForHashedQueries?: boolean;
 }
 
@@ -65,6 +65,9 @@ export namespace PersistedQueryLink {
   }
 
   export type Options = SHA256Options | GenerateHashOptions;
+
+  export type RetryFunctionOptions = CallbackOptions;
+  export type DisableFunctionOptions = CallbackOptions;
 }
 
 function processErrors(
@@ -183,7 +186,7 @@ export const createPersistedQueryLink = (
         let originalFetchOptions: any;
         let setFetchOptions = false;
 
-        function handleRetry(errorResponse: ErrorResponse, cb: () => void) {
+        function handleRetry(options: CallbackOptions, cb: () => void) {
           if (retried) {
             return cb();
           }
@@ -191,7 +194,7 @@ export const createPersistedQueryLink = (
           retried = true;
 
           // if the server doesn't support persisted queries, don't try anymore
-          enabled = !disable(errorResponse);
+          enabled = !disable(options);
           if (!enabled) {
             delete operation.extensions.persistedQuery;
             // clear hashes from cache, we don't need them anymore
@@ -199,7 +202,7 @@ export const createPersistedQueryLink = (
           }
 
           // if its not found, we can try it again, otherwise just report the error
-          if (retry(errorResponse)) {
+          if (retry(options)) {
             // need to recall the link chain
             if (subscription) subscription.unsubscribe();
             // actually send the query this time

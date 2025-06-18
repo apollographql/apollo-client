@@ -47,7 +47,7 @@ describe("error handling", () => {
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
       operation: expect.objectContaining({ query, variables: {} }),
-      response: { errors: [error] },
+      result: { errors: [error] },
       error: new CombinedGraphQLErrors({ errors: [error] }),
     });
   });
@@ -331,7 +331,7 @@ describe("error handling", () => {
         operationName: "MySubscription",
         variables: {},
       }),
-      response: {
+      result: {
         extensions: {
           [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
             {
@@ -464,10 +464,10 @@ describe("error handling", () => {
       }
     `;
 
-    const errorLink = onError(({ response }) => {
+    const errorLink = onError(({ result }) => {
       // ignore errors
-      if (isFormattedExecutionResult(response)) {
-        delete response!.errors;
+      if (isFormattedExecutionResult(result)) {
+        delete result!.errors;
       }
     });
 
@@ -556,7 +556,7 @@ describe("error handling", () => {
         operationName: "Foo",
         variables: {},
       }),
-      response: { data: { foo: true }, errors: [error] },
+      result: { data: { foo: true }, errors: [error] },
       error: new CombinedGraphQLErrors({
         data: { foo: true },
         errors: [error],
@@ -593,7 +593,7 @@ describe("error handling with class", () => {
     expect(callback).toHaveBeenLastCalledWith({
       forward: expect.any(Function),
       operation: expect.objectContaining({ query, variables: {} }),
-      response: { errors: [error] },
+      result: { errors: [error] },
       error: new CombinedGraphQLErrors({ errors: [error] }),
     });
   });
@@ -683,7 +683,7 @@ describe("error handling with class", () => {
         operationName: "MySubscription",
         variables: {},
       }),
-      response: {
+      result: {
         extensions: {
           [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
             {

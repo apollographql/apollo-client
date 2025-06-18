@@ -1249,7 +1249,7 @@ namespace Incremental {
         // Warning: (ae-forgotten-export) The symbol "Incremental" needs to be exported by the entry point index.d.ts
         //
         // (undocumented)
-        startRequest: <TData>(request: {
+        startRequest: <TData extends Record<string, unknown>>(request: {
             query: DocumentNode;
         }) => IncrementalRequest<Chunk, TData>;
     }

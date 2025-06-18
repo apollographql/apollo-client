@@ -731,8 +731,8 @@ export class QueryManager {
       (observableQuery) => {
         const { fetchPolicy } = observableQuery.options;
         if (
-          includeStandby ||
-          (fetchPolicy !== "standby" && fetchPolicy !== "cache-only")
+          (includeStandby || fetchPolicy !== "standby") &&
+          fetchPolicy !== "cache-only"
         ) {
           observableQueryPromises.push(observableQuery.refetch());
         }

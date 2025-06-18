@@ -15,16 +15,13 @@ interface KeepTypenameConfig {
     [key: string]: typeof KEEP | KeepTypenameConfig;
 }
 
+// @public @deprecated (undocumented)
+export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): RemoveTypenameFromVariablesLink;
+
 // @public (undocumented)
-export function removeTypenameFromVariables(options?: RemoveTypenameFromVariablesOptions): ApolloLink & ({
-    getMemoryInternals(): {
-        removeTypenameFromVariables: {
-            getVariableDefinitions: number;
-        };
-    };
-} | {
-    getMemoryInternals?: undefined;
-});
+export class RemoveTypenameFromVariablesLink extends ApolloLink {
+    constructor(options?: RemoveTypenameFromVariablesOptions);
+}
 
 // @public (undocumented)
 export interface RemoveTypenameFromVariablesOptions {

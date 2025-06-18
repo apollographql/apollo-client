@@ -172,6 +172,10 @@ export class HttpLink extends ApolloLink {
   }
 }
 
+/**
+ * @deprecated
+ * Use `HttpLink` from `@apollo/client/link/http` instead.
+ */
 export const createHttpLink = (
   linkOptions: HttpLink.Options & ClientAwarenessLink.Options = {}
 ) => new HttpLink(linkOptions);

@@ -24,7 +24,7 @@ export type ClientParseError = InvariantError & {
     parseError: Error;
 };
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export const createHttpLink: (linkOptions?: HttpLink.Options & ClientAwarenessLink.Options) => HttpLink;
 
 // @public @deprecated (undocumented)

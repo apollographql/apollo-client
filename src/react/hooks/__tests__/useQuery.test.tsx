@@ -5281,6 +5281,52 @@ describe("useQuery Hook", () => {
       expect(client.extract()).toStrictEqual({});
     });
 
+    it("does not allow fetchMore for cache-only queries", async () => {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              fetchPolicy: "cache-only",
+              variables: { limit: 2 },
+            }),
+          {
+            wrapper: ({ children }: any) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { limit: 2 },
+      });
+
+      const expectedError = new InvariantError(
+        "Cannot execute `fetchMore` for a 'cache-only' query. Please use a different fetch policy."
+      );
+
+      await expect(
+        getCurrentSnapshot().fetchMore({ variables: { limit: 2 } })
+      ).rejects.toEqual(expectedError);
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        error: expectedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { limit: 2 },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     it("regression test for issue #8600", async () => {
       const cache = new InMemoryCache({
         typePolicies: {

@@ -1,11 +1,5 @@
 # @apollo/client
 
-## 3.13.9-rc.0
-
-### Patch Changes
-
-- [#12716](https://github.com/apollographql/apollo-client/pull/12716) [`ad88976`](https://github.com/apollographql/apollo-client/commit/ad889766882b4817e50e8e819044bc5ed772173b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Version bump only to release latest as `rc`.
-
 ## 4.0.0-alpha.23
 
 ### Major Changes

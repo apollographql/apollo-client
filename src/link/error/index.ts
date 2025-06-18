@@ -11,22 +11,22 @@ import {
 import type { FetchResult, NextLink, Operation } from "@apollo/client/link";
 import { ApolloLink } from "@apollo/client/link";
 
-export interface ErrorResponse {
-  /**
-   * Error that caused the callback to be triggered.
-   */
-  error: ErrorLike;
-  response?: FetchResult;
-  operation: Operation;
-  forward: NextLink;
-}
-
 export namespace ErrorLink {
   /**
    * Callback to be triggered when an error occurs within the link stack.
    */
   export interface ErrorHandler {
-    (error: ErrorResponse): Observable<FetchResult> | void;
+    (error: ErrorHandlerOptions): Observable<FetchResult> | void;
+  }
+
+  export interface ErrorHandlerOptions {
+    /**
+     * Error that caused the callback to be triggered.
+     */
+    error: ErrorLike;
+    result?: FetchResult;
+    operation: Operation;
+    forward: NextLink;
   }
 }
 
@@ -51,14 +51,14 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
             if (errors) {
               retriedResult = errorHandler({
                 error: new CombinedGraphQLErrors(result, errors),
-                response: result,
+                result,
                 operation,
                 forward,
               });
             } else if (graphQLResultHasProtocolErrors(result)) {
               retriedResult = errorHandler({
                 error: result.extensions[PROTOCOL_ERRORS_SYMBOL],
-                response: result,
+                result,
                 operation,
                 forward,
               });

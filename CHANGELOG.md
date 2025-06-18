@@ -1,5 +1,241 @@
 # @apollo/client
 
+## 4.0.0-alpha.23
+
+### Major Changes
+
+- [#12712](https://github.com/apollographql/apollo-client/pull/12712) [`bbb2b61`](https://github.com/apollographql/apollo-client/commit/bbb2b61d259da54560a79813b130a977dae10523) Thanks [@jerelmiller](https://github.com/jerelmiller)! - An error is now thrown when trying to call `fetchMore` on a `cache-only` query.
+
+- [#12712](https://github.com/apollographql/apollo-client/pull/12712) [`bbb2b61`](https://github.com/apollographql/apollo-client/commit/bbb2b61d259da54560a79813b130a977dae10523) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `cache-only` queries are no longer refetched when calling `client.reFetchObservableQueries` when `includeStandby` is `true`.
+
+- [#12705](https://github.com/apollographql/apollo-client/pull/12705) [`a60f411`](https://github.com/apollographql/apollo-client/commit/a60f411e58cc67730d0dc4513e4045f004027ded) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `cache-only` queries will now initialize with `loading: false` and `networkStatus: NetworkStatus.ready` when there is no data in the cache.
+
+  This means `useQuery` will no longer render a short initial loading state before rendering `loading: false` and `ObservableQuery.getCurrentResult()` will now return `loading: false` immediately.
+
+- [#12712](https://github.com/apollographql/apollo-client/pull/12712) [`bbb2b61`](https://github.com/apollographql/apollo-client/commit/bbb2b61d259da54560a79813b130a977dae10523) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `cache-only` queries are now excluded from `client.refetchQueries` in all situations. `cache-only` queries affected by `updateCache` are also excluded from `refetchQueries` when `onQueryUpdated` is not provided.
+
+- [#12681](https://github.com/apollographql/apollo-client/pull/12681) [`b181f98`](https://github.com/apollographql/apollo-client/commit/b181f98476e635ba3eccab170c09d91f5408060c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Changing most options when rerendering `useQuery` will no longer trigger a `reobserve` which may cause network fetches. Instead, the changed options will be applied to the next cache update or fetch.
+
+  Options that now trigger a `reobserve` when changed between renders are:
+
+  - `query`
+  - `variables`
+  - `skip`
+  - Changing `fetchPolicy` to or from `standby`
+
+- [#12714](https://github.com/apollographql/apollo-client/pull/12714) [`0e39469`](https://github.com/apollographql/apollo-client/commit/0e394692eaf0f8d8e506d8304935deafa952accf) Thanks [@phryneas](https://github.com/phryneas)! - Rework option handling for `fetchMore`.
+
+  - Previously, if the `query` option was specified, no options would be inherited
+    from the underlying `ObservableQuery`.
+    Now, even if `query` is specified, all unspecified options except for `variables` will be inherited from the underlying `ObservableQuery`.
+  - If `query` is not specified, `variables` will still be shallowly merged with the `variables` of the underlying `ObservableQuery`. If a `query` option is specified, the `variables` passed to `fetchMore` are used instead.
+  - `errorPolicy` of `fetchMore` will now always default to `"none"` instead of inherited from the `ObservableQuery` options. This can prevent accidental cache writes of partial data for a paginated query. To opt into receive partial data that may be written to the cache, pass an `errorPolicy` to `fetchMore` to override the default.
+
+- [#12700](https://github.com/apollographql/apollo-client/pull/12700) [`8e96e08`](https://github.com/apollographql/apollo-client/commit/8e96e0862c306df17c09c232704041196a72a466) Thanks [@phryneas](https://github.com/phryneas)! - Added a new `Streaming` type that will mark `data` in results while `dataStatus`
+  is `"streaming"`.
+
+  `Streaming<TData>` defaults to `TData`, but can be overwritten in userland to
+  integrate with different codegen dialects.
+
+  You can override this type globally - this example shows how to override it
+  with `DeepPartial<TData>`:
+
+  ```ts
+  import { HKT, DeepPartial } from "@apollo/client/utilities";
+
+  type StreamingOverride<TData> = DeepPartial<TData>;
+
+  interface StreamingOverrideHKT extends HKT {
+    return: StreamingOverride<this["arg1"]>;
+  }
+
+  declare module "@apollo/client" {
+    export interface TypeOverrides {
+      Streaming: StreamingOverrideHKT;
+    }
+  }
+  ```
+
+- [#12499](https://github.com/apollographql/apollo-client/pull/12499) [`ce35ea2`](https://github.com/apollographql/apollo-client/commit/ce35ea2b3a87d6dd6757e9be50ecc42837bebe56) Thanks [@phryneas](https://github.com/phryneas)! - Enable React compiler for hooks in ESM builds.
+
+- [#12704](https://github.com/apollographql/apollo-client/pull/12704) [`45dba43`](https://github.com/apollographql/apollo-client/commit/45dba43b6ba0c306aad8cfbcfd4029265f5e9106) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `ErrorResponse` object passed to the `disable` and `retry` callback options provided to `createPersistedQueryLink` no longer provides separate `graphQLErrors` and `networkError` properties and instead have been combined to a single `error` property of type `ErrorLike`.
+
+  ```diff
+  // The following also applies to the `retry` function since it has the same signature
+  createPersistedQueryLink({
+  - disable: ({ graphQLErrors, networkError }) => {
+  + disable: ({ error }) => {
+  -   if (graphQLErrors) {
+  +   if (CombinedGraphQLErrors.is(error)) {
+        // ... handle GraphQL errors
+      }
+
+  -   if (networkError) {
+  +   if (error) {
+        // ... handle link errors
+      }
+
+      // optionally check for a specific kind of error
+  -   if (networkError) {
+  +   if (ServerError.is(error)) {
+        // ... handle a server error
+      }
+  });
+  ```
+
+  The `response` property has also been renamed to `result`.
+
+  ```diff
+  createPersistedQueryLink({
+  -  disable: ({ response }) => {
+  +  disable: ({ result }) => {
+        // ... handle GraphQL errors
+      }
+    }
+  });
+  ```
+
+- [#12712](https://github.com/apollographql/apollo-client/pull/12712) [`bbb2b61`](https://github.com/apollographql/apollo-client/commit/bbb2b61d259da54560a79813b130a977dae10523) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `cache-only` queries no longer poll when a `pollInterval` is set. Instead a warning is now emitted that polling has no effect. If the `fetchPolicy` is changed to `cache-only` after polling is already active, polling is stopped.
+
+- [#12704](https://github.com/apollographql/apollo-client/pull/12704) [`45dba43`](https://github.com/apollographql/apollo-client/commit/45dba43b6ba0c306aad8cfbcfd4029265f5e9106) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `response` property in `onError` link has been renamed to `result`.
+
+  ```diff
+  - onError(({ response }) => {
+  + onError(({ result }) => {
+      // ...
+  });
+  ```
+
+- [#12715](https://github.com/apollographql/apollo-client/pull/12715) [`0be0b3f`](https://github.com/apollographql/apollo-client/commit/0be0b3f54a1b533c95c69d3698c5c3bdbd6279fe) Thanks [@phryneas](https://github.com/phryneas)! - All links are now available as classes. The old creator functions have been deprecated.
+
+  Please migrate these function calls to class creations:
+
+  ```diff
+  import {
+  - setContext
+  + SetContextLink
+  } from "@apollo/client/link/context"
+
+  -const link = setContext(...)
+  +const link = new SetContextLink(...)
+  ```
+
+  ```diff
+  import {
+  - createHttpLink
+  + HttpLink
+  } from "@apollo/client/link/http"
+
+  -const link = createHttpLink(...)
+  +const link = new HttpLink(...)
+  ```
+
+  ```diff
+  import {
+  - createPersistedQueryLink
+  + PersistedQueryLink
+  } from "@apollo/client/link/persisted-queries"
+
+  -const link = createPersistedQueryLink(...)
+  +const link = new PersistedQueryLink(...)
+  ```
+
+  ```diff
+  import {
+  - removeTypenameFromVariables
+  + RemoveTypenameFromVariablesLink
+  } from "@apollo/client/link/remove-typename"
+
+  -const link = removeTypenameFromVariables(...)
+  +const link = new RemoveTypenameFromVariablesLink(...)
+  ```
+
+### Minor Changes
+
+- [#12711](https://github.com/apollographql/apollo-client/pull/12711) [`f730f83`](https://github.com/apollographql/apollo-client/commit/f730f83346d4e3c20116da6f55fdd1381114416c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add an `extensions` property to `CombinedGraphQLErrors` to capture any extensions from the original response.
+
+- [#12700](https://github.com/apollographql/apollo-client/pull/12700) [`8e96e08`](https://github.com/apollographql/apollo-client/commit/8e96e0862c306df17c09c232704041196a72a466) Thanks [@phryneas](https://github.com/phryneas)! - The callback function that can be passed to the `ApolloClient.mutate`
+  `refetchQueries` option will now receive a `FormattedExecutionResult` with an
+  additional `dataState` option that describes if the result is `"streaming"`
+  or `"complete"`.
+  This indicates whether the `data` value is of type
+
+  - `Unmasked<TData>` (if `"complete"`)
+  - `Streaming<Unmasked<TData>>` (if `"streaming"`)
+
+- [#12714](https://github.com/apollographql/apollo-client/pull/12714) [`0e39469`](https://github.com/apollographql/apollo-client/commit/0e394692eaf0f8d8e506d8304935deafa952accf) Thanks [@phryneas](https://github.com/phryneas)! - Allow passing `errorPolicy` option to `fetchMore` and change default value to "none".
+
+- [#12714](https://github.com/apollographql/apollo-client/pull/12714) [`0e39469`](https://github.com/apollographql/apollo-client/commit/0e394692eaf0f8d8e506d8304935deafa952accf) Thanks [@phryneas](https://github.com/phryneas)! - The `FetchMoreQueryOptions` type has been inlined into `FetchMoreOptions`, and
+  `FetchMoreQueryOptions` has been removed.
+
+- [#12700](https://github.com/apollographql/apollo-client/pull/12700) [`8e96e08`](https://github.com/apollographql/apollo-client/commit/8e96e0862c306df17c09c232704041196a72a466) Thanks [@phryneas](https://github.com/phryneas)! - Prioritize usage of `FormattedExecutionResult` over `FetchResult` where applicable.
+
+  Many APIs used `FetchResult` in place of `FormattedExecutionResult`, which could
+  cause inconsistencies.
+
+  - `FetchResult` is now used to refer to an unhandled "raw" result as returned from
+    a link.
+    This can also include incremental results that use a different format.
+  - `FormattedExecutionResult` from the `graphql` package is now used to represent
+    the execution of a standard GraphQL request without incremental results.
+
+  If your custom links access the `data` property, you might need to first check if
+  the result is a standard GraphQL result by using the `isFormattedExecutionResult`
+  helper from `@apollo/client/utilities`.
+
+- [#12700](https://github.com/apollographql/apollo-client/pull/12700) [`8e96e08`](https://github.com/apollographql/apollo-client/commit/8e96e0862c306df17c09c232704041196a72a466) Thanks [@phryneas](https://github.com/phryneas)! - The `mutationResult` option passed to the `updateQueries` callback now has an
+  additional property, `dataState` with possible values of `"complete"` and `"streaming"`.
+  This indicates whether the `data` value is of type
+  - `Unmasked<TData>` (if `"complete"`)
+  - `Streaming<Unmasked<TData>>` (if `"streaming"`)
+
+### Patch Changes
+
+- [#12709](https://github.com/apollographql/apollo-client/pull/12709) [`9d42e2a`](https://github.com/apollographql/apollo-client/commit/9d42e2a08d3ddfdfdfc7ac65bd66985da5642e7d) Thanks [@phryneas](https://github.com/phryneas)! - Remove these incremental-format-specific types:
+
+  - `ExecutionPatchIncrementalResult`
+  - `ExecutionPatchInitialResult`
+  - `ExecutionPatchResult`
+  - `IncrementalPayload`
+  - `Path`
+
+- [#12677](https://github.com/apollographql/apollo-client/pull/12677) [`94e58ed`](https://github.com/apollographql/apollo-client/commit/94e58ed75fc547ff037d9efeeba929fd61b20c4c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Downgrade minimum supported `rxjs` peer dependency version to 7.3.0.
+
+- [#12709](https://github.com/apollographql/apollo-client/pull/12709) [`9d42e2a`](https://github.com/apollographql/apollo-client/commit/9d42e2a08d3ddfdfdfc7ac65bd66985da5642e7d) Thanks [@phryneas](https://github.com/phryneas)! - Slightly rework multipart response parsing.
+
+  This removes last incremental-protocol-specific details from `HttpLink` and `BatchHttpLink`.
+
+- [#12700](https://github.com/apollographql/apollo-client/pull/12700) [`8e96e08`](https://github.com/apollographql/apollo-client/commit/8e96e0862c306df17c09c232704041196a72a466) Thanks [@phryneas](https://github.com/phryneas)! - The incremental delivery (`@defer` support) implementation is now pluggable.
+
+  `ApolloClient` now per default ships without an incremental format implementation
+  and allows you to swap in the format that you want to use.
+
+  Usage looks like this:
+
+  ```ts
+  import {
+    // this is the default
+    NotImplementedHandler,
+    // this implements the `@defer` transport format that ships with Apollo Router
+    Defer20220824Handler,
+    // this implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
+    GraphQL17Alpha2Handler,
+  } from "@apollo/client/incremental";
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache({
+      /*...*/
+    }),
+    link: new HttpLink({
+      /*...*/
+    }),
+    incrementalHandler: new Defer20220824Handler(),
+  });
+  ```
+
+  We will add handlers for other response formats that can be swapped this way
+  during the lifetime of Apollo Client 4.0.
+
 ## 4.0.0-alpha.22
 
 ### Major Changes

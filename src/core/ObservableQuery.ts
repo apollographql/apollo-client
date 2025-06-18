@@ -670,7 +670,11 @@ export class ObservableQuery<
         { shouldEmit: EmitBehavior.force }
       );
 
-      return this.toRejectedResultPromise(error);
+      const promise = Object.assign(Promise.reject(error), {
+        retain: () => promise,
+      });
+
+      return promise;
     }
 
     const reobserveOptions: Partial<
@@ -1830,16 +1834,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private getVariablesWithDefaults(variables: TVariables | undefined) {
     return this.queryManager.getVariables(this.query, variables);
-  }
-
-  private toRejectedResultPromise(
-    error: ErrorLike
-  ): ObservableQuery.ResultPromise<never> {
-    const promise = Object.assign(Promise.reject(error), {
-      retain: () => promise,
-    });
-
-    return promise;
   }
 }
 

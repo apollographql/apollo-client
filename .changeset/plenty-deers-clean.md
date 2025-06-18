@@ -12,10 +12,13 @@ You can override this type globally - this example shows how to override it
 with `DeepPartial<TData>`:
 ```ts
 import { HKT, DeepPartial } from "@apollo/client/utilities";
-type StreamingOverride<TData> = DeepPartial<TData>
+
+type StreamingOverride<TData> = DeepPartial<TData>;
+
 interface StreamingOverrideHKT extends HKT {
   return: StreamingOverride<this["arg1"]>;
 }
+
 declare module "@apollo/client" {
   export interface TypeOverrides {
     Streaming: StreamingOverrideHKT;

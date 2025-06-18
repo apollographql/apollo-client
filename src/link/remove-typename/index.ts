@@ -2,4 +2,5 @@ export type { RemoveTypenameFromVariablesOptions } from "./removeTypenameFromVar
 export {
   KEEP,
   removeTypenameFromVariables,
+  RemoveTypenameFromVariablesLink,
 } from "./removeTypenameFromVariables.js";

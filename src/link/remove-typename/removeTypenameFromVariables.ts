@@ -21,11 +21,19 @@ export interface RemoveTypenameFromVariablesOptions {
   except?: KeepTypenameConfig;
 }
 
+/**
+ * @deprecated
+ * Use `RemoveTypenameFromVariablesLink` from `@apollo/client/link/remove-typename` instead.
+ */
 export function removeTypenameFromVariables(
-  options: RemoveTypenameFromVariablesOptions = {}
+  options?: RemoveTypenameFromVariablesOptions
 ) {
-  return Object.assign(
-    new ApolloLink((operation, forward) => {
+  return new RemoveTypenameFromVariablesLink(options);
+}
+
+export class RemoveTypenameFromVariablesLink extends ApolloLink {
+  constructor(options: RemoveTypenameFromVariablesOptions = {}) {
+    super((operation, forward) => {
       const { except } = options;
       const { query, variables } = operation;
 
@@ -37,19 +45,22 @@ export function removeTypenameFromVariables(
       }
 
       return forward(operation);
-    }),
-    __DEV__ ?
-      {
-        getMemoryInternals() {
-          return {
-            removeTypenameFromVariables: {
-              getVariableDefinitions: getVariableDefinitions?.size ?? 0,
-            },
-          };
-        },
-      }
-    : {}
-  );
+    });
+    return Object.assign(
+      this,
+      __DEV__ ?
+        {
+          getMemoryInternals() {
+            return {
+              removeTypenameFromVariables: {
+                getVariableDefinitions: getVariableDefinitions?.size ?? 0,
+              },
+            };
+          },
+        }
+      : {}
+    );
+  }
 }
 
 function maybeStripTypenameUsingConfig(

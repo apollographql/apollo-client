@@ -112,69 +112,74 @@ function operationDefinesMutation(operation: Operation) {
   );
 }
 
-export const createPersistedQueryLink = (
-  options: PersistedQueryLink.Options
-) => {
-  let hashesByQuery:
-    | AutoCleanedWeakCache<DocumentNode, Promise<string>>
-    | undefined;
-  function resetHashCache() {
-    hashesByQuery = undefined;
-  }
-  // Ensure a SHA-256 hash function is provided, if a custom hash
-  // generation function is not provided. We don't supply a SHA-256 hash
-  // function by default, to avoid forcing one as a dependency. Developers
-  // should pick the most appropriate SHA-256 function (sync or async) for
-  // their needs/environment, or provide a fully custom hash generation
-  // function (via the `generateHash` option) if they want to handle
-  // hashing with something other than SHA-256.
-  invariant(
-    options &&
-      (typeof options.sha256 === "function" ||
-        typeof options.generateHash === "function"),
-    'Missing/invalid "sha256" or "generateHash" function. Please ' +
-      'configure one using the "createPersistedQueryLink(options)" options ' +
-      "parameter."
-  );
+/**
+ * @deprecated
+ * Use `PersistedQueryLink` from `@apollo/client/link/persisted-queries` instead.
+ */
+export const createPersistedQueryLink = (options: PersistedQueryLink.Options) =>
+  new PersistedQueryLink(options);
 
-  const {
-    sha256,
-    // If both a `sha256` and `generateHash` option are provided, the
-    // `sha256` option will be ignored. Developers can configure and
-    // use any hashing approach they want in a custom `generateHash`
-    // function; they aren't limited to SHA-256.
-    generateHash = (query: DocumentNode) =>
-      Promise.resolve<string>(sha256!(print(query))),
-    disable,
-    retry,
-    useGETForHashedQueries,
-  } = compact(defaultOptions, options);
-
-  let enabled = true;
-
-  const getHashPromise = (query: DocumentNode) =>
-    new Promise<string>((resolve) => resolve(generateHash(query)));
-
-  function getQueryHash(query: DocumentNode): Promise<string> {
-    if (!query || typeof query !== "object") {
-      // If the query is not an object, we won't be able to store its hash as
-      // a property of query[hashesKey], so we let generateHash(query) decide
-      // what to do with the bogus query.
-      return getHashPromise(query);
+export class PersistedQueryLink extends ApolloLink {
+  constructor(options: PersistedQueryLink.Options) {
+    let hashesByQuery:
+      | AutoCleanedWeakCache<DocumentNode, Promise<string>>
+      | undefined;
+    function resetHashCache() {
+      hashesByQuery = undefined;
     }
-    if (!hashesByQuery) {
-      hashesByQuery = new AutoCleanedWeakCache(
-        cacheSizes["PersistedQueryLink.persistedQueryHashes"] ||
-          defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
-      );
-    }
-    let hash = hashesByQuery.get(query);
-    if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
-    return hash;
-  }
+    // Ensure a SHA-256 hash function is provided, if a custom hash
+    // generation function is not provided. We don't supply a SHA-256 hash
+    // function by default, to avoid forcing one as a dependency. Developers
+    // should pick the most appropriate SHA-256 function (sync or async) for
+    // their needs/environment, or provide a fully custom hash generation
+    // function (via the `generateHash` option) if they want to handle
+    // hashing with something other than SHA-256.
+    invariant(
+      options &&
+        (typeof options.sha256 === "function" ||
+          typeof options.generateHash === "function"),
+      'Missing/invalid "sha256" or "generateHash" function. Please ' +
+        'configure one using the "createPersistedQueryLink(options)" options ' +
+        "parameter."
+    );
 
-  return Object.assign(
-    new ApolloLink((operation, forward) => {
+    const {
+      sha256,
+      // If both a `sha256` and `generateHash` option are provided, the
+      // `sha256` option will be ignored. Developers can configure and
+      // use any hashing approach they want in a custom `generateHash`
+      // function; they aren't limited to SHA-256.
+      generateHash = (query: DocumentNode) =>
+        Promise.resolve<string>(sha256!(print(query))),
+      disable,
+      retry,
+      useGETForHashedQueries,
+    } = compact(defaultOptions, options);
+
+    let enabled = true;
+
+    const getHashPromise = (query: DocumentNode) =>
+      new Promise<string>((resolve) => resolve(generateHash(query)));
+
+    function getQueryHash(query: DocumentNode): Promise<string> {
+      if (!query || typeof query !== "object") {
+        // If the query is not an object, we won't be able to store its hash as
+        // a property of query[hashesKey], so we let generateHash(query) decide
+        // what to do with the bogus query.
+        return getHashPromise(query);
+      }
+      if (!hashesByQuery) {
+        hashesByQuery = new AutoCleanedWeakCache(
+          cacheSizes["PersistedQueryLink.persistedQueryHashes"] ||
+            defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
+        );
+      }
+      let hash = hashesByQuery.get(query);
+      if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
+      return hash;
+    }
+
+    super((operation, forward) => {
       invariant(
         forward,
         "PersistedQueryLink cannot be the last link in the chain."
@@ -332,12 +337,9 @@ export const createPersistedQueryLink = (
           if (subscription) subscription.unsubscribe();
         };
       });
-    }),
-    {
-      resetHashCache,
-    },
-    __DEV__ ?
-      {
+    });
+    if (__DEV__) {
+      Object.assign(this, {
         getMemoryInternals() {
           return {
             PersistedQueryLink: {
@@ -345,7 +347,10 @@ export const createPersistedQueryLink = (
             },
           };
         },
-      }
-    : {}
-  );
-};
+      });
+    }
+    this.resetHashCache = resetHashCache;
+  }
+
+  resetHashCache: () => void;
+}

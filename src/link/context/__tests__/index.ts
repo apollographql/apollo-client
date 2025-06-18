@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link";
-import { setContext } from "@apollo/client/link/context";
+import { setContext, SetContextLink } from "@apollo/client/link/context";
 import {
   executeWithDefaultContext as execute,
   ObservableStream,
@@ -22,7 +22,22 @@ const data = {
 };
 
 it("can be used to set the context with a simple function", async () => {
+  const withContext = new SetContextLink(() => ({ dynamicallySet: true }));
+
+  const mockLink = new ApolloLink((operation) => {
+    expect(operation.getContext().dynamicallySet).toBe(true);
+    return of({ data });
+  });
+
+  const link = withContext.concat(mockLink);
+  const stream = new ObservableStream(execute(link, { query }));
+
+  await expect(stream).toEmitTypedValue({ data });
+});
+
+test("`setContext` can be used to create a `SetContextLink`", async () => {
   const withContext = setContext(() => ({ dynamicallySet: true }));
+  expect(withContext).toBeInstanceOf(SetContextLink);
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
@@ -36,7 +51,7 @@ it("can be used to set the context with a simple function", async () => {
 });
 
 it("can be used to set the context with a function returning a promise", async () => {
-  const withContext = setContext(() =>
+  const withContext = new SetContextLink(() =>
     Promise.resolve({ dynamicallySet: true })
   );
 
@@ -52,7 +67,7 @@ it("can be used to set the context with a function returning a promise", async (
 });
 
 it("can be used to set the context with a function returning a promise that is delayed", async () => {
-  const withContext = setContext(() =>
+  const withContext = new SetContextLink(() =>
     sleep(25).then(() => ({ dynamicallySet: true }))
   );
 
@@ -68,7 +83,7 @@ it("can be used to set the context with a function returning a promise that is d
 });
 
 it("handles errors in the lookup correclty", async () => {
-  const withContext = setContext(() =>
+  const withContext = new SetContextLink(() =>
     sleep(5).then(() => {
       throw new Error("dang");
     })
@@ -86,7 +101,7 @@ it("handles errors in the lookup correclty", async () => {
 });
 
 it("handles errors in the lookup correctly with a normal function", async () => {
-  const withContext = setContext(() => {
+  const withContext = new SetContextLink(() => {
     throw new Error("dang");
   });
 
@@ -101,14 +116,15 @@ it("handles errors in the lookup correctly with a normal function", async () => 
 });
 
 it("has access to the request information", async () => {
-  const withContext = setContext(({ operationName, query, variables }) =>
-    sleep(1).then(() =>
-      Promise.resolve({
-        variables: variables ? true : false,
-        operation: query ? true : false,
-        operationName: operationName!.toUpperCase(),
-      })
-    )
+  const withContext = new SetContextLink(
+    ({ operationName, query, variables }) =>
+      sleep(1).then(() =>
+        Promise.resolve({
+          variables: variables ? true : false,
+          operation: query ? true : false,
+          operationName: operationName!.toUpperCase(),
+        })
+      )
   );
 
   const mockLink = new ApolloLink((op) => {
@@ -128,7 +144,7 @@ it("has access to the request information", async () => {
 });
 
 it("has access to the context at execution time", async () => {
-  const withContext = setContext((_, { count }) =>
+  const withContext = new SetContextLink((_, { count }) =>
     sleep(1).then(() => ({ count: count + 1 }))
   );
 
@@ -147,7 +163,7 @@ it("has access to the context at execution time", async () => {
 });
 
 it("unsubscribes correctly", async () => {
-  const withContext = setContext((_, { count }) =>
+  const withContext = new SetContextLink((_, { count }) =>
     sleep(1).then(() => ({ count: count + 1 }))
   );
 
@@ -172,7 +188,7 @@ it("unsubscribes correctly", async () => {
 
 it("unsubscribes without throwing before data", async () => {
   let called!: boolean;
-  const withContext = setContext((_, { count }) => {
+  const withContext = new SetContextLink((_, { count }) => {
     called = true;
     return sleep(1).then(() => ({ count: count + 1 }));
   });
@@ -205,7 +221,7 @@ it("unsubscribes without throwing before data", async () => {
 
 it("does not start the next link subscription if the upstream subscription is already closed", async () => {
   let promiseResolved = false;
-  const withContext = setContext(() =>
+  const withContext = new SetContextLink(() =>
     sleep(5).then(() => {
       promiseResolved = true;
       return { dynamicallySet: true };

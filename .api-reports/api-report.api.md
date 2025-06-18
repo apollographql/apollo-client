@@ -254,6 +254,9 @@ type AsStoreObject<T extends {
 type BroadcastOptions = Pick<Cache_2.BatchOptions<InMemoryCache>, "optimistic" | "onWatchUpdated">;
 
 // @public (undocumented)
+export const build: "source" | "esm" | "cjs";
+
+// @public (undocumented)
 namespace Cache_2 {
     // (undocumented)
     interface BatchOptions<TCache extends ApolloCache, TUpdateResult = void> {

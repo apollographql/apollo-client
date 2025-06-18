@@ -107,6 +107,7 @@ export function useSuspenseFragment<
 >(
   options: useSuspenseFragment.Options<TData, TVariables>
 ): useSuspenseFragment.Result<TData | null> {
+  "use no memo";
   return wrapHook(
     "useSuspenseFragment",
     // eslint-disable-next-line react-compiler/react-compiler

@@ -303,6 +303,7 @@ export function useBackgroundQuery<
   QueryRef<TData, TVariables, DataState<TData>["dataState"]> | undefined,
   useBackgroundQuery.Result<TData, TVariables>,
 ] {
+  "use no memo";
   return wrapHook(
     "useBackgroundQuery",
     // eslint-disable-next-line react-compiler/react-compiler

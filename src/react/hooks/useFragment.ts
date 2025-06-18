@@ -89,6 +89,7 @@ export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData> {
+  "use no memo";
   return wrapHook(
     "useFragment",
     // eslint-disable-next-line react-compiler/react-compiler

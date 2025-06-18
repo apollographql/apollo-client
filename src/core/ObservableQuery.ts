@@ -49,18 +49,20 @@ import type {
 
 const { assign, hasOwnProperty } = Object;
 
-export interface FetchMoreOptions<
+export type FetchMoreOptions<
   TData = unknown,
-  TVariables = OperationVariables,
-> {
+  TVariables extends OperationVariables = OperationVariables,
+  TFetchData = TData,
+  TFetchVars extends OperationVariables = TVariables,
+> = FetchMoreQueryOptions<TFetchVars, TFetchData> & {
   updateQuery?: (
-    previousQueryResult: TData,
+    previousQueryResult: Unmasked<TData>,
     options: {
-      fetchMoreResult?: TData;
-      variables?: TVariables;
+      fetchMoreResult: Unmasked<TFetchData>;
+      variables: TFetchVars;
     }
-  ) => TData;
-}
+  ) => Unmasked<TData>;
+};
 
 interface TrackedOperation {
   /**
@@ -714,15 +716,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     context,
     errorPolicy,
     updateQuery,
-  }: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-    updateQuery?: (
-      previousQueryResult: Unmasked<TData>,
-      options: {
-        fetchMoreResult: Unmasked<TFetchData>;
-        variables: TFetchVars;
-      }
-    ) => Unmasked<TData>;
-  }): Promise<QueryResult<TFetchData>> {
+  }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<
+    QueryResult<TFetchData>
+  > {
     const combinedOptions = {
       ...compact(
         this.options,

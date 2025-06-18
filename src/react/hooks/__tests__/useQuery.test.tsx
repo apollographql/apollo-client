@@ -20,8 +20,10 @@ import React, { Fragment, useEffect, useState } from "react";
 import { asapScheduler, Observable, observeOn, of } from "rxjs";
 
 import type {
+  ErrorPolicy,
   FetchPolicy,
   OperationVariables,
+  RefetchWritePolicy,
   Streaming,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
@@ -45,12 +47,16 @@ import {
   useQuery,
 } from "@apollo/client/react";
 import { MockLink, MockSubscriptionLink } from "@apollo/client/testing";
-import type { SimpleCaseData } from "@apollo/client/testing/internal";
+import type {
+  SimpleCaseData,
+  VariablesCaseVariables,
+} from "@apollo/client/testing/internal";
 import {
   enableFakeTimers,
   markAsStreaming,
   setupPaginatedCase,
   setupSimpleCase,
+  setupVariablesCase,
   spyOnConsole,
   wait,
 } from "@apollo/client/testing/internal";
@@ -1684,6 +1690,69 @@ describe("useQuery Hook", () => {
     });
   });
 
+  it("does not rerender with cache updates when changing from skip: false to skip: true", async () => {
+    interface Data {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Data, { id: number }> = gql`
+      query ($id: ID!) {
+        user(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: ApolloLink.empty(),
+      cache: new InMemoryCache(),
+    });
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const renderStream = await renderHookToSnapshotStream(
+      ({ skip }) => useQuery(query, { skip, variables: { id: 1 } }),
+      {
+        initialProps: { skip: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+    const { takeSnapshot, rerender } = renderStream;
+
+    await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+      data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: 1 },
+    });
+
+    await rerender({ skip: true });
+
+    await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+    client.writeQuery({
+      query,
+      variables: { id: 1 },
+      data: { user: { __typename: "User", id: 1, name: "User 1 (updated)" } },
+    });
+
+    await expect(renderStream).not.toRerender();
+  });
+
   it("can provide options.client without ApolloProvider", async () => {
     const query = gql`
       query {
@@ -2803,6 +2872,248 @@ describe("useQuery Hook", () => {
       }
 
       unmount();
+      getCurrentSnapshot().stopPolling();
+    });
+
+    it("updates poll interval when rerendering with different pollInterval", async () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+      let count = 0;
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query },
+              result: () => ({ data: { hello: `world ${++count}` } }),
+              delay: 10,
+              maxUsageCount: Number.POSITIVE_INFINITY,
+            },
+          ]}
+        >
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        ({ pollInterval }) => useQuery(query, { pollInterval }),
+        { initialProps: { pollInterval: 50 }, wrapper }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      await rerender({ pollInterval: 100 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+      await expect(renderStream).not.toRerender({ timeout: 50 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        // We waited 50ms before, so waiting another 55ms + 50ms = 105ms
+        timeout: 55,
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 3" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
+
+      getCurrentSnapshot().stopPolling();
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("stops polling when rerendering with pollInterval 0", async () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+      let count = 0;
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query },
+              result: () => ({ data: { hello: `world ${++count}` } }),
+              delay: 10,
+              maxUsageCount: Number.POSITIVE_INFINITY,
+            },
+          ]}
+        >
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        ({ pollInterval }) => useQuery(query, { pollInterval }),
+        { initialProps: { pollInterval: 50 }, wrapper }
+      );
+
+      const { takeSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      await rerender({ pollInterval: 0 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+      await expect(renderStream).not.toRerender();
+    });
+
+    it("starts polling when rerendering with pollInterval > 0", async () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+      let count = 0;
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider
+          mocks={[
+            {
+              request: { query },
+              result: () => ({ data: { hello: `world ${++count}` } }),
+              delay: 10,
+              maxUsageCount: Number.POSITIVE_INFINITY,
+            },
+          ]}
+        >
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const renderStream = await renderHookToSnapshotStream(
+        ({ pollInterval }) => useQuery(query, { pollInterval }),
+        {
+          initialProps: { pollInterval: undefined as number | undefined },
+          wrapper,
+        }
+      );
+
+      const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: undefined,
+        dataState: "empty",
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 1" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await rerender({ pollInterval: 50 });
+
+      await expect(renderStream).toRerenderWithSimilarSnapshot();
+      await expect(renderStream).toRerenderWithSimilarSnapshot({
+        expected: (previous) => ({
+          ...previous,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+        }),
+      });
+
+      await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+        data: { hello: "world 2" },
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
       getCurrentSnapshot().stopPolling();
     });
 
@@ -11675,6 +11986,852 @@ describe("useQuery Hook", () => {
       }
     });
   });
+});
+
+test("applies `errorPolicy` on next fetch when it changes between renders", async () => {
+  const query: TypedDocumentNode<
+    {
+      character: { __typename: "Character"; id: string; name: string } | null;
+    },
+    VariablesCaseVariables
+  > = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: { __typename: "Character", id: "1", name: "Spider-Man" },
+          },
+        },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: {
+            character: null,
+          },
+          errors: [{ message: "Could not find character 1" }],
+        },
+        delay: 20,
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ errorPolicy }: { errorPolicy: ErrorPolicy }) =>
+      useQuery(query, {
+        // Use network-only to show no network requests are made between
+        // renders
+        fetchPolicy: "network-only",
+        errorPolicy,
+        variables: { id: "1" },
+      }),
+    {
+      initialProps: { errorPolicy: "none" },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await rerender({ errorPolicy: "all" });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  const { refetch } = getCurrentSnapshot();
+  void refetch();
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: null,
+    },
+    dataState: "complete",
+    error: new CombinedGraphQLErrors({
+      data: { character: null },
+      errors: [{ message: "Could not find character 1" }],
+    }),
+    loading: false,
+    networkStatus: NetworkStatus.error,
+    previousData: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies `context` on next fetch when it changes between renders", async () => {
+  const query = gql`
+    query {
+      context
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new ApolloLink((operation) => {
+      const context = operation.getContext();
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { context: { source: context.source } } });
+          observer.complete();
+        }, 20);
+      });
+    }),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ context }) => useQuery(query, { context, fetchPolicy: "network-only" }),
+    {
+      initialProps: { context: { source: "initialHookValue" } },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "initialHookValue" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await rerender({ context: { source: "rerender" } });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { context: { source: "rerender" } },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "initialHookValue" } },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { context: { source: "rerender" } },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { context: { source: "initialHookValue" } },
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies `refetchWritePolicy` on next fetch when it changes between renders", async () => {
+  const query: TypedDocumentNode<
+    { primes: number[] },
+    { min: number; max: number }
+  > = gql`
+    query GetPrimes($min: number, $max: number) {
+      primes(min: $min, max: $max)
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query, variables: { min: 0, max: 12 } },
+      result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 20,
+    },
+    {
+      request: { query, variables: { min: 12, max: 30 } },
+      result: { data: { primes: [13, 17, 19, 23, 29] } },
+      delay: 10,
+    },
+    {
+      request: { query, variables: { min: 30, max: 50 } },
+      result: { data: { primes: [31, 37, 41, 43, 47] } },
+      delay: 10,
+    },
+  ];
+
+  const mergeParams: [number[] | undefined, number[]][] = [];
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          primes: {
+            keyArgs: false,
+            merge(existing: number[] | undefined, incoming: number[]) {
+              mergeParams.push([existing, incoming]);
+              return existing ? existing.concat(incoming) : incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ refetchWritePolicy }) =>
+      useQuery(query, {
+        fetchPolicy: "network-only",
+        refetchWritePolicy,
+        variables: { min: 0, max: 12 },
+      }),
+    {
+      initialProps: { refetchWritePolicy: "merge" as RefetchWritePolicy },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: { min: 0, max: 12 },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: mocks[0].result.data,
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { min: 0, max: 12 },
+  });
+
+  expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+  const { refetch } = getCurrentSnapshot();
+
+  void refetch({ min: 12, max: 30 });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: mocks[0].result.data,
+    variables: { min: 12, max: 30 },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: mocks[0].result.data,
+    variables: { min: 12, max: 30 },
+  });
+
+  expect(mergeParams).toEqual([
+    [undefined, [2, 3, 5, 7, 11]],
+    [
+      [2, 3, 5, 7, 11],
+      [13, 17, 19, 23, 29],
+    ],
+  ]);
+
+  await rerender({ refetchWritePolicy: "overwrite" });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  void refetch({ min: 30, max: 50 });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+    variables: { min: 30, max: 50 },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: mocks[2].result.data,
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+    variables: { min: 30, max: 50 },
+  });
+
+  expect(mergeParams).toEqual([
+    [undefined, [2, 3, 5, 7, 11]],
+    [
+      [2, 3, 5, 7, 11],
+      [13, 17, 19, 23, 29],
+    ],
+    [undefined, [31, 37, 41, 43, 47]],
+  ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+  const fullQuery = gql`
+    query ($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const partialQuery = gql`
+    query ($id: ID!) {
+      character(id: $id) {
+        id
+      }
+    }
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query: fullQuery, variables: { id: "1" } },
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "1",
+              name: "Doctor Strange",
+            },
+          },
+        },
+        delay: 20,
+      },
+      {
+        request: { query: fullQuery, variables: { id: "2" } },
+        result: {
+          data: {
+            character: {
+              __typename: "Character",
+              id: "2",
+              name: "Hulk",
+            },
+          },
+        },
+        delay: 20,
+      },
+    ]),
+  });
+
+  client.writeQuery({
+    query: partialQuery,
+    data: { character: { __typename: "Character", id: "1" } },
+    variables: { id: "1" },
+  });
+
+  client.writeQuery({
+    query: partialQuery,
+    data: { character: { __typename: "Character", id: "2" } },
+    variables: { id: "2" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ id, returnPartialData }) =>
+      useQuery(fullQuery, { returnPartialData, variables: { id } }),
+    {
+      initialProps: { id: "1", returnPartialData: false },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await rerender({ id: "1", returnPartialData: true });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  await rerender({ id: "2", returnPartialData: true });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "2" },
+    },
+    dataState: "partial",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    previousData: {
+      character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+    },
+    variables: { id: "2" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "2", name: "Hulk" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: {
+      character: { __typename: "Character", id: "2" },
+    },
+    variables: { id: "2" },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    variables: { id: "1" },
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      character: { __typename: "Character", id: "2", name: "Cached Widow" },
+    },
+    variables: { id: "2" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ id, fetchPolicy }) =>
+      useQuery(query, { fetchPolicy, variables: { id } }),
+    {
+      initialProps: {
+        id: "1",
+        fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
+      },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { id: "1" },
+  });
+
+  await rerender({ id: "1", fetchPolicy: "cache-and-network" });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  await rerender({ id: "2", fetchPolicy: "cache-and-network" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "2", name: "Cached Widow" },
+    },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    previousData: {
+      character: { __typename: "Character", id: "1", name: "Spider-Cache" },
+    },
+    variables: { id: "2" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      character: { __typename: "Character", id: "2", name: "Black Widow" },
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: {
+      character: { __typename: "Character", id: "2", name: "Cached Widow" },
+    },
+    variables: { id: "2" },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("executes fetchPolicy when changing from standby to non-standby", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    data: {
+      greeting: "Hello from cache",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
+    {
+      initialProps: {
+        fetchPolicy: "standby" as WatchQueryFetchPolicy,
+      },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await rerender({ fetchPolicy: "cache-first" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      greeting: "Hello from cache",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("unsubscribes from cache when changing from non-standby -> standby fetch policy", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
+    {
+      initialProps: {
+        fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
+      },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      greeting: "Hello",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await rerender({ fetchPolicy: "standby" });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+  await expect(takeSnapshot).not.toRerender();
+
+  expect(cache["watches"].size).toBe(0);
+});
+
+test("rerenders with latest cache value when in standby changing to non-standby", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
+    {
+      initialProps: {
+        fetchPolicy: "cache-first" as WatchQueryFetchPolicy,
+      },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      greeting: "Hello",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await rerender({ fetchPolicy: "standby" });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  client.writeQuery({ query, data: { greeting: "Hello updated" } });
+
+  await expect(takeSnapshot).not.toRerender();
+
+  await rerender({ fetchPolicy: "cache-first" });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: {
+      greeting: "Hello updated",
+    },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello" },
+    variables: {},
+  });
+});
+
+test("renders loading states at appropriate times on next fetch after updating `notifyOnNetworkStatusChange`", async () => {
+  const { query } = setupSimpleCase();
+
+  let count = 0;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: () => ({ data: { greeting: `Hello ${++count}` } }),
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const renderStream = await renderHookToSnapshotStream(
+    ({ notifyOnNetworkStatusChange }) =>
+      useQuery(query, {
+        notifyOnNetworkStatusChange,
+        fetchPolicy: "network-only",
+      }),
+    {
+      initialProps: { notifyOnNetworkStatusChange: false },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+  const { takeSnapshot, getCurrentSnapshot, rerender } = renderStream;
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: undefined,
+    dataState: "empty",
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 1" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 1" },
+    variables: {},
+  });
+
+  await rerender({ notifyOnNetworkStatusChange: true });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 3" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 2" },
+    dataState: "complete",
+    loading: true,
+    networkStatus: NetworkStatus.refetch,
+    previousData: { greeting: "Hello 1" },
+    variables: {},
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 3" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 2" },
+    variables: {},
+  });
+
+  await rerender({ notifyOnNetworkStatusChange: false });
+
+  await expect(renderStream).toRerenderWithSimilarSnapshot();
+
+  await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 4" },
+  });
+
+  await expect(takeSnapshot()).resolves.toStrictEqualTyped({
+    data: { greeting: "Hello 4" },
+    dataState: "complete",
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello 3" },
+    variables: {},
+  });
+
+  await expect(takeSnapshot).not.toRerender();
 });
 
 describe.skip("Type Tests", () => {

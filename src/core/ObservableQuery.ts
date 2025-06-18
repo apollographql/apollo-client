@@ -939,11 +939,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   /** @internal */
-  public silentSetOptions(
+  public applyOptions(
     newOptions: Partial<ObservableQuery.Options<TData, TVariables>>
-  ) {
+  ): void {
     const mergedOptions = compact(this.options, newOptions || {});
     assign(this.options, mergedOptions);
+    this.updatePolling();
   }
 
   /**

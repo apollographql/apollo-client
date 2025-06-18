@@ -3471,13 +3471,11 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("returns loading: false on cache-only queries when calling getCurrentResult with data in the cache", async () => {
+    it("returns loading: false on cache-only queries with returnPartialData: true when calling getCurrentResult with partial data in the cache", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: ApolloLink.empty(),
       });
-
-      client.writeQuery({ query, variables, data: dataOne });
 
       const observable = client.watchQuery({
         query,
@@ -3486,28 +3484,89 @@ describe("ObservableQuery", () => {
       });
 
       expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: dataOne,
-        dataState: "complete",
+        data: undefined,
+        dataState: "empty",
         loading: false,
         networkStatus: NetworkStatus.ready,
-        partial: false,
+        partial: true,
       });
 
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitTypedValue({
-        data: dataOne,
-        dataState: "complete",
+        data: undefined,
+        dataState: "empty",
         loading: false,
         networkStatus: NetworkStatus.ready,
-        partial: false,
+        partial: true,
       });
       expect(observable.getCurrentResult()).toStrictEqualTyped({
-        data: dataOne,
-        dataState: "complete",
+        data: undefined,
+        dataState: "empty",
         loading: false,
         networkStatus: NetworkStatus.ready,
-        partial: false,
+        partial: true,
+      });
+
+      await expect(stream).not.toEmitAnything();
+    });
+
+    it("returns loading: false on cache-only queries when calling getCurrentResult with data in the cache", async () => {
+      const query = gql`
+        query {
+          user {
+            id
+            name
+          }
+        }
+      `;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+
+      client.writeQuery({
+        query: gql`
+          query {
+            user {
+              id
+            }
+          }
+        `,
+        variables,
+        data: { user: { __typename: "User", id: "1" } },
+      });
+
+      const observable = client.watchQuery({
+        query,
+        variables,
+        fetchPolicy: "cache-only",
+        returnPartialData: true,
+      });
+
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: { user: { __typename: "User", id: "1" } },
+        dataState: "partial",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: { user: { __typename: "User", id: "1" } },
+        dataState: "partial",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+      expect(observable.getCurrentResult()).toStrictEqualTyped({
+        data: { user: { __typename: "User", id: "1" } },
+        dataState: "partial",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
       });
 
       await expect(stream).not.toEmitAnything();

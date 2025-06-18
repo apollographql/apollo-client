@@ -11,8 +11,13 @@ import type { OperationContext } from '@apollo/client/link';
 // @public (undocumented)
 export type ContextSetter = (operation: GraphQLRequest, prevContext: OperationContext) => Promise<Partial<OperationContext>> | Partial<OperationContext>;
 
+// @public @deprecated (undocumented)
+export function setContext(setter: ContextSetter): SetContextLink;
+
 // @public (undocumented)
-export function setContext(setter: ContextSetter): ApolloLink;
+export class SetContextLink extends ApolloLink {
+    constructor(setter: ContextSetter);
+}
 
 // (No @packageDocumentation comment for this package)
 

@@ -215,8 +215,8 @@ describe("graphql-js test cases", () => {
     const handler = new Defer20220824Handler();
     const incoming = run(query);
 
-    const { value: chunk, done } = (await incoming.next())!;
-    assert(!done);
+    const { value: chunk } = (await incoming.next())!;
+    assert(chunk);
     expect(handler.isIncrementalResult(chunk)).toBe(false);
     expect(isIncrementalInitialResult(chunk)).toBe(false);
     expect(isIncrementalSubsequentResult(chunk)).toBe(false);
@@ -570,8 +570,8 @@ describe("graphql-js test cases", () => {
     const handler = new Defer20220824Handler();
     const incoming = run(query);
 
-    const { value: chunk, done } = (await incoming.next())!;
-    assert(!done);
+    const { value: chunk } = (await incoming.next())!;
+    assert(chunk);
     expect(handler.isIncrementalResult(chunk)).toBe(false);
     expect(isIncrementalInitialResult(chunk)).toBe(false);
     expect(isIncrementalSubsequentResult(chunk)).toBe(false);

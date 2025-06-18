@@ -10,7 +10,7 @@ import type {
   DefaultContext,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreQueryOptions,
+  FetchMoreOptions,
   GetDataState,
   MaybeMasked,
   ObservableQuery,
@@ -18,7 +18,6 @@ import type {
   QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
-  Unmasked,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -106,15 +105,12 @@ export declare namespace useLazyQuery {
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,
     >(
-      fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (
-          previousQueryResult: Unmasked<TData>,
-          options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-          }
-        ) => Unmasked<TData>;
-      }
+      fetchMoreOptions: FetchMoreOptions<
+        TData,
+        TVariables,
+        TFetchData,
+        TFetchVars
+      >
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */

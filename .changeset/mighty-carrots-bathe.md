@@ -2,6 +2,5 @@
 "@apollo/client": minor
 ---
 
-Allow passing `errorPolicy` option to `fetchMore` and change default value.
+Allow passing `errorPolicy` option to `fetchMore` and change default value to "none".
 
-Also, the `FetchMoreOptions` type now also includes the `FetchMoreQueryOptions` type.

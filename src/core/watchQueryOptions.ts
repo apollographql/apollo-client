@@ -135,20 +135,6 @@ export interface NextFetchPolicyContext<
   initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
-export type FetchMoreQueryOptions<
-  TVariables extends OperationVariables = OperationVariables,
-  TData = unknown,
-> = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: Partial<NoInfer<TVariables>>;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-};
-
 export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;
 } & (

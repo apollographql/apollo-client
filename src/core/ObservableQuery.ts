@@ -37,8 +37,8 @@ import type {
 } from "./types.js";
 import type {
   ErrorPolicy,
-  FetchMoreQueryOptions,
   NextFetchPolicyContext,
+  QueryOptions,
   RefetchWritePolicy,
   SubscribeToMoreOptions,
   UpdateQueryMapFn,
@@ -50,11 +50,19 @@ import type {
 const { assign, hasOwnProperty } = Object;
 
 export type FetchMoreOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
   TFetchData = TData,
   TFetchVars extends OperationVariables = TVariables,
-> = FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+> = {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+  query?: DocumentNode | TypedDocumentNode<TFetchData, TFetchVars>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: Partial<NoInfer<TFetchVars>>;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
   updateQuery?: (
     previousQueryResult: Unmasked<TData>,
     options: {
@@ -729,13 +737,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           errorPolicy,
         }
       ),
-      variables:
-        query ? variables : (
-          {
-            ...this.variables,
-            ...variables,
-          }
-        ),
+      variables: (query ? variables : (
+        {
+          ...this.variables,
+          ...variables,
+        }
+      )) as TFetchVars,
       // The fetchMore request goes immediately to the network and does
       // not automatically write its result to the cache (hence no-cache
       // instead of network-only), because we allow the caller of
@@ -743,7 +750,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // the data gets written to the cache.
       fetchPolicy: "no-cache",
       notifyOnNetworkStatusChange: this.options.notifyOnNetworkStatusChange,
-    } as WatchQueryOptions<TFetchVars, TFetchData>;
+    } as QueryOptions<TFetchVars, TFetchData>;
 
     combinedOptions.query = this.transformDocument(combinedOptions.query);
 

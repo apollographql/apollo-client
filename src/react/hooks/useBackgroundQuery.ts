@@ -6,7 +6,6 @@ import type {
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
-  FetchMoreQueryOptions,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -382,7 +381,7 @@ function useBackgroundQuery_<
 
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
-      const promise = queryRef.fetchMore(options as FetchMoreQueryOptions<any>);
+      const promise = queryRef.fetchMore(options);
 
       setWrappedQueryRef(wrapQueryRef(queryRef));
 

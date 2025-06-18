@@ -1207,6 +1207,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   // Turns polling on or off based on this.options.pollInterval.
+  private didWarnCacheOnlyPolling = false;
   private updatePolling() {
     // Avoid polling in SSR mode
     if (this.queryManager.ssrMode) {
@@ -1219,11 +1220,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     } = this;
 
     if (!pollInterval || !this.hasObservers() || fetchPolicy === "cache-only") {
-      if (pollInterval && fetchPolicy === "cache-only") {
+      if (
+        !this.didWarnCacheOnlyPolling &&
+        pollInterval &&
+        fetchPolicy === "cache-only"
+      ) {
         invariant.warn(
           "Cannot poll on 'cache-only' query '%s' and as such, polling is disabled. Please use a different fetch policy.",
           getOperationName(this.query, "(anonymous)")
         );
+        this.didWarnCacheOnlyPolling = true;
       }
 
       this.cancelPolling();

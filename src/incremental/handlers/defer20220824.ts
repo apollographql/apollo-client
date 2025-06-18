@@ -1,5 +1,5 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
-import type { FormattedExecutionResult } from "graphql-17-alpha2";
+import type { FormattedExecutionResult } from "graphql";
 
 import type {
   FetchResult,

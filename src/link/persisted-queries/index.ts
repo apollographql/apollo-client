@@ -246,16 +246,16 @@ export const createPersistedQueryLink = (
               () => observer.next(result)
             );
           },
-          error: (error) => {
-            const networkError = toErrorLike(error);
+          error: (incomingError) => {
+            const error = toErrorLike(incomingError);
             let graphQLErrors: ReadonlyArray<GraphQLFormattedError> | undefined;
 
             // This is persisted-query specific (see #9410) and deviates from the
             // GraphQL-over-HTTP spec for application/json responses.
             // This is intentional.
-            if (ServerError.is(networkError) && networkError.bodyText) {
+            if (ServerError.is(error) && error.bodyText) {
               try {
-                const result = JSON.parse(networkError.bodyText) as
+                const result = JSON.parse(error.bodyText) as
                   | FormattedExecutionResult
                   | undefined;
 
@@ -268,11 +268,11 @@ export const createPersistedQueryLink = (
                 error:
                   isNonEmptyArray(graphQLErrors) ?
                     new CombinedGraphQLErrors({ errors: graphQLErrors })
-                  : networkError,
+                  : error,
                 operation,
                 meta: processErrors(graphQLErrors),
               },
-              () => observer.error(error)
+              () => observer.error(incomingError)
             );
           },
           complete: observer.complete.bind(observer),

@@ -55,6 +55,11 @@ export class CombinedGraphQLErrors extends Error {
    */
   readonly data: Record<string, unknown> | null | undefined;
 
+  /**
+   * Extensions added to the result.
+   */
+  readonly extensions: Record<string, unknown> | undefined;
+
   constructor(result: FormattedExecutionResult<any>);
   constructor(
     result: FetchResult<any>,
@@ -73,6 +78,7 @@ export class CombinedGraphQLErrors extends Error {
     );
     this.errors = errors;
     this.data = (result as Partial<FormattedExecutionResult>).data;
+    this.extensions = (result as Partial<FormattedExecutionResult>).extensions;
     this.name = "CombinedGraphQLErrors";
 
     brand(this);

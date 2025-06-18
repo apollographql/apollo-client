@@ -30,6 +30,7 @@ import {
 import type { DeepPartial } from "@apollo/client/utilities";
 import { DocumentTransform } from "@apollo/client/utilities";
 import { removeDirectivesFromDocument } from "@apollo/client/utilities/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 describe("ObservableQuery", () => {
   // Standard data for all these tests
@@ -1954,6 +1955,44 @@ describe("ObservableQuery", () => {
       // FetchPolicy does not switch to cache-first after the first
       // network request.
       expect(observable.options.fetchPolicy).toBe("no-cache");
+    });
+
+    it("does not allow refetch on cache-only query", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: ApolloLink.empty(),
+      });
+      const observable = client.watchQuery({
+        query,
+        variables,
+        fetchPolicy: "cache-only",
+      });
+
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitTypedValue({
+        data: undefined,
+        dataState: "empty",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+
+      const expectedError = new InvariantError(
+        "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+      );
+
+      await expect(observable.refetch()).rejects.toEqual(expectedError);
+
+      await expect(stream).toEmitSimilarValue({
+        expected: (previous) => ({
+          ...previous,
+          error: expectedError,
+          networkStatus: NetworkStatus.error,
+        }),
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
 
     it("returns cached results after refetch when changing variables using a cache-and-network fetch policy", async () => {

@@ -5216,7 +5216,7 @@ describe("ObservableQuery", () => {
           cache.writeQuery({ query, data: cacheValues.update4 });
           await check(resultAfterCacheUpdate4, "resultAfterCacheUpdate4");
 
-          expect(stream).not.toEmitAnything();
+          await expect(stream).not.toEmitAnything();
         }
       );
     }

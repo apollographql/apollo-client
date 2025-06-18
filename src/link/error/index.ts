@@ -48,7 +48,7 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
             const errors =
               handler.isIncrementalResult(result) ?
                 handler.extractErrors(result)
-              : (result as FormattedExecutionResult).errors;
+              : result.errors;
             if (errors) {
               retriedResult = errorHandler({
                 error: new CombinedGraphQLErrors(result, errors),

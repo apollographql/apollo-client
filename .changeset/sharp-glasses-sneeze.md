@@ -28,15 +28,12 @@ createPersistedQueryLink({
 });
 ```
 
-The `response` property has also been removed. To access partial data returned in GraphQL responses, access the `data` property on the `CombinedGraphQLErrors` instance.
+The `response` property has also been renamed to `result`.
 
 ```diff
 createPersistedQueryLink({
-  disable: (errorResponse) => {
--   if (errorResponse.response) {
--     const data = errorResponse.response.data;
-+   if (CombinedGraphQLErrors.is(errorResponse.error)) {
-+     const data = errorResponse.error.data;
+-  disable: ({ response }) => {
++  disable: ({ result }) => {
 
       // ... handle GraphQL errors
     }

@@ -23,7 +23,7 @@ import type {
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreQueryOptions,
+  FetchMoreOptions,
   GetDataState,
   ObservableQuery,
   OperationVariables,
@@ -36,7 +36,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client";
 import { NetworkStatus } from "@apollo/client";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   NoInfer,
   VariablesOption,
@@ -152,15 +152,12 @@ export declare namespace useQuery {
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,
     >(
-      fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (
-          previousQueryResult: Unmasked<TData>,
-          options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-          }
-        ) => Unmasked<TData>;
-      }
+      fetchMoreOptions: FetchMoreOptions<
+        TData,
+        TVariables,
+        TFetchData,
+        TFetchVars
+      >
     ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
   } & GetDataState<MaybeMasked<TData>, TStates>;
 }

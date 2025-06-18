@@ -3,7 +3,13 @@ import { assign, cloneDeep } from "lodash";
 import { Observable } from "rxjs";
 
 import type { TypedDocumentNode } from "@apollo/client";
-import { ApolloClient, ApolloLink, NetworkStatus, split } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloLink,
+  CombinedGraphQLErrors,
+  NetworkStatus,
+  split,
+} from "@apollo/client";
 import type {
   ApolloCache,
   FieldMergeFunction,
@@ -223,7 +229,7 @@ describe("fetchMore on an observable query", () => {
     limit: 20,
   };
 
-  const result: any = {
+  const result: { data: TCommentData } = {
     data: {
       entry: {
         __typename: "Entry",
@@ -1665,6 +1671,219 @@ describe("fetchMore on an observable query", () => {
       partial: false,
     });
 
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("`errorPolicy` defaults to `none`", async () => {
+    const query = gql`
+      query {
+        fail
+      }
+    `;
+    const observable = setup({
+      request: { query },
+      error: new Error("This is an error"),
+    });
+    const stream = new ObservableStream(observable);
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: result.data,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const updateQuery = jest.fn();
+    const promise = observable.fetchMore({
+      query,
+      updateQuery,
+    });
+    await expect(promise).rejects.toThrow("This is an error");
+    expect(updateQuery).not.toHaveBeenCalled();
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+      }),
+    });
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      }),
+    });
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("`errorPolicy` can be overwritten to `ignore`", async () => {
+    const query = gql`
+      query {
+        fail
+      }
+    `;
+    const observable = setup({
+      request: { query },
+      error: new Error("This is an error"),
+    });
+    const stream = new ObservableStream(observable);
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: result.data,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const fallbackResult: TCommentData = {
+      entry: {
+        ...result.data.entry,
+        comments: result.data.entry.comments.concat({
+          __typename: "Comment",
+          text: "fallback comment",
+        }),
+      },
+    };
+
+    const updateQuery = jest.fn(
+      (previousResult: TCommentData): TCommentData => fallbackResult
+    );
+    const promise = observable.fetchMore({
+      query,
+      updateQuery,
+      errorPolicy: "ignore",
+    });
+    await expect(promise).resolves.toStrictEqualTyped({ data: undefined });
+    expect(updateQuery).toHaveBeenCalledTimes(1);
+    expect(updateQuery).toHaveBeenNthCalledWith(1, result.data, {
+      fetchMoreResult: undefined,
+      variables: undefined,
+    });
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+      }),
+    });
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        data: fallbackResult,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      }),
+    });
+    await expect(stream).not.toEmitAnything();
+  });
+
+  test("`errorPolicy` can be overwritten to `all`", async () => {
+    const query = gql`
+      query {
+        fail
+      }
+    `;
+    const observable = setup({
+      request: { query },
+      result: {
+        data: {
+          entry: {
+            __typename: "Entry",
+          },
+        },
+        errors: [{ message: "This is an error" }],
+      },
+    });
+    const stream = new ObservableStream(observable);
+    await expect(stream).toEmitTypedValue({
+      data: undefined,
+      dataState: "empty",
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    });
+    await expect(stream).toEmitTypedValue({
+      data: result.data,
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const fallbackResult: TCommentData = {
+      entry: {
+        ...result.data.entry,
+        comments: result.data.entry.comments.concat({
+          __typename: "Comment",
+          text: "fallback comment",
+        }),
+      },
+    };
+
+    const updateQuery = jest.fn(
+      (previousResult: TCommentData): TCommentData => fallbackResult
+    );
+    const promise = observable.fetchMore({
+      query,
+      updateQuery,
+      errorPolicy: "all",
+    });
+    await expect(promise).resolves.toStrictEqual({
+      data: {
+        entry: {
+          __typename: "Entry",
+        },
+      },
+      error: new CombinedGraphQLErrors({
+        data: {
+          entry: {
+            __typename: "Entry",
+          },
+        },
+        errors: [{ message: "This is an error" }],
+      }),
+    });
+    expect(updateQuery).toHaveBeenCalledTimes(1);
+    expect(updateQuery).toHaveBeenNthCalledWith(1, result.data, {
+      fetchMoreResult: {
+        entry: {
+          __typename: "Entry",
+        },
+      },
+      variables: undefined,
+    });
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+      }),
+    });
+    await expect(stream).toEmitSimilarValue({
+      expected: (previous) => ({
+        ...previous,
+        data: fallbackResult,
+        dataState: "complete",
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      }),
+    });
     await expect(stream).not.toEmitAnything();
   });
 });

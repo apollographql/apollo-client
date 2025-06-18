@@ -6,7 +6,6 @@ import type {
   DefaultContext,
   DocumentNode,
   ErrorPolicy,
-  FetchMoreQueryOptions,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -234,9 +233,7 @@ export function useLoadableQuery<
         );
       }
 
-      const promise = internalQueryRef.fetchMore(
-        options as FetchMoreQueryOptions<TVariables, TData>
-      );
+      const promise = internalQueryRef.fetchMore(options);
 
       setQueryRef(wrapQueryRef(internalQueryRef));
 

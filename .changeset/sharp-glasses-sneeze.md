@@ -34,7 +34,6 @@ The `response` property has also been renamed to `result`.
 createPersistedQueryLink({
 -  disable: ({ response }) => {
 +  disable: ({ result }) => {
-
       // ... handle GraphQL errors
     }
   }

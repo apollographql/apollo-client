@@ -98,13 +98,10 @@ export async function readMultipartBody<
     const result = parseJsonEncoding(response, body);
     if (Object.keys(result).length == 0) continue;
     if (isApolloPayloadResult(result)) {
-      let next = {};
-      if ("payload" in result) {
-        if (Object.keys(result).length === 1 && result.payload === null) {
-          return;
-        }
-        next = { ...result.payload };
+      if (Object.keys(result).length === 1 && result.payload === null) {
+        return;
       }
+      let next = { ...result.payload };
       if ("errors" in result) {
         next = {
           ...next,

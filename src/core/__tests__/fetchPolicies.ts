@@ -12,6 +12,7 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "@apollo/client/testing/internal";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import type { ApolloQueryResult } from "../types.js";
 import type {
@@ -599,7 +600,7 @@ describe("cache-first", () => {
 });
 
 describe("cache-only", () => {
-  it("allows explicit refetch to happen", async () => {
+  it("does not allow refetch", async () => {
     let counter = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -649,23 +650,20 @@ describe("cache-only", () => {
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
-    await observable.refetch();
+    const expectedError = new InvariantError(
+      "Cannot execute `refetch` for a 'cache-only' query. Please use a different fetch policy."
+    );
+
+    await expect(observable.refetch()).rejects.toEqual(expectedError);
 
     await expect(stream).toEmitTypedValue({
-      data: { count: 1 },
-      dataState: "complete",
-      loading: true,
-      networkStatus: NetworkStatus.refetch,
-      partial: false,
-    });
-
-    await expect(stream).toEmitTypedValue({
-      loading: false,
-      networkStatus: NetworkStatus.ready,
       data: {
-        count: 2,
+        count: 1,
       },
       dataState: "complete",
+      error: expectedError,
+      loading: false,
+      networkStatus: NetworkStatus.error,
       partial: false,
     });
 

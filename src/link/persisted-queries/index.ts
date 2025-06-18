@@ -231,14 +231,7 @@ export const createPersistedQueryLink = (
 
         const handler: Observer<FetchResult> = {
           next: (response) => {
-            if (!isFormattedExecutionResult(response)) {
-              // if the response is not an expected format, we ignore it.
-              // Network errors will still be handled correctly,
-              // but we don't pass any unexpected data to userland callbacks
-              return;
-            }
-
-            if (!response.errors) {
+            if (!isFormattedExecutionResult(response) || !response.errors) {
               return observer.next(response);
             }
 

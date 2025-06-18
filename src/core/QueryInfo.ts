@@ -18,9 +18,10 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   DefaultContext,
-  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
+  MutationQueryReducer,
   MutationUpdaterFunction,
+  NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
   Streaming,
@@ -91,7 +92,7 @@ const queryInfoIds = new WeakMap<QueryManager, number>();
 // It is responsible for reporting results to the cache, merging and in a no-cache
 // scenario accumulating the response.
 export class QueryInfo<
-  TData,
+  TData extends Record<string, any>,
   TVariables extends OperationVariables = OperationVariables,
   TCache extends ApolloCache = ApolloCache,
 > {
@@ -182,7 +183,7 @@ export class QueryInfo<
     const { incrementalHandler } = this.queryManager;
 
     if (incrementalHandler.isIncrementalResult(incoming)) {
-      this.incremental ||= incrementalHandler.startRequest({
+      this.incremental ||= incrementalHandler.startRequest<TData>({
         query,
       });
 
@@ -402,11 +403,14 @@ export class QueryInfo<
 
             if (complete && currentQueryResult) {
               // Run our reducer using the current query result and the mutation result.
-              const nextQueryResult = updater(currentQueryResult, {
-                mutationResult: getResultWithDataState(),
-                queryName: (document && getOperationName(document)) || void 0,
-                queryVariables: variables!,
-              });
+              const nextQueryResult = (updater as MutationQueryReducer<any>)(
+                currentQueryResult,
+                {
+                  mutationResult: getResultWithDataState(),
+                  queryName: (document && getOperationName(document)) || void 0,
+                  queryVariables: variables!,
+                }
+              );
 
               // Write the modified result back into the store if we got a new result.
               if (nextQueryResult) {

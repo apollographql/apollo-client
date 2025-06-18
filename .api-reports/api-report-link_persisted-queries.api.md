@@ -7,17 +7,26 @@
 import { ApolloLink } from '@apollo/client/link';
 import type { DocumentNode } from 'graphql';
 import type { ErrorLike } from '@apollo/client';
+import type { FormattedExecutionResult } from 'graphql';
 import type { Operation } from '@apollo/client/link';
 
 // @public (undocumented)
 interface BaseOptions {
     // (undocumented)
-    disable?: (error: ErrorResponse) => boolean;
+    disable?: (error: PersistedQueryLink.DisableFunctionOptions) => boolean;
     // (undocumented)
-    retry?: (error: ErrorResponse) => boolean;
+    retry?: (error: PersistedQueryLink.RetryFunctionOptions) => boolean;
     // (undocumented)
     useGETForHashedQueries?: boolean;
 }
+
+// @public (undocumented)
+type CallbackOptions = {
+    error: ErrorLike;
+    operation: Operation;
+    meta: ErrorMeta;
+    result?: FormattedExecutionResult;
+};
 
 // @public (undocumented)
 export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & ({
@@ -39,22 +48,12 @@ type ErrorMeta = {
 };
 
 // @public (undocumented)
-export interface ErrorResponse {
-    // (undocumented)
-    error: ErrorLike;
-    // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    meta: ErrorMeta;
-    // (undocumented)
-    operation: Operation;
-}
-
-// @public (undocumented)
 type GenerateHashFunction = (document: DocumentNode) => string | PromiseLike<string>;
 
 // @public (undocumented)
 export namespace PersistedQueryLink {
+    // (undocumented)
+    export type DisableFunctionOptions = CallbackOptions;
     // (undocumented)
     export interface GenerateHashOptions extends BaseOptions {
         // Warning: (ae-forgotten-export) The symbol "GenerateHashFunction" needs to be exported by the entry point index.d.ts
@@ -66,6 +65,10 @@ export namespace PersistedQueryLink {
     }
     // (undocumented)
     export type Options = SHA256Options | GenerateHashOptions;
+    // Warning: (ae-forgotten-export) The symbol "CallbackOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    export type RetryFunctionOptions = CallbackOptions;
     // Warning: (ae-forgotten-export) The symbol "BaseOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -85,6 +88,10 @@ type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 
 // @public (undocumented)
 export const VERSION = 1;
+
+// Warnings were encountered during analysis:
+//
+// src/link/persisted-queries/index.ts:37:3 - (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

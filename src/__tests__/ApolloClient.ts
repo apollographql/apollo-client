@@ -3082,7 +3082,7 @@ describe("ApolloClient", () => {
 
     await expect(() => client.query({ query })).rejects.toThrow(
       new InvariantError(
-        "`@defer` is not supported without specifying an incremental handler. Please pass one as the `incrementalHandler` option to `ApolloClient`."
+        "`@defer` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
       )
     );
   });

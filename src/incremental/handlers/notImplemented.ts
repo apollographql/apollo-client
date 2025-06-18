@@ -11,7 +11,7 @@ export class NotImplementedHandler implements Incremental.Handler<never> {
   prepareRequest(request: GraphQLRequest) {
     invariant(
       !hasDirectives(["defer"], request.query),
-      "`@defer` is not supported without specifying an incremental handler. Please pass one as the `incrementalHandler` option to `ApolloClient`."
+      "`@defer` is not supported without specifying an incremental handler. Please pass a handler as the `incrementalHandler` option to the `ApolloClient` constructor."
     );
 
     return request;

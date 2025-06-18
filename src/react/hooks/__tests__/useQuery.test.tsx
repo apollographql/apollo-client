@@ -6785,7 +6785,7 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it("does not allow refetch on a cache-only query", async () => {
+    it("allows refetch on a cache-only query", async () => {
       const query = gql`
         query Greeting {
           hello
@@ -6822,20 +6822,15 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      const expectedError = new InvariantError(
-        "Cannot execute `refetch` for 'cache-only' query 'Greeting'. Please use a different fetch policy."
-      );
-
-      await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        expectedError
-      );
+      await expect(getCurrentSnapshot().refetch()).resolves.toStrictEqualTyped({
+        data: { hello: "world" },
+      });
 
       await expect(takeSnapshot()).resolves.toStrictEqualTyped({
-        data: undefined,
-        dataState: "empty",
-        error: expectedError,
+        data: { hello: "world" },
+        dataState: "complete",
         loading: false,
-        networkStatus: NetworkStatus.error,
+        networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
       });

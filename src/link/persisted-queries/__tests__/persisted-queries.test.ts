@@ -11,6 +11,7 @@ import { ApolloLink } from "@apollo/client/link";
 import { createHttpLink } from "@apollo/client/link/http";
 import {
   createPersistedQueryLink,
+  PersistedQueryLink,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import {
@@ -91,7 +92,41 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitTypedValue({ data });
+
+    const [uri, request] = fetchMock.lastCall()!;
+
+    expect(uri).toEqual("/graphql");
+    expect(request!.body!).toBe(
+      JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          clientLibrary: {
+            name: "@apollo/client",
+            version,
+          },
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: hash,
+          },
+        },
+      })
+    );
+  });
+
+  test("`createPersistedQueryLink` creates a `PersistedQueryLink`", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response }))
+    );
+    const pqLink = createPersistedQueryLink({ sha256 });
+    expect(pqLink).toBeInstanceOf(PersistedQueryLink);
+    const link = pqLink.concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -123,7 +158,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -148,7 +183,7 @@ describe("happy path", () => {
       { repeat: 1 }
     );
     const hashSpy = jest.fn(sha256);
-    const link = createPersistedQueryLink({ sha256: hashSpy }).concat(
+    const link = new PersistedQueryLink({ sha256: hashSpy }).concat(
       createHttpLink()
     );
 
@@ -184,7 +219,7 @@ describe("happy path", () => {
       hashRefs.push(new WeakRef(newHash));
       return newHash as string;
     }
-    const persistedLink = createPersistedQueryLink({ sha256: hash });
+    const persistedLink = new PersistedQueryLink({ sha256: hash });
     await new Promise<void>((complete) =>
       execute(persistedLink.concat(createHttpLink()), {
         query,
@@ -203,7 +238,7 @@ describe("happy path", () => {
       () => new Promise((resolve) => resolve({ body: response }))
     );
     const generateHash = (query: any) => Promise.resolve("foo");
-    const link = createPersistedQueryLink({ generateHash }).concat(
+    const link = new PersistedQueryLink({ generateHash }).concat(
       createHttpLink()
     );
 
@@ -224,7 +259,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
 
     const observable = execute(link, { query: "1234", variables } as any);
     const stream = new ObservableStream(observable);
@@ -243,7 +278,7 @@ describe("happy path", () => {
         }, 100);
       });
     });
-    const link = createPersistedQueryLink({ sha256 }).concat(delay);
+    const link = new PersistedQueryLink({ sha256 }).concat(delay);
 
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
@@ -256,9 +291,8 @@ describe("happy path", () => {
   });
 
   it("should error if `sha256` and `generateHash` options are both missing", async () => {
-    const createPersistedQueryFn = createPersistedQueryLink as any;
-
-    expect(() => createPersistedQueryFn()).toThrow(
+    // @ts-expect-error
+    expect(() => new PersistedQueryLink()).toThrow(
       'Missing/invalid "sha256" or "generateHash" function'
     );
   });
@@ -266,9 +300,8 @@ describe("happy path", () => {
   it.each(["sha256", "generateHash"])(
     "should error if `%s` option is not a function",
     async (option) => {
-      const createPersistedQueryFn = createPersistedQueryLink as any;
-
-      expect(() => createPersistedQueryFn({ [option]: "ooops" })).toThrow(
+      // @ts-expect-error
+      expect(() => new PersistedQueryLink({ [option]: "ooops" })).toThrow(
         'Missing/invalid "sha256" or "generateHash" function'
       );
     }
@@ -282,7 +315,7 @@ describe("happy path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQueryLink({
+    const link = new PersistedQueryLink({
       sha256(data) {
         return crypto.createHmac("sha256", data).digest("hex");
       },
@@ -343,9 +376,7 @@ describe("failure path", () => {
         () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
-      const link = createPersistedQueryLink({ sha256 }).concat(
-        createHttpLink()
-      );
+      const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
 
       const stream = new ObservableStream(execute(link, { query, variables }));
 
@@ -386,7 +417,7 @@ describe("failure path", () => {
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
-    const link = createPersistedQueryLink({
+    const link = new PersistedQueryLink({
       sha256,
       useGETForHashedQueries: true,
     }).concat(createHttpLink());
@@ -420,7 +451,7 @@ describe("failure path", () => {
       () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
-    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -476,7 +507,7 @@ describe("failure path", () => {
       () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
-    const link = createPersistedQueryLink({
+    const link = new PersistedQueryLink({
       sha256,
       disable({ operation }) {
         operation.setContext({
@@ -548,9 +579,7 @@ describe("failure path", () => {
         () => new Promise((resolve) => resolve({ body: response })),
         { repeat: 1 }
       );
-      const link = createPersistedQueryLink({ sha256 }).concat(
-        createHttpLink()
-      );
+      const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
 
       {
         const stream = new ObservableStream(
@@ -611,7 +640,7 @@ describe("failure path", () => {
         hashRefs.push(new WeakRef(newHash));
         return newHash as string;
       }
-      const persistedLink = createPersistedQueryLink({ sha256: hash });
+      const persistedLink = new PersistedQueryLink({ sha256: hash });
       await new Promise<void>((complete) =>
         execute(persistedLink.concat(createHttpLink()), {
           query,
@@ -638,7 +667,7 @@ describe("failure path", () => {
       () => new Promise((resolve) => resolve({ body: response })),
       { repeat: 1 }
     );
-    const link = createPersistedQueryLink({ sha256 }).concat(createHttpLink());
+    const link = new PersistedQueryLink({ sha256 }).concat(createHttpLink());
     const observable = execute(link, { query, variables });
     const stream = new ObservableStream(observable);
 
@@ -681,7 +710,7 @@ describe("failure path", () => {
         // @ts-expect-error
         return global.fetch.apply(null, args);
       };
-      const link = createPersistedQueryLink({ sha256 }).concat(
+      const link = new PersistedQueryLink({ sha256 }).concat(
         createHttpLink({ fetch: fetcher } as any)
       );
 
@@ -739,7 +768,7 @@ describe("failure path", () => {
         // @ts-expect-error
         return global.fetch.apply(null, args);
       };
-      const link = createPersistedQueryLink({ sha256 }).concat(
+      const link = new PersistedQueryLink({ sha256 }).concat(
         createHttpLink({ fetch: fetcher } as any)
       );
 
@@ -778,7 +807,7 @@ describe("failure path", () => {
         return global.fetch.apply(null, args);
       };
 
-      const link = createPersistedQueryLink({ sha256 }).concat(
+      const link = new PersistedQueryLink({ sha256 }).concat(
         createHttpLink({ fetch: fetcher } as any)
       );
 
@@ -818,7 +847,7 @@ test("disables persisted queries from future requests when `disable` returns tru
     )
   );
 
-  const link = createPersistedQueryLink({ sha256, disable: () => true }).concat(
+  const link = new PersistedQueryLink({ sha256, disable: () => true }).concat(
     createHttpLink({ fetch })
   );
 
@@ -907,7 +936,7 @@ test("continues working with persisted queries for future requests when `disable
     )
   );
 
-  const link = createPersistedQueryLink({
+  const link = new PersistedQueryLink({
     sha256,
     disable: () => false,
   }).concat(createHttpLink({ fetch }));
@@ -990,7 +1019,7 @@ test("calls `disable` with error emitted from link chain", async () => {
 
   const disable = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, disable }).concat(
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
     terminatingLink
   );
 
@@ -1022,7 +1051,7 @@ test("calls `disable` with ServerError when response has non-2xx status code", a
 
   const disable = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, disable }).concat(
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
     createHttpLink({ fetch })
   );
 
@@ -1064,7 +1093,7 @@ test("calls `disable` with GraphQL errors when returned in response", async () =
 
   const disable = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, disable }).concat(
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
     terminatingLink
   );
 
@@ -1106,7 +1135,7 @@ test("calls `disable` with GraphQL errors when parsed from non-2xx response", as
 
   const disable = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, disable }).concat(
+  const link = new PersistedQueryLink({ sha256, disable }).concat(
     createHttpLink({ fetch })
   );
 
@@ -1169,7 +1198,7 @@ test("retries when `retry` returns true", async () => {
     )
   );
 
-  const link = createPersistedQueryLink({
+  const link = new PersistedQueryLink({
     sha256,
     retry: () => true,
   }).concat(createHttpLink({ fetch }));
@@ -1230,7 +1259,7 @@ test("only retries query once", async () => {
     })
   );
 
-  const link = createPersistedQueryLink({
+  const link = new PersistedQueryLink({
     sha256,
     retry: () => true,
   }).concat(createHttpLink({ fetch }));
@@ -1298,7 +1327,7 @@ test("does not retry when `retry` returns false", async () => {
     })
   );
 
-  const link = createPersistedQueryLink({
+  const link = new PersistedQueryLink({
     sha256,
     retry: () => false,
   }).concat(createHttpLink({ fetch }));
@@ -1341,7 +1370,7 @@ test("calls `retry` with error emitted from link chain", async () => {
 
   const retry = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, retry }).concat(
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
     terminatingLink
   );
 
@@ -1373,7 +1402,7 @@ test("calls `retry` with ServerError when response has non-2xx status code", asy
 
   const retry = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, retry }).concat(
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
     createHttpLink({ fetch })
   );
 
@@ -1415,7 +1444,7 @@ test("calls `retry` with GraphQL errors when returned in response", async () => 
 
   const retry = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, retry }).concat(
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
     terminatingLink
   );
 
@@ -1457,7 +1486,7 @@ test("calls `retry` with GraphQL errors when parsed from non-2xx response", asyn
 
   const retry = jest.fn(() => false);
 
-  const link = createPersistedQueryLink({ sha256, retry }).concat(
+  const link = new PersistedQueryLink({ sha256, retry }).concat(
     createHttpLink({ fetch })
   );
 

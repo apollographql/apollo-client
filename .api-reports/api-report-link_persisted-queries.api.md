@@ -29,18 +29,8 @@ type CallbackOptions = {
     result?: FormattedExecutionResult;
 };
 
-// @public (undocumented)
-export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & ({
-    resetHashCache: () => void;
-} & ({
-    getMemoryInternals(): {
-        PersistedQueryLink: {
-            persistedQueryHashes: number;
-        };
-    };
-} | {
-    getMemoryInternals?: undefined;
-}));
+// @public @deprecated (undocumented)
+export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => PersistedQueryLink;
 
 // @public (undocumented)
 type ErrorMeta = {
@@ -82,6 +72,13 @@ export namespace PersistedQueryLink {
         sha256: SHA256Function;
     }
         {};
+}
+
+// @public (undocumented)
+export class PersistedQueryLink extends ApolloLink {
+    constructor(options: PersistedQueryLink.Options);
+    // (undocumented)
+    resetHashCache: () => void;
 }
 
 // @public (undocumented)

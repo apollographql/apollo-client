@@ -37,12 +37,10 @@ export namespace ErrorLink {
 // @public (undocumented)
 export class ErrorLink extends ApolloLink {
     constructor(errorHandler: ErrorLink.ErrorHandler);
-    // (undocumented)
-    request(operation: Operation, forward: NextLink): Observable<FetchResult> | null;
 }
 
-// @public (undocumented)
-export function onError(errorHandler: ErrorHandler): ApolloLink;
+// @public @deprecated (undocumented)
+export function onError(errorHandler: ErrorHandler): ErrorLink;
 
 // (No @packageDocumentation comment for this package)
 

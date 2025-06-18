@@ -1235,10 +1235,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const {
       pollingInfo,
-      options: { pollInterval },
+      options: { fetchPolicy, pollInterval },
     } = this;
 
-    if (!pollInterval || !this.hasObservers()) {
+    if (!pollInterval || !this.hasObservers() || fetchPolicy === "cache-only") {
+      if (pollInterval && fetchPolicy === "cache-only") {
+        invariant.warn(
+          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+        );
+      }
+
       this.cancelPolling();
       return;
     }

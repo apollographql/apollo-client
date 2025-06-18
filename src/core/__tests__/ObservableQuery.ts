@@ -453,6 +453,186 @@ describe("ObservableQuery", () => {
 
         await expect(stream).not.toEmitAnything();
       });
+
+      it("warns and does not start polling on a cache-only query when using reobserve to change poll interval", async () => {
+        using _ = spyOnConsole("warn");
+        const query = gql`
+          query {
+            count
+          }
+        `;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: ApolloLink.empty(),
+        });
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy: "cache-only",
+        });
+
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          dataState: "empty",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        });
+
+        await expect(
+          observable.reobserve({ pollInterval: 10 })
+        ).resolves.toStrictEqualTyped({ data: undefined });
+
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+        );
+
+        await expect(stream).not.toEmitAnything();
+      });
+
+      it("warns and does not start polling on a cache-only query when initializing with poll interval", async () => {
+        using _ = spyOnConsole("warn");
+        const query = gql`
+          query {
+            count
+          }
+        `;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: ApolloLink.empty(),
+        });
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy: "cache-only",
+          pollInterval: 10,
+        });
+
+        const stream = new ObservableStream(observable);
+
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+        );
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          dataState: "empty",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        });
+
+        await expect(stream).not.toEmitAnything();
+      });
+
+      it("warns and does not start polling on a cache-only query when calling startPolling", async () => {
+        using _ = spyOnConsole("warn");
+        const query = gql`
+          query {
+            count
+          }
+        `;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: ApolloLink.empty(),
+        });
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy: "cache-only",
+        });
+
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          dataState: "empty",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        });
+
+        observable.startPolling(10);
+
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+        );
+
+        await expect(stream).not.toEmitAnything();
+      });
+
+      it("cancels polling when changing to a cache-only fetchPolicy", async () => {
+        using _ = spyOnConsole("warn");
+        const query = gql`
+          query {
+            count
+          }
+        `;
+        let count = 0;
+        const client = new ApolloClient({
+          cache: new InMemoryCache(),
+          link: new MockLink([
+            {
+              request: { query },
+              result: () => ({ data: { count: ++count } }),
+              maxUsageCount: Number.POSITIVE_INFINITY,
+              delay: 20,
+            },
+          ]),
+        });
+
+        const observable = client.watchQuery({ query, pollInterval: 100 });
+
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitTypedValue({
+          data: undefined,
+          dataState: "empty",
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { count: 1 },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { count: 1 },
+          dataState: "complete",
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          partial: false,
+        });
+
+        await expect(stream).toEmitTypedValue({
+          data: { count: 2 },
+          dataState: "complete",
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+        });
+
+        await expect(
+          observable.reobserve({ fetchPolicy: "cache-only" })
+        ).resolves.toStrictEqualTyped({ data: { count: 2 } });
+
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          "Cannot poll on a 'cache-only' query and as such, polling is disabled. Please use a different fetch policy."
+        );
+
+        await expect(stream).not.toEmitAnything();
+      });
     });
 
     it("does not break refetch", async () => {

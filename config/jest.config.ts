@@ -26,6 +26,7 @@ const defaults = {
     ],
   },
   resolver: "<rootDir>/config/jest/resolver.ts",
+  transformIgnorePatterns: ["/node_modules/(?!(rxjs)/)"],
   prettierPath: null,
   moduleNameMapper: {
     // Our internal testing utilities are not part of the final build, so we
@@ -64,6 +65,15 @@ const tsStandardConfig = {
     "src/local-state/__tests__/LocalState/testUtils.ts",
     "src/local-state/__tests__/LocalState/fixtures/.*.ts$",
   ],
+};
+
+const tsRxJSMinConfig = {
+  ...tsStandardConfig,
+  displayName: "Core Tests - RxJS min version",
+  moduleNameMapper: {
+    ...tsStandardConfig.moduleNameMapper,
+    "^rxjs$": "rxjs-min",
+  },
 };
 
 // For both React (Jest) "projects", ignore core tests (.ts files) as they
@@ -107,6 +117,7 @@ const standardReact17Config = {
 export default {
   projects: [
     tsStandardConfig,
+    tsRxJSMinConfig,
     standardReact17Config,
     standardReact18Config,
     standardReact19Config,

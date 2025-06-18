@@ -5,6 +5,7 @@ import { filter } from "rxjs";
 import type {
   ApolloQueryResult,
   DataState,
+  FetchMoreOptions,
   ObservableQuery,
   OperationVariables,
   QueryResult,
@@ -29,10 +30,6 @@ type QueryRefPromise<
 type Listener<TData, TStates extends DataState<TData>["dataState"]> = (
   promise: QueryRefPromise<TData, TStates>
 ) => void;
-
-type FetchMoreOptions<TData> = Parameters<
-  ObservableQuery<TData>["fetchMore"]
->[0];
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol.for(
   "apollo.internal.queryRef"
@@ -350,7 +347,7 @@ export class InternalQueryReference<
     return this.initiateFetch(this.observable.refetch(variables));
   }
 
-  fetchMore(options: FetchMoreOptions<TData>) {
+  fetchMore(options: FetchMoreOptions<TData, any, any, any>) {
     return this.initiateFetch(this.observable.fetchMore<TData>(options));
   }
 

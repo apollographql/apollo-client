@@ -1,8 +1,11 @@
 import * as React from "react";
 
-import type { DataState, OperationVariables } from "@apollo/client";
+import type {
+  DataState,
+  FetchMoreOptions,
+  OperationVariables,
+} from "@apollo/client";
 import type { SubscribeToMoreFunction } from "@apollo/client";
-import type { FetchMoreQueryOptions } from "@apollo/client";
 import type { ApolloClient } from "@apollo/client";
 import type { ObservableQuery } from "@apollo/client";
 import type {
@@ -113,7 +116,7 @@ function useQueryRefHandlers_<
   const fetchMore: FetchMoreFunction<TData, TVariables> = React.useCallback(
     (options) => {
       const promise = internalQueryRef.fetchMore(
-        options as FetchMoreQueryOptions<any, any>
+        options as FetchMoreOptions<any, any>
       );
 
       setWrappedQueryRef(wrapQueryRef(internalQueryRef));

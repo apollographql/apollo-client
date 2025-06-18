@@ -22,7 +22,7 @@ import { DocumentTransform } from '@apollo/client/utilities';
 import type { ErrorLike as ErrorLike_2 } from '@apollo/client';
 import type { ErrorPolicy as ErrorPolicy_2 } from '@apollo/client';
 import type { FetchMoreFunction } from '@apollo/client/react/internal';
-import type { FetchMoreQueryOptions as FetchMoreQueryOptions_2 } from '@apollo/client';
+import type { FetchMoreOptions as FetchMoreOptions_2 } from '@apollo/client';
 import type { FetchPolicy as FetchPolicy_2 } from '@apollo/client';
 import type { FetchResult } from '@apollo/client/link';
 import type { FormattedExecutionResult } from 'graphql';
@@ -290,12 +290,16 @@ interface ErrorLike {
 type ErrorPolicy = "none" | "ignore" | "all";
 
 // @public (undocumented)
-interface FetchMoreQueryOptions<TVariables, TData = unknown> {
-    // (undocumented)
+type FetchMoreOptions<TData, TVariables extends OperationVariables_2, TFetchData = TData, TFetchVars extends OperationVariables_2 = TVariables> = {
+    query?: DocumentNode | TypedDocumentNode<TFetchData, TFetchVars>;
+    variables?: Partial<NoInfer<TFetchVars>>;
+    errorPolicy?: ErrorPolicy;
     context?: DefaultContext;
-    query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    variables?: Partial<NoInfer_2<TVariables>>;
-}
+    updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+        fetchMoreResult: Unmasked<TFetchData>;
+        variables: TFetchVars;
+    }) => Unmasked<TData>;
+};
 
 // @public
 type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache";
@@ -562,13 +566,8 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables_2 =
     });
     // @internal @deprecated (undocumented)
     applyOptions(newOptions: Partial<ObservableQuery.Options<TData, TVariables>>): void;
-    // Warning: (ae-forgotten-export) The symbol "FetchMoreQueryOptions" needs to be exported by the entry point index.d.ts
-    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables_2 = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-        }) => Unmasked<TData>;
-    }): Promise<QueryResult_2<TFetchData>>;
+    // Warning: (ae-forgotten-export) The symbol "FetchMoreOptions" needs to be exported by the entry point index.d.ts
+    fetchMore<TFetchData = TData, TFetchVars extends OperationVariables_2 = TVariables>({ query, variables, context, errorPolicy, updateQuery, }: FetchMoreOptions<TData, TVariables, TFetchData, TFetchVars>): Promise<QueryResult_2<TFetchData>>;
     // @internal @deprecated (undocumented)
     getCacheDiff({ optimistic }?: {
         optimistic?: boolean | undefined;
@@ -1225,12 +1224,7 @@ export namespace useLazyQuery {
         subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
         updateQuery: (mapFn: UpdateQueryMapFn_2<TData, TVariables>) => void;
         refetch: (variables?: Partial<TVariables>) => Promise<QueryResult_3<MaybeMasked_2<TData>>>;
-        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions_2<TFetchVars, TFetchData> & {
-            updateQuery?: (previousQueryResult: Unmasked_2<TData>, options: {
-                fetchMoreResult: Unmasked_2<TFetchData>;
-                variables: TFetchVars;
-            }) => Unmasked_2<TData>;
-        }) => Promise<QueryResult_3<MaybeMasked_2<TFetchData>>>;
+        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreOptions_2<TData, TVariables, TFetchData, TFetchVars>) => Promise<QueryResult_3<MaybeMasked_2<TFetchData>>>;
         client: ApolloClient;
         observable: ObservableQuery_2<TData, TVariables>;
         previousData?: MaybeMasked_2<TData>;
@@ -1410,12 +1404,7 @@ export namespace useQuery {
         updateQuery: (mapFn: UpdateQueryMapFn_2<TData, TVariables>) => void;
         refetch: (variables?: Partial<TVariables>) => Promise<QueryResult_3<MaybeMasked<TData>>>;
         variables: TVariables;
-        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions_2<TFetchVars, TFetchData> & {
-            updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-                fetchMoreResult: Unmasked<TFetchData>;
-                variables: TFetchVars;
-            }) => Unmasked<TData>;
-        }) => Promise<QueryResult_3<MaybeMasked<TFetchData>>>;
+        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreOptions_2<TData, TVariables, TFetchData, TFetchVars>) => Promise<QueryResult_3<MaybeMasked<TFetchData>>>;
     } & GetDataState_2<MaybeMasked<TData>, TStates>;
 }
 
@@ -1640,23 +1629,23 @@ type WatchQueryOptions_2<TVariables extends OperationVariables_2 = OperationVari
 
 // Warnings were encountered during analysis:
 //
-// src/core/ObservableQuery.ts:134:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:146:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:294:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:64:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:144:5 - (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:156:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:304:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:236:3 - (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:238:3 - (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:255:7 - (ae-forgotten-export) The symbol "Streaming" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:308:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:186:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:269:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:272:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:282:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:285:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:288:3 - (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:294:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:71:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:178:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:253:3 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:261:3 - (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:264:3 - (ae-forgotten-export) The symbol "NormalizedExecutionResult" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:274:3 - (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:277:3 - (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:286:3 - (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:70:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:75:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

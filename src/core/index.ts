@@ -6,7 +6,6 @@ export type { FetchMoreOptions } from "./ObservableQuery.js";
 export { ObservableQuery } from "./ObservableQuery.js";
 export type {
   ErrorPolicy,
-  FetchMoreQueryOptions,
   FetchPolicy,
   MutationFetchPolicy,
   MutationOptions,
@@ -27,7 +26,6 @@ export type {
   DataState,
   DefaultContext,
   ErrorLike,
-  NormalizedExecutionResult,
   GetDataState,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
@@ -39,6 +37,7 @@ export type {
   MutationQueryReducer,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
+  NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
   QueryResult,

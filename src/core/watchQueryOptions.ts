@@ -14,10 +14,10 @@ import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
-  NormalizedExecutionResult,
   InternalRefetchQueriesInclude,
   MutationQueryReducersMap,
   MutationUpdaterFunction,
+  NormalizedExecutionResult,
   OnQueryUpdated,
   OperationVariables,
 } from "./types.js";
@@ -133,14 +133,6 @@ export interface NextFetchPolicyContext<
   observable: ObservableQuery<TData, TVariables>;
   options: WatchQueryOptions<TVariables, TData>;
   initialFetchPolicy: WatchQueryFetchPolicy;
-}
-
-export interface FetchMoreQueryOptions<TVariables, TData = unknown> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: Partial<NoInfer<TVariables>>;
-  context?: DefaultContext;
 }
 
 export type UpdateQueryOptions<TData, TVariables> = {

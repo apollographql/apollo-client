@@ -144,7 +144,7 @@ Array [
 exports[`exports of public entry points @apollo/client/incremental 1`] = `
 Array [
   "Defer20220824Handler",
-  "DeferAlpha2Handler",
+  "GraphQL17Alpha2Handler",
   "NotImplementedHandler",
 ]
 `;

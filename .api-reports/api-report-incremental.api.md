@@ -61,7 +61,7 @@ class Defer20220824Handler implements Incremental.Handler<Defer20220824Handler.C
     }): DeferRequest;
 }
 export { Defer20220824Handler }
-export { Defer20220824Handler as DeferAlpha2Handler }
+export { Defer20220824Handler as GraphQL17Alpha2Handler }
 
 // @public (undocumented)
 class DeferRequest implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk> {

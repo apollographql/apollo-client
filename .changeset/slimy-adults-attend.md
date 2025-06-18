@@ -16,7 +16,7 @@ import {
   // this implements the `@defer` transport format that ships with Apollo Router
   Defer20220824Handler,
   // this implements the `@defer` transport format that ships with GraphQL 17.0.0-alpha.2
-  DeferAlpha2Handler,
+  GraphQL17Alpha2Handler,
 } from "@apollo/client/incremental";
 
 const client = new ApolloClient({

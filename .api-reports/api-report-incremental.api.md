@@ -8,7 +8,6 @@ import type { DeepPartial } from '@apollo/client/utilities';
 import type { DocumentNode } from 'graphql';
 import type { FetchResult } from '@apollo/client';
 import type { FormattedExecutionResult } from 'graphql';
-import type { FormattedExecutionResult as FormattedExecutionResult_2 } from 'graphql-17-alpha2';
 import type { GraphQLFormattedError } from 'graphql';
 import type { GraphQLRequest } from '@apollo/client';
 
@@ -33,7 +32,7 @@ namespace Defer20220824Handler {
     type IncrementalPayload<TData = Record<string, unknown>> = IncrementalDeferPayload<TData>;
     // (undocumented)
     type InitialResult<TData = Record<string, unknown>> = {
-        data: TData | null | undefined;
+        data?: TData | null | undefined;
         errors?: ReadonlyArray<GraphQLFormattedError>;
         extensions?: Record<string, any>;
         hasNext: boolean;
@@ -66,7 +65,7 @@ export { Defer20220824Handler as GraphQL17Alpha2Handler }
 // @public (undocumented)
 class DeferRequest<TData> implements Incremental.IncrementalRequest<Defer20220824Handler.Chunk, TData> {
     // (undocumented)
-    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.InitialResult | Defer20220824Handler.SubsequentResult): FormattedExecutionResult_2<TData>;
+    handle(cacheData: TData | DeepPartial<TData> | null | undefined, chunk: Defer20220824Handler.InitialResult | Defer20220824Handler.SubsequentResult): FormattedExecutionResult<TData>;
     // (undocumented)
     hasNext: boolean;
 }

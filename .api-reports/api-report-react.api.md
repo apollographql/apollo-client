@@ -471,7 +471,7 @@ interface MutationStoreValue {
 export type MutationTuple<TData, TVariables extends OperationVariables, _TContext = DefaultContext_2, TCache extends ApolloCache_2 = ApolloCache_2> = useMutation.ResultTuple<TData, TVariables, TCache>;
 
 // @public (undocumented)
-type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: Omit<FormattedExecutionResult<Unmasked<TData>>, "context">, options: {
+type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -502,10 +502,10 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables_2>
 
 // @public
 type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data?: TData | null;
+    data: TData;
     dataState: "complete";
 } | {
-    data?: Streaming<TData> | null;
+    data: Streaming<TData>;
     dataState: "streaming";
 });
 

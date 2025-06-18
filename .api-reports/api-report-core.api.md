@@ -501,7 +501,7 @@ interface MutationStoreValue {
 }
 
 // @public (undocumented)
-export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: Omit<FormattedExecutionResult<Unmasked<TData>>, "context">, options: {
+export type MutationUpdaterFunction<TData, TVariables, TCache extends ApolloCache> = (cache: TCache, result: FormattedExecutionResult<Unmasked<TData>>, options: {
     context?: DefaultContext;
     variables?: TVariables;
 }) => void;
@@ -538,10 +538,10 @@ export { NormalizedCacheObject }
 
 // @public
 export type NormalizedExecutionResult<TData = Record<string, unknown>, TExtensions = Record<string, unknown>> = Omit<FormattedExecutionResult<TData, TExtensions>, "data"> & ({
-    data?: TData | null;
+    data: TData;
     dataState: "complete";
 } | {
-    data?: Streaming<TData> | null;
+    data: Streaming<TData>;
     dataState: "streaming";
 });
 

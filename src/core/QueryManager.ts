@@ -1393,7 +1393,10 @@ export class QueryManager {
               return result;
             }
 
-            if (onQueryUpdated !== null) {
+            if (
+              onQueryUpdated !== null &&
+              oq.options.fetchPolicy !== "cache-only"
+            ) {
               // If we don't have an onQueryUpdated function, and onQueryUpdated
               // was not disabled by passing null, make sure this query is
               // "included" like any other options.include-specified query.

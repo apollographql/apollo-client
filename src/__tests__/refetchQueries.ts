@@ -590,6 +590,56 @@ describe("client.refetchQueries", () => {
     unsubscribe();
   });
 
+  it("does not include cache-only queries when affected by updateCache", async () => {
+    const cQuery = gql`
+      query {
+        c
+      }
+    `;
+    const client = makeClient();
+    client.writeQuery({ query: cQuery, data: { c: "C" } });
+
+    await setup(client);
+
+    const cObs = client.watchQuery({
+      query: cQuery,
+      fetchPolicy: "cache-only",
+    });
+
+    const cStream = new ObservableStream(cObs);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "C" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    const activeResults = await client.refetchQueries({
+      updateCache(cache) {
+        cache.writeQuery({
+          query: cQuery,
+          data: { c: "See" },
+        });
+      },
+    });
+
+    sortObjects(activeResults);
+
+    expect(activeResults).toEqual([]);
+
+    await expect(cStream).toEmitTypedValue({
+      data: { c: "See" },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    unsubscribe();
+  });
+
   it("includes queries named in refetchQueries even if they have `standby` fetchPolicy", async () => {
     const client = makeClient();
 

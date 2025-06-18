@@ -6,19 +6,25 @@ The `ErrorResponse` object passed to the `disable` and `retry` callback options 
 
 
 ```diff
-// The following also applies to the retry function since it has the same signature
+// The following also applies to the `retry` function since it has the same signature
 createPersistedQueryLink({
-  disable: (errorResponse) => {
--   if (errorResponse.graphQLErrors) {
-+   if (CombinedGraphQLErrors.is(errorResponse.error)) {
+- disable: ({ graphQLErrors, networkError }) => {
++ disable: ({ error }) => {
+-   if (graphQLErrors) {
++   if (CombinedGraphQLErrors.is(error)) {
       // ... handle GraphQL errors
     }
 
--   if (errorResponse.networkError) {
-+   if (errorResponse.error) {
-      // ... handle a NetworkError errors
+-   if (networkError) {
++   if (error) {
+      // ... handle link errors
     }
-  }
+
+    // optionally check for a specific kind of error
+-   if (networkError) {
++   if (ServerError.is(error)) {
+      // ... handle a server error
+    }
 });
 ```
 
